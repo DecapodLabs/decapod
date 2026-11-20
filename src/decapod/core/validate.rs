@@ -95,12 +95,20 @@ fn container_signal_reasons(repo_root: &Path) -> Vec<&'static str> {
 }
 
 fn is_container_workspaces_disabled(repo_root: &Path) -> bool {
-    let config_path = repo_root.join(".decapod").join("config.toml");
-    if !config_path.exists() {
-        return false;
-    }
-    match std::fs::read_to_string(config_path) {
-        Ok(content) => content.contains("container_workspaces = false"),
+    match crate::core::db_maintenance::resolve_accepted_project_config(repo_root) {
+        Ok((_main_root, accepted_cfg, unmerged_violation)) => {
+            unmerged_violation.is_none()
+                && !accepted_cfg.repo.container_workspaces
+                && accepted_cfg.custody.isolation != crate::cli::IsolationMode::Container
+        }
+        Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+            crate::cli::DecapodProjectConfig::load(repo_root)
+                .map(|cfg| {
+                    !cfg.repo.container_workspaces
+                        && cfg.custody.isolation != crate::cli::IsolationMode::Container
+                })
+                .unwrap_or(false)
+        }
         Err(_) => false,
     }
 }
@@ -580,6 +588,46 @@ fn validation_task_id(workspace_root: &Path) -> String {
     "todo-unassigned".to_string()
 }
 
+/// Return the sanitized task identifier used to scope temporary validation
+/// and build scratch paths for `workspace_root`.
+pub fn resolve_validation_task_id(workspace_root: &Path) -> String {
+    validation_task_id(workspace_root)
+}
+
+/// Return the todo-scoped temporary root directory used by validation for
+/// `workspace_root` (i.e. `<temp_dir>/decapod_validate/<task-id>`).
+pub fn validation_temp_root(workspace_root: &Path) -> PathBuf {
+    std::env::temp_dir()
+        .join("decapod_validate")
+        .join(validation_task_id(workspace_root))
+}
+
+/// Return agent-facing cleanup guidance for a specific task ID and optional
+/// validation temp root path.
+///
+/// Instructs the agent to flush ONLY that todo's `/tmp` build/scratch
+/// directory after validation succeeds / PR creation completes, and never
+/// perform wildcard or root-level deletion of `/tmp` or remove concurrent
+/// agents' paths, shared `/tmp/decapod` controller state, or active sibling
+/// directories.
+pub fn todo_tmp_cleanup_instruction_for_task(task_id: &str, temp_root: Option<&Path>) -> String {
+    let sanitized = sanitize_validation_task_id(task_id);
+    let validation_dir = temp_root
+        .map(|path| path.display().to_string())
+        .unwrap_or_else(|| format!("/tmp/decapod_validate/{sanitized}"));
+    format!(
+        "Todo-scoped /tmp cleanup ({sanitized}): after validation succeeds and PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as `{validation_dir}` and any todo-scoped CARGO_TARGET_DIR or build scratch under /tmp created for `{sanitized}`). Never perform wildcard or root-level deletion of /tmp, never delete another concurrent agent's or sibling todo's /tmp directory, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories."
+    )
+}
+
+/// Return agent-facing `/tmp` build and scratch cleanup guidance for the todo
+/// associated with `workspace_root`.
+pub fn todo_tmp_cleanup_instruction(workspace_root: &Path) -> String {
+    let task_id = validation_task_id(workspace_root);
+    let temp_root = validation_temp_root(workspace_root);
+    todo_tmp_cleanup_instruction_for_task(&task_id, Some(&temp_root))
+}
+
 /// Return the task-owned temporary directory for this validation workspace.
 ///
 /// The task ID is part of the path by contract. Legacy unscoped `/tmp`
@@ -588,16 +636,11 @@ pub fn create_validation_temp_path(
     workspace_root: &Path,
     kind: &str,
 ) -> Result<PathBuf, error::DecapodError> {
-    let task_root = std::env::temp_dir()
-        .join("decapod_validate")
-        .join(validation_task_id(workspace_root));
+    let task_root = validation_temp_root(workspace_root);
     fs::create_dir_all(&task_root).map_err(error::DecapodError::IoError)?;
-    register_validation_temp_path(task_root);
+    register_validation_temp_path(task_root.clone());
 
-    let path = std::env::temp_dir()
-        .join("decapod_validate")
-        .join(validation_task_id(workspace_root))
-        .join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
+    let path = task_root.join(format!("{kind}_{}", crate::core::ulid::new_ulid()));
     fs::create_dir_all(&path).map_err(error::DecapodError::IoError)?;
     Ok(path)
 }
@@ -1929,6 +1972,65 @@ fn validate_project_config_toml(
             "Guided init custody.isolation must be either 'container' or 'worktree'",
             ctx,
         );
+    }
+
+    if is_inside_git_work_tree(repo_root)
+        && let Ok((main_root, accepted_cfg, unmerged_violation)) =
+            crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
+    {
+        let same_root =
+            std::fs::canonicalize(repo_root).ok() == std::fs::canonicalize(&main_root).ok();
+        let is_candidate = !same_root || unmerged_violation.is_some();
+        if is_candidate {
+            let accepted_base = crate::core::workspace::resolve_base_branch(&main_root, None);
+            if let Some(cand_base) = typed_config
+                .repo
+                .base_branch
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                && cand_base != accepted_base
+            {
+                fail(
+                    &format!(
+                        "BASE_BRANCH_SELF_AUTHORIZATION_DENIED: candidate repo.base_branch '{cand_base}' cannot override accepted base branch '{accepted_base}'"
+                    ),
+                    ctx,
+                );
+            }
+            if accepted_cfg.laya.mode == crate::core::laya_readiness::Mode::Required
+                && typed_config.laya.mode != crate::core::laya_readiness::Mode::Required
+            {
+                fail(
+                    "LAYA_POLICY_DOWNGRADE: candidate cannot weaken accepted [laya] mode = \"required\"",
+                    ctx,
+                );
+            }
+            if accepted_cfg
+                .proof
+                .required_profile
+                .as_ref()
+                .is_some_and(|p| p.id == "decapod.pr-readiness.v1")
+                && typed_config
+                    .proof
+                    .required_profile
+                    .as_ref()
+                    .is_none_or(|p| p.id != "decapod.pr-readiness.v1")
+            {
+                fail(
+                    "REQUIRED_PROFILE_DOWNGRADE: candidate cannot downgrade accepted proof.required_profile 'decapod.pr-readiness.v1'",
+                    ctx,
+                );
+            }
+            if accepted_cfg.repo.effective_backend().is_cloud()
+                && !typed_config.repo.effective_backend().is_cloud()
+            {
+                fail(
+                    "BACKEND_POLICY_DOWNGRADE: candidate cannot switch accepted cloud backend to local",
+                    ctx,
+                );
+            }
+        }
     }
 
     let proof_names: Vec<_> = typed_config
@@ -3296,8 +3398,16 @@ fn validate_publication_bundle_currency(
     // (fingerprint/provenance still validates ⇒ unchanged inheritance is fine).
     // When the base pin is older than the evaluating release, inheritance is
     // not enough: the branch must carry refreshed release-bound surfaces.
+    let preserve_source_versions =
+        crate::core::entrypoint_integrity::preserves_source_entrypoint_versions(repo_root);
+    let base_release = if preserve_source_versions {
+        git_blob_generation_release(repo_root, &base_ref)
+            .or_else(|| git_blob_release_marker(repo_root, &base_ref, "AGENTS.md"))
+    } else {
+        git_blob_release_marker(repo_root, &base_ref, "AGENTS.md")
+    };
     if !skip_fingerprint_gates()
-        && let Some(base_release) = git_blob_release_marker(repo_root, &base_ref, "AGENTS.md")
+        && let Some(base_release) = base_release
         && base_release != crate::core::entrypoint_integrity::RELEASE_VERSION
     {
         let running = crate::core::entrypoint_integrity::RELEASE_VERSION;
@@ -3311,11 +3421,24 @@ fn validate_publication_bundle_currency(
             ".decapod/managed/Dockerfile.decapod",
             ".decapod/managed/specs/.manifest.json",
         ];
+        // Authorized source headers can retain their own valid versions. The
+        // generated manifest records the evaluating release instead; its pin
+        // and the Docker pin still refresh when that release advances.
+        let required_refresh = if preserve_source_versions {
+            &required_refresh[4..]
+        } else {
+            &required_refresh[..]
+        };
         let missing_refresh =
-            release_bound_paths_missing_vs_base(repo_root, &base_ref, &required_refresh)?;
+            release_bound_paths_missing_vs_base(repo_root, &base_ref, required_refresh)?;
         if !missing_refresh.is_empty() {
+            let remediation = if preserve_source_versions {
+                "Refresh the managed Dockerfile pin and specs manifest through the evaluating Decapod; canonical source entrypoint versions remain valid."
+            } else {
+                "First PR for a new installed Decapod must bump all four entrypoint fingerprints, Dockerfile pin, and specs manifest."
+            };
             failures.push(format!(
-                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound surfaces were not fully refreshed on this branch (missing from base...HEAD: {}). First PR for a new installed Decapod must bump all four entrypoint fingerprints, Dockerfile pin, and specs manifest.",
+                "Decapod release advanced from base '{base_release}' to running '{running}' but release-bound surfaces were not fully refreshed on this branch (missing from base...HEAD: {}). {remediation}",
                 missing_refresh.join(", ")
             ));
         }
@@ -3380,6 +3503,20 @@ fn load_validation_receipt_for_currency(repo_root: &Path) -> Result<(), String> 
     };
     let _: ValidationReceipt = serde_json::from_value(value).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// The generated manifest's release is provenance for preserved source headers.
+fn git_blob_generation_release(repo_root: &Path, reference: &str) -> Option<String> {
+    let spec = format!("{reference}:.decapod/managed/specs/.manifest.json");
+    let output = crate::core::entrypoint_integrity::history_git(repo_root, &["show", &spec])?;
+    if !output.status.success() {
+        return None;
+    }
+    serde_json::from_slice::<serde_json::Value>(&output.stdout)
+        .ok()?
+        .get("decapod_release")?
+        .as_str()
+        .map(str::to_owned)
 }
 
 /// Read the `<!-- decapod-release: ... -->` marker from a blob at `reference:path`.
@@ -3707,11 +3844,48 @@ fn validate_validation_rules(
         include_publication: false,
         governing_identity: None,
         evidence_identity: std::collections::BTreeMap::new(),
+        terminal_evidence: None,
     };
 
-    // Create and populate rule registry
+    // Create and populate rule registry from accepted policy only.
     let mut registry = RuleRegistry::new();
-    registry.load_project_rules(main_root)?;
+    let accepted_override =
+        match crate::core::db_maintenance::resolve_repository_override(main_root) {
+            Ok(text) => text,
+            Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+                let p = main_root.join(".decapod").join("OVERRIDE.md");
+                p.exists().then(|| std::fs::read_to_string(p)).transpose()?
+            }
+            Err((code, msg)) => {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "{code}: {msg}"
+                )));
+            }
+        };
+    if let Some(content) = accepted_override.as_deref() {
+        registry.load_project_rules_from_content(content)?;
+    }
+    // Validate candidate/unmerged OVERRIDE.md separately so forbidden/weakening
+    // rule overrides fail explicitly instead of passing unnoticed.
+    let cand_override_path = working_root.join(".decapod").join("OVERRIDE.md");
+    let main_override_path = main_root.join(".decapod").join("OVERRIDE.md");
+    let same_root =
+        std::fs::canonicalize(working_root).ok() == std::fs::canonicalize(main_root).ok();
+    for path in [
+        (!same_root).then_some(cand_override_path),
+        Some(main_override_path),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        if path.exists() {
+            let candidate_text = std::fs::read_to_string(&path)?;
+            if accepted_override.as_deref() != Some(candidate_text.as_str()) {
+                let mut probe = RuleRegistry::new();
+                probe.load_project_rules_from_content(&candidate_text)?;
+            }
+        }
+    }
     registry.load_task_rules(working_root)?;
 
     // Evaluate all applicable rules
@@ -3862,12 +4036,24 @@ fn get_current_task_type(working_root: &Path) -> Result<Option<String>, error::D
         && let Some(task_id) =
             crate::core::workspace::extract_task_ids_from_branch(&status.git.current_branch).first()
     {
-        // Try to get task details from store
-        let main_root = crate::core::workspace::get_main_repo_root(working_root)?;
-        let store_root = main_root.join(".decapod").join("data");
-        if let Ok(Some(task)) = crate::core::todo::get_task(&store_root, task_id) {
-            return Ok(Some(task.category));
-        }
+        // Try to get task details from store without creating or mutating DB state
+        let category = crate::core::workspace::get_main_repo_root(working_root)
+            .ok()
+            .and_then(|main_root| {
+                let store_root = main_root.join(".decapod").join("data");
+                if store_root.join("decapod.db").is_file() && !store_root.join("todo.db").exists() {
+                    crate::core::todo::get_task(&store_root, task_id)
+                        .ok()
+                        .flatten()
+                        .map(|task| task.category)
+                } else {
+                    None
+                }
+            });
+        return Ok(crate::core::validation_rules::normalize_rule_task_type(
+            category.as_deref(),
+            Some(task_id),
+        ));
     }
     Ok(None)
 }
@@ -3904,11 +4090,13 @@ fn collect_evidence_artifacts(
             error::DecapodError::ValidationError(format!("Invalid governance.json: {}", e))
         })?;
 
-        if let Some(validation) = governance.pointer("/sections/validation")
-            && let Some(receipt) = validation.pointer("/receipt")
-            && let Some(hash) = receipt.pointer("/receipt_hash").and_then(|v| v.as_str())
+        if let Some(value) =
+            crate::core::governance_document::read_section(working_root, "validation")?
         {
-            artifacts.insert("validation_receipt".to_string(), hash.to_string());
+            let receipt: ValidationReceipt = serde_json::from_value(value)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+            receipt.validate_integrity()?;
+            artifacts.insert("validation_receipt".to_string(), receipt.receipt_hash);
         }
 
         if let Some(trajectory) = governance.pointer("/sections/trajectory")
@@ -3922,12 +4110,6 @@ fn collect_evidence_artifacts(
         if let Some(_plan) = governance.pointer("/sections/plan") {
             artifacts.insert("governed_plan".to_string(), "present".to_string());
         }
-    }
-
-    // Check for workunit manifest
-    let workunits_dir = working_root.join(".decapod").join("data").join("workunits");
-    if workunits_dir.exists() {
-        artifacts.insert("workunit_manifest".to_string(), "present".to_string());
     }
 
     // Config toml
@@ -4009,7 +4191,7 @@ fn validate_workunit_manifests_if_present(
             ))
         })?;
         if parsed.status == WorkUnitStatus::Verified {
-            workunit::validate_verified_manifest(&parsed).map_err(|e| {
+            workunit::validate_verified_manifest(repo_root, &parsed).map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "invalid VERIFIED workunit manifest: {} ({})",
                     e,
@@ -4746,7 +4928,7 @@ fn validate_risk_map(store: &Store, ctx: &ValidationContext) -> Result<(), error
     if map_path.exists() {
         pass("Risk map (blast-radius) is present", ctx);
     } else {
-        warn("Risk map missing (run `decapod riskmap init`)", ctx);
+        warn(&crate::plugins::policy::missing_riskmap_warning(), ctx);
     }
     Ok(())
 }
@@ -5151,22 +5333,51 @@ fn validate_knowledge_integrity(
 fn load_knowledge_promotion_event_ids(
     conn: &crate::core::db::Connection,
 ) -> Result<HashSet<String>, error::DecapodError> {
+    if !conn.has_table("events")? {
+        return Ok(HashSet::new());
+    }
     let mut stmt = conn
-        .prepare("SELECT payload FROM events WHERE stream = 'knowledge'")
+        .prepare(
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload \
+             FROM events WHERE stream = 'knowledge'",
+        )
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
-        .query_map([], |row| row.get::<_, String>(0))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, String>(6)?,
+            ))
+        })
         .map_err(error::DecapodError::StorageError)?;
     let mut ids = HashSet::new();
     for row in rows {
-        let raw = row.map_err(error::DecapodError::StorageError)?;
-        let v: serde_json::Value = serde_json::from_str(&raw).map_err(|e| {
+        let (event_id, ts, event_type, actor, subject_kind, subject_id, raw) =
+            row.map_err(error::DecapodError::StorageError)?;
+        let v = crate::core::events::reconstruct_stored_payload(
+            crate::core::events::KNOWLEDGE,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw,
+        )
+        .map_err(|e| {
             error::DecapodError::ValidationError(format!(
                 "invalid knowledge promotion event in decapod.db:events (stream=knowledge): {e}"
             ))
         })?;
         if let Some(id) = v.get("event_id").and_then(|x| x.as_str()) {
             ids.insert(id.to_string());
+        } else if !event_id.is_empty() {
+            ids.insert(event_id);
         }
     }
     Ok(ids)
@@ -5713,6 +5924,34 @@ fn validate_git_workspace_context(
     let container_reasons = container_signal_reasons(repo_root);
     let is_non_code = is_non_code_change(repo_root);
 
+    if let Ok((_resolved_main, accepted_cfg, unmerged_violation)) =
+        crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
+    {
+        let accepted_requires_container = accepted_cfg.repo.container_workspaces
+            || accepted_cfg.custody.isolation == crate::cli::IsolationMode::Container;
+        if accepted_requires_container {
+            if let Ok(working_cfg) = crate::cli::DecapodProjectConfig::load(repo_root)
+                && (!working_cfg.repo.container_workspaces
+                    || working_cfg.custody.isolation != crate::cli::IsolationMode::Container)
+            {
+                fail(
+                    "CUSTODY_ISOLATION_DOWNGRADE: candidate cannot disable container_workspaces or downgrade custody.isolation below accepted policy",
+                    ctx,
+                );
+            }
+            if unmerged_violation.is_some()
+                && let Ok(main_cfg) = crate::cli::DecapodProjectConfig::load(main_root)
+                && (!main_cfg.repo.container_workspaces
+                    || main_cfg.custody.isolation != crate::cli::IsolationMode::Container)
+            {
+                fail(
+                    "CUSTODY_ISOLATION_DOWNGRADE: unaccepted main-root branch cannot disable container_workspaces or downgrade custody.isolation",
+                    ctx,
+                );
+            }
+        }
+    }
+
     if is_container_workspaces_disabled(main_root) {
         skip(
             "Container workspace requirement disabled (container_workspaces = false in .decapod/config.toml). This is only safe for single-agent workflows; multi-agent concurrent runs require container isolation.",
@@ -5915,11 +6154,14 @@ fn run_migration_validation(
     }
 
     let started = Instant::now();
-    let mut child = std::process::Command::new(&config.command)
+    let mut command = std::process::Command::new(&config.command);
+    command
         .args(&config.args)
         .current_dir(&working_path)
         .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
+        .stderr(Stdio::piped());
+    crate::core::bounded_process::configure_child_nofile_limit(&mut command);
+    let mut child = command
         .spawn()
         .map_err(|err| format!("could not start '{}': {err}", config.command))?;
     let stdout = child.stdout.take().expect("stdout was piped");
@@ -6493,6 +6735,10 @@ fn validate_plan_governed_execution_gate(
             Ok(()) => pass("Plan phase progress matches its current contract", ctx),
             Err(error) => fail(&error.to_string(), ctx),
         }
+        match crate::core::mentor::reflection::check_execute(main_root, &store.root, &plan, None) {
+            Ok(()) => {}
+            Err(error) => fail(&error.to_string(), ctx),
+        }
         match plan_governance::enforce_scope_constraints(main_root, &plan.constraints) {
             Ok(()) => pass("Complete candidate scope satisfies the governed plan", ctx),
             Err(error) => fail(&error.to_string(), ctx),
@@ -6542,11 +6788,28 @@ fn validate_plan_governed_execution_gate(
     let unverified = plan_governance::collect_unverified_done_todos(&store.root)?;
 
     if !unverified.is_empty() {
+        let historical_hints: Vec<String> = unverified
+            .iter()
+            .filter_map(|id| {
+                crate::core::validation_history::latest_candidate_for_task(store, id)
+                    .map(|sha| format!("`decapod todo done {id} --validated --commit {sha}`"))
+            })
+            .take(2)
+            .collect();
+        let historical_clause = if historical_hints.is_empty() {
+            "If a task was already validated before merge, repair it with `decapod todo done <id> --validated --commit <sha>`.".to_string()
+        } else {
+            format!(
+                "For already-validated merged commits, repair directly with {}.",
+                historical_hints.join(" or ")
+            )
+        };
         fail(
             &format!(
-                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: replay existing proof with `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
+                "PROOF_HOOK_FAILED: {} done TODO(s) are CLAIMED but not VERIFIED: {}. Agent: {} To verify a single task on the current checkout, run `decapod qa verify regen <id>`; to replay existing proof baselines, run `decapod qa verify` or `decapod qa verify todo <id>`. For stale or missing batch evidence, run `decapod qa verify recover`; if it requests current files, repeat `--artifact TODO_ID=FILE` using each reported task ID and an explicitly selected relevant current file. Recovery preserves completion history and still requires actual passing checks; do not prune or reopen tasks to bypass proof.",
                 unverified.len(),
-                output::preview_messages(&unverified, 4, 80)
+                output::preview_messages(&unverified, 4, 80),
+                historical_clause
             ),
             ctx,
         );
@@ -6997,27 +7260,29 @@ fn validate_tooling_gate(
         let fmt_handle = fmt_available.then(|| {
             let root_fmt = repo_root.to_path_buf();
             std::thread::spawn(move || {
-                std::process::Command::new("cargo")
-                    .args(["fmt", "--all", "--", "--check"])
-                    .current_dir(&root_fmt)
-                    .output()
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.args(["fmt", "--all", "--", "--check"])
+                    .current_dir(&root_fmt);
+                crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+                cmd.output()
             })
         });
 
         let clippy_handle = clippy_available.then(|| {
             let root_clippy = repo_root.to_path_buf();
             std::thread::spawn(move || {
-                std::process::Command::new("cargo")
-                    .args([
-                        "clippy",
-                        "--all-targets",
-                        "--all-features",
-                        "--",
-                        "-D",
-                        "warnings",
-                    ])
-                    .current_dir(&root_clippy)
-                    .output()
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.args([
+                    "clippy",
+                    "--all-targets",
+                    "--all-features",
+                    "--",
+                    "-D",
+                    "warnings",
+                ])
+                .current_dir(&root_clippy);
+                crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+                cmd.output()
             })
         });
 
@@ -7357,12 +7622,43 @@ fn validate_root_dockerfile_seed_detection(
 }
 
 fn cargo_subcommand_available(subcommand: &str) -> bool {
-    std::process::Command::new("cargo")
-        .arg(subcommand)
-        .arg("--version")
-        .output()
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.arg(subcommand).arg("--version");
+    crate::core::bounded_process::configure_child_nofile_limit(&mut cmd);
+    cmd.output()
         .map(|output| output.status.success())
         .unwrap_or(false)
+}
+
+fn validate_open_file_limits(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+    match crate::core::bounded_process::current_nofile_limits() {
+        Ok(limits) => {
+            if limits.soft < crate::core::bounded_process::LOW_NOFILE_WARNING_THRESHOLD {
+                advisory(
+                    &format!(
+                        "RLIMIT_NOFILE_LOW: parent soft open-file limit is {} (hard={}); spawned validation test harnesses elevate child soft RLIMIT_NOFILE toward min(hard, {}).",
+                        limits.soft,
+                        limits.hard_display(),
+                        crate::core::bounded_process::RECOMMENDED_NOFILE_CEILING,
+                    ),
+                    ctx,
+                );
+            } else {
+                pass(
+                    &format!(
+                        "Open-file limit is sufficient (soft={}, hard={})",
+                        limits.soft,
+                        limits.hard_display()
+                    ),
+                    ctx,
+                );
+            }
+        }
+        Err(_) => {
+            skip("RLIMIT_NOFILE inspection unavailable on this platform", ctx);
+        }
+    }
+    Ok(())
 }
 
 fn validate_state_commit_gate(
@@ -7598,6 +7894,12 @@ fn validate_gatekeeper_gate(
             .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::DangerousPattern)
             .count();
 
+        let protected_count = result
+            .violations
+            .iter()
+            .filter(|v| v.kind == crate::core::gatekeeper::ViolationKind::ProtectedPath)
+            .count();
+
         let mut parts = Vec::new();
         if secret_count > 0 {
             parts.push(format!("{secret_count} secret(s)"));
@@ -7607,6 +7909,9 @@ fn validate_gatekeeper_gate(
         }
         if dangerous_count > 0 {
             parts.push(format!("{dangerous_count} dangerous pattern(s)"));
+        }
+        if protected_count > 0 {
+            parts.push(format!("{protected_count} protected path(s)"));
         }
         fail(&format!("Gatekeeper violations: {}", parts.join(", ")), ctx);
     }
@@ -8161,6 +8466,13 @@ pub fn run_validation(
             ctx,
             "validate_tooling_gate",
             validate_tooling_gate(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_open_file_limits",
+            validate_open_file_limits(ctx)
         );
         gate!(
             s,

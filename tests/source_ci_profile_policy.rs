@@ -1301,6 +1301,36 @@ fn golden_recipes_check_immutable_vectors_and_run_their_regressions() {
 }
 
 #[test]
+fn plugin_test_changes_select_the_existing_complete_plugin_recipe() {
+    let check = find_check("selective-plugins").unwrap();
+    let production = paths(&["src/decapod/plugins/aptitude.rs"]);
+    let expected = commands(check, &production).unwrap();
+    assert!(!expected.is_empty());
+    assert!(expected.iter().any(|command| {
+        command.program == "bazelisk" && command.args.contains(&"//:plugins_aptitude_tests")
+    }));
+
+    for path in ["tests/plugins/aptitude.rs", "tests/plugins/todo.rs"] {
+        let changed = paths(&[path]);
+        assert!(selected(check, &changed, false), "{path}");
+        let recipe = commands(check, &changed).unwrap();
+        assert_eq!(recipe, expected, "{path} must retain every plugin target");
+        let scheduled = inventory(&changed, false);
+        let job = scheduled
+            .iter()
+            .find(|job| job.job == "test" && job.matrix == Some("plugins"))
+            .expect("plugin job remains in the required inventory");
+        assert!(job.applicable, "{path} must not emit not_applicable");
+        assert!(job.checks.contains(&"selective-plugins"));
+        assert!(!selected(check, &changed, true));
+    }
+
+    let unrelated = paths(&["docs/agent/README.md", "tests/contract_conformance.rs"]);
+    assert!(!selected(check, &unrelated, false));
+    assert!(commands(check, &unrelated).unwrap().is_empty());
+}
+
+#[test]
 fn rust_justfile_regressions_are_selected_on_linux_and_required_on_macos() {
     let cli = find_check("selective-cli").unwrap();
     for path in [
@@ -2220,5 +2250,144 @@ fn storage_and_broker_changes_select_unfiltered_runtime_regressions() {
         let serialized = format!("{recipe:?}");
         assert!(serialized.contains("//:group_broker"));
         assert!(serialized.contains("//:validate_termination"));
+    }
+}
+
+#[test]
+fn nix_cachix_publication_has_native_owner_and_isolated_secret() {
+    let workflow = include_str!("../.github/workflows/nix-flake.yml");
+    let owner = job(workflow, "publication-owner");
+    let proof = job(workflow, "build");
+    let publisher = job(workflow, "publish");
+
+    // A Buildkite-imported job must be discarded before statically resolving
+    // the credential-bearing job's secret. Step-level if guards are too late.
+    assert!(owner.contains("permissions: {}"));
+    assert!(!owner.contains("secrets."));
+    assert!(!owner.contains("uses:"));
+    assert!(owner.contains("RUNNER_ENVIRONMENT:-"));
+    assert!(owner.contains("BUILDKITE_BUILD_ID:-"));
+    assert!(owner.contains("GITHUB_ACTIONS:-"));
+    assert!(owner.contains("GITHUB_EVENT_NAME:-"));
+    assert!(owner.contains("refs/heads/master"));
+    assert!(owner.contains("chore:"));
+    assert!(!proof.contains("secrets."));
+    assert!(proof.contains("Check that a rebuild is byte-identical"));
+    assert!(publisher.contains("needs: [publication-owner, build]"));
+    assert!(publisher.contains("needs.publication-owner.outputs.publish == 'true'"));
+    assert!(publisher.contains("needs.build.result == 'success'"));
+    assert!(publisher.contains("github.event_name == 'push'"));
+    assert!(publisher.contains("github.ref == 'refs/heads/master'"));
+    assert!(publisher.contains("CACHIX_AUTH_TOKEN: ${{ secrets.CACHIX_AUTH_TOKEN }}"));
+    assert_eq!(workflow.matches("secrets.CACHIX_AUTH_TOKEN").count(), 1);
+    assert!(publisher.contains("nix build --print-build-logs"));
+    assert!(publisher.contains("nix build --rebuild --print-build-logs"));
+    assert!(publisher.contains("Smoke-check publication candidate"));
+    assert!(publisher.contains("nix run --inputs-from . nixpkgs#cachix -- push decapod ./result"));
+    assert!(publisher.contains("CACHIX_AUTH_TOKEN must be a write-capable token"));
+    assert!(!workflow.contains("pull_request:"));
+}
+
+#[test]
+fn publication_regressions_are_always_owned_by_the_full_library_recipe() {
+    let check = find_check("supabase-consumer").unwrap();
+    for path in [
+        "src/decapod/core/workspace_publication.rs",
+        "tests/unit/core/workspace_publication_tests.rs",
+        "src/decapod/core/entrypoint_integrity/history/tests.rs",
+    ] {
+        let changed = paths(&[path]);
+        assert!(selected(check, &changed, false), "{path}");
+        assert!(
+            commands(check, &changed).unwrap().iter().any(|command| {
+                command.program == "cargo"
+                    && command.args.first() == Some(&"test")
+                    && command.args.contains(&"--lib")
+                    && !command.args.contains(&"--")
+            }),
+            "the required lane must execute the full library suite for {path}"
+        );
+        assert!(
+            inventory(&changed, false)
+                .iter()
+                .any(|job| { job.applicable && job.checks.contains(&check.id) }),
+            "library proof must remain in the required plan for {path}"
+        );
+    }
+}
+
+#[test]
+fn required_test_source_changes_retain_the_complete_owning_recipe() {
+    let core = find_check("selective-core").unwrap();
+    let cli = find_check("selective-cli").unwrap();
+    let core_recipe = commands(core, &paths(&["src/decapod/core/todo.rs"])).unwrap();
+    let cli_recipe = commands(cli, &paths(&["src/decapod/lib.rs"])).unwrap();
+    for (check, expected, changed) in [
+        (
+            core,
+            &core_recipe,
+            vec![
+                "tests/todo_enforcement.rs",
+                "tests/validate_termination.rs",
+                "tests/workspace_interlock.rs",
+                "tests/spec_workspace_ownership.rs",
+                "tests/workspace_prune_regression.rs",
+                "tests/hermes_governance_substrate.rs",
+                "tests/group_broker.rs",
+                "tests/group_broker_strict.rs",
+                "tests/workunit_cli.rs",
+                "tests/context_capsule_cli.rs",
+                "tests/interop_conformance.rs",
+                "tests/support/interop_harness.rs",
+            ],
+        ),
+        (
+            cli,
+            &cli_recipe,
+            vec![
+                "tests/cli_contract_enforcement.rs",
+                "tests/entrypoint_correctness.rs",
+                "tests/cli_contracts.rs",
+                "tests/consumer_readiness.rs",
+                "tests/init_ci_scaffolding.rs",
+                "tests/init_config_behavior.rs",
+                "tests/infer_precision.rs",
+                "tests/sqlite_maintenance.rs",
+                "tests/support/fresh_docs_readiness.rs",
+                "tests/support/cli_workunit_recovery.rs",
+                "tests/support/storage_inventory.rs",
+                "tests/support/justfile_inventory.rs",
+                "tests/fixtures/justfile_consumer/src/distance.rs",
+            ],
+        ),
+    ] {
+        for path in changed.into_iter().chain([
+            "tests/common/consumer_readiness_fixture.rs",
+            "BUILD.bazel",
+            ".config/build/decapod.BUILD.bzl",
+        ]) {
+            let changed = paths(&[path]);
+            assert!(
+                selected(check, &changed, false),
+                "missing {} for {path}",
+                check.id
+            );
+            assert_eq!(&commands(check, &changed).unwrap(), expected, "{path}");
+            let required = inventory(&changed, false);
+            assert!(
+                required
+                    .iter()
+                    .any(|job| { job.applicable && job.checks.contains(&check.id) }),
+                "test recipe must be in the required inventory: {path}"
+            );
+            assert!(!selected(check, &changed, true));
+        }
+    }
+    for path in ["docs/agent/README.md", "tests/unrelated_example.rs"] {
+        let changed = paths(&[path]);
+        for check in [core, cli] {
+            assert!(!selected(check, &changed, false), "unrelated input: {path}");
+            assert!(commands(check, &changed).unwrap().is_empty());
+        }
     }
 }

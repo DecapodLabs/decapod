@@ -312,14 +312,21 @@ fn local_command_announces_a_detected_version_transition_once() {
     )
     .expect("seed prior release");
 
-    let first = run_decapod(&root, &["system", "version"], None);
+    // Binary metadata must not migrate project state or consume its notice.
+    let version = run_decapod(&root, &["system", "version"], None);
+    assert!(version.status.success());
+    assert!(!String::from_utf8_lossy(&version.stderr).contains("Decapod migration notice"));
+    let after_version: Value = serde_json::from_slice(&fs::read(&counter_path).unwrap()).unwrap();
+    assert_eq!(after_version["last_seen_version"], "0.96.13");
+
+    let first = run_decapod(&root, &["workspace", "status"], None);
     assert!(first.status.success());
     let first_stderr = String::from_utf8_lossy(&first.stderr);
     assert!(first_stderr.contains("Decapod migration notice"));
     assert!(first_stderr.contains("0.96.13"));
     assert!(first_stderr.contains("applied.json"));
 
-    let second = run_decapod(&root, &["system", "version"], None);
+    let second = run_decapod(&root, &["workspace", "status"], None);
     assert!(second.status.success());
     assert!(!String::from_utf8_lossy(&second.stderr).contains("Decapod migration notice"));
 }
@@ -477,4 +484,232 @@ fn generated_agent_guidance_mentions_trajectory_proof() {
     let agents = std::fs::read_to_string(root.join("AGENTS.md")).expect("read AGENTS.md");
     assert!(agents.contains("govern trajectory init"));
     assert!(agents.contains("no_checks_run"));
+}
+
+#[test]
+fn system_migrations_and_doctor_expose_notice_details_without_consuming_it() {
+    let (_temp, root, _password) = setup_repo();
+    let decapod_root = root.join(".decapod");
+    let counter_path = decapod_root.join("managed/version_counter.json");
+    let applied_path = decapod_root.join("managed/migrations/applied.json");
+
+    // Trigger initial applied/catalog ledger creation once, then rewind counter + remove one applied entry.
+    let prime = run_decapod(&root, &["workspace", "status"], None);
+    assert!(prime.status.success());
+
+    let mut counter: Value =
+        serde_json::from_str(&fs::read_to_string(&counter_path).expect("read counter"))
+            .expect("counter json");
+    counter["last_seen_version"] = Value::String("0.143.2".to_string());
+    fs::write(
+        &counter_path,
+        serde_json::to_string_pretty(&counter).expect("serialize counter"),
+    )
+    .expect("seed prior release");
+
+    let mut applied_json: Value =
+        serde_json::from_str(&fs::read_to_string(&applied_path).expect("read applied"))
+            .expect("applied json");
+    let entries = applied_json["entries"]
+        .as_array_mut()
+        .expect("applied entries array");
+    entries.retain(|entry| entry["id"] != "events.compact_sequence_index.v002");
+    fs::write(
+        &applied_path,
+        serde_json::to_string_pretty(&applied_json).expect("serialize applied"),
+    )
+    .expect("write trimmed applied ledger");
+
+    let counter_snapshot = fs::read(&counter_path).unwrap();
+    let applied_snapshot = fs::read(&applied_path).unwrap();
+
+    // Read-only CLI inspection (no session password) reports details without mutating or consuming notice.
+    let inspect_json_out = run_decapod(&root, &["system", "migrations", "--format", "json"], None);
+    assert!(inspect_json_out.status.success());
+    assert!(inspect_json_out.stderr.is_empty());
+    let inspect = json(&inspect_json_out, "system migrations --format json");
+    assert_eq!(inspect["action_required"], true);
+    assert_eq!(inspect["version_counter"]["last_seen_version"], "0.143.2");
+    assert_eq!(
+        inspect["version_counter"]["version_changed_from_binary"],
+        true
+    );
+    let pending = inspect["pending_migrations"]
+        .as_array()
+        .expect("pending migrations array");
+    assert!(
+        pending
+            .iter()
+            .any(|m| m["id"] == "events.compact_sequence_index.v002")
+    );
+    let reason_codes = inspect["reason_codes"]
+        .as_array()
+        .expect("reason codes array");
+    assert!(
+        reason_codes
+            .iter()
+            .any(|c| c == "VERSION_TRANSITION_PENDING")
+    );
+    assert!(reason_codes.iter().any(|c| c == "MIGRATIONS_PENDING"));
+    assert_eq!(fs::read(&counter_path).unwrap(), counter_snapshot);
+    assert_eq!(fs::read(&applied_path).unwrap(), applied_snapshot);
+
+    let inspect_text_out = run_decapod(&root, &["system", "migrations", "--format", "text"], None);
+    assert!(inspect_text_out.status.success());
+    let text = String::from_utf8_lossy(&inspect_text_out.stdout);
+    assert!(text.contains("action_required=true"));
+    assert!(text.contains("0.143.2"));
+    assert!(text.contains("events.compact_sequence_index.v002"));
+    assert_eq!(fs::read(&counter_path).unwrap(), counter_snapshot);
+    assert_eq!(fs::read(&applied_path).unwrap(), applied_snapshot);
+
+    let doctor_out = run_decapod(
+        &root,
+        &["system", "doctor", "check", "--format", "json"],
+        None,
+    );
+    assert!(doctor_out.status.success());
+    let doctor_json = json(&doctor_out, "system doctor check --format json");
+    let mig_check = doctor_json["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "Migrations")
+        .expect("Migrations check in doctor output");
+    assert_eq!(mig_check["status"], "warn");
+    assert!(
+        mig_check["message"]
+            .as_str()
+            .unwrap()
+            .contains("decapod system migrations --format json")
+    );
+    assert_eq!(fs::read(&counter_path).unwrap(), counter_snapshot);
+    assert_eq!(fs::read(&applied_path).unwrap(), applied_snapshot);
+
+    // First normal command emits the migration notice pointing to the read-only CLI and resolved root.
+    let first = run_decapod(&root, &["workspace", "status"], None);
+    assert!(first.status.success());
+    let first_stderr = String::from_utf8_lossy(&first.stderr);
+    assert!(first_stderr.contains("Decapod migration notice"));
+    assert!(first_stderr.contains("0.143.2"));
+    assert!(first_stderr.contains("events.compact_sequence_index.v002"));
+    assert!(first_stderr.contains("decapod system migrations --format json"));
+    assert!(first_stderr.contains("applied.json"));
+    assert!(first_stderr.contains("catalog.json"));
+
+    // After applying, read-only inspection shows steady state.
+    let after = json(
+        &run_decapod(&root, &["system", "migrations", "--format", "json"], None),
+        "post-migration inspect",
+    );
+    assert_eq!(after["action_required"], false);
+    assert!(after["pending_migrations"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn migration_notice_and_system_migrations_report_main_decapod_root_from_linked_worktree() {
+    let (temp, root, _password) = setup_repo();
+    let decapod_root = root.join(".decapod");
+    let prime = run_decapod(&root, &["workspace", "status"], None);
+    assert!(prime.status.success());
+
+    for git_args in [
+        &["config", "user.email", "test@example.com"][..],
+        &["config", "user.name", "Test User"][..],
+        &["add", "-A"][..],
+        &["commit", "-m", "initial"][..],
+    ] {
+        let out = Command::new("git")
+            .current_dir(&root)
+            .args(git_args)
+            .output()
+            .expect("git setup");
+        assert!(
+            out.status.success(),
+            "git {:?} failed: {}",
+            git_args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    let wt_dir = temp.path().join("linked-worktree");
+    let wt_add = Command::new("git")
+        .current_dir(&root)
+        .args([
+            "worktree",
+            "add",
+            "-b",
+            "agent-wt-test",
+            wt_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("git worktree add");
+    assert!(
+        wt_add.status.success(),
+        "git worktree add failed: {}",
+        String::from_utf8_lossy(&wt_add.stderr)
+    );
+
+    let counter_path = decapod_root.join("managed/version_counter.json");
+    let mut counter: Value =
+        serde_json::from_str(&fs::read_to_string(&counter_path).expect("read counter"))
+            .expect("counter json");
+    counter["last_seen_version"] = Value::String("0.143.2".to_string());
+    fs::write(
+        &counter_path,
+        serde_json::to_string_pretty(&counter).expect("serialize counter"),
+    )
+    .expect("seed prior release");
+
+    let wt_inspect = json(
+        &run_decapod(&wt_dir, &["system", "migrations", "--format", "json"], None),
+        "worktree system migrations",
+    );
+    assert_eq!(wt_inspect["action_required"], true);
+    assert_eq!(wt_inspect["differs_from_workspace_decapod"], true);
+    assert_eq!(
+        fs::canonicalize(wt_inspect["decapod_root"].as_str().unwrap()).unwrap(),
+        fs::canonicalize(&decapod_root).unwrap()
+    );
+    assert_eq!(
+        fs::canonicalize(wt_inspect["governance_root"].as_str().unwrap()).unwrap(),
+        fs::canonicalize(&root).unwrap()
+    );
+    assert_eq!(
+        fs::canonicalize(wt_inspect["workspace_root"].as_str().unwrap()).unwrap(),
+        fs::canonicalize(&wt_dir).unwrap()
+    );
+    assert!(!wt_dir.join(".decapod/managed/migrations").exists());
+
+    // Counter must still be pending for the first normal command from the worktree.
+    let counter_after_inspect: Value =
+        serde_json::from_slice(&fs::read(&counter_path).unwrap()).unwrap();
+    assert_eq!(counter_after_inspect["last_seen_version"], "0.143.2");
+
+    let wt_doctor = json(
+        &run_decapod(
+            &wt_dir,
+            &["system", "doctor", "check", "--format", "json"],
+            None,
+        ),
+        "worktree doctor check",
+    );
+    assert_eq!(wt_doctor["failed"], 0);
+    let checks = wt_doctor["checks"].as_array().unwrap();
+    assert_eq!(
+        checks.iter().find(|c| c["name"] == ".decapod").unwrap()["status"],
+        "pass"
+    );
+    assert_eq!(
+        checks.iter().find(|c| c["name"] == "Migrations").unwrap()["status"],
+        "warn"
+    );
+
+    let wt_status = run_decapod(&wt_dir, &["workspace", "status"], None);
+    assert!(wt_status.status.success());
+    let wt_stderr = String::from_utf8_lossy(&wt_status.stderr);
+    let canonical_decapod_root = fs::canonicalize(&decapod_root).unwrap();
+    assert!(wt_stderr.contains("Decapod migration notice"));
+    assert!(wt_stderr.contains("decapod system migrations --format json"));
+    assert!(wt_stderr.contains(&canonical_decapod_root.display().to_string()));
 }

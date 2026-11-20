@@ -144,7 +144,60 @@ fi
     )
     .unwrap();
     std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o700)).unwrap();
+    await_lifecycle_fixture(&script);
     script.to_string_lossy().into_owned()
+}
+
+#[cfg(unix)]
+fn await_lifecycle_fixture(script: &std::path::Path) {
+    // A concurrent fork can briefly inherit the fixture's write descriptor
+    // before exec closes it. Linux refuses to execute that inode with ETXTBSY
+    // until every writer closes. Probe the side-effect-free listing once;
+    // successful exec proves there are no remaining writers of this fixture.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+    loop {
+        match Command::new(script).args(["container", "ls"]).output() {
+            Ok(output) => {
+                assert!(
+                    output.status.success(),
+                    "fixture listing failed: {output:?}"
+                );
+                return;
+            }
+            Err(error)
+                if error.raw_os_error() == Some(libc::ETXTBSY)
+                    && std::time::Instant::now() < deadline =>
+            {
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+            Err(error) => panic!("fixture runtime could not execute: {error}"),
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn lifecycle_fixture_waits_for_an_inherited_writer_to_close() {
+    use std::os::unix::fs::PermissionsExt;
+    let temp = tempfile::tempdir().unwrap();
+    let script = temp.path().join("runtime");
+    std::fs::write(&script, "#!/bin/sh\nexit 0\n").unwrap();
+    std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o700)).unwrap();
+    let writer = std::fs::OpenOptions::new()
+        .write(true)
+        .open(&script)
+        .unwrap();
+    // Establish the actual kernel refusal, not a simulated error classifier.
+    assert_eq!(
+        Command::new(&script).output().unwrap_err().raw_os_error(),
+        Some(libc::ETXTBSY)
+    );
+    let release = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(30));
+        drop(writer);
+    });
+    await_lifecycle_fixture(&script);
+    release.join().unwrap();
 }
 
 #[cfg(unix)]

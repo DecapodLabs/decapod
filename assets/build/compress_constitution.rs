@@ -1,15 +1,18 @@
 use flate2::{Compression, write::GzEncoder};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env;
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 
+// Every map here is a BTreeMap, not a HashMap. serde writes these maps into the
+// JSON that the binary embeds, and HashMap iteration order changes from build to
+// build, so identical inputs would give different binaries (#1176).
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct ConstitutionGraph {
-    nodes: HashMap<String, ConstitutionNode>,
+    nodes: BTreeMap<String, ConstitutionNode>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -27,9 +30,9 @@ struct ConstitutionNode {
     #[serde(default)]
     links: ConstitutionLinks,
     #[serde(default)]
-    sections: std::collections::HashMap<String, Vec<String>>,
+    sections: BTreeMap<String, Vec<String>>,
     #[serde(flatten)]
-    extra: HashMap<String, Value>,
+    extra: BTreeMap<String, Value>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -96,11 +99,11 @@ fn ingest_docs_recursive(
                     summary: String::new(),
                     terms: vec![],
                     sections: {
-                        let mut map = std::collections::HashMap::new();
+                        let mut map = BTreeMap::new();
                         map.insert("concepts".to_string(), vec![content]);
                         map
                     },
-                    extra: HashMap::new(),
+                    extra: BTreeMap::new(),
                 },
             );
         }

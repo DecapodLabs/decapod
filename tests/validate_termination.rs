@@ -268,7 +268,7 @@ fn validate_terminates_with_typed_error_under_db_contention() {
     let start = Instant::now();
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -341,7 +341,7 @@ fn validate_terminates_with_typed_error_under_immediate_lock_contention() {
     let start = Instant::now();
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -380,7 +380,7 @@ fn validate_timeout_does_not_strand_db_for_followup_commands() {
 
     let validate = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -597,16 +597,13 @@ fn validate_json_reports_self_heal_and_structured_summary() {
         !stale_validate.status.success(),
         "changed Dockerfile material cannot reuse the previous validation epoch"
     );
-    // Public full validation does not write methodology receipts. An earlier
-    // prerequisite receipt cannot satisfy the missing current readiness profile.
-    let public_refusal: Value =
-        serde_json::from_slice(&stale_validate.stdout).expect("public readiness refusal JSON");
-    assert_eq!(public_refusal["scope"], "publication_readiness");
-    assert_eq!(public_refusal["publication_ready"], false);
-    assert_eq!(public_refusal["readiness"]["ready"], false);
+    // Full readiness rejects the diagnostic override before it can inspect or
+    // rewrite an old prerequisite receipt. Staleness is exercised below through
+    // the explicit prerequisite interface; neither result grants publication.
+    let public_refusal = String::from_utf8_lossy(&stale_validate.stderr);
     assert!(
-        String::from_utf8_lossy(&stale_validate.stdout).contains("READINESS_PROFILE_REQUIRED"),
-        "expected full-proof refusal, got: {public_refusal}"
+        public_refusal.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
+        "expected early full-readiness override refusal, got: {public_refusal}"
     );
     assert_eq!(
         fs::read(&governance_path).expect("preserved governance"),
@@ -927,7 +924,7 @@ fn validate_parallel_contention_emits_typed_reasoned_diagnostics() {
     for _ in 0..4 {
         outputs.push(run_decapod(
             &dir,
-            &["validate"],
+            &["govern", "project-check"],
             &[
                 ("DECAPOD_AGENT_ID", "unknown"),
                 ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1011,7 +1008,7 @@ fn validate_diagnostics_disabled_does_not_write_artifacts() {
 
     let output = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1072,7 +1069,7 @@ fn validate_diagnostics_payload_is_sanitized() {
 
     let output = run_decapod(
         &dir,
-        &["validate"],
+        &["govern", "project-check"],
         &[
             ("DECAPOD_AGENT_ID", "unknown"),
             ("DECAPOD_SESSION_PASSWORD", &password),
@@ -1150,7 +1147,22 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
     // Time the bounded project prerequisite stage; full CI has its own execution budget.
     // This prerequisite result is not full publication-readiness proof.
 
-    let (_tmp, dir, password) = setup_repo();
+    let (_tmp, dir, _) = setup_repo();
+    // Unknown agents are deliberately re-enrolled on every command. Measure
+    // repeat validation with an established identity, rather than charging the
+    // enrollment funnel to every iteration of this steady-state runtime bound.
+    let agent = "validation-runtime-smoke";
+    let acquire = run_decapod(
+        &dir,
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", agent)],
+    );
+    assert!(acquire.status.success(), "establish smoke session");
+    let password = String::from_utf8_lossy(&acquire.stdout)
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: ").map(str::trim))
+        .expect("smoke session password")
+        .to_owned();
     let mut durations_ms = Vec::new();
 
     for iteration in 1..=3 {
@@ -1159,7 +1171,7 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
             &dir,
             &["govern", "project-check", "--format", "json"],
             &[
-                ("DECAPOD_AGENT_ID", "unknown"),
+                ("DECAPOD_AGENT_ID", agent),
                 ("DECAPOD_SESSION_PASSWORD", &password),
                 ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
                 ("DECAPOD_VALIDATE_TIMEOUT_SECS", "10"),
@@ -1169,6 +1181,10 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         durations_ms.push(elapsed);
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
+        assert!(
+            !stderr.contains("session: auto-acquired"),
+            "steady-state probe must reuse its established session: {stderr}"
+        );
         if let Ok(payload) = serde_json::from_slice::<Value>(&output.stdout) {
             let report = &payload["report"];
             eprintln!(

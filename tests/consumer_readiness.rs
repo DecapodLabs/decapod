@@ -1,376 +1,250 @@
-//! Consumer readiness is exercised through the public runtime and its real
-//! repository/native adapters. Only the accepted-target transport is replaced
-//! with an independently read local Git upstream; no execution receipt is faked.
+//! Real consumer runtime contracts. Shared support contains no test cases.
 #![cfg(any(target_os = "linux", target_os = "macos"))]
 
 use decapod::core::bounded_process::{BoundedCommand, Cancellation};
-use decapod::core::native_proof::ReviewedCapabilities;
-use decapod::core::proof::{ProjectProofConfig, ProofDef};
-use decapod::core::readiness_evidence::{
-    Conclusion, ExpectedPlan, MaterialIdentity, Observation, Provider, SuiteEvidence,
-};
-use decapod::core::readiness_profile::{self, ProfileDeclaration, ProjectPrerequisites};
-use decapod::core::repository_profile::{
-    self, RepositoryContract, RepositoryExecution, SourceCoverage,
-};
-use decapod::core::validation_runtime::{
-    self as runtime, Blocker, CurrentProject, ExecutedSuite, ExecutionSelection, Host,
-    NativeAction, Options, RuntimeBudget, ValidationReport,
-};
-use std::collections::BTreeMap;
+use decapod::core::readiness_evidence::{Conclusion, Observation, Provider, SuiteEvidence};
+use decapod::core::readiness_profile;
+use decapod::core::repository_profile;
+use decapod::core::validation_runtime::{self as runtime, ValidationReport};
 use std::fs;
-use std::io;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::Duration;
 
-const CONFIG: &str = ".decapod/config.toml";
-const WORKFLOW: &str = ".github/workflows/decapod-validate.yml";
+#[path = "common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
+use consumer_readiness_fixture::{Fixture, LocalHost, WORKFLOW, git};
 
-fn git(root: &Path, args: &[&str]) -> String {
-    let output = Command::new("/usr/bin/git")
-        .current_dir(root)
-        .args(args)
-        .env("GIT_CONFIG_NOSYSTEM", "1")
-        .env("GIT_CONFIG_GLOBAL", "/dev/null")
-        .env("GIT_AUTHOR_NAME", "Consumer Readiness Test")
-        .env("GIT_COMMITTER_NAME", "Consumer Readiness Test")
-        .env("GIT_AUTHOR_EMAIL", "consumer@example.invalid")
-        .env("GIT_COMMITTER_EMAIL", "consumer@example.invalid")
-        .bounded_output(Duration::from_secs(10))
-        .unwrap();
-    assert!(
-        output.status.success(),
-        "git {args:?}: {}",
-        String::from_utf8_lossy(&output.stderr)
+#[test]
+fn admitted_cli_source_file_pass_cannot_mint_verified_workunit() {
+    use consumer_readiness_fixture::{CONFIG, governed_command};
+    use std::{path::Path, time::Duration};
+
+    let fixture = Fixture::new();
+    let storage = fixture._storage.path();
+    let root = &fixture.options.root;
+    fs::create_dir(storage.join("home")).unwrap();
+    git(root, &["checkout", "-B", "main"]);
+    // Use the same genuine first-adoption path as fresh_docs_readiness.
+    fs::remove_file(root.join(CONFIG)).unwrap();
+    let run = |at: &Path, args: &[&str]| {
+        governed_command(at, storage, args)
+            .bounded_output(Duration::from_secs(30))
+            .unwrap()
+    };
+    let ok = |at: &Path, args: &[&str]| {
+        let output = run(at, args);
+        assert!(
+            output.status.success(),
+            "{args:?}: stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        serde_json::from_slice::<serde_json::Value>(&output.stdout)
+            .unwrap_or(serde_json::Value::Null)
+    };
+    ok(
+        root,
+        &[
+            "init",
+            "--force",
+            "--backend",
+            "local",
+            "--no-container-workspaces",
+        ],
     );
-    String::from_utf8(output.stdout).unwrap().trim().into()
-}
-
-fn python_runtime() -> (String, BTreeMap<String, String>) {
-    let program = ["/usr/bin/python3", "/usr/local/bin/python3"]
-        .into_iter()
-        .find_map(|path| Path::new(path).canonicalize().ok())
-        .expect("consumer execution regression requires installed Python 3");
-    // Measure real installed runtime files, not synthetic success executables.
-    // The declaration is explicit; these tests make no inferred-closure claim.
-    let output = Command::new(&program)
-        .args([
-            "-I",
-            "-S",
-            "-B",
-            "-c",
-            "import os, encodings, encodings.utf_8; print(os.path.realpath(os.__file__)); print(os.path.realpath(encodings.__file__)); print(os.path.realpath(encodings.utf_8.__file__))",
-        ])
-        .bounded_output(Duration::from_secs(10))
+    git(root, &["add", "-A"]);
+    git(
+        root,
+        &["commit", "-m", "test: accept isolated workunit fixture"],
+    );
+    git(root, &["push", "origin", "main"]);
+    // Match the existing CLI fixture's supported repository identity. No forge
+    // operation or remote execution is performed by this negative control.
+    git(
+        root,
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/consumer/project.git",
+        ],
+    );
+    let task = ok(
+        root,
+        &[
+            "todo",
+            "add",
+            "test: reject counterfeit workunit proof",
+            "--format",
+            "json",
+        ],
+    );
+    let id = task["id"].as_str().unwrap();
+    ok(root, &["todo", "claim", "--id", id]);
+    let branch = format!("agent/docs-bootstrap/{id}-counterfeit");
+    let workspace = ok(root, &["workspace", "ensure", "--branch", &branch]);
+    let workspace = std::path::PathBuf::from(workspace["worktree_path"].as_str().unwrap());
+    ok(&workspace, &["infer", "orientation", "--task-id", id]);
+    ok(&workspace, &["govern", "plan", "approve"]);
+    let ready = ok(
+        &workspace,
+        &["govern", "plan", "check-execute", "--todo-id", id],
+    );
+    assert_eq!(ready["marker"], "EXECUTION_READY");
+    let governance = ok(&workspace, &["govern", "artifacts", "status"]);
+    let intent = governance["sections"]["trajectory"]["intent_id"]
+        .as_str()
         .unwrap();
-    assert!(output.status.success(), "{output:?}");
-    let closure = String::from_utf8(output.stdout)
-        .unwrap()
-        .lines()
-        .enumerate()
-        .map(|(index, path)| {
-            assert!(
-                Path::new(path).is_file(),
-                "missing Python runtime file: {path}"
-            );
-            (format!("python-runtime-{index}"), path.to_owned())
-        })
-        .collect();
-    (program.to_string_lossy().into_owned(), closure)
-}
-
-struct Fixture {
-    _storage: tempfile::TempDir,
-    upstream: PathBuf,
-    options: Options,
-    proof: ProjectProofConfig,
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "init",
+            "--task-id",
+            id,
+            "--intent-ref",
+            intent,
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "attach-spec",
+            "--task-id",
+            id,
+            "--ref",
+            ".decapod/managed/specs/INTENT.md",
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "capsule",
+            "query",
+            "--topic",
+            "canonical observed workunit proof",
+            "--scope",
+            "interfaces",
+            "--task-id",
+            id,
+            "--workunit-id",
+            id,
+            "--write",
+        ],
+    );
+    let capsule_ref = format!(".decapod/managed/context/{id}.json");
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "attach-state",
+            "--task-id",
+            id,
+            "--ref",
+            &capsule_ref,
+        ],
+    );
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "set-proof-plan",
+            "--task-id",
+            id,
+            "--gate",
+            "validate_passes",
+        ],
+    );
+    let checkpoint = ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "checkpoint",
+            "--task-id",
+            id,
+            "--operation-id",
+            "counterfeit-current",
+        ],
+    );
+    assert_eq!(checkpoint["resumable"], true);
+    for status in ["executing", "claimed"] {
+        ok(
+            &workspace,
+            &[
+                "govern",
+                "workunit",
+                "transition",
+                "--task-id",
+                id,
+                "--to",
+                status,
+            ],
+        );
+    }
+    // A real file passes the artifact-integrity check. It is still only an
+    // agent declaration, so test the canonical producer gate beyond that check.
+    ok(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "record-proof",
+            "--task-id",
+            id,
+            "--gate",
+            "validate_passes",
+            "--status",
+            "pass",
+            "--artifact",
+            ".decapod/managed/specs/INTENT.md",
+        ],
+    );
+    let before = ok(
+        &workspace,
+        &["govern", "workunit", "journal-status", "--task-id", id],
+    );
+    let denied = run(
+        &workspace,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            id,
+            "--to",
+            "verified",
+        ],
+    );
+    assert!(!denied.status.success());
+    let diagnostic = String::from_utf8_lossy(&denied.stderr);
+    assert!(diagnostic.contains("VALIDATION_HISTORY"), "{diagnostic}");
+    assert!(
+        diagnostic.contains("no canonical full validation proof"),
+        "{diagnostic}"
+    );
+    let manifest = ok(&workspace, &["govern", "workunit", "get", "--task-id", id]);
+    assert_eq!(manifest["status"], "CLAIMED");
+    assert_eq!(manifest["proof_results"][0]["status"], "pass");
+    assert!(manifest.get("validation_record").is_none());
+    let after = ok(
+        &workspace,
+        &["govern", "workunit", "journal-status", "--task-id", id],
+    );
+    assert_eq!(before["generation"], after["generation"]);
+    assert_eq!(after["projection_state"], "current");
 }
 
 impl Fixture {
-    fn new() -> Self {
-        Self::with_accepted_config(None)
-    }
-
     fn with_accepted_profile(id: &str) -> Self {
         Self::with_accepted_config(Some(&format!(
             "[proof.required_profile]\nid = {id:?}\nreviewed_sources_digest = {:?}\n",
             format!("sha256:{}", "0".repeat(64)),
         )))
-    }
-
-    fn with_accepted_config(accepted_config: Option<&str>) -> Self {
-        let storage = tempfile::tempdir().unwrap();
-        let root = storage.path().join("consumer");
-        let upstream = storage.path().join("upstream.git");
-        let evidence = storage.path().join("evidence");
-        fs::create_dir_all(root.join(".decapod")).unwrap();
-        fs::create_dir_all(root.join(".github/workflows")).unwrap();
-        fs::create_dir(root.join("scripts")).unwrap();
-        fs::create_dir(&evidence).unwrap();
-        fs::create_dir(&upstream).unwrap();
-        fs::write(root.join("payload.txt"), "ready\n").unwrap();
-        fs::write(root.join("second.txt"), "also ready\n").unwrap();
-        fs::write(
-            root.join("Justfile"),
-            "check:\n    python3 -B scripts/check_source.py\n",
-        )
-        .unwrap();
-        fs::write(
-            root.join(WORKFLOW),
-            "name: Governed consumer\non: [pull_request]\njobs:\n  validate:\n    runs-on: ubuntu-latest\n    steps:\n      - run: decapod validate\n",
-        )
-        .unwrap();
-        fs::write(
-            root.join("scripts/check_source.py"),
-            "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nassert os.getcwd() != os.environ['FIXTURE_WORKTREE'], 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
-        )
-        .unwrap();
-        fs::write(root.join(".decapod/governance.json"), "{\"sections\":{}}\n").unwrap();
-        // Model first adoption: the accepted target can predate Decapod config.
-        if let Some(config) = accepted_config {
-            fs::write(root.join(CONFIG), config).unwrap();
-        }
-        git(&root, &["init", "-b", "main"]);
-        git(&root, &["add", "."]);
-        git(&root, &["commit", "-m", "accepted consumer source"]);
-        git(&upstream, &["init", "--bare"]);
-        git(
-            &root,
-            &["remote", "add", "origin", upstream.to_str().unwrap()],
-        );
-        git(&root, &["push", "origin", "main"]);
-        git(&root, &["checkout", "-b", "consumer-work"]);
-        let options = Options {
-            root: root.canonicalize().unwrap(),
-            git: Path::new("/usr/bin/git").canonicalize().unwrap(),
-            repository: "consumer/project".into(),
-            base_branch: "main".into(),
-            accepted_base_ref: "refs/remotes/origin/main".into(),
-            evidence_parent: evidence,
-            timeout: Duration::from_secs(60),
-            max_input_bytes: 64 * 1024 * 1024,
-            max_files: 10_000,
-            max_output_bytes: 1024 * 1024,
-        };
-        let (program, toolchain_files) = python_runtime();
-        let mut commands = vec![
-            ProofDef {
-                name: "inspect-source".into(),
-                command: program.clone(),
-                args: ["-I", "-S", "-B", "scripts/check_source.py"]
-                    .map(str::to_owned).into(),
-                description: "Read actual committed consumer source".into(),
-                required: true,
-            },
-            ProofDef {
-                name: "inspect-second".into(),
-                command: program.clone(),
-                args: ["-I", "-S", "-B", "-c", "assert open('second.txt').read() == 'also ready\\n'; print('second-source-inspected')"]
-                    .map(str::to_owned).into(),
-                description: "A second independent required source assertion".into(),
-                required: true,
-            },
-        ];
-        // Public project checks require canonical proof-name ordering too.
-        commands.sort_by(|left, right| left.name.cmp(&right.name));
-        let execution = RepositoryExecution {
-            program,
-            toolchain_files,
-            environment: BTreeMap::from([(
-                "FIXTURE_WORKTREE".into(),
-                options.root.to_string_lossy().into_owned(),
-            )]),
-            directory: ".".into(),
-            timeout_seconds: 10,
-        };
-        let mut contract = RepositoryContract {
-            reviewed_commands_digest: String::new(),
-            source_coverage: vec![SourceCoverage {
-                source: WORKFLOW.into(),
-                commands: commands
-                    .iter()
-                    .map(|command| command.name.clone())
-                    .collect(),
-                ci_only: false,
-                reason: None,
-            }],
-            executions: commands
-                .iter()
-                .map(|command| (command.name.clone(), execution.clone()))
-                .collect(),
-        };
-        contract.reviewed_commands_digest =
-            repository_profile::command_contract_digest(&commands, &contract).unwrap();
-        let sources =
-            runtime::discover_source_inventory(&options, &Cancellation::default()).unwrap();
-        let proof = ProjectProofConfig {
-            validation_buildkite_preflights: false,
-            required_profile: Some(ProfileDeclaration {
-                id: repository_profile::REQUIRED_PROFILE.into(),
-                reviewed_sources_digest: sources.digest().unwrap(),
-            }),
-            repository_contract: Some(contract),
-            rust_workers: None,
-            ci_attested: None,
-            commands,
-        };
-        let fixture = Self {
-            _storage: storage,
-            upstream,
-            options,
-            proof,
-        };
-        fixture.save_config();
-        fixture.commit("declare reviewed local consumer contract");
-        fixture
-    }
-
-    fn save_config(&self) {
-        let config = toml::Value::try_from(serde_json::json!({"proof": self.proof})).unwrap();
-        fs::write(
-            self.options.root.join(CONFIG),
-            toml::to_string_pretty(&config).unwrap(),
-        )
-        .unwrap();
-    }
-
-    fn review_commands(&mut self) {
-        let contract = self.proof.repository_contract.as_mut().unwrap();
-        contract.reviewed_commands_digest =
-            repository_profile::command_contract_digest(&self.proof.commands, contract).unwrap();
-    }
-
-    fn commit(&self, message: &str) {
-        git(&self.options.root, &["add", "."]);
-        git(&self.options.root, &["commit", "-m", message]);
-    }
-
-    fn host(&self) -> LocalHost {
-        LocalHost::new(self, false)
-    }
-
-    fn validate(&self, host: &mut LocalHost) -> ValidationReport {
-        runtime::validate(&self.options, host, &Cancellation::default())
-    }
-}
-
-struct LocalHost {
-    upstream: PathBuf,
-    root: PathBuf,
-    runner: runtime::repository_host::RepositoryHost<'static>,
-    selections: usize,
-    execution_attempts: usize,
-    change_source_after_selection: bool,
-    move_target_after_execution: bool,
-    change_config_after_execution: bool,
-    force_strict_capability: bool,
-}
-
-impl LocalHost {
-    fn new(fixture: &Fixture, deny_execution: bool) -> Self {
-        let store = fixture.options.root.join(".decapod/data");
-        let runner = runtime::repository_host::RepositoryHost::new(
-            fixture.options.clone(),
-            "https://github.com/consumer/project.git".into(),
-            |_| Ok(ProjectPrerequisites::Passed),
-            move |action| {
-                let NativeAction::RepositoryCheck { invocation, seal } = action else {
-                    panic!("repository execution must use the sealed authorization path");
-                };
-                if deny_execution {
-                    Err(io::Error::new(
-                        io::ErrorKind::PermissionDenied,
-                        "fixture denied proof execution",
-                    ))
-                } else {
-                    decapod::core::external_action::authorize_repository_proof(
-                        &store, invocation, seal,
-                    )
-                    .map_err(io::Error::other)
-                }
-            },
-        )
-        .unwrap();
-        Self {
-            upstream: fixture.upstream.clone(),
-            root: fixture.options.root.clone(),
-            runner,
-            selections: 0,
-            execution_attempts: 0,
-            change_source_after_selection: false,
-            move_target_after_execution: false,
-            change_config_after_execution: false,
-            force_strict_capability: false,
-        }
-    }
-}
-
-impl Host for LocalHost {
-    fn project_check(&mut self, _: &RuntimeBudget<'_>) -> io::Result<ProjectPrerequisites> {
-        Ok(ProjectPrerequisites::Passed)
-    }
-
-    fn accepted_target(
-        &mut self,
-        repository: &str,
-        branch: &str,
-        _: &RuntimeBudget<'_>,
-    ) -> io::Result<String> {
-        assert_eq!(repository, "consumer/project");
-        assert_eq!(branch, "main");
-        // Read the upstream repository afresh, not the candidate tracking ref.
-        Ok(git(&self.upstream, &["rev-parse", "refs/heads/main"]))
-    }
-
-    fn select(
-        &mut self,
-        project: &CurrentProject,
-        budget: &RuntimeBudget<'_>,
-    ) -> Result<ExecutionSelection, Vec<Blocker>> {
-        self.selections += 1;
-        let mut selection = self.runner.select(project, budget)?;
-        if self.force_strict_capability {
-            for (key, invocation) in &mut selection.native_invocations {
-                invocation.capabilities = ReviewedCapabilities::LocalCheckWithOwnedScratch;
-                selection.bindings.get_mut(key).unwrap().invocation_digest =
-                    invocation.digest().unwrap();
-            }
-        }
-        if self.change_source_after_selection {
-            fs::write(self.root.join("payload.txt"), "changed during selection\n").unwrap();
-        }
-        Ok(selection)
-    }
-
-    fn execute(
-        &mut self,
-        project: &CurrentProject,
-        selection: &ExecutionSelection,
-        plan: &ExpectedPlan,
-        identity: &MaterialIdentity,
-        directory: &Path,
-        budget: &RuntimeBudget<'_>,
-    ) -> io::Result<ExecutedSuite> {
-        self.execution_attempts += 1;
-        // This one negative case targets the legacy runner capability directly;
-        // production host seals correctly reject invocation mutation even earlier.
-        let result = if self.force_strict_capability {
-            runtime::execute_native(project, selection, plan, identity, directory, budget)?
-        } else {
-            self.runner
-                .execute(project, selection, plan, identity, directory, budget)?
-        };
-        if self.move_target_after_execution {
-            git(&self.root, &["push", "origin", "HEAD:refs/heads/main"]);
-        }
-        if self.change_config_after_execution {
-            let path = self.root.join(CONFIG);
-            let mut bytes = fs::read(&path)?;
-            bytes.extend_from_slice(b"\n# configuration changed after successful execution\n");
-            fs::write(path, bytes)?;
-        }
-        Ok(result)
     }
 }
 
@@ -384,6 +258,57 @@ fn blocked(report: &ValidationReport, expected: &str) {
             .any(|blocker| blocker.detail.contains(expected) || blocker.code.contains(expected)),
         "expected {expected}: {report:?}"
     );
+}
+
+#[test]
+fn diagnostic_overrides_cannot_establish_full_runtime_readiness() {
+    const PROBE: &str = "DECAPOD_TEST_READINESS_OVERRIDE_PROBE";
+    if let Ok(expected) = std::env::var(PROBE) {
+        let fixture = Fixture::new();
+        let mut host = fixture.host();
+        let report = fixture.validate(&mut host);
+        if expected == "allow" {
+            assert!(report.ready, "{report:?}");
+            assert!(report.proof_ready);
+            assert_eq!(host.execution_attempts, 1);
+        } else {
+            blocked(&report, "READINESS_GATE_OVERRIDE_UNSUPPORTED");
+            assert!(!report.proof_ready);
+            assert!(report.evidence_path.is_none());
+            assert_eq!(host.selections, 0);
+            assert_eq!(host.execution_attempts, 0);
+        }
+        return;
+    }
+    let prefix = module_path!()
+        .split_once("::")
+        .map(|(_, path)| format!("{path}::"))
+        .unwrap_or_default();
+    let case = format!("{prefix}diagnostic_overrides_cannot_establish_full_runtime_readiness");
+    for (name, value, expected) in [
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "0", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "false", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "true", "deny"),
+        ("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES", "false", "allow"),
+    ] {
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", &case, "--nocapture"])
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_TOOLING_GATES")
+            .env_remove("DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES")
+            .env(PROBE, expected)
+            .env(name, value)
+            .bounded_output(std::time::Duration::from_secs(120))
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{name}={value:?}: stdout={} stderr={}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert!(String::from_utf8_lossy(&output.stdout).contains("1 passed"));
+    }
 }
 
 #[test]
@@ -490,10 +415,31 @@ fn fresh_non_cargo_consumer_executes_every_required_source_check_in_snapshot() {
 }
 
 #[test]
-fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
+fn governed_intent_survives_source_failure_repair_and_native_proof() {
     let fixture = Fixture::new();
     fs::write(fixture.options.root.join("payload.txt"), "broken\n").unwrap();
+    // Use Decapod's real intent custody, not a synthetic receipt or an agent's
+    // completion claim. The source adapter below executes the actual checks.
+    let intent = "Repair the consumer source while preserving both required checks";
+    decapod::core::trajectory::init_trajectory(
+        &fixture.options.root,
+        decapod::core::trajectory::TrajectoryInit {
+            run_id: "consumer_repair".into(),
+            task_id: Some("consumer_source_repair".into()),
+            intent_id: None,
+            original_intent: intent.into(),
+            derived_intent: "Restore payload.txt and collect fresh source-bound proof".into(),
+            active_boundaries: vec!["payload.txt".into()],
+            repo_scope: vec!["payload.txt".into()],
+            destination: Some("validated source repair with an inspectable receipt".into()),
+            current_phase: Some("execution".into()),
+            next_transitions: vec!["validation".into()],
+            blockers: vec![],
+        },
+    )
+    .unwrap();
     fixture.commit("introduce source defect");
+    let failed_head = git(&fixture.options.root, &["rev-parse", "HEAD"]);
     let mut host = fixture.host();
     let failed = fixture.validate(&mut host);
     assert!(!failed.ready, "{failed:?}");
@@ -507,8 +453,21 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
             .join("completion/native-readiness-receipt.json")
             .exists()
     );
+    assert!(!failed_path.join("completion/verdict.json").exists());
+    assert!(!failed_path.join("historical-proof.json").exists());
     let evidence: SuiteEvidence =
         serde_json::from_slice(&fs::read(failed_path.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(
+        evidence.results.len(),
+        2,
+        "every reviewed command must execute"
+    );
+    assert!(
+        evidence
+            .results
+            .iter()
+            .all(|result| matches!(result.observation, Observation::Executed { .. }))
+    );
     let executed: Vec<_> = evidence
         .results
         .iter()
@@ -532,10 +491,64 @@ fn real_source_failure_is_not_ready_and_committed_repair_runs_new_proof() {
         "{failed:?}: {stderr}"
     );
     fs::write(fixture.options.root.join("payload.txt"), "ready\n").unwrap();
+    decapod::core::trajectory::record_trajectory(
+        &fixture.options.root,
+        "consumer_repair",
+        decapod::core::trajectory::TrajectoryUpdate {
+            modified_files: vec!["payload.txt".into()],
+            current_phase: Some("validation".into()),
+            tool_calls: vec!["repair payload.txt after the required source check failed".into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
     fixture.commit("repair actual source defect");
+    assert_ne!(
+        git(&fixture.options.root, &["rev-parse", "HEAD"]),
+        failed_head
+    );
     let repaired = fixture.validate(&mut fixture.host());
     assert!(repaired.ready, "{repaired:?}");
     assert_ne!(failed.evidence_path, repaired.evidence_path);
+    let directory = repaired.evidence_path.unwrap();
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(directory.join("completion/native-readiness-receipt.json")).unwrap(),
+    )
+    .unwrap();
+    let governance = fs::read(fixture.options.root.join(".decapod/governance.json")).unwrap();
+    let document: serde_json::Value = serde_json::from_slice(&governance).unwrap();
+    let trajectory =
+        decapod::core::trajectory::load_trajectory(&fixture.options.root, "consumer_repair")
+            .unwrap();
+    assert_eq!(trajectory.original_intent, intent);
+    assert_eq!(
+        trajectory.task_id.as_deref(),
+        Some("consumer_source_repair")
+    );
+    assert_eq!(trajectory.modified_files, ["payload.txt"]);
+    assert_eq!(receipt["status"], "ok");
+    assert_eq!(receipt["scope"], "repository_local_readiness");
+    assert_eq!(
+        receipt["material"]["head_revision"],
+        git(&fixture.options.root, &["rev-parse", "HEAD"])
+    );
+    use sha2::{Digest, Sha256};
+    assert_eq!(
+        receipt["governance_digest"],
+        format!("sha256:{:x}", Sha256::digest(&governance))
+    );
+    assert_eq!(
+        receipt["trajectory_digest"],
+        decapod::core::readiness_evidence::digest(&document["sections"]["trajectory"]).unwrap()
+    );
+    assert!(!directory.starts_with(&fixture.options.root));
+    for artifact in [
+        "completion/native-readiness-receipt.json",
+        "completion/verdict.json",
+        "historical-proof.json",
+    ] {
+        assert!(directory.join(artifact).is_file(), "{artifact}");
+    }
 }
 
 #[test]
@@ -695,6 +708,258 @@ fn accepted_strict_profile_cannot_be_downgraded_by_candidate_local_contract() {
 }
 
 #[test]
+fn candidate_repinning_cannot_replace_an_accepted_required_local_check() {
+    let mut fixture = Fixture::new();
+    // Establish the reviewed local contract on the independently observed base.
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    fs::write(fixture.options.root.join("second.txt"), "invalid source\n").unwrap();
+    let command = fixture
+        .proof
+        .commands
+        .iter_mut()
+        .find(|command| command.name == "inspect-second")
+        .unwrap();
+    command.args = [
+        "-I",
+        "-S",
+        "-B",
+        "-c",
+        "print('claimed success without inspection')",
+    ]
+    .map(str::to_owned)
+    .into();
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("replace accepted check and repin its claimed review");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+}
+
+/// Registered explicitly by the required CLI target so selection includes it.
+pub fn candidate_cannot_repin_a_rewritten_accepted_check_script() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    fs::write(fixture.options.root.join("payload.txt"), "invalid source\n").unwrap();
+    fs::write(
+        fixture.options.root.join("scripts/check_source.py"),
+        "print('claimed success without inspecting the invalid source')\n",
+    )
+    .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("repin rewritten accepted check with unchanged command");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+}
+
+#[test]
+fn local_source_policy_can_change_after_separate_target_acceptance() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let script = fixture.options.root.join("scripts/check_source.py");
+    let original = fs::read_to_string(&script).unwrap();
+    fs::write(
+        script,
+        format!("# Reviewed target policy revision\n{original}"),
+    )
+    .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture.save_config();
+    fixture.commit("separately accept the changed source verification policy");
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
+fn repinned_local_policy_removal_execution_and_coverage_changes_fail_before_selection() {
+    for change in [
+        "remove",
+        "program",
+        "directory",
+        "environment",
+        "toolchain",
+        "timeout",
+        "coverage",
+        "ci-only",
+    ] {
+        let mut fixture = Fixture::new();
+        git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+        git(&fixture.options.root, &["fetch", "origin", "main"]);
+        let contract = fixture.proof.repository_contract.as_mut().unwrap();
+        match change {
+            "remove" => {
+                fixture
+                    .proof
+                    .commands
+                    .retain(|command| command.name != "inspect-second");
+                contract.executions.remove("inspect-second");
+                contract.source_coverage[0]
+                    .commands
+                    .retain(|name| name != "inspect-second");
+            }
+            "program" => {
+                let shell = fs::canonicalize("/bin/sh").unwrap();
+                let shell = shell.to_str().unwrap().to_owned();
+                let command = fixture
+                    .proof
+                    .commands
+                    .iter_mut()
+                    .find(|command| command.name == "inspect-second")
+                    .unwrap();
+                command.command = shell.clone();
+                command.args = vec![
+                    "-c".into(),
+                    "printf 'claimed success without inspection'".into(),
+                ];
+                let execution = contract.executions.get_mut("inspect-second").unwrap();
+                execution.program = shell.clone();
+                execution.toolchain_files.insert("shell".into(), shell);
+            }
+            "directory" => {
+                fs::create_dir(fixture.options.root.join("nested")).unwrap();
+                fs::write(fixture.options.root.join("nested/input.txt"), "input\n").unwrap();
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .directory = "nested".into();
+            }
+            "environment" => {
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .environment
+                    .insert("UNREVIEWED_INPUT".into(), "replacement".into());
+            }
+            "toolchain" => {
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .toolchain_files
+                    .insert("replacement".into(), "/unreviewed/runtime".into());
+            }
+            "timeout" => {
+                contract
+                    .executions
+                    .get_mut("inspect-second")
+                    .unwrap()
+                    .timeout_seconds += 1
+            }
+            "coverage" => contract.source_coverage[0]
+                .commands
+                .retain(|name| name != "inspect-second"),
+            "ci-only" => {
+                contract.source_coverage[0].commands.clear();
+                contract.source_coverage[0].ci_only = true;
+                contract.source_coverage[0].reason =
+                    Some("candidate claims external coverage".into());
+            }
+            _ => unreachable!(),
+        }
+        fixture.review_commands();
+        fixture.save_config();
+        fixture.commit("repin replacement local verification policy");
+        let mut host = fixture.host();
+        blocked(
+            &fixture.validate(&mut host),
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+        );
+        assert_eq!(host.selections, 0, "{change}");
+        assert_eq!(host.execution_attempts, 0, "{change}");
+    }
+}
+
+#[test]
+fn accepted_local_contract_executes_current_checks_and_never_reuses_an_old_source_pass() {
+    let fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut host = fixture.host();
+    let historical = fixture.validate(&mut host);
+    assert!(historical.ready, "{historical:?}");
+    assert_eq!(historical.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+    fs::write(
+        fixture.options.root.join("second.txt"),
+        "changed after successful proof\n",
+    )
+    .unwrap();
+    fixture.commit("invalidate source evidence");
+    let mut host = fixture.host();
+    let current = fixture.validate(&mut host);
+    assert!(!current.ready, "{current:?}");
+    assert!(!current.proof_ready);
+    assert_eq!(host.execution_attempts, 1);
+    assert!(
+        historical.ready,
+        "historical observations must remain intact"
+    );
+}
+
+#[test]
+fn candidate_can_add_required_local_checks_without_replacing_accepted_ones() {
+    let mut fixture = Fixture::new();
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    let mut additional = fixture.proof.commands[0].clone();
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    let execution = contract.executions[&additional.name].clone();
+    additional.name = "inspect-third".into();
+    contract
+        .executions
+        .insert(additional.name.clone(), execution);
+    contract.source_coverage[0]
+        .commands
+        .push(additional.name.clone());
+    fixture.proof.commands.push(additional);
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("add an extra required local check");
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
 fn source_change_during_selection_prevents_any_execution() {
     let fixture = Fixture::new();
     let mut host = fixture.host();
@@ -810,4 +1075,514 @@ fn configuration_change_after_successful_execution_invalidates_readiness() {
             ..
         },
     )));
+}
+
+#[test]
+fn two_isolated_worktrees_require_combined_candidate_validation_and_target_freshness() {
+    use consumer_readiness_fixture::CONFIG;
+    use decapod::core::bounded_process::Cancellation;
+    use decapod::core::todo::{self, ClaimMode, TodoCommand};
+    use std::path::Path;
+
+    let mut fixture = Fixture::new();
+    let main_repo = fixture.options.root.clone();
+
+    // Establish a shared semantic invariant across two regions of `shared_contract.py`:
+    // LEFT_DELTA + RIGHT_DELTA <= 1. Each isolated agent edit satisfies the invariant
+    // on its own branch, while a clean textual merge violates it until reconciled.
+    fs::write(
+        main_repo.join("shared_contract.py"),
+        "LEFT_DELTA = 0\n\n\nRIGHT_DELTA = 0\n",
+    )
+    .unwrap();
+    fs::write(
+        main_repo.join("scripts/check_source.py"),
+        "import os\nassert not os.path.exists('Cargo.toml')\nassert open('payload.txt').read() == 'ready\\n', 'consumer source is invalid'\nns = {}\nexec(open('shared_contract.py').read(), ns)\nassert ns['LEFT_DELTA'] + ns['RIGHT_DELTA'] <= 1, 'combined concurrency budget exceeded'\nassert not os.path.realpath(os.getcwd()).startswith(os.path.realpath(os.environ['FIXTURE_WORKTREE'])), 'proof used mutable worktree'\nassert os.environ['DECAPOD_NATIVE_PROOF_ACTIVE'] == '1'\nassert os.path.isdir(os.environ['HOME'])\nprint('consumer-source-inspected')\n",
+    )
+    .unwrap();
+
+    fs::write(
+        main_repo.join(".gitignore"),
+        ".decapod/data/\n.decapod/managed/governance-document.lock\n.decapod/workspaces/\n",
+    )
+    .unwrap();
+    let sources =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default()).unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest = sources.digest().unwrap();
+    let root_cfg = toml::Value::try_from(serde_json::json!({
+        "schema_version": "1.0.0",
+        "init": {"diagram_style": "ascii", "entrypoints": []},
+        "repo": {},
+        "proof": fixture.proof,
+    }))
+    .unwrap();
+    fs::write(
+        main_repo.join(CONFIG),
+        toml::to_string_pretty(&root_cfg).unwrap(),
+    )
+    .unwrap();
+    fixture.commit("add shared semantic invariant to consumer contract");
+    git(&main_repo, &["checkout", "main"]);
+    git(&main_repo, &["merge", "--ff-only", "consumer-work"]);
+    git(&main_repo, &["push", "origin", "main"]);
+    git(&main_repo, &["checkout", "consumer-work"]);
+
+    // Provision canonical task store and two overlapping tasks in distinct isolated worktrees.
+    let store = main_repo.join(".decapod/data");
+    fs::create_dir_all(&store).unwrap();
+    todo::initialize_todo_db(&store).unwrap();
+    let add_scoped = |title: &str| -> String {
+        let cmd = TodoCommand::Add {
+            title: title.to_string(),
+            description: String::new(),
+            tags: String::new(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: r#"paths:["shared_contract.py"]"#.to_string(),
+            dir: Some(main_repo.to_string_lossy().to_string()),
+            priority: "medium".to_string(),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        };
+        todo::add_task(&store, &cmd).unwrap()["id"]
+            .as_str()
+            .unwrap()
+            .to_string()
+    };
+    let task_a = add_scoped("Agent alpha left-delta slice");
+    let task_b = add_scoped("Agent beta right-delta slice");
+    assert_eq!(
+        todo::claim_task(&store, &task_a, "alpha", ClaimMode::Exclusive).unwrap()["status"],
+        "ok"
+    );
+    let beta_claim = todo::claim_task(&store, &task_b, "beta", ClaimMode::Exclusive).unwrap();
+    assert_eq!(beta_claim["status"], "ok");
+    assert_eq!(
+        beta_claim["result"]["integration_readiness"],
+        "combined_candidate_reconciliation_required"
+    );
+
+    let wt_alpha_raw = main_repo.join(".decapod/workspaces/wt-alpha");
+    let wt_beta_raw = main_repo.join(".decapod/workspaces/wt-beta");
+    fs::create_dir_all(wt_alpha_raw.parent().unwrap()).unwrap();
+    let branch_alpha = format!("agent/alpha/{task_a}-left");
+    let branch_beta = format!("agent/beta/{task_b}-right");
+    git(
+        &main_repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &branch_alpha,
+            wt_alpha_raw.to_str().unwrap(),
+            "main",
+        ],
+    );
+    git(
+        &main_repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            &branch_beta,
+            wt_beta_raw.to_str().unwrap(),
+            "main",
+        ],
+    );
+    let wt_alpha = wt_alpha_raw.canonicalize().unwrap();
+    let wt_beta = wt_beta_raw.canonicalize().unwrap();
+    todo::admit_authoring(&store, &wt_alpha, "alpha").unwrap();
+    todo::admit_authoring(&store, &wt_beta, "beta").unwrap();
+
+    // Helper to build an isolated Fixture view targeting a specific worktree checkout
+    // without mutating `.decapod/config.toml` across branches.
+    let make_wt_options = |wt: &Path, suffix: &str| -> (runtime::Options, Fixture) {
+        let mut opts = fixture.options.clone();
+        opts.root = wt.to_path_buf();
+        opts.evidence_parent = fixture._storage.path().join(format!("evidence-{suffix}"));
+        fs::create_dir_all(&opts.evidence_parent).unwrap();
+        let sub_fixture = Fixture {
+            _storage: tempfile::tempdir().unwrap(),
+            upstream: fixture.upstream.clone(),
+            options: opts.clone(),
+            proof: fixture.proof.clone(),
+        };
+        (opts, sub_fixture)
+    };
+
+    // 1. Both isolated branches independently validate and pass (`ready == true`).
+    fs::write(
+        wt_alpha.join("shared_contract.py"),
+        "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "shared_contract.py"]);
+    git(&wt_alpha, &["commit", "-m", "alpha isolated change"]);
+    let (_, alpha_fixture) = make_wt_options(&wt_alpha, "alpha-1");
+    let mut alpha_host = LocalHost::new(&alpha_fixture, false);
+    let alpha_report = alpha_fixture.validate(&mut alpha_host);
+    assert!(alpha_report.ready, "{alpha_report:?}");
+
+    fs::write(
+        wt_beta.join("shared_contract.py"),
+        "LEFT_DELTA = 0\n\n\nRIGHT_DELTA = 1\n",
+    )
+    .unwrap();
+    git(&wt_beta, &["add", "shared_contract.py"]);
+    git(&wt_beta, &["commit", "-m", "beta isolated change"]);
+    let (_, beta_fixture) = make_wt_options(&wt_beta, "beta-1");
+    let mut beta_host = LocalHost::new(&beta_fixture, false);
+    let beta_report = beta_fixture.validate(&mut beta_host);
+    assert!(beta_report.ready, "{beta_report:?}");
+
+    // 2. Clean textual Git merge into `wt_alpha` breaks the combined semantic invariant:
+    //    `runtime::validate` MUST fail (`ready == false`) with no readiness receipt.
+    git(&wt_alpha, &["merge", "--no-edit", &branch_beta]);
+    let (_, merged_fixture) = make_wt_options(&wt_alpha, "alpha-merged-broken");
+    let mut merged_host = LocalHost::new(&merged_fixture, false);
+    let merged_report = merged_fixture.validate(&mut merged_host);
+    assert!(
+        !merged_report.ready,
+        "semantically broken combined candidate must not pass readiness: {merged_report:?}"
+    );
+    let merged_dir = merged_report.evidence_path.unwrap();
+    assert!(
+        !merged_dir
+            .join("completion/native-readiness-receipt.json")
+            .exists(),
+        "failed combined candidate must not emit a readiness receipt"
+    );
+
+    // 3. Reconciling the combined candidate restores readiness (`ready == true`).
+    fs::write(
+        wt_alpha.join("shared_contract.py"),
+        "LEFT_DELTA = 1\n\n\nRIGHT_DELTA = 0\n",
+    )
+    .unwrap();
+    git(&wt_alpha, &["add", "shared_contract.py"]);
+    git(
+        &wt_alpha,
+        &["commit", "-m", "reconcile combined candidate invariant"],
+    );
+    let (_, reconciled_fixture) = make_wt_options(&wt_alpha, "alpha-reconciled");
+    let mut reconciled_host = LocalHost::new(&reconciled_fixture, false);
+    let reconciled_report = reconciled_fixture.validate(&mut reconciled_host);
+    assert!(reconciled_report.ready, "{reconciled_report:?}");
+    assert!(
+        reconciled_report
+            .evidence_path
+            .unwrap()
+            .join("completion/native-readiness-receipt.json")
+            .is_file()
+    );
+
+    // 4. Advancing upstream `refs/heads/main` invalidates prior readiness until re-integrated.
+    git(&main_repo, &["checkout", "main"]);
+    git(
+        &main_repo,
+        &[
+            "commit",
+            "--allow-empty",
+            "-m",
+            "upstream accepted target advance",
+        ],
+    );
+    git(&main_repo, &["push", "origin", "main"]);
+
+    let (_, stale_target_fixture) = make_wt_options(&wt_alpha, "alpha-stale-target");
+    let mut stale_target_host = LocalHost::new(&stale_target_fixture, false);
+    let stale_target_report = stale_target_fixture.validate(&mut stale_target_host);
+    assert!(
+        !stale_target_report.ready,
+        "advancing upstream target must invalidate candidate readiness until rebased/merged: {stale_target_report:?}"
+    );
+
+    // Fetching and merging the new upstream `origin/main` + revalidating succeeds again.
+    git(&wt_alpha, &["fetch", "origin", "main"]);
+    git(&wt_alpha, &["merge", "--no-edit", "origin/main"]);
+    let (_, refreshed_fixture) = make_wt_options(&wt_alpha, "alpha-refreshed-target");
+    let mut refreshed_host = LocalHost::new(&refreshed_fixture, false);
+    let refreshed_report = refreshed_fixture.validate(&mut refreshed_host);
+    assert!(refreshed_report.ready, "{refreshed_report:?}");
+}
+
+fn convert_fixture_to_per_platform(fixture: &mut Fixture) -> String {
+    use decapod::core::native_proof::NativePlatform;
+    use decapod::core::repository_profile::{CANONICAL_PLATFORM_KEYS, PlatformExecution};
+    use std::collections::BTreeMap;
+    use std::path::Path;
+
+    let current_key = repository_profile::platform_key(NativePlatform::current().unwrap())
+        .unwrap()
+        .to_string();
+    let sample_exec = fixture
+        .proof
+        .repository_contract
+        .as_ref()
+        .unwrap()
+        .executions
+        .values()
+        .next()
+        .unwrap()
+        .clone();
+    let bin_name = Path::new(&sample_exec.program)
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned();
+    for command in &mut fixture.proof.commands {
+        command.command = bin_name.clone();
+    }
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    for execution in contract.executions.values_mut() {
+        let host_entry = PlatformExecution {
+            program: std::mem::take(&mut execution.program),
+            toolchain_files: std::mem::take(&mut execution.toolchain_files),
+        };
+        let mut platforms = BTreeMap::new();
+        for key in CANONICAL_PLATFORM_KEYS {
+            if key == current_key {
+                platforms.insert(key.to_string(), host_entry.clone());
+            } else {
+                platforms.insert(
+                    key.to_string(),
+                    PlatformExecution {
+                        program: format!("/nix/store/nonexistent-{key}/bin/{bin_name}"),
+                        toolchain_files: BTreeMap::from([(
+                            "runtime".into(),
+                            format!("/nix/store/nonexistent-{key}/lib/runtime"),
+                        )]),
+                    },
+                );
+            }
+        }
+        execution.platforms = platforms;
+    }
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("configure reviewed per-platform executables");
+    current_key
+}
+
+#[test]
+fn per_platform_contract_selects_and_executes_current_host_native_executable() {
+    let mut fixture = Fixture::new();
+    let current_key = convert_fixture_to_per_platform(&mut fixture);
+    // Also attach an owned runtime closure file to the current host platform entry
+    // so before/after measurement covers both the native binary and declared closure.
+    let owned_closure = fixture._storage.path().join("owned-host-closure.txt");
+    fs::write(&owned_closure, b"reviewed host closure\n").unwrap();
+    for execution in fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .values_mut()
+    {
+        execution
+            .platforms
+            .get_mut(&current_key)
+            .unwrap()
+            .toolchain_files
+            .insert(
+                "owned-host-closure".into(),
+                owned_closure
+                    .canonicalize()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into(),
+            );
+    }
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("add owned host closure to per-platform entry");
+
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.exit_code(), 0);
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+    let directory = report.evidence_path.unwrap();
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(directory.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(evidence.results.len(), 2);
+    assert!(evidence.results.iter().all(|result| matches!(
+        result.observation,
+        Observation::Executed {
+            conclusion: Conclusion::Success,
+            exit_code: Some(0),
+            ..
+        }
+    )));
+    assert!(
+        directory
+            .join("completion/native-readiness-receipt.json")
+            .is_file()
+    );
+}
+
+#[test]
+fn per_platform_contract_rejects_missing_host_platform_and_incompatible_native_format() {
+    // 1. Missing current host platform fails closed before execution.
+    let mut missing_fixture = Fixture::new();
+    let current_key = convert_fixture_to_per_platform(&mut missing_fixture);
+    for execution in missing_fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .values_mut()
+    {
+        execution.platforms.remove(&current_key);
+    }
+    missing_fixture.review_commands();
+    missing_fixture.save_config();
+    missing_fixture.commit("omit current host platform");
+    let mut missing_host = missing_fixture.host();
+    let missing_report = missing_fixture.validate(&mut missing_host);
+    blocked(&missing_report, "MISSING_PLATFORM_EXECUTION");
+    assert_eq!(missing_host.execution_attempts, 0);
+
+    // 2. Host platform pointing to a foreign-architecture binary fails closed at native execution.
+    let mut wrong_fmt_fixture = Fixture::new();
+    let current_key = convert_fixture_to_per_platform(&mut wrong_fmt_fixture);
+    let foreign_dir = wrong_fmt_fixture._storage.path().join("foreign-bin");
+    fs::create_dir(&foreign_dir).unwrap();
+    let bin_name = wrong_fmt_fixture.proof.commands[0].command.clone();
+    let foreign_bin = foreign_dir.join(&bin_name);
+    // Minimal 64-byte foreign header: ELF x86_64 on macOS, Mach-O arm64 on Linux.
+    let mut header = vec![0u8; 64];
+    let (expected_detected, expected_host_phrase) = if cfg!(target_os = "macos") {
+        header[0..4].copy_from_slice(b"\x7fELF");
+        header[4] = 2; // 64-bit
+        header[5] = 1; // little-endian
+        header[18..20].copy_from_slice(&0x3Eu16.to_le_bytes()); // x86_64
+        ("ELF x86_64", "native macOS validation requires Mach-O")
+    } else {
+        header[0..4].copy_from_slice(&[0xcf, 0xfa, 0xed, 0xfe]); // MH_MAGIC_64 little-endian
+        header[4..8].copy_from_slice(&0x0100_000Cu32.to_le_bytes()); // arm64
+        ("Mach-O arm64", "native Linux validation requires ELF")
+    };
+    fs::write(&foreign_bin, &header).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&foreign_bin, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let foreign_bin = foreign_bin.canonicalize().unwrap();
+    let foreign_path = foreign_bin.to_string_lossy().into_owned();
+    for execution in wrong_fmt_fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .values_mut()
+    {
+        let entry = execution.platforms.get_mut(&current_key).unwrap();
+        entry.program = foreign_path.clone();
+        entry.toolchain_files.clear();
+        entry
+            .toolchain_files
+            .insert("tool".into(), foreign_path.clone());
+    }
+    wrong_fmt_fixture.review_commands();
+    wrong_fmt_fixture.save_config();
+    wrong_fmt_fixture.commit("point host platform at foreign executable");
+    let mut wrong_host = wrong_fmt_fixture.host();
+    let wrong_report = wrong_fmt_fixture.validate(&mut wrong_host);
+    assert!(!wrong_report.ready, "{wrong_report:?}");
+    assert!(!wrong_report.proof_ready);
+    assert_eq!(wrong_host.execution_attempts, 1);
+    blocked(&wrong_report, &foreign_path);
+    blocked(&wrong_report, expected_detected);
+    blocked(&wrong_report, expected_host_phrase);
+    if let Some(evidence_dir) = wrong_report.evidence_path.as_ref() {
+        assert!(
+            !evidence_dir
+                .join("completion/native-readiness-receipt.json")
+                .exists()
+        );
+    }
+}
+
+#[test]
+fn per_platform_accepted_contract_rejects_candidate_platform_changes() {
+    use decapod::core::native_proof::NativePlatform;
+
+    let current_key = repository_profile::platform_key(NativePlatform::current().unwrap()).unwrap();
+    let non_host_key = if current_key == "linux-x86_64" {
+        "macos-aarch64"
+    } else {
+        "linux-x86_64"
+    };
+
+    for mutation in [
+        "modify-non-host-program",
+        "modify-non-host-toolchain",
+        "remove-non-host-platform",
+        "switch-to-single",
+    ] {
+        let mut fixture = Fixture::new();
+        convert_fixture_to_per_platform(&mut fixture);
+        // Accept the multi-platform contract on main before the candidate modifies it.
+        git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+        git(&fixture.options.root, &["fetch", "origin", "main"]);
+
+        let execution = fixture
+            .proof
+            .repository_contract
+            .as_mut()
+            .unwrap()
+            .executions
+            .get_mut("inspect-second")
+            .unwrap();
+        match mutation {
+            "modify-non-host-program" => {
+                let bin_name = fixture.proof.commands[0].command.clone();
+                execution.platforms.get_mut(non_host_key).unwrap().program =
+                    format!("/nix/store/evil-{non_host_key}/bin/{bin_name}");
+            }
+            "modify-non-host-toolchain" => {
+                execution
+                    .platforms
+                    .get_mut(non_host_key)
+                    .unwrap()
+                    .toolchain_files
+                    .insert("injected".into(), "/nix/store/evil/lib/x".into());
+            }
+            "remove-non-host-platform" => {
+                execution.platforms.remove(non_host_key);
+            }
+            "switch-to-single" => {
+                let host_entry = execution.platforms.remove(current_key).unwrap();
+                execution.platforms.clear();
+                execution.program = host_entry.program;
+                execution.toolchain_files = host_entry.toolchain_files;
+            }
+            _ => unreachable!(),
+        }
+        fixture.review_commands();
+        fixture.save_config();
+        fixture.commit("repin candidate change to accepted per-platform contract");
+        let mut host = fixture.host();
+        blocked(
+            &fixture.validate(&mut host),
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+        );
+        assert_eq!(host.selections, 0, "{mutation}");
+        assert_eq!(host.execution_attempts, 0, "{mutation}");
+    }
 }

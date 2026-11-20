@@ -191,13 +191,50 @@ fn lookup(root: &Path, target: &Path) -> Result<Option<Receipt>, DecapodError> {
     if !conn.has_table("events")? {
         return Ok(None);
     }
-    let raw: Option<String> = conn.query_row(
-        "SELECT payload FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
-        db::params![events::WORKSPACE_LIFECYCLE, key(target)], |row| row.get(0)).optional()?;
-    raw.map(|value| {
-        serde_json::from_str(&value)
-            .map_err(|e| failure(&format!("invalid ownership receipt: {e}")))
-    })
+    type LifecycleEventRow = (
+        String,
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+    );
+    let row: Option<LifecycleEventRow> = conn
+        .query_row(
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
+             FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
+            db::params![events::WORKSPACE_LIFECYCLE, key(target)],
+            |row| {
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                    row.get(5)?,
+                    row.get(6)?,
+                ))
+            },
+        )
+        .optional()?;
+    row.map(
+        |(event_id, ts, event_type, actor, subject_kind, subject_id, raw)| {
+            let value = events::reconstruct_stored_payload(
+                events::WORKSPACE_LIFECYCLE,
+                &event_id,
+                &ts,
+                &event_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &raw,
+            )
+            .map_err(|e| failure(&format!("invalid ownership receipt: {e}")))?;
+            serde_json::from_value(value)
+                .map_err(|e| failure(&format!("invalid ownership receipt: {e}")))
+        },
+    )
     .transpose()
 }
 

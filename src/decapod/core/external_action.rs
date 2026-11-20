@@ -317,9 +317,19 @@ fn authorize_binary(
             capability,
             ExternalCapability::PreflightProbe | ExternalCapability::PreflightRead
         );
-    let is_allowed = sealed_default
-        || allowed_bins.iter().any(|b| b == &bin)
-        || (capability == ExternalCapability::VerificationExec && bin.starts_with("decapod"));
+    // Nix's makeWrapper executes bin/.decapod-wrapped. Permit exactly the
+    // running Decapod executable for self-verification, irrespective of its
+    // installed filename. Canonical identity prevents a similarly named
+    // arbitrary executable from receiving this exception (#1582).
+    let is_self_verification = capability == ExternalCapability::VerificationExec
+        && Path::new(command).is_absolute()
+        && std::env::current_exe()
+            .ok()
+            .and_then(|exe| std::fs::canonicalize(exe).ok())
+            .zip(std::fs::canonicalize(command).ok())
+            .is_some_and(|(current, requested)| current == requested);
+    let is_allowed =
+        sealed_default || allowed_bins.iter().any(|b| b == &bin) || is_self_verification;
     if !is_allowed {
         return Err(error::DecapodError::ValidationError(format!(
             "External action denied: capability '{}' does not allow binary '{}'",
@@ -769,5 +779,48 @@ mod repository_proof_authorization_tests {
         std::os::unix::fs::symlink(target, root.path().join(".decapod/EXTERNAL_ACTIONS.json"))
             .unwrap();
         assert!(repository_proof_policy(&store, "/installed/python3").is_err());
+    }
+}
+
+#[cfg(all(test, unix))]
+mod verification_self_execution_tests {
+    use super::*;
+
+    #[test]
+    fn nix_wrapped_self_binary_is_allowed_but_arbitrary_wrapped_binary_is_not() {
+        let temp = tempfile::tempdir().unwrap();
+        let store = temp.path().join(".decapod/data");
+        std::fs::create_dir_all(&store).unwrap();
+        let current = std::env::current_exe().unwrap();
+        let wrapped = temp.path().join(".decapod-wrapped");
+        std::os::unix::fs::symlink(&current, &wrapped).unwrap();
+        assert!(
+            authorize_binary(
+                &store,
+                ExternalCapability::VerificationExec,
+                wrapped.to_str().unwrap()
+            )
+            .is_ok()
+        );
+        std::fs::remove_file(&wrapped).unwrap();
+        std::fs::write(&wrapped, b"not decapod").unwrap();
+        assert!(
+            authorize_binary(
+                &store,
+                ExternalCapability::VerificationExec,
+                wrapped.to_str().unwrap()
+            )
+            .is_err()
+        );
+        let arbitrary = temp.path().join("decapod-malicious");
+        std::fs::write(&arbitrary, b"not decapod").unwrap();
+        assert!(
+            authorize_binary(
+                &store,
+                ExternalCapability::VerificationExec,
+                arbitrary.to_str().unwrap()
+            )
+            .is_err()
+        );
     }
 }

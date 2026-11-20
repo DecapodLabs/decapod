@@ -16,6 +16,7 @@ use std::path::{Component, Path};
 
 pub const REQUIRED_PROFILE: &str = "repo.pr-readiness.v1";
 pub const READINESS_SCOPE: &str = "repository_local_readiness";
+pub const LOCAL_GIT_READINESS_SCOPE: &str = "repository_local_git_readiness";
 
 fn is_false(value: &bool) -> bool {
     !*value
@@ -42,17 +43,62 @@ pub struct SourceCoverage {
     pub reason: Option<String>,
 }
 
+pub const CANONICAL_PLATFORM_KEYS: [&str; 4] = [
+    "linux-aarch64",
+    "linux-x86_64",
+    "macos-aarch64",
+    "macos-x86_64",
+];
+
+pub fn platform_key(platform: super::native_proof::NativePlatform) -> Option<&'static str> {
+    match platform {
+        super::native_proof::NativePlatform::LinuxX86_64 => Some("linux-x86_64"),
+        super::native_proof::NativePlatform::LinuxAarch64 => Some("linux-aarch64"),
+        super::native_proof::NativePlatform::MacosX86_64 => Some("macos-x86_64"),
+        super::native_proof::NativePlatform::MacosAarch64 => Some("macos-aarch64"),
+        super::native_proof::NativePlatform::WindowsX86_64 => None,
+    }
+}
+
+pub fn is_valid_platform_key(key: &str) -> bool {
+    CANONICAL_PLATFORM_KEYS.contains(&key)
+}
+
 fn root_directory() -> String {
     ".".into()
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PlatformExecution {
+    /// Installed canonical executable for this platform, never a candidate-produced executable.
+    pub program: String,
+    /// Reviewed transitive tool/runtime files for this platform. Completeness is
+    /// authored, while every declared byte and the direct executable are measured
+    /// by the runner.
+    pub toolchain_files: BTreeMap<String, String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct RepositoryExecution {
     /// Installed canonical executable, never a candidate-produced executable.
+    /// Required for single-platform declarations (`platforms` empty) and must
+    /// be omitted when `platforms` is non-empty.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub program: String,
     /// Reviewed transitive tool/runtime files. Completeness is authored, while
     /// every declared byte and the direct executable are measured by the runner.
+    /// Required for single-platform declarations (`platforms` empty) and must
+    /// be omitted when `platforms` is non-empty.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub toolchain_files: BTreeMap<String, String>,
+    /// Reviewed per-platform `program` + `toolchain_files` declarations keyed
+    /// by canonical platform key (`linux-x86_64`, `linux-aarch64`,
+    /// `macos-x86_64`, `macos-aarch64`). Empty for single-platform declarations
+    /// so legacy `command_contract_digest` values remain byte-identical.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub platforms: BTreeMap<String, PlatformExecution>,
     #[serde(default)]
     pub environment: BTreeMap<String, String>,
     #[serde(default = "root_directory")]
@@ -60,9 +106,49 @@ pub struct RepositoryExecution {
     pub timeout_seconds: u64,
 }
 
+impl RepositoryExecution {
+    /// Resolve the reviewed executable path and toolchain closure for `platform`.
+    /// Single-platform declarations (`platforms` empty) return their sole
+    /// executable; per-platform declarations select only the exact matching
+    /// canonical platform key and fail closed if missing or unsupported.
+    pub fn resolve_for_platform(
+        &self,
+        platform: super::native_proof::NativePlatform,
+    ) -> Result<(&str, &BTreeMap<String, String>), PlanningFailure> {
+        if self.platforms.is_empty() {
+            if self.program.is_empty() || self.toolchain_files.is_empty() {
+                return Err(invalid(
+                    "missing single-platform execution program or toolchain_files",
+                ));
+            }
+            return Ok((self.program.as_str(), &self.toolchain_files));
+        }
+        if !self.program.is_empty() || !self.toolchain_files.is_empty() {
+            return Err(invalid(
+                "mixed top-level program/toolchain_files and per-platform declarations are unsupported",
+            ));
+        }
+        let key = platform_key(platform).ok_or_else(|| {
+            invalid(
+                "UNSUPPORTED_PLATFORM: current host platform has no canonical per-platform execution key",
+            )
+        })?;
+        let selected = self.platforms.get(key).ok_or_else(|| {
+            invalid(format!(
+                "MISSING_PLATFORM_EXECUTION: no reviewed execution entry for host platform {key}"
+            ))
+        })?;
+        Ok((selected.program.as_str(), &selected.toolchain_files))
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct RepositoryContract {
+    /// Explicit local authority; must already be accepted on the canonical
+    /// repository target. Absence preserves the existing GitHub transport.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub canonical_local_target: bool,
     pub reviewed_commands_digest: String,
     pub source_coverage: Vec<SourceCoverage>,
     pub executions: BTreeMap<String, RepositoryExecution>,
@@ -74,17 +160,85 @@ pub fn command_contract_digest(
     commands: &[ProofDef],
     contract: &RepositoryContract,
 ) -> Result<String, PlanningFailure> {
-    super::readiness_evidence::digest(&(
+    let original = (
         REQUIRED_PROFILE,
         commands,
         &contract.source_coverage,
         &contract.executions,
-    ))
+    );
+    // Preserve all pre-local-target review digests byte for byte.
+    if contract.canonical_local_target {
+        super::readiness_evidence::digest(&(original, "canonical_local_git.v1"))
+    } else {
+        super::readiness_evidence::digest(&original)
+    }
     .map_err(|_| PlanningFailure::Serialization)
 }
 
 fn invalid(message: impl Into<String>) -> PlanningFailure {
     PlanningFailure::InvalidPlan(format!("REPOSITORY_CONTRACT_INVALID: {}", message.into()))
+}
+
+/// Candidate review digests establish internal consistency, not authority to
+/// replace requirements already accepted on the target. Additive checks are
+/// allowed; accepted execution and coverage obligations must remain intact.
+pub(crate) fn preserve_accepted(
+    commands: &[ProofDef],
+    contract: Option<&RepositoryContract>,
+    accepted_commands: &[ProofDef],
+    accepted_contract: Option<&RepositoryContract>,
+) -> Result<(), PlanningFailure> {
+    let changed = || {
+        invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: preserve the accepted local checks, execution declarations and coverage; replacement requires a separately accepted policy transition, not a candidate-authored review digest",
+        )
+    };
+    let accepted = accepted_contract.ok_or_else(changed)?;
+    let candidate = contract.ok_or_else(changed)?;
+    if accepted.canonical_local_target != candidate.canonical_local_target
+        || accepted_commands.is_empty()
+        || command_contract_digest(accepted_commands, accepted)?
+            != accepted.reviewed_commands_digest
+    {
+        return Err(changed());
+    }
+    for required in accepted_commands {
+        let current = commands
+            .iter()
+            .find(|command| command.name == required.name)
+            .ok_or_else(changed)?;
+        if !required.required
+            || !current.required
+            || current.command != required.command
+            || current.args != required.args
+            || !accepted.executions.contains_key(&required.name)
+            || candidate.executions.get(&required.name) != accepted.executions.get(&required.name)
+        {
+            return Err(changed());
+        }
+    }
+    for coverage in &accepted.source_coverage {
+        let current = candidate
+            .source_coverage
+            .iter()
+            .find(|row| row.source == coverage.source)
+            .ok_or_else(changed)?;
+        if coverage.ci_only {
+            // A candidate cannot turn an accepted external limitation into an
+            // unsupported local-equivalence claim.
+            if current != coverage {
+                return Err(changed());
+            }
+        } else if current.ci_only
+            || !coverage
+                .commands
+                .iter()
+                .all(|name| current.commands.contains(name))
+        {
+            return Err(changed());
+        }
+    }
+    Ok(())
 }
 fn relative(path: &str) -> bool {
     !path.is_empty()
@@ -92,6 +246,42 @@ fn relative(path: &str) -> bool {
         && Path::new(path)
             .components()
             .all(|part| matches!(part, Component::Normal(_)))
+}
+
+fn validate_execution_target(
+    command: &ProofDef,
+    program: &str,
+    toolchain_files: &BTreeMap<String, String>,
+) -> Result<(), PlanningFailure> {
+    if !Path::new(program).is_absolute()
+        || program.contains('\0')
+        || toolchain_files.is_empty()
+        || toolchain_files.iter().any(|(name, path)| {
+            name.trim().is_empty()
+                || name == "program"
+                || !Path::new(path).is_absolute()
+                || path.contains('\0')
+        })
+    {
+        return Err(invalid(format!(
+            "invalid explicit execution/toolchain/budget: {}",
+            command.name
+        )));
+    }
+    // A reviewed canonical program may resolve a named installed command;
+    // absolute proof commands must match it exactly. No silent substitution.
+    let declared = Path::new(&command.command);
+    if (declared.is_absolute() && command.command != program)
+        || (!declared.is_absolute()
+            && (declared.components().count() != 1
+                || declared.file_name() != Path::new(program).file_name()))
+    {
+        return Err(invalid(format!(
+            "execution program differs from proof command: {}",
+            command.name
+        )));
+    }
+    Ok(())
 }
 
 pub fn validate_contract(
@@ -141,13 +331,7 @@ pub fn validate_contract(
             .executions
             .get(&command.name)
             .ok_or_else(|| invalid(format!("missing execution declaration: {}", command.name)))?;
-        if !Path::new(&execution.program).is_absolute()
-            || execution.program.contains('\0')
-            || execution.toolchain_files.is_empty()
-            || execution.toolchain_files.iter().any(|(name, path)| {
-                name.is_empty() || !Path::new(path).is_absolute() || path.contains('\0')
-            })
-            || (execution.directory != "." && !relative(&execution.directory))
+        if (execution.directory != "." && !relative(&execution.directory))
             || execution.timeout_seconds == 0
             || execution.timeout_seconds > 7200
         {
@@ -156,18 +340,28 @@ pub fn validate_contract(
                 command.name
             )));
         }
-        // A reviewed canonical program may resolve a named installed command;
-        // absolute proof commands must match it exactly. No silent substitution.
-        let declared = Path::new(&command.command);
-        if (declared.is_absolute() && command.command != execution.program)
-            || (!declared.is_absolute()
-                && (declared.components().count() != 1
-                    || declared.file_name() != Path::new(&execution.program).file_name()))
-        {
-            return Err(invalid(format!(
-                "execution program differs from proof command: {}",
-                command.name
-            )));
+        if execution.platforms.is_empty() {
+            validate_execution_target(command, &execution.program, &execution.toolchain_files)?;
+        } else {
+            if !execution.program.is_empty() || !execution.toolchain_files.is_empty() {
+                return Err(invalid(format!(
+                    "execution {} cannot mix top-level program/toolchain_files with platforms",
+                    command.name
+                )));
+            }
+            for (platform_key, platform_exec) in &execution.platforms {
+                if !is_valid_platform_key(platform_key) {
+                    return Err(invalid(format!(
+                        "unsupported platform key {platform_key:?} in execution {}",
+                        command.name
+                    )));
+                }
+                validate_execution_target(
+                    command,
+                    &platform_exec.program,
+                    &platform_exec.toolchain_files,
+                )?;
+            }
         }
     }
     if contract.executions.keys().cloned().collect::<BTreeSet<_>>() != names {

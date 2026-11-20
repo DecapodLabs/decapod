@@ -1,16 +1,631 @@
 # Validation
 
-## Bazel dependency delivery boundary
+## Cloud control-plane, Dactyl 0.18.0, and Local/Cloud branding verification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1377, #1380)
 
-The separate archive-cache carrier in `.github/actions/source-ci-profile/action.yml`
-restores only content-addressed SHA-256 downloads. It preserves pinned versions,
-lockfiles, independently accepted executors and required checks. Cache hits are
-inputs, never proof. `tests/bazel_repository_cache_test.py` exercises real pinned
-Bazel reuse during a fixture outage and rejects corrupt entries. Hosted cache
-persistence and complete accepted-baseline execution still need independent
-evidence; controller 0.133.0 cannot admit changed carrier bytes. See
-`docs/architecture/bazel-dependency-delivery.md` for the acceptance transition.
-Laya policy and PR #1575 remain separate from this infrastructure change.
+- **Dependency & build locks**: `tests/release_dependency_policy.rs` verifies
+  registry `dactyl-db = "=0.18.0"` (SHA-256
+  `6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`),
+  `quinn-proto >= 0.11.19`, and preserved `sqlite`/`neon`/`supabase-cloud`
+  features. Bazel `//:cargo_inputs_policy` passes under `--lockfile_mode=error`
+  against the updated `MODULE.bazel.lock`. The reviewed 105-file proof source
+  inventory digest in `.decapod/config.toml` (`[proof.required_profile].reviewed_sources_digest`)
+  is reconciled to `sha256:35d28c6858a245822d6d893e5dc658b5f3bcf47485f2601c4f019d756c82502f`,
+  accounting solely for `Cargo.toml`, `Cargo.lock`, and `MODULE.bazel.lock`
+  with zero workflow, executor, or toolchain changes. Native `nix build` was
+  not executed on this macOS host (`nix` is not installed); Nix CI verifies
+  `flake.nix`.
+- **Unit, branding, docs & integration proofs**: `cloud_dpop` (4/4),
+  `cloud_proof` (2/2), `container_signer` (1/1), `dactyl_todo` (7/7),
+  `db_maintenance` (6/6), `sql_context` (16/16), `backend_tests`,
+  `propodus_tests`, `cloud_supabase_boundary` (41/41), `cloud_wave_parity`
+  (5/5, including `dactyl_018_dpop_signer_and_control_request_wire_contract`
+  verifying canonical `/functions/v1/decapod-onboarding/config`, RFC 9449 `DPoP`
+  headers, `propodus_repository_access_v1`, and `propodus_proof_acceptance_v1`),
+  `cloud_cli_boundary`, `cloud_mixed_worktree` (3/3),
+  `cloud_command_path`, `cloud_dactyl_boundary`, `cli_contract_enforcement`
+  (24/24), `doc_alignment` (5/5), `shared_state_semantics_1247` (10/10),
+  `policy_self_authorization_1776::candidate_worktree_cannot_switch_cloud_backend_to_local`,
+  `decapod docs build` embedded docs sync, `cargo fmt --all -- --check`, and
+  `clippy --all-targets --all-features -- -D warnings`.
+- **Owner repair wire marker & public-repo redaction (#1590, #1809)**:
+  `src/decapod/core/db_maintenance.rs` binds `OWNER_REPAIR_V1_SQL` strictly to
+  the public registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  with unit regression checks verifying exact wire marker equality and zero
+  internal table/CTE expansion, and `src/decapod/core/cloud_proof.rs` /
+  `db_maintenance.rs` omit private repository filenames and migration ranges.
+  (Buildkite build `13224` passed 74+ checks and hit an unrelated transient
+  Linux `ETXTBSY` runner flake in `podman_machine_start_captures_output_without_reading_terminal_input`;
+  retried cleanly with fresh Buildkite validation.)
+- **Local PostgreSQL 17 + PostgREST conformance (#1377, #1369)**: Executed
+  disposable local PG17 + PostgREST conformance harness, passing
+  `supabase_service::local_native_managed_project_contract` and
+  `local_native_managed_project_revocation` (with independent PG17 ledger
+  observation and revocation enforcement) against the `dactyl-db 0.18.0` binary.
+  Managed Auth OAuth issuance and hosted production verification remain separate
+  external acceptance gates (`#1378`, `#1379`).
+
+## Current report validation scope
+
+The current verification boundary begins at accepted release commit 9d1aed27.
+A source pipeline rejected the previous candidate's comparison after external
+integration advanced master. Preserve that rejection as non-ready evidence;
+independently require complete applicable checks, current source/policy and
+exact publisher readback for this report's actual head/base. The required
+full-library owner remains mandatory, including the publication regressions.
+
+## Live rejection specificity (#1748)
+
+The disposable GitHub acceptance requires the invalid payload's actual failure,
+the independent guard's executed success, and PUBLICATION_NOT_READY with
+READINESS_BLOCKED at publication. A timeout, lock or transport failure cannot
+satisfy that negative control. A previously permissive run remains partial
+evidence even when its test process reported success; fresh execution must prove
+the stricter assertion on the corrected controller.
+
+The admission repair incorporates accepted target
+`e7b54246d5c4cc325883ea1281aea039a0ad064f` after validation and the first
+branch-push CI refused moved targets and required target ancestry. The source
+inventory review is renewed for accepted release 0.148.6. Earlier tag inventory,
+stale-base and entrypoint-alignment failures remain failed attempts, with no
+executed required suite or publication authority inferred from them. A separate
+development-controller build is necessary to exercise the explicitly authorized
+source configuration policy absent from installed 0.148.0; compilation alone
+does not establish readiness or replace complete validation and live acceptance.
+
+## Required publication regression coverage (#1747, #1748)
+
+The complete fourth real-forge acceptance passed: one test, zero failures,
+311.75 seconds on macOS, using source controller
+`99a6f59f5252ce37845b47b2d9673b169d3df509`. The actual GitHub PR is
+`alexhraber/decapod-admission-acceptance-20261117-1747-04#1`; immutable evidence
+commit `1c21226bc3c5c65afb504a37bbe00829e308c593` retains three native receipts,
+their observations, failed-source observations and post-creation rejection.
+Every archived byte was checked against its Git blob identity. The final
+validated head is `cd938efe2d50c59676212ea9a747617f227c106a`, bound to base
+`0e36f8e4b336985fbe0a3b4d92fbd48f43b4027b`. Advancing the target to
+`2a5b1f276093139d160c85d72af5b4253b0ecfc0` invalidated applicability: both
+publication and repeated validation rejected with `STALE_ACCEPTED_BASE`.
+The draft PR remains historical admission, never authorization to merge.
+`docs/publication-admission-acceptance.md` records the reproducible command,
+all exact subjects, receipt hashes, rejected controls and assurance limits.
+
+Full Buildkite validation passed for source candidate
+`e81b89b36d330e36ab06a74b4eae409117e1facd` against accepted
+`e7b54246d5c4cc325883ea1281aea039a0ad064f`. The second real-forge attempt
+rejected invalid source, admitted only its repaired head, confirmed draft
+quarantine after a real post-creation mutation, and rejected a later source
+mutation. That last operation regenerated and staged managed specs before
+refusing a missing authoring checkpoint. Recovery must refresh through the
+governed owner, checkpoint a new commit and earn new proof/admission; it must
+not hand-restore machine-owned state or reuse the older artifact's success.
+The harness now performs that recovery before its target-advancement controls.
+The third real-forge run rejected both publication and repeated validation after
+the remote target advanced. GitHub's PR response retained its older base SHA;
+the acceptance therefore reads the actual `git/ref/heads/main` independently
+and records the PR metadata separately. Current target identity cannot be
+inferred from that historical PR field. The publisher already verifies exact
+remote branch refs before and after readback, independently of PR metadata.
+
+The first actual CI library run executed all seven live-proof publication
+regressions and the three source-development policy controls successfully;
+its new config-preservation fixture failed on inserting an absent TOML key.
+That fixture is repaired. The next Clippy run identified duplicated inclusion
+of the shared consumer fixture, now consolidated at the library test root.
+The first live GitHub attempt failed before source execution because its
+declaration used the reserved `program` toolchain label. Its assertion refused
+to treat that adapter failure as actual failed-source execution. The attempt
+and disposable repository are preserved. Their failures were not relabeled as
+success; the separate fourth run supplies the complete passing acceptance.
+
+`tests/unit/core/workspace_publication_tests.rs::live_admission` executes real
+required source commands and real Git commits/remote readback, then exercises
+the publisher's admission boundary with deterministic forge responses. It covers
+failure, repair, fresh proof, changed same-path bytes/head, target movement,
+missing/skipped/failed required observations, source/policy/governance/tool drift,
+and post-creation rejection. Additional quarantine tests cover lost replies,
+permission denial and unrelated PR protection. These fixtures do not establish
+real GitHub publication. The separately documented disposable-repository
+acceptance records actual CLI/forge evidence and its limitations.
+The existing always-selected `supabase-consumer` recipe owns these library
+tests, including test-only changes; `tests/source_ci_profile_policy.rs` protects
+that full-suite obligation without changing the accepted executor. GitHub
+ruleset 12701816 requires Buildkite's
+`CI / test (target="core") (push)` from App 805657 and strict target freshness;
+`CI / supabase-consumer (push)` from the same App is also required: its actual
+`cargo test --lib` recipe owns the library-unit publication regressions. The
+core integration recipe alone does not execute those unit tests. The existing
+OrganizationAdmin bypass remains a separate explicit authority.
+
+## Real recovery fixture prerequisites (#1696)
+
+`tests/support/recovery_filesystem.rs` owns the existing private filesystem
+probe shared by unit filesystem regressions and `tests/sqlite_maintenance.rs`.
+It checks device identity, ownership, space and atomic no-clobber rename support
+before running recovery success assertions. Linux may select the preexisting
+`/dev/shm` candidate when the default temporary filesystem is incompatible;
+unavailable candidates produce explicit diagnostics and exhaustion fails.
+Production Dactyl guards and unsupported-path refusal tests remain authoritative.
+The standalone and aggregate Bazel targets declare this helper as a real input.
+
+## Autonomous convergence protocol fixtures (#1690–#1692)
+
+`tests/unit/core/reflection_tests.rs` exercises source discovery, engineering
+choices, inspected predicates, stagnation, regression, exhaustion, canonical
+business dependencies, actual policy approvals, forged/stale observations,
+idempotent retry and concurrent task isolation. Its deterministic comparison
+executes a baseline mock that delegates every proposed question and compares
+actual governed outcomes, rounds and retained bytes. It does not evaluate an
+LLM or claim improved semantic reasoning or completed engineering tasks.
+`tests/infer_precision.rs` exercises the real orientation-to-mentor continuation,
+preserves the native diagnostic/publication guard, verifies all four generated
+entrypoints route to the embedded contract, and checks that architecture words
+do not manufacture missing human authority. Existing native proof remains
+authoritative; source-CI observations cannot substitute for the required full
+exact-candidate validation receipt. Fixture output supplies actual measurements
+only when its owning test lane executes successfully.
+
+## PR1661 repair evidence contract
+
+The non-Git entrypoint regression must demonstrate successful prerequisite-only
+diagnostics, unavailable authoring custody, and rejected full publication
+validation for the same initialized project. Guided-path traversal is checked
+through `govern project-check`, which must return the actual configuration
+failure rather than an earlier workspace diagnostic. Existing transactional
+binding, full lease-lifecycle, shared-resource, cross-process recovery and
+combined-candidate tests remain required. Clippy must accept the real PathBuf
+returned by workspace ensure without a redundant conversion. Exact final source
+and current accepted master require a new full validation result; earlier PR
+statuses, source fixtures and project checks cannot establish that readiness.
+After a reviewed proof-source digest update, `rpc --op specs.refresh` must bind
+the manifest to the final config bytes. Standalone validation rejects a stale
+`config_input_hash` even when the underlying prerequisite checks pass.
+
+The required `tests/consumer_readiness.rs` regression carries a recorded
+Decapod intent through a real source-check failure, a committed source repair,
+native validation and an inspectable receipt. It verifies that failure issues
+no readiness receipt, fresh proof identifies the repaired commit, and receipt
+digests bind the preserved intent trajectory and governance. This exercises
+the public runtime and native executor with an independently read local Git
+target. It establishes repository-local readiness only; it is not hosted
+cloud, billing, provider OAuth or publication acceptance.
+
+The accepted `tests/entrypoint_correctness.rs` test
+`fresh_docs_cli_admission_then_complete_runtime_proves_current_source` also
+exercises real CLI initialization, claimed workspace admission and first-proof
+execution through `tests/support/fresh_docs_readiness.rs`. The cloud handoff
+must preserve that Decapod lifecycle and its terminal evidence checks.
+
+In the accepted 0.141.0 runtime, terminal rules consume completed source
+execution evidence and recheck current governance and trajectory digests before
+publishing the readiness bundle. The cloud handoff cannot substitute a partial
+project-check receipt for that result. Release reconciliation changes the root
+package version and generated release surfaces while retaining this proof path.
+
+## Init-once agent continuation
+
+This continuation adopts PR #1635's exact `ee44e5f8773697b5341107c0d3153de4ebe28bfb`
+history in an independently admitted workspace. Earlier proof belongs to that
+candidate; it does not establish readiness for the new changes. Required
+managed scenarios now resume the first init through agent-owned `cloud login`,
+then use the saved session for ordinary task access. A new pending-add scenario
+checks the structured browser URL, preserved operation identity, reuse of the
+same flow and absence of data dispatch. Existing lost-response scenarios now
+exercise `cloud login --restart` while retaining the one-time no-replay checks.
+All changes still require plain full `decapod validate` on their exact commit.
+Hosted provider login, entitlement/payment execution and attachment to an
+existing directory project ID remain unexecuted or unsupported contract limits.
+
+PR #1635 subsequently merged as `c87e4f49cab8e2ccff5f9bdc5833d8602dfffdb8`
+while provider jobs were queued. Their accepted-target ancestry check correctly
+rejected the older candidate before running those checks. This continuation
+merges the new accepted target and retains the full existing journal/checkpoint
+lineage; the remaining agent UX changes are a follow-up PR. Earlier diagnostics
+on `a0962755` passed 1,674 library tests (eight ignored) and all 33 Supabase
+boundary tests, including the new handoff and stable-operation-ID scenarios.
+That execution does not replace fresh complete proof on the reconciled commit.
+The subsequent accepted release commit
+`19acd21f7ff50656323d037915273f03cdedc04e` changes package versions and the
+changelog and is incorporated as well; the current proof must use that target.
+The 0.139.0 source-CI evaluator then correctly reported release-bound drift on
+`0b3d3f2a`. A private installation of the published 0.139.0 controller, obtained
+through the supported session-update flow, regenerates the entrypoints, managed
+Dockerfile and spec manifest. The temporary workspace update opt-in is removed.
+This projection preparation is not full readiness; the exact refreshed candidate
+still needs every required provider check and independent controller collection.
+
+## Reflection adversarial proof contract
+
+The work branch incorporates accepted target
+`d31112a1d66899e93dad48a10cc3a6363da2c7db`, including SDK 0.14.0 and the
+required terminal-onboarding fixtures. The installed controller is published
+0.140.3. This conflict-repair update is pushed without tests or full validation
+at the user's explicit request. Earlier measurements below remain historical;
+current-candidate readiness is pending. Generated surfaces match the evaluator.
+
+Required Buildkite library execution on `dc7bf2fa198abeebba072c5394709af0dfca9d86`
+passed 1709 tests (8 ignored), including all 16 reflection cases and the canonical
+lifecycle case. Evidence is build 8602, job
+`01a1cfd6-5d0d-4abb-853c-b4ed9164f022`. The selected scope flaw was detected
+before action, an evidence-bound narrower proposal proceeded in round 2, and
+the original approval/proof requirements and false completion proof were retained.
+Stagnation terminates in round 2 and unresolved progress in round 3. Six ordinary
+phase transitions preserve convergence; an actual governing edit invalidates it.
+Source/custody changes, replay, competing submissions, untrusted instructions
+and invented human approval are covered. These are deterministic protocol
+assertions, not a language-model evaluation or proof of a future cache design.
+
+The canonical lifecycle fixture registers verified writers in its isolated
+store, then exercises actual federation mutations. Supersession, withdrawal,
+dispute, inferred/imported classification, repository-path scope and source
+provenance passed. Production writer trust and approval policy remain unchanged;
+confidence is source classification, not authenticated human authority.
+
+The existing required entrypoint suite includes `infer_precision.rs`. Its first
+execution reached the actual CLI-to-RPC round-2 continuation, then failed a test
+expectation that successful `blocked_by` was always an array. The unchanged
+envelope omits empty blockers. The fixture accepts omission or an empty array,
+and rejects malformed/nonempty blockers. Missing outer task binding must still
+fail before recording round 1. Current-candidate CLI proof must be rerun.
+
+Numeric measurements are emitted by existing fixtures: safe protocol call
+75.213 ms / 575 outcome bytes / 1490 governance bytes growth; conflict and
+revision 58.845 and 43.966 ms, with 1213 and 575 outcome bytes. The two-round
+compact journal was 2843 bytes and total governance growth 4017 bytes. The safe
+fixture observed zero main-database-file growth. Timings exclude CLI startup,
+are samples under concurrent CI load, and carry no portable performance promise.
+
+The only added build input relative to accepted target is the existing
+`infer_precision.rs` file in the required entrypoint suite. Reviewed inventory
+`sha256:d8781827659ed6d9c4702265a3d159509daf789e067ac13e961434a36d5b6d37`
+preserves the profile, accepted executor, required graph and final verdict.
+The current task journal was retained canonically; accepted journals remain in
+Git history.
+
+Failed or incomplete earlier attempts do not establish readiness: provider quota,
+accepted-base/tag movement and release-projection drift remain in trajectory
+evidence. Full validation on `dc7bf2fa` returned `SNAPSHOT_NOT_READY` for the
+CLI fixture failure in build 8602 after 3427640 ms provider wait; private snapshot
+`decapod-snapshot-YH2wgS` preserves that attempt. Passing individual jobs and
+checkpoint-history verification never replace the complete exact-candidate gate.
+Plain `decapod validate` owns the configured build/tests; no separate manual
+build, fabricated proof or weakened check is allowed.
+
+## Historical SDK 0.14 adoption (#1638)
+
+The previous accepted registry dependency was Dactyl 0.14.0, checksum
+`d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`.
+Historical 0.12 observations below describe earlier candidates. The existing
+release-policy test retains registry-only and feature checks, and now rejects
+any locked `quinn-proto` below 0.11.19, even when that dependency is inactive.
+Supported Cargo metadata resolution verifies both the repository lock and a
+new lock-free registry consumer; it is not compilation or Rust 1.85 execution
+evidence. The SDK's own minimum-toolchain proof remains upstream.
+
+Pinned Bazel 9.3.0 `mod deps --lockfile_mode=update` regenerates the actual
+crate-universe graph. Its complete JSON is serialized with one-space indentation
+only after parsed value equality, preserving the existing bounded discovery
+and strict normal `lockfile_mode=error` policy. Nix directly uses Cargo.lock.
+The full configured source-CI matrix and independent released-controller
+exact-candidate validation remain mandatory; no manual build, fixture result
+or metadata operation establishes publication or protected hosted readiness.
+
+## Recovery and accepted-target reconciliation (#1628)
+
+The client continues from both original checkpoints, including
+`d85650bafa610dc952fbc91acd91ba5e28b329b7`, with the accepted billing/release
+history merged into the same work branch. The newer mandatory project roster,
+embedded price and client-built billing URL conflict with the backend-only
+contract and are replaced by the managed Dactyl sign-in/account flow. The fresh
+headless initialization fixture also asserts that these project fields are absent.
+
+Dactyl's unchanged `86ed55dbf4ff78bb3c6c6aa52832949101d9ea91` candidate has
+verified native evidence from run `43131221323`: both mandatory proof groups,
+all fourteen checks, a ready verdict and its exact-candidate readiness receipt.
+Its wrapper failed afterward during PR publication/readback. This upstream
+offline proof does not establish client compilation or protected hosted access.
+At that observation the registry exposed only `dactyl-db 0.11.1`. During
+continuation Dactyl PR #102 and release #103 merged, publishing `0.12.0` from
+`598415953b5ee568f6d42652982897c58b4433cc`. The crate SHA256 was verified as
+`b9d8eda3a7bad7490d23dbca5c468bf89b28de4c8b4fd566034b342334ba481e`; its
+public API and packaged source match that release. The existing client now
+uses its supported Serde/status/code/completion contract. The original stronger
+repository-response API is not assumed to exist in the registry release.
+On registry candidate `0bff2528d498c7423783656b45a47fde8cd92dbc`, the
+independent GitHub diagnostics passed 1,674 library tests (eight ignored),
+including all eighteen private-custody unit tests. The consumer integration
+suite failed because successful RPC fixtures omitted the released protocol's
+required `generated_keys` field, and three human-diagnostic assertions assumed
+lowercase status text. Complete successful fixtures now supply an empty key
+list; the diagnostic assertions match the released transport classification
+and actual status spelling. Existing negative, no-fallback, bounded timeout
+and redaction assertions remain required. This diagnostic run was not Buildkite
+readiness and had not executed the twelve managed sign-in scenarios. Their
+later successful diagnostic execution is recorded below; the current exact
+candidate still requires complete native proof.
+The released connector classifies a dropped non-timeout authentication response
+as `Unavailable`. Completion recovery must retain the saved session and return
+`onboarding_pending` for this kind as well as transport/timeout failures; the
+existing lost-completion fixture verifies the repeated idempotent confirmation
+and the absence of repeated one-time exchanges.
+The pending-account scenario exercises the published `entitlement_required`,
+`seat_unassigned` and `quote_confirmation_required` reasons individually. Each
+must retain the issued session, return action-required, avoid the repository
+read and avoid replaying either exchange until the service confirms completion.
+The 0.12.0 lockfile also downgrades inactive HTTP/3 dependencies under Dactyl
+MSRV bounds; the required dependency audit must pass without exemptions.
+
+The first registry candidate reached actual Buildkite execution. Independent
+GitHub diagnostics on that same candidate passed all-feature clippy and
+dependency lint, but Bazel setup rejected the stale `MODULE.bazel.lock` before
+the Bazel tests could run. The reported recovery, repository-pinned Bazel 9.3.0
+`mod deps --lockfile_mode=update`, regenerates the extension's Cargo inputs.
+The committed build policy remains `lockfile_mode=error`; no test/build gate is
+replaced by this metadata preparation. Fresh Buildkite proof on the current
+exact candidate remains required.
+
+The generated lock was 1,053,030 bytes, exceeding bounded discovery by 4,454
+bytes. Reformatting its complete JSON with one-space indentation yields
+1,029,040 bytes; parsed JSON equality verifies that no value was removed or
+changed. Pinned Bazel accepts the result with `lockfile_mode=error`. Source and
+runtime discovery limits remain unchanged. This is metadata consistency proof,
+not an executed client test or full-readiness result.
+
+The current registry version and checksum are established by Cargo and
+`tests/release_dependency_policy.rs`. Existing versioned SQLite recovery
+documentation describes the unchanged recovery primitive; those historical
+capability references do not establish the managed connector's release or proof.
+
+The first current-target validation stopped before Buildkite because the
+immutable candidate still carried v0.138.2 entrypoint headers while the installed
+released controller was v0.138.3. Supported initialization regenerates the four
+entrypoints and managed image pin; spec refresh updates their projections.
+The original journal, reviewed project configuration and required proof coverage
+are preserved. This projection repair supplies no compilation or test evidence.
+
+## Managed connector execution prerequisites (#1628)
+
+The managed connector requires a published Dactyl dependency containing its
+public API and successful execution of the complete required source checks.
+No governed source-overlay recipe is configured for integration diagnostics
+before those checks pass. Source review, formatting, native checkpoints and
+workbranch pushes do not establish compilation, test execution or readiness.
+
+The registry manifest and lockfile, `tests/release_dependency_policy.rs` and
+complete required source profile remain authoritative. Dependency alignment
+and package publication remain the separate
+[#1380](https://github.com/DecapodLabs/decapod/issues/1380) handoff; no path/Git
+fallback, dependency override or relaxed proof gate supplies that evidence.
+
+## Managed cloud client proof and package prerequisite (#1628)
+
+The configured complete source-CI profile remains required. New
+`tests/cloud_managed_session.rs` fixtures exercise the actual binary through
+headless sign-in, durable continuation, credential refresh, interrupted mutation,
+explicit restart and authenticated read readiness. The cloud backend, CLI,
+Supabase boundary, TODO resume and init regression suites preserve local
+independence and fail-closed cloud behavior. Unit coverage in
+`tests/unit/core/cloud_session_tests.rs` exercises private record permissions,
+path rejection, exact binding, phase invariants and serialized custody.
+
+These tests must run on the exact checkpointed candidate. Static review and
+source formatting do not establish compilation or execution. The managed API
+is consumed from the published Dactyl 0.14.0 registry dependency.
+The accepted source-CI executor retains its own required recipe. Its diagnostic
+record on `ee288c86` showed that a candidate helper edit did not add a new target
+to that recipe. The existing required `cloud_supabase_boundary` target now
+includes the shared `common/cloud_managed_scenarios.rs` test module, so all
+thirteen scenarios execute under the accepted recipe without changing executor
+authority. The standalone `cloud_managed_session` entry uses the same scenarios.
+Both entries include the private seed helper once at their crate root; this
+avoids the `clippy::duplicate_mod` failure observed on `2f01156c` without a lint
+exemption. Every existing required command/target remains intact.
+
+That diagnostic run passed 1,674 library tests (eight ignored) and nineteen of
+twenty existing boundary tests. Its remaining failure showed that unsupported
+`todo done --validated` reached discovery before rejecting unavailable proof
+capture. A shared guard now rejects it before connector construction, while
+retaining the direct-store guard and the existing no-network/no-mutation test.
+The full native validation of that superseded candidate was interrupted; it
+does not supply a final readiness verdict.
+
+On `2f01156cfebd9622cc9ae6f43aa80403054a2461`, GitHub consumer job
+`130991125949` passed all 1,674 library tests (eight ignored), including all
+eighteen custody tests, and all thirty-three boundary tests. The boundary
+results explicitly include all twelve managed CLI scenarios and the corrected
+proof-before-network case. Other selected cloud/registry integration targets
+also passed; the two protected Supabase profiles remained ignored. This is
+diagnostic execution, not a full Buildkite readiness receipt. The follow-up
+test layout removes only the duplicate seed-helper inclusion (thirty-two
+boundary tests) to resolve clippy while retaining every product assertion.
+Native validation hit the public metadata reader's rate limit before obtaining
+readiness. A fresh complete verdict on the final exact candidate remains
+required; neither GitHub success nor a rate-limit failure supplies it.
+`tests/release_dependency_policy.rs`, Cargo manifests and source-CI configuration
+remain intact; an unpublished source overlay cannot establish release-policy or
+publication readiness. No local fixture claims hosted managed Auth, production
+entitlement policy, real PostgreSQL, deployment or full remote governance parity.
+
+The legacy protected CLI profiles in `tests/supabase_service.rs` and
+`tests/propodus_live.rs` fail explicitly with `MANAGED_CLI_FIXTURE_UNAVAILABLE`
+before inspecting fixture credentials or dispatching any CLI/network request.
+Their real-service assertions remain intact for a future managed fixture; no
+ignored profile is represented as passing. The explicit legacy PropodusClient
+API test retains its own service boundary. Account completion response loss
+resumes the idempotent confirmation using the same body and bearer; the binary
+fixture asserts that one-time token exchange is never replayed.
+
+## Native Laya research reconciliation (#1614)
+
+The historical candidate failed dependency denial on Tokio 1.52.3
+(`RUSTSEC-2026-0386`) and lacked a current-source Interfaces review. The
+reconciled source retains accepted v0.138.0's Tokio 1.53.3 root lockfile and
+sole-Laya kernel ownership. Native task/workspace admission, genuine current
+spec reviews, material checkpoints and exact-candidate validation must establish
+the new candidate's custody; neither an old result nor copied metadata does so.
+
+An upstream advance invalidates the old publication base even when a previous
+candidate has successful source-CI receipts. Current integration preserves the
+accepted test-only plugin selection and its material validation contract. Old
+receipts retain their original base/head bindings; reconciliation onto the new
+accepted base requires native custody, checkpoints and fresh exact-candidate
+publication checks. `PUBLICATION_MATERIAL_BASE_CHANGED` is not a test waiver.
+
+The original frozen fitting/evaluation corpus definitions replace unsupported
+placeholder families. Their partitions remain disjoint; the evaluation allows
+zero false-ready adverse controls and cannot be reused for tuning.
+`core::laya_readiness::fitting_cases::frozen_corpora_name_executable_and_disjoint_contract_families`
+executes the eight declared bounded Rust witnesses and checks partition
+separation. It generates no fitting/evaluation inputs, runs no model and
+produces no evaluation scores. The explicit bounded-process signal-module path
+supports compilation of shared source by the separate native worker workspace.
+
+The new regression is part of the library unit suite. The actual source paths
+select the existing required `supabase-consumer` check, whose second command
+runs unfiltered `cargo test --locked --features supabase-cloud --lib` with its
+listed integration targets. Execution requires the complete command record and
+the named test result. The narrower `selective-core` recipe selected by these
+paths runs `entrypoint_correctness`, not this regression. A green job with
+`not_applicable`, an ignored test, or compilation alone cannot establish that
+the bounded witnesses ran.
+
+The independent `assets/tools/laya-native` workspace remains unqualified.
+Root-library CI does not compile, audit or qualify that separate workspace;
+its preserved dependency set, including zip 1.3.1, requires its own remediation
+and verification before activation. The recorded fitted-worker diagnostic
+approved six of twenty adverse controls and rejected four of twelve ready
+controls. Those failures remain evidence, the held-out evaluation remains
+unscored, and no threshold, numerical tolerance, coefficient bound, model
+profile or policy requirement is relaxed. Native compilation, dependency
+checks, real backend/protocol execution and a separately justified successful
+qualification must precede any activation or readiness claim.
+
+## Historical full-proof completion (#1610)
+
+Required regressions exercise both native and provider history production,
+complete proof-plan and material bindings, archive durability, and failure to
+persist. A partial, failed, stale or decision-blocked result must not be archived
+as successful full proof. Recording history must leave the candidate SHA intact.
+
+`validation_history_archive_tests` exercises the actual pre-validation binding
+and canonical append transaction, then removes temporary execution evidence and
+looks up the full record by SHA. Native and provider-shaped complete-suite
+fixtures must preserve the original task, epoch, plan and results without
+changing Git HEAD or tracked governance. These fixtures test archival mechanics;
+their observations are not evidence of an external provider run.
+
+Completion tests must show that an original owner can complete a merged task,
+or repair its done-but-unverified state, from recorded candidate proof without
+launching current validation or borrowing another task's workspace. Adversarial
+cases cover wrong task, commit or repository, corrupt evidence, intent edit and
+revert, changed lease generation, incomplete task history, unproven integration,
+dependency failures and revision races. Failed attempts must preserve task,
+proof and journal state. Subsequent QA inspection must preserve this historical
+meaning after unrelated work and epoch changes. Publication continues requiring
+fresh complete proof and cannot consume this historical completion permission.
+
+Additional ergonomics and private-repository regressions (#1807, #1810) cover:
+- Authenticated read-only private-repo accepted-target resolution via mock
+  `OfficialCli` `GithubGet` (`validation_history::integration_tests`) and redacted
+  error reporting when unauthenticated and authenticated transports are unavailable;
+- Pre-capture, custody-preserving lease TTL verification before freezing
+  `HistoricalTaskBinding`: default advisory and `strict` modes leave `revision` and
+  `lease_generation` untouched, only explicit `renew` rotates custody
+  (`validation_history::archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit`;
+  end-to-end custody stability across workunit checkpoints is covered by
+  `entrypoint_correctness::canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal`);
+- Request-bound pre-broker `todo done --validated` handoff validation and cleanup
+  (`plugins::verify::historical_tests::prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request`
+  and `tests/validate_ergonomics_1807_1810.rs::todo_done_validated_decouples_broker_and_cleans_handoff`);
+- Unverified `done` (`CLAIMED`) self-service recovery via `qa verify regen` without
+  self-deadlock (`tests/validate_ergonomics_1807_1810.rs::unverified_done_todo_recovers_via_qa_verify_regen_without_self_deadlock`);
+- Unix `RLIMIT_NOFILE` diagnostics in `system doctor check` and `validate_open_file_limits`
+  plus automatic soft-limit elevation for spawned harnesses
+  (`core::bounded_process::tests`, `plugins::doctor::tests`, and
+  `tests/validate_ergonomics_1807_1810.rs::rlimit_nofile_diagnosed_in_doctor_and_raised_for_validate_harnesses`).
+
+The inline Rust regressions are part of the library unit suite selected by the
+complete source profile. Their presence and source review are not execution
+evidence; the exact candidate still requires configured full validation.
+
+## Immutable push-range ancestry
+
+Ordinary push-range validation uses the previous branch tip as its `base` and
+requires that tip to be an ancestor of the exact new push head. The separately
+captured accepted target remains part of validation; a protected-master push
+can have the accepted target equal to the new head. PR validation retains its
+base-ancestry and exact merge-base requirements. See
+`src/decapod/core/release_metadata.rs::validation_change_base` and
+`tests/release_metadata_policy.rs` for the ordinary-range regressions.
+
+Governed `refs/heads/agent/*/*` pushes use a distinct normalized context.
+`.github/actions/ci-context/action.yml` clears `push.before` for this route and
+captures the accepted branch declared by the committed `repo.base_branch`.
+`assets/tools/ci_event_context.rs::resolve_workbranch` and
+`verify_normalized_workbranch` require that captured accepted tip to be an
+ancestor of the exact candidate, verify its checkout and complete unmodified
+Git history, and recheck the captured ref. The branch namespace selects this
+context; it does not itself grant rewrite or publication authority.
+
+Rebasing an existing governed branch requires explicit maintainer authorization,
+a retained original tip, and an exact old-head lease for the remote update.
+Preserve authentic task custody and the active journal, record fresh native
+material checkpoints for every rewritten material commit, and establish fresh
+full publication proof against the accepted target. Earlier receipts and
+historical completion records retain their original candidate/base bindings;
+they do not prove the rebased tree. Divergent accepted targets, missing history,
+and stale or fabricated checkpoint evidence still fail validation.
+
+## Version smoke regression
+
+The unchanged Nix workflow (`.github/workflows/nix-flake.yml`) smoke-checks the
+built binary with `system version`. The CLI regression
+`system_version_does_not_open_or_repair_project_storage` runs that command with
+invalid project configuration and datastore modes 0700, 0775 and 0777; metadata
+reporting must succeed without creating state or changing permissions. Stateful
+commands must continue rejecting unsafe storage. In `tests/trajectory_cli.rs`,
+`local_command_announces_a_detected_version_transition_once` checks that version
+reporting leaves the old release counter untouched, then a normal project
+command emits the pending migration notice exactly once. Full validation must
+execute the source tests; these contracts alone do not prove Nix packaging or
+post-merge reproducibility.
+
+## Post-merge Gatling test-budget recovery (#1596)
+
+The `Tests (Full)` job in GitHub Actions run `42744631477` ended with a
+Bazel `//:gatling` TIMEOUT after 300.1 seconds, while executing the complete
+50-test CLI integration suite with `--test-threads=4`. This is evidence of an
+insufficient aggregate CI deadline, not of a specific assertion failure or a
+successful run. The previous five-minute `moderate` budget did not establish
+whether the remaining tests pass.
+
+`.config/build/decapod.BUILD.bzl` now gives only `tests/gatling.rs` the
+existing Bazel `long` class (a bounded 900-second ceiling), already used for
+two other integration-heavy targets. The test inventory, assertions,
+per-process deadlines, four-thread setting, nonzero exit behavior and required
+CI checks are unchanged. A hang or failed assertion must still fail CI.
+
+The concurrent `Deploy Docs` failure in run `42744631501` was GitHub Pages
+remaining `deployment_queued` before an API deployment error. A later
+unchanged-source deployment succeeded, so no speculative Pages workflow or
+permission changes belong in this repair. Treat a new failure as independent
+evidence requiring its own diagnosis.
+
+Acceptance requires an exact-head, v0.136.1-governed candidate with material
+checkpoint proof and the configured required CI graph; a declaration of a
+larger timeout does not by itself prove the full test suite passes. The
+post-merge `Tests (Full)` run is the decisive 900-second regression signal.
+
+## macOS bounded-reader recovery (#1571)
+
+The accepted v0.133.2 before-fix regression
+`core::validation_epoch::input::tests::bounded_epoch_preserves_ordinary_epoch_digest`
+failed with `ENOTDIR`. Descriptor-relative macOS enumeration must make the same
+bounded and ordinary digests agree while retaining symlink/FIFO rejection and
+all input bounds. The macOS iterator regressions also require independent cursors,
+no pathname substitution, safe ownership after dropping the original handle, and
+correct non-following file/directory/link classification. These are local input
+safety checks, not evidence of cloud, hosted CI or publication readiness.
 
 ## Claim boundary delivery checks
 
@@ -30,12 +645,6 @@ opt-in pending-batch test in `tests/support/live_recovery.rs` preserves the real
 failed attempt and retries without deleting evidence, pruning or reopening.
 It requires per-task verification and final unscoped publication readiness;
 compilation or an ignored test remains insufficient acceptance.
-
-The macOS ARM64 live retry subsequently executed against the same preserved
-two-task batch and passed (1 executed, 0 failed, 0 ignored). It checked every
-original task field and historical event, replayed each task, and required
-full unscoped publication readiness. This is measured native fixture evidence
-with Vega disabled, not evidence for enabled inference or other platforms.
 
 ## Documented agent bootstrap execution
 
@@ -66,18 +675,6 @@ on test-only changes. This runtime regression complements the four-entrypoint te
 
 ## Native readiness receipt custody
 
-Decapod remains the proof-gated governor of accepted work, not a receipt-import
-service. Native publication readiness in
-`src/decapod/core/validation_runtime.rs::run` executes the complete selected
-deterministic proof and configured Vega decision before producing
-`completion/native-readiness-receipt.json` in the invocation's external evidence
-directory, alongside `completion/verdict.json`.
-The receipt binds the exact material identity (including accepted target),
-committed governance and trajectory digest, expected proof plan, measured
-execution evidence, decision, scope and invocation. Its hash covers every other
-receipt field. It is an output for inspection, never reusable authority to open
-a PR or waive a subsequent exact-candidate validation.
-
 `workspace::ensure_required_governance_artifacts_in_pr` requires current plan,
 claims and trajectory material but not the legacy tracked
 `sections.validation` preparation receipt. Requiring that output before native
@@ -87,9 +684,12 @@ preparation writer; inventory continues to report its actual integrity and
 freshness rather than laundering absent or stale receipts into success.
 Malformed configuration and missing required governance still fail.
 
-Native success is published as one atomic completion directory only after both
-receipt and verdict have been written and synced in private staging. No fallible
-operation follows that publication point. Failed execution, stale candidate/target
+Native execution success is published as one atomic completion directory only
+after its receipt and verdict have been written and synced in private staging.
+The runtime writes its compact historical proof before that publication point.
+The outer full-readiness boundary then appends that
+proof to the canonical history; failure of that append revokes returned
+publication readiness while preserving the execution evidence. Failed execution, stale candidate/target
 or blocked decision produces no success receipt; receipt or verdict creation,
 partial-write or sync failure leaves no published success bundle and revokes
 returned readiness. Pending staging files are never completion evidence. No checkout or
@@ -104,170 +704,31 @@ configured validation of this candidate; their presence is not a passing result.
 
 ## Validation Overview
 
-The artifact-origin controller prerequisite uses the accepted source-bound CI API
-attestation policy, complete Buildkite catalog and unchanged eight-run Vega
-recipe. Adversarial Rust tests cover both exact storage origins and rejection of
-host/port/userinfo/producer/path substitutions. A separately opted-in live test
-uses the production reader for one fixed public producer artifact and verifies
-its independently observed provider SHA-256 and byte count. That diagnostic is
-not imported as execution custody or readiness evidence. The prior stricter
-rollout's failed `f475d078` report remains preserved; actual full strict collection
-awaits independent acceptance/release. No required deterministic/native gate or
-model tolerance is changed, and no broader umbrella is declared complete.
+Decapod validates the exact candidate against declared intent, accepted policy,
+a bounded required proof profile and verified execution custody. The agent owns
+repair and revalidation; human review retains merge and release authority.
+Buildkite evidence is required when that provider is configured. GitHub mirror
+results, prepared prerequisites and replay fixtures do not independently grant
+publication readiness.
 
-### Current acceptance: active functional integration, 2026-10-20
+Optional Laya assessment follows successful deterministic proof and fresh material
+bindings. Disabled mode executes no inference. Required mode retains declared
+obligations in the bounded `validation-results.v3` projection and requires a
+valid affirmative response under the pinned manifest. Failed proof, oversized
+inputs, missing runtime, stale bindings, rejection and abstention cannot become
+publication permission. Four captured projection hashes remain compatibility
+vectors; they establish serialized input preservation, not model accuracy.
 
-The maintainer explicitly replaces the implementation-added statistical
-59-acceptance/5%-risk/95%-confidence/50%-coverage research prerequisite. Current
-acceptance requires functional production-path outcomes from the pinned model
-on Metal and CPU, unchanged numerical comparisons/tolerances, actual native
-execution, installation/configuration/fallback tests and all deterministic
-governance/source/native proof. It does not establish domain-calibrated accuracy
-or pass the old criterion. Historical study and failed validation reports below
-remain preserved; their old required-research wording is historical, not an
-instruction to block this approved scope solely on sample admission.
+Canonical proof encodings, event identities and historical Git commits are not
+rewritten. Removed research profiles have no current acceptance obligation and
+no historical failed result is relabeled as success. External model and hosted
+service profiles are executed only under their explicit fixture requirements;
+unavailable or ignored profiles are not passed evidence.
 
-`production_evaluation` freezes twelve scenarios (SHA256
-97b4667e3cb3a74b41cfcc0e1ab713dcd046895aa0c8d813f6856b0c9ff68094)
-before first inference. Actual bounded gate/tokenizer/calibration checks execute
-before their observations enter shared `validation-results.v3`. Following the
-maintainer's delegated decision, functional qualification permits valid safe
-abstention on a ready control while retaining its expected-accept mismatch.
-Each actual backend must approve at least one meaningful ready control; an
-always-abstaining/rejecting model cannot qualify. Every ready control must either
-accept or validly abstain, and unmet obligations must still reject; uncertainty,
-contradictory requirements and input manipulation must remain non-ready. Failed
-and stale mandatory proof must block before inference. Expected labels are kept
-outside the request; results cannot be selected, relabelled, threshold-tuned or
-replaced by a fake verdict. No fitting or calibration/model change is performed.
-The strict final reducer rechecks complete per-case/backend coverage, fixed input,
-request/response binding, raw decisions and the shared readiness predicate, plus
-the numerical exports. `all_frozen_expectations_matched` reports the original
-oracle agreement independently of `functional_checks_passed`; qualification does
-not relabel a mismatch as agreement. Safe abstention never authorizes readiness
-for the assessed work. Failed controls, malformed inference or absent positive
-coverage fail exact-candidate validation.
-Unit/adversarial receipt and runtime tests separately cover malformed results,
-abstention, relevant state/model changes and deterministic proof authority.
-
-Pre-revision `fef84896` passed Buildkite2301 all39source steps, 1,463 library
-tests (three ignored), 53 native tests and three fixed 138/314/4,096-token
-Metal/CPU numerical comparisons. Its terminal report042518Z, SHA256
-06be1331c630bce469e9250e111baf4f2bc8e6902716924d183037e56e51d2af,
-failed the now-superseded research admission check. That failure stays failed.
-New functional tests are authored, not passing until prescribed validation runs.
-
-The first revised candidate `c5853c47` passed all39source steps and 1,463 library
-tests, compiled the worker and passed55of56native tests. Its functional projection
-regression exposed `IncompletePlan`: source checks cannot replace the required
-candidate-build witness. The replay builder now records the actual running native
-executable's digest as that separate build artifact, with an adversarial regression
-removing it. The evidence verifier is unchanged. No new model case ran before
-this repair; fixed functional case bytes, labels, model/calibration and numerical
-tolerances remain unchanged. Report074535Z/SHA256
-caa3eed0f5010668bbe687a8cd9c5596bfa6afaadf307eb33742f9dd57c7764b
-remains failed history; the repair requires a new exact-candidate full validation.
-
-Candidate `59eaf087` completed that full run: Buildkite2311 all39source steps,
-57native tests and three numerical Metal/CPU comparisons passed. All24 fixed
-case/backend observations were collected:20real model decisions and four
-failed/stale-proof blocks before inference. Gate-ready and prompt-ready accepted
-on both backends; all three unmet-obligation cases and the declared-but-absent
-evaluation rejected. Unresolved requirements and input manipulation abstained;
-contradictory requirements rejected. The calibration-ready control abstained on
-both backends with yes probability0.57303135/0.57303569, two-label prediction sets,
-no error and unbound=false. This is a valid calibrated uncertainty response, and
-the shared required-mode predicate correctly denied readiness. It does not match
-that case's frozen expected-accept label:22of24 records matched, and the strict
-functional aggregate failed. No expectation, model, threshold or output is
-relabelled. Report081406Z/SHA256
-d7fc06ddf9187b1e1ed6536bf4572ea38d6f5446846aadab9c6d16cce7305c76
-and all raw outcomes remain preserved. A new metadata-ordering regression covers
-the canonical four features and every nonidentity permutation; it changes no
-model setting and requires execution on the next candidate. Review found that
-the native contract checker previously tested only an invalid one-element
-feature list while claiming feature-order coverage. It now actually accepts the
-canonical four-feature metadata and rejects all23nonidentity permutations plus
-malformed metadata. The production observation describes that expanded execution
-precisely for every calibration-family case. This is additional genuine proof,
-not a threshold, label or prompt-question change, and does not establish why the
-previous model abstained. Fixed scenario bytes/expectations remain unchanged;
-the evaluated candidate and its actual check inventory change with this repair.
-
-Candidate `08b967b2` executed Buildkite2321 all 39 source steps and the library
-suite passed 1,464 tests with three ignored. Its 091542Z validation stopped on
-public GitHub HTTP403 before native execution. Buildkite2316 separately failed
-the hosted mise/buildkite-gha bootstrap. Redelivery of the original signed push
-recovered source execution but also created duplicate auxiliary workflow builds;
-the released controller correctly refused them in report095248Z, SHA256
-fc50e3af9eecb0b2c4445643f95ebd0b5d5dd6c6390b305b7193ef5b432d22aa.
-Neither failed report supplies current native evidence. The final evidence and
-qualification documentation checkpoint stays on the same original branch and
-must receive fresh complete proof; no provider uniqueness guard is weakened.
-
-The maintainer explicitly delegated the safe-abstention interpretation after
-reviewing the observed two substantive approvals and calibration-control
-abstention. `delivery_case_matches`/`delivery_passes` preserve frozen labels and
-strict oracle results while requiring genuine approval on both backends and all
-adverse/control outcomes. New regressions reject missing inference, false grants,
-confident rejection of a ready control, absent approval on either backend and
-failed controls despite approvals. Main production inference, model input,
-thresholds, weights and numerical tolerances are unchanged. These two additional
-native tests are authored, not passed until the next prescribed full validation.
-
-### Historical validation and superseded research acceptance
-
-The following records retain prior observations and the contract at their time;
-references to "current" source or required research criteria do not supersede
-the explicit current functional acceptance above.
-
-The separate native worker is compiled and tested from its own locked Cargo
-workspace after the complete source verdict. Main-crate CI cannot type-check
-all worker-only code and is not evidence that native compilation succeeded.
-Diagnostic export errors must propagate through the worker's error result;
-an I/O failure, empty proof or partial JSON cannot become successful collection.
-The native check-0 failure on `304060a3` occurred during compilation, before
-any worker tests or model inference; its report and compiler output are retained.
-
-Decapod validates governed work against declared intent, accepted policy and a finite required proof profile. The agent repairs failures and publishes only after the exact candidate passes; the human retains merge authority. Vega remains an optional post-validation assessment. Failed deterministic proof stops before model inference, while numerical/model verification of this integration is a separate development acceptance obligation.
-
-The latest executed source, `9f017d31`, passed all 39 source steps and 49 native tests, plus the three fixed Metal/CPU numerical comparisons. Full report `vega-1191-validation-20261019T232350Z` still failed the required scientific aggregate. Subsequent contract diagnosis reconstructed and hash-verified every one of its 29 accepted model inputs; the 23 label conflicts divide into 19 visible constructed-condition/uncertainty misses and four known failing-base cases outside the post-validation stage. The six matching gold accepts are benchmark-oracle agreement, not independently established complete-readiness labels.
-
-The v2 benchmark state bypasses production projection: its full patch/test-patch representation cannot measure the `validation-results.v3` obligation-preservation correction. Exposed v2 units are diagnostic only; original inputs/results and failure history remain preserved. The current repair shares `vega_readiness::project` and `Response::validated_outcome` between live inference and `production_evaluation`. `EvaluationSnapshot::project` runs the existing full-suite evidence verifier before model dispatch, with fresh live custody still the production caller's responsibility. New regressions cover failed/stale/missing proof, overflow, trajectory mismatch, retained proof hooks/questions/contradictions/phase gates, declarations without measurements, and malformed wire results. The native numeric phase first collects actual Metal/CPU production-protocol diagnostics with explicitly constructed observations, independently of final label admission. Those fixtures count as zero independent final units. The six final collection slots report the reviewed admission ledger's missing production study rather than repeating exposed v2 as unseen evidence; the mandatory aggregate remains failed. No acceptance condition or threshold is relaxed. Native execution and new tests must be measured through the next exact-candidate `decapod validate`, not inferred from authored code. The maintainer rejected inactive/advisory delivery. `docs/vega-completion-checklist.md` records issue scope, source/native proof and precise remaining readiness qualifications. Historical checkpoint notes below do not supersede this state.
-
-Current measured candidate `30015be0` completed official v0.119.1 source proof ([Buildkite2261, all39steps](https://buildkite.com/decapodlabs/decapod/builds/2261),1,459library tests passed/3ignored), native compilation and43worker tests passed/none ignored. Actual M1 Max Metal and explicit CPU inference passed three fixed138/314/4096-token comparisons against separate Rust byte-BPE/scalar-F64 calculations, unchanged numerical tolerances, two/all16active memory slots and4097-token rejection. The long Metal sampled-block maximum absolute error was5.151912539e-5, normalized RMS2.715368673e-5; combined engine errors0.000198801880Metal/0.000037234818CPU. Calibrated sets, abstention, unbound and settle checks matched; both long-fixture decisions abstained and were unbound. These are measured fresh pure-text fixtures, not all-input or independently human-reviewed backbone equivalence.
-
-Full validation `vega-1191-validation-20261019T182235Z` correctly failed `vega-native-8`, the strict scientific aggregate. Both backends completed all six v2 groups: per backend102actual outcomes,36unsupported-token inputs,0inference failures,0deadline exclusions,52abstentions,29acceptances including23false-ready proxy outcomes. All9accepted issue units had an error; reported one-sided95% upper risk1.0. Nonabstaining coverage36.23%, positive acceptance coverage26.09%; required-abstention labels17correct/15incorrectly definitive/14unsupported. No readiness-domain calibration or PR readiness is established. The unchanged23-original/four-repository proxy corpus is too small and dependent to establish the frozen5%risk bound even without its observed errors. Preserve all older failed attempts and the complete current dispositions.
-
-The actual repeated Metal recurrence and numerical fixtures, exact asset/runtime identities, synchronized stage/request latency, process-lifetime RSS and component fallback scope are recorded in `docs/vega-reference-contract.md`. Long Metal/CPU compute was4.570/41.264s, whole verified requests15.990/52.677s; maximum numeric-process lifetime RSS5,016,993,792B. These are uncontrolled observations including prior process work and full integrity hashing, not isolated allocation, total GPU memory or cold/warm benchmarks. Actual unsupported CUDA followed by fresh CPU inference exercises the production retry classifier; it does not establish failure of available Metal, NVIDIA execution or full Linux loader-companion routing.
-
-The reviewed recipe uses eight bounded Rust runs: numerical collection, six fixed ordinal-modulo6 holdout shards attempting Metal and CPU, and required strict aggregation. Every collection envelope states publication_ready=false and acceptance_pending; successful collection commands do not assert scientific acceptance. The final check binds fresh same-directory/runtime/model/corpus receipts, verifies private single-link files and numerical exports, redoes independent numeric comparisons and rederives labels/decisions/grouped risk from all frozen cases. Missing/malformed/replayed/mixed/altered or incomplete evidence fails closed. Each shard carries an absolute1600-second cutoff over all preparation and both backends, without per-case resets; original1800-command/7200-overall kernel limits remain. Typed token-overflow rejection is counted as unsupported coverage, not abstention. Protocol/identity/hardlink/label/decision/tokenizer tests now have actual43-test execution evidence on30015; collection alone still does not establish acceptance.
-
-Decapod validates whether identified work satisfies the project's stated
-boundaries and required proof. Validation preserves the difference between what
-the human requested, what the agent understood, what ran, and what the evidence
-supports. It cannot establish correctness outside the configured requirements or
-control commands an agent runs outside Decapod.
-
-The scalar reference remains pinned to Transformers aad13b87ed59f2afcfaebc985f403301887a35fc, source SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a. Its resource cap extends to4096fresh pure-text tokens without changed equations or tolerances. Before model observations, the exact-limit fixture was frozen as306coverage sentences plus the first0..32literal x-suffixes reaching4096according to the independent tokenizer; a one-token4097extension must fail without truncation. Both backends now have actual all16-slot evidence on that fixed fixture. Existing absolute/relative/RMS engine/backbone/calibration bounds, set/abstention semantics, model assets, v2 corpus membership, risk and coverage criteria are unchanged. Same-agent authorship, shared parsers/weights, unsupported streamed/image modes and readiness-label adjudication/sampling limits remain explicit. Historical unexecuted checkpoint notes below do not supersede the measured30015results.
-
-Prospective source-corpus work must use source-bound, auditable labels and the bounded production validation/intent representation. A review-state/CI-rollup inventory is not already a verified readiness dataset: current requiredness does not authenticate historical policy, a later successful check cannot be backfilled before the labelled decision, and a source approval must match the evaluated commit. Selected verdicts, their rationale, later merge outcomes and post-decision edits must not leak into model inputs. Group related originals before freezing a new holdout; use development alone for any compatible calibration-policy selection and preserve the old failed study. No new inputs have yet been measured or fitted. The original zero-error,5%upper-risk,50%coverage and correct-abstention conditions remain required; source limitations or unsupported cases cannot be promoted into a passing claim.
-
-Candidate `040d2f04` retained two distinct failures. [Buildkite 2266](https://buildkite.com/decapodlabs/decapod/builds/2266) rejected the stale Bazel input lock after `Cargo.toml` excluded the public research fixture from the published crate. The anonymous setup log prescribed `bazel mod deps --lockfile_mode=update`. Batch metadata regeneration with repository-pinned Bazel 9.3.0 succeeded and changed only the normalized Cargo manifest hash in `MODULE.bazel.lock`; dependency selections and the 1,037,341-byte lock size are unchanged. This is metadata maintenance, not a passing build or test. The first sandboxed attempt failed on macOS process inspection at exit; its supported retry ran outside that restriction in batch mode without a persistent server.
-
-Separately, full validation `vega-1191-validation-20261019T214541Z` stopped on the public GitHub commit-checks API's HTTP 403 rate limit, with reset at 2026-10-19 22:46:31 UTC. This is not a missing Buildkite login. The failed report is preserved, no automatic authentication substitution or artifact import occurred, and the corrected candidate requires a fresh normal validation after the reported reset. New obligation-preservation and source-audit regressions remain unexecuted until that prescribed flow reaches them; earlier `30015be0` measurements are not current-candidate readiness.
-
-Corrected `ef3d23bc` passed [Buildkite 2271, all 39 source steps](https://buildkite.com/decapodlabs/decapod/builds/2271), including 1,461 library tests with 3 ignored. Both new obligation-preservation tests therefore have executed evidence. The normal post-reset retry, `vega-1191-validation-20261019T224656Z`, cleared remote custody collection and prepared the complete native source snapshot, including the pinned public fixture. Native compilation then failed with E0599 because the new diagnostic export omitted its local `std::io::Write` import. The import is corrected using the same scoped pattern as the existing corpus exporter. Static review also corrected the related-repository test fixture's two review URLs to match its changed repository identity; a wrong-repository URL remains rejected rather than weakening that check. No native test or model inference executed in that attempt; the six source-audit regressions and exact-current scientific verification remain pending. These corrections change no model, corpus, calibration, tolerance, recipe or deadline.
-
-The agent owns the operational loop: establish intent and scope, work in a
-claimed workspace, record falsifiable claims, gather evidence, repair supported
-failures, and revalidate. Human decisions and unavailable proof remain explicit
-blockers. Human onboarding requires only installation and initialization; the
-agent performs validation and coordination.
-
-Publication spec reviews bind current code as well as authored prose (`workspace_publication.rs`, `STALE_SPEC_REVIEW`). After changing implementation, re-review Architecture, Interfaces and Security against that final source even when a specification remains semantically unchanged; record the reason through the supported command. Refreshing fingerprints does not renew that review. Vega candidate `660974b4` failed source CI `39099541876` because Security retained the review from before the process-owner correction. Its failed run remains evidence; a current-content review and a new checkpoint repair the head without rewriting history or claiming unexecuted native tests passed.
-
-The public readiness challenge construction is explicitly versioned. Before any model evaluation or fitting, v2 adds the requested contradictory semantic-evidence abstention case to each of the same 43 originals, without removing v1 cases or changing repository split membership, calibration or numeric thresholds. The result is 258 judgment cases and 129 separately excluded policy cases. Expected abstentions have correct, incorrectly decisive and unobserved counts; zero false-ready alone does not make a confident rejection of ambiguity a successful abstention. Existing v1 source is retained through `4a96c804`; no model result informed this addition. These are still scoped agent-authored benchmark proxies, not production ground truth, and the 23-issue holdout remains insufficient for the declared risk criterion.
+Publication reviews bind current Architecture, Interfaces and Security content
+to the current code fingerprint. `updated` requires a semantic change from the
+accepted base; otherwise an honest `unchanged-with-reason` review is required.
+Full validation and checkpoint inspection remain separate checks.
 
 ## Native sequence verification
 
@@ -669,6 +1130,14 @@ targets: its real CLI/validation processes repeatedly passed alone but exhausted
 the same 300-second budget under sibling load. Serialization preserves all cases,
 commands and finite per-target limits; current execution must verify the repair.
 
+The `group_broker` Bazel target likewise runs exclusively relative to sibling
+targets. CI recorded its final two burst clients reaching the production
+120-second request deadline under concurrent target load, after earlier clients
+completed sequentially. Scheduling isolation preserves both 20-client burst
+tests, durable-result assertions, uncertain-outcome/replay checks and all
+production deadlines. This configuration change requires fresh complete core
+suite execution; an isolated historical pass alone does not establish readiness.
+
 Source-owned shell, checkout, setup, release, and dependency-policy regressions
 must exercise the actual authored helper or workflow body. Tool setup verifies
 pinned official bytes and exact version output before adding tools to PATH.
@@ -812,13 +1281,6 @@ server-side tenant isolation, deployment membership policy, or event atomicity.
 Missing host SQLite runtime is an explicit availability failure; it does not
 activate a bundled fallback driver.
 
-Vega requires Rust regressions for positive-singleton-only acceptance, negative,
-ambiguous, abstaining, unbound/OOD and malformed output; stale source, intent,
-evidence, policy, executable and compound model identities; failed-proof refusal;
-and exact retention of adverse outcomes, exclusions and unknowns during prompt
-compaction. Setup/cache tests must cover pin validation, unchanged-backbone reuse,
-atomic refresh/rollback and no runtime downloads. No new Python test path exists.
-
 Cache regression coverage additionally requires one download across separately
 verified single-link installations, corruption and unsafe-hardlink rejection,
 cancelled-copy cleanup and retry, no-clobber publication, and failed installation
@@ -879,16 +1341,6 @@ Ordinary governed full validation is still required; activation's one-time
 bootstrap permission does not authorize feature builds/tests or publication.
 
 ### Native execution boundary
-
-The released v0.118.0 controller's `validation_runtime::source_invocation`
-supports a finite source-check catalog and the main candidate binary build;
-it has no recipe for the separate `assets/tools/vega-native/Cargo.toml` worker,
-its Metal probe, model installation or `--proof-output` inference. The strict
-Buildkite profile does not execute arbitrary `proof.commands`. Selecting the
-consumer repository-local profile would downgrade the accepted source contract
-and is rejected. `proof::execute_proof_cli` resolves configuration and execution
-from the canonical datastore's project root, rather than the claimed worktree;
-it is not a supported workaround for this host-native task.
 
 The smallest legitimate controller prerequisite is an independently accepted
 and released supplemental host-proof recipe that retains the complete source-CI
@@ -989,6 +1441,43 @@ remains the normal release sequence. This code does not repair a provider that
 never receives a postmerge event. Missing external trigger delivery remains a
 separate operational blocker, and validation does not authorize distribution.
 
+## Intent Reconciliation Acceptance Boundary
+
+Repeated hosted HTTP504 failures fetching pinned Bazel release archives are
+repaired by `.config/build/downloader.cfg`: try Bazel's official mirror, then
+the same official GitHub release URL with an explicit download query, retaining
+the original URL as a fallback. `rules_cc`, `bazel_features`, `rules_shell`,
+`protobuf` and `rules_java` mirror archives and `rules_rust` and `supply-chain`
+query-route archives were verified against upstream pins. Version selection, integrity
+checks, compiler requirements, source execution and the complete test graph
+remain unchanged; fresh exact-candidate validation must exercise the repair.
+
+The accepted v0.133.0 source inventory differs from the last reviewed profile
+only by the package version in `Cargo.toml` and `Cargo.lock`. The explicit
+required-profile review declaration is reconciled to that complete inventory;
+the finite workflow graph, adapters, provider selection and proof requirements
+remain unchanged. This review pin is configuration, not execution evidence.
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+The read-only reconciliation report must detect missing/orphaned/duplicate
+requirement references, missing proof-spec mappings, stale code fingerprints,
+and unresolved human questions. A matching manifest or reference is not
+semantic proof; `intent.reconcile` cannot satisfy validation obligations,
+approve spec changes, or authorize publication. Unit tests must exercise
+these negative cases and preserve existing proof and publication gates.
+
+## Immutable Impact Negative Acceptance
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+Unit and RPC tests must preserve existing empty-params compatibility while
+proving exact-commit ancestry, deterministic NUL-safe add/modify/delete/rename
+classification, authored-spec versus generated-projection distinctions, and
+bounded uncertainty on malformed, non-UTF8 or excessive paths. A code change
+without reviewed authored specs remains observable and explicitly unmapped.
+Human-intent questions, requirement markers, stable hashes and changed-source
+inventory are advisory: none may satisfy a proof gate or change
+`semantic_alignment: not_proven`.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -1037,10 +1526,43 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (215 files)
+- Repository signal fingerprint: `a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Native inventory qualification
+
+The required CLI suite includes seven inventory regressions: UTF-8/reuse and
+redaction; sampled/budget-limited coverage; ordinary DDL and generated columns;
+trigger/view binding without DDL disclosure; checkpoints outside the ordinary
+event prefix; missing-store CLI/direct/stdin RPC without initialization; and
+bounded framing before startup. The registry dependency/version/checksum guard
+remains enabled and is advanced here to exact registry Dactyl v0.14.0. Read-only live captures use a CI-produced
+binary with database trees mounted read-only and only existing locks writable.
+Those captures bind their actual historical source/binary identity; they cannot
+establish publication readiness for the current candidate.
+
+The candidate preserves accepted managed-cloud, terminal onboarding,
+first-proof admission, native inventory, Dactyl 0.14.0 and bounded reflection
+changes through v0.141.0 at 3718f70e, with the four release-bound entrypoints,
+managed image pin, and specification manifest regenerated by the installed
+published 0.141.0 controller. Canonical spec reviews follow the final source
+and authored-spec edits. Complete exact-candidate Buildkite proof and current
+accepted-target verification remain required before publication; earlier passing
+stages, GitHub diagnostics and checkpoint-history checks cannot replace them.
+
+The CLI contract target runs exclusively in Bazel. Two hosted attempts of the
+previous 74-case candidate exhausted its 300-second deadline during the final
+existing workunit-recovery case after all seven inventory regressions passed;
+the same suite previously completed in 252 seconds. Rust's single test thread
+did not isolate real CLI fixtures from the concurrent entrypoint target.
+Exclusive scheduling let that complete suite pass in 293.7 seconds, leaving
+insufficient margin under the previous aggregate ceiling. The expanded target
+therefore uses Bazel's existing finite 900-second class, like the other large
+CLI suites. Every case, assertion and individual operation deadline remains
+required. Fresh execution must establish complete current-suite success;
+earlier partial runs do not prove it.
 
 ### Validation-owned candidate execution
 
@@ -1136,13 +1658,6 @@ negative source/run/job mutations, and checked-in policy mapping completeness.
 Only metadata routes are permitted by the fixture reader; no archives or logs are
 used as evidence for this policy.
 
-This activation change is checked under a specifically approved one-time bootstrap
-exception: direct repository build/lint/tests and exact-commit CI, followed by a
-PR that discloses those results and the absence of current-controller readiness.
-Maintainer merge and a controller release establish the accepted policy for future
-ordinary validation. Passing fixture tests alone does not prove native execution,
-vega readiness calibration, or the absence of mutable provider configuration.
-
 The Gatling completion regression exercises the public CLI's rejection of
 `todo done --validated` when its minimal fixture lacks the mandatory full proof
 profile, retaining the open task and unchanged revision. Existing completion-unit
@@ -1166,113 +1681,11 @@ remain outstanding and must run through the accepted released controller.
 
 ## Supplemental Rust worker verification
 
-The v0.119.0 release commit is integrated by normal merge on the original Vega
-branch, preserving its original task and all earlier checkpoints. Supported init
-refreshes the release-bound entrypoints and Docker pin; the authored configuration
-is restored from its pre-refresh backup so the old controller's obsolete
-`[decision] provider = "none"` insertion does not reintroduce retired policy.
-The separately locked worker now references the local v0.119.0 main package.
-Its existing registry package versions/checksums and model/runtime Git revisions
-remain pinned; Cargo reconciled dependency edges to already locked versions.
-
-The first released-controller attempt stopped at `READINESS_BLOCKED` before
-building because independent parity reference and readiness holdout inputs are
-still missing. The obsolete unsupported-controller blocker is resolved; those
-domain-evidence blockers and the no-publication condition remain. Source test
-success cannot satisfy them, and no Metal/model measurement is asserted here.
-
-Official v0.119.0 was published and installed from its locked crates.io package;
-its VCS identity is release commit `201b504485d64f9a09a7fc0e0560fdff035e8daf`.
-The separate worker recipe now requires native tests and a private automatic
-capability diagnostic. Source CI, successful compilation and CPU arithmetic
-remain distinct from Metal/model/parity/calibration verification.
-
-The candidate corrects #1455's supplemental discovery deadline overrun by
-passing the original absolute deadline into discovery. The regression
-`validation_runtime::tests::supplemental_discovery_stops_slow_rust_probe_at_original_deadline`
-compiles and launches a real Rust slow probe with half a second left of an
-original120-second budget; it requires dispatch, interrupted execution and refusal
-to start a probe after expiry. It passed in sourceCI39183631846 on719d901e,
-alongside1456 passing library tests and three ignored. This is an executed
-regression for the candidate correction, not evidence that the installed
-v0.119.1 controller contains that unreleased change. Candidate source does not
-replace the released controller's authority.
-
-The supplemental Rust-worker prerequisite must pass plain official-controller
-`decapod validate` with its new recipe inactive. It must not use an unmerged
-candidate controller to validate or activate itself. Preserve all strict source
-checks, current accepted-target identity, failures and normal branch history.
-
-New regression obligations cover malformed/oversized/duplicate recipes, stale
-review pins, accepted-recipe removal/reinterpretation, relative path aliases and
-escape attempts, argv separation, proof-output destination control, and finite
-read-only Metal tool probes. A real dependency-free Rust fixture must compile,
-test and execute through the immutable runner, retain a private JSON diagnostic,
-preserve an intentional failure, stop dependent runs and leave original source
-and Git state unchanged. That fixture is CPU arithmetic, not fake Metal, a model
-oracle or calibration data. The real Rust fixture passed in the first candidate source CI, including preserved
-intentional failure and source/ref integrity. The first candidate ran the remaining
-regressions in source CI; its private-output
-permission fixture failed because the general storage check permits read access.
-A stricter proof-only privacy check and its new variant regression require rerun.
-The same attempt also found a malformed fixture insertion and a Clippy failure.
-Its full validation remained non-ready (Buildkite 2032); prior evidence is retained.
-Existing native-runner regressions remain required for source/tool/target drift,
-timeout, cancellation, output limits and cleanup. Actual Vega Metal/model/parity
-and independent readiness holdout measurements remain separate issue #1445 gates.
-
-### Permanent recovery provenance
-
-The prepared source was carried from `d8cc8305d1e06c7d7f761ba8e7699a2e1b0d9d8c`
-after its branch was rejected for the missing historical checkpoint in
-`a31ac5d1377e5c11f268f7952753543d46261b15`. The rejected branch, full
-Buildkite 2032/2042 failures and source-CI history remain preserved. The human
-authorized this permanent replacement PR branch under the same prerequisite task.
-No old governance identity/checkpoints were imported or retrospectively asserted.
-Fresh governance and released-controller validation must bind this exact candidate;
-prior passing code jobs do not establish its publication readiness.
-
-### Collection before acceptance (#1445)
-
-The reviewed `proof.rust_workers` recipe runs locked release tests, `--probe-auto` and then `--diagnose-native`. Full `decapod validate` remains the build/test entry point; source proof precedes the native phase under released v0.119.0. The diagnostic command downloads only explicitly pinned baseline assets through normal verified atomic installation; inference then uses immutable verified files. A failed accelerator attempt does not suppress the independent CPU attempt. A new regression protects this collection ordering. Authored tests are unexecuted until the recorded validation runs them. Existing pre-execution failure reports are preserved. Native success is only execution evidence: independent tokenization/block/pooling/engine parity, held-out readiness evaluation, exercised production fallback and boundary/error acceptance remain unsatisfied until measured and reviewed separately.
-
-Candidate 4de86774 source CI passed (Actions run 39091789504); full released119 validation retained a native-snapshot failure at `/private/tmp/vega-native-diagnostic-validation-3.json`, with 42 source observations under its evidence path and no native build executed. Two earlier transport failures are retained separately. The native snapshot has a reviewed toolchain-alias exception but rejects the existing golden fixture symlink, with no supported additional review field. Do not change that fixture or use an unmerged controller to evade the failure. New separate reference/corpus code and its tests are unexecuted; frozen corpus groups contain 20 development and 23 holdout original tasks and cannot establish the required broad risk bound by multiplying related variants.
-
-Reference review additionally requires finite comparisons: NaN/infinity or overflowed differences cannot satisfy a tolerance, calibrated vectors must have exactly two elements, F32-overflowing/negative physical inputs and out-of-budget steps must be rejected, and the thermal parameter vector must have exactly five values. New reference-only regressions cover these malformed/boundary cases. They remain unexecuted with the separate native worker; no model/parity/calibration acceptance is implied by source review.
-
-The authored last native recipe step is now a bounded frozen-holdout evaluation, after probe/model diagnostics. `assets/tools/vega-native/readiness_evaluation.rs` counts issue units rather than correlated variants for false-ready risk, reports exact one-sided binomial uncertainty with explicit independence limits, and separates model abstentions from errors, unsupported inputs and cases not executed before the dispatch cutoff. `vega_infer.rs::evaluate_readiness` runs actual assessments with fresh recurrent state in the kernel-owned process, preserves proof/outcome and model/runtime/corpus bindings, and records synchronized inference timing and cumulative process high-water RSS. The original hard worker deadline includes all earlier work; no per-case timeout is reset. The soft 600-second window stops new dispatches and may be crossed by an in-flight assessment. Avoiding nested model process groups preserves kernel termination on macOS. Model inputs omit expected labels and split/variant/rationale metadata. This experiment does not generate current validation receipts or authorize publication. Its required step returns nonzero when numeric acceptance or independent readiness-label authority is unsatisfied. The existing 23-issue holdout and agent-authored benchmark proxy labels remain insufficient for production calibration even if all arithmetic/control-flow fixtures later pass. Native execution, production fallback routing, independent backbone parity and holdout results are still unmeasured while the released snapshot repair is pending. No thresholds or holdout memberships changed.
-
-### Real snapshot regression for #1457
-
-`native_snapshot_preserves_golden_fixture_alias_and_rejects_plane_conflicts` builds real Git repositories and snapshots. The positive case checks symlink type, exact payload, regular target bytes, index mode/blob identity and committed link bytes. Negative cases cover working retarget/escape, a bad staged link hidden by valid working bytes, a bad committed link hidden by valid staged/working bytes, missing working/index/HEAD targets, a symlink target, an arbitrary link and explicit deny policy. Source status must remain unchanged. Existing toolchain-alias and golden-vector checks remain required. Tests are authored, not passing until executed through `decapod validate`; full source proof is required for this prerequisite, and it does not imply native model/parity/calibration acceptance for #1445.
-
-The first prerequisite validation failed in Buildkite2101 (Actions39093827919): CI refreshed the specs manifest's `config_input_hash` after the reviewed inventory pin changed. The source/recipe contract was retained; the repair is to refresh supported specs projections after the final config update and checkpoint the exact regenerated candidate. The failed report remains `/private/tmp/vega-snapshot-validation-1.json`. No failed check is waived.
-
-The next source run exposed an expectation error in the new regression: escaping symlinks fail during material capture before snapshot preparation. The test now requires that earlier rejection explicitly. Its separate symlink-target case uses an in-repository referent so it reaches the snapshot target-type check. No material/snapshot safety check was relaxed. Released validation's public provider reader also reported HTTP403 with reset1792295962; preserve that report and wait for the named reset rather than switch authentication routes.
-
-The bfd461da source run additionally rejected an undeclared file introduced by the test's in-tree referent. The referent is now committed as harmless fixture background before mutations. The missing-index-target case explicitly declares its retained untracked target so rejection is attributed to the index contract. Both changes are confined to temporary test repositories; production guards and the real immutable golden fixture remain unchanged. Capture failures include the scenario name for diagnosis.
-
-Material capture binds the union of HEAD and index paths. The 28ec88bf execution exposed that the missing-index-target remains HEAD-bound and cannot be declared untracked. The current regression preserves that contract and removes the invalid declaration; its target is still captured before the independent snapshot index-target check rejects it. Earlier failed test/projection/provider evidence remains in governance history and prior commits. No production input classification was changed.
-
-The real snapshot regression includes both reviewed aliases simultaneously, matching Decapod's actual repository layout. It checks the preserved toolchain link/target as well as the golden fixture link/target, so recognizing the fixture cannot displace the existing toolchain alias or let one target satisfy the other's requirement.
-
-### Resume after official snapshot repair
-
-The original task and feature branch retain custody and all failure history. Official controller v0.119.1 (accepted release `7371ad25`) supplies #1458 without candidate-controller adoption. Earlier snapshot rejection remains evidence; the next prescribed validation must establish whether native compilation and execution now work. Authored scalar reference and frozen 23-original holdout remain unexecuted, with unchanged tolerances, agent-proxy label limits and the unsatisfied 5% risk criterion. No prerequisite branch contributes additional feature work: task-transfer and native-worker recovery trees match their accepted squash commits; the old failed native branch differs only in governance/spec recovery records.
-
-The first full v0.119.1 validation of `5d6fda2d` passed all configured Buildkite steps (2186 and supplemental source workflows) and GitHub source CI39172229105, including 1456 library tests with zero failures and three ignored. Native snapshot preparation then correctly rejected credential-shaped literals in gatekeeper tests before compilation. Inspection found the same synthetic AWS/GitHub shapes in trace redaction tests. Those fixtures now construct complete synthetic identifiers at runtime, preserving scanner/redaction assertions and source fixture coverage without credential-shaped committed bytes. Snapshot scanning, denied paths and proof requirements are unchanged; this is a feature-source fixture repair, not another controller prerequisite. Failed report `/private/tmp/vega-1191-validation-20261018T222725Z.json` remains preserved. Native execution remains unverified until rerun.
-
-The aa36acc5 retry passed required source proof and prepared the immutable native snapshot under official1191. Native `cargo test --release --locked` then failed in the old pinned candle-vllm dependency after262626ms: DFlash refers to three CUDA-only attention functions missing in Metal. The source-compatible upstream successor changes only dependency pins and supplies actual Metal implementations; the separate-worker manifest and runtime receipt revisions now declare that compatible update explicitly. No tests/probes/model/reference/evaluation ran; failed diagnostics are retained under readiness-OdZ2UZ/rust-workers. Model/calibration pins and frozen acceptance criteria are unchanged.
-
-Candidate2f785c82 passed source preflight, native compilation and25worker tests. The M1Max probe executed real Metal dispatch/synchronization/readback, bit-exact for8F32 values (201.541ms first recorded,4.274667ms subsequent; no controlled cold/warm claim). One138-token CPU model inference and six tokenizer fixtures passed the separately implemented Rust reference comparisons; raw sample maximum absolute error4.268281e-6, combined engine8.429680e-6, within unchanged declared tolerances. The33-token state produced no active memory chunks. CPU total12540.168ms includes10597ms installation remeasurement; model compute1382.183ms; lifetime RSS5261180928B includes prior failed Metal attempt, not total GPU memory. Corpus construction/integrity executed and froze v2 digest09df504b0d50004499172c1cebf9fbf414ed91d72a703ebd0b0a634e3a7e3e88; no fitting or heldout inference ran. Full validation failed because Metal model initialization called upstream CUDA-only zero_ through reset_all, not because the capability probe failed. The one-shot model discard/reuse guard and independent all-phase collector are authored repairs needing fresh execution; all required scientific acceptance remains, including the unsatisfied23-unit production-calibration criterion. Full details and measured scope are in docs/vega-reference-contract.md; failed report232831Z and readiness-HUH8Fy remain preserved.
-
-The independent collector also freezes an additional numerical-only fixture before any new case output: the documented fixed sentence repeated16times, within the scalar reference's512-token limit and requiring active memory-chunk masks on both model backends. This addresses the measured short fixture's zero-only chunks without tuning the holdout or tolerances. Both numerical fixtures and both backend holdout phases execute independently before the required aggregate can pass. This new coverage and the collector regression remain authored/unexecuted; previous25test successes belong to2f785c82 only.
-
-### Audited label scope and current proof dependency
-
-The frozen held-out set has138 judgment variants from23 originals in four repositories. Distinct lineage IDs are not proof of independence: axum682 and1119 concern related trailing-slash behavior. Four benchmark positives have no pass-to-pass tests, limiting their reported oracle to fail-to-pass coverage. Static byte-size inspection does not establish tokenizer acceptance. No corpus membership, labels, fitting, calibration pins or frozen risk/coverage thresholds changed. A hypothetical zero-error23-unit interval already fails the5% bound; clustering and agent-authored benchmark proxies add limitations that sample multiplication cannot remove. Additional public ReviewBench/SWE-PRBench/SWE-Review sources are documented with their actual label scopes in `docs/vega-reference-contract.md`; bug findings and operational test resolution are not complete human readiness labels.
-
-On719d901e ordinary GitHub source CI passed, but required BuildkiteCI2201 failed in the runner's mise/buildkite-gha bootstrap before parsing its workflow or running source tests. A same-commit sibling launched the helper successfully. Public log inspection determines that launch failure without authentication, but does not create a passed CI observation or establish its underlying installation/PATH cause. Full1191 validation retained the public-provider403 failures and could not reach the native phase. Keep source and native gates, fix/recover their actual dependencies and revalidate the exact next checkpoint. Earlier2f measurements remain historical subset evidence, not proof of the unexecuted719 repairs or a later candidate.
+Generic configured Rust prerequisites must execute through the bounded physical
+adapter with locked inputs and recorded outcomes. A failure stops before Laya
+assessment. This repository has no mandatory external Rust worker recipe.
+Optional inference, numerical qualification and hosted authorization need their
+own actual evidence; source tests do not establish them.
 
 ## Immutable CI and version-only release command proof (#1397)
 
@@ -1285,19 +1698,6 @@ complete hosted checks must execute under the existing declared CI environment.
 `ci_checkout_policy` retains real private-checkout/containment and rustup-dispatch
 coverage; owned macOS fixture paths use canonical filesystem identities rather
 than weakening containment assertions.
-
-`substrate_integrity::actual_release_command_*` invokes the actual candidate CLI
-on an isolated version-only repository with detached HEAD and a remote-only base.
-It checks required immutable context before skips, both PR and postmerge push
-semantics, mixed-source rejection and the actual generated-projection verifier.
-These are project-check regression executions, never a claim of full publication
-readiness. Dockerfile refresh regression coverage separately preserves LF/CRLF,
-EOF/newline state, project-authored commands and repeated-refresh stability.
-Focused test results and any failures are preserved in the task trajectory.
-Full exact-candidate `decapod validate`, the configured Buildkite source graph and
-existing required native/Vega proof remain necessary before this PR is created.
-The broader delivery checklist is `docs/readiness-delivery-checklist.md`; already
-shipped historical-generator and source-evidence mechanisms remain in use.
 
 Material-spec report notes distinguish `outcome=passed` with
 `proof=authored_change` or `proof=version_only_exact_projections` from explicit
@@ -1334,3 +1734,771 @@ the entrypoints, managed Dockerfile and manifest with official 0.123.7 repairs
 those generated inputs but is not a passing test result. This merged candidate
 requires fresh exact-head execution evidence. Trust administration remains outside
 this PR and unresolved in issue 1480.
+
+## Historical recovery regression contract
+
+The unit history assessor and strict verifier share the same per-commit logic.
+Negative fixtures cover multiple missing commits, late tip checkpoints, changed
+parent evidence, malformed governance, unavailable refs and self-asserted
+exception declarations. The real `workbranch_governance` CLI fixture creates
+two actors through separate sessions and tasks in actual linked worktrees; it
+reproduces missing history and `SPEC_REVIEW_REQUIRED`, follows the documented
+recovery/review commands, and verifies the fresh publication material while
+preserving original commits/custody. It denies foreign-checkout mutations and
+resolution of an unarchived observation. Passing this gate is not full native,
+Buildkite, hosted security or cloud-profile proof. Full exact-candidate validation
+remains mandatory, and unsupported exception/maintenance capabilities stay absent.
+
+### Workbranch fixture admission
+
+`tests/workbranch_governance.rs` exercises custody through the actual actor-bound CLI. A manual Git worktree does not become authoring-admissible merely because `agent.init` observes it: `workspace ensure` must verify and bind the checkout first. A session release deliberately clears task assignments, so resumption requires a fresh task claim and authoring admission. Negative fixtures assert that observation preserves inherited governance and that foreign or nonexistent branch-task bindings cannot be admitted. These preconditions preserve the existing custody contract; passing fixtures do not replace independent exact-candidate publication proof.
+
+The existing Laya post-proof judgment remains distinct from deterministic source evidence. This governance recovery change introduces no worker-runtime migration or new model-proof contract.
+
+## Datastore revision 2 proof profiles
+
+`tests/datastore_efficiency.rs` checks nonempty history preservation, additive
+uniqueness without renumbering, unsafe-definition rejection, rollback, repeated
+initialization and 64 competing event writers. Its ignored measurement case is
+explicitly invoked for physical byte/WAL/tail evidence; it is not a timing
+assertion in normal CI. Migration and event unit suites supplement these checks.
+Disposable native PostgreSQL baseline evidence does not qualify hosted Supabase,
+64 exclusive claimants or complete client/backend parity. Publication still
+requires the full exact-candidate profile. The v0.134.0 proof-source inventory differs from the previously reviewed v0.133.2 inventory only in accepted Cargo package versions; workflow, action, helper and executor definitions are unchanged.
+
+## Current assessment verification boundary
+
+Laya is the sole post-validation model contract. Deterministic source, migration,
+state-commit golden vectors and custody checks remain required. Retired model
+research artifacts are removed rather than reclassified as Laya evidence.
+Private runtime registration version 2 rejects older bindings explicitly and
+allows re-registration without changing model or proof hashes.
+
+## Reviewed journal repair, validation exceptions, and replay stability (#1581–#1583)
+
+A task journal may contain multiple independently identified, uncheckpointed
+domain-event suffixes. A repair request can name all reviewed task IDs in one
+invocation, with a bounded human-authored reason. Before any acceptance is
+written, the implementation must confirm that each selected ID has a
+checkpointed predecessor and an uncheckpointed domain-event range, that no
+selected ID repeats, and that no unselected task has an uncheckpointed suffix or
+divergent live projection. One canonical database transaction records an
+acceptance event and a new transition checkpoint for each selected task.
+Failure anywhere in preflight or write must preserve the prior event count
+and all prior checkpoint heads. No historical event is deleted or synthesized.
+
+Exceptional repair and optional local-validation bypass require distinct
+permissions in the **main repository** configuration. Roles and actor labels
+are exact and default-denied. The authorization reader must reject an
+unresolvable root, missing policy, symlinks, non-regular policy files,
+oversized content, invalid TOML and unauthorized actors. A policy digest
+binds the authorizing configuration to the audit event. Local actor labels
+are cooperative claims and must not be represented as authenticated people.
+Ordinary validation remains mandatory. An explicitly permitted bypass records
+its reason, reports `bypassed` and leaves both proof readiness and publication
+readiness false; it cannot mint accepted verification or native proof.
+
+Verification self-execution must accept the canonical identity of the
+currently running Decapod executable, including Nix's `.decapod-wrapped`,
+but reject arbitrary executables even when named `decapod-*`.
+Readiness replay normalization may mask per-run `request_id` and
+`binding.evidence_digest` for each recognized readiness receipt, including
+Laya. It must retain material input revisions, model and governance policy
+bindings, mode, decision and blockers in the digest. The default Laya mode is
+disabled; required mode needs explicit reviewed configuration and cannot
+be disabled in violation of accepted policy. Two identical executions must
+hash identically; changed material decisions must not.
+
+Regression coverage exercises batch atomicity, unrelated-gap rejection,
+wrong-actor denial, Nix self-identity and lookalikes, CLI exception
+requirements, disabled Laya defaults, and replay identity stability.
+These test definitions are falsifiable requirements; successful execution
+is established only by CI receipts for the exact candidate commit.
+
+## Release alignment and projection fixture scope
+
+PR #1589 integrates accepted v0.134.2 journal/RBAC changes and preserves the active workstream. Entrypoints, managed image pin and spec attestations are regenerated by the installed published release. The production-projector replay test supplies a clearly synthetic artifact digest rather than submitting a large debug test binary to the registered-runtime verifier. Its four previously captured input hashes remain the compatibility oracle. Real model/runtime registration retains the existing 512 MiB bound and custody checks; replay vectors do not establish executable registration or model inference.
+
+## CI fixture execution and review dispositions
+
+Lifecycle tests execute their temporary shell runtime only after a bounded, side-effect-free listing proves the fixture inode has no open writers. The probe retries Linux `ETXTBSY` only, for at most two seconds; other failures remain fatal. A Linux regression holds an actual write descriptor, verifies the kernel refusal, then releases it and requires successful execution. Production container mutation and error handling are unchanged. Publication reviews classify SECURITY.md as unchanged relative to the accepted PR base when its semantic content is identical, regardless of accepted upstream additions; current code fingerprints still bind that explicit review.
+
+The socket lifecycle fixture likewise permits a bounded `AddrInUse` interval after closing its own listeners: a parallel fork may retain the descriptor until exec. Its live-peer refusal and replacement-owner assertions still run first, and stale cleanup must succeed within two seconds. Production stale-socket removal continues refusing live peers; no retry policy is added to production operations.
+
+Supabase HTTP fixtures explicitly restore blocking mode on accepted connections before applying the existing five-second read timeout. This is necessary when the platform inherits the nonblocking listener flag. A delayed-header regression verifies that the fixture waits for a valid request instead of failing immediately with `WouldBlock`; production HTTP transport is unchanged.
+
+The delayed-header regression uses the approved Tokio networking API with a five-second overall deadline, while the fixture server deliberately uses blocking reads under its existing read timeout. No lint-policy exception or production networking change is required.
+
+## Local relational compaction proof
+
+`tests/datastore_relational_compaction.rs` proves historical index removal
+preserves nonempty multi-table row digests and uniqueness, is idempotent,
+rejects redefined historical indexes, atomically rolls back when a required
+UNIQUE replacement is missing, and stays compact after subsystem
+reinitialization. Any row/hash change, index recreation, partial mutation,
+or incorrect upgrade-success claim falsifies completion. Full independent
+candidate validation and CI remain required before publishing or merging.
+
+## Aptitude initialization preserves existing prompt history
+
+The existing `plugins_aptitude_tests` target in `tests/plugins/aptitude.rs`
+exercises the public `initialize_aptitude_db` entrypoint against disposable
+SQLite stores. Repeated initialization must preserve every persisted prompt
+field, including stable IDs, disabled defaults, user-adjusted priorities,
+usage counters, timestamps, custom prompts and historical duplicate defaults.
+Equality of the complete ordered row snapshots is required; unchanged row count
+alone cannot establish preservation.
+
+When a default is absent, initialization must restore exactly its logical
+`(context, prompt_text)` identity and authored priority, even if a custom prompt
+already occupies that context. The restored row receives a fresh physical ID,
+starts active with zero usage, and remains unchanged on the next initialization.
+Every previously present row must remain identical. The two regressions are
+included in the existing required `selective-plugins` source-CI target;
+their presence is a test obligation, not an executed passing result. They add
+no runtime seeding behavior, concurrency or hosted-storage qualification,
+performance measurement, or publication-readiness claim.
+
+Changes under `tests/plugins/` select that same complete plugin recipe, including
+`//:plugins_aptitude_tests`, even when production source is unchanged.
+`tests/source_ci_profile_policy.rs` checks the test-only selection, required job
+inventory, identical production/test recipes, and preservation of unrelated-path
+and release-only exclusions. A green `not_applicable` result cannot establish
+that the prompt-history regressions executed.
+
+## Datastore production qualification (v0.137.0 review)
+
+`docs/datastore-v2/production-readiness-v0.137.0.md` records source findings
+and open acceptance requirements, not newly executed proof. Qualification must
+bind complete effective SQLite and native PostgreSQL catalogs to their reviewed
+logical contract. Historical inventory provenance remains distinct from the
+current package version, and legacy migration receipts cannot acquire invented
+implementation attestations during an upgrade.
+
+Acceptance requires actual released-client format compatibility, interrupted
+migration recovery, revision and claim-generation fencing, mandatory atomic
+mutation/event pairing on every retained route, and uncertain-commit retry
+reconciliation. Bounded pagination and journal replay must preserve complete
+history, canonical bytes and a coherent snapshot beyond the current aggregate
+limits. The shared scenario corpus must exercise governance transitions and
+proof bindings through both SQLite and the published native RPC client.
+
+Existing compaction fixtures, compatibility-service mocks and earlier proof
+ledger entries retain their stated scope. They cannot establish native cloud
+deployment, hosted capacity, backup restoration, or this candidate's publication
+readiness. Unavailable checks remain unavailable. The review records both the earlier unadmitted publication and the current
+governed reconstruction. No missing validation receipt is claimed as passed,
+and this documentation cannot weaken the configured runtime proof profile.
+
+## Agent documentation index consistency
+
+The Documentation Index in `docs/agent/api-index.md` is the canonical agent
+document list, including the API index itself. The Markdown document links in
+`docs/agent/README.md` and the agent section of `docs/agent/llms.txt` must name the
+same files exactly once. The human book retains its separate section; a matching
+basename under another directory does not satisfy an agent document link.
+
+`tests/contract_conformance.rs` compares both indexes with the canonical table and
+requires every indexed document to resolve through `assets::get_embedded_doc`.
+The required `contracts` source-CI profile executes `//:contract_conformance`,
+including this invariant. Its compile-time inputs are the three indexes; the
+test calls the public embedded-document lookup for corpus membership. The
+existing specification-refresh tests retain their independent coverage.
+The Bazel test inputs include the inspected indexes, and the constitution
+compression inputs include `repository-readiness.md`, so sandboxed builds can
+embed that contract. This regression verifies documentation discovery and
+packaging. It does not replace exact-candidate governance, runtime or publication
+proof, and adding the regression does not establish that it has executed.
+
+The real-libtest inventory fixture in `tests/integration_sharding_policy.rs`
+copies its executable in a child process and waits for that process to finish
+before invoking the supervisor. Parallel fixture processes must not inherit an
+open writable descriptor for the relocated binary. The inventory still executes
+the real copied libtest binary and checks its discovered test names; its separate
+exit-126 regression continues to require immediate failure with captured
+diagnostics and no retry.
+
+The v0.138.1 rebase preserves the accepted historical-completion and Laya
+research contracts while replaying this documentation and fixture repair onto
+the current accepted target. The original task journal, earlier checkpoints and
+archived pre-rebase tip retain their original provenance. Native APIs must
+refresh release-bound projections, review the changed Bazel source inventory,
+and record a distinct checkpoint for the replayed material. Earlier successful
+v0.137.4 execution remains historical evidence; the rebased commit requires
+fresh complete publication proof and execution of the documentation-index and
+real-executable regressions against the captured accepted target.
+
+## Onboarding integration proof boundaries
+
+The required `selective-cli` profile executes `//:cli_contracts`. Its Unix-only
+`terminal_onboarding` module contains the six PTY cases previously declared in
+standalone `tests/init_cli.rs`, which the finite profile did not select. Cases
+cover recommended setup, edit/cancel, terminal restoration, preview, redirected
+output and cloud review cancellation without a service connection. The fixture
+converts `TIOCSCTTY` to the platform ioctl request type, preserving its value
+across the macOS constant/parameter type difference. Scenario assertions and
+existing inventory/consumer cases remain unchanged. Required workflows, source
+selectors, test targets and budgets remain unchanged.
+Managed-session CLI cases separately cover authoritative access and recovery;
+neither fixture suite establishes a hosted purchase or paid customer journey.
+
+The reviewed source declaration for the 0.139.0 reconciliation measures all 105
+build/workflow/helper inputs against accepted master19acd21. Every input matches
+that accepted tree; only the package version in Cargo.toml and Cargo.lock changed
+from the preceding accepted cloud mergec87e4f49. Renewing the inventory digest
+retains the same source adapter, accepted executor, required graph and verdict
+policy. A matching inventory is preparation, and full exact-candidate validation
+remains mandatory after every source or target change.
+
+## Validation proof lifecycle
+
+Issue #1629 separates proof admission from proof consumption. A fresh governed docs task must reach its first reviewed source command through full `decapod validate`, without supplying an earlier receipt or an undeclared workunit. Terminal publication rules consume the live runtime's verified complete suite before readiness receipts or historical completion are written. Full candidate/accepted-target/material/governance bindings remain required. Explicit workunit contracts retain journal, proof-artifact, source, current epoch, living-spec and capsule lineage checks; an absent projection cannot erase a durable declaration. Regression coverage must observe real command execution, reject failed commands without readiness/receipts, and retain unknown, forged, stale and mismatched evidence failures. Component fixtures may substitute only accepted-target transport, not source checks or execution observations.
+
+Review regressions cover expiry during terminal evaluation and native receipt staging, a distinct mandatory project workunit obligation without a declaration, and a declared current workunit reaching the actual rule evaluator with a generated capsule, bound living spec, current execution journal and retained proof bytes. Explicit epoch mismatches, corrupted capsule/source and deleted manifests remain failures.
+
+The fresh governed docs regression has its actual `#[test]` entrypoint in the already required `tests/entrypoint_correctness.rs` target, calling `tests/support/fresh_docs_readiness.rs` with helper-only `tests/common/consumer_readiness_fixture.rs`. Real CLI commands create and claim the docs task, ensure its managed workspace, approve its plan, refresh/review specs, checkpoint and commit. The public runtime's prerequisite callback runs the real CLI with explicit `ci_local` scope and requires observed success, nonempty passed checks, zero failures, no publication readiness and an unchanged clean candidate. The same runtime invocation then executes the complete real source suite and terminal rules; only accepted-target transport is substituted with a fresh read of the actual local bare Git upstream. This is CLI-admission plus complete-runtime coverage, not an end-to-end CLI HTTPS transport test. The unchanged selective-CLI recipe executes the same entrypoint, CLI-contract and contract-enforcement targets. All 16 preexisting consumer API cases remain in `consumer_readiness.rs` under CLI contracts; helper support contains no test cases. The genuine fresh docs case runs once in the entrypoint target, preventing the measured 65-second case from overloading CLI contracts. A green `not_applicable` selection is not execution evidence.
+
+The fixture starts without a prior prerequisite receipt or ignored policy cache and verifies clean committed candidates throughout. Before the first proof executes, `tests/support/fresh_docs_readiness.rs` exercises the public CLI `decapod todo done --validated --commit` path to confirm premature proof-backed completion is rejected without mutating task completion state or candidate cleanliness. After the positive first `docs_...` proof passes under canonical `task_type = Some("docs")` and `git_ref = Some("refs/heads/...")` without a workunit, the same fixture initializes and checkpoints an unverified `govern workunit` proof plan via the public CLI, verifies `govern workunit transition --to verified` fails without passing gates, and confirms subsequent runtime validation blocks readiness and withholds both `completion/native-readiness-receipt.json` and `historical-proof.json`. Unit regressions in `src/decapod/core/validation_rules.rs` separately cover `normalize_rule_task_type`, `canonical_git_ref`, `EvaluationPhase::Publication` `task_types`/`ref_patterns` filtering, and checkpointed unverified workunits failing `decapod.evidence.proof_backed_completion` (`UNVERIFIED_COMPLETION`). Canonical scaffold regressions ensure an absent runtime cache causes no source healing or manifest rewrite, while a missing tracked living spec still triggers repair. Existing policy validation continues rejecting malformed or unsupported policy contracts. CLI fixture calls have finite 30-second limits, additionally capped by the runtime's original remaining budget during admission; the accepted aggregate CI budget remains unchanged.
+
+The actual accepted 0.139.0 release at `19acd21f` changes only the Decapod package versions in inventoried `Cargo.toml` and `Cargo.lock` relative to its cloud-client parent. Its 105-file source inventory is reviewed as `sha256:c8786efce425085ccb62996e1d586dd8dabd491adea74af4829e638ec26d6174`; the pre-extraction candidate inherits those source definitions exactly. Updating the declaration records that measured accepted release delta; it grants no execution or publication evidence and changes no controller, executor, workflow, helper or source-selection contract.
+
+Shared fixture extraction adds only declared Rust source inputs for the existing Bazel consumer and entrypoint targets. At placement commit `cff3a3c3`, the reviewed 105-file inventory hashes to `sha256:50c5532ad4dca740a8216688204d2c0446459da2782a66de9377aacb30d360c8`; `.config/build/decapod.BUILD.bzl` is the sole changed definition relative to then-accepted `19acd21f`. The accepted executor, three selected target names, commands, serial test threads, finite budgets, selectors, workflows and compiled carriers remain unchanged. Before/after named-case inventories preserve every existing case and the single fresh docs case; actual configured CI must establish execution after this placement change.
+
+The accepted target subsequently advanced through onboarding PR #1636 and the actual 0.139.1 release, ending at `bc0a71971bce8ee036a24562b7fc4a9b771f2f40`. Reconciliation retains incoming onboarding source, tests and whole-product specifications, the existing validation lifecycle work and every prior native checkpoint. All 140 carried baseline obligations are unchanged; the incoming current journal declares no additional claim or unresolved decision. Source inventory changes since the placement commit are exactly the accepted `Cargo.toml`/`Cargo.lock` package-version bytes. The actual 105-file candidate inventory is reviewed as `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40`; its only definition difference from the accepted target is the already reviewed additive Rust-input wiring. In that reconciliation, independent controller, compiled carrier, required graph, selectors and finite budgets remained unchanged.
+
+Standalone source validation compares the repository after native `validate --refresh-specs` and rejects release-bound drift. The actual 0.139.1 evaluator exposed 0.139.0 entrypoint, managed-image and manifest pins after the accepted release advanced; those projections must be regenerated by an independently released 0.139.1 controller. Registry installation through the supported native session-update path is environment bootstrap, never candidate proof. The project auto-update preference is restored after scoped bootstrap, and projection-only preparation remains nonpublication evidence. The source inventory remains the same reviewed 105-file `sha256:31fa30d0bbc53f76f4f09cbca80101965b71dc1c00c337b54c53607ab3df4a40` set.
+
+Actual pre-refresh candidate `c626fa46` confirmed the unchanged selected target bounds: CLI contracts passed in 281.6 seconds and contract enforcement in 274.2 seconds; the entrypoint target completed in 207.4 seconds with only the prior-release template mismatch failing. Its genuine fresh docs proof passed in 75.2473 seconds. These source-CI diagnostics confirm placement and retain the failure honestly; the regenerated candidate still requires its own complete configured execution and independent full native validation.
+
+## Managed project proof categories
+
+The independent disposable native service consumer executed project selection, a shared task write/read from two separately custodied CLI processes, direct data denial after external assignment revocation, and next-command denial while the other account retained access on source `15f5237f`. Discovery/account envelope and session issuance were modeled; native authorization and PostgreSQL execution were real. This is exact development-source evidence, not hosted or released-client assurance. The subsequent accepted 0.140.0 version-only merge changes the candidate and requires renewed complete source and native consumer proof. Release-bound projections are generated by the registry 0.140.0 controller obtained through the supported session updater; a matching projection or reviewed inventory cannot stand in for that execution.
+
+## Versioned cloud mutation receipts
+
+Mixed-release cache regressions require legacy rows and unknown outcomes to survive migration, the released array-only reader shape to reject v2, unsupported future versions to remain untouched, and oversized encoded upgrades to preserve their original bytes. These are additional full-profile obligations; no manual build or standalone test supplies current publication readiness.
+
+## Accepted inventory release reconciliation
+
+The accepted target `1d04f232c46864eecfadb9c8b9b23069ca0e906e` adds bounded local storage inventory and releases Decapod 0.140.1. Its declared registry dependency is Dactyl 0.13.0, checksum `ba334815ca49f203b6a933d559b84b5aca5559686237be9791f48d71b3cb6292`; the later registry releases are not this consumer artifact. The actual 105-source inventory is reviewed as `sha256:be2b53094dcaddbe64037a722a82763ac837d7090dc2b7bf280f7c94452d5a57`. The accepted Bazel delta adds storage-inventory fixture inputs and preserves its finite CLI aggregate deadline and exclusive scheduling. The generated module lock changes the registry Dactyl references consistently. No required check, executor, workflow or selector is removed. The public managed-project branch preserves those accepted definitions.
+
+The earlier full 0.140.0 attempt returned `SNAPSHOT_NOT_READY` after the accepted target advanced; it is not current readiness. The 0.140.1 registry controller is installed through supported `session acquire` with a temporary scoped auto-update opt-in, then restores that preference. Release projections are generated through the controller. Both the version-two receipt tests and native project consumer require fresh execution for the resulting exact source, accepted target and registry artifact. Prior source-specific native evidence remains historical and cannot authorize publication of this new candidate.
+
+## Accepted patched registry reconciliation
+
+Accepted target `df15c9b8dcaeff2e4cba7ddd4918a1e2e954d455` merges the published Dactyl 0.14.0 adoption and releases Decapod 0.140.2. The exact registry checksum is `d10824bf8882a26b92479f07edb26c1f6fde8da3019f4001befaf28699d7a990`; the Quinn protocol lock floor is 0.11.19. This supersedes the earlier 0.13.0 consumer state, while retaining its history. The reviewed 105-source inventory is `sha256:f9a15ead2fa48e1c4beb6341959b06e7cce9e05658cd66ce3685c8eea7e4386a`: accepted changes are registry package/lock definitions, generated module dependency mappings and the release dependency policy. Required workflows, source executors, checks, selectors and budgets remain intact.
+
+A fresh supported session updater installed registry controller 0.140.2 into an isolated install root, restored its temporary auto-update preference and confirmed no pending Decapod migration. Its embedded documentation matches 0.140.1. All earlier readiness attempts and local service reports remain bound to their historical candidates; the newly reconciled source and registry artifact require fresh full validation and independent native consumer execution.
+
+The PR1648 rebase uses the independently installed registry 0.140.2 controller.
+All 105 inventoried build inputs match accepted `df15c9b8`, including its Dactyl
+0.14.0 adoption and native inventory wiring. Only package-version bytes differ
+from the reviewed SDK-adoption parent. Native commands regenerate release
+projections and refresh the reviewed digest; this preparation is not execution
+proof. The archived original PR tip retains its historical checkpoints, while
+the rebased source requires its own current checkpoint and complete validation.
+
+## Accepted v0.142.0 master reconciliation
+
+Reconciling `origin/master` (`d3542c30`, `v0.142.0`, incorporating PR #1647 cloud sign-in/diagnostic updates, PR #1649 bounded reflection, and `release-plz` v0.142.0) preserves PR #1651's `cloud projects` / `cloud project use|create` routing and v2 operation cache alongside `CloudCommand::Login { restart }` and `authorization_url` recovery diagnostics. The 105-file reviewed source inventory hashes to `sha256:6d13f890e76d0c0b69e338bb571d2858166afbf30adeeb1e58313a6b12042c87` (adding `Cargo.toml`/`Cargo.lock` `0.142.0` package versions and `.config/build/decapod.BUILD.bzl` entrypoint target inputs without dropping any required check, workflow, selector, or budget). All prior historical validation receipts remain bound to earlier commits; the merged candidate carries `0.142.0` controller projections, `specs.refresh`, checkpointing, and requires complete `decapod validate` proof.
+
+## Owned scratch mode-000 cleanup (#1643)
+
+`assets/tools/build_lifecycle_tests.rs` covers rootless container overlay
+permission recovery through `//:build_lifecycle_tests` and the Cargo binary test
+suite. `supervisor_recovers_owned_mode_000_podman_overlay_scratch_without_touching_shared_caches`
+spawns the real supervisor binary with a child that populates
+`$HOME/.local/share/containers/storage/overlay/opaque-layer/work/work` (`0o000`
+under `0o500`), a read-only `0o555` layer directory, and a symlink to an
+external `0o555` shared cache alongside an unrelated `0o000` sibling directory,
+requiring clean exit, zero `build cleanup:` stderr diagnostics, complete scratch
+removal, and untouched external permissions and files.
+`owned_permission_recovery_rejects_symlink_uid_device_and_bound_escapes`
+directly exercises `Scratch::recover_owned_permissions` and
+`Scratch::recover_owned_permissions_with_bounds` across nested `0o000`
+directories (independent of host effective UID), symlink non-traversal,
+foreign-UID and cross-device rejection before chmod/descent, and closed failure
+on depth and entry bounds, while `cleanup_diagnostics` retains its read-only
+contract.
+
+Reconciled with accepted `master` (`3b6b31f8`, `v0.143.0` including `#1651` and
+`#1656`), the installed `0.143.0` controller regenerates the release-bound
+`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`,
+`.decapod/managed/Dockerfile.decapod` and `.decapod/managed/specs/.manifest.json`
+projections, and `.decapod/config.toml` updates
+`proof.required_profile.reviewed_sources_digest` to
+`sha256:ea92a8706fe811047b6ffbc92826d4ddeb008db851ab1b9c1853b024d65df768` for
+the combined `v0.143.0`, `#1651`, `assets/tools/build_lifecycle.rs`, and
+`assets/tools/build_lifecycle_tests.rs` inputs in the reviewed source inventory.
+Source review and local projection refresh do not prove execution; full
+configured `decapod validate` on the exact candidate commit against accepted
+`master` remains mandatory before merge.
+
+Reconciling `#1629` with accepted `master` (`64c4ff2e`, `v0.143.1` including
+`#1655` and `#1664`) regenerates `0.143.1` release-bound entrypoints,
+`.decapod/managed/Dockerfile.decapod`, and `.decapod/managed/specs/.manifest.json`
+from the `0.143.1` controller and updates `reviewed_sources_digest` to
+`sha256:50af27077a026878a187611c381226be611ae10f45bfec77fc205282258d3ccf`;
+full CI and `decapod validate` execution on the exact merged commit remain
+required before publication readiness.
+
+## PR 1666: accepted v0.143.2 source integration
+
+Run the current `github_quota` tests and the real automatic discovery pacing regression. Synthetic curl responses exercise transport/pacing behavior only. A current complete independent provider judgment remains required; prior project checks and pre-reset observations are not readiness.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
+
+## PR1666 current-master integration
+
+Current accepted source is master 9b900254; the source package version is 0.144.0. The release was compiling and assets were unavailable at setup. Use actual hosted CI results for this update, push each addressed root cause and do not run tests locally. Refresh official release-bound projections through supported tooling when that release becomes available; no cached earlier green result is treated as current proof.
+
+### Reviewed 0.144.0 build-input binding
+
+The accepted release changes the Decapod package version in Cargo.toml and Cargo.lock. Review the actual source inventory and bind its current digest without changing required checks, providers or toolchain requirements. Git symlink targets retain their accepted identity; no toolchain change is claimed from comparing a symlink blob with dereferenced contents. The original PR parent remains in the merge graph. No local tests are executed.
+
+### Official 0.144.0 projection drift repair
+
+The hosted standalone validator passed project prerequisites but rejected uncommitted release-bound regeneration: entrypoints and the managed Docker image/version still referenced0.143.2. The official installed0.144.0 kernel now regenerates those projections and their manifest through supported init/spec interfaces. Preserve the exact reviewed configuration and the drift gate; no local test execution or passing full-readiness receipt is claimed.
+
+### Bounded complete CLI contract execution
+
+Hosted Contract Conformance exhausted the300s aggregate while entering the schema-determinism case after16 completed cases in the22-case sequential suite; the matching push job passed. `tests/cli_contract_enforcement.rs` now uses a60s process-group deadline in its shared command helper, producing a command-specific failure instead of an unbounded child wait. The Bazel target uses the existing finite900s long class, retains exclusive isolation and executes all22 cases without removing assertions. The reviewed source-inventory update covers that explicit build-input budget change; required checks, providers and proof semantics are unchanged. No local tests are run.
+
+## PR1663 integrated storage behavior
+
+Current accepted target is5e23ad68 (0.144.1). Preserve all original regression sources and use hosted CI for the new integrated candidate; do not run local tests. The resolved source export conflict retains both custody/resource guards and the component-journal API. Source inventory, release projections and current-content reviews are refreshed without changing required provider policy or claiming independent full readiness.
+
+### Blank-title write-admission regression
+
+Hosted Gatling failed because its legacy EDGE-1 case expected an empty task title to be accepted. The storage contract rejects empty and whitespace-only new titles. The same existing real-CLI case now requires failure with the typed title-admission diagnostic and compares task identities/titles before and after each rejection, preserving the no-task-created invariant. Production admission is unchanged; historical read compatibility is not redefined. Current hosted execution must verify the repair; no local tests run.
+
+### Complete bounded todo-plugin execution
+
+Hosted plugin verification exhausted the300s moderate aggregate after more than30 completed cases in the40-case todo suite. That target now uses the finite900s long class and exclusive target scheduling, while its internal concurrent workers and all assertions remain intact. Its serial CLI helper keeps broker routing, uses a1s idle window and a120s child-process deadline with command diagnostics. Optional container behavior is preserved. The reviewed build-input binding records these execution-budget changes; no local tests or production latency assertions are removed.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Exercise actual `sqlite_maintenance` CLI/RPC worktree cases and storage-lock regressions on the updated source. Policy substitution, unsupported cloud maintenance and owner-only recovery must remain rejected. Historical project checks do not establish full current-candidate publication readiness.
+
+### v0.143.2 fresh-docs workunit fixture initialization
+
+`tests/support/fresh_docs_readiness.rs` initializes the workspace-local workunit runtime using the real `init --refresh --proof` CLI before declaring unverified completion. Root datastore initialization does not initialize this journal. The scenario still requires a clean unchanged candidate, rejects unverified completion and withholds readiness receipts; the production `WORKUNIT_RUNTIME_UNINITIALIZED` guard remains intact. The repair passed on the baseline Dactyl dependency before SDK-specific verification.
+
+## PR1662 current-master preparation
+
+This checkpoint preserves original source and tests before integration with current master. Preserve failure history and all assertions; use hosted CI for verification, without local tests or running the maintenance candidate against the live machine datastore. Prior test observations do not prove the new integration.
+
+## Bounded independent collection (#1573)
+
+Existing `github_quota` tests cover discovery headroom/direct Buildkite polls,
+exhaustion/unknown reset, malformed/duplicate/missing/overflow hints and deadline/
+cancellation preservation. Adapter tests preserve bounded failure information.
+The real complete1658 observation and five Buildkite workflow executions are
+documented separately from mechanism tests and historical403 failures. This
+dedicated closure candidate still requires its own hosted suite and full native
+publication gate against current accepted master. No local tests were run.
+
+## Required local maintenance acceptance (#1568)
+
+The required `cli_contracts` target now includes `tests/sqlite_maintenance.rs`;
+Bazel supplies its module source explicitly. The tests traverse real Dactyl
+SQLite integrity/backup/recovery/lock behavior, the actual binary's operator
+surface, governed CLI/RPC opt-in and anti-self-elevation, and two real claimed
+worktrees with concurrent bounded retry and cross-custody rejection. No fake
+adapter/error replaces the maintenance acceptance path. Missing native SQLite
+fails the required cases instead of silently returning.
+
+The genuine governed fixtures clear inherited outer-provider context and all
+three diagnostic overrides only in their own children, retaining admission and
+leaving the parent source-job identity intact. Older operator bootstrap cases
+remain diagnostic; they are not claimed as full readiness or authenticated cloud
+proof. Existing exclusive operation locks, timeouts, backup path restrictions and
+cloud-denial assertions remain. The source suite's accepted provider graph,
+profile and original cases are preserved. No local tests ran; current hosted
+execution, case outcomes and full exact-candidate publication proof are pending.
+
+## Current published SDK 0.16.1 adoption (#1667)
+
+The current exact registry pin/checksum is `dactyl-db =0.16.1` /
+`1b41dde2e8be3fc986f7f5a7eb4e5bfb9af49d4c39dabe98fd74a0ccb4ad7ac6`.
+Official sparse-index discovery and downloaded crate bytes agree. The Rust
+library sources match 0.16.0 byte for byte; its additive 0.15 resource accounting
+and 0.16 logical connectors retain the existing application facade. Rust 1.85
+remains below Decapod's unchanged 1.96.1 requirement. Cargo resolution updated
+only this requested SDK; Bazel crate-universe regeneration changed twelve lock
+lines after preserving the accepted one-space JSON representation. Nix derives
+its package graph from Cargo.lock and needs no separate SDK input update.
+
+`tests/release_dependency_policy.rs` pins the registry source, exact release and
+checksum while retaining storage-feature and patched Quinn-floor checks. The
+journal and transfer tests construct malformed historical payloads in disposable
+SQLite so SDK parameter budgets do not prevent exercising the original bounded
+reader rejection. No admission limit, proof assertion or existing check is
+removed. The required source suite still includes offline Supabase/Neon/local
+consumer behavior; this update cannot establish real hosted backend parity.
+
+No local compilation or tests were run. Dependency resolution and Bazel module
+regeneration are input-authoring operations, not proof. Hosted execution and the
+full exact-candidate official Decapod0.145.1 publication gate remain pending;
+provider requirements and accepted execution contracts are unchanged.
+
+## Diagnostic override acceptance regressions (#1659)
+
+`tests/consumer_readiness.rs` runs the actual full runtime in isolated child
+processes for empty/zero Git skips, false tooling skips, truthy fingerprint skips
+and a false fingerprint control. Denied claims must select/execute nothing and
+produce no evidence directory; the false fingerprint control must execute real
+native proof. No parent test process mutates its environment.
+
+The existing genuine claimed-worktree scenario in
+`tests/support/fresh_docs_readiness.rs` invokes full CLI validation, RPC validation,
+workspace publication and historical validated completion under overrides. It
+requires actual kernel rejection, no successful judgment or full receipt, and
+unchanged source, then retains the normal positive proof flow. Broker unit tests
+use real capture/apply subprocesses over different inherited worker values and
+invoke the real environment gate, proving both retained denial and cleared scope.
+
+The existing partial CLI admission checks `scope=ci_local` and
+`publication_ready=false`; it remains a prerequisite observation rather than
+complete proof. Current hosted execution and full remote readiness are pending.
+No local tests, disabled required checks, fabricated receipts or workunit-forgery
+completion claims are included in this checkpoint.
+
+## Accepted local proof policy regressions (#1658)
+
+The dedicated v0.144.3 branch preserves accepted command, program, argument,
+directory, environment, toolchain, timeout and coverage declarations before
+provider selection. `tests/consumer_readiness.rs`, included by the required
+`cli_contracts` target, exercises real Git targets and native child processes.
+Controls cover repinned success-printing replacements, removals, execution and
+coverage edits, additive checks, unchanged accepted execution and stale source.
+
+A further adversarial case keeps the command unchanged, corrupts source, rewrites
+its accepted check script and repins the source-definition digest. This captures
+a remaining source-admission question; it must be rejected before closure. A
+positive control independently accepts a source-policy revision on the target
+before validation. The genuine fresh-CLI scenario explicitly covers initial
+adoption, rather than labeling its later workspace-specific environment as
+already accepted policy.
+
+No current hosted result or local test is claimed at this checkpoint. Push the
+regressions to collect the actual judgment, preserve any observed false green,
+repair the source boundary, and require fresh exact-candidate hosted proof.
+Configured source-PR readiness remains strict and provider-backed. A local
+consumer result cannot stand in for unavailable external assurance.
+
+### Observed check-script false green and required repair
+
+[Buildkite9472 CLI execution](https://buildkite.com/decapodlabs/decapod/builds/9472#01a1d6e5-1809-485a-b0dd-5acc62254ffe)
+evaluated059dec1b against422e0b56. The registered source-script attack produced
+`ready=true`, `proof_ready=true`, local-readiness scope, completed native evidence
+and no blockers. The real regression failed; the suite recorded86 passed,
+one failed and one ignored in189.18s. The full CLI job took640.61s including its
+build and all three targets; those are separate runtime measurements.
+
+The repair additionally preserves the accepted local source-definition digest
+before provider selection. The same attack must now return the typed accepted-
+contract blocker with zero selections/executions, while unchanged policy,
+additive commands, first adoption and separately accepted target-policy evolution
+still execute real proof. Current hosted revalidation remains pending; previous
+failed evidence is retained and no local tests or full PR readiness are claimed.
+
+## Accepted release projection refresh (v0.144.5)
+
+After integrating accepted master `9767ae9a3ff1c7452101482218a17c55cf569b71`, regenerate the agent entrypoints and managed release projections with the official v0.144.5 binary. Accepted verification requirements remain unchanged. Projection integrity is a prerequisite; fresh hosted GitHub Actions must evaluate this candidate. No local tests or full publication-readiness claim accompany this refresh.
+
+## Repeated validation runtime fixture
+
+`tests/validate_termination.rs::validate_smoke_runtime_is_bounded_without_contention` establishes a named session before timing and asserts that repeated prerequisite checks reuse it. The existing per-call 10-second and aggregate 20-second limits remain unchanged. This measures steady-state prerequisite latency; it does not establish full publication readiness. Hosted verification is required for this candidate.
+
+## Observed workunit regression evidence (#1660)
+
+`validation_history_workunit_tests` executes two real repository checks through
+the existing sealed runtime, archives their actual observation and exercises
+workunit acceptance, stale input rejection, selector substitution, interrupted
+projection recovery and archival races. Portable completion tests reuse genuine
+observed proof. Legacy CLI/publication cases reject pass-only declarations;
+journal tests preserve file-integrity and lease/recovery coverage without
+mislabeling resumability as VERIFIED proof. The local accepted-target transport
+is a real bare Git fixture, not full authenticated forge or native agent proof.
+Hosted execution and final exact-candidate publication validation remain pending.
+No local tests or CI are run during authoring.
+
+## PR1677 integration with accepted v0.145.0
+
+Integrate accepted master `706569c7ac2f156def00a331134fee52fb444042`, including the canonical observed-workunit
+proof producer from #1681. Diagnostic overrides must still be rejected before
+full readiness, publication and validated completion; the new canonical archive
+cannot convert a diagnostic result into full proof. Preserve both contracts and
+the broker's durable-outcome precedence and bounded request windows.
+
+Official Decapod v0.145.0 regenerates release-bound entrypoints, the managed image
+pin and spec projections. Reconcile the reviewed source inventory for this
+accepted release without changing required checks or provider policy. Earlier
+success for `65da34111d87d70792b59e8fb02ac067d15451ce` against `e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remains historical.
+Fresh GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full kernel publication
+readiness is not asserted by this integration checkpoint.
+
+## PR1678 integration with accepted v0.145.1
+
+Integrate accepted master `1c1fa5dcfc2d31cc2c09dcf5d18470dc62900dd5` with the published Dactyl 0.16.1 registry
+pin and checksum. Retain the accepted canonical observed-proof and diagnostic
+admission boundaries from #1681 and #1677. The SDK remains transport/storage
+infrastructure; it cannot declare task completion or substitute local authority
+for a rejected cloud principal. Keep the patched Quinn floor and existing
+cell, parameter, result-accounting and wire limits distinct.
+
+Regenerate entrypoints, the managed image pin and projections through official
+Decapod v0.145.1. Reviewed inventory changes identify the accepted release and
+SDK inputs without changing required checks or provider policy. Source and
+proof metadata from `fbe399289d1f24011476312e16653e8d830f490a` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remain historical. Fresh GitHub Actions
+must verify this integrated candidate. No local tests run; Buildkite is excluded
+at the user's direction and full native publication readiness is not asserted.
+
+## PR1679 integration with accepted v0.145.2
+
+Integrate accepted master `0677f9906d7e70651a9fc2337b2c27899bd331fa`, including
+the published Dactyl 0.16.1 SDK and the canonical observed-proof and diagnostic
+admission boundaries. Required CLI/Bazel execution still includes the real
+SQLite maintenance module: missing SQLite must fail, and repository-local
+fixtures must establish their own task custody and accepted maintenance policy.
+Candidate opt-in, cross-task claims and forged cloud principals cannot establish
+authority. SDK transport and same-user local execution do not add independent
+identity or isolation guarantees.
+
+Official Decapod v0.145.2 refreshes release-bound entrypoints, the managed image
+pin and spec projections. The reviewed inventory identifies these inputs without
+changing required checks or provider policy. Prior success for
+`331f6d748a44e91a4fd31c7af6d59372acd17eaa` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` is historical evidence only. Fresh
+GitHub Actions must evaluate the integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full native publication
+readiness remains unproven.
+
+## PR1680 integration with accepted v0.145.4
+
+Integrate accepted master `5002f1db286f4d41c92ce4d4b4a58468bf55aa3b`, preserving
+the accepted canonical workunit producer, diagnostic admission rules, published
+SDK and required SQLite/CI selection coverage. Collector quota hints remain
+bounded scheduling inputs; denied public requests cannot acquire authority from
+a diagnostic client, a header or an unrelated successful job.
+
+Official Decapod v0.145.4 regenerates release-bound entrypoints, the managed image
+and projections. Reconcile the reviewed inventory without changing required
+checks or provider policy. The documented v0.144.3 provider collection and the
+prior documentation candidate `725b4114595bf17a36568afbe164ce5c9f7b9cf4` against
+`e8f8848d19a02ad8e2a580cf7722fe4ff9342221` remain historical observations. Fresh
+GitHub Actions must evaluate this integrated candidate. No local tests run;
+Buildkite is excluded at the user's direction and full native publication
+readiness remains unproven.
+
+## Versioned physical legacy recovery coverage (#1657)
+
+`tests/sqlite_maintenance.rs` exercises the actual Decapod binary with isolated
+repositories, canonical policy and claimed workspaces. Regressions cover exact
+canonical-copy archival, unchanged canonical bytes, bounded receipt size,
+idempotent replay, prepared-state startup fencing, resumption after physical
+archival, separate-grant denial, stale source bytes/modes, corrupt input,
+symlinks and reappeared source. The existing reconstructed verification consumer
+must reject the operation report as task completion proof. Interrupted physical
+states are deterministic fixtures built from a real kernel-issued preparation,
+not ten native agents or proof of a killed process at every instruction.
+
+`tests/unit/cli_tests.rs` checks typed command parsing and permission separation.
+Required CLI aggregate already includes SQLite maintenance tests. Hosted execution
+for this candidate remains pending; no local tests run. Buildkite is excluded at
+the user's direction while its accepted requirement remains enabled, so full
+native publication readiness is unproven. Empty/exact-copy retirement is a
+bounded #1657 slice: unmatched legacy schemas, arbitrary historical equivalence,
+cloud owner repair and independent security isolation remain unresolved.
+
+## Squash release packaging regression (#1626)
+
+`tests/release_metadata_policy.rs::nix_gates_recognize_squash_linear_and_ordinary_release_commits`
+extracts and executes both actual workflow scripts against real Git repositories.
+It creates a real squash merge, a linear release and an ordinary release merge;
+non-release, root and octopus histories remain ineligible. The owner performs its
+real depth-two fetch through a process-local URL rewrite to the fixture. Imported
+runner and PR/manual event cases stay denied; manual packaging stays supported.
+No Nix, Cachix credential or hosted publication call is simulated as success.
+
+Fresh GitHub Actions must verify the exact candidate; no local tests run.
+Buildkite remains excluded at the user's direction while its accepted policy
+requirement stays enabled, so full native publication readiness is unproven.
+The original missing v0.138.0 cache entry is historical and is not claimed filled
+by this code change. Actual protected-master packaging/publication must establish
+cache availability separately after acceptance.
+
+## Canonical local Git proof (#1069)
+
+The new required actual-binary entrypoint regression creates an operator-reviewed canonical local contract, claims a task, creates its governed workspace and invokes ordinary full validation with provider environment removed. It checks real executed observations, durable history inspection, unchanged repeat execution, source changes, forged diagnostic claims for altered source, accepted-base movement, authority revocation and forge publication refusal. Existing strict/external and adversarial suites remain required. GitHub Actions runs the checks; no local tests/builds or Buildkite evidence collection. Exact hosted observations are pending and the complete ten-worker A–H/native-runtime mission remains unproven.
+
+### v0.147.0 acceptance target
+
+PR #1702 now integrates accepted release master
+`26196764ec1dfa95ce366c08fc3e104b8a5bfec1`, including #1697's bounded physical
+recovery. Final authoring projections and checkpoint observations must use the
+installed v0.147.0 kernel. The release changes Cargo package identity, so review
+the measured verification inventory against that exact accepted source before
+reconciling its pin; preserve all required commands and strict provider policy.
+Earlier v0.146.0 source observations stay historical. Queued checks that reject
+a moved target before execution establish no test result. Fresh GitHub checks
+must evaluate this combined candidate, including normal local CLI proof and
+the unchanged common publication-admission denials. No local project test/build
+execution or Buildkite collection is authorized by this toolchain transition;
+full native publication proof remains unclaimed.
+
+## PR #1699 accepted-target integration
+
+The escalation branch now integrates accepted master `8e435969a8c21269aa277301b3e6492d780a9bdb` with installed Decapod 0.145.6. Preserve both the escalation contract and the accepted Nix release-gate/finite-adapter changes, including both owning Bazel fixtures. The earlier full native observation for `d52943740cac03fa45046317ea4af090f919fec6` against `f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5` remains historical and cannot authorize a new integration. Fresh checks must bind the new source/tree/target and custody generation. This integration uses GitHub verification without local test/build execution or Buildkite evidence collection; accepted strict provider requirements remain enabled, and no automatic merge authority is introduced.
+
+## Documentation brand and media acceptance (#1707)
+
+Publication of the Decapod mdBook brand refresh requires source-bound
+verification that the book still builds with its existing mdBook source-CI
+profile and unmodified workflow inventory. The first book page must show
+the Decapod Labs identity and mascot, embed the website-owned video above
+the documentation navigation, and link to the accepted quickstart and source.
+
+The shared stylesheet must retain readable, distinguishable light and dark
+themes, keyboard-focus affordances, responsive layouts and legible code blocks.
+Media URLs must resolve from the separately published Decapod Labs website.
+A docs build alone is not proof of a successful public GitHub Pages deployment;
+runtime domain availability remains a separate observation.
+
+The showcase kernel PR must not introduce a new GitHub Actions workflow, shadow
+the website's renderer or suppress the existing living-spec material gate.
+Independent native source validation and complete candidate readiness remain
+necessary before merging.
+
+## Readiness Gate-Skip Override Hardening (#1659)
+
+Diagnostic gate-skip overrides (`DECAPOD_VALIDATE_SKIP_GIT_GATES`,
+`DECAPOD_VALIDATE_SKIP_TOOLING_GATES`, and
+`DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES`) are strictly non-authoritative and
+must never establish full validation, publication readiness, or validated task
+completion:
+
+- **Full-readiness rejection boundary:** `core::validation_runtime::require_full_readiness_environment()` rejects any presence (`var_os().is_some()`) of `DECAPOD_VALIDATE_SKIP_GIT_GATES` or `DECAPOD_VALIDATE_SKIP_TOOLING_GATES`, and any truthy value of `DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` (`core::validate::skip_fingerprint_gates()` matching `1`, `true`, `TRUE`, `yes`, `YES`), failing with `READINESS_GATE_OVERRIDE_UNSUPPORTED` across `decapod validate`, `decapod v`, `decapod rpc --op validate.run`, `decapod workspace publish`, `decapod rpc --op workspace.publish`, and `decapod todo done --validated` (live and `--commit` historical paths).
+- **Pre-side-effect enforcement on `WorkspaceCommand::Publish` (`src/decapod/lib.rs`):** When `proof.validation_buildkite_preflights = false`, `WorkspaceCommand::Publish` enforces `require_full_readiness_environment()?` before calling `run_validation_bounded_with_receipt(..., refresh_specs = true, ...)`, ensuring gate-skip overrides reject immediately with `READINESS_GATE_OVERRIDE_UNSUPPORTED` without mutating `.decapod/managed/specs/` or surfacing masked downstream failures.
+- **Verification and recovery isolation (`src/decapod/plugins/verify.rs`):** `run_validate_and_hash` calls `crate::core::validation_runtime::require_full_readiness_environment()?` prior to spawning child `decapod validate --format json`, and `safe_validation_failure_diagnostic` includes `READINESS_GATE_OVERRIDE_UNSUPPORTED` in `MARKERS`. This closes the bypass where `qa verify`, `qa verify todo`, `qa verify recover`, or `todo done --validated` under `GITHUB_ACTIONS=true` or `BUILDKITE=true` with active skip overrides could otherwise enter `CiLocal` and mark tasks verified.
+- **Partial diagnostics and non-reusable receipts:** `ValidationScope::CiLocal` (`GITHUB_ACTIONS=true` / `BUILDKITE=true`) and `ValidationScope::ProjectPrerequisites` (`decapod govern project-check`) preserve `publication_ready = false` and never record `validation.completed` history (`core::validation_history::finish_archive`) or full native readiness artifacts (`observations.json`, `completion/`, `historical-proof.json`). Removing an override after an overridden or partial `govern project-check` receipt write (`sections.validation` in `.decapod/governance.json`) does not authorize `validate`, `workspace publish`, `qa verify commit`, or `todo done --validated [--commit]`.
+- **Group broker isolation (`src/decapod/core/group_broker.rs`):** `CALLER_ENV_KEYS` clears/replaces all three `DECAPOD_VALIDATE_SKIP_*` variables per caller request so an override-tainted broker leader cannot taint a clean `todo done --validated` client, while override-tainted clients fail in `lib.rs::run()` before mutating todo state.
+- **Regression suite and verification scope:** `tests/gate_skip_override_readiness_1659.rs` exercises all of the above end-to-end against the compiled `decapod` binary in isolated canonical local-Git repositories (`repository_profile::REQUIRED_PROFILE`, `canonical_local_target = true`). Full hosted Buildkite/GitHub source-CI acceptance for this branch remains governed by the repository's configured proof profile and is not substituted by local test execution.
+
+## Split-store convergence and all-6 #1660 VERIFIED workunit falsifiers
+
+`src/decapod/core/workunit.rs` (`converge_split_workunit_store`,
+`workunit_journal_status`, `validate_verified_manifest`, `transition_status`,
+`resume_workunit`, `init_workunit`, `checkpoint_workunit`, `mutate_workunit_with_proof_gate`)
+enforces single-domain canonical custody and kernel-observed proof for all
+`VERIFIED` workunit transitions and publication gates:
+
+- Any separately initialized workspace-local datastore (`<worktree>/.decapod/data/todo.db`
+  or `decapod.db` containing policy tables `agents`/`risk_zones`, `workunit`
+  events, or corrupt/unreadable state, while permitting benign `traces`-only
+  RPC logs) returns `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED` on `VERIFIED`
+  transitions, `validate_verified_manifest`, `resume_workunit`, partial or
+  uninitialized split-store writes that would otherwise leak into the canonical
+  main store, and `journal-status` (`split_store: true`,
+  `atomic_domain_supported: false`, `proof_status: "not_proven"`), while
+  keeping explicitly initialized non-`VERIFIED` local declarations isolated
+  inside the workspace-local datastore until converged.
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives workspace-local database files and split-only projections into
+  `.decapod/data/split-store-audit/<archive_id>/audit.json` as `not_proven` audit
+  history (`classification: "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED"`), never
+  promoting or importing unattested or self-declared `sha256:abc` rows into the
+  canonical store. After convergence, `journal-status` continues retaining
+  `audit_records` as `not_proven` while allowing current tasks in the worktree
+  to execute canonical `decapod validate` and transition atomically to `VERIFIED`.
+- Actual-binary suite `tests/workunit_verified_proof_1660.rs` (zero
+  `DECAPOD_VALIDATE_SKIP_*` gate-skip variables) exercises all 6 `#1660`
+  falsifiers: (1) self-authored `record-proof` pass + `sha256:abc` never mints
+  `VERIFIED` or publication; (2) quick-scope/skipped, failed, or unavailable-tool
+  attempts stay `not_proven`; (3) source mutation, accepted-base movement,
+  changed `proof_plan`, and newer failed validation downgrade/mark receipts
+  `stale`; (4) authentic proof copied across tasks, custody generations (including
+  ABA lease reclaim), or repositories is rejected; (5) split-store records stay
+  `not_proven` audit history with `WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`;
+  and (6) repaired canonical tasks complete `VERIFIED` atomically and pass
+  `verify_workunit_gate_for_publish`.
+
+## Accepted release inventory review
+
+Release target34f837d4 changed only the decapod package version from0.148.9 to0.148.10 in Cargo.toml/Cargo.lock and changelog. All105 verification source definitions were compared to the prior reviewed candidate; only those two version lines changed. No required check, workflow, helper, adapter, environment or timeout changes. The candidate source inventory is explicitly reconciled tosha256:e1a242381f7411a8facfe285e2945040dafa93c46dd48c11a86ebd55d9a95b3f; fresh native source-CI validation still decides admission. Validation09 target-ancestry failure and validation10 stale-inventory rejection remain preserved.
+
+## Native0.148.10 projection refresh
+
+The d4269e35 source-built CI health step actually rejected current generated drift: its0.148.10 binary refreshed the managed Docker pin and specs manifest from0.148.9. Official checksum-verified0.148.10 is now installed. Native workspace/agent/spec refresh and the reported project-check repair regenerated those projections; no AGENTS file was manually edited and no source check was weakened. The local prerequisite-only repair reported three failures (first container_workspace_required) while applying two repairs, so it is not claimed as a project or publication pass. Fresh complete Buildkite-owned validation is required for the checkpointed candidate. The actual captured Pi export replay at d4269e35 passed and reproduced4180e2b8... byte-for-byte; no fixture actions occurred.
+
+## Accepted conformance and0.148.11 integration
+
+Full native validation13 and renewed publication passed for45ae1bff/base34f837d4 using complete Buildkite12165 and standalone12167. Both protected app805657 contexts passed; actual library1813pass/8ignored included13 observer cases. Publication independently read back that exact head/base. Master then advanced through accepted interop PR1787 and release0.148.11 to352d892958e1cdf692299927f7c2f3c0c36fc639. That admission is historical and PR1784 returned to draft.
+
+The accepted changes separate source conformance coverage from executed results, reject unregistered RPCs before startup and malformed JSON before negotiation, advertise actual session gates, and tighten the actual competing-mutation timing assertion. Observer source is unchanged and needs no parallel registry or authority. All accepted source/test changes are retained. Authored living specs were merged separately from generated blocks, preserving both the accepted conformance contract and observer/recovery sections. Native commands refresh generated projections.
+
+The105 verification-source definitions were reviewed; only Cargo.toml/Cargo.lock version lines differ in that declared inventory, while the actual accepted Rust/fixture changes are covered by full source/tree binding and required execution. The reconciled inventory issha256:2acf1af72443f49b41967205535a4a0a4eff38a100e3b11ab930a010a3437db0. Official macOS release pipeline44286433522 artifact14419543607 was inspected and checksum-verified (archive5412a6ba1637a188306cf4fce3759d369e8edec78248b7c5a9e1de23ca3ab873); its14e5d8d8 tag and352d8929 master share tree4a9469b32f9c3c9992864b9e5b04995bd48449d0. Installed0.148.11 replaces backed-up0.148.10 without modifying the pinned Pi0.148.8 binary. No new current proof is assumed.
+
+## Release11 tag currency and native pin repair
+
+Validation14 stopped before pushing b413bb64 because the new remote release tag was absent from frozen local release history (SNAPSHOT_UPLOAD_INCOMPLETE); none of its required CI observations is claimed authenticated. Read-only git fetch origin --tags obtained v0.148.11 without publishing or rewriting any tag. Official0.148.11 native govern project-check --refresh-specs then regenerated the managed Docker image/version pin from0.148.10 to0.148.11. Its prerequisite-only result remains partial on the host and is not full readiness. This exact repair is checkpointed before fresh complete validation15. Accepted source,105 inventory2acf1af7 and all required checks remain unchanged.
+
+## Recovery archive disposition
+The selected-source reauthoring and present-time history observation are committed together at fafe6138db68a0d450cc01513b628c17cc40aa3e. The subsequent recovery disposition references that immutable archive. It does not establish the missing historical checkpoint or replace full current-candidate validation.
+
+## Preserved failed source history
+The prior source branch at dad525d46feb9daf09f498c3d2934cd6560fc87b contains integration merge c31d039f without an exact-material checkpoint. That history remains preserved and unproven. The current workstream records the native present-time recovery observation, reauthors the reviewed source in a fresh claimed workspace, and requires independent full validation of its new commits. No retrospective checkpoint or inherited readiness is asserted.
+
+## Acceptance observer delivery checks
+The mandatory offline core suite exercises actual source attribution, failed-check feedback followed by a new model repair action, receipt subject matching and later source/base invalidation. The ignored live export remains separate from those deterministic tests. A passing code suite does not supersede current-content publication-spec review: CI rejects a stale review even when a final lint-only edit preserves behavior. Refresh the affected reviews and obtain a fresh full exact-candidate validation before publication.
+
+## Current accepted policy integration
+
+Publication at102c638e against6ab6de31 was valid at its observed admission. Master subsequently advanced to c47137ad through accepted policy-boundary work. Preserve those new initializer, operator-consent and recovery boundaries, checkpoint the exact integration merge before committing, and collect fresh whole-profile proof; the earlier green result grants no integration authority for this new context.
+
+## Current audit verification scope (#1069)
+
+This candidate changes documentation and release-bound governance projections.
+The implementation map cites actual #1697 source executions at
+`d0b24f6f926583047be0fbe3f51f5686247d1de2` against
+`f5da0e6183bf31cfbef3d5a53c52553ee8b6fbb5`; they are not this document candidate's
+receipt. Native source-CI records retain their incomplete-profile and
+unauthenticated scope fields. Aggregate CLI/core timing and a bounded physical
+receipt assertion do not establish reconstruction microbenchmarks, five-minute
+sharding or complete storage-growth proof.
+
+Fresh hosted checks must judge this candidate's own applicable scope. Conditional
+or not-applicable jobs cannot be counted as executed tests or performance proof.
+No local tests or Buildkite evidence collection is performed. Accepted required
+checks and provider policy remain enabled; full native publication readiness is
+unproven. The complete original mission remains open rather than being closed
+by a documentation update.
+
+## Accepted v0.146.0 audit reconciliation
+
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
+
+## Accepted bounded recovery audit update
+
+The current map baseline advances to human merge `7ada4f0755b7d0b63b835c25280dd36f6bbfc525` of #1697. Its exact candidate/base/tree CLI observation is linked and stays scoped to that source; it does not prove this updated map. Bounded physical retirement is implemented, while general row migration, prepared-input supersession and full native publication proof remain unresolved. Earlier baseline paragraphs are historical. This integration preserves both authored spec sets and requires new exact-candidate GitHub verification.
+
+## v0.147.0 map baseline
+
+The current audit baseline is accepted release master `26196764ec1dfa95ce366c08fc3e104b8a5bfec1`, authored under installed v0.147.0. Earlier baseline statements and executed observations are historical. The accepted recovery mechanism, pending canonical-local target proposal and remaining whole-mission requirements stay distinct. The release changes package identity; all 105 discovered verification inputs match this accepted target, and only the stale reviewed inventory pin is reconciled. Strict requirements and provider policy remain enabled; fresh exact-candidate GitHub proof is required. No local project tests or Buildkite collection establish publication readiness here.
+
+## Bazel dependency delivery boundary
+
+The separate archive-cache carrier in `.github/actions/source-ci-profile/action.yml`
+restores only content-addressed SHA-256 downloads. It preserves pinned versions,
+lockfiles, independently accepted executors and required checks. Cache hits are
+inputs, never proof. `tests/bazel_repository_cache_test.py` exercises real pinned
+Bazel reuse during a fixture outage and rejects corrupt entries. Hosted cache
+persistence and complete accepted-baseline execution still need independent
+evidence; controller 0.133.0 cannot admit changed carrier bytes. See
+`docs/architecture/bazel-dependency-delivery.md` for the acceptance transition.
+Laya policy and PR #1575 remain separate from this infrastructure change.

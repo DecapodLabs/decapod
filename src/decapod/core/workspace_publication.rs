@@ -219,7 +219,7 @@ pub(super) fn verify_remote(
         "Remote publication object fetch",
     )?;
     verify_committed_bundle(repo, &head)?;
-    crate::core::governance_document::verify_pr_checkpoints_for_target(
+    crate::core::governance_document::verify_pr_continuation_for_target(
         repo,
         &base,
         &head,
@@ -297,7 +297,8 @@ pub(super) fn verify_spec_reviews(repo: &Path, base: &str) -> Result<(), Decapod
             || review.reason.trim().is_empty()
         {
             return Err(failure(format!(
-                "STALE_SPEC_REVIEW: {path} or code changed after review. Re-review current bytes through `decapod govern plan review-spec`, refresh projections, and validate."
+                "STALE_SPEC_REVIEW: {path} or code changed after review (observed_code_fingerprint={fingerprint}; reviewed_code_fingerprint={}; observed_spec_hash={hash}; reviewed_spec_hash={}). Re-review current bytes through `decapod govern plan review-spec`, refresh projections, and validate.",
+                review.reviewed_code_fingerprint, review.spec_material_hash
             )));
         }
     }
@@ -320,6 +321,10 @@ struct PullRequest {
     number: u64,
     html_url: String,
     state: String,
+    #[serde(default)]
+    draft: bool,
+    #[serde(default)]
+    merged: bool,
     head: PrRef,
     base: PrRef,
     changed_files: usize,
@@ -398,38 +403,117 @@ fn find_pr(
     }
 }
 
+/// Only quarantine the exact same-repository PR and branch we were publishing.
+/// A denied mutation or unavailable readback stays an explicit failed admission.
+fn quarantine_pr(
+    call: &mut impl FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
+    slug: &str,
+    branch: &str,
+    base: &str,
+    number: u64,
+) -> Result<&'static str, DecapodError> {
+    let endpoint = format!("repos/{slug}/pulls/{number}");
+    let matches = |pr: &PullRequest| {
+        pr.number == number
+            && pr.html_url == format!("https://github.com/{slug}/pull/{number}")
+            && pr.head.branch == branch
+            && pr.base.branch == base
+            && pr
+                .head
+                .repo
+                .as_ref()
+                .is_some_and(|repo| repo.full_name.eq_ignore_ascii_case(slug))
+            && pr
+                .base
+                .repo
+                .as_ref()
+                .is_some_and(|repo| repo.full_name.eq_ignore_ascii_case(slug))
+    };
+    let pr: PullRequest = json(&call(&["api", &endpoint])?)?;
+    if !matches(&pr) {
+        return Err(failure("PR_QUARANTINE_TARGET_UNVERIFIED"));
+    }
+    if pr.merged {
+        return Err(failure(
+            "PR_QUARANTINE_UNAVAILABLE_ALREADY_MERGED: admission failed after an external merge; no quarantine or merge authorization is claimed",
+        ));
+    }
+    if pr.state == "closed" {
+        return Ok("closed_confirmed");
+    }
+    if pr.state != "open" {
+        return Err(failure("PR_QUARANTINE_STATE_UNKNOWN"));
+    }
+    if !pr.draft {
+        // An ambiguous response is resolved by readback, just like creation.
+        let _ = call(&["pr", "ready", &number.to_string(), "--undo", "--repo", slug]);
+    }
+    let observed: PullRequest = json(&call(&["api", &endpoint])?)?;
+    if matches(&observed)
+        && !observed.merged
+        && (observed.state == "closed" || (observed.state == "open" && observed.draft))
+    {
+        Ok(if observed.state == "closed" {
+            "closed_confirmed"
+        } else {
+            "draft_confirmed"
+        })
+    } else {
+        Err(failure(
+            "PR_QUARANTINE_UNCONFIRMED: PR may remain actionable; admission is rejected and human review is required",
+        ))
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 pub(super) fn ensure_and_verify_pr(
     repo: &Path,
+    target: &str,
     slug: &str,
     branch: &str,
     base: &str,
     proof: &RemoteProof,
+    readiness: &crate::core::validation_history::PublicationReadiness,
     title: &str,
     description: &str,
 ) -> Result<String, DecapodError> {
-    ensure_and_verify_pr_with(
+    let result = ensure_and_verify_pr_with(
         &mut |args| gh(repo, args),
         slug,
         branch,
         base,
         proof,
+        &mut || {
+            readiness.verify_subject(slug, branch, &proof.head, base, &proof.base)?;
+            readiness.verify_current(repo)?;
+            verify_committed_bundle(repo, &proof.head)?;
+            verify_remote_unchanged(repo, target, branch, base, proof)
+        },
         title,
         description,
-    )
+    );
+    result.map_err(|error| match readiness.record_publication_rejection(&error.to_string()) {
+        Ok(path) => failure(format!("{error}\nRejection evidence: {}", path.display())),
+        Err(record_error) => failure(format!("{error}\nPUBLICATION_REJECTION_RECORD_FAILED: {record_error}; admission remains rejected")),
+    })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn ensure_and_verify_pr_with(
     call: &mut impl FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
     slug: &str,
     branch: &str,
     base: &str,
     proof: &RemoteProof,
+    admission: &mut impl FnMut() -> Result<(), DecapodError>,
     title: &str,
     description: &str,
 ) -> Result<String, DecapodError> {
+    admission()?;
     let number = match find_pr(call, slug, branch)? {
         Some(number) => number,
         None => {
+            admission()?;
             // Retry a failed create only by readback: GitHub may have accepted
             // the request before the connection failed. Never create duplicates.
             let created = call(&[
@@ -459,45 +543,65 @@ fn ensure_and_verify_pr_with(
         }
     };
     let endpoint = format!("repos/{slug}/pulls/{number}");
-    let pr: PullRequest = json(&call(&["api", &endpoint])?)?;
-    check_pr(&pr, slug, branch, base, proof)?;
-    let pages: Vec<Vec<serde_json::Value>> = json(&call(&[
-        "api",
-        &format!("{endpoint}/files?per_page=100"),
-        "--paginate",
-        "--slurp",
-    ])?)?;
-    let files: Vec<_> = pages.into_iter().flatten().collect();
-    let mut paths = BTreeSet::new();
-    for file in &files {
-        let path = file
-            .get("filename")
-            .and_then(|v| v.as_str())
-            .ok_or_else(|| failure("PR diff readback contained an invalid path."))?;
-        paths.insert(path.to_string());
-        // GitHub represents renames as one file; local --no-renames lists both.
-        if file.get("status").and_then(|v| v.as_str()) == Some("renamed") {
-            let old = file
-                .get("previous_filename")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| failure("PR rename proof omitted its previous path."))?;
-            paths.insert(old.to_string());
+    let result = (|| {
+        let pr: PullRequest = json(&call(&["api", &endpoint])?)?;
+        if pr.number != number {
+            return Err(failure(
+                "PR_NUMBER_MISMATCH: readback identified another PR",
+            ));
         }
-    }
-    if files.len() != pr.changed_files || paths != proof.paths {
-        return Err(failure(
-            "PR_DIFF_MISMATCH: GitHub's complete PR diff differs from the verified remote commits or was truncated. Do not report the PR ready; fetch, inspect, and retry.",
-        ));
-    }
-    require_bundle_paths(&paths)?;
-    let final_pr: PullRequest = json(&call(&["api", &endpoint])?)?;
-    check_pr(&final_pr, slug, branch, base, proof)?;
-    if final_pr.changed_files != pr.changed_files {
-        return Err(failure(
-            "PR_PUBLICATION_RACE: PR diff changed during verification; retry.",
-        ));
-    }
-    Ok(final_pr.html_url)
+        check_pr(&pr, slug, branch, base, proof)?;
+        let pages: Vec<Vec<serde_json::Value>> = json(&call(&[
+            "api",
+            &format!("{endpoint}/files?per_page=100"),
+            "--paginate",
+            "--slurp",
+        ])?)?;
+        let files: Vec<_> = pages.into_iter().flatten().collect();
+        let mut paths = BTreeSet::new();
+        for file in &files {
+            let path = file
+                .get("filename")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| failure("PR diff readback contained an invalid path."))?;
+            paths.insert(path.to_string());
+            // GitHub represents renames as one file; local --no-renames lists both.
+            if file.get("status").and_then(|v| v.as_str()) == Some("renamed") {
+                let old = file
+                    .get("previous_filename")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| failure("PR rename proof omitted its previous path."))?;
+                paths.insert(old.to_string());
+            }
+        }
+        if files.len() != pr.changed_files || paths != proof.paths {
+            return Err(failure(
+                "PR_DIFF_MISMATCH: GitHub's complete PR diff differs from the verified remote commits or was truncated. Do not report the PR ready; fetch, inspect, and retry.",
+            ));
+        }
+        require_bundle_paths(&paths)?;
+        let final_pr: PullRequest = json(&call(&["api", &endpoint])?)?;
+        if final_pr.number != number {
+            return Err(failure(
+                "PR_NUMBER_MISMATCH: final readback identified another PR",
+            ));
+        }
+        check_pr(&final_pr, slug, branch, base, proof)?;
+        if final_pr.changed_files != pr.changed_files {
+            return Err(failure(
+                "PR_PUBLICATION_RACE: PR diff changed during verification; retry.",
+            ));
+        }
+        admission()?;
+        Ok(final_pr.html_url)
+    })();
+    result.map_err(|error| {
+        let quarantine = match quarantine_pr(call, slug, branch, base, number) {
+            Ok(state) => state.to_string(),
+            Err(quarantine_error) => format!("unconfirmed ({quarantine_error})"),
+        };
+        failure(format!("PR_CREATED_NOT_ADMITTED: https://github.com/{slug}/pull/{number} exists or was observed, but admission failed; quarantine={quarantine}. {error}"))
+    })
 }
 
 #[cfg(test)]

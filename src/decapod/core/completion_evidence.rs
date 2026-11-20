@@ -706,7 +706,7 @@ pub fn build_record(
             "completion evidence requires VERIFIED workunit status for '{task_id}'"
         )));
     }
-    workunit::validate_verified_manifest(&manifest)?;
+    workunit::validate_verified_manifest(project_root, &manifest)?;
     workunit::ensure_living_specs_bound_for_proof(project_root, &manifest)?;
     workunit::verify_capsule_policy_lineage_for_task(project_root, &manifest)?;
 
@@ -959,7 +959,7 @@ fn verify_record_value(
         },
     ));
 
-    let workunit_ready = workunit::validate_verified_manifest(&manifest).is_ok();
+    let workunit_ready = workunit::validate_verified_manifest(project_root, &manifest).is_ok();
     checks.push(check(
         "proof_plan",
         if workunit_ready { "pass" } else { "fail" },

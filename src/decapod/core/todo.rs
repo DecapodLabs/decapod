@@ -1,5 +1,5 @@
 use crate::cli::CloudRuntimeConfig;
-use crate::core::backend::{BackendRoute, BackendSelection, StorageContext};
+use crate::core::backend::BackendSelection;
 use crate::core::broker::DbBroker;
 use crate::core::cloud_todo_operation::{
     self, Diagnostic as CloudTodoDiagnostic, Journal as CloudTodoJournal, OperationRecord, Outcome,
@@ -11,9 +11,6 @@ use crate::core::external_action::{self, ExternalCapability};
 use crate::core::fleet_coord::{
     self, ActiveClaimView, DEFAULT_CLAIM_LEASE_SECS, DependencyNodeView, DependencyReadiness,
     LeaseLifecycle, MAX_CLAIM_LEASE_SECS,
-};
-use crate::core::propodus::{
-    PropodusClientError, PropodusConfig, ensure_cloud_session_for_datastore,
 };
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::schemas; // Import the new schemas module
@@ -37,9 +34,268 @@ use std::path::{Path, PathBuf};
 
 #[path = "authoring.rs"]
 mod authoring;
+#[path = "legacy_todo_recovery.rs"]
+mod legacy_todo_recovery;
 #[path = "task_journal.rs"]
 mod task_journal;
-pub use authoring::{admit_authoring, check_authoring};
+pub use authoring::{
+    admit_authoring, check_authoring, enforce_shared_resource_available, release_authoring_binding,
+};
+pub(crate) use authoring::{authoring_actor_required_error, is_missing_or_unknown_actor};
+#[cfg(test)]
+pub(crate) use authoring::{test_current_agent_id_guard, test_current_agent_id_override};
+pub use task_journal::{
+    VerifyBudget as TaskJournalVerifyBudget, VerifyCursor as TaskJournalVerifyCursor,
+};
+
+/// Bootstrap-only recovery: the CLI authenticates apply requests before calling
+/// this crate-private kernel entrypoint. Local policy is rechecked by the owner.
+pub(crate) fn reconcile_legacy_todo(
+    root: &Path,
+    actor: &str,
+    expected_review: Option<&str>,
+    prepare_only: bool,
+) -> Result<JsonValue, error::DecapodError> {
+    legacy_todo_recovery::run(root, actor, expected_review, prepare_only)
+}
+
+pub(crate) fn guard_pending_legacy_reconciliation(root: &Path) -> Result<(), error::DecapodError> {
+    legacy_todo_recovery::guard_pending(root)
+}
+
+/// Snapshot-consistent, keyset-paged task journal verification (`#1630` `F5`).
+pub fn verify_task_journal_with_budget(
+    conn: &Connection,
+    budget: &TaskJournalVerifyBudget,
+    cursor: Option<&TaskJournalVerifyCursor>,
+) -> Result<JsonValue, error::DecapodError> {
+    task_journal::verify_with_budget(conn, budget, cursor)
+}
+
+/// The original task contract and custody captured before full validation.
+/// Revision changes are accepted only through the independently checked journal.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct HistoricalTaskBinding {
+    pub task_id: String,
+    pub revision: i64,
+    pub status: String,
+    pub contract_digest: String,
+    pub checkpoint_digest: String,
+    pub assignee: String,
+    pub lease_generation: i64,
+}
+
+pub(crate) fn capture_validation_binding(
+    store_root: &Path,
+    task_id: &str,
+) -> Result<HistoricalTaskBinding, error::DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "VALIDATION_HISTORY_BACKEND_UNSUPPORTED: historical task proof requires the local canonical journal".into(),
+        ));
+    }
+    broker.with_conn(
+        &todo_db_path(store_root),
+        "decapod",
+        None,
+        "validation.history.task_binding",
+        |conn| task_journal::capture_validation_binding(conn, task_id),
+    )
+}
+
+/// How `validate` reacts when the active claim lease is shorter than the
+/// validation budget.
+///
+/// Renewing a lease increments `lease_generation`, which rotates task custody
+/// and invalidates workunit execution checkpoints (`EXECUTION_STATE_CHANGED`).
+/// Validation therefore never renews implicitly: the default is a read-only
+/// advisory, and renewal is an explicit operator opt-in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ValidationLeaseTtlMode {
+    /// Read-only: report an advisory and continue without mutating custody.
+    Warn,
+    /// Read-only: fail fast with `VALIDATION_LEASE_TTL_INSUFFICIENT`.
+    Strict,
+    /// Explicit opt-in: renew the claiming agent's lease before capture. This
+    /// rotates custody, so any existing workunit checkpoint must be refreshed.
+    Renew,
+}
+
+impl ValidationLeaseTtlMode {
+    /// Parses `DECAPOD_VALIDATE_LEASE_TTL` (`warn` | `strict` | `renew`).
+    /// Unknown values fall back to the non-mutating `Warn` mode.
+    pub(crate) fn from_env_value(value: Option<&str>) -> Self {
+        match value.map(|v| v.trim().to_ascii_lowercase()).as_deref() {
+            Some("strict") => Self::Strict,
+            Some("renew") => Self::Renew,
+            _ => Self::Warn,
+        }
+    }
+}
+
+/// Outcome of the pre-capture lease TTL guard.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum ValidationLeaseTtl {
+    /// Remaining lease covers the validation budget.
+    Sufficient { remaining_secs: u64 },
+    /// Remaining lease is shorter than the budget; custody was not mutated.
+    Low {
+        remaining_secs: u64,
+        required_secs: u64,
+        advisory: String,
+    },
+    /// Lease was renewed by explicit operator opt-in.
+    Renewed { lease_secs: u64 },
+}
+
+/// Guard against mid-validation `VALIDATION_HISTORY_TASK_STALE` by checking the
+/// remaining exclusive lease TTL before expensive validation starts. Only the
+/// explicit `Renew` mode mutates custody.
+pub(crate) fn ensure_validation_lease_ttl(
+    store_root: &Path,
+    task_id: &str,
+    min_remaining_secs: u64,
+    mode: ValidationLeaseTtlMode,
+) -> Result<ValidationLeaseTtl, error::DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "VALIDATION_HISTORY_BACKEND_UNSUPPORTED: historical task proof requires the local canonical journal".into(),
+        ));
+    }
+    let agent_id = crate::current_agent_id();
+    let now_ts = now_iso();
+    let now_secs = parse_epoch_z(&now_ts).unwrap_or_else(now_unix_secs);
+    let required_secs = min_remaining_secs.clamp(1, MAX_CLAIM_LEASE_SECS);
+    let (status, remaining_secs) = broker.with_conn(
+        &todo_db_path(store_root),
+        "decapod",
+        None,
+        "validation.history.lease_ttl_check",
+        |conn| {
+            let row: Option<(String, String, Option<String>, i64, String)> = conn
+                .query_row(
+                    "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_generation, 0),
+                            COALESCE(lease_lifecycle, '')
+                     FROM tasks WHERE id = ?1",
+                    [task_id],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                        ))
+                    },
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
+            let Some((status, assigned_to, lease_expires_at, lease_generation, lease_lifecycle)) =
+                row
+            else {
+                return Err(error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody".into(),
+                ));
+            };
+            if assigned_to.is_empty()
+                || assigned_to != agent_id
+                || !matches!(status.as_str(), "open" | "in_progress" | "done")
+                || lease_generation <= 0
+                || !LeaseLifecycle::parse(Some(&lease_lifecycle)).holds_exclusive_custody()
+                || fleet_coord::lease_state(lease_expires_at.as_deref(), &now_ts)
+                    != fleet_coord::LeaseState::Active
+            {
+                return Err(error::DecapodError::ValidationError(
+                    "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody".into(),
+                ));
+            }
+            let expires_secs = lease_expires_at
+                .as_deref()
+                .and_then(fleet_coord::parse_epoch_z)
+                .unwrap_or(0);
+            Ok((status, expires_secs.saturating_sub(now_secs)))
+        },
+    )?;
+    if remaining_secs >= required_secs {
+        return Ok(ValidationLeaseTtl::Sufficient { remaining_secs });
+    }
+    let renew_hint = format!(
+        "run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` and refresh any workunit/governance checkpoint before running validation"
+    );
+    match mode {
+        ValidationLeaseTtlMode::Warn => {
+            return Ok(ValidationLeaseTtl::Low {
+                remaining_secs,
+                required_secs,
+                advisory: format!(
+                    "VALIDATION_LEASE_TTL_LOW: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than the validation budget ({required_secs}s); validation continues without mutating custody, but a lease that expires mid-run fails with VALIDATION_HISTORY_TASK_STALE; {renew_hint}"
+                ),
+            });
+        }
+        ValidationLeaseTtlMode::Strict => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s); {renew_hint}"
+            )));
+        }
+        ValidationLeaseTtlMode::Renew if status == "done" => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and a done task cannot be renewed"
+            )));
+        }
+        ValidationLeaseTtlMode::Renew => {}
+    }
+    let renew_secs = required_secs.clamp(DEFAULT_CLAIM_LEASE_SECS, MAX_CLAIM_LEASE_SECS);
+    let renewed = renew_claim_lease(store_root, task_id, &agent_id, Some(renew_secs))?;
+    if renewed.get("status").and_then(|v| v.as_str()) != Some("ok") {
+        let detail = renewed["result"]["message"]
+            .as_str()
+            .or_else(|| renewed["message"].as_str())
+            .unwrap_or("unable to extend active claim lease");
+        return Err(error::DecapodError::ValidationError(format!(
+            "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and explicit renewal failed: {detail}"
+        )));
+    }
+    Ok(ValidationLeaseTtl::Renewed {
+        lease_secs: renew_secs,
+    })
+}
+
+pub(crate) fn ensure_task_full_validation_plan_on_conn(
+    conn: &Connection,
+    task_id: &str,
+) -> Result<(), error::DecapodError> {
+    task_journal::ensure_task_full_validation_plan(conn, task_id)
+}
+
+pub(crate) fn ensure_task_full_validation_plan(
+    store_root: &Path,
+    task_id: &str,
+) -> Result<(), error::DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "VALIDATION_HISTORY_BACKEND_UNSUPPORTED: no local fallback for cloud task proof".into(),
+        ));
+    }
+    broker.with_conn(
+        &todo_db_path(store_root),
+        "decapod",
+        None,
+        "validation.workunit.task_plan.check",
+        |conn| ensure_task_full_validation_plan_on_conn(conn, task_id),
+    )
+}
+
+pub(crate) fn check_validation_binding_on_conn(
+    conn: &Connection,
+    binding: &HistoricalTaskBinding,
+    allow_lifecycle_progress: bool,
+) -> Result<(), error::DecapodError> {
+    task_journal::check_validation_binding(conn, binding, allow_lifecycle_progress)
+}
 
 /// Task IDs are selected under the same write transaction as their mutation.
 /// New-task discovery uses only this transaction's task.add event range.
@@ -236,30 +492,61 @@ pub fn capture_execution_custody(
 }
 
 /// Explicitly establish current-state baselines; legacy events are not replayed.
-/// `gap` is the reviewed `Some((task_id, reason))` historical-gap repair (#1534).
+/// Compatibility entrypoint for a single reviewed historical gap.
 pub fn task_journal_checkpoint(
     root: &Path,
     gap: Option<(String, String)>,
+) -> Result<JsonValue, error::DecapodError> {
+    task_journal_checkpoint_many(root, gap.into_iter().collect())
+}
+
+/// Accept multiple independently reviewed historical gaps atomically (#1581).
+pub fn task_journal_checkpoint_many(
+    root: &Path,
+    gaps: Vec<(String, String)>,
 ) -> Result<JsonValue, error::DecapodError> {
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
         return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
     }
+    let actor = mutation_actor(None);
+    let rbac_digest = if gaps.is_empty() {
+        None
+    } else {
+        Some(policy::authorize_rbac_exception(
+            root,
+            &actor,
+            "todo.journal.repair",
+        )?)
+    };
     broker.with_transaction(
         &todo_db_path(root),
-        &mutation_actor(None),
+        &actor,
         None,
         "todo.journal.checkpoint",
         |conn| {
             ensure_schema(conn)?;
-            match &gap {
-                Some((id, reason)) => task_journal::checkpoint_with_gap(
+            let result = task_journal::checkpoint_with_gaps(conn, &actor, &gaps)?;
+            if let Some(config_digest) = &rbac_digest {
+                crate::core::events::append_on_conn(
                     conn,
-                    &mutation_actor(None),
-                    Some((id.as_str(), reason.as_str())),
-                ),
-                None => task_journal::checkpoint(conn, &mutation_actor(None)),
+                    crate::core::events::TODO,
+                    &serde_json::json!({
+                        "ts": now_iso(),
+                        "event_id": crate::core::ulid::new_ulid(),
+                        "event_type": "policy.rbac.exception_used",
+                        "status": "success",
+                        "actor": actor,
+                        "payload": {
+                            "permission": "todo.journal.repair",
+                            "config_digest": config_digest,
+                            "task_ids": gaps.iter().map(|(id, _)| id).collect::<Vec<_>>(),
+                            "identity_assurance": "cooperative_not_authenticated"
+                        }
+                    }),
+                )?;
             }
+            Ok(result)
         },
     )
 }
@@ -308,15 +595,22 @@ pub fn task_journal_restore(
 
 #[derive(Subcommand, Debug)]
 pub enum TodoJournalCommand {
+    /// Review mixed TODO input; explicitly prepare/apply only the exact reviewed
+    /// empty or byte-identical canonical copy. Unmatched history stays blocked.
+    ReconcileLegacy {
+        #[clap(long)]
+        expected_review: Option<String>,
+        /// Persist the versioned operation intent without retiring the input.
+        #[clap(long, requires = "expected_review")]
+        prepare_only: bool,
+    },
     /// Observe current state as an explicit versioned baseline.
     Checkpoint {
-        /// Explicitly accept a historical uncheckpointed domain-event suffix
-        /// for this task (#1534): records the reviewed reason and event range
-        /// as a task.journal.gap_accepted event, then appends a baseline for
-        /// the current projection.
+        /// Accept a reviewed historical gap for a task. Repeat this flag for
+        /// multiple tasks; all gap receipts and checkpoints commit atomically.
         #[clap(long)]
-        accept_historical_gap: Option<String>,
-        /// Reviewed reason required together with --accept-historical-gap.
+        accept_historical_gap: Vec<String>,
+        /// Reviewed reason required with any --accept-historical-gap.
         #[clap(long)]
         reason: Option<String>,
     },
@@ -436,6 +730,31 @@ pub struct TodoCli {
     command: TodoCommand,
 }
 
+pub(crate) struct LegacyReconciliationRequest<'a> {
+    pub(crate) expected_review: Option<&'a str>,
+    pub(crate) prepare_only: bool,
+    pub(crate) has_operation_id: bool,
+}
+
+impl TodoCli {
+    pub(crate) fn legacy_reconciliation_request(&self) -> Option<LegacyReconciliationRequest<'_>> {
+        match &self.command {
+            TodoCommand::Journal {
+                command:
+                    TodoJournalCommand::ReconcileLegacy {
+                        expected_review,
+                        prepare_only,
+                    },
+            } => Some(LegacyReconciliationRequest {
+                expected_review: expected_review.as_deref(),
+                prepare_only: *prepare_only,
+                has_operation_id: self.operation_id.is_some(),
+            }),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Subcommand, Debug)]
 pub enum TodoCommand {
     /// Inspect non-secret machine-local cloud operation receipts after interruption.
@@ -509,6 +828,14 @@ pub enum TodoCommand {
         /// Capture verification artifacts and proof baseline while marking done.
         #[clap(long)]
         validated: bool,
+        /// Reuse full validation recorded for this exact accepted source commit.
+        #[clap(
+            long,
+            requires = "validated",
+            conflicts_with = "artifact",
+            value_name = "SHA"
+        )]
+        commit: Option<String>,
         /// File path(s) to hash for drift detection. Defaults to AGENTS.md when --validated is set.
         #[clap(long = "artifact")]
         artifact: Vec<String>,
@@ -546,7 +873,7 @@ pub enum TodoCommand {
     Claim {
         #[clap(long)]
         id: String,
-        /// Agent identifier (defaults to environment or 'unknown').
+        /// Agent identifier (defaults to DECAPOD_AGENT_ID; 'unknown' is rejected).
         #[clap(long)]
         agent: Option<String>,
         /// Claim mode: exclusive takes assignment; shared joins as secondary owner.
@@ -573,7 +900,7 @@ pub enum TodoCommand {
     Renew {
         #[clap(long)]
         id: String,
-        /// Agent identifier (defaults to environment or 'unknown').
+        /// Agent identifier (defaults to DECAPOD_AGENT_ID; 'unknown' is rejected).
         #[clap(long)]
         agent: Option<String>,
         /// Lease duration in seconds from now (default 1800, max 86400).
@@ -584,7 +911,7 @@ pub enum TodoCommand {
     Yield {
         #[clap(long)]
         id: String,
-        /// Agent identifier (defaults to environment or 'unknown').
+        /// Agent identifier (defaults to DECAPOD_AGENT_ID; 'unknown' is rejected).
         #[clap(long)]
         agent: Option<String>,
         /// Optional reason recorded on the yield event.
@@ -975,12 +1302,14 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     // here turns an otherwise valid read into a ReadOnly storage failure.
     // A missing or incompatible schema still fails at the actual query and
     // is repaired by the next governed initialization/migration step.
+    crate::core::storage_compaction::check_read_compatibility(conn)?;
     if conn.is_read_only() {
         return Ok(());
     }
 
     guard_task_schema_initialization(conn)?;
     conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
+    crate::core::storage_compaction::check_storage_format_compatibility(conn)?;
     crate::core::events::ensure_tables(conn)?;
 
     let current: Option<String> = conn
@@ -1007,7 +1336,6 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute_batch(schemas::TODO_DB_SCHEMA_TASK_TAGS)
         .map_err(error::DecapodError::StorageError)?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
     // Preserve the first historical claim for each pair before installing the
     // invariant required by concurrent owner upserts.
     conn.execute(
@@ -1019,18 +1347,28 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     )?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_UNIQUE, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_APPROVALS, [])?;
     conn.execute(schemas::POLICY_DB_SCHEMA_INDEX, [])?;
     conn.execute_batch(
         "CREATE TABLE IF NOT EXISTS authoring_bindings (
         worktree_id TEXT PRIMARY KEY, task_id TEXT NOT NULL, agent_id TEXT NOT NULL,
         lease_generation INTEGER NOT NULL, branch TEXT NOT NULL,
-        repository_id TEXT NOT NULL, updated_at TEXT NOT NULL);",
+        repository_id TEXT NOT NULL, updated_at TEXT NOT NULL);
+        DELETE FROM authoring_bindings
+        WHERE rowid NOT IN (
+            SELECT MAX(rowid) FROM authoring_bindings GROUP BY task_id
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_authoring_bindings_task_id
+        ON authoring_bindings(task_id);",
     )?;
+    conn.execute_batch(schemas::STORAGE_COMPONENTS_SCHEMA)
+        .map_err(error::DecapodError::StorageError)?;
+    conn.execute_batch(schemas::STORAGE_COMPONENT_REFS_SCHEMA)
+        .map_err(error::DecapodError::StorageError)?;
+    conn.execute_batch(schemas::STORAGE_MIGRATION_MANIFESTS_SCHEMA)
+        .map_err(error::DecapodError::StorageError)?;
     seed_default_risk_zones(conn)?;
     // Houseboat 2 lease columns must exist even if meta was advanced without the ALTER.
     let _ = conn.execute("ALTER TABLE tasks ADD COLUMN lease_expires_at TEXT", []);
@@ -1062,12 +1400,10 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_VERIFICATION, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_VERIFICATION_STATUS, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
-    conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
     conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
 
     if current_version < 2 {
         conn.execute(schemas::TODO_DB_SCHEMA_CATEGORIES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_CATEGORY_NAME, [])?;
         seed_default_categories(conn)?;
     }
 
@@ -1113,7 +1449,6 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 10 {
         // Multiple owners support (also always-enforced above).
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_OWNERS, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_OWNERS_TASK, [])?;
         // Agent expertise folded into agents.expertise_json (#1129).
     }
 
@@ -1124,12 +1459,10 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version < 12 {
         // Operational risk zones
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
     }
 
     if current_version < 13 {
         conn.execute(schemas::TODO_DB_SCHEMA_TASK_DEPENDENCIES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_TASK, [])?;
         conn.execute(schemas::TODO_DB_SCHEMA_INDEX_TASK_DEPS_DEPENDS_ON, [])?;
         backfill_task_dependencies(conn)?;
     }
@@ -1178,6 +1511,9 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
             schemas::TODO_SCHEMA_VERSION.to_string()
         ],
     )?;
+    if current_version == 0 {
+        crate::core::storage_compaction::stamp_storage_format_metadata(conn)?;
+    }
 
     Ok(())
 }
@@ -1218,6 +1554,12 @@ fn seed_default_risk_zones(conn: &Connection) -> Result<(), error::DecapodError>
         (
             "aptitude.mutate",
             "Aptitude preference mutations require basic trust",
+            "basic",
+            0,
+        ),
+        (
+            "workspace.authoring",
+            "Workspace checkout authoring bindings require basic trust",
             "basic",
             0,
         ),
@@ -2553,6 +2895,7 @@ pub fn initialize_todo_db(root: &Path) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "todo.init", |conn| {
+        crate::core::storage_scope::ensure(conn, root)?;
         ensure_schema(conn)?;
         Ok(())
     })?;
@@ -3129,7 +3472,7 @@ fn fetch_task_comments(
 ) -> Result<Vec<TaskComment>, error::DecapodError> {
     let mut stmt = conn
         .prepare(
-            "SELECT ts, actor, payload
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events
              WHERE stream = 'todo'
                AND subject_id = ?1
@@ -3139,12 +3482,28 @@ fn fetch_task_comments(
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
         .query_map([task_id], |row| {
-            let payload: String = row.get(2)?;
-            let raw: JsonValue = serde_json::from_str(&payload).unwrap_or(JsonValue::Null);
+            let event_id: String = row.get(0)?;
+            let ts: String = row.get(1)?;
+            let event_type: String = row.get(2)?;
+            let actor: String = row.get(3)?;
+            let subject_kind: Option<String> = row.get(4)?;
+            let subject_id: Option<String> = row.get(5)?;
+            let payload: String = row.get(6)?;
+            let raw: JsonValue = crate::core::events::reconstruct_stored_payload(
+                "todo",
+                &event_id,
+                &ts,
+                &event_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &payload,
+            )
+            .unwrap_or_else(|_| serde_json::from_str(&payload).unwrap_or(JsonValue::Null));
             let payload = event_inner_payload(&raw);
             Ok(TaskComment {
-                ts: row.get(0)?,
-                actor: row.get(1)?,
+                ts,
+                actor,
                 comment: payload
                     .get("comment")
                     .and_then(|v| v.as_str())
@@ -3174,6 +3533,7 @@ fn write_task_comment_event(
     payload_extra: JsonValue,
     ts: &str,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_task_comment(task_id, actor, comment)?;
     let mut payload = serde_json::json!({ "comment": comment });
     if let (Some(payload_obj), Some(extra_obj)) =
         (payload.as_object_mut(), payload_extra.as_object())
@@ -3252,6 +3612,27 @@ fn set_task_owners(
 }
 
 pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, error::DecapodError> {
+    if let Some((cloud, identity)) = cloud_runtime(root)? {
+        let project_root = project_root_from_store_root(root)?;
+        let factory = inline_cloud_todo_factory(&project_root);
+        let journal = CloudTodoJournal::machine()?;
+        return run_cloud_todo_command_with_factory(
+            &project_root,
+            args,
+            &cloud,
+            &identity,
+            &factory,
+            None,
+            Some(&journal),
+        );
+    }
+    add_task_local(root, args)
+}
+
+pub(crate) fn add_task_local(
+    root: &Path,
+    args: &TodoCommand,
+) -> Result<serde_json::Value, error::DecapodError> {
     let TodoCommand::Add {
         title,
         description,
@@ -3313,15 +3694,35 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
     let ts = now_iso();
     let intent_ref = format!("intent:todo.add:{}", crate::core::ulid::new_ulid());
     let owner_list = parse_owners_input(owner);
+    if owner_list
+        .iter()
+        .any(|o| authoring::is_missing_or_unknown_actor(o))
+    {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    let validated_collections = crate::core::storage_contracts::validate_task_write(
+        &crate::core::storage_contracts::TaskWriteInput {
+            title,
+            description,
+            priority,
+            tags,
+            owners: &owner_list,
+            due: due.as_deref(),
+            r#ref,
+            scope: &scope,
+            dir_path: &dir_abs,
+            depends_on,
+            blocks,
+            parent_task_id: parent.as_deref(),
+        },
+    )?;
     let primary_owner = owner_list.first().cloned().unwrap_or_default();
-    let effective_tags = tags.clone();
+    let effective_tags = validated_collections.tags_csv;
+    let normalized_depends_on = validated_collections.depends_on_csv;
+    let normalized_blocks = validated_collections.blocks_csv;
 
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
-
-    if broker.is_cloud() {
-        return Err(crate::core::cloud_backend::unavailable_error());
-    }
 
     let actor = mutation_actor(None);
     let (task_id, task_hash, effective_tags, consolidation) = with_task_journal(
@@ -3373,8 +3774,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 scope,
                 parent,
                 priority,
-                depends_on,
-                blocks,
+                normalized_depends_on,
+                normalized_blocks,
                 category,
                 assigned_to,
                 assigned_at,
@@ -3382,7 +3783,7 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
             ],
         )?;
             sync_task_tags(conn, &task_id, &effective_tags)?;
-            sync_task_dependencies(conn, &task_id, depends_on, &ts)?;
+            sync_task_dependencies(conn, &task_id, &normalized_depends_on, &ts)?;
 
             let mut payload = serde_json::json!({
                 "intent_ref": intent_ref,
@@ -3397,8 +3798,8 @@ pub fn add_task(root: &Path, args: &TodoCommand) -> Result<serde_json::Value, er
                 "scope": scope,
                 "parent_task_id": parent,
                 "priority": priority,
-                "depends_on": depends_on,
-                "blocks": blocks,
+                "depends_on": normalized_depends_on,
+                "blocks": normalized_blocks,
                 "category": category,
                 "hash": task_hash,
                 "task_type": task_type,
@@ -3524,6 +3925,24 @@ pub fn update_status(
     )
 }
 
+#[cfg(test)]
+pub(crate) fn complete_prepared_task_for_test(
+    store: &Store,
+    id: &str,
+    proof: &verify::PreparedTodoVerification,
+) -> Result<serde_json::Value, error::DecapodError> {
+    update_status_with_verification(
+        store,
+        id,
+        proof.expected_revision(),
+        proof.expected_status(),
+        "done",
+        "task.done",
+        serde_json::json!({}),
+        Some(proof),
+    )
+}
+
 #[allow(clippy::too_many_arguments)]
 fn update_status_with_verification(
     store: &Store,
@@ -3628,6 +4047,7 @@ fn update_status_with_verification(
                             "status": "conflict", "reason": "stale_completion_proof", "id": id
                         }));
                     }
+                    proof.check_task_binding_on_connection(conn)?;
                 } else if let Some(gate) = exclusive_lease_proof_gate_on_conn(conn, root, id)? {
                     return Ok(gate);
                 }
@@ -3659,6 +4079,9 @@ fn update_status_with_verification(
 
             if let Some(proof) = verification {
                 proof.commit_on_connection(conn)?;
+            }
+            if matches!(new_status, "done" | "archived") {
+                authoring::retire_task_bindings_on_conn(conn, id, &actor, event_type, &ts)?;
             }
 
             let new_revision = expected_revision + 1;
@@ -3786,7 +4209,7 @@ fn update_status_with_verification(
     Ok(output)
 }
 
-fn comment_task(
+pub fn comment_task(
     root: &Path,
     id: &str,
     comment: &str,
@@ -3817,7 +4240,7 @@ fn comment_task(
     }))
 }
 
-fn edit_task(
+pub fn edit_task(
     root: &Path,
     id: &str,
     title: Option<&str>,
@@ -3825,6 +4248,23 @@ fn edit_task(
     owner: Option<&str>,
     category: Option<&str>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    let parsed_owners = owner.map(parse_owners_input);
+    if parsed_owners.as_ref().is_some_and(|owners| {
+        owners
+            .iter()
+            .any(|o| authoring::is_missing_or_unknown_actor(o))
+    }) {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    crate::core::storage_contracts::validate_task_patch(
+        &crate::core::storage_contracts::TaskPatchInput {
+            id,
+            title,
+            description,
+            owners: parsed_owners.as_deref(),
+            category,
+        },
+    )?;
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
@@ -3899,6 +4339,9 @@ fn edit_task(
                     crate::core::db::params_from_iter(params.iter().map(|p| p.as_ref())),
                 )?
             };
+            if changed == 0 {
+                return Ok(0usize);
+            }
 
             // Create edit event
             let mut payload = serde_json::Map::new();
@@ -4060,6 +4503,48 @@ pub fn claim_task_with_lease(
     lease_seconds: Option<u64>,
     intent_anchor: Option<String>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    if let Some((cloud, identity)) = cloud_runtime(root)? {
+        if mode == ClaimMode::Shared {
+            return Err(error::DecapodError::NotImplemented(
+                "CLOUD_SHARED_CLAIM_UNSUPPORTED: hosted cloud claims only support exclusive custody"
+                    .into(),
+            ));
+        }
+        let project_root = project_root_from_store_root(root)?;
+        let factory = inline_cloud_todo_factory(&project_root);
+        return run_cloud_todo_command_with_factory(
+            &project_root,
+            &TodoCommand::Claim {
+                id: id.to_string(),
+                agent: Some(agent_id.to_string()),
+                mode,
+                lease_seconds,
+                intent_anchor,
+            },
+            &cloud,
+            &identity,
+            &factory,
+            None,
+            None,
+        );
+    }
+    claim_task_with_lease_local(root, id, agent_id, mode, lease_seconds, intent_anchor)
+}
+
+pub(crate) fn claim_task_with_lease_local(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+    mode: ClaimMode,
+    lease_seconds: Option<u64>,
+    intent_anchor: Option<String>,
+) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
     let lease_secs = lease_seconds
@@ -4095,10 +4580,15 @@ pub fn claim_task_with_lease(
     // Do not short-circuit exclusive conflicts from cache: lease expiry must hit the DB
     // so another agent can reclaim an expired ownership lease.
 
+    let journal_actor = if agent_id.trim().is_empty() {
+        "decapod"
+    } else {
+        agent_id
+    };
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        journal_actor,
         None,
         "todo.claim",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
@@ -4209,7 +4699,18 @@ pub fn claim_task_with_lease(
                         }));
                     }
                     if !assigned_to.is_empty() && assigned_to != agent_id {
+                        let is_unknown_assignee =
+                            authoring::is_missing_or_unknown_actor(&assigned_to);
                         if mode == ClaimMode::Shared {
+                            if is_unknown_assignee {
+                                return Ok(serde_json::json!({
+                                    "status": "conflict",
+                                    "mode": "shared",
+                                    "message": format!("Task {} is currently claimed by '{}'; claim it exclusively with an explicit DECAPOD_AGENT_ID before adding shared owners", id, assigned_to),
+                                    "resolution": "claim_exclusive_as_real_actor",
+                                    "assigned_to": assigned_to
+                                }));
+                            }
                             let claim_id = upsert_task_owner(conn, id, agent_id, "secondary", &ts)?;
                             write_ownership_claim_event(
                                 root,
@@ -4247,11 +4748,24 @@ pub fn claim_task_with_lease(
                             }));
                         }
 
+                        let unknown_recoverable = is_unknown_assignee
+                            && !authoring::has_real_actor_checkout_custody(conn, id)?
+                            && !has_other_real_primary_owner(conn, id, agent_id)?;
                         let lease_expired =
                             fleet_coord::lease_allows_reclaim(existing_lease.as_deref(), &ts);
                         let agent_stale =
                             is_agent_stale(conn, &assigned_to, &ts, AGENT_EVICT_TIMEOUT_SECS)?;
-                        if lease_expired || agent_stale {
+                        if unknown_recoverable {
+                            force_release_assignment(
+                                conn,
+                                id,
+                                &assigned_to,
+                                agent_id,
+                                &ts,
+                                "unknown_actor_adopted",
+                            )?;
+                            reclaimed_from = Some(assigned_to);
+                        } else if !is_unknown_assignee && (lease_expired || agent_stale) {
                             force_release_assignment(
                                 conn,
                                 id,
@@ -4290,6 +4804,10 @@ pub fn claim_task_with_lease(
                                 "status": "conflict",
                                 "mode": "exclusive",
                                 "conflict_class": "shared_resource",
+                                "predicate": "resource_reservation",
+                                "affected_operation": "shared_resource_mutation",
+                                "authoring_permission": "isolated_source_authoring_unaffected",
+                                "integration_readiness": "requires_shared_resource_custody",
                                 "resolution": "wait_for_resource_custody",
                                 "message": format!(
                                     "Task {} conflicts with {} enforced shared resource claim(s)",
@@ -4436,7 +4954,13 @@ pub fn claim_task_with_lease(
             }
             if !advisory_overlaps.is_empty() {
                 ok["advisory_overlaps"] = serde_json::json!(advisory_overlaps);
+                ok["integration_readiness"] =
+                    serde_json::json!("combined_candidate_reconciliation_required");
+            } else {
+                ok["integration_readiness"] = serde_json::json!("validation_required");
             }
+            ok["authoring_permission"] =
+                serde_json::json!("permitted_after_isolated_workspace_bind");
             ok["authoring_state"] = serde_json::json!("custody_pending");
             ok["authoring_isolation"] = serde_json::json!("custody_acquired_workspace_unproven");
             Ok(ok)
@@ -4469,6 +4993,30 @@ pub fn claim_task_with_lease(
     }))
 }
 
+fn has_other_real_primary_owner(
+    conn: &Connection,
+    task_id: &str,
+    claiming_agent: &str,
+) -> Result<bool, error::DecapodError> {
+    let mut stmt = conn
+        .prepare(
+            "SELECT agent_id FROM task_owners
+             WHERE task_id = ?1 AND claim_type = 'primary'
+             LIMIT 65",
+        )
+        .map_err(error::DecapodError::StorageError)?;
+    let rows = stmt
+        .query_map([task_id], |r| r.get::<_, String>(0))
+        .map_err(error::DecapodError::StorageError)?;
+    for row in rows {
+        let owner = row.map_err(error::DecapodError::StorageError)?;
+        if owner != claiming_agent && !authoring::is_missing_or_unknown_actor(&owner) {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 fn force_release_assignment(
     conn: &Connection,
     task_id: &str,
@@ -4495,6 +5043,7 @@ fn force_release_assignment(
         crate::core::db::params![task_id, previous_agent],
     )
     .map_err(error::DecapodError::StorageError)?;
+    authoring::retire_task_bindings_on_conn(conn, task_id, actor, reason, ts)?;
     let ev = TodoEvent {
         ts: ts.to_string(),
         event_id: crate::core::ulid::new_ulid(),
@@ -4610,6 +5159,9 @@ pub fn renew_claim_lease(
     agent_id: &str,
     lease_seconds: Option<u64>,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let now_secs = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
     let lease_secs = lease_seconds
@@ -4619,10 +5171,15 @@ pub fn renew_claim_lease(
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
+    let journal_actor = if agent_id.trim().is_empty() {
+        "decapod"
+    } else {
+        agent_id
+    };
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        journal_actor,
         None,
         "todo.renew",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
@@ -4715,6 +5272,14 @@ pub fn renew_claim_lease(
                         ],
                     )
                     .map_err(error::DecapodError::StorageError)?;
+                    authoring::renew_task_binding_on_conn(
+                        conn,
+                        id,
+                        agent_id,
+                        prev_gen as i64,
+                        generation as i64,
+                        &ts,
+                    )?;
                     let ev = TodoEvent {
                         ts: ts.clone(),
                         event_id: crate::core::ulid::new_ulid(),
@@ -4763,14 +5328,22 @@ pub fn yield_claim_lease(
     agent_id: &str,
     reason: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
+    let journal_actor = if agent_id.trim().is_empty() {
+        "decapod"
+    } else {
+        agent_id
+    };
     let result = with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        journal_actor,
         None,
         "todo.yield",
         TaskJournalSelection::Ids(vec![id.to_owned()]),
@@ -4833,6 +5406,7 @@ pub fn yield_claim_lease(
                         crate::core::db::params![id, agent_id],
                     )
                     .map_err(error::DecapodError::StorageError)?;
+                    authoring::retire_task_bindings_on_conn(conn, id, agent_id, "task.yield", &ts)?;
                     let reason = if reason.trim().is_empty() {
                         "yielded"
                     } else {
@@ -5028,7 +5602,7 @@ fn dependency_completion_gate(
     )
 }
 
-fn dependency_completion_gate_on_conn(
+pub(crate) fn dependency_completion_gate_on_conn(
     conn: &Connection,
     root: &Path,
     task_id: &str,
@@ -5514,6 +6088,10 @@ fn handoff_task_impl(
                     serde_json::json!({
                         "status": "conflict",
                         "conflict_class": "shared_resource",
+                        "predicate": "resource_reservation",
+                        "affected_operation": "shared_resource_mutation",
+                        "authoring_permission": "isolated_source_authoring_unaffected",
+                        "integration_readiness": "requires_shared_resource_custody",
                         "resolution": "wait_for_resource_custody",
                         "message": format!(
                             "Task {id} handoff to {to} conflicts with {} enforced shared resource claim(s)",
@@ -5597,6 +6175,7 @@ fn handoff_task_impl(
 
             let claim_id = upsert_task_owner(conn, id, to, "primary", &ts)?;
             sync_legacy_owner_column(conn, id)?;
+            authoring::retire_task_bindings_on_conn(conn, id, acting_agent, "task.handoff", &ts)?;
 
             let event_id = crate::core::ulid::new_ulid();
             let ev = TodoEvent {
@@ -5648,6 +6227,12 @@ fn handoff_task_impl(
                     "lease_state": "active",
                     "dependency_readiness": dependency_readiness,
                     "advisory_overlaps": handoff_advisory,
+                    "authoring_permission": "permitted_after_isolated_workspace_bind",
+                    "integration_readiness": if handoff_advisory.is_empty() {
+                        "validation_required"
+                    } else {
+                        "combined_candidate_reconciliation_required"
+                    },
                     "authoring_isolation": authoring_isolation
                 }),
                 event_id,
@@ -5724,14 +6309,18 @@ fn add_task_owner(
     agent_id: &str,
     claim_type: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+    let actor = mutation_actor(None);
 
     with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        &actor,
         None,
         "todo.add_owner",
         TaskJournalSelection::Ids(vec![task_id.to_owned()]),
@@ -5784,7 +6373,7 @@ fn add_task_owner(
                     agent_id,
                     claim_type,
                     claim_id: &claim_id,
-                    actor: "decapod",
+                    actor: &actor,
                     ts: &ts,
                 },
             )?;
@@ -5811,11 +6400,12 @@ fn remove_task_owner(
     let ts = now_iso();
     let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
+    let actor = mutation_actor(None);
 
     with_task_journal(
         &broker,
         &db_path,
-        "decapod",
+        &actor,
         None,
         "todo.remove_owner",
         TaskJournalSelection::Ids(vec![task_id.to_owned()]),
@@ -5849,7 +6439,7 @@ fn remove_task_owner(
                 payload: serde_json::json!({
                     "agent_id": agent_id,
                 }),
-                actor: "decapod".to_string(),
+                actor: actor.clone(),
             };
             append_event(conn, &ev)?;
             insert_event(conn, &ev)?;
@@ -6007,11 +6597,32 @@ fn list_agent_expertise(
     })
 }
 
-fn release_task(root: &Path, id: &str) -> Result<serde_json::Value, error::DecapodError> {
-    release_task_as_actor(root, id, &mutation_actor(None))
+fn release_task_local(root: &Path, id: &str) -> Result<serde_json::Value, error::DecapodError> {
+    release_task_as_actor_local(root, id, &mutation_actor(None))
 }
 
-fn release_task_as_actor(
+pub fn release_task_as_actor(
+    root: &Path,
+    id: &str,
+    actor: &str,
+) -> Result<serde_json::Value, error::DecapodError> {
+    if let Some((cloud, identity)) = cloud_runtime(root)? {
+        let project_root = project_root_from_store_root(root)?;
+        let factory = inline_cloud_todo_factory(&project_root);
+        return run_cloud_todo_command_with_factory(
+            &project_root,
+            &TodoCommand::Release { id: id.to_string() },
+            &cloud,
+            &identity,
+            &factory,
+            None,
+            None,
+        );
+    }
+    release_task_as_actor_local(root, id, actor)
+}
+
+pub(crate) fn release_task_as_actor_local(
     root: &Path,
     id: &str,
     actor: &str,
@@ -6097,6 +6708,7 @@ fn release_task_as_actor(
                 )?;
                 sync_legacy_owner_column(conn, id)?;
             }
+            authoring::retire_task_bindings_on_conn(conn, id, actor, "task.release", &ts)?;
 
             // Create release event
             let ev = TodoEvent {
@@ -6135,12 +6747,32 @@ fn release_task_as_actor(
 }
 
 pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodError> {
-    let broker = DbBroker::new(root);
-
-    if broker.is_cloud() {
-        return Err(crate::core::cloud_backend::unavailable_error());
+    if let Some((cloud, identity)) = cloud_runtime(root)? {
+        let project_root = project_root_from_store_root(root)?;
+        let factory = inline_cloud_todo_factory(&project_root);
+        let out = run_cloud_todo_command_with_factory(
+            &project_root,
+            &TodoCommand::Get { id: id.to_string() },
+            &cloud,
+            &identity,
+            &factory,
+            None,
+            None,
+        )?;
+        let item = out.get("item").cloned().unwrap_or(JsonValue::Null);
+        if item.is_null() {
+            return Ok(None);
+        }
+        let storage_task: StorageTask = serde_json::from_value(item).map_err(|error| {
+            error::DecapodError::ValidationError(format!("invalid cloud task payload: {error}"))
+        })?;
+        return Ok(Some(task_from_cloud_storage_task(&storage_task)));
     }
+    get_task_local(root, id)
+}
 
+pub(crate) fn get_task_local(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodError> {
+    let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "todo.get", |conn| {
@@ -6188,14 +6820,81 @@ pub fn get_task(root: &Path, id: &str) -> Result<Option<Task>, error::DecapodErr
     })
 }
 
-fn get_work_claim_verification(
+pub fn get_work_claim(
+    root: &Path,
+    id: &str,
+) -> Result<Option<work_claim::WorkClaim>, error::DecapodError> {
+    if let Some(task) = get_task(root, id)? {
+        if DbBroker::new(root).is_cloud() {
+            return Ok(Some(work_claim::from_todo_with_lease(
+                &task,
+                &WorkClaimVerification::default(),
+                None,
+                None,
+                Some(&now_iso()),
+            )));
+        }
+        return get_work_claim_local_with_task(root, id, task);
+    }
+    Ok(None)
+}
+
+pub(crate) fn get_work_claim_local(
+    root: &Path,
+    id: &str,
+) -> Result<Option<work_claim::WorkClaim>, error::DecapodError> {
+    let Some(task) = get_task_local(root, id)? else {
+        return Ok(None);
+    };
+    get_work_claim_local_with_task(root, id, task)
+}
+
+fn get_work_claim_local_with_task(
+    root: &Path,
+    id: &str,
+    task: Task,
+) -> Result<Option<work_claim::WorkClaim>, error::DecapodError> {
+    let verification = get_work_claim_verification_local(root, id)?;
+    let trajectory_id = std::env::current_dir()
+        .ok()
+        .and_then(|dir| crate::core::store::find_decapod_project_root(&dir).ok())
+        .and_then(|project_root| {
+            crate::core::trajectory::load_trajectory_cookie(&project_root).ok()
+        })
+        .flatten()
+        .and_then(|trajectory| {
+            (trajectory.task_id.as_deref() == Some(id)).then_some(trajectory.run_id)
+        });
+    let ts = now_iso();
+    let lease_expires_at = get_task_lease_expires_at_local(root, id)?;
+    let mut claim = work_claim::from_todo_with_lease(
+        &task,
+        &verification,
+        trajectory_id,
+        lease_expires_at,
+        Some(&ts),
+    );
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    let dependency_readiness = broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "todo.work-claim.dependencies",
+        |conn| {
+            ensure_schema(conn)?;
+            load_dependency_readiness(conn, id)
+        },
+    )?;
+    work_claim::apply_dependency_readiness(&mut claim, dependency_readiness);
+    Ok(Some(claim))
+}
+
+fn get_work_claim_verification_local(
     root: &Path,
     id: &str,
 ) -> Result<WorkClaimVerification, error::DecapodError> {
     let broker = DbBroker::new(root);
-    if broker.is_cloud() {
-        return Err(crate::core::cloud_backend::unavailable_error());
-    }
     let db_path = todo_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "todo.work-claim", |conn| {
         ensure_schema(conn)?;
@@ -6222,54 +6921,11 @@ fn get_work_claim_verification(
     })
 }
 
-pub fn get_work_claim(
+fn get_task_lease_expires_at_local(
     root: &Path,
     id: &str,
-) -> Result<Option<work_claim::WorkClaim>, error::DecapodError> {
-    let Some(task) = get_task(root, id)? else {
-        return Ok(None);
-    };
-    let verification = get_work_claim_verification(root, id)?;
-    let trajectory_id = std::env::current_dir()
-        .ok()
-        .and_then(|dir| crate::core::store::find_decapod_project_root(&dir).ok())
-        .and_then(|project_root| {
-            crate::core::trajectory::load_trajectory_cookie(&project_root).ok()
-        })
-        .flatten()
-        .and_then(|trajectory| {
-            (trajectory.task_id.as_deref() == Some(id)).then_some(trajectory.run_id)
-        });
-    let ts = now_iso();
-    let lease_expires_at = get_task_lease_expires_at(root, id)?;
-    let mut claim = work_claim::from_todo_with_lease(
-        &task,
-        &verification,
-        trajectory_id,
-        lease_expires_at,
-        Some(&ts),
-    );
+) -> Result<Option<String>, error::DecapodError> {
     let broker = DbBroker::new(root);
-    let db_path = todo_db_path(root);
-    let dependency_readiness = broker.with_conn(
-        &db_path,
-        "decapod",
-        None,
-        "todo.work-claim.dependencies",
-        |conn| {
-            ensure_schema(conn)?;
-            load_dependency_readiness(conn, id)
-        },
-    )?;
-    work_claim::apply_dependency_readiness(&mut claim, dependency_readiness);
-    Ok(Some(claim))
-}
-
-fn get_task_lease_expires_at(root: &Path, id: &str) -> Result<Option<String>, error::DecapodError> {
-    let broker = DbBroker::new(root);
-    if broker.is_cloud() {
-        return Ok(None);
-    }
     let db_path = todo_db_path(root);
     broker.with_conn(&db_path, "decapod", None, "todo.lease", |conn| {
         ensure_schema(conn)?;
@@ -6292,12 +6948,50 @@ pub fn list_tasks(
     title_search: Option<String>,
     dir: Option<String>,
 ) -> Result<Vec<Task>, error::DecapodError> {
-    let broker = DbBroker::new(root);
-
-    if broker.is_cloud() {
-        return Err(crate::core::cloud_backend::unavailable_error());
+    if let Some((cloud, identity)) = cloud_runtime(root)? {
+        let project_root = project_root_from_store_root(root)?;
+        let factory = inline_cloud_todo_factory(&project_root);
+        let out = run_cloud_todo_command_with_factory(
+            &project_root,
+            &TodoCommand::List {
+                status: status.unwrap_or_else(|| "all".to_string()),
+                scope,
+                tags,
+                title_search,
+                dir,
+            },
+            &cloud,
+            &identity,
+            &factory,
+            None,
+            None,
+        )?;
+        let items = out
+            .get("items")
+            .cloned()
+            .unwrap_or_else(|| JsonValue::Array(Vec::new()));
+        let storage_tasks: Vec<StorageTask> = serde_json::from_value(items).map_err(|error| {
+            error::DecapodError::ValidationError(format!(
+                "invalid cloud task list payload: {error}"
+            ))
+        })?;
+        return Ok(storage_tasks
+            .iter()
+            .map(task_from_cloud_storage_task)
+            .collect());
     }
+    list_tasks_local(root, status, scope, tags, title_search, dir)
+}
 
+pub(crate) fn list_tasks_local(
+    root: &Path,
+    status: Option<String>,
+    scope: Option<String>,
+    tags: Option<String>,
+    title_search: Option<String>,
+    dir: Option<String>,
+) -> Result<Vec<Task>, error::DecapodError> {
+    let broker = DbBroker::new(root);
     let db_path = todo_db_path(root);
 
     broker.with_conn(&db_path, "decapod", None, "todo.list", |conn| {
@@ -6904,7 +7598,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "list", "parameters": ["status", "scope", "tags", "title_search", "dir"] },
             { "name": "get", "parameters": ["id"] },
             { "name": "show", "parameters": ["id"] },
-            { "name": "done", "parameters": ["id", "validated", "artifact"] },
+            { "name": "done", "parameters": ["id", "validated", "artifact", "commit"] },
             { "name": "archive", "parameters": ["id"] },
             { "name": "comment", "parameters": ["id", "comment"] },
             { "name": "edit", "parameters": ["id", "title", "description", "owner", "category"] },
@@ -7042,21 +7736,65 @@ fn claim_followup_once(
     use crate::core::events;
     let key = format!("claim.container.{request_id}");
     let broker = DbBroker::new(root);
-    let existing = broker.with_transaction(&todo_db_path(root), "decapod", None, "todo.claim.container.reserve", |conn| {
-        let existing: Option<String> = conn.query_row(
-            "SELECT payload FROM events WHERE stream = ?1 AND event_type = ?2 ORDER BY seq DESC LIMIT 1",
-            params![events::WORKSPACE_LIFECYCLE, key], |row| row.get(0)).optional()?;
-        if existing.is_none() {
-            events::append_on_conn(conn, events::WORKSPACE_LIFECYCLE, &serde_json::json!({
-                "event_id": crate::core::ulid::new_ulid(), "event_type": key,
-                "ts": now_iso(), "phase": "started", "request_id": request_id,
-            }))?;
-        }
-        Ok(existing)
-    })?;
-    if let Some(raw) = existing {
-        let receipt: JsonValue = serde_json::from_str(&raw)
-            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
+    let existing = broker.with_transaction(
+        &todo_db_path(root),
+        "decapod",
+        None,
+        "todo.claim.container.reserve",
+        |conn| {
+            type LifecycleEventRow = (
+                String,
+                String,
+                String,
+                String,
+                Option<String>,
+                Option<String>,
+                String,
+            );
+            let existing: Option<LifecycleEventRow> = conn
+                .query_row(
+                    "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
+             FROM events
+             WHERE stream = ?1 AND event_type = ?2
+             ORDER BY seq DESC LIMIT 1",
+                    params![events::WORKSPACE_LIFECYCLE, key],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                            row.get(5)?,
+                            row.get(6)?,
+                        ))
+                    },
+                )
+                .optional()?;
+            if existing.is_none() {
+                events::append_on_conn(
+                    conn,
+                    events::WORKSPACE_LIFECYCLE,
+                    &serde_json::json!({
+                        "event_id": crate::core::ulid::new_ulid(), "event_type": key,
+                        "ts": now_iso(), "phase": "started", "request_id": request_id,
+                    }),
+                )?;
+            }
+            Ok(existing)
+        },
+    )?;
+    if let Some((event_id, ts, event_type, actor, subject_kind, subject_id, raw)) = existing {
+        let receipt: JsonValue = events::reconstruct_stored_payload(
+            events::WORKSPACE_LIFECYCLE,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &raw,
+        )?;
         return Ok(receipt.get("result").cloned().unwrap_or_else(|| claim_container_warning(
             "Container follow-up already started or was interrupted; automatic retry is suppressed to avoid duplicating the command.")));
     }
@@ -7153,23 +7891,41 @@ pub fn finish_broker_claim_response(
     )
 }
 
-fn cloud_runtime(
-    root: &Path,
-) -> Result<Option<(CloudRuntimeConfig, RepositoryIdentity)>, error::DecapodError> {
-    let project_root = root
-        .parent()
+fn project_root_from_store_root(root: &Path) -> Result<std::path::PathBuf, error::DecapodError> {
+    if root.file_name().and_then(|n| n.to_str()) == Some("data")
+        && root
+            .parent()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            == Some(".decapod")
+        && let Some(project_root) = root.parent().and_then(Path::parent)
+    {
+        return Ok(project_root.to_path_buf());
+    }
+    if root.join(".decapod").exists() {
+        return Ok(root.to_path_buf());
+    }
+    root.parent()
         .and_then(Path::parent)
         .map(Path::to_path_buf)
         .ok_or_else(|| {
             error::DecapodError::Config(
                 "unable to resolve the project root for cloud todo configuration".to_string(),
             )
-        })?;
-    let selection = BackendSelection::from_project(&project_root)?;
+        })
+}
+
+fn cloud_runtime_for_project(
+    project_root: &Path,
+) -> Result<Option<(CloudRuntimeConfig, RepositoryIdentity)>, error::DecapodError> {
+    if !project_root.join(".decapod/config.toml").exists() {
+        return Ok(None);
+    }
+    let selection = BackendSelection::from_project(project_root)?;
     if !selection.backend().is_cloud() {
         return Ok(None);
     }
-    let cloud = CloudRuntimeConfig::default();
+    let cloud = CloudRuntimeConfig::logical_cloud()?;
     let identity = selection.repository_identity().cloned().ok_or_else(|| {
         error::DecapodError::ValidationError(
             "cloud todo runtime did not resolve a repository identity".to_string(),
@@ -7178,13 +7934,66 @@ fn cloud_runtime(
     Ok(Some((cloud, identity)))
 }
 
+fn cloud_runtime(
+    root: &Path,
+) -> Result<Option<(CloudRuntimeConfig, RepositoryIdentity)>, error::DecapodError> {
+    let project_root = project_root_from_store_root(root)?;
+    cloud_runtime_for_project(&project_root)
+}
+
+fn inline_cloud_todo_factory(project_root: &Path) -> DactylCloudTodoStoreFactory {
+    DactylCloudTodoStoreFactory {
+        project_root: project_root.to_path_buf(),
+        authenticated_context: std::cell::RefCell::new(None),
+    }
+}
+
+fn task_from_cloud_storage_task(task: &StorageTask) -> Task {
+    let created_at =
+        crate::core::time::format_rfc3339_nanos(task.created_at).unwrap_or_else(|_| now_iso());
+    let updated_at = crate::core::time::format_rfc3339_nanos(task.updated_at)
+        .unwrap_or_else(|_| created_at.clone());
+    let completed_at =
+        (task.status == "completed" || task.status == "done").then(|| updated_at.clone());
+    Task {
+        id: task.id.clone(),
+        hash: task.hash.clone(),
+        title: task.title.clone(),
+        description: task.description.clone().unwrap_or_default(),
+        tags: task.tags.join(","),
+        owner: task.assignee.clone().unwrap_or_default(),
+        due: None,
+        r#ref: String::new(),
+        status: task.status.clone(),
+        created_at,
+        updated_at,
+        completed_at,
+        closed_at: None,
+        dir_path: task.dir_path.clone(),
+        scope: task.scope.clone(),
+        parent_task_id: None,
+        priority: task.priority.clone(),
+        depends_on: String::new(),
+        blocks: String::new(),
+        category: task.category.clone(),
+        component: String::new(),
+        assigned_to: task.assignee.clone().unwrap_or_default(),
+        assigned_at: None,
+        owners: Vec::new(),
+        comments: Vec::new(),
+        one_shot: 0,
+        revision: i64::from(task.version),
+    }
+}
+
 fn cloud_error(error: anyhow::Error) -> error::DecapodError {
     let error = match error.downcast::<error::DecapodError>() {
+        Ok(error::DecapodError::DactylError(error)) => return cloud_adapter_error(error),
         Ok(error) => return error,
         Err(error) => error,
     };
     match error.downcast::<dactyl_db::DactylError>() {
-        Ok(error) => error::DecapodError::DactylError(error),
+        Ok(error) => cloud_adapter_error(error),
         Err(_) => error::DecapodError::ValidationError(
             "Dactyl cloud todo operation failed (unclassified storage failure; no local fallback)"
                 .into(),
@@ -7192,7 +8001,34 @@ fn cloud_error(error: anyhow::Error) -> error::DecapodError {
     }
 }
 
+fn cloud_adapter_error(error: dactyl_db::DactylError) -> error::DecapodError {
+    if matches!(
+        error.adapter_kind(),
+        Some(
+            dactyl_db::AdapterErrorKind::Authentication
+                | dactyl_db::AdapterErrorKind::Authorization
+        )
+    ) {
+        crate::core::cloud_client::transport_error(error)
+    } else {
+        error::DecapodError::DactylError(error)
+    }
+}
+
 pub trait CloudTodoStoreFactory {
+    fn resolved_repository(
+        &self,
+        identity: &RepositoryIdentity,
+    ) -> Result<String, error::DecapodError> {
+        Ok(identity.canonical_name.clone())
+    }
+
+    /// Persist a known credential rejection after the original operation ends.
+    /// Test stores and explicit adapter consumers have no managed custody.
+    fn report_failure(&self, _error: &error::DecapodError) -> Result<(), error::DecapodError> {
+        Ok(())
+    }
+
     fn build(
         &self,
         config: &CloudRuntimeConfig,
@@ -7200,50 +8036,55 @@ pub trait CloudTodoStoreFactory {
     ) -> Result<Box<dyn TodoStore>, error::DecapodError>;
 }
 
-struct DactylCloudTodoStoreFactory;
+struct DactylCloudTodoStoreFactory {
+    project_root: std::path::PathBuf,
+    authenticated_context: std::cell::RefCell<Option<crate::core::backend::StorageContext>>,
+}
 
 impl CloudTodoStoreFactory for DactylCloudTodoStoreFactory {
+    fn resolved_repository(
+        &self,
+        _identity: &RepositoryIdentity,
+    ) -> Result<String, error::DecapodError> {
+        self.authenticated_context
+            .borrow()
+            .as_ref()
+            .and_then(|context| context.route().repository_identity())
+            .map(|identity| identity.canonical_name.clone())
+            .ok_or_else(|| {
+                error::DecapodError::Config("Missing resolved cloud project context".into())
+            })
+    }
+
+    fn report_failure(&self, error: &error::DecapodError) -> Result<(), error::DecapodError> {
+        if cloud_todo_operation::failure_kind(error)
+            == cloud_todo_operation::FailureKind::Authentication
+            && let Some(context) = self.authenticated_context.borrow().as_ref()
+        {
+            crate::core::cloud_client::record_rejected_credential(&self.project_root, context)?;
+        }
+        Ok(())
+    }
+
     fn build(
         &self,
-        config: &CloudRuntimeConfig,
+        _config: &CloudRuntimeConfig,
         identity: &RepositoryIdentity,
     ) -> Result<Box<dyn TodoStore>, error::DecapodError> {
-        let datastore = config.validate_datastore()?;
-        let route = BackendRoute::cloud(identity.clone(), &config.api_url)?;
-        let propodus = PropodusConfig::for_repository(config, identity);
-        let credential = ensure_cloud_session_for_datastore(&propodus, identity, datastore)
-            .map_err(|error| match error {
-                PropodusClientError::Authentication(diagnostic) => {
-                    error::DecapodError::CloudAuth(diagnostic)
-                }
-                other => {
-                    use dactyl_db::AdapterErrorKind as K;
-                    let kind = match other {
-                        PropodusClientError::Transport(_) => K::Transport,
-                        PropodusClientError::Conflict(_) => K::Conflict,
-                        PropodusClientError::Service { status: 401, .. } => K::Authentication,
-                        PropodusClientError::Service { status: 403, .. } => K::Authorization,
-                        PropodusClientError::Service { status: 409, .. } => K::Conflict,
-                        PropodusClientError::Service { status: 429, .. } => K::RateLimited,
-                        PropodusClientError::Service {
-                            status: 500..=599, ..
-                        } => K::Unavailable,
-                        PropodusClientError::Decode(_) => K::Protocol,
-                        _ => K::InvalidOperation,
-                    };
-                    error::DecapodError::DactylError(dactyl_db::DactylError::Adapter {
-                        kind,
-                        code: None,
-                        message: "Cloud authentication preflight failed; no local fallback".into(),
-                    })
-                }
-            })?;
-        let context = StorageContext::from_route(route, Some(&credential.token))?
-            .with_cloud_datastore(datastore)?;
-        Ok(Box::new(DactylTodoStore::new(
-            context,
-            identity.canonical_name.clone(),
-        )))
+        let context =
+            crate::core::cloud_client::connect(&self.project_root, identity, false, false)?;
+        let repository = context
+            .route()
+            .repository_identity()
+            .ok_or_else(|| {
+                error::DecapodError::Config(
+                    "Cloud data requires a selected repository context".into(),
+                )
+            })?
+            .canonical_name
+            .clone();
+        *self.authenticated_context.borrow_mut() = Some(context.clone());
+        Ok(Box::new(DactylTodoStore::new(context, repository)))
     }
 }
 
@@ -7256,7 +8097,7 @@ fn cloud_task_from_command(
     dir: Option<&String>,
     repo_id: &str,
 ) -> StorageTask {
-    let now = chrono::Utc::now();
+    let now = time::OffsetDateTime::now_utc();
     let id = make_task_id("todo");
     StorageTask {
         hash: task_hash_from_id(&id),
@@ -7322,6 +8163,157 @@ fn cloud_add_request(command: &TodoCommand) -> Option<JsonValue> {
     }))
 }
 
+fn check_cloud_proof_support(
+    root: &Path,
+    command: &TodoCommand,
+) -> Result<(), error::DecapodError> {
+    if let TodoCommand::Done {
+        validated: true,
+        artifact,
+        commit,
+        ..
+    } = command
+    {
+        if artifact.is_empty() && commit.is_none() {
+            return Err(error::DecapodError::ValidationError(
+                "CLOUD_PROOF_CAPTURE_PREFLIGHT_FAILED: cloud todo --validated requires proof-capture evidence (--artifact and/or committed --commit SHA); no local fallback occurred".to_string(),
+            ));
+        }
+        let target_commit = commit.as_deref().unwrap_or("HEAD");
+        let head_out = std::process::Command::new("git")
+            .args([
+                "-C",
+                root.to_str().unwrap_or("."),
+                "rev-parse",
+                "--verify",
+                target_commit,
+            ])
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !head_out.status.success() {
+            return Err(error::DecapodError::ValidationError(
+                "CLOUD_PROOF_CAPTURE_PREFLIGHT_FAILED: proof-capture candidate commit could not be resolved in Git; no local fallback occurred".to_string(),
+            ));
+        }
+        for path in artifact {
+            let candidate = root.join(path);
+            if !candidate.is_file() {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "CLOUD_PROOF_CAPTURE_PREFLIGHT_FAILED: proof-capture artifact '{}' does not exist",
+                    path
+                )));
+            }
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn build_cloud_proof_capture_request(
+    root: &Path,
+    repo_id: &str,
+    task_id: &str,
+    task_revision: i64,
+    fencing_generation: i64,
+    artifacts: &[String],
+    commit_override: Option<&str>,
+) -> Result<crate::core::cloud_proof::ProofCaptureRequest, error::DecapodError> {
+    use crate::core::cloud_proof::*;
+    let git_rev = |rev: &str| -> Result<String, error::DecapodError> {
+        let out = std::process::Command::new("git")
+            .args([
+                "-C",
+                root.to_str().unwrap_or("."),
+                "rev-parse",
+                "--verify",
+                rev,
+            ])
+            .output()
+            .map_err(error::DecapodError::IoError)?;
+        if !out.status.success() {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLOUD_PROOF_CAPTURE_PREFLIGHT_FAILED: cannot resolve git object {rev:?}"
+            )));
+        }
+        Ok(String::from_utf8_lossy(&out.stdout).trim().to_string())
+    };
+    let cand_ref = commit_override.unwrap_or("HEAD");
+    let candidate_commit = git_rev(cand_ref)?;
+    let candidate_tree = git_rev(&format!("{cand_ref}^{{tree}}"))?;
+    let base_branch = crate::core::workspace::resolve_base_branch(root, None);
+    let accepted_commit = git_rev(&format!("origin/{base_branch}"))
+        .or_else(|_| git_rev(&base_branch))
+        .unwrap_or_else(|_| candidate_commit.clone());
+    let accepted_tree =
+        git_rev(&format!("{accepted_commit}^{{tree}}")).unwrap_or_else(|_| candidate_tree.clone());
+
+    let hash_hex = |bytes: &[u8]| -> String {
+        use sha2::{Digest, Sha256};
+        let digest = Sha256::digest(bytes);
+        let mut s = String::from("sha256:");
+        for b in digest {
+            use std::fmt::Write;
+            let _ = write!(&mut s, "{b:02x}");
+        }
+        s
+    };
+
+    let policy_digest = std::fs::read(root.join(".decapod/config.toml"))
+        .map(|b| hash_hex(&b))
+        .unwrap_or_else(|_| PROOF_CAPTURE_CONTRACT_DIGEST.to_string());
+    let mut evidence = Vec::new();
+    for raw_path in artifacts {
+        let full = root.join(raw_path);
+        let bytes = std::fs::read(&full).map_err(error::DecapodError::IoError)?;
+        let digest = hash_hex(&bytes);
+        let provenance_digest = hash_hex(format!("{raw_path}:{digest}").as_bytes());
+        evidence.push(ProofEvidenceReference {
+            kind: "suite".to_string(),
+            digest,
+            bytes: bytes.len() as i64,
+            provenance_digest,
+        });
+    }
+    if evidence.is_empty() {
+        let fallback_digest = hash_hex(candidate_commit.as_bytes());
+        evidence.push(ProofEvidenceReference {
+            kind: "material".to_string(),
+            digest: fallback_digest.clone(),
+            bytes: candidate_commit.len() as i64,
+            provenance_digest: fallback_digest,
+        });
+    }
+    let op_id = new_uuid_v4()?;
+    let ws_id = format!("ws_{}", crate::core::ulid::new_ulid().to_lowercase());
+    let custody_id = format!("custody_{}", crate::core::ulid::new_ulid().to_lowercase());
+    Ok(ProofCaptureRequest {
+        contract: PROOF_CAPTURE_CONTRACT_ID.to_string(),
+        contract_digest: PROOF_CAPTURE_CONTRACT_DIGEST.to_string(),
+        operation_id: op_id,
+        subject: ProofSubject {
+            repository_id: repo_id.to_string(),
+            task_id: task_id.to_string(),
+            workspace_id: ws_id,
+            custody_id,
+            task_revision: task_revision.max(1),
+            fencing_generation: fencing_generation.max(1),
+            candidate: ProofGitIdentity {
+                commit: candidate_commit.clone(),
+                tree: candidate_tree,
+            },
+            accepted_target: ProofGitIdentity {
+                commit: accepted_commit,
+                tree: accepted_tree,
+            },
+            integration: None,
+            policy_digest: policy_digest.clone(),
+            requirements_digest: policy_digest.clone(),
+            material_digest: hash_hex(candidate_commit.as_bytes()),
+            prerequisites_digest: policy_digest,
+        },
+        evidence,
+    })
+}
+
 fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     root: &Path,
     command: &TodoCommand,
@@ -7331,6 +8323,9 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     operation_id: Option<&str>,
     journal: Option<&CloudTodoJournal>,
 ) -> Result<JsonValue, error::DecapodError> {
+    // Reject invalid proof capture preflight before discovery, credential refresh or
+    // any other connector work. The direct-store entry also keeps this guard.
+    check_cloud_proof_support(root, command)?;
     let mut operation = cloud_add_request(command)
         .map(|payload| {
             OperationRecord::new(
@@ -7349,17 +8344,31 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     if let (Some(operation), Some(journal)) = (&mut operation, journal) {
         *operation = journal.prepare(operation)?;
     }
-    let store = match factory.build(config, identity) {
-        Ok(store) => store,
+    let (store, repository) = match factory.build(config, identity).and_then(|store| {
+        factory
+            .resolved_repository(identity)
+            .map(|repository| (store, repository))
+    }) {
+        Ok(connection) => connection,
         Err(error) => {
             if let (Some(operation), Some(journal)) = (&operation, journal) {
                 let kind = cloud_todo_operation::failure_kind(&error);
                 let _ = journal.finish(operation, Outcome::BlockedBeforeSubmit, Some(kind));
-                return Err(error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
-                    operation,
-                    Outcome::BlockedBeforeSubmit,
-                    kind,
-                )));
+                let mut diagnostic =
+                    CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind);
+                if let error::DecapodError::CloudAuth(auth) = &error {
+                    if auth.status == crate::core::error::CloudAuthStatus::OnboardingPending {
+                        diagnostic.authorization_url = auth.authorization_url.clone();
+                    }
+                    // Auth message/recovery text can contain private adapter
+                    // details. Only its explicit validated handoff crosses
+                    // into the public task receipt; guidance stays fixed.
+                    diagnostic.next_action = format!(
+                        "Agent: share authorization_url when present, then run `decapod cloud login --format json` and follow its structured recovery. While sign-in is pending, retry login every 2 seconds for up to 5 minutes. Continue without waiting for another user message; preserve the saved connection if still pending. Resume the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add. The user does not need another CLI command.",
+                        operation.operation_id
+                    );
+                }
+                return Err(error::DecapodError::CloudTodo(diagnostic));
             }
             return Err(error);
         }
@@ -7371,6 +8380,19 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     // Persist uncertainty before dispatch, so interruption cannot masquerade as
     // a known rollback. No local receipt is used to authorize or skip a retry.
     if let (Some(operation), Some(journal)) = (&mut operation, journal) {
+        *operation = journal.bind_route(
+            operation,
+            &cloud_todo_operation::fingerprint(
+                &config.api_url,
+                &repository,
+                &serde_json::json!({"kind":"resolved-project-v1"}),
+            ),
+            &cloud_todo_operation::fingerprint(
+                &config.api_url,
+                &identity.canonical_name,
+                &serde_json::json!({"kind":"resolved-project-v1"}),
+            ),
+        )?;
         journal.finish(operation, Outcome::OutcomeUnknown, None)?;
         // The journal records possible dispatch before entering the adapter.
         // Keep that uncertainty even if this attempt later fails a read: a
@@ -7383,7 +8405,7 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
         root,
         command,
         store.as_ref(),
-        &identity.canonical_name,
+        &repository,
         operation.as_ref(),
     ));
     if let (Some(operation), Some(journal)) = (&operation, journal) {
@@ -7402,6 +8424,9 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
             Err(_) => {}
         }
     }
+    if let Err(error) = &result {
+        factory.report_failure(error)?;
+    }
     result
 }
 
@@ -7412,6 +8437,7 @@ async fn run_cloud_todo_command_with_store_async(
     repo_id: &str,
     operation: Option<&OperationRecord>,
 ) -> Result<JsonValue, error::DecapodError> {
+    check_cloud_proof_support(root, command)?;
     let actor = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
     let result = match command {
         TodoCommand::List {
@@ -7497,8 +8523,15 @@ async fn run_cloud_todo_command_with_store_async(
             let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
             cloud_get_task(root, store, &task_id).await?
         }
-        TodoCommand::Claim { id, .. } => {
-            let task = store.claim_task(id, actor).await.map_err(cloud_error)?;
+        TodoCommand::Claim { id, agent, .. } => {
+            let effective_actor = agent.as_deref().unwrap_or(&actor).to_string();
+            if authoring::is_missing_or_unknown_actor(&effective_actor) {
+                return Err(authoring::authoring_actor_required_error());
+            }
+            let task = store
+                .claim_task(id, effective_actor)
+                .await
+                .map_err(cloud_error)?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.claim",
@@ -7521,18 +8554,107 @@ async fn run_cloud_todo_command_with_store_async(
                 "item": task,
             })
         }
+        TodoCommand::Yield { id, .. } => {
+            let task = store.release_task(id, actor).await.map_err(cloud_error)?;
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.yield",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "dactyl",
+                "id": id,
+                "item": task,
+            })
+        }
+        TodoCommand::Renew {
+            id, lease_seconds, ..
+        } => {
+            let existing = store
+                .get_task(id)
+                .await
+                .map_err(cloud_error)?
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(format!("Task {id} not found"))
+                })?;
+            if existing.status != "in_progress"
+                || existing.assignee.as_deref() != Some(actor.as_str())
+            {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "CLOUD_LEASE_RENEW_DENIED: task {id} is not actively claimed by {actor}"
+                )));
+            }
+            let ttl = lease_seconds.unwrap_or(1800).clamp(60, 86400);
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.renew",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "backend": "dactyl",
+                "id": id,
+                "lease_ttl_seconds": ttl,
+                "item": existing,
+            })
+        }
         TodoCommand::Done {
             id,
             id_positional,
             validated,
-            ..
+            artifact,
+            commit,
         } => {
-            if *validated {
-                return Err(error::DecapodError::NotImplemented(
-                    "cloud todo --validated is intentionally unsupported until the remote Dactyl storage contract carries proof-capture data. Complete the remote task first, then run a separate local/remote proof workflow; see docs/book/src/reference/propodus.md".to_string(),
-                ));
-            }
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+            if *validated {
+                let current = store
+                    .get_task(&task_id)
+                    .await
+                    .map_err(cloud_error)?
+                    .ok_or_else(|| {
+                        error::DecapodError::ValidationError(format!("Task {task_id} not found"))
+                    })?;
+                let submission = build_cloud_proof_capture_request(
+                    root,
+                    repo_id,
+                    &task_id,
+                    i64::from(current.version),
+                    i64::from(current.version),
+                    artifact,
+                    commit.as_deref(),
+                )?;
+                let fingerprint = crate::core::cloud_proof::proof_capture_fingerprint(&submission)?;
+                #[cfg(feature = "supabase-cloud")]
+                {
+                    let identity = crate::core::repo_identity::resolve_repository_identity(root)?;
+                    let (transport, routed) =
+                        crate::core::cloud_proof::DactylProofControlTransport::from_context(
+                            root, &identity,
+                        )?;
+                    let receipt = crate::core::cloud_proof::submit_capture(
+                        &transport,
+                        &routed.canonical_name,
+                        i64::from(current.version),
+                        &submission,
+                    )?;
+                    return Ok(serde_json::json!({
+                        "ts": now_iso(),
+                        "cmd": "todo.done",
+                        "status": "captured",
+                        "root": root.to_string_lossy(),
+                        "backend": "dactyl",
+                        "id": task_id,
+                        "fingerprint": fingerprint,
+                        "operation_id": submission.operation_id,
+                        "proof_receipt": receipt,
+                        "acceptance_supported": false,
+                    }));
+                }
+                #[cfg(not(feature = "supabase-cloud"))]
+                {
+                    return Err(error::DecapodError::NotImplemented(format!(
+                        "CLOUD_PROOF_ACCEPTANCE_CAPABILITY_DISABLED (fingerprint={fingerprint}, operation_id={}): proof-capture submission requires the supabase-cloud feature; no local fallback occurred",
+                        submission.operation_id
+                    )));
+                }
+            }
             let task = store
                 .complete_task(&task_id, actor, String::new())
                 .await
@@ -7591,11 +8713,38 @@ async fn cloud_get_task(
 }
 
 pub fn run_todo_cli(store: &Store, cli: TodoCli) -> Result<(), error::DecapodError> {
-    run_todo_cli_with_cloud_factory(store, cli, &DactylCloudTodoStoreFactory)
+    let project_root = project_root_from_store_root(&store.root)?;
+    run_todo_cli_in_workspace(store, &project_root, cli)
+}
+
+pub fn run_todo_cli_in_workspace(
+    store: &Store,
+    workspace_root: &Path,
+    cli: TodoCli,
+) -> Result<(), error::DecapodError> {
+    run_todo_cli_with_cloud_factory_in_workspace(
+        store,
+        workspace_root,
+        cli,
+        &DactylCloudTodoStoreFactory {
+            project_root: workspace_root.to_path_buf(),
+            authenticated_context: std::cell::RefCell::new(None),
+        },
+    )
 }
 
 pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
     store: &Store,
+    cli: TodoCli,
+    factory: &F,
+) -> Result<(), error::DecapodError> {
+    let workspace_root = project_root_from_store_root(&store.root)?;
+    run_todo_cli_with_cloud_factory_in_workspace(store, &workspace_root, cli, factory)
+}
+
+pub fn run_todo_cli_with_cloud_factory_in_workspace<F: CloudTodoStoreFactory>(
+    store: &Store,
+    workspace_root: &Path,
     cli: TodoCli,
     factory: &F,
 ) -> Result<(), error::DecapodError> {
@@ -7642,12 +8791,12 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             "--operation-id is only supported for cloud todo add".into(),
         ));
     }
-    if let Some((cloud, identity)) = cloud_runtime(root)? {
+    if let Some((cloud, identity)) = cloud_runtime_for_project(workspace_root)? {
         let journal = matches!(cli.command, TodoCommand::Add { .. })
             .then(CloudTodoJournal::machine)
             .transpose()?;
         let out = match run_cloud_todo_command_with_factory(
-            root,
+            workspace_root,
             &cli.command,
             &cloud,
             &identity,
@@ -7692,7 +8841,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                     if items.is_empty() {
                         println!("No tasks found.");
                     } else {
-                        println!("Cloud tasks (root: {}):", root.display());
+                        println!("Cloud tasks (root: {}):", workspace_root.display());
                         for item in items {
                             println!(
                                 "- {} [{}|{}|{}] {}",
@@ -7724,7 +8873,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
     }
     let out = match &cli.command {
         TodoCommand::Operations => unreachable!("handled without a task store"),
-        TodoCommand::Add { .. } => add_task(root, &cli.command)?,
+        TodoCommand::Add { .. } => add_task_local(root, &cli.command)?,
         TodoCommand::List {
             status,
             scope,
@@ -7732,7 +8881,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             title_search,
             dir,
         } => {
-            let items = list_tasks(
+            let items = list_tasks_local(
                 root,
                 Some(status.clone()),
                 scope.clone(),
@@ -7749,7 +8898,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             })
         }
         TodoCommand::Get { id } => {
-            let t = get_task(root, id)?;
+            let t = get_task_local(root, id)?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.get",
@@ -7760,7 +8909,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         }
         TodoCommand::Show { id, id_positional } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
-            let t = get_task(root, &task_id)?;
+            let t = get_task_local(root, &task_id)?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.get",
@@ -7774,20 +8923,11 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             id_positional,
             validated,
             artifact,
+            commit,
         } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
-            let project_root = crate::core::store::find_decapod_project_root(
-                &std::env::current_dir().map_err(error::DecapodError::IoError)?,
-            )
-            .unwrap_or_else(|_| {
-                store
-                    .root
-                    .parent()
-                    .and_then(|p| p.parent())
-                    .map(|p| p.to_path_buf())
-                    .unwrap_or(std::env::current_dir().unwrap())
-            });
-            if crate::plan_governance::load_plan(&project_root)?.is_some() {
+            let project_root = workspace_root.to_path_buf();
+            if commit.is_none() && crate::plan_governance::load_plan(&project_root)?.is_some() {
                 crate::plan_governance::ensure_execute_ready(
                     crate::plan_governance::ExecuteCheckInput {
                         project_root: &project_root,
@@ -7798,7 +8938,30 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             }
             // Preparation executes actual verification while the task remains open.
             // The final transition rechecks dependencies and task revision under lock.
-            let prepared = if *validated {
+            if commit.is_some() && (!*validated || !artifact.is_empty()) {
+                return Err(error::DecapodError::ValidationError(
+                    "Historical completion requires --validated and cannot capture replacement --artifact inputs".into(),
+                ));
+            }
+            let prepared = if crate::core::group_broker::is_internal_invocation()
+                && *validated
+                && let Ok(request_id) = std::env::var("DECAPOD_GROUP_BROKER_REQUEST_ID")
+                && let Some(handoff) = verify::consume_prepared_done_handoff(
+                    store,
+                    &project_root,
+                    &task_id,
+                    commit.as_deref(),
+                    &request_id,
+                )? {
+                Some(handoff)
+            } else if let Some(sha) = commit {
+                Some(verify::prepare_historical_completion(
+                    store,
+                    &project_root,
+                    &task_id,
+                    sha,
+                )?)
+            } else if *validated {
                 Some(verify::prepare_verified_completion(
                     store,
                     &project_root,
@@ -7808,32 +8971,67 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             } else {
                 None
             };
-            let current = get_task(root, &task_id)?.ok_or_else(|| {
+            let current = get_task_local(root, &task_id)?.ok_or_else(|| {
                 error::DecapodError::ValidationError(format!("Task {task_id} not found"))
             })?;
-            let (revision, status) = prepared
-                .as_ref()
-                .map_or((current.revision, current.status.as_str()), |proof| {
-                    (proof.expected_revision(), proof.expected_status())
-                });
-            let out = update_status_with_verification(
-                store,
-                &task_id,
-                revision,
-                status,
-                "done",
-                "task.done",
-                serde_json::json!({}),
-                prepared.as_ref(),
-            )?;
+            let mut out = if commit.is_some() && current.status == "done" {
+                let proof = prepared.as_ref().ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "Historical completion proof is missing".into(),
+                    )
+                })?;
+                verify::complete_historical_done_task(store, proof)?;
+                serde_json::json!({
+                    "ts": now_iso(), "cmd": "todo.done", "status": "ok", "id": task_id,
+                    "revision": current.revision,
+                    "completion": "historical_validation",
+                    "publication_ready": false,
+                    "candidate_sha": commit,
+                    "result": {"status":"ok", "id":task_id, "revision":current.revision},
+                })
+            } else {
+                let (revision, status) = prepared
+                    .as_ref()
+                    .map_or((current.revision, current.status.as_str()), |proof| {
+                        (proof.expected_revision(), proof.expected_status())
+                    });
+                update_status_with_verification(
+                    store,
+                    &task_id,
+                    revision,
+                    status,
+                    "done",
+                    "task.done",
+                    serde_json::json!({}),
+                    prepared.as_ref(),
+                )?
+            };
+            if commit.is_some() && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
+                out["completion"] = "historical_validation".into();
+                out["publication_ready"] = false.into();
+                out["candidate_sha"] = serde_json::json!(commit);
+            }
             if !*validated && out.get("status").and_then(|v| v.as_str()) == Some("ok") {
                 mark_todo_claimed_pending_proof(store, &task_id)?;
+                let remediation = if let Some(sha) =
+                    crate::core::validation_history::latest_candidate_for_task(store, &task_id)
+                {
+                    format!(
+                        "Task closed without --validated (status=CLAIMED); subsequent `decapod validate` runs will require proof. Recover with `decapod todo done {task_id} --validated --commit {sha}` (if integrated into the accepted branch), `decapod qa verify regen {task_id}`, or `decapod qa verify recover --artifact {task_id}=<file>`."
+                    )
+                } else {
+                    format!(
+                        "Task closed without --validated (status=CLAIMED); subsequent `decapod validate` runs will require proof. Recover with `decapod qa verify regen {task_id}` or `decapod qa verify recover --artifact {task_id}=<file>` (or `decapod todo done {task_id} --validated --commit <sha>` once validated)."
+                    )
+                };
+                out["verification_status"] = serde_json::json!("CLAIMED");
+                out["remediation"] = serde_json::json!(remediation);
             }
             out
         }
         TodoCommand::Archive { id, id_positional } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo archive")?;
-            let current = get_task(root, &task_id)?.ok_or_else(|| {
+            let current = get_task_local(root, &task_id)?.ok_or_else(|| {
                 error::DecapodError::ValidationError(format!("Task {task_id} not found"))
             })?;
             update_status(
@@ -7871,7 +9069,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
-            let mut out = claim_task_with_lease(
+            let mut out = claim_task_with_lease_local(
                 root,
                 id,
                 agent_id,
@@ -7890,7 +9088,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
                 let launch = if crate::core::group_broker::is_internal_invocation() {
                     serde_json::json!({"status": "pending", "code": "claim_container_followup"})
                 } else {
-                    match get_task(root, id) {
+                    match get_task_local(root, id) {
                         Ok(Some(task)) => {
                             run_claim_container_followup(store, agent_id, id, &task.title, None)
                         }
@@ -7909,7 +9107,7 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
         }
         TodoCommand::ClaimStatus { id } => claim_status(root, id)?,
         TodoCommand::WorkClaim { id } => {
-            let claim = get_work_claim(root, id)?;
+            let claim = get_work_claim_local(root, id)?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.work-claim",
@@ -7935,33 +9133,41 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             yield_claim_lease(root, id, agent_id, reason)?
         }
         TodoCommand::Fleet { agent } => fleet_health(root, agent.as_deref())?,
-        TodoCommand::Release { id } => release_task(root, id)?,
+        TodoCommand::Release { id } => release_task_local(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Journal { command } => match command {
             TodoJournalCommand::Checkpoint {
                 accept_historical_gap,
                 reason,
             } => {
-                let gap = match (accept_historical_gap, reason) {
-                    (Some(id), Some(reason)) => Some((id.clone(), reason.clone())),
-                    (Some(_), None) => {
+                let gaps = match (accept_historical_gap.is_empty(), reason) {
+                    (false, Some(reason)) if !reason.trim().is_empty() => accept_historical_gap
+                        .iter()
+                        .map(|id| (id.clone(), reason.clone()))
+                        .collect(),
+                    (false, _) => {
                         return Err(error::DecapodError::ValidationError(
                             "--reason is required with --accept-historical-gap".into(),
                         ));
                     }
-                    (None, Some(_)) => {
+                    (true, Some(_)) => {
                         return Err(error::DecapodError::ValidationError(
                             "--accept-historical-gap is required with --reason".into(),
                         ));
                     }
-                    (None, None) => None,
+                    (true, None) => Vec::new(),
                 };
-                task_journal_checkpoint(root, gap)?
+                task_journal_checkpoint_many(root, gaps)?
             }
             TodoJournalCommand::Verify => task_journal_verify(root)?,
             TodoJournalCommand::Restore {
                 expected_current_digest,
             } => task_journal_restore(root, expected_current_digest)?,
+            TodoJournalCommand::ReconcileLegacy { .. } => {
+                return Err(error::DecapodError::ValidationError(
+                    "LEGACY_TODO_BOOTSTRAP_REQUIRED: use the native recovery dispatcher before storage initialization".into(),
+                ));
+            }
         },
         TodoCommand::Transfer { .. } => {
             unreachable!("transfer is dispatched before backend routing")
@@ -7994,6 +9200,9 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            if *autoclaim && authoring::is_missing_or_unknown_actor(agent_id) {
+                return Err(authoring::authoring_actor_required_error());
+            }
             let heartbeat = record_heartbeat(root, agent_id)?;
             if !*autoclaim {
                 heartbeat
@@ -8055,6 +9264,9 @@ pub fn run_todo_cli_with_cloud_factory<F: CloudTodoStoreFactory>(
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
+            if authoring::is_missing_or_unknown_actor(agent_id) {
+                return Err(authoring::authoring_actor_required_error());
+            }
             run_worker_loop(
                 store,
                 agent_id,
@@ -8289,7 +9501,7 @@ fn mark_todo_claimed_pending_proof(
                     "[\"validate_passes\"]",
                     ts,
                     "CLAIMED",
-                    "Claimed complete; proof hooks not yet verified. Run `decapod qa verify todo <id>`.",
+                    "Claimed complete; proof hooks not yet verified. Run `decapod todo done <id> --validated --commit <sha>`, `decapod qa verify regen <id>`, or `decapod qa verify recover --artifact <id>=<file>`.",
                 ],
             )
             .map_err(error::DecapodError::StorageError)?;
@@ -8307,6 +9519,68 @@ fn mark_todo_claimed_pending_proof(
             )
         },
     )
+}
+
+/// Originating CLI admission inspects completion intent without exposing parser state.
+pub(crate) fn is_validated_completion(cli: &TodoCli) -> bool {
+    matches!(
+        cli.command,
+        TodoCommand::Done {
+            validated: true,
+            ..
+        }
+    )
+}
+
+/// Run slow historical/QA completion verification outside the exclusive
+/// group-broker lock and persist a request-bound handoff for the short
+/// transactional completion inside the brokered child.
+pub(crate) fn prepare_validated_done_handoff(
+    store: &Store,
+    cli: &TodoCli,
+    request_id: &str,
+) -> Result<Option<PathBuf>, error::DecapodError> {
+    let TodoCommand::Done {
+        id,
+        id_positional,
+        validated: true,
+        artifact,
+        commit,
+    } = &cli.command
+    else {
+        return Ok(None);
+    };
+    let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
+    let project_root = crate::core::store::find_decapod_project_root(
+        &std::env::current_dir().map_err(error::DecapodError::IoError)?,
+    )
+    .unwrap_or_else(|_| {
+        store
+            .root
+            .parent()
+            .and_then(|p| p.parent())
+            .map(|p| p.to_path_buf())
+            .unwrap_or(std::env::current_dir().unwrap())
+    });
+    if commit.is_none() && crate::plan_governance::load_plan(&project_root)?.is_some() {
+        crate::plan_governance::ensure_execute_ready(crate::plan_governance::ExecuteCheckInput {
+            project_root: &project_root,
+            store_root: &store.root,
+            todo_id: Some(&task_id),
+        })?;
+    }
+    if commit.is_some() && !artifact.is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "Historical completion requires --validated and cannot capture replacement --artifact inputs".into(),
+        ));
+    }
+    let prepared = if let Some(sha) = commit {
+        verify::prepare_historical_completion(store, &project_root, &task_id, sha)?
+    } else {
+        verify::prepare_verified_completion(store, &project_root, &task_id, artifact.clone())?
+    };
+    let path = verify::write_prepared_done_handoff(store, request_id, &prepared)?;
+    Ok(Some(path))
 }
 
 pub fn is_heartbeat_command(cli: &TodoCli) -> bool {

@@ -10,6 +10,7 @@ use crate::core::db::params;
 use crate::core::error;
 use crate::core::events;
 use crate::core::schemas;
+use crate::core::storage_codec;
 use crate::core::store::Store;
 use crate::core::todo;
 use clap::Subcommand;
@@ -117,21 +118,48 @@ fn read_all_events(root: &Path) -> Result<Vec<LcmEvent>, error::DecapodError> {
         return Ok(Vec::new());
     }
     let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
+    if !conn.has_table("events")? {
+        return Ok(Vec::new());
+    }
     let mut stmt = conn
-        .prepare("SELECT payload FROM events WHERE stream = 'lcm' ORDER BY seq ASC")
+        .prepare(
+            "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
+             FROM events WHERE stream = 'lcm' ORDER BY seq ASC, event_id ASC",
+        )
         .map_err(error::DecapodError::StorageError)?;
     let rows = stmt
-        .query_map([], |row| row.get::<_, String>(0))
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, String>(6)?,
+            ))
+        })
         .map_err(error::DecapodError::StorageError)?;
-    let mut events = Vec::new();
+    let mut out = Vec::new();
     for row in rows {
-        let payload = row.map_err(error::DecapodError::StorageError)?;
-        events.push(
-            serde_json::from_str(&payload)
+        let (event_id, ts, event_type, actor, subject_kind, subject_id, payload) =
+            row.map_err(error::DecapodError::StorageError)?;
+        let reconstructed = events::reconstruct_stored_payload(
+            events::LCM,
+            &event_id,
+            &ts,
+            &event_type,
+            &actor,
+            subject_kind.as_deref(),
+            subject_id.as_deref(),
+            &payload,
+        )?;
+        out.push(
+            serde_json::from_value(reconstructed)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
         );
     }
-    Ok(events)
+    Ok(out)
 }
 
 /// Rough token estimate: ~4 chars per token.
@@ -337,11 +365,13 @@ pub fn summarize(store: &Store, scope: &str) -> Result<serde_json::Value, error:
     let broker = DbBroker::new(&store.root);
     let db_path = lcm_db_path(&store.root);
     let hashes_json = serde_json::to_string(&original_hashes).unwrap();
+    let stored_hashes = storage_codec::encode(&hashes_json)?;
+    let stored_text = storage_codec::encode(&summary_text)?;
 
     broker.with_conn(&db_path, "decapod", None, "lcm.summarize", |conn| {
         conn.execute(
             "INSERT OR REPLACE INTO summaries(summary_hash, ts, scope, original_hashes, summary_text, token_estimate) VALUES(?1,?2,?3,?4,?5,?6)",
-            params![summary_hash, ts, scope, hashes_json, summary_text, token_estimate],
+            params![summary_hash, ts, scope, stored_hashes, stored_text, token_estimate],
         ).map_err(error::DecapodError::StorageError)?;
         Ok(())
     })?;
@@ -443,15 +473,19 @@ pub fn show_summary(
         let params_refs: Vec<&dyn crate::core::db::types::ToSql> = bind_values.iter().map(|b| b.as_ref()).collect();
         let mut rows = stmt.query(params_refs.as_slice())?;
         if let Some(row) = rows.next()? {
-            let hashes_json: String = row.get(3)?;
+            let values = row.parameters();
+            let hashes_json = storage_codec::decode(&values[3])?;
+            let summary_text = storage_codec::decode(&values[4])?;
             let original_hashes: Vec<String> = serde_json::from_str(&hashes_json)
-                .unwrap_or_default();
+                .map_err(|err| error::DecapodError::ValidationError(format!(
+                    "LCM_SUMMARY_HASH_LIST_CORRUPT: {err}"
+                )))?;
             Ok(Some(SummaryEntry {
                 summary_hash: row.get(0)?,
                 ts: row.get(1)?,
                 scope: row.get(2)?,
                 original_hashes,
-                summary_text: row.get(4)?,
+                summary_text,
                 token_estimate: row.get(5)?,
             }))
         } else {

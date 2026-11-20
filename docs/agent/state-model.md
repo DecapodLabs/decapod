@@ -13,6 +13,19 @@ establishes meaning; an isolated workspace supplies the filesystem for execution
 todos supply coordination and durable custody. None replaces the others. Missing
 workspace-local coordination state is not evidence that the request was lost.
 
+## Cloud connection custody
+
+Managed cloud sessions and pending browser flows live outside the repository
+under `$XDG_DATA_HOME/decapod/cloud-sessions`, defaulting to
+`~/.local/share/decapod/cloud-sessions`. The scope binds the service origin,
+repository and canonical main checkout; linked worktrees share custody.
+Separate clones have independent records. A bounded lock serializes refresh
+and atomic writes preserve session progress between agent invocations.
+Browser completion alone does not establish access: the service must confirm
+the account handoff and an authorized repository read. Private local phase
+inspection does not establish live readiness. These cloud credentials are
+distinct from the cooperative local agent session and workspace lease.
+
 ## 1. Tasks (Todos)
 The primary coordination unit of work, not the sole authority for request meaning.
 - **States:** `open` -> `claimed` -> `done` | `archived`.
@@ -59,6 +72,16 @@ is a no-op; releasing a task does not change its completion status. Actor identi
 uses the existing local caller boundary. These checks do not protect against an
 unrestricted process directly rewriting the database or impersonating that actor.
 
+Successful full validation with a local task store also appends a bounded record keyed by the validated
+candidate SHA to the canonical verification event stream. It retains the original
+task binding and complete compact proof, independently of temporary raw logs and
+without changing the candidate commit. `qa verify commit` only inspects this
+history. Explicit `todo done --validated --commit` may consume it for the original
+task after proving supported task continuity and accepted integration. It can
+repair done-but-unverified state atomically without a second completion event.
+Historical proof replay is distinct from current-workspace validation and never
+confers readiness to publish new work. Missing legacy records remain unavailable.
+
 ## 2. Workspaces
 Isolated execution environments.
 - **Context boundary:** Isolation does not discard the agent's prompt. With clear
@@ -70,6 +93,7 @@ Isolated execution environments.
 - **Relationship:** Each active workspace is mapped to exactly one `task_id` and one `agent_id`.
 - **Artifacts:** Changes made in a workspace are transient until `workspace publish` is called.
 - **Cleanup:** Stale/unused workspaces (associated with done/archived tasks, deleted branches, or matching no active claim) can be cleaned up using the `workspace prune` command.
+- **Todo-scoped `/tmp` scratch cleanup:** After validation succeeds and PR creation completes, flush ONLY the current todo's `/tmp` build and scratch directories (such as `/tmp/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). Never perform wildcard or root-level deletion of `/tmp`, never delete another concurrent agent's or sibling todo's `/tmp` path, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories.
 - **Recovery bounds:** Workspace/control subprocesses have a 15-second deadline; image builds have a 600-second deadline. Output is captured without pipe backpressure, capped at 64 MiB per stream, and owned children are terminated and reaped on failure. Timeout is a recovery error, never evidence that a branch or claim is absent.
 - **Claim preparation:** The broker commits and acknowledges a task claim before optional container preparation runs on the requesting client. Preparation holds no broker election or datastore lock. Its bounded failure remains a warning in the successful claim response. A durable per-request handoff receipt prevents retries from repeating a started container command; interrupted preparation requires inspecting workspace recovery before an explicit retry. `DECAPOD_CLAIM_AUTORUN=0` disables this optional preparation for callers that only need task state.
 - **Cleanup ownership:** `workspace prune --force` may remove dirty or interrupted managed workspaces, but does not establish ownership. Unknown directories, symlinked workspace parents/candidates, active-claim local clones, and targets whose Git or container state cannot be verified are preserved with recovery information. Unregistered directories require a durable invocation receipt binding their exact canonical path and directory generation; names, even full completed-task IDs, do not prove ownership. The canonical `workspace_lifecycle` event-stream receipt is committed before an empty privately staged directory is exposed by atomic no-replace rename. Staging is on the workspace filesystem, so a separately mounted datastore remains supported. An advisory invocation lease prevents pruning live work and releases on interruption. Retry automatically removes only an empty, unfinished reservation; newly added files are preserved for explicit review. For a container.run invocation whose producer held the lease throughout execution, recovery may reconcile its abandoned container even while the task claim remains active, retaining all workspace files. Interactive launch hints do not imply that producer lease and are not reclaimed solely because the claim is active. Container cleanup checks Decapod ownership, workspace and invocation labels and removes immutable IDs, treating already-gone containers as success. Before launch the receipt also binds the creating Docker or Podman backend. Recovery uses that recorded backend even when discovery preferences or installed runtimes change; it never treats an empty inventory from another engine as proof of cleanup. Missing, invalid or unavailable runtime provenance preserves resources with a recovery diagnostic.
@@ -84,7 +108,7 @@ Authentication and identity verification tokens.
 
 - **Dual-Token Architecture:**
   - **Local Agent Sessions:** Ephemeral, short-lived tokens generated on-the-fly via `session acquire`. Stored machine-locally under `~/.config/decapod/sessions/<project-hash>/<agent-id>.json` when available, with secure workspace-local fallback under `.decapod/managed/sessions/<agent-id>.json` when machine-local storage is unusable. Gates local coordination, TODO subsystem access, and database locking in the workspace (verified using the process-local or environment-provided `DECAPOD_SESSION_PASSWORD`).
-  - **Cloud Session Token:** Long-lived global OAuth identity token stored as JSON (`{"token": "..."}`) under `~/.local/share/decapod/session_token.json`. Used to authenticate the user's client with the Propodus cloud backend when cloud storage modes are enabled.
+  - **Managed Cloud Sessions:** Expiring access tokens, rotating refresh tokens, and resumable browser-flow state stay in private global storage scoped by service origin, repository and canonical main checkout. The agent reuses and renews them through Dactyl. The legacy global token file is not adopted by the managed path; see Cloud connection custody above.
 - **Lifecycle:** Local sessions are acquired via `session acquire` and released via `session release`.
 - **Restriction:** Most repository mutation commands (e.g., `todo add`, `workspace ensure`) require an active local session.
 
@@ -138,6 +162,105 @@ The persistent, shared understanding of the project.
 - **Persistence:** Surmounts individual sessions and agents.
 
 ## 7. Governance and Proof Artifacts
+
+After human initialization, the agent operates the engineering lifecycle
+through Decapod. Record the request and scope in the governed plan and
+trajectory, claim the task and enter its workspace, then keep execution and
+recovery attached to that intent. Use `decapod validate` to run the configured
+checks and collect source-bound evidence. Inspect the returned evidence path
+and receipt before reporting completion, and provide the proof reference to
+the user. Preserve failed checks and retry with fresh proof after repairs.
+The user should not have to sequence these commands. Human decisions and
+browser/account actions remain explicit when Decapod requires them.
+
+Receipts identify their scope and governing source. Repository-local proof
+does not establish hosted cloud, billing or deployment acceptance; CI-local
+checks do not establish publication readiness.
+
+### Bounded reflection continuity
+
+Escalation admissibility is an extension of this same journal, not a separate
+conversation or datastore. `reflection.escalation` identifies canonical intent,
+the proposed human question, the missing subject, declared uncertainty, source
+references, concise investigation, an optional supported resolution, risks,
+constraints and an optional exact authority operation. The input is transient;
+receipts retain digests, observed source identities, typed assessments and
+dispositions. Proposed questions, investigation prose and quoted source bodies
+are not copied into the journal.
+
+`progress` distinguishes `initial`, `reduced_obligations`, `narrowed_scope`,
+`human_dependency`, `stagnant` and `regressed`. A newly admissible targeted
+human dependency is progress; repeating an admitted question is not. Other
+added obligations are regression; paraphrases and
+unobserved self-assessments stagnate. Source/hash failures leave the journal
+unchanged. The current kernel version and relevant source/policy observations
+bind conclusions without resetting the lifetime three-round budget. Ordinary
+checkpoint commits and phase progress do not manufacture additional rounds.
+
+An escalation's subject cannot be renamed or omitted during continuation.
+Its uncertainty class is a revisable agent declaration. Correcting that label
+requires observable progress; it cannot waive an observed policy gate or a
+canonical human dependency and never renews the budget.
+An omitted authority operation may be supplied after investigation, and its
+omitted target may be narrowed. Once supplied, the command and concrete target
+cannot be replaced or dropped. These refinements consume the existing rounds.
+Existing policy/approval requirements and canonical human dependencies take
+priority over reflection. The proposed human question must match a governing
+dependency, or the protocol redirects it. Missing approval returns the human
+disposition immediately rather than demanding cognitive work to infer a grant.
+Only the agent carries an admitted targeted question to the human.
+
+Exact source predicates are observations of bytes, including for uncertainty
+that can be checked by inspection. They do not authenticate who wrote the source,
+prove that a test ran, establish semantic relevance or exhaustive investigation,
+or satisfy validation/publication. `semantic_exhaustion_proven` and
+`completion_proven` remain false. An explicit plan question is an existing
+governing dependency, not newly authenticated evidence of human identity.
+
+Successful RPC envelopes may omit `blocked_by` when it is empty; consumers must
+accept omission or an empty array. Reflection still does not grant global
+execution or completion permission.
+
+Optional reflection uses `sections.plan.reflection` in the existing governance
+document: one current task/custody binding, at most three receipts, and a bounded
+terminal stop if a successful third round is later revisited. It creates no
+datastore table, index, event stream or transcript. Each receipt retains input,
+context and progress hashes, proposed paths, pending/resolved challenge IDs,
+source references and the disposition. Agent explanations are hashed and discarded.
+
+CLI reflection requires a matching outer `--task-id`; omitting it fails before
+recording a round so orientation and reflection evaluate the same task intent.
+The first proposal consumes round 1. A continuation uses a new submission ID and
+the last outcome's token as `expected_token`. Exact retries are idempotent and
+do not write; changed reuse or stale tokens fail without consuming a round.
+Replaying an old nonterminal conclusion after relevant source changes fails.
+Plan/policy/ADR/evidence changes invalidate conclusions without resetting the
+lifetime budget. Plan reinitialization and ordinary edits preserve the journal.
+The plan source/context hash binds governing definitions; approval and measured
+phase/gate progress reuse the existing plan contract/progress distinction and
+do not consume extra rounds. Existing execution/proof gates still check them.
+Terminal state dominates historical replays, including an earlier `proceed`.
+A new accepted workstream is the explicit recovery boundary for a terminal stop.
+This initial contract supports one task continuation per plan, local exclusive
+custody, up to 32 literal paths and 32 bounded ADR files; it fails explicitly
+outside those limits. It does not automatically retrieve the whole knowledge graph.
+The compact journal is capped at 64 KiB and applicable gap IDs at 64.
+
+| Disposition | Meaning and continuation |
+| --- | --- |
+| `proceed` | No current reflective gap. Satisfy existing approval/execution/proof gates. |
+| `reflect` | Investigate the single challenge; submit an observably narrower scope or a separately resolved governing gap, with its source reference. |
+| `human_decision` | Existing orientation/plan/spec authority requires human judgment; an agent assertion cannot resolve it. The third unresolved round is terminal. |
+| `blocked` | No progress or exhausted budget terminates; custody, source and invalid-input errors preserve state and require supported recovery. |
+
+Binding plan constraints stay binding at plan execution, execution checkpoint/
+resume and existing validation gates. Mentor's literal ADR matches are advisory;
+they cannot manufacture policy. Source references identify current bytes, not
+verified understanding or successful tests. Removal of a conflict or strict
+scope narrowing establishes structural progress. New prose, arbitrary evidence
+citations and an operation synonym do not. Source references accompanying a
+resolution must name the focused challenge's source. An omitted hash asks the
+kernel to capture current identity; a supplied stale hash is rejected.
 
 - **Intent and Plans:** The human supplies intent; the agent records and updates its governed interpretation through Decapod. Plans are execution state, not proof by themselves.
 - **Claims:** Falsifiable repository-owned statements linked to a baseline, failure mode, measurement, and proof gate. They change as research evidence changes.

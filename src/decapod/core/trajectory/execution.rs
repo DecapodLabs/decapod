@@ -207,6 +207,12 @@ fn accepted_plan(
         ));
     }
     plan_governance::validate_plan_progress(&plan)?;
+    crate::core::mentor::reflection::check_execute(
+        root,
+        &crate::core::store::find_governance_root(root).join(".decapod/data"),
+        &plan,
+        Some(task_id),
+    )?;
     if let Some(phase) = plan
         .phases
         .iter()

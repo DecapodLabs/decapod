@@ -43,6 +43,22 @@ Pre-adoption legacy history is not retroactively represented as verified proof.
 Historical observation sections remain readable and are preserved when a new
 trajectory starts. They do not supply current readiness or require credentials.
 
+### Rewritten branch pushes and stale CI events
+
+A GitHub `push` event binds both the old and new commit IDs. If a later
+force-push replaces that history and the old commit is no longer present in
+a fresh checkout, the immutable event-context verifier must reject the run
+(`Git cat-file verification failed`). That historical run remains failed:
+rerunning it cannot establish the missing Git objects or replace its event
+identity with the branch's current tip.
+
+For an existing pull request, preserve the current accepted branch history,
+make a substantive follow-up change in its claimed Decapod worktree, record a
+new checkpoint, and push a **fast-forward** commit. Inspect the resulting
+`push` run and the pull-request checks against the same new immutable SHA.
+Do not erase the old failure, substitute a mutable branch ref for the event's
+old SHA, or treat a green PR workflow as proof that the earlier push passed.
+
 ## Population order and write boundaries
 
 Use the existing commands in dependency order:
@@ -92,6 +108,12 @@ claims or replace plan, trajectory, or validation work.
 
 `inventory --claims-note "..."` records a current-PR checkpoint without inventing
 a research claim. `inventory --compact` performs lossless legacy normalization.
+When a Git merge (`MERGE_HEAD` present) leaves `.decapod/governance.json` with a
+merge conflict or `Trajectory artifact hash mismatch`, run
+`decapod govern artifacts reconcile-merge` before committing the merge; it
+reconciles from immutable commit ancestry (`HEAD`, `MERGE_HEAD`,
+`merge-base --all`), rejects conflicting unaccepted PR authority or check-status
+contradictions, and preserves failed or missing proof verbatim.
 Successful validation writes the logical validation section without a
 self-referential hash cycle. Do not use `DECAPOD_VALIDATE_SKIP_GIT_GATES` as an
 agent publication shortcut. Stage and checkpoint the final material before committing.

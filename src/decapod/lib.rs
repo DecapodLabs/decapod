@@ -6,10 +6,15 @@
 //! Runtime operational contracts for agents are defined in repository entrypoint
 //! docs and constitution documents, not in Rust source comments.
 
+// Share genuine execution fixtures with integration tests without a second kernel.
+#[cfg(test)]
+extern crate self as decapod;
+
 pub(crate) mod cli;
 pub use cli::CloudRuntimeConfig;
 pub mod constitution;
 pub mod core;
+mod onboarding;
 pub(crate) mod plan_governance;
 pub mod plugins;
 pub(crate) mod subsystems;
@@ -19,8 +24,8 @@ use validation_scope::ValidationScope;
 use cli::*;
 
 use core::{
-    auth, cloud_backend, db, docs, docs_cli, error, flight_recorder, migration, obligation, proof,
-    repomap, scaffold, state, state_commit,
+    db, docs, docs_cli, error, flight_recorder, migration, obligation, proof, repomap, scaffold,
+    state, state_commit,
     store::{Store, StoreKind, find_decapod_project_root, find_governance_root},
     todo, trace, validate, workspace,
 };
@@ -88,9 +93,7 @@ fn load_project_config_if_present(
         return Ok(None);
     }
     let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
-    let cfg: DecapodProjectConfig = toml::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=INVALID_CONFIG_SCHEMA severity=transient auto_remediable=true audience=agent agent_action=\"fix the .decapod/config.toml schema to be valid TOML\" user_note=\"Configuration file schema is invalid; the agent should correct the file or report the issue.\"\nInvalid .decapod/config.toml schema: {e}"))
-    })?;
+    let cfg = DecapodProjectConfig::parse(&raw)?;
     Ok(Some(cfg))
 }
 
@@ -164,8 +167,10 @@ fn write_project_config(
     })?;
     let mut merged = desired.clone();
     let exists = config_path.exists();
+    let mut prior_bytes = None;
     if exists {
         let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
+        prior_bytes = Some(raw.as_bytes().to_vec());
         let authored: toml::Value = toml::from_str(&raw).map_err(|error| {
             error::DecapodError::ValidationError(format!("INVALID_CONFIG_SCHEMA: {error}"))
         })?;
@@ -200,45 +205,16 @@ fn write_project_config(
     let serialized = toml::to_string_pretty(&merged).map_err(|error| {
         error::DecapodError::ValidationError(format!("CONFIG_SERIALIZE_FAILED: {error}"))
     })?;
+    if let Some(bytes) = prior_bytes {
+        let digest = format!("{:x}", Sha256::digest(&bytes));
+        let backup = target_dir
+            .join(".decapod/data/config-backups")
+            .join(format!("{digest}.toml"));
+        core::atomic::write_atomic(&backup, &bytes).map_err(error::DecapodError::IoError)?;
+    }
     core::atomic::write_atomic(&config_path, serialized.as_bytes())
         .map_err(error::DecapodError::IoError)?;
     Ok(())
-}
-
-fn record_cloud_init_registration(
-    target_dir: &Path,
-    config: &DecapodProjectConfig,
-    dry_run: bool,
-) -> Result<(), error::DecapodError> {
-    if !config.repo.effective_backend().is_cloud() {
-        return Ok(());
-    }
-
-    let cloud = crate::cli::CloudRuntimeConfig::default();
-    let registration = cloud_backend::CloudInitRegistration::for_init(
-        &cloud.provider,
-        &cloud.api_url,
-        "",
-        target_dir,
-    );
-    if let Some(path) =
-        cloud_backend::write_mock_init_registration(target_dir, &registration, dry_run)?
-    {
-        println!(
-            "Cloud: recorded mock init registration payload at {}",
-            path.display()
-        );
-    }
-    Ok(())
-}
-
-fn map_cloud_preflight_error(error: core::propodus::PropodusClientError) -> error::DecapodError {
-    match error {
-        core::propodus::PropodusClientError::Authentication(diagnostic) => {
-            error::DecapodError::CloudAuth(diagnostic)
-        }
-        other => error::DecapodError::SessionError(other.to_string()),
-    }
 }
 
 fn ensure_project_cloud_session(
@@ -247,35 +223,22 @@ fn ensure_project_cloud_session(
     let selection = core::backend::BackendSelection::from_project(project_root)?;
     let identity = selection.repository_identity().cloned().ok_or_else(|| {
         error::DecapodError::ValidationError(
-            "cloud session setup did not resolve a repository identity".to_string(),
+            "Cloud session setup requires a repository identity".into(),
         )
     })?;
-    let cloud = crate::cli::CloudRuntimeConfig::default();
-    let datastore = cloud.validate_datastore()?;
-    core::backend::BackendRoute::cloud(identity.clone(), &cloud.api_url)?;
-    let propodus = core::propodus::PropodusConfig::for_repository(&cloud, &identity);
-    core::propodus::ensure_cloud_session_for_datastore(&propodus, &identity, datastore)
-        .map_err(map_cloud_preflight_error)?;
+    core::cloud_client::connect(project_root, &identity, false, true)?;
     Ok(identity)
 }
 
-fn bootstrap_cloud_session(project_root: &Path) -> Result<(), error::DecapodError> {
-    match ensure_project_cloud_session(project_root) {
+fn bootstrap_cloud_session(project_root: &Path, restart: bool) -> Result<(), error::DecapodError> {
+    let identity = core::repo_identity::resolve_repository_identity(project_root)?;
+    match core::cloud_client::connect(project_root, &identity, restart, true).map(|_| identity) {
         Ok(identity) => {
             println!(
-                "Cloud setup ready for {}; the machine-local Propodus session is available.",
+                "Cloud setup ready for {}; the service confirmed repository read access. Credentials remain machine-private.",
                 identity.canonical_name
             );
             Ok(())
-        }
-        Err(error @ error::DecapodError::CloudAuth(_)) => {
-            if let error::DecapodError::CloudAuth(diagnostic) = &error {
-                println!(
-                    "Cloud setup requires attention: {}; next action: {}",
-                    diagnostic.message, diagnostic.next_action
-                );
-            }
-            Err(error)
         }
         Err(error) => Err(error),
     }
@@ -297,17 +260,14 @@ fn print_cloud_auth_json_if_needed(
 fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
     let CloudCli { format, command } = cloud_cli;
     match command {
-        CloudCommand::Login => {
+        CloudCommand::Login { restart } => {
             let current_dir = std::env::current_dir()?;
-            eprintln!(
-                "Deprecated compatibility command; use `decapod init --backend cloud` for human setup."
-            );
             // Resolve repository scope before project configuration so a
             // login attempt outside a GitHub repository fails with the
             // actionable origin error rather than a misleading config error.
             core::repo_identity::resolve_repository_identity(&current_dir)?;
             let project_root = find_decapod_project_root(&current_dir)?;
-            match bootstrap_cloud_session(&project_root) {
+            match bootstrap_cloud_session(&project_root, restart) {
                 Ok(()) => Ok(()),
                 Err(error @ error::DecapodError::CloudAuth(_)) => {
                     if let error::DecapodError::CloudAuth(diagnostic) = &error {
@@ -318,29 +278,132 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 Err(error) => Err(error),
             }
         }
-        CloudCommand::Status => match auth::load_selected_cloud_credential(None) {
-            Ok(credential) => {
+        CloudCommand::Projects | CloudCommand::Project { .. } => {
+            #[cfg(not(feature = "supabase-cloud"))]
+            {
+                core::cloud_client::selected_origin()?;
+                unreachable!("cloud capability required");
+            }
+            #[cfg(feature = "supabase-cloud")]
+            {
+                let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+                let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+                let operation = match command {
+                    CloudCommand::Projects => core::cloud_project::Operation::List,
+                    CloudCommand::Project {
+                        command: CloudProjectCommand::Use { choice },
+                    } => core::cloud_project::Operation::Use(choice),
+                    CloudCommand::Project {
+                        command: CloudProjectCommand::Create { name },
+                    } => core::cloud_project::Operation::Create(name),
+                    _ => unreachable!("project operation"),
+                };
+                match core::cloud_client::projects(&project_root, &identity, operation) {
+                    Ok(output) => {
+                        if format == "json" {
+                            println!(
+                                "{}",
+                                serde_json::to_string_pretty(&output)
+                                    .map_err(std::io::Error::other)?
+                            );
+                        } else if output.projects.is_empty() {
+                            println!(
+                                "No managed projects are available. Create one with `decapod cloud project create NAME` or accept a project invitation."
+                            );
+                        } else {
+                            for (index, project) in output.projects.iter().enumerate() {
+                                if output.selected {
+                                    println!(
+                                        "Selected project: {} ({}).",
+                                        project.name, project.status
+                                    );
+                                } else {
+                                    println!("{}. {}", index + 1, project.name);
+                                }
+                            }
+                            if !output.selected {
+                                println!(
+                                    "Select a saved entry with `decapod cloud project use NUMBER`, or use its exact name."
+                                );
+                            } else if output
+                                .projects
+                                .iter()
+                                .any(|p| p.backend_authorized == Some(false))
+                            {
+                                println!(
+                                    "The service has not granted data access. Resolve account access in the cloud portal or with the project administrator, then retry."
+                                );
+                            }
+                        }
+                        Ok(())
+                    }
+                    Err(error) => {
+                        if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                            print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                        }
+                        Err(error)
+                    }
+                }
+            }
+        }
+        CloudCommand::Status => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let status = core::cloud_client::status(&project_root, &identity)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&status).map_err(std::io::Error::other)?
+            );
+            Ok(())
+        }
+        CloudCommand::Logout => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report = core::cloud_client::logout(&project_root, &identity)?;
+            if format == "json" {
                 println!(
-                    "Propodus bearer configured ({:?}); issuer, audience, GitHub subject, repository, and seat claims are validated by Propodus",
-                    credential.source
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
                 );
-                Ok(())
+            } else {
+                println!(
+                    "Cleared saved cloud session for {} (device key preserved).",
+                    identity.canonical_name
+                );
             }
-            Err(error::DecapodError::SessionError(message)) => {
-                println!("cloud credential unavailable: {message}");
-                Ok(())
+            Ok(())
+        }
+        CloudCommand::Revoke { all, device_id } => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report =
+                core::cloud_client::revoke(&project_root, &identity, all, device_id.as_deref())?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Revoked device key and cleared saved cloud credentials for {}.",
+                    identity.canonical_name
+                );
             }
-            Err(error) => Err(error),
-        },
+            Ok(())
+        }
     }
 }
 
-fn seed_init_generated_state(target_dir: &Path, dry_run: bool) -> Result<(), error::DecapodError> {
+fn seed_init_generated_state(
+    target_dir: &Path,
+    dry_run: bool,
+    interactive: bool,
+) -> Result<(), error::DecapodError> {
     if dry_run {
         return Ok(());
     }
 
-    if core::research_claims::ensure_template(target_dir, false)? {
+    if core::research_claims::ensure_template(target_dir, false)? && !interactive {
         println!(
             "Governance: created {} (replace the template claim through issue-scoped review)",
             core::research_claims::CLAIMS_PATH
@@ -461,7 +524,7 @@ fn infer_repo_context(target_dir: &Path) -> Result<RepoContext, error::DecapodEr
     if ctx.product_summary.is_none() {
         // Repository shape cannot establish a product's users or purpose.
         // Keep the existing explicit placeholder recognized by spec validation.
-        ctx.product_summary = Some("Define the user-visible outcome in one paragraph.".to_string());
+        ctx.product_summary = Some(INIT_PURPOSE_PLACEHOLDER.to_string());
     }
     if ctx.architecture_direction.is_none() {
         let has_frontend = ctx.detected_surfaces.iter().any(|s| s == "frontend");
@@ -777,9 +840,14 @@ fn prompt_line(prompt: &str) -> Result<String, error::DecapodError> {
     print!("{prompt}");
     io::stdout().flush().map_err(error::DecapodError::IoError)?;
     let mut buf = String::new();
-    io::stdin()
+    let read = io::stdin()
         .read_line(&mut buf)
         .map_err(error::DecapodError::IoError)?;
+    if read == 0 {
+        return Err(error::DecapodError::ValidationError(
+            "Setup cancelled: input closed before confirmation.".to_string(),
+        ));
+    }
     Ok(strip_ansi_escape_sequences(buf.trim()).trim().to_string())
 }
 
@@ -801,6 +869,42 @@ fn strip_ansi_escape_sequences(input: &str) -> String {
         }
     }
     out
+}
+
+const INIT_PURPOSE_PLACEHOLDER: &str = "Define the user-visible outcome in one paragraph.";
+const DEFER_ARCHITECTURE: &str = "Decide with my agent";
+
+fn setup_purpose_default(summary: Option<&str>) -> &str {
+    summary
+        .filter(|value| *value != INIT_PURPOSE_PLACEHOLDER)
+        .unwrap_or("")
+}
+
+fn is_architecture_guidance(value: &str) -> bool {
+    [
+        "Architecture is not established by repository shape;",
+        "Frontend and backend surfaces detected;",
+        "Frontend surface detected;",
+        "Backend surface detected;",
+    ]
+    .iter()
+    .any(|prefix| value.starts_with(prefix))
+}
+
+fn setup_architecture_label(direction: Option<&str>) -> String {
+    match direction {
+        Some(value) if value.starts_with("Frontend and backend surfaces detected;") => {
+            "Frontend + backend · refine with your agent".into()
+        }
+        Some(value) if value.starts_with("Frontend surface detected;") => {
+            "Frontend · refine with your agent".into()
+        }
+        Some(value) if value.starts_with("Backend surface detected;") => {
+            "Backend · refine with your agent".into()
+        }
+        Some(value) if !is_architecture_guidance(value) => value.to_string(),
+        _ => "Discover with your agent".into(),
+    }
 }
 
 const LANGUAGES: &[&str] = &[
@@ -879,7 +983,7 @@ const DIAGRAM_NOTATION_DESCRIPTIONS: &[&str] = &[
     "ASCII/text blocks readable in terminals and plain Markdown",
     "Mermaid diagrams rendered by GitHub Markdown from readable text source",
 ];
-const SELECTOR_VISIBLE_OPTIONS: usize = 10;
+const SELECTOR_VISIBLE_OPTIONS: usize = 6;
 
 fn normalize_language(input: &str) -> String {
     match input.trim().to_lowercase().as_str() {
@@ -935,62 +1039,13 @@ fn apply_architecture_language_recommendation(ctx: &mut RepoContext) {
     }
 }
 
-struct TerminalModeGuard {
-    saved_mode: String,
-    tty: fs::File,
-}
-
-impl Drop for TerminalModeGuard {
-    fn drop(&mut self) {
-        if let Ok(tty) = self.tty.try_clone() {
-            let _ = std::process::Command::new("stty")
-                .arg(&self.saved_mode)
-                .stdin(Stdio::from(tty))
-                .status();
-        }
-        print!("\x1b[?25h");
-        println!();
-    }
-}
-
-fn enter_raw_terminal_mode() -> Option<(TerminalModeGuard, fs::File)> {
-    let tty = fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .open("/dev/tty")
-        .ok()?;
-    let output = std::process::Command::new("stty")
-        .arg("-g")
-        .stdin(Stdio::from(tty.try_clone().ok()?))
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let saved_mode = String::from_utf8(output.stdout).ok()?.trim().to_string();
-    let status = std::process::Command::new("stty")
-        .args(["raw", "-echo"])
-        .stdin(Stdio::from(tty.try_clone().ok()?))
-        .status()
-        .ok()?;
-    if !status.success() {
-        return None;
-    }
-    let input = tty.try_clone().ok()?;
-    Some((TerminalModeGuard { saved_mode, tty }, input))
-}
-
-fn terminal_selector_available(_default: &[String]) -> bool {
-    io::stdin().is_terminal()
-}
-
 fn find_selector_match(options: &[&str], typed: &str) -> Option<usize> {
     let typed = typed.trim();
     if typed.is_empty() {
         return None;
     }
     if let Ok(index) = typed.parse::<usize>() {
-        return options.get(index.saturating_sub(1)).map(|_| index - 1);
+        return index.checked_sub(1).filter(|index| *index < options.len());
     }
     let typed = typed.to_lowercase();
     options
@@ -1019,11 +1074,21 @@ fn selector_default_index(options: &[&str], default: &[String]) -> Option<usize>
         .and_then(|d| options.iter().position(|o| d.eq_ignore_ascii_case(o)))
 }
 
+fn selector_visible_options() -> usize {
+    let width_limit = if onboarding::width() < 44 {
+        3
+    } else {
+        SELECTOR_VISIBLE_OPTIONS
+    };
+    width_limit.min(onboarding::height().saturating_sub(9).max(2))
+}
+
 fn selector_window_start(options_len: usize, selected: usize) -> usize {
-    if options_len <= SELECTOR_VISIBLE_OPTIONS {
+    let visible = selector_visible_options();
+    if options_len <= visible {
         0
     } else {
-        selected.min(options_len - SELECTOR_VISIBLE_OPTIONS)
+        selected.min(options_len - visible)
     }
 }
 
@@ -1041,9 +1106,27 @@ fn selector_render_lines(
     } else {
         typed.to_string()
     };
-    let mut lines = vec![format!("{prompt}{input}")];
+    let columns = onboarding::width().saturating_sub(4);
+    let query = onboarding::clean(&format!("{prompt}{input}"));
+    let query = query.trim_start();
+    let query = if query.chars().count() > columns {
+        format!(
+            "…{}",
+            query
+                .chars()
+                .rev()
+                .take(columns.saturating_sub(1))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect::<String>()
+        )
+    } else {
+        query.to_string()
+    };
+    let mut lines = vec![format!("    {query}")];
     let window_start = selector_window_start(options.len(), selected);
-    let window_end = (window_start + SELECTOR_VISIBLE_OPTIONS).min(options.len());
+    let window_end = (window_start + selector_visible_options()).min(options.len());
     if window_start > 0 {
         lines.push("    ↑ more".to_string());
     }
@@ -1055,23 +1138,40 @@ fn selector_render_lines(
     {
         let cursor = if i == selected { ">" } else { " " };
         let marker = if default_idx == Some(i) { "✓" } else { " " };
-        let suffix = descriptions
-            .and_then(|items| items.get(i))
-            .map(|description| format!(" -> {description}"))
-            .unwrap_or_default();
-        lines.push(format!(
-            "    {cursor} {marker} {:>2}. {option}{suffix}",
-            i + 1
-        ));
+        let prefix = format!("    {cursor} {marker} {:>2}. ", i + 1);
+        for (index, part) in onboarding::wrap(
+            option,
+            onboarding::width().saturating_sub(prefix.chars().count()),
+        )
+        .iter()
+        .enumerate()
+        {
+            lines.push(format!(
+                "{}{part}",
+                if index == 0 {
+                    prefix.clone()
+                } else {
+                    " ".repeat(prefix.chars().count())
+                }
+            ));
+        }
+        if i == selected
+            && let Some(description) = descriptions.and_then(|items| items.get(i))
+        {
+            for part in onboarding::wrap(description, onboarding::width().saturating_sub(8)) {
+                lines.push(format!("        {part}"));
+            }
+        }
     }
     if window_end < options.len() {
         lines.push("    ↓ more".to_string());
-    } else if options.len() > SELECTOR_VISIBLE_OPTIONS {
+    } else if options.len() > selector_visible_options() {
         lines.push("    ↓ wraps to 1".to_string());
     }
     lines
 }
 
+#[cfg(test)]
 fn update_selector_from_byte(options: &[&str], selected: &mut usize, typed: &mut String, byte: u8) {
     match byte {
         8 | 127 => {
@@ -1142,17 +1242,13 @@ fn prompt_terminal_selector(
     if options.is_empty() {
         return Ok(None);
     }
-    if !io::stdin().is_terminal() {
-        return prompt_select_fallback(options, default, prompt);
-    }
-    let mut selected = selector_default_index(options, default).unwrap_or(0);
-    let default_idx = selector_default_index(options, default);
-    let Some((_guard, mut input)) = enter_raw_terminal_mode() else {
+    let Some(mut terminal) = onboarding::Terminal::open() else {
         return prompt_select_fallback(options, default, prompt);
     };
+    let mut selected = selector_default_index(options, default).unwrap_or(0);
+    let default_idx = selector_default_index(options, default);
     let mut typed = String::new();
     let mut rendered_lines = 0;
-    print!("\x1b[?25l");
     loop {
         if rendered_lines > 0 {
             print!("\x1b[{rendered_lines}F");
@@ -1160,56 +1256,91 @@ fn prompt_terminal_selector(
         let lines =
             selector_render_lines(options, descriptions, selected, default_idx, &typed, prompt);
         for line in &lines {
-            print!("\r\x1b[K{line}\n");
+            let line = if line.starts_with("    >") {
+                onboarding::accent(line)
+            } else {
+                line.to_string()
+            };
+            print!("\r\x1b[K{line}\r\n");
+        }
+        // Clear remnants when a shorter option replaces a longer description.
+        for _ in lines.len()..rendered_lines {
+            print!("\r\x1b[K\r\n");
+        }
+        if rendered_lines > lines.len() {
+            print!("\x1b[{}F", rendered_lines - lines.len());
         }
         rendered_lines = lines.len();
         io::stdout().flush().map_err(error::DecapodError::IoError)?;
-
-        let mut byte = [0_u8; 1];
-        input
-            .read_exact(&mut byte)
-            .map_err(error::DecapodError::IoError)?;
-        match byte[0] {
-            b'\r' | b'\n' => {
+        match terminal.key().map_err(error::DecapodError::IoError)? {
+            onboarding::Key::Enter => {
                 let shown = selector_shown(options, selected, &typed);
                 print!("\x1b[{rendered_lines}F");
-                print!("\r\x1b[K{prompt}{shown}\n");
-                for _ in 1..rendered_lines {
-                    print!("\r\x1b[K\n");
+                for _ in 0..rendered_lines {
+                    print!("\r\x1b[K\r\n");
                 }
+                print!("\x1b[{rendered_lines}F");
                 print!(
-                    "\x1b[{lines_up}F",
-                    lines_up = rendered_lines.saturating_sub(1)
+                    "\r{} {}\r\n",
+                    onboarding::accent("  ✓"),
+                    onboarding::clean(&shown)
                 );
                 io::stdout().flush().map_err(error::DecapodError::IoError)?;
                 return Ok(Some(shown));
             }
-            3 => {
+            onboarding::Key::Cancel => {
                 return Err(error::DecapodError::ValidationError(
-                    "init prompt interrupted".to_string(),
+                    "Setup cancelled before confirmation.".to_string(),
                 ));
             }
-            8 | 127 => {
-                update_selector_from_byte(options, &mut selected, &mut typed, byte[0]);
+            onboarding::Key::Up => {
+                typed.clear();
+                selected = selected.checked_sub(1).unwrap_or(options.len() - 1);
             }
-            27 => {
-                let mut seq = [0_u8; 2];
-                if input.read_exact(&mut seq).is_ok() && seq[0] == b'[' {
-                    match seq[1] {
-                        b'A' => {
-                            typed.clear();
-                            selected = selected.checked_sub(1).unwrap_or_else(|| options.len() - 1);
-                        }
-                        b'B' => {
-                            typed.clear();
-                            selected = (selected + 1) % options.len();
-                        }
-                        _ => {}
-                    }
+            onboarding::Key::Down => {
+                typed.clear();
+                selected = (selected + 1) % options.len();
+            }
+            onboarding::Key::Backspace => {
+                typed.pop();
+                if let Some(index) = find_selector_match(options, &typed) {
+                    selected = index;
                 }
             }
-            byte => update_selector_from_byte(options, &mut selected, &mut typed, byte),
+            onboarding::Key::Text(text) => {
+                typed.push_str(&text);
+                if let Some(index) = find_selector_match(options, &typed) {
+                    selected = index;
+                }
+            }
+            onboarding::Key::Ignore => {}
         }
+    }
+}
+
+/// Closed menus cannot accept arbitrary typed values as an approval.
+fn prompt_setup_choice(
+    label: &str,
+    options: &[&str],
+    descriptions: &[&str],
+    default: &str,
+) -> Result<String, error::DecapodError> {
+    onboarding::field(label, onboarding::navigation_hint(), "");
+    loop {
+        let choice = prompt_terminal_selector(
+            options,
+            Some(descriptions),
+            &[default.to_string()],
+            "    › ",
+        )?
+        .unwrap_or_else(|| default.to_string());
+        if let Some(index) = options
+            .iter()
+            .position(|option| option.eq_ignore_ascii_case(&choice))
+        {
+            return Ok(options[index].to_string());
+        }
+        onboarding::note("Choose one of the listed options.");
     }
 }
 
@@ -1217,63 +1348,26 @@ fn prompt_language_choice(
     current: &[String],
     recommendation: &[String],
 ) -> Result<Vec<String>, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    if current.is_empty() && recommendation.is_empty() {
-        return prompt_csv_default("Primary language(s)", "");
-    }
-    let current_is_selector_safe = current.len() <= 1
-        && current.first().is_none_or(|language| {
-            LANGUAGES
-                .iter()
-                .any(|option| option.eq_ignore_ascii_case(language))
-        });
-    if !current.is_empty() && !current_is_selector_safe {
-        return prompt_csv_default("Primary language(s)", &current.join(","));
-    }
-    let inferred = if current.is_empty() {
-        "None".to_string()
-    } else {
-        current.join(", ")
-    };
     let default = language_choice_seed(current, recommendation);
-    let default_label = if default.is_empty() {
-        "None".to_string()
-    } else {
-        default.join(", ")
-    };
-    let recommendation_label = if recommendation.is_empty() {
-        "None".to_string()
-    } else {
-        recommendation
+    if default.len() != 1
+        || !LANGUAGES
             .iter()
-            .map(|s| normalize_language(s))
-            .collect::<Vec<_>>()
-            .join(", ")
-    };
-    let supports_arrows = terminal_selector_available(&default);
-
-    println!();
-    println!("{}", "  Primary language(s)".bright_white().bold());
-    println!("    inferred from files: {inferred}");
-    println!("    recommended for architecture: {recommendation_label}");
-    println!("    current selection/default: {default_label}");
-    if supports_arrows {
-        println!("    options: up/down, type name or number, comma-separated for multiple");
+            .any(|option| option.eq_ignore_ascii_case(&default[0]))
+    {
+        return prompt_csv_default("Primary languages", &default.join(","));
+    }
+    onboarding::field(
+        "Primary languages",
+        "↑/↓ to move · type a language, or separate several with commas.",
+        "",
+    );
+    let choice = prompt_terminal_selector(LANGUAGES, None, &default, "    › ")?
+        .unwrap_or_else(|| default.join(","));
+    Ok(if choice.is_empty() {
+        default
     } else {
-        println!("    options: type name or number, comma-separated for multiple");
-    }
-    println!("    press Enter to use the current selection/default");
-
-    let choice = match prompt_terminal_selector(LANGUAGES, None, &default, "    choice: ")? {
-        Some(choice) => choice,
-        None => prompt_line("    choice: ")?,
-    };
-
-    if choice.is_empty() {
-        return Ok(default);
-    }
-
-    Ok(parse_language_choice(&choice))
+        parse_language_choice(&choice)
+    })
 }
 
 fn parse_language_choice(choice: &str) -> Vec<String> {
@@ -1284,7 +1378,8 @@ fn parse_language_choice(choice: &str) -> Vec<String> {
             trimmed
                 .parse::<usize>()
                 .ok()
-                .and_then(|n| LANGUAGES.get(n.saturating_sub(1)))
+                .and_then(|n| n.checked_sub(1))
+                .and_then(|n| LANGUAGES.get(n))
                 .map(|lang| (*lang).to_string())
                 .unwrap_or_else(|| normalize_language(trimmed))
         })
@@ -1341,76 +1436,37 @@ fn infer_language_from_architecture(arch: &str) -> Vec<String> {
 fn prompt_architecture_choice(
     current: Option<&str>,
 ) -> Result<Option<String>, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    if let Some(current) = current {
-        let current_matches_common = ARCH_DIRECTIONS
+    let current = current.filter(|value| !is_architecture_guidance(value));
+    if let Some(current) = current
+        && !ARCH_DIRECTIONS
             .iter()
-            .any(|(arch, _)| current.eq_ignore_ascii_case(arch));
-        if !current_matches_common {
-            let choice = prompt_line_default("Architecture direction", current)?;
-            return Ok(Some(choice));
-        }
-    }
-    let inferred = current.unwrap_or("None");
-    let current_matches_common = current.is_some_and(|c| {
-        ARCH_DIRECTIONS
-            .iter()
-            .any(|(arch, _)| c.eq_ignore_ascii_case(arch))
-    });
-    let default = if current_matches_common {
-        current.map(|s| vec![s.to_string()]).unwrap_or_default()
-    } else {
-        Vec::new()
-    };
-    let supports_arrows = terminal_selector_available(&default);
-
-    println!();
-    println!("{}", "  Architecture".bright_white().bold());
-    println!("    inferred: {inferred}");
-    println!("    current selection/default: {inferred}");
-    println!("    common approaches:");
-    if supports_arrows {
-        println!("    options: up/down, type name or number, or type your architecture");
-    } else {
-        println!("    options: type name or number, or type your architecture");
-    }
-
-    let arch_options = ARCH_DIRECTIONS
-        .iter()
-        .map(|(arch, _)| *arch)
-        .collect::<Vec<_>>();
-    let arch_descriptions = ARCH_DIRECTIONS
-        .iter()
-        .map(|(_, description)| *description)
-        .collect::<Vec<_>>();
-    let choice = match prompt_terminal_selector(
-        &arch_options,
-        Some(&arch_descriptions),
-        &default,
-        "    choice: ",
-    )? {
-        Some(choice) => choice,
-        None => prompt_line("    choice: ")?,
-    };
-
-    if choice.is_empty() {
-        return Ok(current.map(|s| s.to_string()));
-    }
-
-    if let Ok(index) = choice.parse::<usize>()
-        && let Some((arch, _)) = ARCH_DIRECTIONS.get(index.saturating_sub(1))
+            .any(|(arch, _)| current.eq_ignore_ascii_case(arch))
     {
-        return Ok(Some((*arch).to_string()));
+        return prompt_line_default("Architecture", current).map(Some);
     }
-
-    Ok(Some(choice.trim().to_string()))
+    onboarding::field(
+        "Architecture",
+        "Choose an approach, keep it open, or type your own.",
+        "",
+    );
+    let options = std::iter::once(DEFER_ARCHITECTURE)
+        .chain(ARCH_DIRECTIONS.iter().map(|(arch, _)| *arch))
+        .collect::<Vec<_>>();
+    let descriptions =
+        std::iter::once("Let your agent inspect the project before choosing an architecture.")
+            .chain(ARCH_DIRECTIONS.iter().map(|(_, description)| *description))
+            .collect::<Vec<_>>();
+    let default = vec![current.unwrap_or(DEFER_ARCHITECTURE).to_string()];
+    Ok(
+        prompt_terminal_selector(&options, Some(&descriptions), &default, "    › ")?
+            .filter(|choice| choice != DEFER_ARCHITECTURE),
+    )
 }
 
 fn print_init_block(title: &str, subtitle: &str) {
-    use crate::core::ansi::AnsiExt;
     println!();
-    println!("{}", format!("◢ {title}").bright_cyan().bold());
-    println!("{}", format!("  {subtitle}").bright_black());
+    println!("  {}", onboarding::accent(title));
+    onboarding::note(subtitle);
 }
 
 fn prompt_text_field(
@@ -1418,15 +1474,8 @@ fn prompt_text_field(
     helper: &str,
     default_value: &str,
 ) -> Result<String, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    println!();
-    println!("{}", format!("  {label}").bright_white().bold());
-    println!("{}", format!("    {helper}").bright_black());
-    println!(
-        "{}",
-        format!("    inferred: {default_value}").bright_black()
-    );
-    let line = prompt_line(&format!("{}", "    input: ".bright_cyan().bold()))?;
+    onboarding::field(label, helper, default_value);
+    let line = prompt_line(&format!("{} ", onboarding::accent("  ›")))?;
     if line.trim().is_empty() {
         Ok(default_value.to_string())
     } else {
@@ -1435,11 +1484,7 @@ fn prompt_text_field(
 }
 
 fn prompt_line_default(prompt: &str, default_value: &str) -> Result<String, error::DecapodError> {
-    prompt_text_field(
-        prompt,
-        "Press Enter to keep inferred context.",
-        default_value,
-    )
+    prompt_text_field(prompt, "Press Enter to keep this value.", default_value)
 }
 
 fn prompt_csv_default(
@@ -1459,21 +1504,28 @@ fn prompt_csv_default(
         .collect())
 }
 
-fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
-    use crate::core::ansi::AnsiExt;
-    let suffix = if default_yes { "[Y/n]" } else { "[y/N]" };
-    println!();
-    println!("{}", format!("  {prompt}").bright_white().bold());
-    let line = prompt_line(&format!(
-        "{} {} ",
-        "    choice:".bright_cyan().bold(),
-        suffix.bright_black()
-    ))?;
-    if line.is_empty() {
-        return Ok(default_yes);
+fn parse_setup_confirmation(input: &str, default_yes: bool) -> Option<bool> {
+    match input.trim().to_ascii_lowercase().as_str() {
+        "" => Some(default_yes),
+        "y" | "yes" => Some(true),
+        "n" | "no" => Some(false),
+        _ => None,
     }
-    let normalized = line.to_ascii_lowercase();
-    Ok(matches!(normalized.as_str(), "y" | "yes"))
+}
+
+fn prompt_yes_no(prompt: &str, default_yes: bool) -> Result<bool, error::DecapodError> {
+    onboarding::field(prompt, "", "");
+    loop {
+        let line = prompt_line(&format!(
+            "  {} {} ",
+            onboarding::accent("›"),
+            if default_yes { "[Y/n]" } else { "[y/N]" }
+        ))?;
+        if let Some(answer) = parse_setup_confirmation(&line, default_yes) {
+            return Ok(answer);
+        }
+        onboarding::note("Please enter yes or no.");
+    }
 }
 
 fn resolve_existing_init_dir(raw: &Path) -> Result<PathBuf, error::DecapodError> {
@@ -1507,25 +1559,23 @@ fn resolve_or_create_project_dir(
 }
 
 fn prompt_init_target_dir(current_dir: &Path) -> Result<PathBuf, error::DecapodError> {
-    // In non-interactive environments (no TTY), default to current directory to avoid hanging
-    if !io::stdin().is_terminal() {
+    let current = current_dir.display().to_string();
+    onboarding::card("Workspace", &[("Directory", current)]);
+    let choice = prompt_setup_choice(
+        "Where would you like to begin?",
+        &["Use this directory", "Create a project"],
+        &["Set up the project you're in.", "Start in a new directory."],
+        "Use this directory",
+    )?;
+    if choice == "Use this directory" {
         return resolve_existing_init_dir(current_dir);
     }
-    if prompt_yes_no("Initialize the existing current directory?", true)? {
-        return resolve_existing_init_dir(current_dir);
-    }
-    let project_name = prompt_text_field(
-        "Project directory name",
-        "Decapod will create this directory and initialize inside it.",
+    let name = prompt_text_field(
+        "Project directory",
+        "A name or path. Created after you review setup.",
         "my-project",
     )?;
-    let project_name = project_name.trim();
-    if project_name.is_empty() {
-        return Err(error::DecapodError::ValidationError(
-            "Project directory name cannot be empty".to_string(),
-        ));
-    }
-    resolve_or_create_project_dir(current_dir, Path::new(project_name), false)
+    resolve_or_create_project_dir(current_dir, Path::new(&name), true)
 }
 
 fn diagram_style_choice(style: InitDiagramStyle) -> &'static str {
@@ -1564,24 +1614,12 @@ fn parse_diagram_style_choice(
 fn prompt_diagram_style(
     default_style: InitDiagramStyle,
 ) -> Result<InitDiagramStyle, error::DecapodError> {
-    print_init_block(
-        "Diagram Notation",
-        "Choose the README-visible diagram notation Decapod should generate.",
-    );
-    println!(
-        "    current selection/default: {}",
-        diagram_style_label(default_style).bright_white()
-    );
-    println!("    options: up/down, type name or number");
-    let default = vec![diagram_style_choice(default_style).to_string()];
-    let choice = prompt_terminal_selector(
+    let choice = prompt_setup_choice(
+        "Diagram notation",
         DIAGRAM_NOTATION_OPTIONS,
-        Some(DIAGRAM_NOTATION_DESCRIPTIONS),
-        &default,
-        "    choice: ",
-    )?
-    .unwrap_or_else(|| String::from(diagram_style_choice(default_style)));
-
+        DIAGRAM_NOTATION_DESCRIPTIONS,
+        diagram_style_choice(default_style),
+    )?;
     parse_diagram_style_choice(&choice, default_style)
 }
 
@@ -1638,8 +1676,12 @@ fn init_with_from_config(
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
-        vega_decisions: Some(config.vega.mode == core::vega_readiness::Mode::Required),
+        existing_rbac: config.governance.rbac.clone(),
+        existing_db_maintenance: config.governance.db_maintenance.clone(),
+        existing_laya: config.laya.clone(),
+        laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
+        restart_cloud_signin: false,
         backend: if config.repo.effective_backend().is_cloud() {
             crate::cli::BackendType::Cloud
         } else {
@@ -1728,8 +1770,8 @@ fn preserve_unspecified_init_options(
     if !explicit("validation_buildkite_preflights") {
         init.validation_buildkite_preflights = existing.validation_buildkite_preflights;
     }
-    if !explicit("vega_decisions") {
-        init.vega_decisions = existing.vega_decisions;
+    if !explicit("laya_decisions") {
+        init.laya_decisions = existing.laya_decisions;
     }
     if !explicit("backend") {
         init.backend = existing.backend;
@@ -1747,6 +1789,9 @@ fn preserve_unspecified_init_options(
     init.existing_repository_contract = existing.existing_repository_contract;
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
+    init.existing_rbac = existing.existing_rbac;
+    init.existing_db_maintenance = existing.existing_db_maintenance;
+    init.existing_laya = existing.existing_laya;
 }
 
 fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjectConfig {
@@ -1830,6 +1875,8 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             protected_paths,
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
+            rbac: init.existing_rbac.clone(),
+            db_maintenance: init.existing_db_maintenance.clone(),
         },
         proof: proof::ProjectProofConfig {
             validation_buildkite_preflights: init.validation_buildkite_preflights.unwrap_or(false),
@@ -1861,7 +1908,8 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-        vega: core::vega_readiness::Configuration::default(),
+        workspace: crate::cli::WorkspaceConfigSection::default(),
+        laya: init.existing_laya.clone(),
     }
 }
 
@@ -1919,6 +1967,28 @@ fn verify_git_status(target_dir: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
+fn prepare_init_directory_and_git(
+    target: &Path,
+    init: &InitWithCli,
+) -> Result<(), error::DecapodError> {
+    if !init.dry_run {
+        fs::create_dir_all(target).map_err(error::DecapodError::IoError)?;
+    }
+    if !is_git_repository(target) {
+        if !init.no_git {
+            if !init.dry_run {
+                run_git_init(target)?;
+                verify_git_status(target)?;
+            }
+        } else {
+            println!(
+                "warning: Git repository was not initialized. Decapod workspace/worktree workflows will not function until a Git repository is created."
+            );
+        }
+    }
+    Ok(())
+}
+
 fn apply_init_proof_command_input(init: &mut InitWithCli, input: &str) {
     // An unchanged default must not split literal commas inside existing commands.
     if input != init.proof_commands.join(",") {
@@ -1931,146 +2001,360 @@ fn apply_init_proof_command_input(init: &mut InitWithCli, input: &str) {
     }
 }
 
+fn setup_review_rows(repo: &RepoContext, init: &InitWithCli) -> Vec<(&'static str, String)> {
+    let mut rows = vec![
+        (
+            "Project",
+            repo.product_name
+                .clone()
+                .unwrap_or_else(|| "Your project".into()),
+        ),
+        (
+            "Directory",
+            init.dir
+                .as_deref()
+                .unwrap_or(Path::new("."))
+                .display()
+                .to_string(),
+        ),
+        (
+            "Purpose",
+            Some(setup_purpose_default(repo.product_summary.as_deref()).to_string())
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| "Refine with your coding agent".into()),
+        ),
+        (
+            "Architecture",
+            setup_architecture_label(repo.architecture_direction.as_deref()),
+        ),
+        (
+            "Languages",
+            if repo.primary_languages.is_empty() {
+                "Discover with your agent".into()
+            } else {
+                repo.primary_languages.join(", ")
+            },
+        ),
+        (
+            "Workspace",
+            match init.isolation_mode {
+                Some(IsolationMode::Container) => "Isolated containers".into(),
+                Some(IsolationMode::Worktree) => "Isolated Git worktrees".into(),
+                _ if repo.container_workspaces => "Isolated containers".into(),
+                _ => "Isolated Git worktrees".into(),
+            },
+        ),
+        (
+            "Storage",
+            if init.backend.is_cloud() {
+                "Decapod Cloud (cloud) · experimental · account required".into()
+            } else {
+                "Decapod Local (local) · free · no account needed".into()
+            },
+        ),
+    ];
+    if init.backend.is_cloud() {
+        rows.push((
+            "Cloud setup",
+            "Sign in if needed; the service confirms repository access".into(),
+        ));
+    }
+    let selected = config_from_init_with(init, repo.clone());
+    rows.push(("Agent files", selected.init.entrypoints.join(", ")));
+    rows.push((
+        "Living specs",
+        if init.specs { "Enabled" } else { "Disabled" }.into(),
+    ));
+    rows.push((
+        "CI scaffold",
+        if init.ci {
+            "GitHub validation workflow"
+        } else {
+            "Disabled"
+        }
+        .into(),
+    ));
+    rows.push(("Diagrams", diagram_style_label(init.diagram_style).into()));
+    rows.push((
+        "Proof",
+        format!(
+            "{}; {} custom command(s)",
+            if init.validation_buildkite_preflights.unwrap_or(false) {
+                "Buildkite"
+            } else {
+                "Native validation"
+            },
+            init.proof_commands.len()
+        ),
+    ));
+    if let Some(path) = init.dir.as_deref()
+        && !is_git_repository(path)
+    {
+        rows.push((
+            "Git",
+            if init.no_git {
+                "Not initialized; workspace workflows unavailable"
+            } else {
+                "Initialize a local repository"
+            }
+            .into(),
+        ));
+    }
+    rows
+}
+
+fn customize_setup(
+    repo: &mut RepoContext,
+    init: &mut InitWithCli,
+) -> Result<(), error::DecapodError> {
+    let mut default = "Project";
+    loop {
+        let section = prompt_setup_choice(
+            "Make it yours",
+            &["Project", "Workspace", "Connections", "Advanced", "Done"],
+            &[
+                "Name, purpose, architecture, languages, and done criteria.",
+                "Choose how agent changes are isolated.",
+                "Local or cloud storage, and your task tracker.",
+                "Proof, permissions, context, diagrams, and CI.",
+                "Return to the setup review.",
+            ],
+            default,
+        )?;
+        match section.as_str() {
+            "Project" => {
+                repo.product_name = Some(prompt_line_default(
+                    "Project name",
+                    repo.product_name.as_deref().unwrap_or("my-project"),
+                )?);
+                repo.product_summary = Some(prompt_line_default(
+                    "What are you building?",
+                    repo.product_summary.as_deref().unwrap_or(""),
+                )?);
+                repo.architecture_direction =
+                    prompt_architecture_choice(repo.architecture_direction.as_deref())?;
+                let recommendation = repo
+                    .architecture_direction
+                    .as_deref()
+                    .map(infer_language_from_architecture)
+                    .unwrap_or_default();
+                repo.primary_languages =
+                    prompt_language_choice(&repo.primary_languages, &recommendation)?;
+                repo.done_criteria = Some(prompt_line_default(
+                    "What does done look like?",
+                    repo.done_criteria
+                        .as_deref()
+                        .unwrap_or("Required checks pass and the requested outcome is verified."),
+                )?);
+            }
+            "Workspace" => {
+                let container = init.isolation_mode == Some(IsolationMode::Container)
+                    || (init.isolation_mode.is_none() && repo.container_workspaces);
+                let choice = prompt_setup_choice(
+                    "Where should agent work run?",
+                    &["Git worktrees", "Containers"],
+                    &[
+                        "Separate working copies on this machine.",
+                        "Container isolation for concurrent agent workflows. Requires Docker or Podman.",
+                    ],
+                    if container {
+                        "Containers"
+                    } else {
+                        "Git worktrees"
+                    },
+                )?;
+                repo.container_workspaces = choice == "Containers";
+                init.container_workspaces = repo.container_workspaces;
+                init.isolation_mode = Some(if repo.container_workspaces {
+                    IsolationMode::Container
+                } else {
+                    IsolationMode::Worktree
+                });
+            }
+            "Connections" => {
+                let storage = prompt_setup_choice(
+                    "Where should work state live?",
+                    &["Decapod Local", "Decapod Cloud"],
+                    &[
+                        "On this machine. Free, offline, no account needed.",
+                        "Repository tasks in the cloud. Account and authorized access required.",
+                    ],
+                    if init.backend.is_cloud() {
+                        "Decapod Cloud"
+                    } else {
+                        "Decapod Local"
+                    },
+                )?;
+                init.backend = if storage == "Decapod Cloud" {
+                    onboarding::note(
+                        "After you apply, follow the trusted sign-in link if needed. The service confirms repository access.",
+                    );
+                    BackendType::Cloud
+                } else {
+                    BackendType::Local
+                };
+                repo.set_backend(init.backend);
+                repo.external_tracker =
+                    prompt_yes_no("Connect an external task tracker?", repo.external_tracker)?;
+                if repo.external_tracker {
+                    init.tracker_provider = Some(prompt_line_default(
+                        "Tracker provider",
+                        init.tracker_provider.as_deref().unwrap_or("external"),
+                    )?);
+                    let project = prompt_line_default(
+                        "Tracker project (optional)",
+                        init.tracker_project.as_deref().unwrap_or(""),
+                    )?;
+                    init.tracker_project = (!project.is_empty()).then_some(project);
+                    let url = prompt_line_default(
+                        "Tracker URL (optional)",
+                        init.tracker_url.as_deref().unwrap_or(""),
+                    )?;
+                    init.tracker_url = (!url.is_empty()).then_some(url);
+                } else {
+                    init.tracker_provider = None;
+                    init.tracker_project = None;
+                    init.tracker_url = None;
+                }
+            }
+            "Advanced" => {
+                init.protected_paths = canonical_repo_relative_paths(&prompt_csv_default(
+                    "Protected paths",
+                    &init.protected_paths.join(","),
+                )?)
+                .map_err(error::DecapodError::ValidationError)?;
+                let approval_default = if init.approval_categories.is_empty() {
+                    "destructive_operations".into()
+                } else {
+                    init.approval_categories.join(",")
+                };
+                init.approval_categories =
+                    prompt_csv_default("Actions that need approval", &approval_default)?;
+                let proof = prompt_text_field(
+                    "Proof commands",
+                    "Comma-separated name=command values. Enter keeps existing command details.",
+                    &init.proof_commands.join(","),
+                )?;
+                apply_init_proof_command_input(init, &proof);
+                onboarding::note(
+                    "Laya requires a separately installed runtime and pinned model data.",
+                );
+                init.laya_decisions = Some(prompt_yes_no(
+                    "Require optional Laya readiness decisions?",
+                    init.laya_decisions.unwrap_or(false),
+                )?);
+                onboarding::note("No runs the full proof suite on this machine.");
+                init.validation_buildkite_preflights = Some(prompt_yes_no(
+                    "Run the full proof suite on Buildkite?",
+                    init.validation_buildkite_preflights.unwrap_or(false),
+                )?);
+                let context = if init.declared_context_sources.is_empty() {
+                    "AGENTS.md".into()
+                } else {
+                    init.declared_context_sources.join(",")
+                };
+                init.declared_context_sources = canonical_repo_relative_paths(&prompt_csv_default(
+                    "Context sources",
+                    &context,
+                )?)
+                .map_err(error::DecapodError::ValidationError)?;
+                init.specs = prompt_yes_no("Generate living project specs?", init.specs)?;
+                init.ci = prompt_yes_no("Scaffold a GitHub validation workflow?", init.ci)?;
+                init.diagram_style = prompt_diagram_style(init.diagram_style)?;
+            }
+            _ => return Ok(()),
+        }
+        default = "Done";
+    }
+}
+
 fn enrich_repo_context_interactive(
     repo: &mut RepoContext,
     init: &mut InitWithCli,
 ) -> Result<(), error::DecapodError> {
-    print_init_block(
-        "Repository Context",
-        "Review inferred intent before generating .decapod/managed/specs/.",
+    onboarding::step(
+        0,
+        "A little context goes a long way.",
+        "We detected what we could. You can refine every choice.",
     );
-
-    let current_summary = repo.product_summary.clone().unwrap_or_else(|| {
-        "Deliver the repository outcome against explicit user intent with proof-backed completion."
-            .to_string()
-    });
-    repo.product_summary = Some(prompt_line_default("Intent outcome", &current_summary)?);
-
-    repo.architecture_direction =
-        prompt_architecture_choice(repo.architecture_direction.as_deref())?;
-
-    let recommended_languages = repo
-        .architecture_direction
-        .as_deref()
-        .map(infer_language_from_architecture)
-        .unwrap_or_default();
-    repo.primary_languages =
-        prompt_language_choice(&repo.primary_languages, &recommended_languages)?;
-
-    let refine_now = prompt_yes_no(
-        "Refine done criteria now? (You can evolve .decapod/config.toml and .decapod/managed/specs/*.md later.)",
-        false,
-    )?;
-    if refine_now {
-        let current_done = repo.done_criteria.clone().unwrap_or_else(|| {
-            "Decapod validate passes, required tests pass, and promotion-relevant artifacts are present."
-                .to_string()
-        });
-        repo.done_criteria = Some(prompt_line_default("Done criteria", &current_done)?);
-    }
-
-    let use_external_tracker = prompt_yes_no(
-        "Use an external task tracker (e.g. Beads) instead of Decapod todos?",
-        repo.external_tracker,
-    )?;
-    repo.external_tracker = use_external_tracker;
-
-    let enable_container_workspaces = prompt_yes_no(
-        "Enable container workspaces? (Required for multi-agent concurrent runs. Disable only for single-agent workflows.)",
-        repo.container_workspaces,
-    )?;
-    repo.container_workspaces = enable_container_workspaces;
-
-    let protected_default = init.protected_paths.join(",");
-    init.protected_paths =
-        canonical_repo_relative_paths(&prompt_csv_default("Protected paths", &protected_default)?)
-            .map_err(error::DecapodError::ValidationError)?;
-
-    let approval_default = if init.approval_categories.is_empty() {
-        "destructive_operations".to_string()
-    } else {
-        init.approval_categories.join(",")
-    };
-    init.approval_categories = prompt_csv_default("Approval categories", &approval_default)?;
-
-    let proof_default = init.proof_commands.join(",");
-    let proof_input = prompt_text_field(
-        "Proof commands",
-        "Enter comma-separated name=command values, or press Enter to keep all existing proof details.",
-        &proof_default,
-    )?;
-    apply_init_proof_command_input(init, &proof_input);
-    init.vega_decisions = Some(prompt_yes_no(
-        "Require Vega readiness decisions after validation? (Each maintainer installs the runtime and pinned model data separately.)",
-        init.vega_decisions.unwrap_or(false),
-    )?);
-    init.validation_buildkite_preflights = Some(prompt_yes_no(
-        "Use Buildkite on the current workspace branch for the full required proof suite? (No runs the full suite natively in Decapod.)",
-        init.validation_buildkite_preflights.unwrap_or(false),
-    )?);
-
-    if repo.external_tracker {
-        let provider = init
-            .tracker_provider
-            .clone()
-            .unwrap_or_else(|| "external".to_string());
-        init.tracker_provider = Some(prompt_line_default("External tracker provider", &provider)?);
-        let project = init.tracker_project.clone().unwrap_or_default();
-        let project = prompt_line_default("External tracker project (optional)", &project)?;
-        init.tracker_project = (!project.trim().is_empty()).then_some(project);
-        let url = init.tracker_url.clone().unwrap_or_default();
-        let url = prompt_line_default("External tracker URL (optional)", &url)?;
-        init.tracker_url = (!url.trim().is_empty()).then_some(url);
-    } else {
-        init.tracker_provider = None;
-        init.tracker_project = None;
-        init.tracker_url = None;
-    }
-
-    let context_default = if init.declared_context_sources.is_empty() {
-        "AGENTS.md".to_string()
-    } else {
-        init.declared_context_sources.join(",")
-    };
-    init.declared_context_sources = canonical_repo_relative_paths(&prompt_csv_default(
-        "Declared context sources",
-        &context_default,
-    )?)
-    .map_err(error::DecapodError::ValidationError)?;
-    init.isolation_mode = Some(if repo.container_workspaces {
-        IsolationMode::Container
-    } else {
-        IsolationMode::Worktree
-    });
-
-    println!();
-    println!("Enable Decapod Cloud? [experimental, account required]");
-    println!("  No  - local-first repo governance only");
-    println!("  Yes - sign in to Decapod Labs to sync governed work state");
-    let backend_choice = prompt_yes_no(
-        "Enable Decapod Cloud? [experimental, account required]",
-        matches!(init.backend, crate::cli::BackendType::Cloud),
-    )?;
-    init.backend = if backend_choice {
-        println!();
-        println!("Decapod Cloud is experimental.");
-        println!("It syncs governed operational state for this repo.");
-        println!("Local state remains canonical unless cloud sync is enabled.");
-        println!();
-        if prompt_yes_no("Continue?", false)? {
-            crate::cli::BackendType::Cloud
+    let rows = setup_review_rows(repo, init);
+    onboarding::card("Your project", &rows[..6]);
+    let purpose = setup_purpose_default(repo.product_summary.as_deref());
+    let summary = prompt_text_field(
+        "What are you building?",
+        if purpose.is_empty() {
+            "One sentence helps your agent. Enter to decide together later."
         } else {
-            crate::cli::BackendType::Local
-        }
-    } else {
-        crate::cli::BackendType::Local
-    };
-    repo.set_backend(init.backend);
-
-    let enable_ci = prompt_yes_no("Scaffold GitHub Action for decapod validate?", init.ci)?;
-    init.ci = enable_ci;
-
+            "A useful starting point for your agent."
+        },
+        purpose,
+    )?;
+    repo.product_summary = (!summary.is_empty()).then_some(summary);
+    onboarding::step(
+        1,
+        "Start with a good foundation.",
+        "Use detected and existing settings, or adjust just what you need.",
+    );
+    let choice = prompt_setup_choice(
+        "How would you like to set up?",
+        &["Recommended", "Customize"],
+        &[
+            "Keep the settings shown in your review. Local by default, no account needed.",
+            "Adjust project details, workspace isolation, connections, or advanced settings.",
+        ],
+        "Recommended",
+    )?;
+    if choice == "Customize" {
+        customize_setup(repo, init)?;
+    }
     Ok(())
+}
+
+fn review_setup(
+    repo: &mut RepoContext,
+    init: &mut InitWithCli,
+) -> Result<bool, error::DecapodError> {
+    loop {
+        onboarding::step(
+            2,
+            "Everything in its right place.",
+            "Review the plan before we touch your project.",
+        );
+        onboarding::card(
+            if init.dry_run {
+                "Setup preview"
+            } else {
+                "Setup plan"
+            },
+            &setup_review_rows(repo, init),
+        );
+        onboarding::note(
+            "Setup adds agent instructions and project governance. Existing instructions are backed up; authored settings are preserved.",
+        );
+        let apply = if init.dry_run {
+            "Preview setup"
+        } else {
+            "Apply setup"
+        };
+        let choice = prompt_setup_choice(
+            "Ready when you are",
+            &[apply, "Edit choices", "Cancel"],
+            &[
+                "Continue with the plan above.",
+                "Revisit any part of setup.",
+                "Leave without applying setup.",
+            ],
+            apply,
+        )?;
+        if choice == apply {
+            return Ok(true);
+        }
+        if choice == "Cancel" {
+            onboarding::note("Setup cancelled. No setup changes were applied.");
+            return Ok(false);
+        }
+        customize_setup(repo, init)?;
+    }
 }
 
 fn print_init_reconciliation(report: &core::init_reconciliation::ReconciliationReport) {
@@ -2102,6 +2386,7 @@ fn run_init_apply(
     init_with: &InitWithCli,
     current_dir: &Path,
     repo_ctx: &RepoContext,
+    interactive: bool,
 ) -> Result<PathBuf, error::DecapodError> {
     let target_dir = match &init_with.dir {
         Some(d) => d.clone(),
@@ -2206,7 +2491,7 @@ fn run_init_apply(
     // scaffold layer preserves authored material using manifest provenance.
     let generate_specs = init_with.specs
         && (!target_dir
-            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+            .join(core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST)
             .exists()
             || init_with.force);
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
@@ -2242,55 +2527,95 @@ fn run_init_apply(
         .display()
         .to_string();
     use crate::core::ansi::AnsiExt;
-    print_init_block(
-        "Decapod Init Summary",
-        "Scaffold completed with the following changes.",
-    );
-    println!("  Target: {}", target_display.bright_white());
-    println!(
-        "  Mode: {}",
-        if init_with.dry_run {
-            "Dry Run".bright_yellow()
-        } else {
-            "Apply".bright_green()
-        }
-    );
-    println!(
-        "  Entrypoints: created={}, unchanged={}, preserved={}",
-        scaffold_summary
-            .entrypoints_created
-            .to_string()
-            .bright_green(),
-        scaffold_summary
-            .entrypoints_unchanged
-            .to_string()
-            .bright_yellow(),
-        scaffold_summary
-            .entrypoints_preserved
-            .to_string()
-            .bright_white()
-    );
-    println!(
-        "  Config scaffold (README/OVERRIDE): created={}, unchanged={}, preserved={}",
-        scaffold_summary.config_created.to_string().bright_green(),
-        scaffold_summary
-            .config_unchanged
-            .to_string()
-            .bright_yellow(),
-        scaffold_summary.config_preserved.to_string().bright_white()
-    );
-    println!(
-        "  Specs: created={}, unchanged={}, preserved={}",
-        scaffold_summary.specs_created.to_string().bright_green(),
-        scaffold_summary.specs_unchanged.to_string().bright_yellow(),
-        scaffold_summary.specs_preserved.to_string().bright_white()
-    );
-    println!(
-        "  CI: created={}, unchanged={}, preserved={}",
-        scaffold_summary.ci_created.to_string().bright_green(),
-        scaffold_summary.ci_unchanged.to_string().bright_yellow(),
-        scaffold_summary.ci_preserved.to_string().bright_white()
-    );
+    if interactive {
+        onboarding::card(
+            if init_with.dry_run {
+                "Would prepare"
+            } else {
+                "Prepared"
+            },
+            &[
+                (
+                    "Agent files",
+                    format!(
+                        "{} created · {} current · {} preserved",
+                        scaffold_summary.entrypoints_created,
+                        scaffold_summary.entrypoints_unchanged,
+                        scaffold_summary.entrypoints_preserved
+                    ),
+                ),
+                (
+                    "Living specs",
+                    format!(
+                        "{} created · {} current · {} preserved",
+                        scaffold_summary.specs_created,
+                        scaffold_summary.specs_unchanged,
+                        scaffold_summary.specs_preserved
+                    ),
+                ),
+                (
+                    "CI",
+                    format!(
+                        "{} created · {} current · {} preserved",
+                        scaffold_summary.ci_created,
+                        scaffold_summary.ci_unchanged,
+                        scaffold_summary.ci_preserved
+                    ),
+                ),
+                ("Backups", backup_count.to_string()),
+            ],
+        );
+    } else {
+        print_init_block(
+            "Decapod Init Summary",
+            "Scaffold completed with the following changes.",
+        );
+        println!("  Target: {}", target_display.bright_white());
+        println!(
+            "  Mode: {}",
+            if init_with.dry_run {
+                "Dry Run".bright_yellow()
+            } else {
+                "Apply".bright_green()
+            }
+        );
+        println!(
+            "  Entrypoints: created={}, unchanged={}, preserved={}",
+            scaffold_summary
+                .entrypoints_created
+                .to_string()
+                .bright_green(),
+            scaffold_summary
+                .entrypoints_unchanged
+                .to_string()
+                .bright_yellow(),
+            scaffold_summary
+                .entrypoints_preserved
+                .to_string()
+                .bright_white()
+        );
+        println!(
+            "  Config scaffold (README/OVERRIDE): created={}, unchanged={}, preserved={}",
+            scaffold_summary.config_created.to_string().bright_green(),
+            scaffold_summary
+                .config_unchanged
+                .to_string()
+                .bright_yellow(),
+            scaffold_summary.config_preserved.to_string().bright_white()
+        );
+        println!(
+            "  Specs: created={}, unchanged={}, preserved={}",
+            scaffold_summary.specs_created.to_string().bright_green(),
+            scaffold_summary.specs_unchanged.to_string().bright_yellow(),
+            scaffold_summary.specs_preserved.to_string().bright_white()
+        );
+        println!(
+            "  CI: created={}, unchanged={}, preserved={}",
+            scaffold_summary.ci_created.to_string().bright_green(),
+            scaffold_summary.ci_unchanged.to_string().bright_yellow(),
+            scaffold_summary.ci_preserved.to_string().bright_white()
+        );
+    }
     if !scaffold_summary.tracked_runtime_paths.is_empty() {
         println!(
             "\n{}",
@@ -2309,11 +2634,13 @@ fn run_init_apply(
             "      Use `git rm --cached -- <path>` for each path; keep the local runtime files if Decapod needs them.".bright_yellow()
         );
     }
-    println!("  Backups: {}", backup_count.to_string().bright_magenta());
-    println!(
-        "  Diagram Notation: {}",
-        diagram_style_label(init_with.diagram_style).bright_white()
-    );
+    if !interactive {
+        println!("  Backups: {}", backup_count.to_string().bright_magenta());
+        println!(
+            "  Diagram Notation: {}",
+            diagram_style_label(init_with.diagram_style).bright_white()
+        );
+    }
 
     if backup_count > 0 {
         println!("\n{}", "TASK: Legacy entrypoints were backed up (.bak). Blend their project-specific rules into the appropriate sections of `.decapod/OVERRIDE.md`.".bright_yellow());
@@ -2323,14 +2650,15 @@ fn run_init_apply(
             "      Delete the .bak files when done.".bright_yellow()
         );
     }
-    println!(
-        "{} {}",
-        "✓".bright_green().bold(),
-        "Initialized; required proof has not run"
-            .bright_white()
-            .bold()
-    );
-
+    if !interactive {
+        println!(
+            "{} {}",
+            "✓".bright_green().bold(),
+            "Initialized; required proof has not run"
+                .bright_white()
+                .bold()
+        );
+    }
     Ok(target_dir)
 }
 
@@ -2357,7 +2685,8 @@ pub fn run() -> Result<(), error::DecapodError> {
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
         Command::ProjectCheckWorker(validate_cli) => {
-            if validate_cli.snapshot_prepare
+            if validate_cli.bypass_validation
+                || validate_cli.snapshot_prepare
                 || validate_cli.snapshot_resume.is_some()
                 || validate_cli.snapshot_adopt.is_some()
                 || validate_cli.provider_artifacts.is_some()
@@ -2392,6 +2721,9 @@ pub fn run() -> Result<(), error::DecapodError> {
     // Keep them out of the migration/session path so a missing or damaged
     // local store cannot prevent bootstrap diagnostics from running.
     let command = match command {
+        Command::Data(DataCli {
+            command: DataCommand::Schema(schema_cli),
+        }) => return run_schema_command(schema_cli),
         Command::Capabilities(cap_cli) => return run_capabilities_command(cap_cli),
         Command::Constitution(constitution_cli) => {
             return crate::core::constitution_cli::run_constitution_cli(constitution_cli);
@@ -2407,27 +2739,160 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
             return Ok(());
         }
-        command @ Command::System(SystemCli {
+        Command::System(SystemCli {
             command: SystemCommand::Version,
-        }) => {
-            // Keep `system version` usable before project initialization, but
-            // let an initialized project observe the normal migration notice
-            // exactly once when its release counter changes.
-            let in_project = std::env::current_dir()
-                .ok()
-                .is_some_and(|dir| find_decapod_project_root(&dir).is_ok());
-            if in_project {
-                command
-            } else {
-                return show_version_info();
-            }
-        }
+        }) => return show_version_info(),
         Command::System(SystemCli {
             command: SystemCommand::Capabilities(cap_cli),
         }) => return run_capabilities_command(cap_cli),
+        Command::System(SystemCli {
+            command: SystemCommand::Migrations(mig_cli),
+        }) => return run_system_migrations_command(&std::env::current_dir()?, mig_cli),
+        Command::System(SystemCli {
+            command: SystemCommand::Doctor(doctor_cli),
+        }) => {
+            let current_dir = std::env::current_dir()?;
+            let workspace_root = find_decapod_project_root(&current_dir).unwrap_or(current_dir);
+            let governance_root = find_governance_root(&workspace_root);
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: governance_root.join(".decapod").join("data"),
+            };
+            return doctor::run_doctor_cli(&project_store, &workspace_root, doctor_cli);
+        }
+        Command::Integration(integration_cli) => {
+            return run_integration_command(integration_cli);
+        }
         command => command,
     };
 
+    // Inspection must bypass startup migrations, session/presence writes and
+    // worktree maintenance. Decode stdin RPC before that path as well, so HTTP
+    // RPC (which uses the stdin carrier) has the same read-only guarantee.
+    let command = match command {
+        Command::Todo(todo_cli) if todo_cli.legacy_reconciliation_request().is_some() => {
+            let request = todo_cli.legacy_reconciliation_request().ok_or_else(|| {
+                error::DecapodError::ValidationError("LEGACY_TODO_DISPATCH_INVALID".into())
+            })?;
+            if request.has_operation_id {
+                return Err(error::DecapodError::ValidationError(
+                    "--operation-id is only supported for cloud todo add".into(),
+                ));
+            }
+            let workspace_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let main_root = find_governance_root(&workspace_root);
+            let actor = current_agent_id();
+            if request.expected_review.is_some() {
+                let password = std::env::var("DECAPOD_SESSION_PASSWORD").map_err(|_| {
+                    error::DecapodError::ValidationError(
+                        "AGENT_IDENTITY_UNAUTHENTICATED: recovery apply requires an active local session password".into(),
+                    )
+                })?;
+                let _ = verify_strict_local_agent_session(
+                    &workspace_root,
+                    &main_root,
+                    &actor,
+                    &password,
+                )
+                .map_err(|(code, message)| {
+                    error::DecapodError::ValidationError(format!("{code}: {message}"))
+                })?;
+            }
+            let report = todo::reconcile_legacy_todo(
+                &main_root.join(".decapod/data"),
+                &actor,
+                request.expected_review,
+                request.prepare_only,
+            )?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+            );
+            if report["status"] != "ok" {
+                return Err(error::DecapodError::ValidationError(
+                    "LEGACY_TODO_RECONCILIATION_BLOCKED: inspect the versioned report; no successful recovery was established".into(),
+                ));
+            }
+            return Ok(());
+        }
+        Command::Data(DataCli {
+            command:
+                DataCommand::Database(DatabaseCli {
+                    command:
+                        DatabaseCommand::Inspect {
+                            scope,
+                            format,
+                            options,
+                        },
+                }),
+        }) => {
+            let root = find_decapod_project_root(&std::env::current_dir()?)?;
+            return run_storage_inventory(&root, &scope, &format, &options);
+        }
+        Command::Data(DataCli {
+            command: DataCommand::Database(DatabaseCli { command: db_cmd }),
+        }) if should_dispatch_governed_database_cli(&std::env::current_dir()?, &db_cmd) => {
+            return run_governed_database_cli(&std::env::current_dir()?, db_cmd);
+        }
+        command => command,
+    };
+    let predecoded_rpc_request = match &command {
+        Command::Rpc(cli) if !cli.http_server => Some(parse_rpc_request(cli)?),
+        _ => None,
+    };
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && !core::interop::RPC_OPS.contains(&request.op.as_str())
+    {
+        // A handler cannot become a callable, undiscoverable operation. This
+        // registration check grants no session, custody or policy authority.
+        let response = core::rpc::error_response(
+            request.id.clone(),
+            request.op.clone(),
+            request.params.clone(),
+            "unknown_op".to_string(),
+            format!("Unknown operation: {}", request.op),
+            None,
+            vec![],
+        );
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return rpc_validation_exit_status(&request.op, response.success);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && request.op == "schema.get"
+    {
+        // Pure embedded reference: no config, session, migrations, mandate
+        // resolution or workspace preparation can be needed to repair config.
+        let root = std::env::current_dir()?;
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: root.join(".decapod/data"),
+        };
+        let response = rpc_handlers::handle_schema_get(&RpcCtx {
+            project_root: &root,
+            store: &store,
+            request,
+            mandates: vec![],
+        })?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return Ok(());
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && request.op == "data.database.inspect"
+    {
+        let root = find_decapod_project_root(&std::env::current_dir()?)?;
+        return run_storage_inventory_rpc(&root, request);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && is_governed_db_maintenance_rpc_op(&request.op)
+    {
+        return run_governed_database_rpc(&std::env::current_dir()?, request);
+    }
     let cli = Cli { command };
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let current_dir = std::env::current_dir()?;
@@ -2437,6 +2902,10 @@ pub fn run() -> Result<(), error::DecapodError> {
     match cli.command {
         Command::Init(init_group) => {
             let base_init_invocation = init_group.command.is_none();
+            let terminal_setup = onboarding::interactive(base_init_invocation, init_group.proof);
+            if terminal_setup {
+                onboarding::welcome(init_group.refresh);
+            }
             let init_with = match init_group.command {
                 Some(InitCommand::Clean { dir }) => {
                     clean_project(dir)?;
@@ -2453,13 +2922,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                         resolve_or_create_project_dir(
                             &current_dir,
                             project_dir,
-                            init_group.dry_run,
+                            init_group.dry_run || terminal_setup,
                         )?
                     } else if let Some(dir) = init_group.dir.as_ref() {
                         resolve_existing_init_dir(dir)?
                     } else if init_group.proof {
                         resolve_existing_init_dir(&current_dir)?
-                    } else if io::stdin().is_terminal() {
+                    } else if terminal_setup {
                         prompt_init_target_dir(&current_dir)?
                     } else {
                         resolve_existing_init_dir(&current_dir)?
@@ -2472,14 +2941,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                         ));
                     }
                     {
-                        let diagram_style = if maybe_cfg.is_none()
-                            && io::stdin().is_terminal()
-                            && !init_group.proof
-                        {
-                            prompt_diagram_style(init_group.diagram_style)?
-                        } else {
-                            init_group.diagram_style
-                        };
+                        let diagram_style = init_group.diagram_style;
                         InitWithCli {
                             dir: Some(target),
                             project_dir: None,
@@ -2518,10 +2980,15 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_rust_workers: None,
                             existing_ci_attested: None,
                             existing_allow_basic_shared_claims: false,
-                            vega_decisions: init_group.vega_decisions,
+                            existing_rbac: crate::cli::GovernanceRbac::default(),
+                            existing_db_maintenance:
+                                crate::core::db_maintenance::DbMaintenanceConfig::default(),
+                            existing_laya: crate::core::laya_readiness::Configuration::default(),
+                            laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
                                 .validation_buildkite_preflights,
                             backend: init_group.backend,
+                            restart_cloud_signin: init_group.restart_cloud_signin,
                             git: init_group.git,
                             no_git: init_group.no_git,
                         }
@@ -2537,7 +3004,11 @@ pub fn run() -> Result<(), error::DecapodError> {
             let init_target = if let Some(project_dir) = init_with.project_dir.as_ref() {
                 resolve_or_create_project_dir(&current_dir, project_dir, init_with.dry_run)?
             } else if let Some(dir) = init_with.dir.as_ref() {
-                resolve_existing_init_dir(dir)?
+                if terminal_setup && !dir.exists() {
+                    resolve_or_create_project_dir(&current_dir, dir, true)?
+                } else {
+                    resolve_existing_init_dir(dir)?
+                }
             } else {
                 resolve_existing_init_dir(&current_dir)?
             };
@@ -2569,70 +3040,55 @@ pub fn run() -> Result<(), error::DecapodError> {
                 apply_architecture_language_recommendation(&mut repo_ctx);
             }
 
-            let is_git = is_git_repository(&init_target);
             let is_refresh = init_target.join(".decapod").exists();
-            let is_interactive = base_init_invocation
-                && io::stdin().is_terminal()
-                && !is_refresh
-                && !init_with.proof;
-
-            if !is_git {
-                let opt_in = if init_with.no_git {
-                    false
-                } else if init_with.git {
-                    true
-                } else if is_interactive {
-                    print_init_block(
-                        "Git Repository",
-                        "Decapod worktree workflows require a Git repository to isolate agent changes.",
-                    );
-                    prompt_yes_no("Initialize Git repository for this project?", true)?
-                } else {
-                    // Non-interactive init follows the same safe default as the prompt:
-                    // initialize Git unless the caller explicitly opted out with --no-git.
-                    true
-                };
-
-                if opt_in {
-                    if !init_with.dry_run {
-                        run_git_init(&init_target)?;
-                        verify_git_status(&init_target)?;
-                    }
-                } else {
-                    use crate::core::ansi::AnsiExt;
-                    println!(
-                        "{} Git repository was not initialized. Decapod workspace/worktree workflows will not function until a Git repository is created.",
-                        "warning:".bright_yellow()
-                    );
-                }
+            let is_interactive = terminal_setup && (init_with.refresh || !is_refresh);
+            // Preserve unattended Git bootstrap. Interactive setup waits for
+            // review before creating the directory, Git, config or sign-in state.
+            if !is_interactive {
+                prepare_init_directory_and_git(&init_target, &init_with)?;
             }
-
-            // Existing projects normally refresh non-interactively. Explicit
-            // `init --refresh` reopens the questionnaire with current values
-            // as defaults while keeping the non-destructive refresh path.
-            if base_init_invocation
-                && io::stdin().is_terminal()
-                && (init_with.refresh || !is_refresh)
-                && !init_with.proof
-            {
+            if is_interactive {
                 enrich_repo_context_interactive(&mut repo_ctx, &mut init_with)?;
             }
-            let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx)?;
+            if is_interactive && !review_setup(&mut repo_ctx, &mut init_with)? {
+                return Ok(());
+            }
+            if is_interactive {
+                prepare_init_directory_and_git(&init_target, &init_with)?;
+            }
+            let gitignore_existed_before_init = init_target.join(".gitignore").exists();
+            let mut pre_existing_for_ownership = Vec::new();
+            if init_target
+                .join(".github/workflows/decapod-validate.yml")
+                .exists()
+            {
+                pre_existing_for_ownership
+                    .push(".github/workflows/decapod-validate.yml".to_string());
+            }
+            if init_target.join(".decapod/OVERRIDE.md").exists() {
+                pre_existing_for_ownership.push(".decapod/OVERRIDE.md".to_string());
+            }
+            if existing_config.is_some() {
+                pre_existing_for_ownership.push(".decapod/config.toml".to_string());
+            }
+            let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx, is_interactive)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
-                config.vega = existing.vega.clone();
+                config.laya = existing.laya.clone();
             }
-            if let Some(enabled) = init_with.vega_decisions {
-                config.vega.mode = if enabled {
-                    core::vega_readiness::Mode::Required
+            if let Some(enabled) = init_with.laya_decisions {
+                config.laya.mode = if enabled {
+                    core::laya_readiness::Mode::Required
                 } else {
-                    core::vega_readiness::Mode::Disabled
+                    core::laya_readiness::Mode::Disabled
                 };
                 if enabled
-                    && config.vega.model_manifest_digest.is_empty()
-                    && config.vega.installation.is_none()
+                    && config.laya.model_manifest_digest.is_empty()
+                    && config.laya.installation.is_none()
                 {
-                    config.vega.model_manifest_digest = core::vega_setup::baseline_digest()?;
+                    config.laya.model_manifest_digest =
+                        core::laya_assets::manifest_digest(&core::laya_assets::baseline())
+                            .map_err(io::Error::other)?;
                 }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
@@ -2646,19 +3102,91 @@ pub fn run() -> Result<(), error::DecapodError> {
                     &config.repo.capabilities,
                 )?;
             }
-            record_cloud_init_registration(&target_dir, &config, init_with.dry_run)?;
-            seed_init_generated_state(&target_dir, init_with.dry_run)?;
+            seed_init_generated_state(&target_dir, init_with.dry_run, is_interactive)?;
+            if !init_with.dry_run {
+                let created_gitignore =
+                    !gitignore_existed_before_init && target_dir.join(".gitignore").exists();
+                let generated_entrypoints = if init_with.all {
+                    vec![
+                        "AGENTS.md".to_string(),
+                        "CLAUDE.md".to_string(),
+                        "GEMINI.md".to_string(),
+                        "CODEX.md".to_string(),
+                    ]
+                } else {
+                    let mut eps = Vec::new();
+                    if init_with.claude {
+                        eps.push("CLAUDE.md".to_string());
+                    }
+                    if init_with.gemini {
+                        eps.push("GEMINI.md".to_string());
+                    }
+                    if init_with.cdx_ep {
+                        eps.push("CODEX.md".to_string());
+                    }
+                    if init_with.agents {
+                        eps.push("AGENTS.md".to_string());
+                    }
+                    if eps.is_empty() {
+                        vec![
+                            "AGENTS.md".to_string(),
+                            "CLAUDE.md".to_string(),
+                            "GEMINI.md".to_string(),
+                            "CODEX.md".to_string(),
+                        ]
+                    } else {
+                        if !eps.iter().any(|e| e == "AGENTS.md") {
+                            eps.push("AGENTS.md".to_string());
+                        }
+                        eps
+                    }
+                };
+                core::integration_removal::record_init_ownership(
+                    &target_dir,
+                    &generated_entrypoints,
+                    init_with.ci,
+                    created_gitignore,
+                    &pre_existing_for_ownership,
+                )?;
+            }
             let reconciliation = core::init_reconciliation::inspect(
                 &target_dir,
                 &config.proof,
                 config.repo.product_name.as_deref(),
             );
-            print_init_reconciliation(&reconciliation);
-            if !init_with.dry_run
-                && config.repo.effective_backend().is_cloud()
-                && let Err(error) = bootstrap_cloud_session(&target_dir)
-            {
-                println!("Cloud setup is pending: {error}");
+            if !is_interactive {
+                print_init_reconciliation(&reconciliation);
+                if !init_with.dry_run {
+                    println!(
+                        "Continue with your coding agent. Describe what you want to build; your agent handles Decapod from here."
+                    );
+                    if config.repo.effective_backend().is_cloud() {
+                        println!("Your agent will guide you through browser sign-in when needed.");
+                    }
+                }
+            }
+            if !init_with.dry_run && config.repo.effective_backend().is_cloud() {
+                if init_with.proof {
+                    // Explicit fixture/scaffolding mode prepares configuration
+                    // only. It never creates a credential or claims readiness.
+                    println!(
+                        "Cloud configuration prepared for proof; sign-in and server readiness were not evaluated."
+                    );
+                } else if let Err(error) =
+                    bootstrap_cloud_session(&target_dir, init_with.restart_cloud_signin)
+                {
+                    if let error::DecapodError::CloudAuth(diagnostic) = &error {
+                        print_cloud_auth_json_if_needed(diagnostic, None);
+                    }
+                    return Err(error);
+                }
+            }
+            if is_interactive {
+                onboarding::ready(
+                    &target_dir,
+                    init_with.dry_run,
+                    reconciliation.repair_tasks.len(),
+                );
             }
         }
         Command::Govern(GovernCli {
@@ -2699,6 +3227,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                 GovernCommand::Artifacts(ArtifactsCli {
                     command:
                         ArtifactsCommand::VerifyCheckpoints {
+                            format,
                             base_branch,
                             head_ref,
                             target_base,
@@ -2706,17 +3235,26 @@ pub fn run() -> Result<(), error::DecapodError> {
                         },
                 }),
         }) => {
-            verify_checkpoints_with_target(
+            run_checkpoint_inspection(
                 &decapod_root_option?,
                 &base_branch,
                 &head_ref,
                 target_base.as_deref(),
                 publication_material,
+                &format,
             )?;
-            println!(
-                "{}",
-                serde_json::json!({"status": "ok", "base_ref": base_branch, "head_ref": head_ref})
-            );
+        }
+        Command::Qa(QaCli {
+            command: QaCommand::Verify(verify_cli),
+        }) if verify::is_commit_lookup(&verify_cli) => {
+            // Historical evidence inspection must not initialize a datastore,
+            // acquire a session, refresh presence, or repair the current worktree.
+            let workspace_root = decapod_root_option?;
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: find_governance_root(&workspace_root).join(".decapod/data"),
+            };
+            verify::run_verify_cli(&project_store, &workspace_root, verify_cli)?;
         }
         Command::Session(session_cli) => {
             run_session_command(session_cli)?;
@@ -2729,30 +3267,34 @@ pub fn run() -> Result<(), error::DecapodError> {
             run_release_command(release_cli, &project_root)?;
         }
         Command::Setup(setup_cli) => match setup_cli.command {
-            SetupCommand::Vega {
+            SetupCommand::Laya {
                 cache_directory,
                 runtime,
                 cpu_runtime,
                 check_updates,
-                refresh,
                 offline,
-                rollback,
             } => {
-                let report = core::vega_setup::run(&core::vega_setup::SetupOptions {
-                    cache_directory,
-                    runtime,
-                    cpu_runtime,
-                    check_updates,
-                    refresh,
-                    offline,
-                    rollback,
-                })?;
-                let report_json = serde_json::to_string_pretty(&report).map_err(|e| {
+                let report = if check_updates {
+                    serde_json::to_value(core::laya_setup::check_updates(
+                        cache_directory.as_deref(),
+                    )?)
+                } else {
+                    serde_json::to_value(core::laya_setup::run(&core::laya_setup::SetupOptions {
+                        cache_directory,
+                        runtime,
+                        cpu_runtime,
+                        offline,
+                    })?)
+                }
+                .map_err(|e| {
                     error::DecapodError::ValidationError(format!(
-                        "vega setup report serialization failed: {e}"
+                        "Laya setup report serialization failed: {e}"
                     ))
                 })?;
-                println!("{report_json}");
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                );
             }
             SetupCommand::Hook {
                 commit_msg,
@@ -2772,14 +3314,29 @@ pub fn run() -> Result<(), error::DecapodError> {
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
-            let configured_backend = load_project_config_if_present(&workspace_root)?
-                .map(|config| config.repo.effective_backend())
-                .unwrap_or_default();
+            let accepted_cloud =
+                core::db_maintenance::resolve_accepted_project_config(&workspace_root)
+                    .ok()
+                    .is_some_and(|(_main, cfg, _)| cfg.repo.effective_backend().is_cloud());
+            let configured_backend = if accepted_cloud {
+                cli::BackendType::Cloud
+            } else {
+                load_project_config_if_present(&workspace_root)?
+                    .map(|config| config.repo.effective_backend())
+                    .unwrap_or_default()
+            };
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
-            if !configured_backend.is_cloud() && !cloud_todo_command {
+            if configured_backend.is_cloud()
+                && !cloud_todo_command
+                && !is_cloud_file_only_command(&cli.command)
+            {
+                return Err(core::cloud_backend::unavailable_error());
+            }
+            let local_storage_startup = !configured_backend.is_cloud() && !cloud_todo_command;
+            if local_storage_startup {
                 core::dactyl::ensure_local_sqlite_runtime()?;
             }
-            // Cloud todo operations use the Propodus machine session/JWT for
+            // Cloud todo operations use the Dactyl-managed session bearer for
             // authentication, then route physical storage through Dactyl and
             // deliberately bypass the local SQLite-backed agent session. This
             // keeps the cloud path free of local database locks while leaving
@@ -2787,9 +3344,14 @@ pub fn run() -> Result<(), error::DecapodError> {
             if requires_session_token(&cli.command) && !cloud_todo_command {
                 ensure_session_valid()?;
             }
-            if !cloud_todo_command {
+            if local_storage_startup {
                 core::fs_permissions::ensure_storage_dir(&store_root)
                     .map_err(error::DecapodError::IoError)?;
+            }
+            if local_storage_startup && !is_storage_independent_command(&cli.command) {
+                // A missing legacy path after interrupted archival is not a
+                // completed recovery. Fence normal work before broker routing.
+                todo::guard_pending_legacy_reconciliation(&store_root)?;
             }
 
             let project_store = Store {
@@ -2797,7 +3359,76 @@ pub fn run() -> Result<(), error::DecapodError> {
                 root: store_root.clone(),
             };
 
-            if !cloud_todo_command && should_route_via_group_broker(&cli.command, &argv) {
+            // Reject a full completion claim in the originating process before
+            // an older broker can discard or inherit diagnostic environment.
+            if local_storage_startup
+                && let Command::Todo(todo_cli) = &cli.command
+                && todo::is_validated_completion(todo_cli)
+            {
+                core::validation_runtime::require_full_readiness_environment()?;
+            }
+
+            if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
+                struct PreparedDoneGuard {
+                    store_root: PathBuf,
+                    request_id: String,
+                    previous_env: Option<std::ffi::OsString>,
+                    active: bool,
+                }
+                impl Drop for PreparedDoneGuard {
+                    fn drop(&mut self) {
+                        if self.active {
+                            plugins::verify::remove_prepared_done_handoff(
+                                &self.store_root,
+                                &self.request_id,
+                            );
+                            unsafe {
+                                if let Some(prev) = &self.previous_env {
+                                    std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", prev);
+                                } else {
+                                    std::env::remove_var("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                                }
+                            }
+                        }
+                    }
+                }
+                let mut _prepared_done_guard = PreparedDoneGuard {
+                    store_root: store_root.clone(),
+                    request_id: String::new(),
+                    previous_env: None,
+                    active: false,
+                };
+                if !core::group_broker::is_internal_invocation()
+                    && !core::group_broker::is_disabled()
+                    && let Command::Todo(todo_cli) = &cli.command
+                    && todo::is_validated_completion(todo_cli)
+                {
+                    let previous_env = std::env::var_os("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                    let request_id = previous_env
+                        .as_ref()
+                        .and_then(|v| v.to_str())
+                        .filter(|v| !v.is_empty())
+                        .map(str::to_owned)
+                        .unwrap_or_else(core::ulid::new_ulid);
+                    if !core::group_broker::has_dedupe_record(&store_root, &request_id)
+                        && todo::prepare_validated_done_handoff(
+                            &project_store,
+                            todo_cli,
+                            &request_id,
+                        )?
+                        .is_some()
+                    {
+                        unsafe {
+                            std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", &request_id);
+                        }
+                        _prepared_done_guard = PreparedDoneGuard {
+                            store_root: store_root.clone(),
+                            request_id,
+                            previous_env,
+                            active: true,
+                        };
+                    }
+                }
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
                         &project_store,
@@ -2833,7 +3464,7 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Check for version/schema changes and run protected migrations if needed.
             // Backups are auto-created in .decapod/data only when schema upgrades are pending.
-            if !cloud_todo_command
+            if local_storage_startup
                 && !is_validate_cmd
                 && !is_storage_independent_command(&cli.command)
                 && !core::group_broker::has_initialized_owner(&store_root)
@@ -2850,14 +3481,14 @@ pub fn run() -> Result<(), error::DecapodError> {
 
             // Best-effort hygiene: routinely scrub stale git worktree metadata/config.
             // This must not block primary command execution.
-            if !cloud_todo_command
+            if local_storage_startup
                 && let Err(e) = workspace::prune_stale_worktree_config(&workspace_root)
                 && !is_not_git_repository_error(&e)
             {
                 eprintln!("warn: worktree maintenance skipped: {e}");
             }
 
-            if !cloud_todo_command
+            if local_storage_startup
                 && !is_storage_independent_command(&cli.command)
                 && should_auto_clock_in(&cli.command)
                 && let Err(e) =
@@ -2897,7 +3528,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
                     }
                 }
-                Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
+                Command::Todo(todo_cli) => {
+                    todo::run_todo_cli_in_workspace(&project_store, &workspace_root, todo_cli)?
+                }
                 Command::Obligation(obligation_cli) => {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
                 }
@@ -2920,7 +3553,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     run_workspace_command(workspace_cli, &workspace_root)?;
                 }
                 Command::Rpc(rpc_cli) => {
-                    run_rpc_command(rpc_cli, &workspace_root)?;
+                    run_rpc_command(rpc_cli, &workspace_root, predecoded_rpc_request)?;
                 }
                 Command::Capabilities(cap_cli) => {
                     run_capabilities_command(cap_cli)?;
@@ -3054,13 +3687,31 @@ fn should_auto_clock_in(command: &Command) -> bool {
 
 fn is_storage_independent_command(command: &Command) -> bool {
     match command {
-        Command::Rpc(rpc_cli) => rpc_cli.op.as_deref() == Some("specs.refresh"),
+        Command::Rpc(rpc_cli) => matches!(
+            rpc_cli.op.as_deref(),
+            Some("specs.refresh" | "intent.reconcile")
+        ),
         // Maintenance commands operate on the canonical store through the
         // Dactyl contract and must not run startup migrations or presence
         // clock-in before they acquire their own bounded coordination lock.
         Command::Data(DataCli {
             command: DataCommand::Database(_),
         }) => true,
+        _ => false,
+    }
+}
+
+fn is_cloud_file_only_command(command: &Command) -> bool {
+    match command {
+        Command::Activate
+        | Command::Capabilities(_)
+        | Command::Constitution(_)
+        | Command::Docs(_) => true,
+        Command::Workspace(ws_cli) => matches!(ws_cli.command, WorkspaceCommand::Status),
+        Command::Rpc(rpc_cli) => matches!(
+            rpc_cli.op.as_deref(),
+            Some("specs.refresh" | "intent.reconcile")
+        ),
         _ => false,
     }
 }
@@ -3118,6 +3769,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Release(_)
         | Command::Todo(_)
         | Command::System(_)
+        | Command::Integration(_)
         | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
@@ -3260,6 +3912,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "context.bindings"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -3331,6 +3984,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "context.bindings"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "store.upsert"
             | "store.query"
             | "validate.run"
@@ -3369,7 +4023,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Release(_)
         | Command::Trace(_)
-        | Command::System(_) => false,
+        | Command::System(_)
+        | Command::Integration(_) => false,
         Command::Context(ContextGroupCli {
             command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
         }) => false,
@@ -3386,6 +4041,26 @@ fn requires_session_token(command: &Command) -> bool {
             }
         }
         _ => true,
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn advertised_rpc_sessions_match_the_actual_entry_guards() {
+    for capability in core::interop::builtin_manifest().capabilities {
+        if capability.surface != "rpc" {
+            continue;
+        }
+        let mapping = capability.implementation.expect("RPC implementation");
+        // Inspection returns before generic startup and has its own bounded,
+        // read-only route. Maintenance operations enforce their own session.
+        let required =
+            mapping.op != "data.database.inspect" && !rpc_op_bypasses_session(&mapping.op);
+        assert_eq!(
+            mapping.session_required, required,
+            "session descriptor differs from entry enforcement for {}",
+            mapping.op
+        );
     }
 }
 
@@ -3455,6 +4130,10 @@ fn session_token_matches_backend(token: &str, backend: BackendType) -> bool {
 }
 
 fn current_agent_id() -> String {
+    #[cfg(test)]
+    if let Some(override_id) = crate::core::todo::test_current_agent_id_override() {
+        return override_id;
+    }
     std::env::var("DECAPOD_AGENT_ID")
         .ok()
         .map(|v| v.trim().to_string())
@@ -5060,6 +5739,19 @@ fn run_release_inventory(project_root: &Path) -> Result<(), error::DecapodError>
 }
 
 fn run_release_lineage_sync(project_root: &Path) -> Result<(), error::DecapodError> {
+    let main_repo = core::workspace::get_main_repo_root(project_root)
+        .unwrap_or_else(|_| project_root.to_path_buf());
+    let shared_store = if main_repo.join(".decapod/data").exists() {
+        main_repo.join(".decapod/data")
+    } else {
+        project_root.join(".decapod/data")
+    };
+    core::todo::enforce_shared_resource_available(
+        &shared_store,
+        &current_agent_id(),
+        &["resource:release"],
+        "release.lineage_sync",
+    )?;
     let artifact_manifest =
         project_root.join(".decapod/managed/artifacts/provenance/artifact_manifest.json");
     let proof_manifest =
@@ -5722,7 +6414,6 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
         ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/policy/context_capsule_policy.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())
 }
@@ -6166,6 +6857,71 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if scope.requires_publication_proof() && !validate_cli.bypass_validation {
+        core::validation_runtime::require_full_readiness_environment()?;
+    }
+    if validate_cli.bypass_validation {
+        // A scoped, audited local exception. The publisher, worker, replay
+        // verifier and CI still require genuine proof; no passing validation
+        // receipt or publication-ready claim is minted by this path.
+        if scope != ValidationScope::PublicationReadiness
+            || validate_cli.snapshot_prepare
+            || validate_cli.snapshot_resume.is_some()
+            || validate_cli.snapshot_adopt.is_some()
+            || validate_cli.provider_artifacts.is_some()
+        {
+            return Err(error::DecapodError::ValidationError(
+                "RBAC_VALIDATION_BYPASS_SCOPE: unsupported validation scope or snapshot handoff"
+                    .into(),
+            ));
+        }
+        let reason = validate_cli.bypass_reason.as_deref().unwrap_or_default();
+        if reason.trim().is_empty() || reason.len() > 2048 {
+            return Err(error::DecapodError::ValidationError(
+                "RBAC_VALIDATION_BYPASS_REASON: a bounded reviewed reason is required".into(),
+            ));
+        }
+        let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_default();
+        let config_digest = crate::plugins::policy::authorize_rbac_exception(
+            &project_store.root,
+            &actor,
+            "validate.bypass",
+        )?;
+        crate::core::events::append(
+            &project_store.root,
+            crate::core::events::VERIFICATION,
+            &serde_json::json!({
+                "ts": crate::core::time::now_epoch_z(),
+                "event_id": crate::core::ulid::new_ulid(),
+                "event_type": "validation.bypassed",
+                "status": "bypassed",
+                "actor": actor,
+                "payload": {
+                    "scope": scope.label(),
+                    "reason": reason,
+                    "config_digest": config_digest,
+                    "identity_assurance": "cooperative_not_authenticated",
+                    "proof_ready": false,
+                    "publication_ready": false
+                }
+            }),
+        )?;
+        if validate_cli.format == "json" {
+            println!(
+                "{}",
+                serde_json::json!({
+                    "status": "bypassed", "scope": scope.label(),
+                    "proof_ready": false, "publication_ready": false,
+                    "actor": actor, "reason": reason, "config_digest": config_digest
+                })
+            );
+        } else {
+            println!(
+                "Validation bypass recorded for actor {actor}: {reason}. No proof or publication readiness granted."
+            );
+        }
+        return Ok(());
+    }
     let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
         .validation_buildkite_preflights;
@@ -6195,17 +6951,21 @@ fn run_validate_command_remote(
     invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &invocation)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, &invocation);
+    let tmp_cleanup_guidance = readiness
+        .ready
+        .then(|| core::validate::todo_tmp_cleanup_instruction(workspace_root));
     if cli.format == "json" {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": if readiness.ready { "pass" } else { "fail" },
                 "scope": scope.label(),
-                "publication_ready": readiness.ready,
+                "publication_ready": readiness.publication_ready(),
                 "local_project_checks": "not_run_provider_owned",
                 "report": serde_json::Value::Null,
                 "self_heal": [],
                 "readiness": readiness,
+                "tmp_cleanup_guidance": tmp_cleanup_guidance,
             }))
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
         );
@@ -6215,6 +6975,9 @@ fn run_validate_command_remote(
         if readiness.ready {
             println!("Complete current-candidate Buildkite proof passed.");
             println!("{}", readiness.agent_guidance.instruction);
+            if let Some(cleanup) = &tmp_cleanup_guidance {
+                println!("{cleanup}");
+            }
         } else {
             for blocker in &readiness.blockers {
                 eprintln!("{}: {}", blocker.code, blocker.detail);
@@ -6250,7 +7013,11 @@ fn run_validate_command_local(
     readiness_invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &readiness_invocation)?;
 
-    if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+    let non_git_diagnostics =
+        !scope.requires_publication_proof() && !is_git_repository(workspace_root);
+    if non_git_diagnostics || std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+        // Non-Git projects can inspect bounded prerequisites. This does not
+        // admit authoring or establish an exact-candidate publication result.
         // Skip workspace check if gates are explicitly skipped
     } else {
         // FIRST: Check workspace enforcement (non-negotiable)
@@ -6411,15 +7178,19 @@ fn run_validate_command_local(
         .as_ref()
         .map(|result| &result.agent_guidance)
         .unwrap_or(&fallback_guidance);
+    let tmp_cleanup_guidance = (scope.requires_publication_proof()
+        && readiness.as_ref().is_some_and(|r| r.ready))
+    .then(|| core::validate::todo_tmp_cleanup_instruction(workspace_root));
     if validate_cli.format == "json" {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": report.status,
                 "scope": scope.label(),
-                "publication_ready": readiness.as_ref().is_some_and(|r| r.ready),
+                "publication_ready": readiness.as_ref().is_some_and(|r| r.publication_ready()),
                 "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
+                "tmp_cleanup_guidance": tmp_cleanup_guidance,
                 "self_heal": heal_actions,
                 "report": report,
             }))
@@ -6437,6 +7208,9 @@ fn run_validate_command_local(
         if scope.requires_publication_proof() {
             println!("{}", guidance.execution);
             println!("{}", guidance.instruction);
+            if let Some(cleanup) = &tmp_cleanup_guidance {
+                println!("{cleanup}");
+            }
             if !readiness.as_ref().is_some_and(|r| r.ready) {
                 println!("{}", guidance.human_input_when);
             }
@@ -6515,7 +7289,7 @@ fn readiness_environment(
 ) -> Result<
     (
         core::validation_runtime::Options,
-        core::repo_identity::RepositoryIdentity,
+        core::workspace::ReadinessRepository,
     ),
     error::DecapodError,
 > {
@@ -6658,6 +7432,7 @@ fn run_current_workbranch_readiness_with(
     let mut report_scope = runtime::READINESS_SCOPE;
     let result = (|| -> Result<runtime::ValidationReport, error::DecapodError> {
         invocation.validate()?;
+        runtime::require_full_readiness_environment()?;
         let config = crate::cli::DecapodProjectConfig::load(workspace_root)?;
         if config
             .proof
@@ -6709,6 +7484,17 @@ fn run_current_workbranch_readiness_with(
         let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
         let cancellation = signal_guard.cancellation().clone();
         let store_root = find_governance_root(workspace_root).join(".decapod/data");
+        let history_store = Store {
+            kind: StoreKind::Repo,
+            root: store_root.clone(),
+        };
+        // Guard against mid-validation lease expiry, then capture task custody
+        // before the potentially long proof run.
+        let history_binding = core::validation_history::capture_task_binding_with_budget(
+            &history_store,
+            workspace_root,
+            options.timeout,
+        )?;
         let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
             use core::external_action::{self, ExternalCapability};
             let result = match action {
@@ -6781,9 +7567,10 @@ fn run_current_workbranch_readiness_with(
                 )?;
                 signal_guard.restore()?;
                 return Ok(runtime::ValidationReport {
+                    completed_evidence: None,
                     ready: false,
                     proof_ready: false,
-                    vega_readiness: None,
+
                     laya_readiness: None,
                     scope: runtime::READINESS_SCOPE,
                     agent_guidance: runtime::ValidationGuidance::for_outcome(false),
@@ -6835,8 +7622,14 @@ fn run_current_workbranch_readiness_with(
             if let Some(path) = &invocation.provider_artifacts {
                 host = host.with_artifact_directory(path.clone())?;
             }
-            let report = runtime::validate(&options, &mut host, &cancellation);
+            let mut report = runtime::validate(&options, &mut host, &cancellation);
             signal_guard.restore()?;
+            archive_workbranch_readiness(
+                &history_store,
+                workspace_root,
+                history_binding.as_ref(),
+                &mut report,
+            );
             return Ok(report);
         }
         if config
@@ -6845,14 +7638,29 @@ fn run_current_workbranch_readiness_with(
             .as_ref()
             .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
         {
-            let mut host = runtime::repository_host::RepositoryHost::new(
-                options.clone(),
-                repository.remote_url,
-                prerequisite,
-                authorize,
-            )?;
-            let report = runtime::validate(&options, &mut host, &cancellation);
+            let mut host = if let Some(root) = repository.local_target_root {
+                runtime::repository_host::RepositoryHost::canonical_local(
+                    options.clone(),
+                    root,
+                    prerequisite,
+                    authorize,
+                )?
+            } else {
+                runtime::repository_host::RepositoryHost::new(
+                    options.clone(),
+                    repository.remote_url,
+                    prerequisite,
+                    authorize,
+                )?
+            };
+            let mut report = runtime::validate(&options, &mut host, &cancellation);
             signal_guard.restore()?;
+            archive_workbranch_readiness(
+                &history_store,
+                workspace_root,
+                history_binding.as_ref(),
+                &mut report,
+            );
             return Ok(report);
         }
         let manifest: toml::Value = toml::from_str(&fs::read_to_string(
@@ -6883,14 +7691,21 @@ fn run_current_workbranch_readiness_with(
         remaining_options.timeout = remaining_options.timeout.checked_sub(native_started.elapsed())
             .filter(|remaining| !remaining.is_zero())
             .ok_or_else(|| error::DecapodError::ValidationError("READINESS_DEADLINE_EXCEEDED: native tool discovery exhausted the original budget".into()))?;
-        let report = runtime::validate(&remaining_options, &mut host, &cancellation);
+        let mut report = runtime::validate(&remaining_options, &mut host, &cancellation);
         signal_guard.restore()?;
+        archive_workbranch_readiness(
+            &history_store,
+            workspace_root,
+            history_binding.as_ref(),
+            &mut report,
+        );
         Ok(report)
     })();
     result.unwrap_or_else(|error| runtime::ValidationReport {
+        completed_evidence: None,
         ready: false,
         proof_ready: false,
-        vega_readiness: None,
+
         laya_readiness: None,
         scope: report_scope,
         agent_guidance: runtime::ValidationGuidance::for_outcome(false),
@@ -6903,10 +7718,35 @@ fn run_current_workbranch_readiness_with(
     })
 }
 
+fn archive_workbranch_readiness(
+    store: &Store,
+    workspace_root: &Path,
+    binding: Option<&core::validation_history::ValidationBinding>,
+    report: &mut core::validation_runtime::ValidationReport,
+) {
+    // Cloud-backed task history has its own authority boundary. Preserve its
+    // existing validation path without claiming local historical completion.
+    let Some(binding) = binding else {
+        return;
+    };
+    if let Err(error) =
+        core::validation_history::finish_archive(store, workspace_root, binding, report)
+    {
+        // Preserve the execution evidence and its original failure details, but
+        // never return publication authority if durable recording failed.
+        report.ready = false;
+        report.agent_guidance = core::validation_runtime::ValidationGuidance::for_outcome(false);
+        report.blockers.push(core::validation_runtime::Blocker::new(
+            "VALIDATION_HISTORY_PERSIST_FAILED",
+            error.to_string(),
+        ));
+    }
+}
+
 pub(crate) fn enforce_workbranch_readiness_before_push(
     workspace_root: &Path,
     invocation: &ReadinessInvocation,
-) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
+) -> Result<core::validation_history::PublicationReadiness, error::DecapodError> {
     invocation.validate()?;
     if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
         return Err(error::DecapodError::ValidationError(
@@ -6936,18 +7776,31 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
             return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
         }
     }
+    if core::workspace::resolve_readiness_repository(workspace_root)?
+        .local_target_root
+        .is_some()
+    {
+        return Err(error::DecapodError::ValidationError(
+            "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: local merge readiness does not prove the forge target; establish independently verified target equivalence and publication authority".into(),
+        ));
+    }
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: find_governance_root(workspace_root).join(".decapod/data"),
+    };
+    let binding = core::validation_history::capture_task_binding(&store, workspace_root)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
-    if !readiness.ready {
+    if !readiness.publication_ready() {
         return Err(error::DecapodError::ValidationError(format!(
             "PUBLICATION_NOT_READY: {}",
             serde_json::to_string(&readiness)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
         )));
     }
-    Ok(readiness
-        .evidence_path
-        .map(|path| path.join("snapshot-handoff.json"))
-        .filter(|path| path.is_file()))
+    let readiness =
+        core::validation_history::PublicationReadiness::from_report(readiness, binding)?;
+    readiness.verify_current(workspace_root)?;
+    Ok(readiness)
 }
 
 /// Called only after source publication and PR identity have been verified.
@@ -7262,6 +8115,7 @@ fn run_validation_in_child_process(
         "DECAPOD_VALIDATE_PROGRESS_PATH",
         progress_path.to_string_lossy().as_ref(),
     );
+    core::bounded_process::configure_child_nofile_limit(&mut command);
     let child = command.spawn().map_err(error::DecapodError::IoError)?;
     match supervise_piped_child(child, timeout)? {
         PipedChildOutput::Exited { stdout, stderr } => {
@@ -7668,6 +8522,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "context.capsule.query"
             | "constitution.get"
             | "schema.get"
+            | "intent.reconcile"
             | "specs.refresh"
             | "interop.manifest"
             | "interop.negotiate"
@@ -7800,6 +8655,56 @@ fn verify_checkpoints_with_target(
         )),
         None => core::governance_document::verify_pr_checkpoints(root, base, head),
     }
+}
+
+/// JSON diagnosis and strict text validation use the same history assessment.
+/// Neither a successful observation nor a recovery suggestion is publication proof.
+fn run_checkpoint_inspection(
+    root: &Path,
+    base: &str,
+    head: &str,
+    target: Option<&str>,
+    publication_material: bool,
+    format: &str,
+) -> Result<(), error::DecapodError> {
+    if format != "json" {
+        verify_checkpoints_with_target(root, base, head, target, publication_material)?;
+        println!(
+            "{}",
+            serde_json::json!({"status": "ok", "base_ref": base, "head_ref": head})
+        );
+        return Ok(());
+    }
+    let named_target =
+        target.or_else(|| (!base.bytes().all(|b| b.is_ascii_hexdigit())).then_some(base));
+    let report =
+        core::governance_document::inspect_checkpoint_history(root, base, head, named_target);
+    let report = match report {
+        Ok(report) => report,
+        Err(error) => {
+            println!(
+                "{}",
+                serde_json::json!({"schema":"decapod.checkpoint-history.v1", "scope":"checkpoint_history", "history_proven":false,"publication_ready":false,"status":"invalid_or_unavailable","error":error.to_string()})
+            );
+            return Err(error);
+        }
+    };
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&report)
+            .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+    );
+    report.require_proven()?;
+    if publication_material {
+        verify_checkpoints_with_target(
+            root,
+            &report.base_commit,
+            &report.head_commit,
+            target,
+            true,
+        )?;
+    }
+    Ok(())
 }
 
 fn run_govern_command(
@@ -7979,6 +8884,27 @@ fn run_govern_command(
                         .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
                 );
             }
+            ArtifactsCommand::RecordHistoryRecovery { source_ref, reason } => {
+                let document = core::governance_document::record_history_recovery(
+                    workspace_root,
+                    &source_ref,
+                    &reason,
+                    &current_agent_id(),
+                )?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+                );
+            }
+            ArtifactsCommand::ReconcileMerge => {
+                let document = core::governance_document::reconcile_merge(workspace_root)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+                );
+            }
             ArtifactsCommand::Status => {
                 let document = core::governance_document::load(workspace_root)?;
                 println!(
@@ -7988,22 +8914,20 @@ fn run_govern_command(
                 );
             }
             ArtifactsCommand::VerifyCheckpoints {
+                format,
                 base_branch,
                 head_ref,
                 target_base,
                 publication_material,
             } => {
-                verify_checkpoints_with_target(
+                run_checkpoint_inspection(
                     workspace_root,
                     &base_branch,
                     &head_ref,
                     target_base.as_deref(),
                     publication_material,
+                    &format,
                 )?;
-                println!(
-                    "{}",
-                    serde_json::json!({"status": "ok", "base_ref": base_branch, "head_ref": head_ref})
-                );
             }
             ArtifactsCommand::Inventory {
                 base_branch,
@@ -8159,6 +9083,7 @@ fn run_workunit_command(
         WorkunitCommand::Status { task_id } => {
             let manifest = core::workunit::load_workunit(project_root, &task_id)?;
             let path = core::workunit::workunit_path(project_root, &task_id)?;
+            let journal = core::workunit::workunit_journal_status(project_root, &task_id)?;
             let hash = manifest.canonical_hash_hex().map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "failed to compute workunit hash: {e}"
@@ -8170,6 +9095,9 @@ fn run_workunit_command(
                     "status": "ok",
                     "task_id": manifest.task_id,
                     "workunit_status": manifest.status,
+                    "proof_status": journal.proof_status,
+                    "split_store": journal.split_store,
+                    "atomic_domain_supported": journal.atomic_domain_supported,
                     "manifest_hash": hash,
                     "path": path,
                 }))
@@ -8206,6 +9134,14 @@ fn run_workunit_command(
         WorkunitCommand::Transition { task_id, to } => {
             let manifest = core::workunit::transition_status(project_root, &task_id, to.into())?;
             println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::Converge { task_id, dry_run } => {
+            let report = core::workunit::converge_split_workunit_store(
+                project_root,
+                task_id.as_deref(),
+                dry_run,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
 
@@ -8361,6 +9297,18 @@ fn run_trajectory_command(
                 }))
                 .unwrap()
             );
+        }
+        TrajectoryCommand::ReconcileScope { task_id, run_id } => {
+            let store_root = core::store::find_governance_root(workspace_root)
+                .join(".decapod")
+                .join("data");
+            let report = core::governance_document::reconcile_scope_projections(
+                workspace_root,
+                &store_root,
+                task_id.as_deref(),
+                run_id.as_deref(),
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
     Ok(())
@@ -8825,37 +9773,7 @@ fn run_data_command(
                 }
             }
         }
-        DataCommand::Schema(schema_cli) => {
-            let schemas = schema_catalog();
-
-            let output = if let Some(sub) = schema_cli.subsystem {
-                schemas
-                    .get(sub.as_str())
-                    .cloned()
-                    .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
-            } else {
-                let mut envelope = deterministic_schema_envelope();
-                if !schema_cli.deterministic {
-                    envelope.as_object_mut().unwrap().insert(
-                        "generated_at".to_string(),
-                        serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
-                    );
-                }
-                envelope
-            };
-
-            match schema_cli.format.as_str() {
-                "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
-                "md" => {
-                    println!("{}", schema_to_markdown(&output));
-                }
-                other => {
-                    return Err(error::DecapodError::ValidationError(format!(
-                        "Unsupported schema format '{other}'. Use 'json' or 'md'."
-                    )));
-                }
-            }
-        }
+        DataCommand::Schema(schema_cli) => run_schema_command(schema_cli)?,
         DataCommand::Repo(repo_cli) => match repo_cli.command {
             RepoCommand::Map => {
                 let map = repomap::generate_map(workspace_root);
@@ -8881,9 +9799,16 @@ fn run_data_command(
                 let report = broker.verify_replay()?;
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
                 if !report.divergences.is_empty() {
+                    let unknown_note = if report.divergences.iter().any(|d| d.human_review_required)
+                    {
+                        " Divergences with writer_liveness=\"unknown\" require human review and `--acknowledge-unknown-writer` on `--apply`."
+                    } else {
+                        ""
+                    };
                     return Err(error::DecapodError::ValidationError(format!(
-                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`. For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
-                        report.divergences.len()
+                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`.{} For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
+                        report.divergences.len(),
+                        unknown_note
                     )));
                 }
             }
@@ -8891,20 +9816,37 @@ fn run_data_command(
                 event_id,
                 reason,
                 apply,
+                acknowledge_unknown_writer,
             } => {
                 let broker = core::broker::DbBroker::new(store_root);
                 let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "cli".into());
-                let report = broker.repair(&event_id, &reason, apply, &actor)?;
+                let report = broker.repair_with_options(
+                    &event_id,
+                    &reason,
+                    apply,
+                    acknowledge_unknown_writer,
+                    &actor,
+                )?;
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
             }
         },
         DataCommand::Database(database_cli) => match database_cli.command {
-            DatabaseCommand::Verify => verify_database_integrity(store_root)?,
-            DatabaseCommand::Backup { destination } => {
+            DatabaseCommand::Inspect { .. } => {
+                unreachable!("read-only inventory dispatched before startup")
+            }
+            DatabaseCommand::Capabilities { .. }
+            | DatabaseCommand::Lock(_)
+            | DatabaseCommand::Maintain(_)
+            | DatabaseCommand::Audit { .. } => {
+                unreachable!("governed db maintenance dispatched before startup")
+            }
+            DatabaseCommand::Verify { .. } => verify_database_integrity(store_root)?,
+            DatabaseCommand::Backup { destination, .. } => {
                 backup_database_with_dactyl(store_root, &destination)?
             }
             DatabaseCommand::Recover {
                 preserve_original_at,
+                ..
             } => recover_database_with_dactyl(store_root, &preserve_original_at)?,
         },
         DataCommand::Aptitude(aptitude_cli) => {
@@ -8922,6 +9864,793 @@ fn run_data_command(
     }
 
     Ok(())
+}
+
+fn inventory_data_root(project_root: &Path) -> PathBuf {
+    find_governance_root(project_root).join(".decapod/data")
+}
+
+fn run_storage_inventory(
+    project_root: &Path,
+    scope: &str,
+    format: &str,
+    options: &core::storage_inventory::InventoryOptions,
+) -> Result<(), error::DecapodError> {
+    let report =
+        core::storage_inventory::inspect(&inventory_data_root(project_root), scope, options)?;
+    if format == "text" {
+        let bytes = report
+            .pointer("/files_before/main/apparent_bytes")
+            .and_then(serde_json::Value::as_u64)
+            .map(|bytes| bytes.to_string())
+            .unwrap_or_else(|| "unavailable".into());
+        let tables = report["tables"].as_array().map_or(0, Vec::len);
+        println!(
+            "{scope}: {bytes} main-file bytes; {tables} table reports; coverage={}",
+            report["coverage"].as_str().unwrap_or("unavailable")
+        );
+        if let Some(limitation) = report["limitation"].as_str() {
+            println!("Limitation: {limitation}");
+        }
+    } else {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report)
+                .map_err(|_| error::DecapodError::ValidationError("INVENTORY_ENCODING".into()))?
+        );
+    }
+    if report["status"] != "ok" {
+        return Err(error::DecapodError::ValidationError(
+            "INVENTORY_INCOMPLETE: inspect the typed limitation; no maintenance was performed"
+                .into(),
+        ));
+    }
+    Ok(())
+}
+
+fn run_storage_inventory_rpc(
+    project_root: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<(), error::DecapodError> {
+    let report = (|| {
+        let params: core::rpc::StorageInventoryParams = if request.params.is_null() {
+            core::rpc::StorageInventoryParams::default()
+        } else {
+            serde_json::from_value(request.params.clone()).map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "INVENTORY_PARAMETERS: expected scope and optional options".into(),
+                )
+            })?
+        };
+        core::storage_inventory::inspect(
+            &inventory_data_root(project_root),
+            &params.scope,
+            &params.options,
+        )
+    })();
+    let report = match report {
+        Ok(report) => report,
+        Err(error) => {
+            let code = match &error {
+                error::DecapodError::ValidationError(message) => message
+                    .split(':')
+                    .next()
+                    .filter(|code| {
+                        [
+                            "INVENTORY_PARAMETERS",
+                            "INVENTORY_BUDGET",
+                            "INVENTORY_SCOPE",
+                        ]
+                        .contains(code)
+                    })
+                    .unwrap_or("INVENTORY_UNAVAILABLE"),
+                _ => "INVENTORY_UNAVAILABLE",
+            };
+            let response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                code.into(),
+                "Inventory options or scope are invalid".into(),
+                None,
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("INVENTORY_ENCODING".into())
+                })?
+            );
+            return Err(error);
+        }
+    };
+    let complete = report["status"] == "ok";
+    let mut response = core::rpc::success_response(
+        request.id.clone(),
+        request.op.clone(),
+        request.params.clone(),
+        Some(report),
+        vec![],
+        None,
+        vec![],
+        vec![],
+    );
+    if !complete {
+        response.success = false;
+        response.error = Some(core::rpc::RpcError {
+            code: "INVENTORY_INCOMPLETE".into(),
+            message: "Inspect the typed limitation; no maintenance was performed".into(),
+            details: None,
+        });
+    }
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&response)
+            .map_err(|_| error::DecapodError::ValidationError("INVENTORY_ENCODING".into()))?
+    );
+    if !complete {
+        return Err(error::DecapodError::ValidationError(
+            "INVENTORY_INCOMPLETE".into(),
+        ));
+    }
+    Ok(())
+}
+
+fn is_governed_db_maintenance_rpc_op(op: &str) -> bool {
+    matches!(
+        op,
+        "data.database.capabilities"
+            | "data.database.maintain.inspect"
+            | "data.database.verify"
+            | "data.database.backup"
+            | "data.database.recover"
+            | "data.database.lock.diagnose"
+            | "data.database.lock.retry"
+            | "data.database.lock.release_own"
+            | "data.database.audit"
+    )
+}
+
+fn should_dispatch_governed_database_cli(invocation_dir: &Path, command: &DatabaseCommand) -> bool {
+    match command {
+        DatabaseCommand::Inspect { .. } => false,
+        DatabaseCommand::Capabilities { .. }
+        | DatabaseCommand::Lock(_)
+        | DatabaseCommand::Maintain(_)
+        | DatabaseCommand::Audit { .. } => true,
+        DatabaseCommand::Verify {
+            governed,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+        }
+        | DatabaseCommand::Backup {
+            governed,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        }
+        | DatabaseCommand::Recover {
+            governed,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => {
+            if *governed
+                || operation_id.is_some()
+                || expected_policy_sha256.is_some()
+                || actor.is_some()
+            {
+                return true;
+            }
+            if std::env::var_os("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_some()
+                && let Ok(root) = find_decapod_project_root(invocation_dir)
+                && find_governance_root(&root) == root
+            {
+                return false;
+            }
+            true
+        }
+    }
+}
+
+fn verify_strict_local_agent_session(
+    workspace_root: &Path,
+    main_root: &Path,
+    agent_id: &str,
+    supplied_password: &str,
+) -> Result<String, (&'static str, String)> {
+    let now = now_epoch_secs();
+    let mut candidate_roots = vec![workspace_root];
+    if main_root != workspace_root {
+        candidate_roots.push(main_root);
+    }
+    let mut saw_expired = false;
+    let mut saw_wrong_password = false;
+    let mut saw_wrong_backend = false;
+
+    for root in candidate_roots {
+        let rec_opt = read_agent_session(root, agent_id).map_err(|e| {
+            (
+                "AGENT_IDENTITY_UNAUTHENTICATED",
+                format!("failed to read agent session state: {e}"),
+            )
+        })?;
+        let Some(rec) = rec_opt else {
+            continue;
+        };
+        if rec.agent_id != agent_id {
+            return Err((
+                "AGENT_IDENTITY_FORGED",
+                format!(
+                    "session record agent_id '{}' does not match '{}'",
+                    rec.agent_id, agent_id
+                ),
+            ));
+        }
+        if !session_token_matches_backend(&rec.token, BackendType::Local) {
+            saw_wrong_backend = true;
+            continue;
+        }
+        if rec.expires_at_epoch_secs <= now {
+            saw_expired = true;
+            continue;
+        }
+        if hash_password(supplied_password, &rec.token) != rec.password_hash {
+            saw_wrong_password = true;
+            continue;
+        }
+        return Ok(rec.token);
+    }
+
+    if saw_wrong_password {
+        Err((
+            "AGENT_IDENTITY_FORGED",
+            "DECAPOD_SESSION_PASSWORD does not match active local session".to_string(),
+        ))
+    } else if saw_expired {
+        Err((
+            "AGENT_IDENTITY_UNAUTHENTICATED",
+            "active local agent session has expired; run `decapod session acquire`".to_string(),
+        ))
+    } else if saw_wrong_backend {
+        Err((
+            "AGENT_IDENTITY_UNAUTHENTICATED",
+            "session token is not a local Decapod session".to_string(),
+        ))
+    } else {
+        Err((
+            "AGENT_IDENTITY_UNAUTHENTICATED",
+            format!("no active local session found for agent '{agent_id}'"),
+        ))
+    }
+}
+
+fn print_governed_maintenance_json(value: &serde_json::Value) -> Result<(), error::DecapodError> {
+    println!(
+        "{}",
+        serde_json::to_string_pretty(value).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "DB_MAINTENANCE_ENCODING: failed to serialize response: {e}"
+            ))
+        })?
+    );
+    Ok(())
+}
+
+fn run_governed_database_cli(
+    invocation_dir: &Path,
+    command: DatabaseCommand,
+) -> Result<(), error::DecapodError> {
+    use crate::cli::{DatabaseLockCommand, DatabaseMaintainCommand};
+    use crate::core::db_maintenance;
+
+    let payload = match command {
+        DatabaseCommand::Inspect { .. } => {
+            unreachable!("legacy read-only inventory handled separately")
+        }
+        DatabaseCommand::Capabilities { probes, actor } => {
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                actor.as_deref(),
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            db_maintenance::build_capabilities_report(&policy, &verified_actor, &probes)
+        }
+        DatabaseCommand::Audit { limit } => {
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                None,
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            let records = db_maintenance::read_audit_records(&policy.main_store_root, limit)?;
+            serde_json::json!({
+                "schema_version": db_maintenance::DB_MAINTENANCE_AUDIT_SCHEMA_VERSION,
+                "status": "ok",
+                "repo_identity": policy.repo_identity,
+                "actor": verified_actor.agent_id,
+                "count": records.len(),
+                "records": records,
+                "implies_validation_ready": false,
+            })
+        }
+        DatabaseCommand::Lock(lock_cli) => match lock_cli.command {
+            DatabaseLockCommand::Diagnose {
+                timeout_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.diagnose",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={timeout_ms}")],
+                |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, timeout_ms),
+            )?,
+            DatabaseLockCommand::Retry {
+                target,
+                destination,
+                max_attempts,
+                initial_backoff_ms,
+                deadline_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => {
+                let spec = db_maintenance::LockRetrySpec {
+                    target,
+                    destination,
+                    max_attempts,
+                    initial_backoff_ms,
+                    deadline_ms,
+                    operation_id: operation_id.clone(),
+                    expected_policy_sha256: expected_policy_sha256.clone(),
+                };
+                db_maintenance::execute_governed_capability(
+                    invocation_dir,
+                    "db.lock.retry",
+                    actor.as_deref(),
+                    operation_id.as_deref(),
+                    expected_policy_sha256.as_deref(),
+                    &verify_strict_local_agent_session,
+                    vec![
+                        format!("target={}", target.as_capability().as_str()),
+                        format!("max_attempts={max_attempts}"),
+                        format!("initial_backoff_ms={initial_backoff_ms}"),
+                        format!("deadline_ms={deadline_ms}"),
+                    ],
+                    |_, _| db_maintenance::run_maintain_lock_retry(invocation_dir, &spec),
+                )?
+            }
+            DatabaseLockCommand::ReleaseOwn {
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.release_own",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
+            )?,
+        },
+        DatabaseCommand::Maintain(maint_cli) => match maint_cli.command {
+            DatabaseMaintainCommand::Inspect {
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.inspect",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_inspect(policy),
+            )?,
+            DatabaseMaintainCommand::Verify {
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.verify",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_verify(policy),
+            )?,
+            DatabaseMaintainCommand::Backup {
+                destination,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.backup",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["destination=<bounded-backups-dir>".to_string()],
+                |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
+            )?,
+            DatabaseMaintainCommand::Recover {
+                preserve_original_at,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.recover",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["tier=owner".to_string()],
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(preserve_original_at.as_path()),
+                    )
+                },
+            )?,
+        },
+        DatabaseCommand::Verify {
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => db_maintenance::execute_governed_capability(
+            invocation_dir,
+            "db.verify",
+            actor.as_deref(),
+            operation_id.as_deref(),
+            expected_policy_sha256.as_deref(),
+            &verify_strict_local_agent_session,
+            vec![],
+            |policy, _| db_maintenance::run_maintain_verify(policy),
+        )?,
+        DatabaseCommand::Backup {
+            destination,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => db_maintenance::execute_governed_capability(
+            invocation_dir,
+            "db.backup",
+            actor.as_deref(),
+            operation_id.as_deref(),
+            expected_policy_sha256.as_deref(),
+            &verify_strict_local_agent_session,
+            vec!["destination=<bounded-backups-dir>".to_string()],
+            |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
+        )?,
+        DatabaseCommand::Recover {
+            preserve_original_at,
+            operation_id,
+            expected_policy_sha256,
+            actor,
+            ..
+        } => db_maintenance::execute_governed_capability(
+            invocation_dir,
+            "db.recover",
+            actor.as_deref(),
+            operation_id.as_deref(),
+            expected_policy_sha256.as_deref(),
+            &verify_strict_local_agent_session,
+            vec!["tier=owner".to_string()],
+            |policy, verified_actor| {
+                db_maintenance::run_maintain_recover(
+                    policy,
+                    verified_actor,
+                    Some(preserve_original_at.as_path()),
+                )
+            },
+        )?,
+    };
+
+    print_governed_maintenance_json(&payload)
+}
+
+fn extract_maintenance_error_code_and_message(error: &error::DecapodError) -> (String, String) {
+    match error {
+        error::DecapodError::ValidationError(message) => {
+            if let Some((code, rest)) = message.split_once(':') {
+                let trimmed_code = code.trim();
+                if !trimmed_code.is_empty()
+                    && trimmed_code
+                        .chars()
+                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_')
+                {
+                    return (trimmed_code.to_string(), rest.trim().to_string());
+                }
+            }
+            ("DB_MAINTENANCE_DENIED".to_string(), message.clone())
+        }
+        other => ("DB_MAINTENANCE_FAILED".to_string(), other.to_string()),
+    }
+}
+
+fn parse_governed_rpc_params<T: Default + serde::de::DeserializeOwned>(
+    raw: &serde_json::Value,
+) -> Result<T, error::DecapodError> {
+    if raw.is_null() {
+        Ok(T::default())
+    } else {
+        serde_json::from_value(raw.clone()).map_err(|e| {
+            error::DecapodError::ValidationError(format!(
+                "DB_MAINTENANCE_PARAMETERS: invalid parameters: {e}"
+            ))
+        })
+    }
+}
+
+fn parse_required_governed_rpc_params<T: serde::de::DeserializeOwned>(
+    raw: &serde_json::Value,
+) -> Result<T, error::DecapodError> {
+    serde_json::from_value(raw.clone()).map_err(|e| {
+        error::DecapodError::ValidationError(format!(
+            "DB_MAINTENANCE_PARAMETERS: invalid parameters: {e}"
+        ))
+    })
+}
+
+fn run_governed_database_rpc(
+    invocation_dir: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<(), error::DecapodError> {
+    use crate::core::db_maintenance;
+    use crate::core::rpc::{
+        DatabaseAuditParams, DatabaseBackupParams, DatabaseCapabilitiesParams,
+        DatabaseLockDiagnoseParams, DatabaseLockReleaseOwnParams, DatabaseLockRetryParams,
+        DatabaseMaintainInspectParams, DatabaseRecoverParams, DatabaseVerifyParams,
+    };
+
+    let outcome: Result<serde_json::Value, error::DecapodError> = (|| match request.op.as_str() {
+        "data.database.capabilities" => {
+            let params: DatabaseCapabilitiesParams = parse_governed_rpc_params(&request.params)?;
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                params.actor.as_deref(),
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            Ok(db_maintenance::build_capabilities_report(
+                &policy,
+                &verified_actor,
+                &params.probes,
+            ))
+        }
+        "data.database.audit" => {
+            let params: DatabaseAuditParams = parse_governed_rpc_params(&request.params)?;
+            let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
+                |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+            )?;
+            let verified_actor = db_maintenance::verify_actor_and_custody(
+                invocation_dir,
+                &policy,
+                params.actor.as_deref(),
+                &verify_strict_local_agent_session,
+            )
+            .map_err(|(code, msg)| {
+                error::DecapodError::ValidationError(format!(
+                    "{code}: {}",
+                    db_maintenance::redact_for_repo(&msg, &policy.main_root)
+                ))
+            })?;
+            let records =
+                db_maintenance::read_audit_records(&policy.main_store_root, params.limit)?;
+            Ok(serde_json::json!({
+                "schema_version": db_maintenance::DB_MAINTENANCE_AUDIT_SCHEMA_VERSION,
+                "status": "ok",
+                "repo_identity": policy.repo_identity,
+                "actor": verified_actor.agent_id,
+                "count": records.len(),
+                "records": records,
+                "implies_validation_ready": false,
+            }))
+        }
+        "data.database.maintain.inspect" => {
+            let params: DatabaseMaintainInspectParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.inspect",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_inspect(policy),
+            )
+        }
+        "data.database.verify" => {
+            let params: DatabaseVerifyParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.verify",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_verify(policy),
+            )
+        }
+        "data.database.backup" => {
+            let params: DatabaseBackupParams = parse_required_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.backup",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["destination=<bounded-backups-dir>".to_string()],
+                |policy, _| db_maintenance::run_maintain_backup(policy, &params.destination),
+            )
+        }
+        "data.database.recover" => {
+            let params: DatabaseRecoverParams =
+                parse_required_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.recover",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec!["tier=owner".to_string()],
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(params.preserve_original_at.as_path()),
+                    )
+                },
+            )
+        }
+        "data.database.lock.diagnose" => {
+            let params: DatabaseLockDiagnoseParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.diagnose",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={}", params.timeout_ms)],
+                |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, params.timeout_ms),
+            )
+        }
+        "data.database.lock.retry" => {
+            let params: DatabaseLockRetryParams =
+                parse_required_governed_rpc_params(&request.params)?;
+            let spec = db_maintenance::LockRetrySpec {
+                target: params.target,
+                destination: params.destination,
+                max_attempts: params.max_attempts,
+                initial_backoff_ms: params.initial_backoff_ms,
+                deadline_ms: params.deadline_ms,
+                operation_id: params.operation_id.clone(),
+                expected_policy_sha256: params.expected_policy_sha256.clone(),
+            };
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.retry",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![
+                    format!("target={}", params.target.as_capability().as_str()),
+                    format!("max_attempts={}", params.max_attempts),
+                    format!("initial_backoff_ms={}", params.initial_backoff_ms),
+                    format!("deadline_ms={}", params.deadline_ms),
+                ],
+                |_, _| db_maintenance::run_maintain_lock_retry(invocation_dir, &spec),
+            )
+        }
+        "data.database.lock.release_own" => {
+            let params: DatabaseLockReleaseOwnParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.release_own",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![],
+                |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
+            )
+        }
+        other => Err(error::DecapodError::ValidationError(format!(
+            "CAPABILITY_UNSUPPORTED: unknown database maintenance operation '{other}'"
+        ))),
+    })();
+
+    match outcome {
+        Ok(report) => {
+            let response = core::rpc::success_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                Some(report),
+                vec![".decapod/data/decapod.db".to_string()],
+                None,
+                vec![],
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("DB_MAINTENANCE_ENCODING".into())
+                })?
+            );
+            Ok(())
+        }
+        Err(error) => {
+            let (code, msg) = extract_maintenance_error_code_and_message(&error);
+            let response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                code,
+                msg,
+                None,
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response).map_err(|_| {
+                    error::DecapodError::ValidationError("DB_MAINTENANCE_ENCODING".into())
+                })?
+            );
+            Err(error)
+        }
+    }
 }
 
 /// Run a read-only integrity probe through Dactyl's native maintenance API.
@@ -9219,6 +10948,39 @@ pub(crate) fn deterministic_schema_envelope() -> serde_json::Value {
     })
 }
 
+fn run_schema_command(schema_cli: SchemaCli) -> Result<(), error::DecapodError> {
+    let schemas = schema_catalog();
+
+    let output = if let Some(sub) = schema_cli.subsystem {
+        schemas
+            .get(sub.as_str())
+            .cloned()
+            .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
+    } else {
+        let mut envelope = deterministic_schema_envelope();
+        if !schema_cli.deterministic {
+            envelope.as_object_mut().unwrap().insert(
+                "generated_at".to_string(),
+                serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
+            );
+        }
+        envelope
+    };
+
+    match schema_cli.format.as_str() {
+        "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
+        "md" => {
+            println!("{}", schema_to_markdown(&output));
+        }
+        other => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Unsupported schema format '{other}'. Use 'json' or 'md'."
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Value> {
     let mut schemas = std::collections::BTreeMap::new();
     schemas.insert("todo", todo::schema());
@@ -9413,6 +11175,94 @@ fn run_qa_command(
     Ok(())
 }
 
+fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodError> {
+    match cli.command {
+        IntegrationCommand::Preview { dir, format } => {
+            let report = core::integration_removal::preview_integration(dir)?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!(
+                        "{}",
+                        core::integration_removal::format_preview_text(&report)
+                    );
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+        IntegrationCommand::Remove {
+            dir,
+            authorize,
+            dry_run,
+            format,
+            purge_state,
+            remove_protected_governance,
+        } => {
+            let report = core::integration_removal::remove_integration(
+                dir,
+                authorize,
+                dry_run,
+                purge_state,
+                remove_protected_governance,
+            )?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!("{}", core::integration_removal::format_apply_text(&report));
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+        IntegrationCommand::Restore {
+            dir,
+            manifest,
+            format,
+        } => {
+            let report = core::integration_removal::restore_integration(dir, manifest)?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!(
+                        "{}",
+                        core::integration_removal::format_restore_text(&report)
+                    );
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
 fn run_hook_install(
     commit_msg: bool,
     pre_commit: bool,
@@ -9434,6 +11284,13 @@ fn run_hook_install(
         .to_string();
     let hooks_dir = PathBuf::from(git_dir).join("hooks");
     fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
+    let repo_root = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| PathBuf::from(String::from_utf8_lossy(&o.stdout).trim()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     if uninstall {
         let commit_msg_path = hooks_dir.join("commit-msg");
@@ -9442,11 +11299,23 @@ fn run_hook_install(
 
         if commit_msg_path.exists() {
             fs::remove_file(&commit_msg_path).map_err(error::DecapodError::IoError)?;
+            let _ = core::integration_removal::record_hook_ownership(
+                &repo_root,
+                "commit-msg",
+                &commit_msg_path,
+                false,
+            );
             println!("✓ Removed commit-msg hook");
             removed_any = true;
         }
         if pre_commit_path.exists() {
             fs::remove_file(&pre_commit_path).map_err(error::DecapodError::IoError)?;
+            let _ = core::integration_removal::record_hook_ownership(
+                &repo_root,
+                "pre-commit",
+                &pre_commit_path,
+                false,
+            );
             println!("✓ Removed pre-commit hook");
             removed_any = true;
         }
@@ -9471,6 +11340,12 @@ fn run_hook_install(
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
+        let _ = core::integration_removal::record_hook_ownership(
+            &repo_root,
+            "commit-msg",
+            &hook_path,
+            true,
+        );
         println!("✓ Installed commit-msg hook for conventional commits");
     }
 
@@ -9493,6 +11368,12 @@ cargo clippy --all-targets --all-features -- -D warnings
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
+        let _ = core::integration_removal::record_hook_ownership(
+            &repo_root,
+            "pre-commit",
+            &hook_path,
+            true,
+        );
         println!("✓ Installed pre-commit hook (fmt + clippy)");
     }
 
@@ -9675,6 +11556,7 @@ fn run_workspace_command(
             snapshot_resume,
             provider_artifacts,
         } => {
+            core::validation_runtime::require_full_readiness_environment()?;
             let workspace_root = project_root;
             if !crate::cli::DecapodProjectConfig::load(workspace_root)?
                 .proof
@@ -10851,6 +12733,9 @@ mod rpc_handlers {
 
     pub(crate) fn handle_validate_run(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let scope = super::ValidationScope::public_validate();
+        if scope.requires_publication_proof() {
+            crate::core::validation_runtime::require_full_readiness_environment()?;
+        }
         let enabled = crate::cli::DecapodProjectConfig::load(ctx.project_root)?
             .proof
             .validation_buildkite_preflights;
@@ -10874,14 +12759,18 @@ mod rpc_handlers {
         invocation.validate()?;
         ensure_session_valid()?;
         let readiness = super::run_current_workbranch_readiness_with(ctx.project_root, &invocation);
+        let tmp_cleanup_guidance = readiness
+            .ready
+            .then(|| core::validate::todo_tmp_cleanup_instruction(ctx.project_root));
         let payload = serde_json::json!({
             "success": readiness.ready,
             "report": if readiness.ready { "Complete Buildkite source proof passed" } else { "Buildkite source proof is not ready" },
             "scope": super::ValidationScope::PublicationReadiness.label(),
-            "publication_ready": readiness.ready,
+            "publication_ready": readiness.publication_ready(),
             "local_project_checks": "not_run_provider_owned",
             "checks": serde_json::Value::Null,
             "readiness": readiness,
+            "tmp_cleanup_guidance": tmp_cleanup_guidance,
         });
         let mut response = if readiness.ready {
             success_response(
@@ -11017,7 +12906,7 @@ mod rpc_handlers {
                     success: true,
                     report: "All validation gates passed".to_string(),
                     scope: scope.label().into(),
-                    publication_ready: true,
+                    publication_ready: readiness.publication_ready(),
                 };
                 Ok(success_response(
                     ctx.request.id.clone(),
@@ -11213,10 +13102,38 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let engine = MentorEngine::new(ctx.project_root);
+        if let Some(request) = &params.reflection
+            && (params.op.as_ref().is_some_and(|op| op != &request.op)
+                || params
+                    .touched_paths
+                    .as_ref()
+                    .is_some_and(|paths| paths != &request.touched_paths))
+        {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_CONTEXT_MISMATCH: outer mentor context must match the proposed action"
+                    .into(),
+            ));
+        }
+        let reflection = params
+            .reflection
+            .as_ref()
+            .map(|request| mentor::reflection::submit(ctx.project_root, request))
+            .transpose()?;
         let obligations_ctx = ObligationsContext {
-            op: params.op.unwrap_or_else(|| "unknown".to_string()),
+            op: params.op.unwrap_or_else(|| {
+                params
+                    .reflection
+                    .as_ref()
+                    .map_or_else(|| "unknown".into(), |r| r.op.clone())
+            }),
             params: params.params.unwrap_or_else(|| serde_json::json!({})),
-            touched_paths: params.touched_paths.unwrap_or_default(),
+            touched_paths: params.touched_paths.unwrap_or_else(|| {
+                params
+                    .reflection
+                    .as_ref()
+                    .map(|r| r.touched_paths.clone())
+                    .unwrap_or_default()
+            }),
             diff_summary: params.diff_summary,
             project_profile_id: params.project_profile_id,
             session_id: params.session_id,
@@ -11241,6 +13158,7 @@ mod rpc_handlers {
             Some(
                 serde_json::to_value(MentorObligationsResult {
                     obligations: obligations.clone(),
+                    reflection: reflection.clone(),
                 })
                 .unwrap(),
             ),
@@ -11256,6 +13174,30 @@ mod rpc_handlers {
 
         if !obligations.contradictions.is_empty() {
             response.blocked_by = mentor::contradictions_to_blockers(&obligations.contradictions);
+        }
+        if let Some(outcome) = reflection {
+            // Keep the optional contract consistent with its authority labels.
+            response.blocked_by.clear();
+            if outcome.execution_blocked {
+                response.blocked_by.push(Blocker {
+                    kind: if outcome.disposition == mentor::reflection::Disposition::HumanDecision {
+                        BlockerKind::MissingAnswer
+                    } else {
+                        BlockerKind::Conflict
+                    },
+                    message: format!("REFLECTION_{}", outcome.reason),
+                    resolve_hint: outcome.next_action.clone(),
+                });
+            }
+            response.allowed_next_ops = if outcome.terminal {
+                vec![]
+            } else {
+                vec![AllowedOp {
+                    op: "mentor.obligations".into(),
+                    reason: outcome.next_action.clone(),
+                    required_params: vec!["reflection".into()],
+                }]
+            };
         }
 
         Ok(response)
@@ -11492,6 +13434,31 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_intent_reconcile(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: IntentReconcileParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
+        let report = crate::core::intent_reconcile::reconcile_with_base(
+            ctx.project_root,
+            params.base_commit.as_deref(),
+        )?;
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(IntentReconcileResult { report }).map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Serialization failed: {e}"))
+                })?,
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_specs_refresh(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let _params: SpecsRefreshParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
@@ -11642,7 +13609,14 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::to_value(InteropProjectResult { projection }).unwrap()),
+            Some(
+                serde_json::to_value(InteropProjectResult {
+                    projection,
+                    input_origin: Some("caller_supplied".to_string()),
+                    canonical_state_verified: Some(false),
+                })
+                .unwrap(),
+            ),
             vec![],
             None,
             vec![],
@@ -11731,6 +13705,17 @@ mod rpc_handlers {
     }
 }
 
+#[cfg(test)]
+#[test]
+fn intent_reconciliation_rpc_does_not_require_mutation_custody() {
+    assert!(!rpc_op_requires_worktree("intent.reconcile"));
+    assert!(rpc_op_bypasses_session("intent.reconcile"));
+    assert!(rpc_op_skips_mandate_enforcement("intent.reconcile"));
+    assert!(!rpc_op_requires_constitutional_awareness(
+        "intent.reconcile"
+    ));
+}
+
 /// Run RPC command
 fn rpc_validation_exit_status(op: &str, success: bool) -> Result<(), error::DecapodError> {
     if op == "validate.run" && !success {
@@ -11757,7 +13742,82 @@ fn unsuccessful_validate_rpc_is_nonzero_without_changing_other_rpc_exit_semantic
     }
 }
 
-fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::DecapodError> {
+fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::DecapodError> {
+    use crate::core::rpc::*;
+    // Bound framing before allocating the JSON value, including the early
+    // read-only inspection route. This leaves room for the 8 MiB event envelope.
+    const MAX_REQUEST_BYTES: usize = 32 * 1024 * 1024;
+    let budget_error = || {
+        error::DecapodError::ValidationError("RPC_REQUEST_BUDGET: request exceeds 32 MiB".into())
+    };
+    if cli.stdin {
+        let mut buffer = String::new();
+        std::io::stdin()
+            .take(MAX_REQUEST_BYTES as u64 + 1)
+            .read_to_string(&mut buffer)
+            .map_err(error::DecapodError::IoError)?;
+        if buffer.len() > MAX_REQUEST_BYTES {
+            return Err(budget_error());
+        }
+        core::json::unique_value(buffer.as_bytes())
+            .and_then(serde_json::from_value)
+            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))
+    } else {
+        if cli
+            .params
+            .as_ref()
+            .is_some_and(|params| params.len() > MAX_REQUEST_BYTES)
+        {
+            return Err(budget_error());
+        }
+        let op = cli
+            .op
+            .clone()
+            .ok_or_else(|| error::DecapodError::ValidationError("Operation required".into()))?;
+        let params = if op == "data.database.inspect" {
+            cli.params
+                .as_ref()
+                .map(|params| core::json::unique_value(params.as_bytes()))
+                .transpose()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError("Invalid inventory parameters".into())
+                })?
+                .unwrap_or(serde_json::json!({}))
+        } else if is_governed_db_maintenance_rpc_op(&op) {
+            cli.params
+                .as_ref()
+                .map(|params| core::json::unique_value(params.as_bytes()))
+                .transpose()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError(
+                        "DB_MAINTENANCE_PARAMETERS: invalid JSON parameters".into(),
+                    )
+                })?
+                .unwrap_or(serde_json::json!({}))
+        } else {
+            cli.params
+                .as_ref()
+                .map(|params| core::json::unique_value(params.as_bytes()))
+                .transpose()
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid JSON parameters: {e}"))
+                })?
+                .unwrap_or(serde_json::json!({}))
+        };
+        Ok(RpcRequest {
+            op,
+            params,
+            id: default_request_id(),
+            session: None,
+        })
+    }
+}
+
+fn run_rpc_command(
+    cli: RpcCli,
+    project_root: &Path,
+    predecoded: Option<core::rpc::RpcRequest>,
+) -> Result<(), error::DecapodError> {
     use crate::core::rpc::*;
 
     if cli.http_server {
@@ -11781,29 +13841,9 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         .map_err(error::DecapodError::IoError);
     }
 
-    let request: RpcRequest = if cli.stdin {
-        let mut buffer = String::new();
-        std::io::stdin()
-            .read_to_string(&mut buffer)
-            .map_err(error::DecapodError::IoError)?;
-        serde_json::from_str(&buffer)
-            .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))?
-    } else {
-        let op = cli.op.ok_or_else(|| {
-            error::DecapodError::ValidationError("Operation required".to_string())
-        })?;
-        let params = cli
-            .params
-            .as_ref()
-            .and_then(|p| serde_json::from_str(p).ok())
-            .unwrap_or(serde_json::json!({}));
-
-        RpcRequest {
-            op,
-            params,
-            id: default_request_id(),
-            session: None,
-        }
+    let request = match predecoded {
+        Some(request) => request,
+        None => parse_rpc_request(&cli)?,
     };
 
     enforce_worktree_requirement_for_rpc(&request.op, project_root)?;
@@ -11876,6 +13916,7 @@ fn run_rpc_command(cli: RpcCli, project_root: &Path) -> Result<(), error::Decapo
         "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
         "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
         "specs.refresh" => rpc_handlers::handle_specs_refresh(&rpc_ctx)?,
+        "intent.reconcile" => rpc_handlers::handle_intent_reconcile(&rpc_ctx)?,
         "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
         "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
         "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,
@@ -12005,6 +14046,18 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
             println!("Decapod {}", report.version);
             println!("==================\n");
 
+            if !report.backends.is_empty() {
+                println!("Backends:");
+                for backend in &report.backends {
+                    let default_tag = if backend.default { ", default" } else { "" };
+                    println!(
+                        "  {} ({}{}) - {}",
+                        backend.name, backend.id, default_tag, backend.description
+                    );
+                }
+                println!();
+            }
+
             println!("Capabilities:");
             for cap in &report.capabilities {
                 println!("  {} [{}] - {}", cap.name, cap.stability, cap.description);
@@ -12078,6 +14131,31 @@ fn run_trace_command(
     Ok(())
 }
 
+fn run_system_migrations_command(
+    current_dir: &Path,
+    cli: MigrationsCli,
+) -> Result<(), error::DecapodError> {
+    let workspace_root = find_decapod_project_root(current_dir)?;
+    let report = migration::inspect_migration_state(&workspace_root)?;
+    match cli.format.as_str() {
+        "json" => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+            );
+        }
+        "text" => {
+            println!("{}", migration::render_migration_inspection_text(&report));
+        }
+        other => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Unsupported format '{other}'. Expected 'json' or 'text'."
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn run_system_command(
     cli: SystemCli,
     project_store: &Store,
@@ -12089,6 +14167,7 @@ fn run_system_command(
             doctor::run_doctor_cli(project_store, project_root, doctor_cli)
         }
         SystemCommand::Capabilities(cap_cli) => run_capabilities_command(cap_cli),
+        SystemCommand::Migrations(mig_cli) => run_system_migrations_command(project_root, mig_cli),
     }
 }
 
@@ -12469,7 +14548,7 @@ fn run_infer_orientation(
     cli: InferOrientationCli,
     project_root: &Path,
 ) -> Result<(), error::DecapodError> {
-    use crate::core::rpc::{DecisionGate, DecisionOption, OrientationPacket};
+    use crate::core::rpc::OrientationPacket;
 
     let mut packet = OrientationPacket {
         user_goal: cli.intent.clone().unwrap_or_else(|| "Unknown".to_string()),
@@ -12483,6 +14562,7 @@ fn run_infer_orientation(
         known_unknowns: vec![],
         decision_gates: vec![],
         next_action: "Perform research to map relevant files and symbols.".to_string(),
+        reflection: None,
     };
 
     if let Some(ref id) = cli.task_id {
@@ -12496,12 +14576,9 @@ fn run_infer_orientation(
                     .known_unknowns
                     .push(format!("Task detail: {}", task.description));
             }
-            if !task.scope.is_empty() {
-                packet.allowed_scope = task
-                    .scope
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect();
+            if !task.scope.trim().is_empty() {
+                packet.allowed_scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+                    .map_err(error::DecapodError::ValidationError)?;
             }
         }
     }
@@ -12548,29 +14625,12 @@ fn run_infer_orientation(
             .push("Do not introduce regressions".to_string());
     }
 
-    if intent_lower.contains("refactor")
-        || intent_lower.contains("architecture")
-        || intent_lower.contains("interface")
-    {
-        packet.decision_gates.push(DecisionGate {
-            decision: "Architectural alignment".to_string(),
-            rationale: "Changes to core structures or interfaces require human alignment on long-term maintainability.".to_string(),
-            options: vec![
-                DecisionOption {
-                    label: "Conservative (wrapper/adapter)".to_string(),
-                    impact: "Minimizes immediate breakage".to_string(),
-                },
-                DecisionOption {
-                    label: "Aggressive (breaking change)".to_string(),
-                    impact: "Cleaner long-term architecture, requires migration".to_string(),
-                },
-            ],
-            recommendation: "Prefer conservative adaptation unless the current interface is fundamentally broken.".to_string(),
-            validation_proof: "Contract conformance tests and migration guide".to_string(),
-        });
-        packet.next_action =
-            "STOP: A decision gate is active. Present options to the human before proceeding."
-                .to_string();
+    if crate::core::rpc::architectural_alignment_required(&packet.user_goal) {
+        // Keywords establish inference pressure, never missing human authority.
+        // Explicit plan/spec and policy dependencies are judged by reflection.
+        packet.constraints.push(
+            "Inspect governing intent and existing architecture before choosing a compatible design; submit an escalation proposal before requesting a human decision.".into(),
+        );
     }
 
     if intent_lower.contains("test") {
@@ -12583,6 +14643,26 @@ fn run_infer_orientation(
         } else {
             packet.allowed_scope = vec!["src/".to_string(), "tests/".to_string()];
         }
+    }
+
+    if let Some(input) = &cli.reflection {
+        let request: crate::core::mentor::reflection::Request = serde_json::from_str(input)
+            .map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid reflection: {e}"))
+            })?;
+        if cli.task_id.is_none() {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_TASK_REQUIRED: orientation reflection requires --task-id so both paths use the same governing intent".into(),
+            ));
+        }
+        if cli.task_id.as_ref() != Some(&request.task_id) {
+            return Err(error::DecapodError::ValidationError(
+                "REFLECTION_TASK_MISMATCH".into(),
+            ));
+        }
+        let outcome = crate::core::mentor::reflection::submit(project_root, &request)?;
+        packet.next_action = outcome.next_action.clone();
+        packet.reflection = Some(outcome);
     }
 
     if cli.format == "json" {
@@ -12599,6 +14679,19 @@ fn run_infer_orientation(
             packet.allowed_scope, packet.forbidden_scope
         );
         println!("Proof:   {:?}", packet.proof_required);
+        if let Some(ref outcome) = packet.reflection {
+            println!(
+                "Reflection: {:?}; {} rounds remain",
+                outcome.disposition, outcome.remaining_rounds
+            );
+            if let Some(ref challenge) = outcome.challenge {
+                println!("Challenge {}: {}", challenge.id, challenge.question);
+                println!(
+                    "Binding: {}; sources: {:?}",
+                    challenge.enforceable, challenge.sources
+                );
+            }
+        }
 
         if !packet.decision_gates.is_empty() {
             println!("\n⚠ DECISION GATES REQUIRED:");
@@ -12843,6 +14936,11 @@ fn run_demo_command(cli: DemoCli, project_root: &Path) -> Result<(), error::Deca
 #[cfg(test)]
 #[path = "../../tests/unit/lib_init_prompt_tests.rs"]
 mod init_prompt_tests;
+
+#[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
+#[allow(dead_code)]
+#[path = "../../tests/common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
 
 #[cfg(test)]
 #[path = "../../tests/unit/lib_ci_scope_tests.rs"]

@@ -934,17 +934,7 @@ pub fn section_hash(root: &Path, section: &str) -> Result<String, DecapodError> 
 }
 
 fn git(root: &Path, args: &[&str]) -> Result<String, DecapodError> {
-    let output = Command::new("git")
-        .args(args)
-        .current_dir(root)
-        .output()
-        .map_err(DecapodError::IoError)?;
-    if !output.status.success() {
-        return Err(invalid(
-            "GOVERNANCE_GIT_PROOF_UNAVAILABLE: inspect repository history and retry",
-        ));
-    }
-    Ok(String::from_utf8_lossy(&output.stdout).trim().into())
+    immutable_archive_git(root, args)
 }
 
 /// Bind durable policy, PR identity and carried obligations without binding
@@ -1192,9 +1182,17 @@ pub(crate) fn initialize_workbranch_at(
             return Ok(Some(previous));
         }
         if !starts_at_base {
-            return Err(invalid(
-                "GOVERNANCE_PR_RESET_REQUIRED: inherited accepted context is not a fresh branch boundary; create a new workspace from the target base or explicitly begin a PR. Existing work was preserved",
-            ));
+            // At an unchanged accepted base, a missing creation reflog is not
+            // evidence of a fresh branch. Require an explicit fork commit
+            // instead of silently admitting an unproven initialization.
+            if created_base.is_none() && context.is_some() && reflog.is_empty() && head == base {
+                return Err(invalid(
+                    "GOVERNANCE_BRANCH_CREATION_PROOF_REQUIRED: pass the captured fork commit when the branch creation reflog is unavailable",
+                ));
+            }
+            // Existing branches with their own commits retain their journal.
+            // Neither a missing reflog nor inherited acceptance can erase work.
+            return Ok(Some(previous));
         }
         if previous.change.is_none() && context.is_none() {
             return Ok(Some(previous));
@@ -1466,6 +1464,22 @@ pub fn resolve_obligation(
         if document.change.is_none() {
             return Err(invalid("Begin a PR before resolving obligations"));
         }
+        if id.starts_with("history-recovery:") {
+            let archived =
+                immutable_archive_git(root, &["show", &format!("HEAD:{GOVERNANCE_PATH}")])
+                    .ok()
+                    .and_then(|text| parse(text.as_bytes()).ok());
+            if archived
+                .as_ref()
+                .and_then(|prior| prior.baseline.unresolved.get(id))
+                != document.baseline.unresolved.get(id)
+                || !document.baseline.unresolved.contains_key(id)
+            {
+                return Err(invalid(
+                    "HISTORY_RECOVERY_NOT_ARCHIVED: checkpoint and commit the present-time gap observation before resolving this obligation; no historical proof was created",
+                ));
+            }
+        }
         let obligation = document
             .baseline
             .unresolved
@@ -1491,18 +1505,14 @@ fn material_path(path: &str) -> bool {
 
 /// Use Git object IDs and modes so the index and immutable commit use identical input bytes.
 fn tree_material(root: &Path, revision: Option<&str>) -> Result<Value, DecapodError> {
-    let output = if let Some(revision) = revision {
-        Command::new("git")
-            .args(["ls-tree", "-rz", "--full-tree", revision])
-            .current_dir(root)
-            .output()
+    let args = if let Some(revision) = revision {
+        vec!["ls-tree", "-rz", "--full-tree", revision]
     } else {
-        Command::new("git")
-            .args(["ls-files", "--stage", "-z"])
-            .current_dir(root)
-            .output()
-    }
-    .map_err(DecapodError::IoError)?;
+        vec!["ls-files", "--stage", "-z"]
+    };
+    let output = crate::core::entrypoint_integrity::history_git(root, &args).ok_or_else(|| {
+        invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE: cannot inspect immutable material")
+    })?;
     if !output.status.success() {
         return Err(invalid("Cannot inspect material Git tree"));
     }
@@ -1629,6 +1639,137 @@ pub fn checkpoint(
     })
 }
 
+/// Record present observation of unprovable source history in a fresh workstream.
+/// This is custody of a gap, never a waiver or a retrospective checkpoint.
+pub(crate) fn record_history_recovery(
+    root: &Path,
+    source_ref: &str,
+    reason: &str,
+    actor: &str,
+) -> Result<GovernanceDocument, DecapodError> {
+    if source_ref.trim().is_empty()
+        || source_ref.len() > 1024
+        || source_ref.starts_with('-')
+        || reason.trim().is_empty()
+        || reason.len() > 4096
+        || actor.trim().is_empty()
+        || actor == "unknown"
+    {
+        return Err(invalid(
+            "HISTORY_RECOVERY_CONTEXT_REQUIRED: established actor and bounded substantive reason required",
+        ));
+    }
+    with_lock(root, || {
+        let mut document = load(root)?.ok_or_else(|| {
+            invalid(
+                "HISTORY_RECOVERY_WORKSPACE_REQUIRED: establish the fresh task and workspace first",
+            )
+        })?;
+        let change = document
+            .change
+            .as_ref()
+            .ok_or_else(|| invalid("GOVERNANCE_PR_IDENTITY_MISSING"))?;
+        let current_head =
+            immutable_archive_git(root, &["rev-parse", "--verify", "HEAD^{commit}"])?;
+        let source = immutable_archive_git(
+            root,
+            &["rev-parse", "--verify", &format!("{source_ref}^{{commit}}")],
+        )?;
+        let source_text =
+            immutable_archive_git(root, &["show", &format!("{source}:{GOVERNANCE_PATH}")])?;
+        let source_document = parse(source_text.as_bytes())?;
+        let source_change = source_document
+            .change
+            .as_ref()
+            .ok_or_else(|| invalid("GOVERNANCE_PR_IDENTITY_MISSING: recovery source"))?;
+        if source_change.id == change.id
+            || normalized_base_label(&source_change.target_base)
+                != normalized_base_label(&change.target_base)
+        {
+            return Err(invalid(
+                "HISTORY_RECOVERY_IDENTITY_CONFLICT: recovery requires a distinct workstream against the same accepted target",
+            ));
+        }
+        let source_base = crate::core::entrypoint_integrity::history_git(
+            root,
+            &[
+                "merge-base",
+                "--is-ancestor",
+                &source_change.base_commit,
+                &change.base_commit,
+            ],
+        )
+        .ok_or_else(|| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE"))?;
+        if !source_base.status.success() {
+            return Err(invalid(
+                "HISTORY_RECOVERY_SOURCE_BASE_UNACCEPTED: the source workstream must start from actual accepted ancestry",
+            ));
+        }
+        let accepted_source = crate::core::entrypoint_integrity::history_git(
+            root,
+            &["merge-base", "--is-ancestor", &source, &change.base_commit],
+        )
+        .ok_or_else(|| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE"))?;
+        match accepted_source.status.code() {
+            Some(1) => (),
+            Some(0) => {
+                return Err(invalid(
+                    "HISTORY_RECOVERY_SOURCE_ALREADY_ACCEPTED: this source is already in the accepted baseline; no unaccepted history is being reconstructed",
+                ));
+            }
+            _ => return Err(invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE")),
+        }
+        let report = inspect_checkpoint_history(
+            root,
+            &source_change.base_commit,
+            &source,
+            Some(&source_change.target_base),
+        )?;
+        if report.history_proven
+            || report
+                .findings
+                .iter()
+                .any(|finding| finding.disposition == HistoryDisposition::Unavailable)
+        {
+            return Err(invalid(
+                "HISTORY_RECOVERY_NOT_APPLICABLE: source must have observed historical evidence gaps, not valid or unavailable proof",
+            ));
+        }
+        let id = format!("history-recovery:{source}");
+        let observation = json!({
+            "schema":"decapod.history-recovery.v1",
+            "source_commit":source, "source_tree":immutable_archive_git(root, &["rev-parse", &format!("{source}^{{tree}}")])?,
+            "source_governance_blob":immutable_archive_git(root, &["rev-parse", &format!("{source}:{GOVERNANCE_PATH}")])?,
+            "destination_change":change.id, "destination_base":change.base_commit,
+            "actor":actor, "authority":"current_task_custody_only",
+            "reason":reason.trim(), "historical_proof":"not_proven",
+            "exception_authorized":false, "recovery":"reauthor_and_obtain_fresh_proof",
+            "assessment":report,
+        });
+        if let Some(prior) = document.baseline.unresolved.get(&id) {
+            if prior == &observation {
+                return Ok(document);
+            }
+            return Err(invalid(
+                "HISTORY_RECOVERY_CONFLICT: prior observation binds different context; it was preserved",
+            ));
+        }
+        if document.resolutions.contains_key(&id) {
+            return Err(invalid(
+                "HISTORY_RECOVERY_ALREADY_RECORDED: preserve the archived observation and its resolution",
+            ));
+        }
+        if current_head != change.base_commit {
+            return Err(invalid(
+                "HISTORY_RECOVERY_FRESH_BASE_REQUIRED: preserve the failed branch and create a fresh claimed workspace from the accepted target; this command does not reset or rewrite history",
+            ));
+        }
+        document.baseline.unresolved.insert(id, observation);
+        save(root, &document)?;
+        Ok(document)
+    })
+}
+
 fn normalized_base_label(reference: &str) -> &str {
     reference
         .strip_prefix("refs/heads/")
@@ -1656,16 +1797,17 @@ fn verify_base_binding(
         ));
     }
     for descendant in [base_ref, head_ref] {
-        let status = Command::new("git")
-            .args([
+        let status = crate::core::entrypoint_integrity::history_git(
+            root,
+            &[
                 "merge-base",
                 "--is-ancestor",
                 &change.base_commit,
                 descendant,
-            ])
-            .current_dir(root)
-            .status()
-            .map_err(DecapodError::IoError)?;
+            ],
+        )
+        .ok_or_else(|| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE"))?
+        .status;
         if !status.success() {
             return Err(invalid(
                 "GOVERNANCE_PR_BASE_MISMATCH: recorded base must be an ancestor of the verified base and head",
@@ -1677,13 +1819,98 @@ fn verify_base_binding(
     }
     if let Ok(content) = git(root, &["show", &format!("{base_ref}:{GOVERNANCE_PATH}")]) {
         let baseline = parse(content.as_bytes())?;
-        if baseline.change.as_ref().map(|prior| prior.id.as_str()) == Some(change.id.as_str()) {
+        // A continuing branch may inherit the accepted change label.
+        // Provenance, not a globally unique label, establishes the boundary.
+        if let Some(prior) = baseline.change.as_ref()
+            && prior.id == change.id
+            && (prior.base_commit != change.base_commit
+                || normalized_base_label(&prior.target_base)
+                    != normalized_base_label(&change.target_base))
+        {
             return Err(invalid(
-                "GOVERNANCE_PR_RESET_REQUIRED: merged PR identity was reused; explicitly begin a new PR",
+                "GOVERNANCE_ACCEPTED_IDENTITY_CONFLICT: inherited change provenance differs from accepted base",
             ));
         }
     }
     Ok(())
+}
+
+/// Admit current publication material on a branch that inherits its accepted
+/// change label, without claiming historical checkpoint proof it does not have.
+///
+/// The exact accepted base and candidate head remain bound by immutable Git,
+/// current spec reviews and the independent validation/CI graph. The accepted
+/// checkpoint catalog may be extended but cannot be erased or rewritten.
+/// New workstreams still require strict per-commit checkpoints.
+pub fn verify_pr_continuation_for_target(
+    root: &Path,
+    base_ref: &str,
+    head_ref: &str,
+    target_base: &str,
+) -> Result<(), DecapodError> {
+    let base = git(
+        root,
+        &["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")],
+    )?;
+    let head = git(
+        root,
+        &["rev-parse", "--verify", &format!("{head_ref}^{{commit}}")],
+    )?;
+    if base == head {
+        return Err(invalid(
+            "GOVERNANCE_EMPTY_CHANGE: no candidate delta against accepted base",
+        ));
+    }
+    let ancestor = crate::core::entrypoint_integrity::history_git(
+        root,
+        &["merge-base", "--is-ancestor", &base, &head],
+    )
+    .ok_or_else(|| invalid("GOVERNANCE_GIT_PROOF_UNAVAILABLE"))?;
+    if !ancestor.status.success() {
+        return Err(invalid(
+            "GOVERNANCE_PR_BASE_MISMATCH: accepted base is not an ancestor",
+        ));
+    }
+    let base_doc = git(root, &["show", &format!("{base}:{GOVERNANCE_PATH}")])
+        .ok()
+        .map(|bytes| parse(bytes.as_bytes()))
+        .transpose()?;
+    let head_doc = parse(git(root, &["show", &format!("{head}:{GOVERNANCE_PATH}")])?.as_bytes())?;
+    verify_base_binding(root, &head_doc, &base, &head, Some(target_base))?;
+    if let (Some(accepted), Some(current)) = (
+        base_doc.as_ref().and_then(|doc| doc.change.as_ref()),
+        head_doc.change.as_ref(),
+    ) && accepted.id == current.id
+    {
+        let prior = base_doc
+            .as_ref()
+            .ok_or_else(|| invalid("GOVERNANCE_ACCEPTED_BASE_MISSING"))?;
+        if prior.checkpoints.len() > head_doc.checkpoints.len()
+            || prior
+                .checkpoints
+                .iter()
+                .zip(&head_doc.checkpoints)
+                .any(|(a, b)| {
+                    a.id != b.id
+                        || a.input_digest != b.input_digest
+                        || a.summary != b.summary
+                        || a.proof_refs != b.proof_refs
+                })
+        {
+            return Err(invalid(
+                "GOVERNANCE_ACCEPTED_CHECKPOINT_CHANGED: accepted checkpoint evidence must remain immutable",
+            ));
+        }
+        if serde_json::to_value(&prior.baseline).map_err(|e| invalid(e.to_string()))?
+            != serde_json::to_value(&head_doc.baseline).map_err(|e| invalid(e.to_string()))?
+        {
+            return Err(invalid(
+                "GOVERNANCE_ACCEPTED_BASELINE_CHANGED: accepted policy and unresolved obligations must be preserved",
+            ));
+        }
+        return Ok(());
+    }
+    verify_pr_checkpoints_inner(root, &base, &head, Some(target_base))
 }
 
 pub fn verify_pr_checkpoints_for_target(
@@ -1756,194 +1983,27 @@ pub fn verify_staged_checkpoint(root: &Path) -> Result<(), DecapodError> {
     Ok(())
 }
 
+#[path = "governance_document/checkpoint_history.rs"]
+mod checkpoint_history;
+pub use checkpoint_history::{
+    CheckpointHistoryReport, HistoryDisposition, HistoryFinding, HistoryObligation,
+    inspect_checkpoint_history,
+};
+#[path = "governance_document/merge_reconcile.rs"]
+mod merge_reconcile;
+pub use merge_reconcile::reconcile_merge;
+
+#[path = "governance_document/scope_reconciliation.rs"]
+mod scope_reconciliation;
+pub use scope_reconciliation::{ScopeReconciliationReport, reconcile_scope_projections};
+
 fn verify_pr_checkpoints_inner(
     root: &Path,
     base_ref: &str,
     head_ref: &str,
     target_base: Option<&str>,
 ) -> Result<(), DecapodError> {
-    // Always bind the exact final head, including merge-only ranges.
-    let head_text =
-        git(root, &["show", &format!("{head_ref}:{GOVERNANCE_PATH}")]).map_err(|_| {
-            invalid("GOVERNANCE_CHECKPOINT_MISSING: final head has no canonical record")
-        })?;
-    let head = parse(head_text.as_bytes())?;
-    verify_base_binding(root, &head, base_ref, head_ref, target_base)?;
-    let identity = head
-        .change
-        .as_ref()
-        .ok_or_else(|| invalid("GOVERNANCE_PR_IDENTITY_MISSING: final head"))?
-        .id
-        .clone();
-    let commits = git(
-        root,
-        &[
-            "rev-list",
-            "--reverse",
-            "--topo-order",
-            &format!("{base_ref}..{head_ref}"),
-        ],
-    )?;
-    // The active PR owns its first-parent journal. Imported parents retain their
-    // independently governed journals in Git instead of being rewritten to the
-    // active PR identity or copied into its checkpoint list.
-    let first_parent_history = git(
-        root,
-        &[
-            "rev-list",
-            "--first-parent",
-            &format!("{base_ref}..{head_ref}"),
-        ],
-    )?;
-    let first_parent_commits: BTreeSet<_> = first_parent_history.lines().collect();
-    let accepted_history = git(root, &["rev-list", base_ref])?;
-    let accepted_commits: BTreeSet<_> = accepted_history.lines().collect();
-    let base_has_document = Command::new("git")
-        .args(["cat-file", "-e", &format!("{base_ref}:{GOVERNANCE_PATH}")])
-        .current_dir(root)
-        .output()
-        .map_err(DecapodError::IoError)?
-        .status
-        .success();
-    let mut verified = false;
-    for commit in commits.lines().filter(|line| !line.is_empty()) {
-        let content = match git(root, &["show", &format!("{commit}:{GOVERNANCE_PATH}")]) {
-            Ok(content) => content,
-            Err(_)
-                if !base_has_document
-                    && first_parent_commits.contains(commit)
-                    && git(
-                        root,
-                        &["log", "-1", "--format=%H", commit, "--", GOVERNANCE_PATH],
-                    )?
-                    .is_empty() =>
-            {
-                continue;
-            }
-            Err(_) => {
-                return Err(invalid(format!(
-                    "GOVERNANCE_CHECKPOINT_MISSING: commit {commit} has no canonical record"
-                )));
-            }
-        };
-        let document = parse(content.as_bytes())?;
-        let change = document
-            .change
-            .as_ref()
-            .ok_or_else(|| invalid(format!("GOVERNANCE_PR_IDENTITY_MISSING: commit {commit}")))?;
-        if first_parent_commits.contains(commit) {
-            if document
-                .change
-                .as_ref()
-                .map(|change| (&change.base_commit, &change.target_base))
-                != head
-                    .change
-                    .as_ref()
-                    .map(|change| (&change.base_commit, &change.target_base))
-            {
-                return Err(invalid(
-                    "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
-                ));
-            }
-            if change.id != identity {
-                return Err(invalid(format!(
-                    "GOVERNANCE_PR_IDENTITY_CONFLICT: commit {commit} belongs to a different PR"
-                )));
-            }
-        } else {
-            // A historical lineage must start from an immutable, already
-            // accepted base and prove its own original checkpoints. Neither a
-            // branch name nor equality with a later accepted tree is a waiver.
-            if !accepted_commits.contains(change.base_commit.as_str()) {
-                return Err(invalid(format!(
-                    "GOVERNANCE_PR_BASE_MISMATCH: imported commit {commit} has an unaccepted base"
-                )));
-            }
-            verify_base_binding(
-                root,
-                &document,
-                &change.base_commit,
-                commit,
-                head.change
-                    .as_ref()
-                    .map(|change| change.target_base.as_str()),
-            )?;
-        }
-        let parent_line = git(root, &["rev-list", "--parents", "-n", "1", commit])?;
-        let parents: Vec<_> = parent_line.split_whitespace().skip(1).collect();
-        let mut prior_ids = BTreeSet::new();
-        for parent in parents.iter().take(1) {
-            let Ok(parent_text) = git(root, &["show", &format!("{parent}:{GOVERNANCE_PATH}")])
-            else {
-                continue;
-            };
-            let prior = parse(parent_text.as_bytes())?;
-            if prior.change.as_ref().map(|change| change.id.as_str()) != Some(change.id.as_str()) {
-                if prior.change.is_some() && !accepted_commits.contains(parent) {
-                    return Err(invalid(format!(
-                        "GOVERNANCE_PR_IDENTITY_CONFLICT: commit {commit} changed identity inside an unaccepted lineage"
-                    )));
-                }
-                continue;
-            }
-            if prior
-                .change
-                .as_ref()
-                .map(|change| (&change.base_commit, &change.target_base))
-                != Some((&change.base_commit, &change.target_base))
-            {
-                return Err(invalid(format!(
-                    "GOVERNANCE_PR_BASE_MISMATCH: commit {commit} changed its first-parent base identity"
-                )));
-            }
-            for old in &prior.checkpoints {
-                prior_ids.insert(old.id.clone());
-                if !document.checkpoints.iter().any(|entry| {
-                    entry.id == old.id
-                        && entry.input_digest == old.input_digest
-                        && entry.summary == old.summary
-                        && entry.proof_refs == old.proof_refs
-                }) {
-                    return Err(invalid(format!(
-                        "GOVERNANCE_CHECKPOINT_HISTORY_CHANGED: commit {commit} erased or rewrote a parent checkpoint"
-                    )));
-                }
-            }
-        }
-        // Transport commits may reuse proof only for exact whole-tree equality,
-        // including the governance document, and only with one source parent.
-        // That source is independently checked in this topological walk (or is
-        // already accepted). Material edits and all merges need a new checkpoint.
-        let unchanged_transport = parents.len() == 1
-            && git(root, &["rev-parse", &format!("{commit}^{{tree}}")])?
-                == git(root, &["rev-parse", &format!("{}^{{tree}}", parents[0])])?;
-        let expected = material_digest(root, &document, Some(commit))?;
-        if !document.checkpoints.iter().any(|entry| {
-            entry.input_digest == expected
-                && (unchanged_transport || !prior_ids.contains(&entry.id))
-        }) {
-            return Err(invalid(format!(
-                "GOVERNANCE_CHECKPOINT_MISSING: commit {commit} needs a new checkpoint bound to its exact material tree and governance inputs"
-            )));
-        }
-        verified = true;
-    }
-    if !commits.is_empty() && !verified {
-        return Err(invalid(
-            "GOVERNANCE_CHECKPOINT_MISSING: PR has no canonical checkpoint",
-        ));
-    }
-    let expected_head = material_digest(root, &head, Some(head_ref))?;
-    if !head
-        .checkpoints
-        .iter()
-        .any(|entry| entry.input_digest == expected_head)
-    {
-        return Err(invalid(
-            "GOVERNANCE_CHECKPOINT_MISSING: final head material is not checkpointed",
-        ));
-    }
-    Ok(())
+    inspect_checkpoint_history(root, base_ref, head_ref, target_base)?.require_proven()
 }
 
 #[cfg(test)]

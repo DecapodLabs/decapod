@@ -223,26 +223,14 @@ pub fn map_agentic(
 
 /// Read all map events from the canonical event table, with legacy fallback.
 pub fn read_map_events(root: &Path) -> Result<Vec<MapEvent>, error::DecapodError> {
-    let db_path = events::canonical_db_path(root);
-    if db_path.exists() {
-        let conn = crate::core::db::db_connect_for_validate(&db_path.to_string_lossy())?;
-        let mut stmt = conn
-            .prepare("SELECT payload FROM events WHERE stream = 'map' ORDER BY seq ASC")
-            .map_err(error::DecapodError::StorageError)?;
-        let rows = stmt
-            .query_map([], |row| row.get::<_, String>(0))
-            .map_err(error::DecapodError::StorageError)?;
-        let mut out = Vec::new();
-        for row in rows {
-            let value = row.map_err(error::DecapodError::StorageError)?;
-            out.push(
-                serde_json::from_str(&value)
-                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
-            );
-        }
-        return Ok(out);
-    }
-    Ok(Vec::new())
+    events::query(root, events::MAP, usize::MAX)?
+        .into_iter()
+        .rev()
+        .map(|event| {
+            serde_json::from_value(event.payload)
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+        })
+        .collect()
 }
 
 // ---------------------------------------------------------------------------

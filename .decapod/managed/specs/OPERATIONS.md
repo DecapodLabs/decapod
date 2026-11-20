@@ -2,14 +2,6 @@
 
 ## Inspecting native validation completion
 
-After full native validation, inspect the returned evidence directory's
-`completion/verdict.json` and `completion/native-readiness-receipt.json` together.
-Pending completion staging is not success. A failed write, missing proof, stale
-candidate/target or rejected required Vega decision must be repaired and validated
-again; never manufacture a tracked receipt to unlock the native boundary.
-`decapod govern project-check` may produce the legacy preparation receipt but
-does not establish publication permission. Full validation remains the entrypoint.
-
 ## Operations Overview
 
 Decapod runs on demand as a versioned CLI or structured RPC process. The agent
@@ -152,6 +144,18 @@ noninteractive `podman machine start --quiet --no-info --update-connection=false
 path, followed by another service probe. This does not launch Podman Desktop or
 change the default connection.
 
+On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
+without a user systemd instance (`#1820`), `decapod auto container run` (and
+claim-triggered container preparation via `src/decapod/plugins/container.rs`)
+retains full `--cpus`, `--memory`, and `--pids-limit` enforcement and never
+disables cgroups. Operators or agents may specify a validated delegated parent
+through `--cgroup-parent` or `DECAPOD_CONTAINER_CGROUP_PARENT`, or run inside a
+delegated cgroup v2 subtree whose writable non-root ancestor enables `cpu`,
+`memory`, and `pids` in `cgroup.subtree_control` for automatic selection.
+Invalid values fail closed with `container_invalid_cgroup_parent` before runtime
+invocation, and OCI/cgroupfs creation or limit-enforcement permission errors emit
+`container_cgroup_permission_denied` rather than `container_workspace_permission_denied`.
+
 The explicit container-workspace launch hint makes a verified online backup in a
 private temporary directory, mounts it read-only and seeds container-local tmpfs.
 Backup failure prevents launch. Container-copy writes are ephemeral and are not
@@ -205,6 +209,59 @@ Release-only packaging is outside that profile; simulated publish/deploy steps
 never prove delivery. Validation itself does not open a PR, create a release/tag,
 upload packages or images, or deploy.
 
+### Exact-Candidate Proof Binding and Continuous Invalidation
+
+Full validation binds its recorded proof in `src/decapod/core/validation_history.rs`
+(`CompletionRecord`, `ValidationBinding`, and `HistoricalTaskBinding`) and
+`src/decapod/core/readiness_evidence/material.rs` (`MaterialIdentity`) to the exact
+candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
+`accepted_base_revision`, repository/workflow/configuration/toolchain digests, active
+`workunit` subject, task ID, and claim `lease_generation`:
+
+- **Source, commit, and history changes:** Uncommitted working-tree edits, new
+  commits, tree-preserving `git commit --amend`, and `git rebase` immediately
+  invalidate earlier candidate readiness; rebased commits lacking a checkpoint
+  bound to their rewritten tree fail `decapod validate` with
+  `GOVERNANCE_CHECKPOINT_MISSING` until re-checkpointed and re-validated.
+- **Target and custody changes:** Advancing the accepted target branch blocks
+  stale completion and publication, and renewing a task lease (`decapod todo renew`,
+  incrementing `lease_generation`) immediately invalidates prior completion history
+  and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
+  --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
+  To surface avoidable mid-validation lease expiration before long provider runs,
+  `validation_history::capture_task_binding_with_budget` calls the read-only
+  `todo::ensure_validation_lease_ttl` guard *before* freezing `HistoricalTaskBinding`.
+  Because renewal rotates custody, validation never renews implicitly. The mode is
+  selected by `DECAPOD_VALIDATE_LEASE_TTL`: `warn` (default) emits a
+  `VALIDATION_LEASE_TTL_LOW` stderr advisory with the exact `decapod todo renew`
+  command and continues with custody untouched; `strict` fails fast with
+  `VALIDATION_LEASE_TTL_INSUFFICIENT`; `renew` is an explicit operator opt-in that
+  renews the claiming agent's lease first and therefore requires refreshing any
+  existing workunit/governance checkpoint. The safe path is to claim or renew with
+  a lease longer than the expected run (`--lease-seconds`) *before* checkpointing.
+- **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
+  default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
+  and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
+  `validate` / `govern project-check` workers and child test/tooling harnesses toward
+  `min(hard_limit, 65536)` with graceful fallbacks (`10240`, `4096`) without failing
+  spawn. `system doctor check` warns when the shell soft limit is below `4096`, and
+  `validate_open_file_limits` emits a non-blocking `RLIMIT_NOFILE_LOW` advisory when
+  hard caps keep the worker below `4096`.
+- **Partial and local scopes:** `GITHUB_ACTIONS=true` / `BUILDKITE=true` runs
+  (`scope=ci_local`, `publication_ready=false`, `readiness=null`), `govern
+  project-check` (`publication_ready=false`), and `validate --snapshot-prepare`
+  never record full completion history or satisfy `workspace publish` / `todo done`.
+  `canonical_local_target = true` proves `scope=repository_local_git_readiness`
+  with `publication_ready=false` and blocks `workspace publish` with
+  `LOCAL_TARGET_PUBLICATION_UNSUPPORTED`.
+- **Immutable historical lookup:** `decapod qa verify commit <sha>`
+  (`src/decapod/plugins/verify.rs::VerifyCommand::Commit`,
+  `validation_history::lookup`) inspects only the immutable observation recorded for
+  that exact `<sha>` (`scope=historical_validation`, `publication_ready=false`) and
+  never transfers readiness to amended, rebased, newer, or lease-rotated
+  candidates. Actual-binary end-to-end coverage lives in
+  `tests/exact_candidate_governance_1052.rs`.
+
 ## Monitoring
 
 Agents inspect supported command status, task/workspace state, trajectories,
@@ -224,8 +281,15 @@ authority. Human-authored overrides are validated, never mechanically rewritten.
 Conflicts preserve source artifacts and stop with an actionable error.
 
 When a migration notice appears, inspect the managed ledger and catalog through
-Decapod and confirm completion and verification. The notice alone is not proof.
-Failed migration follows supported backup/restore diagnostics; unresolved
+`decapod system migrations --format json` (and `decapod system doctor check`)
+instead of directly opening `.decapod/managed/*` files or inferring cwd-relative
+paths from a governed worktree. `MigrationReport::agent_instruction` and
+`inspect_migration_state_at` (`src/decapod/core/migration.rs`) report the actual
+resolved `decapod_root` alongside pending migrations, applied entries, catalog
+entries, legacy database/recovery checks, and concrete remediation instructions
+without consuming the pending transition counter or initializing storage. Confirm
+completion and verification from that inspection output; the notice alone is not
+proof. Failed migration follows supported backup/restore diagnostics; unresolved
 corruption or unsupported recovery requires human judgment.
 
 Release artifact jobs use `assets/tools/release_cpu.rs` through the scoped
@@ -236,6 +300,18 @@ Hidden resource limits and memory pressure are not inferred. The ordinary Cargo
 job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
+
+### Current Release Alignment (v0.150.7)
+
+The `v0.150.7` release cut aligns the package version in `Cargo.toml`,
+root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
+managed projections refreshed by the `0.150.7` binary:
+`.decapod/managed/Dockerfile.decapod` pins `DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.150.7-debian`
+and `DECAPOD_VERSION=0.150.7`, and `.decapod/managed/specs/.manifest.json`
+records `decapod_release` `0.150.7` alongside current codebase attestations.
+Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
+remain intentionally pinned at `0.148.0` under
+`[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
 
 ## Incident Response
 
@@ -268,15 +344,6 @@ semantics remain outside the coordination guarantee. Details are in
 `docs/storage-permissions.md`.
 
 ## Optional services
-
-Vega is disabled by default. Explicit setup caches verified external model data;
-normal builds and inference never download models. Check updates using
-`decapod setup vega --check-updates`, refresh an explicitly selected compatible
-revision using `--refresh`, or restore a verified cached manifest with
-`--rollback`. Unchanged backbone files are reused by content hash. The native
-Rust worker must be built from a reviewed source release on Apple-arm64, checked
-with `--probe`, and explicitly pinned before required mode can run. This is not
-permission to bypass repository validation for development builds.
 
 Required inference is bounded and one-shot, with fresh recurrent state and no
 background process. Unsupported hardware, missing/changed artifacts, timeout,
@@ -313,6 +380,12 @@ and projection handling use exact proofs, never branch names or labels.
 
 Code PRs carry release-bound entrypoints, the managed Dockerfile pin, specifications
 and governance. Release automation compiles and publishes approved artifacts;
+on a release merge native GitHub Actions publishes `packages.default` to the
+`decapod` Cachix cache only after a credential-free release-owner gate and
+proof job succeed. A separate native publisher rebuilds, smoke-checks and
+proves Linux reproducibility before uploading. Missing or invalid
+`CACHIX_AUTH_TOKEN` fails publication closed; Buildkite imports and manual runs
+never resolve the publisher's secret;
 it does not directly mutate master or open a projection-healing PR. A later agent
 iteration refreshes projections for the installed release in its claimed workspace.
 Documentation drift workflows report changes without committing to PR branches.
@@ -385,8 +458,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (215 files)
+- Repository signal fingerprint: `a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -405,3 +478,34 @@ job requires that output and the master branch before it can be scheduled.
 GitHub-compatible environment variables or missing Buildkite markers alone do
 not establish native ownership. Imported builds retain a generic site artifact
 and validation custody, without starting the GitHub Pages deployment job.
+
+## Recover work from immutable checkpoint gaps
+
+First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
+--head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
+branch/task and returned failures. A later checkpoint cannot prove a checkpoint
+existed in an earlier immutable commit. Unavailable input is not a proven gap.
+
+Create and claim a new task, use normal `workspace ensure` from the accepted
+target, and enter its returned verified checkout. Before advancing that branch,
+run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
+<reviewed-rationale>`. Review/reauthor selected source without importing old
+governance or invalid ancestry. Run `govern plan review-spec` for current
+interfaces/architecture/security, refresh projections, then stage, checkpoint
+and commit the present observation. Resolve its returned `history-recovery:<sha>`
+obligation with the archived observation and relevant current evidence references;
+checkpoint/commit that resolution and run complete independent validation.
+This recovers current work. It leaves old history unproven and enables no waiver.
+
+## PR1663 integrated storage behavior
+
+Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.
+
+## Projection performance budgets and bounded retention operations (#1734)
+
+- **Reproducible baseline measurement:** Run `cargo test --test projection_performance_budgets_1734 -- --ignored --nocapture` (optionally setting `DECAPOD_PROJECTION_BENCH_REPORT=<path>`) against disposable temporary stores to reproduce the measured baselines for indexed vs. unindexed subject cursor queries, unbounded vs. bounded event pages, concurrent WAL writer/reader contention, and multi-worktree enumeration. Always-on CI coverage runs via `cargo test --test projection_performance_budgets_1734` and `cargo test --lib core::projection_budget`.
+- **Degraded-mode triage:** When a read-only observer receives `status = "degraded"` on `EventProjectionPage` or `WorktreeProjectionPage`, inspect `degraded_reasons` rather than treating the response as complete:
+  - `response_byte_budget_exceeded` / `scan_budget_exceeded` / `worktree_budget_exceeded` / `wall_time_budget_exceeded`: resume incrementally from `cursor.next_seq` or `next_cursor`, or raise the caller budget within `HARD_MAX_*` limits. When the very first single event exceeds `max_response_bytes`, `next_seq` stays pinned before that record so no event is silently skipped.
+  - `reader_contention_deferred`: an exclusive maintenance lock or heavy write burst held the datastore beyond `reader_lock_timeout_ms`; retry with backoff without interfering with writers.
+  - `cursor_behind_retention_floor`: explicit bounded retention pruned events through `cursor.retention_floor_seq`; verify `cursor.retention_anchor_sha256` against the prior window and resume from the retained floor.
+- **Explicit bounded event retention:** `core/projection_budget.rs::apply_bounded_event_retention` is explicit-only and never runs implicitly on read paths. It computes a chained SHA-256 `EventRetentionAnchor` in `meta(namespace='event_retention')` inside `BEGIN IMMEDIATE` before deleting cold rows, preserves original surviving `seq` numbers, and ensures future `events::append_on_conn` calls remain strictly monotonic even after a full `keep_latest = 0` prune.

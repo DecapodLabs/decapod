@@ -1,5 +1,8 @@
 # CI and local proof must not silently rewrite the committed dependency lock.
 common --lockfile_mode=error
+# Retry GitHub release assets through the same official download endpoint.
+# Repository rules still verify their original pinned integrity before use.
+common --downloader_config=.config/build/downloader.cfg
 build --announce_rc
 build --color=yes
 build --curses=yes

@@ -6,8 +6,10 @@ use std::path::{Path, PathBuf};
 
 pub const PUBLIC_CLOUD_BACKEND_UNAVAILABLE: &str = "This cloud storage operation is not implemented yet; cloud mode never falls back to local SQLite, and todo persistence is routed through Dactyl.";
 
-pub const PROPODUS_TODO_ROUTE_SUMMARY: &str =
+pub const CLOUD_TODO_ROUTE_SUMMARY: &str =
     "POST /query for task reads/writes; POST /batch for atomic task operations";
+#[deprecated(note = "use CLOUD_TODO_ROUTE_SUMMARY")]
+pub const PROPODUS_TODO_ROUTE_SUMMARY: &str = CLOUD_TODO_ROUTE_SUMMARY;
 pub const CLOUD_ONBOARDING_CONTRACT_VERSION: &str = "v1";
 pub const CLOUD_ONBOARDING_START_ROUTE: &str = "/api/onboarding/start";
 pub const CLOUD_ONBOARDING_STATUS_ROUTE: &str = "/api/onboarding/status";
@@ -440,7 +442,7 @@ impl CloudInitRegistration {
             schema_version: "1.0.0".to_string(),
             provider: provider.to_string(),
             api_url: api_url.trim_end_matches('/').to_string(),
-            route: PROPODUS_TODO_ROUTE_SUMMARY.to_string(),
+            route: CLOUD_TODO_ROUTE_SUMMARY.to_string(),
             repo_id: repo_id.to_string(),
             repo_root_hint: repo_root.display().to_string(),
             created_at: time::now_epoch_z(),

@@ -105,7 +105,7 @@ def passed(report, returncode, root, before):
     require(receipt["governance_digest"] == before["governance"] and
             receipt["trajectory_digest"] == before["trajectory"], "Governance binding mismatch")
     require(receipt["evidence_digest"] == digest(observations), "Evidence digest mismatch")
-    require(receipt["vega_readiness_digest"] == digest(verdict["vega_readiness"]),
+    require(receipt["laya_readiness_digest"] == digest(verdict["laya_readiness"]),
             "Decision digest mismatch")
     receipt_hash = receipt.pop("receipt_hash")
     require(receipt_hash == digest(receipt, sorted_keys=True), "Receipt integrity mismatch")

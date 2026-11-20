@@ -1,0 +1,2598 @@
+{
+  "schema_version": 1,
+  "fixture_version": 1,
+  "baseline_ddl": "historical EVENTS_TABLE_SCHEMA plus unique index",
+  "optimization": "events.compact_sequence_index.v002",
+  "unmeasured": [
+    "peak_memory",
+    "allocations",
+    "full CLI cold-start",
+    "task/knowledge workload latency",
+    "hosted PostgreSQL",
+    "network bytes",
+    "multi-agent contention"
+  ],
+  "environment": {
+    "platform": "macOS arm64",
+    "profile": "Cargo test opt-level=1 with debuginfo",
+    "peak_rss_bytes": 685981696,
+    "peak_memory_footprint_bytes": 415302520,
+    "memory_scope": "entire 18-case audit process including materialized hashes/catalog; not an operation allocation measurement"
+  },
+  "cases": [
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 1118208,
+        "freelist_pages": 56,
+        "page_count": 273,
+        "page_size": 4096,
+        "btree_bytes": 888832,
+        "index_bytes": 393216,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 880640,
+        "freelist_pages": 0,
+        "page_count": 215,
+        "page_size": 4096,
+        "btree_bytes": 880640,
+        "index_bytes": 385024,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 901120,
+        "freelist_pages": 0,
+        "page_count": 220,
+        "page_size": 4096,
+        "btree_bytes": 901120,
+        "index_bytes": 405504,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 40960
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 444209,
+          "p95_ns": 603083,
+          "p99_ns": 686958,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 28208,
+          "p95_ns": 43125,
+          "p99_ns": 61625,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12625,
+          "p95_ns": 18542,
+          "p99_ns": 25875,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 895084000,
+      "journal_mode": "delete",
+      "migration_ns": 3247250,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 407542,
+          "p95_ns": 543167,
+          "p99_ns": 628459,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 27458,
+          "p95_ns": 39959,
+          "p99_ns": 51875,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12250,
+          "p95_ns": 17292,
+          "p99_ns": 21625,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 128,
+      "preserved_event_digest": "d7df5cbdc013d424138e1b6324947da8a1eea227c0994fcc80c215b6d9905b95",
+      "preserved_operational_digests": {
+        "agent_prompts": "1df2698cd50dd1aac7e52568f01abbffcf6103a5941732fc582572b9c52a1f25",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "06e1af8a806bef401963f0e640c83af9614d34e9b9d0ac313162daf457c3390c",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "fddc0bbc4c4985836fefe2af78f11c036efd3fefab4f60bbc676c9e2179fd576",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "f48a8f17aad2e910ad9c12ef2b9e49c9e8b393bbd02ad1b5f71fa0e950cb68d3",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "664ea5b753c1bc82c5936e8fe7cab3aea6f69600b364cfb5ec4b29b71bb12d5e"
+      },
+      "rows": 1000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 0
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15286272,
+        "freelist_pages": 88,
+        "page_count": 3732,
+        "page_size": 4096,
+        "btree_bytes": 14925824,
+        "index_bytes": 1011712,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 14917632,
+        "freelist_pages": 0,
+        "page_count": 3642,
+        "page_size": 4096,
+        "btree_bytes": 14917632,
+        "index_bytes": 1003520,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15073280,
+        "freelist_pages": 0,
+        "page_count": 3680,
+        "page_size": 4096,
+        "btree_bytes": 15073280,
+        "index_bytes": 1159168,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 311296
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 449125,
+          "p95_ns": 893291,
+          "p99_ns": 1366667,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 31333,
+          "p95_ns": 77250,
+          "p99_ns": 143208,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12500,
+          "p95_ns": 25375,
+          "p99_ns": 58916,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 933760834,
+      "journal_mode": "delete",
+      "migration_ns": 3371666,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 523583,
+          "p95_ns": 879958,
+          "p99_ns": 2052750,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 39625,
+          "p95_ns": 90875,
+          "p99_ns": 157625,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 15500,
+          "p95_ns": 29916,
+          "p99_ns": 48333,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "e49e1012e7193892ca2b4b6557b50c10c72b43daa5497fc6f8a67a3a9cb43a7c",
+      "preserved_operational_digests": {
+        "agent_prompts": "0b093421f5537b8c6d2c3b411a0164ca0b6fe1005e60dca5d647d0e061b26976",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "5fc4a6eae06a46ec6e68e238ac95dd6a91bc1b459615a1ecfcc7939ddbfc934f",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "f66ad739c072a95a40bac1ac7cc903561c69fdebbede5c1fbc2ba5e5dbced702",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "79e6f4c67ae47f3026ddc1ad8e2ba96da8e7251a9fa7e67e1c189e2620d544f1",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d017b88e8cf0b44d7a4f541d8123e2b3759968a90dd069007698dd8023435d87"
+      },
+      "rows": 10000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 0
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146984960,
+        "freelist_pages": 454,
+        "page_count": 35885,
+        "page_size": 4096,
+        "btree_bytes": 145125376,
+        "index_bytes": 7569408,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1654784
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 145104896,
+        "freelist_pages": 0,
+        "page_count": 35426,
+        "page_size": 4096,
+        "btree_bytes": 145104896,
+        "index_bytes": 7548928,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1650688
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146755584,
+        "freelist_pages": 0,
+        "page_count": 35829,
+        "page_size": 4096,
+        "btree_bytes": 146755584,
+        "index_bytes": 9199616,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 3301376
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 438375,
+          "p95_ns": 610583,
+          "p99_ns": 856792,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 31042,
+          "p95_ns": 45625,
+          "p99_ns": 68375,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12291,
+          "p95_ns": 18958,
+          "p99_ns": 30750,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 913373000,
+      "journal_mode": "delete",
+      "migration_ns": 4135875,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 483750,
+          "p95_ns": 779333,
+          "p99_ns": 957542,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 36458,
+          "p95_ns": 72083,
+          "p99_ns": 111666,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 14833,
+          "p95_ns": 25584,
+          "p99_ns": 53375,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "a2c1dfe062a494a33a72f851e9d7946f0aa2321b7c59817d62ae3117f4ade20d",
+      "preserved_operational_digests": {
+        "agent_prompts": "18ccb3cbc564afd0145d1b5e31d89c598ae0fa9734447ab26ac465a656ff3ff0",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "919d46cf4b11d6bcae3a79482575cfafa8b0d5fba34dfb9335895a77d9ba7b44",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "8f39b39f5418226d409978fcad1f426f8c2dba6ab0687484abc914a49af61670",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "d2f9e6ee6f73b06c97bc6e102ab6e6dbded6f439abbab2cda7092e3911a49127",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d73a162a60c70f9212f1ba7919514a93892535f55a34fa3ce2a2638e9864d642"
+      },
+      "rows": 100000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 0
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 1118208,
+        "freelist_pages": 56,
+        "page_count": 273,
+        "page_size": 4096,
+        "btree_bytes": 888832,
+        "index_bytes": 393216,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 880640,
+        "freelist_pages": 0,
+        "page_count": 215,
+        "page_size": 4096,
+        "btree_bytes": 880640,
+        "index_bytes": 385024,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 901120,
+        "freelist_pages": 0,
+        "page_count": 220,
+        "page_size": 4096,
+        "btree_bytes": 901120,
+        "index_bytes": 405504,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 40960
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 369208,
+          "p95_ns": 2035417,
+          "p99_ns": 2655875,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 28709,
+          "p95_ns": 70583,
+          "p99_ns": 106500,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 9834,
+          "p95_ns": 19792,
+          "p99_ns": 31166,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12364024
+      },
+      "init_ns": 903645500,
+      "journal_mode": "wal",
+      "migration_ns": 2507792,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 330375,
+          "p95_ns": 501334,
+          "p99_ns": 617125,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 21875,
+          "p95_ns": 45625,
+          "p99_ns": 90292,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8125,
+          "p95_ns": 14625,
+          "p99_ns": 21625,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10110384
+      },
+      "payload_body_bytes": 128,
+      "preserved_event_digest": "f89905cd10c9b33ca66b35b665034cc112c55bcbb26440a74c029899b0f00ff4",
+      "preserved_operational_digests": {
+        "agent_prompts": "e3271fc4f31ced7acff55ecd7a662e928d8347761e6582862f1e2694aebe604f",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "96cd1b53b71f791d297dea71bd4f8ccaeb0321cbaf251737007f514b3716aa90",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "7ba62aeb4919b27daf75372bb437de3291efbb7e7917656fe0a3ca5e6eb36006",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "fd79e1886a742520917fd58a5655946aa639ae568e494b3cdcfa8fbb14a6f971",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "664ea5b753c1bc82c5936e8fe7cab3aea6f69600b364cfb5ec4b29b71bb12d5e"
+      },
+      "rows": 1000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 0
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15286272,
+        "freelist_pages": 88,
+        "page_count": 3732,
+        "page_size": 4096,
+        "btree_bytes": 14925824,
+        "index_bytes": 1011712,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 14917632,
+        "freelist_pages": 0,
+        "page_count": 3642,
+        "page_size": 4096,
+        "btree_bytes": 14917632,
+        "index_bytes": 1003520,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15073280,
+        "freelist_pages": 0,
+        "page_count": 3680,
+        "page_size": 4096,
+        "btree_bytes": 15073280,
+        "index_bytes": 1159168,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 311296
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 327417,
+          "p95_ns": 556958,
+          "p99_ns": 752041,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 26000,
+          "p95_ns": 56459,
+          "p99_ns": 87125,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8458,
+          "p95_ns": 16541,
+          "p99_ns": 22958,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12343424
+      },
+      "init_ns": 872125041,
+      "journal_mode": "wal",
+      "migration_ns": 2736667,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 360875,
+          "p95_ns": 564625,
+          "p99_ns": 671792,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 31208,
+          "p95_ns": 62625,
+          "p99_ns": 92833,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 9875,
+          "p95_ns": 18458,
+          "p99_ns": 30291,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10089784
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "218760db1140f6a3875066a4d15fb14ad62e1fb074e3341e1f76fb2824714296",
+      "preserved_operational_digests": {
+        "agent_prompts": "feb42b63dc2a296bd15ae0493e332e2bdb5165057d33765ed6b40ba3e75d5856",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "82cadf35586652bd4cf04fa0dbf49321dbc8189766b051673d58790fdb4fff16",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "03aed43710e8092136e4444da36c342642bb01de36bac282c85bd35f97deaef4",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "6069956fefb64451234e49008d92e1edc7e249fbde5fe4f03c52966ff525f454",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d017b88e8cf0b44d7a4f541d8123e2b3759968a90dd069007698dd8023435d87"
+      },
+      "rows": 10000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 0
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146984960,
+        "freelist_pages": 454,
+        "page_count": 35885,
+        "page_size": 4096,
+        "btree_bytes": 145125376,
+        "index_bytes": 7569408,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1654784
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 145104896,
+        "freelist_pages": 0,
+        "page_count": 35426,
+        "page_size": 4096,
+        "btree_bytes": 145104896,
+        "index_bytes": 7548928,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1650688
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146755584,
+        "freelist_pages": 0,
+        "page_count": 35829,
+        "page_size": 4096,
+        "btree_bytes": 146755584,
+        "index_bytes": 9199616,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 3301376
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 311625,
+          "p95_ns": 559583,
+          "p99_ns": 812375,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 25375,
+          "p95_ns": 34542,
+          "p99_ns": 47792,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8125,
+          "p95_ns": 10834,
+          "p99_ns": 14666,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12454664
+      },
+      "init_ns": 893955000,
+      "journal_mode": "wal",
+      "migration_ns": 3492375,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 363084,
+          "p95_ns": 588959,
+          "p99_ns": 870334,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 30250,
+          "p95_ns": 61583,
+          "p99_ns": 98250,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 9917,
+          "p95_ns": 17125,
+          "p99_ns": 24250,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10213384
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "4608cb5f8cfb87c13fb18a665e1db76f9eea96fc2d2aa07392161e178e862e85",
+      "preserved_operational_digests": {
+        "agent_prompts": "94f26d8b0333f1b2adc2aaa193cd6f491728a28f9e9bdd4167425078b9cab272",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "925de0beef4b3778e2f31ecfb1f7612f934101bee7bac53c8f9485f625caccc5",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "985ee59b86444e8ca9232125385e0478fbf62492724543929a0eb99763b38748",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "2395745d3d5d99ffed4a79983f6911748b6642c910edc07954f8f4785d87598d",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d73a162a60c70f9212f1ba7919514a93892535f55a34fa3ce2a2638e9864d642"
+      },
+      "rows": 100000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 0
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 1118208,
+        "freelist_pages": 56,
+        "page_count": 273,
+        "page_size": 4096,
+        "btree_bytes": 888832,
+        "index_bytes": 393216,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 880640,
+        "freelist_pages": 0,
+        "page_count": 215,
+        "page_size": 4096,
+        "btree_bytes": 880640,
+        "index_bytes": 385024,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 901120,
+        "freelist_pages": 0,
+        "page_count": 220,
+        "page_size": 4096,
+        "btree_bytes": 901120,
+        "index_bytes": 405504,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 40960
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 410667,
+          "p95_ns": 563625,
+          "p99_ns": 710000,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 27125,
+          "p95_ns": 40542,
+          "p99_ns": 53250,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 11792,
+          "p95_ns": 17125,
+          "p99_ns": 20000,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 892033666,
+      "journal_mode": "delete",
+      "migration_ns": 2842750,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 421625,
+          "p95_ns": 594083,
+          "p99_ns": 787708,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 28083,
+          "p95_ns": 46917,
+          "p99_ns": 73500,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12209,
+          "p95_ns": 19750,
+          "p99_ns": 32291,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 128,
+      "preserved_event_digest": "c2081ebc206aba1382bf03b4a27da46f337a134b5959ffc34493ba11cf88c84d",
+      "preserved_operational_digests": {
+        "agent_prompts": "d9e31aae3044e7332c9c5d0afa5261c233c5efa8a60c6cd7bd6328a9805d7237",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "717b0dfe3c92de8f8fb1f45351980ab480a315dd26f776b39177ccb3a93cd42c",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "8741cb6ef59a4409e0ababcd6588d43719cbd81b97fb9f6e1b27d18239e3bec1",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "a7e47e22b0001e216cd12a504e09113337a1e1df20780bca9ec95ec5484d6da7",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "664ea5b753c1bc82c5936e8fe7cab3aea6f69600b364cfb5ec4b29b71bb12d5e"
+      },
+      "rows": 1000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "optimized_first",
+      "trial": 1
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15286272,
+        "freelist_pages": 88,
+        "page_count": 3732,
+        "page_size": 4096,
+        "btree_bytes": 14925824,
+        "index_bytes": 1011712,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 14917632,
+        "freelist_pages": 0,
+        "page_count": 3642,
+        "page_size": 4096,
+        "btree_bytes": 14917632,
+        "index_bytes": 1003520,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15073280,
+        "freelist_pages": 0,
+        "page_count": 3680,
+        "page_size": 4096,
+        "btree_bytes": 15073280,
+        "index_bytes": 1159168,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 311296
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 449417,
+          "p95_ns": 657708,
+          "p99_ns": 855542,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 29792,
+          "p95_ns": 53708,
+          "p99_ns": 86708,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12792,
+          "p95_ns": 21917,
+          "p99_ns": 31042,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 896092625,
+      "journal_mode": "delete",
+      "migration_ns": 3025417,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 427000,
+          "p95_ns": 586875,
+          "p99_ns": 827041,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 29083,
+          "p95_ns": 41542,
+          "p99_ns": 56375,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12500,
+          "p95_ns": 18291,
+          "p99_ns": 24792,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "abcd0dece6ec555188fbd150b02e784f67df55e6b7e3718b051e3f4ff418b9e2",
+      "preserved_operational_digests": {
+        "agent_prompts": "c666d0fa4a585883d00bdd854ba5662c81c78a8b4f4bf1f5eeb7fc59675557de",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "5fb40e505d170bebda6d98ecad5c09a3d6ed2793d5018f44fa48c87ef109c101",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "f6bb7eb883ef2286c7a11e3f4cb3aa416449fd3528faa803ec284b53c7ce8021",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "a95b888d9247d23bc3c25e8454245bec3de10314c38e0df68324d7270961d781",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d017b88e8cf0b44d7a4f541d8123e2b3759968a90dd069007698dd8023435d87"
+      },
+      "rows": 10000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "optimized_first",
+      "trial": 1
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146984960,
+        "freelist_pages": 454,
+        "page_count": 35885,
+        "page_size": 4096,
+        "btree_bytes": 145125376,
+        "index_bytes": 7569408,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1654784
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 145104896,
+        "freelist_pages": 0,
+        "page_count": 35426,
+        "page_size": 4096,
+        "btree_bytes": 145104896,
+        "index_bytes": 7548928,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1650688
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146755584,
+        "freelist_pages": 0,
+        "page_count": 35829,
+        "page_size": 4096,
+        "btree_bytes": 146755584,
+        "index_bytes": 9199616,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 3301376
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 426792,
+          "p95_ns": 606166,
+          "p99_ns": 796916,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 27333,
+          "p95_ns": 42417,
+          "p99_ns": 56583,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12083,
+          "p95_ns": 18041,
+          "p99_ns": 22125,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 926417250,
+      "journal_mode": "delete",
+      "migration_ns": 3944083,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 388084,
+          "p95_ns": 549500,
+          "p99_ns": 635166,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 26791,
+          "p95_ns": 38583,
+          "p99_ns": 48583,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 11625,
+          "p95_ns": 16542,
+          "p99_ns": 23250,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "b25e3595210209b805d05660d8ac3e326048bda7b233abc4fe96511b890693bc",
+      "preserved_operational_digests": {
+        "agent_prompts": "23dd16a07d2f443a86c70d5a2a1f756fc0e2689f2977a6afa2acb8627f6e185b",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "710d0e81f7e6e63615f2c6ec3a97af14198634033ab7c35472f18128f3b525bc",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "7f63f446e3f5ee53183b466ec59a6322e71e044cf5fb10817399a61b61e4b104",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "1b531cbc14eb5df211e13740e32724103d4c65e8653b6dfe7e76025197257be9",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d73a162a60c70f9212f1ba7919514a93892535f55a34fa3ce2a2638e9864d642"
+      },
+      "rows": 100000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "optimized_first",
+      "trial": 1
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 1118208,
+        "freelist_pages": 56,
+        "page_count": 273,
+        "page_size": 4096,
+        "btree_bytes": 888832,
+        "index_bytes": 393216,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 880640,
+        "freelist_pages": 0,
+        "page_count": 215,
+        "page_size": 4096,
+        "btree_bytes": 880640,
+        "index_bytes": 385024,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 901120,
+        "freelist_pages": 0,
+        "page_count": 220,
+        "page_size": 4096,
+        "btree_bytes": 901120,
+        "index_bytes": 405504,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 40960
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 343041,
+          "p95_ns": 588291,
+          "p99_ns": 963583,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 25750,
+          "p95_ns": 66833,
+          "p99_ns": 111459,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8917,
+          "p95_ns": 18083,
+          "p99_ns": 23042,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12364024
+      },
+      "init_ns": 925942791,
+      "journal_mode": "wal",
+      "migration_ns": 2708000,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 375458,
+          "p95_ns": 1186250,
+          "p99_ns": 2619958,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 26708,
+          "p95_ns": 68666,
+          "p99_ns": 96750,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 9167,
+          "p95_ns": 19166,
+          "p99_ns": 23459,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10110384
+      },
+      "payload_body_bytes": 128,
+      "preserved_event_digest": "d464d67cbe398fe7d2c667b1731de7f1f5b73fccb9870c1b674ec2e69e6754a3",
+      "preserved_operational_digests": {
+        "agent_prompts": "b666552dcb50526631060c8d0c8d1e59f656812ecb59066c8c39624be433ec44",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "d02547c3db5ee95793c29bcaa4a839b44b9288fc451426652f6c6e2f5f4fba77",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "6d6935a58307d73934a7179c58932850af45afc3e36a3a0b18929a3f30831715",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "4e8d3e5d7a298f538da6604312f5615e13e61ac696921a834e15c66a378d89c5",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "664ea5b753c1bc82c5936e8fe7cab3aea6f69600b364cfb5ec4b29b71bb12d5e"
+      },
+      "rows": 1000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "optimized_first",
+      "trial": 1
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15286272,
+        "freelist_pages": 88,
+        "page_count": 3732,
+        "page_size": 4096,
+        "btree_bytes": 14925824,
+        "index_bytes": 1011712,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 14917632,
+        "freelist_pages": 0,
+        "page_count": 3642,
+        "page_size": 4096,
+        "btree_bytes": 14917632,
+        "index_bytes": 1003520,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15073280,
+        "freelist_pages": 0,
+        "page_count": 3680,
+        "page_size": 4096,
+        "btree_bytes": 15073280,
+        "index_bytes": 1159168,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 311296
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 325625,
+          "p95_ns": 510625,
+          "p99_ns": 591500,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 24000,
+          "p95_ns": 38000,
+          "p99_ns": 50791,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8417,
+          "p95_ns": 12458,
+          "p99_ns": 14333,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12343424
+      },
+      "init_ns": 852539875,
+      "journal_mode": "wal",
+      "migration_ns": 2775917,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 339166,
+          "p95_ns": 583125,
+          "p99_ns": 895834,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 24625,
+          "p95_ns": 39083,
+          "p99_ns": 63208,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8375,
+          "p95_ns": 13083,
+          "p99_ns": 21709,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10089784
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "930c05a90e562653a6242ff5e4d442dec033857bd088a875178be2341f26c9e2",
+      "preserved_operational_digests": {
+        "agent_prompts": "d6ffde575e091d263f410691b6cc9397147d64d41484eefc025973dba93e43c1",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "a0650746f2352fa95c74083a5c82840f367baff9a0ce3de8a2cfc866010d33c0",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "f7e4307e2033b009824a3f37ee3aa93f224b613aec4c65435d90fa4dfe89707c",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "20169e0ef5ef86fa29a8c6c5084496eaf363378ab0c8de19dcb19034614f1af5",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d017b88e8cf0b44d7a4f541d8123e2b3759968a90dd069007698dd8023435d87"
+      },
+      "rows": 10000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "optimized_first",
+      "trial": 1
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146984960,
+        "freelist_pages": 454,
+        "page_count": 35885,
+        "page_size": 4096,
+        "btree_bytes": 145125376,
+        "index_bytes": 7569408,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1654784
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 145104896,
+        "freelist_pages": 0,
+        "page_count": 35426,
+        "page_size": 4096,
+        "btree_bytes": 145104896,
+        "index_bytes": 7548928,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1650688
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146755584,
+        "freelist_pages": 0,
+        "page_count": 35829,
+        "page_size": 4096,
+        "btree_bytes": 146755584,
+        "index_bytes": 9199616,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 3301376
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 325167,
+          "p95_ns": 591583,
+          "p99_ns": 875625,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 23166,
+          "p95_ns": 38542,
+          "p99_ns": 62792,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8083,
+          "p95_ns": 12333,
+          "p99_ns": 17625,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12454664
+      },
+      "init_ns": 891420583,
+      "journal_mode": "wal",
+      "migration_ns": 3598709,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 327500,
+          "p95_ns": 611125,
+          "p99_ns": 918167,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 22958,
+          "p95_ns": 39000,
+          "p99_ns": 53583,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 7834,
+          "p95_ns": 12292,
+          "p99_ns": 15666,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10213384
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "9474bcbfc131abab5157cf46c983bfab9a2076302ad953ef1f027e9437c3025e",
+      "preserved_operational_digests": {
+        "agent_prompts": "8751003aec8d974fca6fcf04499c1cf6eed6fdd1b1877f6f59b8cef0f5dda1c7",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "5d3210afbbfecee04549b6d0d323744e76c3b5f12070fee64d98ace525be17f2",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "87ad75d827296ffc50cb0cb422d3582f5f60e3e93b8c779def7e170a87b6f027",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "5030566ba63653a7531f2725374ffb81fee2cb4176dbb658bdda151485105e86",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d73a162a60c70f9212f1ba7919514a93892535f55a34fa3ce2a2638e9864d642"
+      },
+      "rows": 100000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "optimized_first",
+      "trial": 1
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 1118208,
+        "freelist_pages": 56,
+        "page_count": 273,
+        "page_size": 4096,
+        "btree_bytes": 888832,
+        "index_bytes": 393216,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 880640,
+        "freelist_pages": 0,
+        "page_count": 215,
+        "page_size": 4096,
+        "btree_bytes": 880640,
+        "index_bytes": 385024,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 901120,
+        "freelist_pages": 0,
+        "page_count": 220,
+        "page_size": 4096,
+        "btree_bytes": 901120,
+        "index_bytes": 405504,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 40960
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 424500,
+          "p95_ns": 568250,
+          "p99_ns": 635958,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 27125,
+          "p95_ns": 38708,
+          "p99_ns": 59417,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12292,
+          "p95_ns": 17750,
+          "p99_ns": 22584,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 882715250,
+      "journal_mode": "delete",
+      "migration_ns": 3078917,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 401959,
+          "p95_ns": 521708,
+          "p99_ns": 584250,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 26709,
+          "p95_ns": 36625,
+          "p99_ns": 46291,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12125,
+          "p95_ns": 17500,
+          "p99_ns": 20875,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 128,
+      "preserved_event_digest": "d37669808bbf7861b5214a74bc593cb35f33fb8037042206445b0e0b31b35cb1",
+      "preserved_operational_digests": {
+        "agent_prompts": "e3c1be920a0c177b9df2e3e487c9d387c4a1a70bcecb49f86fc48f23baef77fd",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "97351782b4886c83d88177d67dcfbbfff69d9638deae09cbfcc1789ae68049af",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "5caec7a2c7cf0279e1e1fe9cc6765e7944d8470598103299feb2b7246636df40",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "76fdb8dbca7f71faf54674a6ca34ad748ef09227e26c4b19c35a70f65404e4b7",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "664ea5b753c1bc82c5936e8fe7cab3aea6f69600b364cfb5ec4b29b71bb12d5e"
+      },
+      "rows": 1000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 2
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15286272,
+        "freelist_pages": 88,
+        "page_count": 3732,
+        "page_size": 4096,
+        "btree_bytes": 14925824,
+        "index_bytes": 1011712,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 14917632,
+        "freelist_pages": 0,
+        "page_count": 3642,
+        "page_size": 4096,
+        "btree_bytes": 14917632,
+        "index_bytes": 1003520,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15073280,
+        "freelist_pages": 0,
+        "page_count": 3680,
+        "page_size": 4096,
+        "btree_bytes": 15073280,
+        "index_bytes": 1159168,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 311296
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 420125,
+          "p95_ns": 576750,
+          "p99_ns": 647042,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 30375,
+          "p95_ns": 42208,
+          "p99_ns": 59667,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12208,
+          "p95_ns": 17834,
+          "p99_ns": 23334,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 933813291,
+      "journal_mode": "delete",
+      "migration_ns": 3075584,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 411708,
+          "p95_ns": 553125,
+          "p99_ns": 661000,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 30000,
+          "p95_ns": 44417,
+          "p99_ns": 55625,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12417,
+          "p95_ns": 18834,
+          "p99_ns": 23000,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "73ce8eefe59d0366ede67434309394d8b547be7f53428ad9e50deaffa00b1af1",
+      "preserved_operational_digests": {
+        "agent_prompts": "856a83a90f98717679368c5072cd42ecca69d882d6df70d7b0d4967e9d5b691f",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "03db671e7914fc93969361b21d47ebc7dabcb9c678fb6379a1116a6717bfc477",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "52c665486ffb91f912200e4d16ff855a460e2a04864e0a9c97e2f9fcd10b40c9",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "42020bff20396d5f59215b3279ba0144af24bb2321dfe14741c427ac6c8951e1",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d017b88e8cf0b44d7a4f541d8123e2b3759968a90dd069007698dd8023435d87"
+      },
+      "rows": 10000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 2
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146984960,
+        "freelist_pages": 454,
+        "page_count": 35885,
+        "page_size": 4096,
+        "btree_bytes": 145125376,
+        "index_bytes": 7569408,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1654784
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 145104896,
+        "freelist_pages": 0,
+        "page_count": 35426,
+        "page_size": 4096,
+        "btree_bytes": 145104896,
+        "index_bytes": 7548928,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1650688
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146755584,
+        "freelist_pages": 0,
+        "page_count": 35829,
+        "page_size": 4096,
+        "btree_bytes": 146755584,
+        "index_bytes": 9199616,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 3301376
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 487667,
+          "p95_ns": 671334,
+          "p99_ns": 891000,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 35833,
+          "p95_ns": 61375,
+          "p99_ns": 90458,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 13917,
+          "p95_ns": 22666,
+          "p99_ns": 39583,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "init_ns": 946197708,
+      "journal_mode": "delete",
+      "migration_ns": 7613875,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 394208,
+          "p95_ns": 544166,
+          "p99_ns": 662167,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 29334,
+          "p95_ns": 39750,
+          "p99_ns": 50375,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 12375,
+          "p95_ns": 16709,
+          "p99_ns": 22583,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 0
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "d081c2541586be59ca4460ac6edd47c40760bdfac649aafbcbb02dc526af80fd",
+      "preserved_operational_digests": {
+        "agent_prompts": "5913ab6a22ffd55726cc3559006048f68717e9127e350404e17a8ccc0bb4f1f8",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "2e1f1652244e599581abcca1e167945082051eb1dbfa847650c9e2b107b45b79",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "42861cb7cf67f3fedbcc87eff898eb3bea091c950ca4b87c70ddb2381d1398a6",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "c649aa6f5b2609ff7ded2e30a220f210eefbd2e36d84faabde1631706930ff97",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d73a162a60c70f9212f1ba7919514a93892535f55a34fa3ce2a2638e9864d642"
+      },
+      "rows": 100000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 2
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 1118208,
+        "freelist_pages": 56,
+        "page_count": 273,
+        "page_size": 4096,
+        "btree_bytes": 888832,
+        "index_bytes": 393216,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 880640,
+        "freelist_pages": 0,
+        "page_count": 215,
+        "page_size": 4096,
+        "btree_bytes": 880640,
+        "index_bytes": 385024,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 20480
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 901120,
+        "freelist_pages": 0,
+        "page_count": 220,
+        "page_size": 4096,
+        "btree_bytes": 901120,
+        "index_bytes": 405504,
+        "event_btree_bytes": 339968,
+        "sequence_index_bytes": 40960
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 465166,
+          "p95_ns": 970208,
+          "p99_ns": 2723000,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 43584,
+          "p95_ns": 123083,
+          "p99_ns": 177000,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 14042,
+          "p95_ns": 33625,
+          "p99_ns": 68416,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12364024
+      },
+      "init_ns": 911942250,
+      "journal_mode": "wal",
+      "migration_ns": 2560833,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 349750,
+          "p95_ns": 577667,
+          "p99_ns": 703542,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 27500,
+          "p95_ns": 70708,
+          "p99_ns": 117125,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 9875,
+          "p95_ns": 19666,
+          "p99_ns": 56459,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10110384
+      },
+      "payload_body_bytes": 128,
+      "preserved_event_digest": "319d218bea3378c8414a8200fafd66d3b2ea0f7155976581097bc005afc6a3da",
+      "preserved_operational_digests": {
+        "agent_prompts": "a4afb1e80c78e1fc7a042b1615ab404a171e52aa4344e143c01ee1e65c95a882",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "af3dff690503d02c430309157b3dc43ebf4395568bb27153e1bb266a8b59a946",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "bc3d92781e9d7e70fe795fedb7e22890cf53082bf3a893eab1734e9268358581",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "b2c821d364db75eca0792d830dcb023db3c6d960565b63d7ec8a8e4425ab8cdd",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "664ea5b753c1bc82c5936e8fe7cab3aea6f69600b364cfb5ec4b29b71bb12d5e"
+      },
+      "rows": 1000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 2
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15286272,
+        "freelist_pages": 88,
+        "page_count": 3732,
+        "page_size": 4096,
+        "btree_bytes": 14925824,
+        "index_bytes": 1011712,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 14917632,
+        "freelist_pages": 0,
+        "page_count": 3642,
+        "page_size": 4096,
+        "btree_bytes": 14917632,
+        "index_bytes": 1003520,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 155648
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 15073280,
+        "freelist_pages": 0,
+        "page_count": 3680,
+        "page_size": 4096,
+        "btree_bytes": 15073280,
+        "index_bytes": 1159168,
+        "event_btree_bytes": 13713408,
+        "sequence_index_bytes": 311296
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 345792,
+          "p95_ns": 586250,
+          "p99_ns": 843916,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 32041,
+          "p95_ns": 60500,
+          "p99_ns": 96250,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 9834,
+          "p95_ns": 17125,
+          "p99_ns": 48250,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12343424
+      },
+      "init_ns": 893608500,
+      "journal_mode": "wal",
+      "migration_ns": 2610958,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 336667,
+          "p95_ns": 493375,
+          "p99_ns": 598667,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 24958,
+          "p95_ns": 44375,
+          "p99_ns": 68375,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8208,
+          "p95_ns": 13042,
+          "p99_ns": 16042,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10089784
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "f40a336140208486e494d5483792bac6edfbecfa3c13ad39248e7a929dbd291a",
+      "preserved_operational_digests": {
+        "agent_prompts": "3f7c2b6d10ca1459343e34c25d7ff2988cd211b5dc75e2c5f69d37eb659c01bb",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "5c903a02500c4a12a168c60554448be165c6ba5eb0c16025396ba60053e1de7c",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "8cda82d8d116029738ab8f6a4d58493e66b70863c0d3f2d3212f56f6c9270a1c",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "bfea8260597f01753300571a222994fbbcff3c7f27318ba7f95e62a1b8338ec3",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d017b88e8cf0b44d7a4f541d8123e2b3759968a90dd069007698dd8023435d87"
+      },
+      "rows": 10000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 2
+    },
+    {
+      "after_drop": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146984960,
+        "freelist_pages": 454,
+        "page_count": 35885,
+        "page_size": 4096,
+        "btree_bytes": 145125376,
+        "index_bytes": 7569408,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1654784
+      },
+      "after_fixture_vacuum": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 145104896,
+        "freelist_pages": 0,
+        "page_count": 35426,
+        "page_size": 4096,
+        "btree_bytes": 145104896,
+        "index_bytes": 7548928,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 1650688
+      },
+      "baseline": {
+        "dbstat_note": "null means host SQLite lacks DBSTAT",
+        "file_bytes": 146755584,
+        "freelist_pages": 0,
+        "page_count": 35829,
+        "page_size": 4096,
+        "btree_bytes": 146755584,
+        "index_bytes": 9199616,
+        "event_btree_bytes": 136896512,
+        "sequence_index_bytes": 3301376
+      },
+      "baseline_operations": {
+        "append": {
+          "p50_ns": 368833,
+          "p95_ns": 756791,
+          "p99_ns": 1397333,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 36750,
+          "p95_ns": 105958,
+          "p99_ns": 180875,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 11084,
+          "p95_ns": 24292,
+          "p99_ns": 64250,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 12454664
+      },
+      "init_ns": 863643542,
+      "journal_mode": "wal",
+      "migration_ns": 3492083,
+      "optimized_operations": {
+        "append": {
+          "p50_ns": 338417,
+          "p95_ns": 578708,
+          "p99_ns": 863250,
+          "samples": 512
+        },
+        "idempotent_replay": {
+          "p50_ns": 25667,
+          "p95_ns": 42334,
+          "p99_ns": 50833,
+          "samples": 512
+        },
+        "query_plans": [
+          [
+            "SEARCH events USING COVERING INDEX idx_events_stream_seq_unique (stream=?)"
+          ],
+          [
+            "SEARCH events USING INDEX idx_events_stream_seq_unique (stream=?)"
+          ]
+        ],
+        "scope": "events::append_on_conn transaction; excludes broker, CLI and checkpoint cost; warm OS cache",
+        "sequence_read": {
+          "p50_ns": 8792,
+          "p95_ns": 13917,
+          "p99_ns": 16875,
+          "samples": 512
+        },
+        "statement_count_method": "source: BEGIN, identity lookup, MAX, INSERT, COMMIT; replay substitutes seq lookup for MAX/INSERT",
+        "statements_per_idempotent_replay": 4,
+        "statements_per_new_append": 5,
+        "wal_bytes_for_appends": 10213384
+      },
+      "payload_body_bytes": 1024,
+      "preserved_event_digest": "6af3576a30934bebb2fc04c0ab88339925e4991fc9b035c588cbce964298090c",
+      "preserved_operational_digests": {
+        "agent_prompts": "0bd4a9a048150721b57bafacf7aaec317f982d482eb527e6e34d7069a4a7e98e",
+        "agents": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "approvals": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "archives": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "authoring_bindings": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "categories": "8b81aa6e56d1b61ae28ef451ac5fcdd19bedd1677c75651de29ad23a832252a4",
+        "claims": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "cron_jobs": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "decisions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "feedback": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "health_cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "knowledge": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "legacy_event_imports": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "meta": "e91c80df450a476affd501ee4c7a1135c6a80c2447a6f484fa39c7061bc13bb6",
+        "node_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "nodes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligation_edges": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "obligations": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "originals_index": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "preferences": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "proof_events": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reflexes": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "risk_zones": "ea96c29acb427c3d835e34944a1e5e3ec1c3c2eb223ac3c79e2a35bee3ab5d02",
+        "sessions": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "summaries": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_dependencies": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_owners": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_tags": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "task_verification": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "tasks": "d73a162a60c70f9212f1ba7919514a93892535f55a34fa3ce2a2638e9864d642"
+      },
+      "rows": 100000,
+      "sqlite_version": "3.54.0",
+      "synchronous": 2,
+      "timing_order": "baseline_first",
+      "trial": 2
+    }
+  ]
+}

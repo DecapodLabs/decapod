@@ -1,6 +1,6 @@
 //! Normal agent/workspace entrypoints must never expose the last accepted PR as
 //! the current task. These tests exercise actual Git worktrees and CLI calls.
-use decapod::core::{governance_document as governance, todo, workspace};
+use decapod::core::{governance_document as governance, todo};
 use serde_json::{Value, json};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -23,14 +23,13 @@ fn git(root: &Path, args: &[&str]) -> String {
     String::from_utf8(out.stdout).unwrap().trim().into()
 }
 fn cli(root: &Path, args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .args(args)
-        .current_dir(root)
-        .env("DECAPOD_AGENT_ID", AGENT)
-        .env_remove("DECAPOD_SESSION_PASSWORD")
-        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
-        .output()
-        .unwrap()
+    recovery_cli(root, AGENT, args)
+}
+
+fn admit(root: &Path) {
+    success(cli(root, &["workspace", "ensure"]));
+    let status = success(cli(root, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], true, "{status}");
 }
 fn success(out: Output) -> Value {
     assert!(
@@ -151,17 +150,19 @@ fn workspace_ensure_seeds_current_context_and_repeat_is_noop() {
     // The workspace creation event supplies its exact base even when Git does
     // not retain a branch-creation reflog.
     git(root.path(), &["config", "core.logAllRefUpdates", "false"]);
-    let config = workspace::WorkspaceConfig {
-        branch: Some(format!("agent/current/{id}")),
-        use_container: false,
-        base_image: None,
-        base_branch: Some("master".into()),
-    };
-    let status = workspace::ensure_workspace(root.path(), Some(config), AGENT).unwrap();
-    let path = status.git.worktree_path.unwrap();
+    let status = success(cli(
+        root.path(),
+        &[
+            "workspace",
+            "ensure",
+            "--branch",
+            &format!("agent/current/{id}"),
+        ],
+    ));
+    let path = PathBuf::from(status["worktree_path"].as_str().unwrap());
     assert_fresh(&path, &id);
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
-    workspace::ensure_workspace(&path, None, AGENT).unwrap();
+    admit(&path);
     success(cli(&path, &["rpc", "--op", "agent.init"]));
     assert_eq!(
         before,
@@ -174,18 +175,30 @@ fn workspace_ensure_seeds_current_context_and_repeat_is_noop() {
 }
 
 #[test]
-fn agent_init_seeds_manual_worktree_but_status_does_not() {
+fn manual_worktree_observation_preserves_history_until_explicit_admission() {
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
-    success(cli(&path, &["workspace", "status"]));
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
     success(cli(&path, &["govern", "artifacts", "status"]));
     assert_eq!(
         before,
         fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
     );
     success(cli(&path, &["rpc", "--op", "agent.init"]));
+    assert_eq!(
+        before,
+        fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
+    );
+    admit(&path);
     assert_fresh(&path, &id);
+    let admitted = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
+    success(cli(&path, &["rpc", "--op", "agent.init"]));
+    assert_eq!(
+        admitted,
+        fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
+    );
     assert_eq!(
         before,
         fs::read(root.path().join(governance::GOVERNANCE_PATH)).unwrap()
@@ -196,6 +209,7 @@ fn agent_init_seeds_manual_worktree_but_status_does_not() {
 fn validation_preflight_initializes_without_fabricating_success() {
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
+    admit(&path);
     // Deliberately fail a real gate after initialization. No success receipt may
     // appear simply because a template was generated.
     fs::remove_file(path.join("AGENTS.md")).unwrap();
@@ -211,6 +225,7 @@ fn successful_validation_issues_new_bound_receipt_after_template_generation() {
 
     let (root, id) = fixture();
     let path = manual_worktree(root.path(), &id);
+    admit(&path);
     success(cli(&path, &["rpc", "--op", "agent.init"]));
     let fresh = assert_fresh(&path, &id);
     success(cli(&path, &["govern", "plan", "approve"]));
@@ -298,6 +313,11 @@ fn agent_init_cannot_use_its_own_task_to_reset_another_agents_branch() {
     let path = manual_worktree(root.path(), other);
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
     let output = cli(&path, &["rpc", "--op", "agent.init"]);
+    success(output);
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
+    let output = cli(&path, &["workspace", "ensure"]);
+    assert!(!output.status.success());
     let message = format!(
         "{}{}",
         String::from_utf8_lossy(&output.stdout),
@@ -372,7 +392,7 @@ fn explicit_begin_pr_refuses_protected_worktree_branch() {
 }
 
 #[test]
-fn agent_init_establishes_session_before_initializing_current_context() {
+fn released_session_requires_fresh_task_custody_before_authoring_resumes() {
     let (root, id) = fixture();
     success(cli(root.path(), &["session", "release"]));
     todo::claim_task(
@@ -383,9 +403,21 @@ fn agent_init_establishes_session_before_initializing_current_context() {
     )
     .unwrap();
     let path = manual_worktree(root.path(), &id);
-    let output = cli(&path, &["rpc", "--op", "agent.init"]);
-    assert!(String::from_utf8_lossy(&output.stderr).contains("auto-acquired"));
-    success(output);
+    admit(&path);
+    let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
+    success(cli(&path, &["session", "release"]));
+    // Session release deliberately releases its task assignments too. An
+    // observation must not silently reacquire that custody or reuse the binding.
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
+    success(cli(&path, &["rpc", "--op", "agent.init"]));
+    assert_eq!(
+        before,
+        fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
+    );
+    success(cli(&path, &["todo", "claim", "--id", &id]));
+    admit(&path);
+    success(cli(&path, &["rpc", "--op", "agent.init"]));
     assert_fresh(&path, &id);
 }
 
@@ -395,17 +427,367 @@ fn agent_init_does_not_substitute_unrelated_task_for_missing_branch_identity() {
     let path = manual_worktree(root.path(), "code_01k0000000000000");
     let before = fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap();
     let output = cli(&path, &["rpc", "--op", "agent.init"]);
+    success(output);
+    let status = success(cli(&path, &["workspace", "status"]));
+    assert_eq!(status["workspace"]["can_work"], false);
+    let output = cli(&path, &["workspace", "ensure"]);
+    assert!(!output.status.success());
     let message = format!(
         "{}{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        message.contains("GOVERNANCE_WORK_CONTEXT_REQUIRED"),
+        message.contains("WORKSPACE_BRANCH_NOT_TODO_SCOPED"),
         "{message}"
     );
     assert_eq!(
         before,
         fs::read(path.join(governance::GOVERNANCE_PATH)).unwrap()
     );
+}
+
+fn recovery_cli(root: &Path, actor: &str, args: &[&str]) -> Output {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    for (key, _) in std::env::vars_os() {
+        let key_text = key.to_string_lossy();
+        if key_text.starts_with("DECAPOD_") || key_text.starts_with("GIT_") {
+            command.env_remove(key);
+        }
+    }
+    command
+        .args(args)
+        .current_dir(root)
+        .env("DECAPOD_AGENT_ID", actor)
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .output()
+        .unwrap()
+}
+
+fn recovery_commit(root: &Path, actor: &str, id: &str) -> String {
+    git(root, &["add", "-A"]);
+    success(recovery_cli(
+        root,
+        actor,
+        &[
+            "govern",
+            "artifacts",
+            "checkpoint",
+            "--id",
+            id,
+            "--summary",
+            "Present-time recovery evidence; no retrospective proof",
+        ],
+    ));
+    git(root, &["add", governance::GOVERNANCE_PATH]);
+    git(root, &["commit", "-m", id]);
+    git(root, &["rev-parse", "HEAD"])
+}
+
+#[test]
+fn actual_cli_reauthors_gapped_history_with_fresh_custody_and_no_retrospective_proof() {
+    let (root, source_task) = fixture();
+    let root = root.path();
+    let base = git(root, &["rev-parse", "master"]);
+    let source_branch = format!("agent/{AGENT}/{source_task}-failed-history");
+    let source_workspace = success(recovery_cli(
+        root,
+        AGENT,
+        &["workspace", "ensure", "--branch", &source_branch],
+    ));
+    let source_path = PathBuf::from(source_workspace["worktree_path"].as_str().unwrap());
+    fs::create_dir_all(source_path.join("src")).unwrap();
+    fs::write(
+        source_path.join("src/recovered.rs"),
+        "pub fn answer() -> u8 { 41 }\n",
+    )
+    .unwrap();
+    recovery_commit(&source_path, AGENT, "source-baseline");
+    fs::write(
+        source_path.join("src/recovered.rs"),
+        "pub fn answer() -> u8 { 42 }\n",
+    )
+    .unwrap();
+    git(&source_path, &["add", "src/recovered.rs"]);
+    git(
+        &source_path,
+        &["commit", "-m", "deliberate historical checkpoint gap"],
+    );
+    let source_head = git(&source_path, &["rev-parse", "HEAD"]);
+    let source_tree = git(&source_path, &["rev-parse", "HEAD^{tree}"]);
+    let failed = recovery_cli(
+        root,
+        "unassigned-history-observer",
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &source_head,
+            "--target-base",
+            "master",
+            "--format",
+            "json",
+        ],
+    );
+    assert!(!failed.status.success());
+    let diagnosis: Value = serde_json::from_slice(&failed.stdout).unwrap();
+    assert_eq!(diagnosis["disposition"], "unproven_history");
+    assert_eq!(diagnosis["findings"][0]["commit"], source_head);
+    assert_eq!(
+        diagnosis["findings"][0]["prior_event_can_be_regenerated"],
+        false
+    );
+
+    let receiver = "history-recovery-independent-agent";
+    // Establish the second actor through its own actual session, never by
+    // copying the source actor's credentials or using an operator label.
+    assert!(
+        recovery_cli(root, receiver, &["session", "acquire"])
+            .status
+            .success()
+    );
+    let task = success(recovery_cli(
+        root,
+        receiver,
+        &[
+            "todo",
+            "add",
+            "Reauthor reviewed source with fresh proof",
+            "--scope",
+            "src,tests",
+            "--format",
+            "json",
+        ],
+    ));
+    let task_id = task["id"].as_str().unwrap();
+    let claim = success(recovery_cli(
+        root,
+        receiver,
+        &["todo", "claim", "--id", task_id, "--format", "json"],
+    ));
+    assert_eq!(claim["result"]["assigned_to"], receiver);
+    let branch = format!("agent/{receiver}/{task_id}-fresh-history");
+    let destination = success(recovery_cli(
+        root,
+        receiver,
+        &["workspace", "ensure", "--branch", &branch],
+    ));
+    assert_eq!(destination["can_work"], true);
+    let path = PathBuf::from(destination["worktree_path"].as_str().unwrap());
+    assert_ne!(path, source_path);
+    let foreign = recovery_cli(
+        &path,
+        AGENT,
+        &[
+            "govern",
+            "artifacts",
+            "record-history-recovery",
+            "--source-ref",
+            &source_head,
+            "--reason",
+            "not my checkout",
+        ],
+    );
+    assert!(!foreign.status.success());
+    let args = [
+        "govern",
+        "artifacts",
+        "record-history-recovery",
+        "--source-ref",
+        source_head.as_str(),
+        "--reason",
+        "Preserve old evidence; reauthor and obtain fresh proof",
+    ];
+    let observation = success(recovery_cli(&path, receiver, &args));
+    let id = format!("history-recovery:{source_head}");
+    assert_eq!(
+        observation["baseline"]["unresolved"][&id]["actor"],
+        receiver
+    );
+    assert_eq!(
+        observation["baseline"]["unresolved"][&id]["exception_authorized"],
+        false
+    );
+    let repeat = success(recovery_cli(&path, receiver, &args));
+    assert_eq!(
+        repeat["baseline"]["unresolved"][&id],
+        observation["baseline"]["unresolved"][&id]
+    );
+    let premature = recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "resolve-obligation",
+            "--id",
+            &id,
+            "--resolution",
+            "current observation",
+            "--proof-ref",
+            &format!("git:{source_head}"),
+        ],
+    );
+    assert!(!premature.status.success());
+    assert!(String::from_utf8_lossy(&premature.stderr).contains("NOT_ARCHIVED"));
+
+    // Review and reauthor selected source bytes in the new, verified checkout.
+    // Do not merge/cherry-pick the invalid governance history or generated files.
+    fs::create_dir_all(path.join("src")).unwrap();
+    let reviewed_source = git(
+        &source_path,
+        &["show", &format!("{source_head}:src/recovered.rs")],
+    );
+    fs::write(
+        path.join("src/recovered.rs"),
+        format!("{reviewed_source}\n"),
+    )
+    .unwrap();
+    let intent = path.join(".decapod/managed/specs/INTENT.md");
+    fs::write(&intent, format!("{}\n## Recovery fixture outcome\n\nThis consumer reauthors a reviewed Rust function in a fresh admitted workstream. The historical source remains unproven; current checkpoints and explicit spec reviews are required.\n", fs::read_to_string(&intent).unwrap())).unwrap();
+    success(recovery_cli(
+        &path,
+        receiver,
+        &["govern", "plan", "approve"],
+    ));
+    success(recovery_cli(
+        &path,
+        receiver,
+        &["rpc", "--op", "specs.refresh"],
+    ));
+    let archived = recovery_commit(&path, receiver, "observed-gap-and-reauthored-work");
+    let missing_review = recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &archived,
+            "--target-base",
+            "master",
+            "--publication-material",
+        ],
+    );
+    assert!(!missing_review.status.success());
+    assert!(
+        String::from_utf8_lossy(&missing_review.stderr).contains("SPEC_REVIEW_REQUIRED"),
+        "{}",
+        String::from_utf8_lossy(&missing_review.stderr)
+    );
+    // A missing review has an actual, reachable resolution before checkpoint
+    // verification. Recording review does not require passing publication first.
+    for spec in ["INTERFACES", "ARCHITECTURE", "SECURITY"] {
+        success(recovery_cli(
+            &path,
+            receiver,
+            &[
+                "govern",
+                "plan",
+                "review-spec",
+                "--path",
+                &format!(".decapod/managed/specs/{spec}.md"),
+                "--disposition",
+                "unchanged-with-reason",
+                "--reason",
+                "Reviewed the single Rust fixture function against the unchanged consumer contract",
+            ],
+        ));
+    }
+    success(recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "resolve-obligation",
+            "--id",
+            &id,
+            "--resolution",
+            "Reviewed current reauthored work; old history remains unproven; full independent publication proof is still required",
+            "--proof-ref",
+            &format!("git:{archived}"),
+            "--proof-ref",
+            &format!("git:{source_head}"),
+        ],
+    ));
+    let final_head = recovery_commit(&path, receiver, "fresh-governed-recovery");
+    let passed = success(recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &final_head,
+            "--target-base",
+            "master",
+            "--format",
+            "json",
+        ],
+    ));
+    assert_eq!(passed["history_proven"], true);
+    assert_eq!(passed["publication_ready"], false);
+    success(recovery_cli(
+        &path,
+        receiver,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base,
+            "--head-ref",
+            &final_head,
+            "--target-base",
+            "master",
+            "--publication-material",
+        ],
+    ));
+    assert_eq!(git(&source_path, &["rev-parse", "HEAD"]), source_head);
+    assert_eq!(
+        git(&source_path, &["rev-parse", "HEAD^{tree}"]),
+        source_tree
+    );
+    assert!(
+        !recovery_cli(
+            &source_path,
+            AGENT,
+            &[
+                "govern",
+                "artifacts",
+                "verify-checkpoints",
+                "--base-branch",
+                &base,
+                "--head-ref",
+                &source_head,
+                "--target-base",
+                "master",
+            ]
+        )
+        .status
+        .success()
+    );
+    let retained = git(
+        &path,
+        &[
+            "show",
+            &format!("{archived}:{}", governance::GOVERNANCE_PATH),
+        ],
+    );
+    let retained: Value = serde_json::from_str(&retained).unwrap();
+    assert_eq!(
+        retained["baseline"]["unresolved"][&id]["historical_proof"],
+        "not_proven"
+    );
+    assert_eq!(git(root, &["rev-parse", "master"]), base);
 }

@@ -588,8 +588,10 @@ fn subject_journal_rejects_oversize_or_corrupt_payload_without_truncation() {
     )
     .unwrap();
     conn.execute(
-        "UPDATE events SET payload = ?1 WHERE event_id = 'bounded'",
-        params!["x".repeat(8 * 1024 * 1024 + 1)],
+        // Construct corrupt stored bytes in SQLite so the SDK parameter budget
+        // cannot mask the journal reader's independent record-size rejection.
+        "UPDATE events SET payload = replace(hex(zeroblob(?1)), '0', 'x') WHERE event_id = 'bounded'",
+        params![4 * 1024 * 1024 + 1],
     )
     .unwrap();
     let error = query_subject_on_conn(&conn, WORKUNIT, "task", "task_bound", 2).unwrap_err();

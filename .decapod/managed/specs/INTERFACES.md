@@ -1,5 +1,474 @@
 # Interfaces
 
+## Caller-supplied validation report projections (#1726)
+
+Every `interop.project` result adds optional `input_origin=caller_supplied` and
+`canonical_state_verified=false`. These describe the operation/approval/report
+input, not the receipt proving that the transformation itself ran. Caller input
+cannot override these output fields. The original per-kind `source` remains an
+input-type label, not authenticated producer provenance. Reported approval and
+denial statuses remain display data; their remediation no longer claims that
+the corresponding canonical policy operation occurred. Only the existing
+policy owner can establish a real grant or denial.
+
+`interop.project` with `kind=validation_report` remains a successful read-only
+transformation; outer RPC success does not verify its input. The reported
+`status`, candidate, epoch and identifiers remain visible. `proof_judgment` for
+a well-formed reported PASS is `not_proven` and `publication_ready` is false,
+including plausible receipt digests and caller-matched verifier/rule identities.
+Reported failed, stale and unknown inputs retain their existing classifications.
+The optional additive `proof_reason` explains that these are caller-supplied
+reports and directs the reader to canonical validation for the exact candidate
+and accepted base. A copied genuine report also cannot prove present currency
+through a pure transformation. Current proof must come from the canonical owner.
+Existing actual-binary controls execute counterfeit, negative/stale and ordinary
+negotiation recovery without provider, custody or gate-skip overrides.
+
+## Reversible repository integration removal (#1704)
+
+`decapod integration {preview, remove, restore}` exposes a repository-level
+removal lifecycle grounded in `src/decapod/core/integration_removal.rs` and
+dispatched before session/migration startup in `src/decapod/lib.rs`:
+
+- **Read-only preview (`decapod integration preview [--dir <path>] [--format text|json]`):**
+  Performs zero filesystem, Git, SQLite, session, or network mutations. Returns
+  `IntegrationPreviewReport` listing `generated`, `edited`, `authored`,
+  `unknown`, and `active` resources separately, plus actionable `blockers` and
+  `authority_boundaries`.
+- **Bounded removal (`decapod integration remove --authorize [--dir <path>] [--format text|json]`):**
+  Requires explicit `--authorize` (and refuses `--dry-run` with guidance to use
+  `preview`). Fails closed (`exit != 0`) on symlink replacement
+  (`INTEGRATION_SYMLINK_REFUSED`), active custody (`INTEGRATION_ACTIVE_CUSTODY`:
+  todo leases, `authoring_bindings`, registered/non-empty `.decapod/workspaces/`,
+  held workspace/storage locks), or uncertain ownership
+  (`INTEGRATION_UNCERTAIN_OWNERSHIP`). Removes only positively owned,
+  unchanged generated files (via `.decapod/managed/integration_ownership.json`
+  or verified release/fingerprint markers on legacy repos) and owned
+  `DECAPOD_GITIGNORE_RULES` lines in `.gitignore`. Preserves edited/authored/unknown
+  files, `*.bak` backups, `.decapod/data/`, `.decapod/governance.json`, global
+  config, and credentials. Writes `.decapod/integration-restore-manifest.json`
+  atomically (`status = "in_progress"` -> `"applied"`) before deleting files so
+  interrupted or repeated removals remain idempotent.
+- **Restore (`decapod integration restore [--dir <path>] [--manifest <path>] [--format text|json]`):**
+  Losslessly restores captured files (including Unix file modes) and
+  `.gitignore` entries from `.decapod/integration-restore-manifest.json`, while
+  failing closed if the manifest is missing/unsupported or if a destination
+  became a symlink or holds conflicting authored content.
+- **Separate authority boundaries:** `--purge-state`
+  (`PERMANENT_STATE_DELETION_BOUNDARY`) and `--remove-protected-governance`
+  (`PROTECTED_GOVERNANCE_REMOVAL_BLOCKED`) are refused by integration removal.
+
+## Delegated cgroup parent selection and cgroup diagnostics (#1820)
+
+`decapod auto container run` (`src/decapod/plugins/container.rs::ContainerCommand::Run`)
+accepts an optional `--cgroup-parent <path-or-slice>` flag and honors the
+`DECAPOD_CONTAINER_CGROUP_PARENT` environment variable (CLI flag takes precedence;
+`container::schema()` exposes both `"cgroup_parent"` and `"cgroup_parent_env"`).
+All explicit and detected values pass `validate_cgroup_parent` fail-closed before
+any runtime probe or workspace clone: only canonical absolute cgroup hierarchy
+paths (`/delegated/parent`, without `/sys/fs/cgroup` mount prefixes, root `/`,
+trailing slashes, empty segments, `.` or `..` traversal, whitespace, control
+characters, leading `-`, or metacharacters) and systemd slice names (`*.slice`)
+are accepted; invalid values fail with `container_invalid_cgroup_parent`.
+
+When no explicit parent is supplied and local `podman info` reports rootless
+`cgroupfs` on cgroup v2 (`serviceIsRemote: false`), `detect_delegated_cgroup_v2_parent_from`
+reads `/proc/self/cgroup` (`0::<path>`) and walks upward from the caller's cgroup
+to the deepest non-root ancestor under `/sys/fs/cgroup` that is a real directory
+(no symlink traversal), writable by the current user, and enables `cpu`, `memory`,
+and `pids` in `cgroup.subtree_control`. `build_docker_spec` injects
+`--cgroup-parent <validated-parent>` while preserving `--pids-limit 512`,
+`--memory`, and `--cpus` unchanged; cgroups are never disabled.
+
+`classify_container_failure` distinguishes OCI/cgroupfs permission errors
+(`crun`/`runc` `cannot set limits without cgroups`, `/sys/fs/cgroup` permission
+denied, `unable to apply cgroup configuration`, `cgroup.subtree_control`/`cgroup.procs`
+errors) as `container_cgroup_permission_denied` with delegated cgroup parent
+remediation, leaving actual workspace ownership and Git lockfile failures under
+`container_workspace_permission_denied`. `RunSummary` exposes the resolved
+`cgroup_parent` field for observability.
+
+## Explicit path scope preservation and reconciliation (#1760)
+
+Explicit task path declarations (`--scope 'paths:[...]'`) are parsed once via
+`core::fleet_coord::parse_scope_entries` (delegating `paths:` prefixes to
+`core::fleet_coord::declared_paths`) rather than naive comma splitting. That
+single bounded JSON-array parser preserves both JSON array separators and commas
+embedded inside literal relative paths (such as `docs/a,b.md`) across
+`infer orientation` (`allowed_scope`), `workspace::initialize_workbranch_governance_at`
+(`BranchWorkContext.scope`), `trajectory::fresh_trajectory` / `record_trajectory`
+(`repo_scope`), and `custody::bootstrap_intent` (`intent.constraints`), keeping
+`todo get`, `infer orientation`, `govern trajectory get`, and `govern state resolve`
+consistent without weakening `declared_paths` validation or modifying legacy
+comma-separated scopes.
+
+Already-generated fragmented scope projections in `.decapod/governance.json`
+are repaired through `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`
+(`core::governance_document::reconcile_scope_projections`). Before mutating any
+projection, reconciliation resolves a single unambiguous task binding
+(`SCOPE_RECONCILIATION_AMBIGUOUS_TASK` / `SCOPE_RECONCILIATION_TASK_REQUIRED`),
+verifies that existing fragments match the task's legacy comma-split projection
+(`SCOPE_RECONCILIATION_AMBIGUOUS`), and requires the prior governance document to
+be committed in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED` via `recoverable_in_git`).
+Repair restores canonical sorted paths in both `sections.trajectory.repo_scope`
+and `intents.<id>.constraints`, recomputes `trajectory.artifact_hash`, invalidates
+`sections.plan.state` back to `DRAFT` when changes occur, preserves original
+recorded intent, prior custody events, checks, loops, and checkpoints, and is
+idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
+
+## Unified Local/Cloud CLI, auth, container credentials, repository tiers, and proof acceptance (#1809, #1808, #1769, #1778, #1590, #1033, #1040, #1066)
+
+- **Unified Local/Cloud CLI, env, and store envelopes (#1808, #1769)**:
+  `src/decapod/cli.rs` exposes `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_PROVIDER`,
+  `DECAPOD_CLOUD_DATASTORE`, and legacy `DECAPOD_PROPODUS_API_URL` (emitting
+  structured `decapod.deprecation.v1` notices on stderr). `CapabilitiesReport`
+  exposes `backends` (`local` / `Decapod Local`, `cloud` / `Decapod Cloud`),
+  `backend.local`/`backend.cloud`, and the `cloud` subsystem. `propodus.rs`
+  accepts `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*` headers
+  alongside legacy compatibility envelopes. `docs/book/src/index.md` and
+  `docs/book/src/custom.css` present **Decapod Local** vs **Decapod Cloud**
+  linking to `https://decapodlabs.github.io/offerings.html` without public
+  prices or checkout routes.
+- **CLI `decapod cloud`**: Adds `logout` (clears session state while preserving
+  the enrolled device key) and `revoke [--all] [--device-id <jkt>]` (calls
+  `AccountOperation::DeviceRevoke` when an active session is present and wipes
+  local device key + session). `decapod cloud status` reports
+  `device_key_present`, `device_jkt`, and `device_keystore` without exposing
+  private key bytes or tokens. `CloudAuthStatus` adds `DeviceRevoked`,
+  `KeyLost`, `MfaRequired`, `PaymentPending`, and `EntitlementDenied`.
+- **Container credential config (`[workspace.credentials]`)**: Adds optional
+  `git_transport`, `github_api`, and `propodus_cloud` fields on
+  `DecapodProjectConfig`. `decapod workspace status` works under `backend = "cloud"`
+  and emits redacted `credentials` capability readiness (`available`,
+  `unconfigured`, `absent`, `expired`, `unauthorized`) without touching SQLite.
+- **Database maintenance & owner repair (`[governance.db_maintenance]`)**:
+  Adds optional `owner_repair_enabled` (default `false`) and `required_tier`
+  (`read` | `write` | `owner`). `db.recover` requires merged canonical policy
+  and `owner` authority on local stores (dump/reload via Dactyl on Linux,
+  explicit typed `Capability` refusal on non-Linux hosts) and
+  `propodus_repository_access_v1` + `owner_repair_v1` on cloud stores, where
+  `OWNER_REPAIR_V1_SQL` transmits strictly the registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  inside `DactylBridge::atomic` (never server-internal SQL expansion).
+- **Cloud todo & proof capture**: `todo claim`, `todo renew`, `todo yield`, and
+  `todo done --validated` route through Dactyl without `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED`.
+  `todo done --validated` fails closed locally with `"proof-capture"` when
+  candidate commit/evidence bounds are absent; when valid evidence is supplied,
+  it submits `propodus_proof_acceptance_v1` `capture` (`status = "captured"`,
+  `acceptance_supported = false`) and reconciles `outcome_unknown` through
+  read-only `propodus_proof_acceptance_get_v1` `get_operation` rather than
+  auto-replaying mutations. Typed HTTP/control denials surface distinct
+  `CLOUD_ENTITLEMENT_DENIED` (`403`), `CLOUD_PAYLOAD_BOUND_EXCEEDED` (`413`),
+  `CLOUD_QUOTA_EXCEEDED` (`429`), and `CLOUD_OUTCOME_UNKNOWN`.
+
+## Workunit proof and continuity semantics (#1660)
+
+Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
+--scope interfaces --topic <topic> --write`, then attach its emitted task
+capsule path using `workunit attach-state`. Creating a capsule does not itself
+prove execution. A fresh workunit checkpoint binds the resulting context;
+full validation and the canonical VERIFIED transition remain separate steps.
+
+`record-proof --status pass` may retain an agent declaration about an existing
+artifact. Success does not authorize `transition --to verified`; that operation
+requires a current canonical full-validation record. Readback preserves the
+unproven declaration without a validation epoch or producer reference.
+After relevant trajectory changes, resume refuses the old execution binding.
+Discarding obsolete passing declarations allows a fresh checkpoint and resume;
+the explicit diagnostic fail marker used to discard a claim is not an
+independently executed failed test. Historical journal entries remain intact.
+
+A completed task-bound full validation with a not-ready judgment withdraws
+current workunit verification through the existing journal. It clears the
+current proof results, validation epoch and producer selector, downgrades
+VERIFIED to CLAIMED, and advances the journal even if promotion had not yet
+occurred. The event is `validation_not_ready`: it does not assert that every
+check executed or failed. The journal reader recognizes this event kind while
+retaining the same identity, manifest hash, record hash and predecessor checks;
+the resulting CLAIMED snapshot must remain readable for repair. Partial CI-local
+and preparation scopes do not have this authority. Earlier successful
+observations remain historical records.
+
+The executable negative control selects the native capture by its full check
+identity (`inspect-source`), then requires an exited process with code 1 and the
+expected assertion diagnostic. Canonical ordering places the independent
+`inspect-second` check first; its successful result cannot substitute for the
+required failure or be mistaken for evidence that the control failed to execute.
+
+Fresh full proof under a renewed lease can restore VERIFIED. The implicit
+workunit selector chooses the newest canonical success for the exact current
+task contract and custody; every epoch, source, execution, input and workunit
+subject check still applies. Generic `qa verify commit` inspection retains its
+mixed-custody ambiguity error and requires explicit historical selection.
+
+The split-store refusal now gives a bounded recovery path: preserve both stores,
+claim a fresh task from the repository root, use a managed workspace sharing
+the canonical runtime, reauthor its obligations and obtain new full proof.
+This is not in-place store convergence or historical-proof authentication;
+that migration remains unsupported.
+
+## Config repair and accepted authority (#1771, #1776)
+
+Configuration errors use `INVALID_CONFIG_SCHEMA` with the original parser
+location/type/expected-value diagnostic and embedded repair commands. Supported
+schema version is 1.0.0; root extension compatibility remains unchanged.
+`data schema` and `rpc --op schema.get` expose their existing schemas without
+config parsing or datastore/session mutation, including on malformed projects.
+Ordinary mutations resume after a valid correction. Valid syntax alone never
+grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
+`publication_ready=false`; unaccepted root policy proposals return
+`RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
+
+## Conformance evidence boundary (#871)
+
+The existing broker responsiveness assertion retains its ten-second limit for
+the competing operation while optional preparation is blocked. Claim completion
+after the explicit release is separately bounded and must still succeed; its
+cleanup duration is not part of that competing-operation measurement.
+
+`context.bundle.export`, `context.bundle.import`, `mentor.obligations` and
+`assurance.evaluate` advertise `session_required=true`, matching existing
+entry enforcement. This includes automatic acquisition; compatibility metadata
+does not issue a session. Bounded `data.database.inspect` remains session-free.
+
+Malformed `rpc --op ... --params ...` JSON returns nonzero with
+`Invalid JSON parameters`, before project/session startup; it is never converted
+to an empty compatibility request. Omitted parameters and explicit empty objects
+retain their existing meaning. Valid requests requiring an unsupported extension
+retain the `negotiation_refused` envelope; successful compatibility discovery
+still grants no mutation, completion or publication permission.
+
+Both RPC stdin framing and flag parameters reject duplicate decoded object
+keys at every nesting level before startup. Escaped spellings of the same key
+are duplicates; later fields cannot erase an earlier required extension.
+Existing 32 MiB framing bounds and redacted inventory/maintenance diagnostics
+remain. JSON syntax acceptance does not waive the strict negotiation schema:
+unknown fields still return `invalid_params`. Supported optional operation and
+extension fields can carry unknown identifiers; negotiation reports them as
+omitted, preserving decoded Unicode identifiers. A focused
+Python stdlib decoder and the actual Rust CLI execute the same malformed and
+ordinary inputs; this is same-host differential parsing, not independent
+producer trust or full foreign-client governance conformance.
+
+The v1 manifest adds the existing reconciliation and state-read operations.
+Reconciliation remains advisory and session-free; state reads retain their
+existing session/workspace gates. Unknown RPC names now receive the existing
+`unknown_op` envelope before startup, including in an uninitialized Git project.
+Both stdin RPC and the HTTP adapter use that same local entry boundary. No
+negotiation result or catalog entry supplies mutation permission.
+
+`interop.manifest` retains its v1 wire shape and source coverage references.
+`evidence.conformance_test` and `evidence.evidence_ref` identify source tests;
+they do not attest execution, transport, binary identity or current applicability.
+Built-in evidence is `not_run`. The Rust manifest validator refuses authored
+`verified`/`failed` with `unobserved_conformance`, including known tests and
+plausible references. Historical JSON remains deserializable without gaining
+current assurance. No new execution producer, receipt import or authorization
+path is introduced; actual observed conformance remains an unresolved contract.
+
+## Internal source currency agreement (#1753)
+
+The existing private config-only source policy now also governs version-only
+entrypoint participation in the publication diff. No new option or public wire
+field is introduced. Authorized canonical source headers remain unchanged when
+generated metadata is already current. A generator upgrade still requires Docker
+and manifest updates; disabled, foreign, ambiguous or invalid source policy keeps
+the ordinary release-bound refresh rule and blocking diagnostics.
+
+## Timestamp compatibility (#1755)
+
+Task, KnowledgeEntry and Decision timestamps remain RFC3339 strings normalized
+to UTC with Z and 0/3/6/9 fractional digits. Explicit observation timestamps keep
++00:00; Dactyl operation markers keep nine fractional digits and Z. Legacy SQL
+UTC timestamps remain accepted at the Dactyl read boundary only. Expiry inputs
+remain RFC3339 and invalid values still expire or require refresh; the separate
+policy epoch-Z compatibility and command envelope wire format are retained.
+The internal Rust model type is now `time::OffsetDateTime`.
+
+## Admission and quarantine (#1747, #1748)
+
+`workspace publish` and RPC publication carry completed live validation through
+their existing readiness boundary. `PUBLICATION_PROOF_SUBJECT_CHANGED` rejects
+a different repository, work branch, candidate or accepted base. Missing live
+completion is `PUBLICATION_PROOF_MISSING`; changed current inputs or custody
+remain blocking. A PR observed after creation can still fail admission:
+`PR_CREATED_NOT_ADMITTED` identifies its URL and confirmed draft/closed quarantine
+or an explicit unconfirmed quarantine. The publisher never reports successful
+publication on this path. Rejection JSON is appended to the live external
+evidence directory without rewriting historical successful proof. An admitted
+result's existing warnings field states that admission does not authorize merge.
+The wire shape of the existing publication result is unchanged.
+
+## Escalation admissibility (#1690–#1692)
+
+Continuations may supply an omitted authority command and narrow an omitted
+target; established scope cannot be replaced or dropped. This uses the current
+token and budget. A newly admitted targeted human dependency reports
+`progress: human_dependency`; repeated admitted questions do not gain progress.
+
+Orientation's existing `--reflection` input and `mentor.obligations.reflection`
+accept optional `escalation`: canonical plan intent, question, missing subject,
+uncertainty class, investigation, optional resolution with exact source facts,
+risks, constraints and optional authority command/target. Typed escalation uses
+`decapod.reflection.v2` with `decapod.escalation.v1`; ordinary reflection retains
+v1. Responses expose typed reasons, source identities, progress, targeted
+challenges, token and remaining rounds. `human_escalation_permitted` is distinct
+from a challenge and never supplies an approval. `completion_proven` and
+`semantic_exhaustion_proven` stay false. Native completion and publication still
+require independent current proof. `escalation_required` on an inference
+capability gap is accompanied by `escalation_target: agent`.
+
+## Required source-CI test selection (#1672)
+
+`assets/tools/source_ci_profile.rs::{selected,commands,inventory}` includes
+the existing recipe test inputs as selection dependencies: named core runtime
+fixtures, CLI aggregate inputs including `tests/sqlite_maintenance.rs`, shared
+`tests/common/*` and `tests/support/*` fixtures, and Bazel declarations. The
+regression `required_test_source_changes_retain_the_complete_owning_recipe`
+checks selection, unchanged complete command recipes and applicable required
+inventory together. Unrelated documents stay unselected, and release-only
+dispositions retain their existing contract. No new shard protocol or timing
+guarantee is introduced by this coverage change.
+
+## Custody and prerequisite diagnostics (#1661)
+
+`workspace status` reports `can_work=false` when checkout custody is unproven.
+`govern project-check --format json` remains usable after `init --no-git` and
+reports `scope=project_prerequisites`, `publication_ready=false`, and no readiness
+result. Full `validate` rejects that same non-Git directory with
+`gate=workspace_protection` / `AUTHORING_CHECKOUT_UNVERIFIED`.
+Task renewal and lifecycle operations update or retire their checkout binding
+atomically; a second live binding is `AUTHORING_TASK_ALREADY_BOUND`.
+`resource:<name>` overlap diagnostics identify the affected shared operation,
+and occupied release/integration reservations yield `SHARED_RESOURCE_OCCUPIED`.
+
+## Optional reflection on existing interfaces
+
+`infer orientation --task-id <id> --reflection '<JSON>'` and
+`mentor.obligations`' optional `reflection` parameter accept the same typed
+request: task/submission ID, operation (`change|modify|update`), literal proposed
+paths, optional expected token, explanation and evidence references. Existing
+calls omit the extension and preserve their response contract. Responses add
+`reflection` with `decapod.reflection.v1`, disposition
+(`proceed|reflect|human_decision|blocked`), reason, one optional challenge,
+token, context digest, round/remaining budget, terminal/execution-blocked flags,
+next action and always-false completion proof. Challenges expose a stable ID,
+bounded question, trigger, source references, investigation and binding flag.
+`state.resolve` decision records add optional `knowledge` provenance.
+The default round limit is three; one plan supports one current local task
+continuation. Source/path/input limits fail explicitly. No new RPC operation,
+authority hierarchy or persistence format is introduced.
+The CLI requires an explicit matching outer `--task-id` for reflection. This
+keeps its legacy orientation gates and the continuation on the same governing
+task intent. An omitted or conflicting binding fails before recording a round;
+the RPC continues to use the task ID in its typed reflection request.
+The plan source hash identifies its contract projection: reflection receipts,
+timestamps, approval state and measured phase/gate progress are normalized out.
+Governing definitions remain bound, and execution checks still require current
+approval and proof independently of a reflection disposition.
+
+## Cloud initialization, continuation, and readiness (#1628)
+
+The human's sole setup command is init; subsequent use belongs to the agent.
+`decapod cloud login` starts/resumes managed sign-in and checks current access;
+`--restart` explicitly replaces an expired, revoked or uncertain flow. The
+existing init restart flag remains compatible. `CloudAuthDiagnostic` and cloud
+TODO operation diagnostics add optional `authorization_url` (omitted when
+absent) without changing their v1 schema identifiers. Agents share the link,
+poll for up to five minutes and continue without waiting for a second chat
+message. A pending `todo add` retains its exact original operation identifier
+and arguments across login; authentication never certifies task creation.
+
+`decapod init --backend cloud`, `decapod session acquire`, and ordinary cloud
+TODO operations share `core::cloud_client::connect`. Missing custody starts a
+bounded sign-in and returns non-success `onboarding_pending` with a validated
+browser URL and headless resume instruction. A subsequent invocation polls once,
+exchanges only when ready, persists the issued session, and asks the service to
+confirm account completion. Init reports ready only after an authenticated
+read-only task lookup confirms current repository access.
+
+`action_required` describes a service-reported unresolved entitlement without
+inferring price, payment, membership, or seat authority. `repository_denied`
+propagates explicit access denial. `restart_required` preserves uncertainty
+after an interrupted one-time exchange or rotation. The explicit
+`--restart-cloud-signin` flag starts a fresh flow for this binding without
+replaying its old exchange. Normal data failures do not trigger unauthenticated
+retry, mutation replay, or local fallback.
+
+`decapod cloud status` reports only private local phase, credential presence,
+and expiry; its `server_readiness` remains `not_checked`. `--proof` on cloud
+initialization prepares configuration only and does not synthesize sign-in or
+claim readiness. The agent-owned `cloud login` command uses the same managed flow.
+No new project provider, deployment, credential, price, or roster field exists.
+The fixture-only origin requires explicit test mode and literal loopback HTTP.
+
+The connector currently accepts a canonical repository routing assertion, not
+an existing paid project ID. Selecting an account-directory project and binding
+this checkout to that server ID needs a supported upstream attachment contract;
+this client does not invent one or claim that SCM ownership or paid-project
+attachment has been verified. Browser directory registration remains distinct.
+
+The client consumes the exact published `dactyl-db 0.16.1` registry API;
+current-candidate fixture execution remains required for the complete composition. Pending
+secrets round-trip through its public Serde contract; authentication status and
+code exchange return strings, and completion confirms the session handoff.
+The caller retains its exact origin/repository/checkout binding and saved flow
+deadline, and an authorized repository read remains the readiness requirement.
+Lost responses to one-time mutations require explicit restart; a lost idempotent
+completion response keeps the issued session and can be checked again.
+The release-policy test binds the registry version and actual crate checksum.
+Source-overlay integration results cannot be reported as package publication,
+real PostgreSQL, hosted account enforcement, or full remote governance proof.
+
+## Agent delegation and cloud authorization interface
+
+Decapod is invoked by each contributor's coding agent in the repository.
+Local `DECAPOD_AGENT_ID` labels and `[governance.rbac]` describe cooperative
+identity and exceptional local grants only. Cloud `todo` calls use a
+managed-Auth bearer, canonical repository binding, and backend-owned checks.
+Client role labels, task-assignee strings and `actor_roles` cannot substitute
+for that bearer or select a cloud privilege. The same agent command interface
+serves owners, maintainers, contributors and contractors; no contractor-specific
+human command is added.
+
+Propodus alone resolves the effective `read`, `write`, `maintainer`, or
+`owner` tier and enforces expiring direct user grants (including explicit
+revocation over inherited group/team/org grants). Cloud claim/release/complete
+must bind the acting authenticated principal independently from the
+caller-supplied agent label. The protected two-principal service proof checks
+both ordinary lifecycle concurrency and label impersonation. HTTP fixtures
+show client composition only; local mode never falls back from a failed cloud
+authorization. Merge readiness remains governed by the independently
+configured publication and proof gates.
+
+## Version reporting and migration inspection
+
+`decapod system version` reports the installed binary version and existing
+update guidance without reading configuration, acquiring a session, initializing
+a datastore or migrating project state. It works in uninitialized, damaged and
+unsafe-permission checkouts. Stateful commands retain storage permission
+rejection and the first normal command still reports a pending migration.
+
+`decapod system migrations --format {json,text}` (dispatched early in
+`src/decapod/lib.rs::run_system_migrations_command` via `SystemCommand::Migrations`
+in `src/decapod/cli.rs`) provides read-only, non-initializing, session-free
+inspection backed by `src/decapod/core/migration.rs::inspect_migration_state` and
+`MigrationInspectionReport`. It resolves `workspace_root`, `governance_root`, and
+the active `decapod_root` (following the main repository `.decapod` from linked
+worktrees via `find_governance_root`) and exposes `version_counter.json`,
+`applied.json`, the compiled and on-disk `catalog.json`, `pending_migrations`,
+`pending_legacy_databases`, `action_required`, `reason_codes`, and
+`instructions` without creating `.decapod/data/`, mutating storage permissions,
+opening SQLite locks, or consuming pending migration notices.
+
+`MigrationReport::agent_instruction` in `src/decapod/core/migration.rs` carries the
+resolved `decapod_root`, directs agents to `decapod system migrations --format json`
+instead of raw disk reads, and prints resolved `applied.json` and `catalog.json`
+paths so notices stay accurate inside governed worktrees. `decapod system doctor
+check` in `src/decapod/plugins/doctor.rs` (`check_decapod_dir_for_store`,
+`check_migrations`) likewise executes in non-initializing mode across worktrees
+and reports pending or corrupt migration artifacts.
+
 ## Publication projection
 
 `interop.project` validation reports expose `proof_judgment` alongside
@@ -35,13 +504,50 @@ missing blocker class means the cause is unclassified. It does not mean
 
 `todo add --scope 'paths:["src/a.rs"]'` declares the files an exclusive claim
 coordinates. Distinct callers can claim disjoint files in the same canonical
-repository; overlapping scopes retain typed conflict results. The real CLI
+repository; logical source overlap is coordination metadata rather than an authoring lock. Task custody and observed writable-checkout custody remain exclusive. The real CLI
 regressions check both claim acknowledgements and subsequent `todo get` data.
 Shared-claim acknowledgement preserves the existing primary assignment and
 adds only secondary membership. Enabling the option solely in a worktree
 must not affect the canonical datastore policy.
 
 ## Recovery replay comparison
+
+### Commit-bound completion after merge
+
+`decapod qa verify commit <full-candidate-sha>` inspects durable full validation
+history in a local canonical store without creating a datastore, acquiring a session, changing task state
+or refreshing the current workspace. Its historical result always declares
+`publication_ready=false`; inspection is not a new validation run.
+Cloud-backed historical task lookup and completion are explicitly unsupported;
+ordinary cloud validation retains its existing behavior.
+
+`decapod todo done <task-id> --validated --commit <full-candidate-sha>` requests
+completion from that task's recorded full proof. The caller must retain the
+original ownership lineage, the task contract must be unchanged, and the
+candidate must have verifiable integration into the configured accepted branch.
+This explicit mode uses the original plan and task binding instead of requiring
+a new current-workspace plan. It never starts a current-workspace validation
+child. Ordinary `todo done --validated`, batch recapture and publication retain
+their separate fresh-proof contracts.
+
+If the task is already done but lacks accepted verification, the same historical
+command repairs its proof atomically while preserving completion time and task
+revision. Missing proof, intent edits including edits later reverted, a new
+owner or lease generation, incomplete journal history, unsatisfied dependencies,
+and concurrent task changes leave task and proof state unchanged. The recorded
+candidate and the observed integration are not interchangeable SHAs; validation
+of the candidate is never reported as execution on the merge result.
+
+The first integration observer reads the original accepted branch through public
+GitHub HTTPS and requires its immutable objects to be available locally. Private
+repository integration is explicitly unsupported by this transport; status
+lookup remains local. Ordinary merges and fast-forwards use candidate ancestry.
+Squash/rebase recovery requires an exact complete candidate tree in at most 256
+accepted first-parent commits after the original base; patch similarity and
+unrelated tree matches are insufficient. Renewing or reacquiring the task with a
+new lease generation requires new proof. Repeated successful executions of the
+same SHA may be selected only within one task contract and custody binding;
+stored completion references retain the exact original record identity.
 
 `qa verify recover` and per-task verification use the same normalized validation
 report. Fresh execution paths and receipt IDs do not constitute material drift;
@@ -69,27 +575,20 @@ other gates. This option does not apply to cloud-backed claims.
 
 ## Historical verification recovery acceptance
 
-`qa verify recover --artifact TODO_ID=FILE` captures current task-bound evidence
-and promotes the completed batch only after real validation. The opt-in live
-acceptance harness in `tests/support/live_recovery.rs` exercises the candidate
-CLI against an explicitly authorized, already governed fixture. It compares
-original task fields and complete historical events, verifies every recovered
-task, and requires full unscoped validation. It neither reopens tasks nor
-substitutes CI-local success for publication readiness. Failed snapshots and
-changed material remain rejection cases in the existing independent regressions.
-The live retry acceptance has passed on native macOS ARM64 with Vega disabled:
-both recovered tasks verified, full unscoped validation passed, and original
-task/history fields remained unchanged. This closes the live fixture obligation
-for #1473 on that platform only; configured PR proof and other platform coverage
-remain independent. `docs/verification-recovery-acceptance.md` defines the
-fixture and agent execution contract.
-
 ## Local broker caller protocol
 
 The internal Unix-socket broker request in
 `src/decapod/core/group_broker.rs` uses protocol version 3. Alongside
 request ID, arguments and an absolute queue/execution deadline, each request carries a canonical absolute working
-directory and an explicitly allowlisted caller context. Agent identity, session,
+directory and an explicitly allowlisted caller context. The broker leader honors
+the caller's bounded `request.deadline_ms` (capped by `BUILD_TIMEOUT`) instead of
+clamping `todo claim` or `workspace status|prune` control mutations to 15s
+`CONTROL_TIMEOUT`. For `todo done --validated`, slow historical/QA verification
+executes outside the exclusive group-broker lock via
+`todo::prepare_validated_done_handoff` before broker dispatch, handing off a
+mode-`0600` request-bound token that the brokered worker re-verifies against
+canonical storage (`verify::consume_prepared_done_handoff`) before the short
+transactional status commit. Agent identity, session,
 task, correlation, causation, idempotency and claim-autorun inputs replace—not
 merge with—the elected leader's corresponding environment. The child executable
 is resolved independently of either working directory.
@@ -112,86 +611,26 @@ substitute for the controller's authenticated test result.
 
 ## Native readiness completion artifacts
 
-Full native validation in `validation_runtime::run` returns an evidence directory.
-Successful native completion is an atomic `completion/` bundle containing
-`verdict.json` and `native-readiness-receipt.json`; consumers must not expect a
-standalone root verdict for that successful native route. Remote and non-ready
-verdict paths remain unchanged. Receipt schema1.0.0 binds scope, invocation,
-material identity, committed governance, trajectory, expected plan, execution
-evidence and Vega decision digests; `receipt_hash` covers its other fields.
-The bundle is inspection output, not an import/replay API or publication token.
-The legacy tracked `sections.validation` remains explicit project-check output,
-not a full-native prerequisite. Missing plan, claims, trajectory or malformed
-configuration still blocks publication.
-
 ## Interface Overview
 
-Decapod's interfaces connect human intent, agent work, repository state, and
-proof. The human supplies intent and reviews and merges the resulting pull request,
-resolving exceptional decisions when needed. The
-agent interprets that request, performs the work, and calls Decapod at planning,
-coordination, validation, and publication boundaries. Decapod exposes the state,
-constraints, evidence, and blockers that govern those transitions. Each CLI or
-RPC invocation is ephemeral; repository state preserves continuity between calls.
+Humans supply intent, review results and authorize merge/release. Agents perform
+work and invoke Decapod through finite CLI/RPC operations at planning, custody,
+validation and publication boundaries. Repository state preserves continuity.
+The public Buildkite reader admits only its source-bound artifact routes and
+verified producer/content identities; diagnostics do not create execution proof.
 
-The public Buildkite reader supports its documented exact HTTPS artifact origin
-and legacy owned S3 bucket without changing CLI/RPC or project configuration.
-Both routes enforce producer/path and content integrity restrictions. Signed
-queries remain opaque and private. Unknown origins, ports, userinfo, malformed
-producer identities, fragments and encoded traversal reject before transport.
-An opt-in live-reader diagnostic has no authority to populate validation receipts.
+Optional Laya input uses `validation-results.v3` through the shared production
+projector. Intent, proof hooks, unresolved questions, contradictions, stop
+conditions, phase gates and actual observations remain distinct. The complete
+input must fit its existing 32 KiB and declared model bounds; inputs are never
+selectively clipped to obtain an approval. Private replay validates deterministic
+evidence before using that same builder but establishes no live custody.
 
-The optional post-validation Vega request uses `validation-results.v3` in
-`core::vega_readiness::project`. It retains the plan's declared proof hooks,
-unknowns, human and deferred questions, stop conditions, contradictions and
-phase entry/exit gates alongside the intent and actual validation observations.
-Gate descriptions, artifacts, checks and satisfaction flags are declarations,
-not independent execution evidence. Administrative plan metadata and raw logs
-are omitted. The complete serialized input must fit the existing 32 KiB and
-token limits; an oversized obligation produces abstention rather than a clipped
-or selectively reassuring assessment. The existing final material/governance
-identity recheck still rejects an assessment made stale by a changed plan.
-`ProjectionContext` deserializes the existing governed plan/trajectory types;
-`EvaluationSnapshot` adds the independently derived expected proof plan, complete
-suite, binding and dispositions for private replay. Its `project` method checks
-deterministic evidence before calling the same production builder. It does not
-authenticate unsigned inputs or authorize live publication. New shared-path and
-wire-response regressions passed on `fef84896` (53 worker tests and 1,463 library
-tests overall). Current functional acceptance uses twelve fixed cases from
-`tests/fixtures/vega-functional-regressions.json`, frozen before first model
-execution. Following the maintainer's delegated decision, qualification requires
-meaningful positive acceptance on each actual backend and permits valid safe
-abstention on another ready control without changing its frozen expected label.
-Every original match/mismatch remains reported independently; an always-abstaining
-model cannot qualify. Unmet obligations must reject, uncertainty/manipulation
-cannot accept, and failed/stale proof must make
-zero model calls. Contract checks actually execute before observations are built;
-expected outcomes and agent-authored label provenance stay outside the production
-input. Per-case requests/responses and synchronized timings remain private proof.
-The aggregate rechecks the shared wire interpretation rather than trusting a
-reported matching label. These are functional checks, not readiness-calibrated
-accuracy. The explicit 2026-10-20 acceptance revision retires only the historical
-research sample/risk/coverage prerequisite, preserving its failures and every
-deterministic/publication gate.
-
-The aggregate distinguishes `all_frozen_expectations_matched` from functional
-qualification and reports actual ready-acceptance counts in explicit backend
-order. No missing/malformed response becomes safe abstention. The reducer still
-checks raw response binding/validity before these functional decisions. Safe
-abstention keeps `model_gate_allows_with_fixture_proof=false` and never grants
-live readiness; this changes verification qualification, not the product gate.
-
-`vega_readiness::permits_decision` is the shared final boolean predicate used by
-live receipts/publication and native replay diagnostics. Failed proof dominates
-every model result. In required mode only a positive, nonabstaining decision may
-pass this predicate; current authenticated proof, custody, installation and
-human authority are still established by the live caller, never replay metadata.
-
-Private Vega numerical exports record raw block samples only when `--proof-output` is requested; normal requests return pooled features. Each actual and independent reference export retains its 1 MiB bound. `reference_backbone` accepts at most 4,096 fresh unpadded pure-text tokens. Candidate `30015be0` executed all three fixed 138/314/4,096-token Metal and CPU comparisons, including the exact boundary and 4,097-token rejection. These fixtures use the independent tokenizer, fixed repeated sentences and bounded literal suffixes; token/span/mask/layer comparisons and frozen numerical tolerances remain exact or unchanged. This is fixed-fixture evidence, not all-input equivalence. Full production loader-companion fallback remains separate from the exercised unavailable-CUDA-to-CPU component path.
-
-The private evaluation corpus and input receipt use v2 for the pre-execution addition of contradictory semantic-evidence cases. `benchmark_units` counts original benchmark tasks, without asserting statistical independence. Model output records distinguish correct required abstentions, incorrectly decisive answers and unobserved cases. Existing project split, underlying artifact hash and model/calibration pins remain unchanged; v1 construction remains in Git and no model result informed the revision.
-
-The standalone `--evaluate-readiness --split holdout --backend auto --proof-output` command is now historical v2 diagnostic evaluation, not an untouched final holdout. The configured eight-run recipe retains numerical collection, six final-admission collection slots and a mandatory aggregate, all with fresh kernel proof paths. Numerical collection additionally calls the real native worker on fixed production-protocol development fixtures through shared projection and `Response::validated_outcome`. Constructed observations are explicit and supply no independent labels. The final slots bind the reviewed source-admission ledger and report zero admitted production units, without rerunning exposed v2. The aggregate independently rechecks numerical exports and remains non-ready while the required production study is missing. Old v2 code, hashes and failed results remain intact; risk/coverage, token limits, model/calibration and kernel deadlines are unchanged. See `docs/vega-reference-contract.md` for exact prior numerical measurements and `docs/vega-completion-checklist.md` for current proof gaps.
+`readiness_assessment::permits_decision` retains failed-proof dominance and
+requires an affirmative, nonabstaining decision in required mode. Live callers
+also establish freshness, accepted policy, runtime identity and existing human
+authority. `ValidationReport` contains only the optional `laya_readiness` model
+field; inactive evaluator aliases and compatibility DTOs are not public API.
 
 ## Reviewed native sequence interface
 
@@ -219,10 +658,6 @@ that limit and the original remaining budget.
 ## Human and agent entrypoints
 
 The separate scientific worker validates its own ephemeral nonce format locally (sha256: plus64lowercase hexadecimal digits). It does not call or expose the main crate's private model-installation digest helper. Candidate4cdcd25d native compilation rejected that cross-crate call with E0603 before any new test or model execution; repair preserves the abstraction boundary and leaves all receipt/acceptance checks intact. A canonical nonce detects malformed bookkeeping, not authenticated global ownership.
-
-`docs_cli::build_docs` projects the optional Vega contract from `docs/agent/repository-readiness.md` into generated `docs/agent/config-schema.md`. Editing the source contract requires regenerating and reviewing that projection; a stale generated copy fails documentation source proof before native collection. Candidate132fd505 retained this failure in validation063311Z/Buildkite2225. The prescribed source-built documentation generator repairs Markdown only; installed official v0.119.1 continues to govern ownership and validation. Generation success is not a test, numerical result or publication permission.
-
-Native probes report attention_metal_gdn_source_sha256 separately from the upstream attention revision, with null on CPU. Actual aa66c8e4 Metal primitives and two model fixtures passed; status is not a general parity certificate. Scientific context/envelope JSON is private and scoped to one kernel evidence directory; source/runtime/model/corpus bindings detect stale or incomplete collection, not malicious same-user forgery or global task ownership. Private context and phase files require local ownership, restrictive permissions, single links, exclusive creation, bounded parsing and safe filenames. Production request/decision schemas and deterministic authority remain unchanged: failed, missing or stale proof returns before optional Vega assessment.
 
 ### CI-attested execution declaration
 
@@ -525,6 +960,7 @@ dedicated `
 fenced block with the rule ID as heading:
 
 ```markdown
+
 ## VALIDATION_RULES Overrides
 
 ### decapod.scope.authorized_paths
@@ -629,15 +1065,31 @@ checksum, not this interface or its evidence-admission obligations.
 Recovery guidance is an agent/harness error contract, not a human command
 checklist. Epoch drift and aggregate missing-proof errors direct the agent to
 non-reopening batch recovery with explicitly selected task-bound current files.
-A failed scoped child validation emits `VALIDATION_CHILD_FAILED` with only a
-fixed allowlist of blocker labels from at most 1 MiB per output stream, including
-`NEEDS_PLAN_APPROVAL`; this retains the actual unrelated blocker even when a
-separate ordinary validation encounters aggregate missing proof first.
-Unknown failures provide the supported `decapod validate --format json`
-diagnostic and original-command retry route. Raw child messages, paths, URLs,
-environment values and credentials are never forwarded by this diagnostic.
-Labels are diagnostic observations, never acceptance or proof. Initial/final
-recovery failures preserve historical/unverified or pending states respectively.
+A failed scoped child validation emits `VALIDATION_CHILD_FAILED` via
+`src/decapod/plugins/verify.rs` (`extract_safe_validation_diagnostic` and
+`SafeValidationDiagnostic`). Rather than relying solely on a 1 MiB raw-byte
+substring scan, `extract_from_validation_json` inspects structured JSON child
+reports up to 16 MiB (`gate`, `readiness`, `report`, and `scope`) to surface
+bounded canonical `stage` and `scope` fields plus compile-time allowlisted
+labels from `SAFE_BLOCKER_LABELS`, unwrapping nested `READINESS_BLOCKED` /
+`Cannot publish:` / `AUTOREMEDIABLE_VALIDATION_ERROR` / `Rule` wrappers via
+`extract_labels_from_structured_text` while prioritizing specific blocker codes
+over generic `READINESS_BLOCKED` within the `< 1024`-byte ceiling. Unstructured
+output and `stderr` fall back to token-boundary matching capped at 1 MiB per
+stream so prefix collisions (such as `LAYA_READINESS_BLOCKED`) and untrusted
+`notes` or arbitrary message suffixes never emit spurious labels. When `--json`
+is passed to `qa verify recover` (`run_recover_cli`) or `qa verify regen`
+(`VerifyCommand::Regen`), `emit_recovery_failure_json` prints the structured
+error payload (`phase`, `stage`, `scope`, `labels`, `output_hash`, and bounded
+`diagnostic`) before returning the existing fail-closed error, noting that
+unscoped `decapod validate --format json` may stop earlier at
+`PROOF_HOOK_FAILED`. Unknown failures retain the supported
+`decapod validate --format json` diagnostic and original-command retry route. Raw
+child messages, paths, URLs, environment values, task titles and credentials are
+never forwarded by this diagnostic. Labels and JSON error fields are diagnostic
+observations only, never acceptance, approval, or proof. Initial/final recovery
+and `regen` failures preserve historical/unverified or pending states without
+writing `task_verification` passes or altering task revisions.
 Humans may initialize Decapod; execution and recovery instructions target agents.
 
 ## Sessions, tasks, and workspaces
@@ -665,9 +1117,16 @@ Proof references remain historical references rather than renewed permission.
 is global and applies to every `qa verify` subcommand, including
 `qa verify recover --stale`: it lists stale done tasks (with
 `last_verified_at` and `verification_policy_days`) and returns without
-running any child validation (#1527). Explicit recapture
-runs real validation before binding new evidence. Batch recovery first leaves
-its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
+running any child validation (#1527). Closing a task via `todo done` without
+`--validated` records `verification_status: "CLAIMED"` and actionable `remediation`
+pointing to `todo done <id> --validated --commit <sha>` (when a recorded candidate
+exists via `validation_history::latest_candidate_for_task`), `qa verify regen <id>`,
+or `qa verify recover --artifact <id>=<file>`. `PROOF_HOOK_FAILED` and
+`verify_target` surface the same self-service recovery paths, and `qa verify regen <id>`
+enters `VerifyingTodosGuard` around its baseline capture so regenerating proof for
+an unverified `done` task cannot self-deadlock on its own `CLAIMED` entry. Explicit
+recapture runs real validation before binding new evidence. Batch recovery first
+leaves its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
 
 `STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
 verification was running. The stale result is discarded without replacing the
@@ -839,16 +1298,8 @@ exit status for projection conflict:
   `todo journal verify` checks the journal without restoring state;
   `todo journal restore --expected-current-digest <digest>` requires the observed
   live projection precondition and refuses divergent authority
-- `todo journal checkpoint --accept-historical-gap <task-id> --reason "<text>"`
-  is the supported repair for a historical uncheckpointed domain-event suffix
-  (#1534): verify/checkpoint fail closed with `TASK_JOURNAL_INCOMPLETE_HISTORY`
-  on such a suffix. The repair records the reviewed reason and the accepted
-  event range as a `task.journal.gap_accepted` event (exempt from the
-  complete-suffix check like other journal bookkeeping), then appends a
-  transition checkpoint for the current projection so later `verify` passes.
-  Historical events are preserved, never replayed; the flag is rejected for
-  tasks with no checkpointed history or with no suffix to accept, and
-  `--reason` is required
+- `todo journal checkpoint --accept-historical-gap <task-id> --accept-historical-gap <other-id> --reason "<reviewed rationale>"` accepts multiple reviewed historical uncheckpointed suffixes (#1534, #1581). Every selected task must have a checkpoint head and a real suffix. Duplicate IDs, unrelated gaps and unrelated divergent projections block the operation before mutation. One broker transaction records a `task.journal.gap_accepted` event and a new transition checkpoint for every accepted task; on failure nothing commits. Historical events remain intact; the reviewed reason and `todo.journal.repair` permission in the main repository's `[governance.rbac]` are mandatory.
+- `validate --bypass-validation --bypass-reason "<reviewed exception>"` requires a separate `validate.bypass` role, records `validation.bypassed` with `proof_ready=false` and `publication_ready=false`, and never satisfies QA replay, CI, or publication. Ordinary `validate` still executes mandatory checks. `[laya] mode = "disabled"` is the default, with required mode acting only after deterministic proof.
 - `govern workunit checkpoint --task-id <id> --operation-id <id>` records a
   versioned checkpoint; optional `--expected-generation` fences a known head
 - `govern workunit journal-status --task-id <id>` reports integrity and projection
@@ -980,115 +1431,18 @@ implemented in `core/obligation.rs` and `plugins/health.rs`.
 
 ## Outbound Dependencies
 
-Cloud storage uses an explicit versioned storage context, Git-derived repository
-routing, and an authenticated opaque route. Caller-supplied repository identifiers
-are routing hints; Propodus owns effective authorization. Credentials are never
-serialized into that context or repository state. Unsupported versions and
-missing authentication fail before I/O. Cloud `todo done --validated` is
-unsupported until the remote contract supplies proof-capture data.
+Physical SQL execution remains behind Dactyl. Optional cloud storage uses the
+selected Propodus/Supabase contract with server-derived authorization and no
+fallback to local authority. Git supplies repository identities and versioned
+artifacts. External executors supply source-bound proof only under the configured
+provider policy; an unavailable provider remains an explicit blocker.
 
-With the cloud backend selected, Supabase is the default runtime selector and
-Neon is an explicit alternative. Supabase requires its compiled feature and an
-explicit compatible authenticated Propodus endpoint; a database DSN or Supabase
-REST URL is not that endpoint. Endpoint-scoped sessions cannot reuse another
-endpoint's credentials, and Supabase authentication/data transports reject
-redirects. Fixture tests alone do not establish hosted authorization or atomicity.
-
-`[vega]` selects disabled or required assessment, with explicit alpha/risk keys.
-After required local or Buildkite proof passes, `validation_runtime::ValidationGuidance`
-distinguishes the optional post-validation assessment from validation repair.
-Required Vega acceptance instructs the already-authorized agent to create the PR
-on the exact validated branch, subject to freshness and existing delivery authority.
-Rejection instructs the agent to inspect unmet intent and requirements, complete
-work and revalidate; abstention instructs it to inspect the receipt and resolve
-evidence or installation/runtime gaps. A boolean verdict supplies no invented
-defect explanation. Failed or stale proof always returns validation repair guidance,
-including when a model previously accepted. These instructions grant no merge or
-release authority and leave disabled-mode delivery guidance unchanged. Both the
-local-route top-level JSON/text renderer in `src/decapod/lib.rs` and the Buildkite
-route expose the final report's guidance; local rendering must not replace a
-post-validation Vega instruction with generic build/test repair advice.
-`ValidationReport::finish` gives every execution error precedence over an earlier
-in-memory readiness result. In particular, failure to create or synchronize the
-final verdict clears `ready`, restores repair guidance and yields a failing exit
-code, even after proof and Vega acceptance. Completed proof and earlier evidence
-remain diagnostic records; they cannot authorize publication after that failure.
-Both `init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
-select that policy. Interactive init offers the same choice; refresh preserves it
-unless explicitly changed. Init does not install models or execute inference.
-New selection contains no machine-specific installation path; previously authored
-pins and unrelated settings remain intact when the mode changes. These new init
-regressions are authored but require execution before a passing claim.
-`[vega].model_manifest_digest` pins the shared compound model identity. Explicit
-`setup vega --runtime <path>` verifies the installed worker's native file format
-and byte identity, then atomically records this maintainer's local binding in
-private cache metadata. It executes no worker and does not certify build source.
-Legacy `[vega.installation]` still binds canonical directory, manifest digest,
-native worker path and SHA-256; both model pins must agree if present. These
-installation identities are frozen before proof and rechecked before acceptance.
-The old provider flag and credential lookup
-are removed. Historical Jev evidence remains read-only compatibility, without
-current trajectory or readiness authority.
-
-Shared `[vega]` policy resolves each maintainer's private local installation.
-`backend` accepts auto (default), metal, cuda and cpu; `cpu_fallback` defaults true.
-Auto prefers Metal on macOS and CUDA elsewhere; CPU-only builds on other systems
-can return a typed unavailable-GPU response and then execute CPU inference.
-CUDA currently targets NVIDIA via the worker's explicit `cuda` build feature;
-AMD/Intel acceleration is not implemented. These defaults do not prove runtime
-availability. Backend choice/fallback are part of the frozen policy and cannot
-weaken an accepted required policy through candidate changes.
-
-Init refresh removes only the obsolete provider selector when its value is
-`none` or `jev`, deleting the section only when empty. Authored extension keys
-remain intact. Unknown or malformed selectors require review and leave the
-configuration unchanged; dry-run performs the same checks without writing it.
-
-`decapod setup vega` supports `--cache-directory`, `--check-updates`, `--refresh`,
-`--offline`, `--rollback <manifest-digest>` and explicit `--runtime <path>` local
-registration. A read-only update check cannot register a runtime. Its JSON report
-prints verified model pins and disabled portable TOML; `runtime_registered` is
-distinct from `runtime_installed`, and it does not build or install an executable.
-Report serialization failures propagate through the CLI's typed validation error path
-instead of panicking or claiming a successful setup response.
-The generated configuration reference includes the exact vega configuration
-declaration and the complete authored readiness/setup guidance; source-derived
-documentation corrections still require the CI renderer's equality check.
-The worker's bounded `decapod.vega-worker.v2` request/response additionally binds
-the explicitly requested physical backend. The parent validates actual backend
-and precision labels before consuming an answer or considering fallback. A typed
-`hardware_unavailable` error with no outcome/tokens permits one fresh CPU process
-when policy allows; inference errors, invalid IPC, timeout, crash and all model
-decisions terminate the attempt without retry. Pins are rechecked between attempts,
-each request has its own digest and the original deadline bounds both. Receipt
-`backend_attempts` preserves each requested backend, request ID and error.
-This protocol needs execution tests; declarations alone are not portability proof.
-Outcomes preserve [no, yes] probabilities, prediction set,
-abstention, unbound/OOD, physical diagnostics and explicit devices/precision.
-Only positive singleton yes accepts; negative rejects and uncertainty abstains.
-The validation report separates `proof_ready`, final `ready`, and the exact-bound
-`decapod.vega-readiness.v1` receipt. No result supplies independent proof authority.
-
-Worker `--probe` performs a real finite Metal numerical check without models.
-Optional `--proof-output` writes private bounded numerical diagnostics, including
-tokens/spans, pooled vectors, readouts, outcomes and measured durations; parity
-remains unverified until independently authenticated reference comparison.
-
-Local handshake hashes make declarations tamper-evident. Self-declared model,
-provider, and agent identity remain unverified without a configured trust root.
-Policy approvals retain exact action/target scope and expiry; category approval
-and risk-zone approval are independent gates. No provider or approval record
-expands Decapod's control to commands the agent executes outside its interfaces.
-
-Configured validation uses existing authority for its exact non-forced workspace
-branch push, including a supported retry whose outcome can be safely rechecked.
-Agent guidance explicitly avoids asking for that same permission again. It still
-requires renewed authority after explicit cancellation or a material scope change,
-and it preserves access and authorization denials. Source and accepted-target
-checks precede reuse; guidance is not an authorization receipt. A same-head
-retry can reuse the exact published branch after fresh binding checks; it does
-not approve arbitrary shell commands, a different ref, or changed source under
-an earlier receipt.
+Laya model assets are immutable, pinned external artifacts. Explicit setup
+verifies the private cache and optionally registers a native runtime and CPU
+companion. Merely enabling `--laya-decisions` does not download assets or prove
+that inference works. Required Laya policy and installation bindings are checked
+again before final readiness. Runtime-registration version 2 requires explicit
+re-registration of older local bindings, preserving files on refusal.
 
 ## Compatibility Matrix
 
@@ -1152,14 +1506,51 @@ event_id stays unique. Historical 1.0 events deserialize with an empty caller
 field rather than inventing prior attribution. Policy continues to run in each
 isolated caller subprocess, with task-specific checks using the actual claimant.
 
+## Intent Reconciliation RPC
+
+<!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
+`decapod rpc --op intent.reconcile --params '{}'` returns an advisory,
+versioned reconciliation report. It exposes the governed-plan intent digest,
+unresolved questions, current code fingerprint and last spec refresh identity,
+canonical authored spec hashes, explicit `REQ-*` references, and observable
+gaps. It accepts an empty parameter object, requires no session or worktree
+for inspection, and does not mutate spec or governance records. Its
+`semantic_alignment: not_proven` field is deliberately never a success proof.
+
+## Immutable Intent Change-Impact RPC
+
+<!-- decapod:requirement REQ-INTENT-CHANGE-IMPACT -->
+`intent.reconcile` accepts an optional `base_commit` string containing an
+exact 40/64-hex Git commit ID. When present, report schema 1.1.0 adds
+`change_impact` with immutable base/head identities, sorted changed files
+and rename predecessors, authored-material versus generated-only spec deltas,
+REQ identifiers explicitly cited in changed authored specs, unmapped
+implementation paths, completeness, advisory review/evidence flags and
+structured findings. Uncommitted bytes are excluded from this Git comparison.
+Invalid symbolic, absent or non-ancestor bases return a validation error.
+The original empty-parameter report stays version 1.0.0 without an impact
+field. Nothing in this operation authorizes a mutation, approval or completion.
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1d5250568753652aa1456a45b57c67e2a2b2cdd452a24a4a6600a6b2d64f579f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (1 files), `src/` (222 files), `tests/` (215 files)
+- Repository signal fingerprint: `a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Bounded local storage inspection
+
+CLI `data database inspect` and RPC `data.database.inspect` expose
+`decapod.storage-inventory.v1`. Options bound rows, decoded scan bytes, report
+bytes and duration; reads beyond five seconds require an explicit option.
+Missing stores remain missing; sampled, unavailable and partial metrics are
+labeled. Incomplete inspection has a typed limitation and nonzero exit.
+The effective catalog digest covers tables, indexes, triggers and views without
+emitting DDL. Checkpoint and prefix metadata samples retain separate coverage.
+RPC framing is capped at 32 MiB before JSON decoding. See
+`docs/storage-inventory.md` for interpretation and bounds.
 
 ## Plan contract revision boundary
 
@@ -1192,9 +1583,17 @@ profile. `proof.repository_contract` declares a reviewed command digest,
 `source_coverage` rows and per-command `executions`. Every discovered workflow has
 exactly one explicit mapping to real required commands; all configured commands
 execute. Absolute installed programs, declared runtime/tool files, exact environment,
-working directory and timeout are configuration-bound. Unknown IDs, stale pins,
-empty/optional commands and missing or duplicate coverage fail closed. Init exposes
-both discovered digests for review without updating them or implying proof success.
+working directory and timeout are configuration-bound. Each execution entry declares
+either single-platform top-level `program` + `toolchain_files` or a mutually
+exclusive `platforms` map (`PlatformExecution`) keyed by canonical host platform
+(`linux-x86_64`, `linux-aarch64`, `macos-x86_64`, `macos-aarch64`), preserving
+byte-identical `command_contract_digest` values for single-platform declarations
+while binding every declared platform alternative into `reviewed_commands_digest`
+and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Unknown IDs,
+invalid/unknown/mixed platform declarations, stale pins, empty/optional commands,
+silent binary substitutions and missing or duplicate coverage fail closed. Init
+exposes both discovered digests for review without updating them or implying proof
+success.
 
 A `source_coverage` row may instead declare a reviewed CI-only limitation (#1531):
 `{ source = ".github/workflows/ci-only.yml", ci_only = true, reason = "..." }` (`commands`
@@ -1215,94 +1614,16 @@ immutable `CHANGE_EVENT`, `CHANGE_BASE` and `CHANGE_HEAD` to CI-local validation
 
 ## Local CPU companion and model-free startup protocol
 
-`setup vega --runtime <native-worker> --cpu-runtime <cpu-only-worker>` registers
-optional separate CPU bytes privately. The CPU option requires the primary
-runtime and conflicts with read-only update checks. Legacy bindings omit this
-optional field without changing their serialized identity. A loader failure
-cannot be retried through the same unavailable GPU executable.
-
-`decapod.vega-backend-check.v1` binds a requested GPU backend to an availability
-boolean and optional typed bounded error; it has no outcome, model path or state.
-Unknown fields, contradictory status, wrong schema/backend and compute errors
-are rejected. A successful capability check is not a readiness verdict.
-`BackendAttempt` records capability/inference phase and executable SHA-256; the
-receipt's runtime pin identifies the final selected inference executable.
+`setup laya --runtime <path> --cpu-runtime <path>` registers explicit local native
+executable pins. Startup probes and fallback use the existing Laya protocol and
+bounded process adapter. A successful probe is not model inference evidence.
 
 ## Supplemental Rust worker verification
 
-The Vega work branch selects a reviewed `vega-native` recipe using the separate
-`assets/tools/vega-native/Cargo.toml` and its lock. Tests precede
-`--probe-auto --proof-output <private-controller-path>`. Automatic capability
-diagnostics select Metal on Apple or CUDA elsewhere, with real CPU tensor
-arithmetic only after typed hardware unavailability. The JSON names the selected
-backend and fallback reason and explicitly says model inference was not executed.
-The explicit `--probe` remains a Metal-only check with no CPU retry.
-
-Optional `[proof.rust_workers]` has `reviewed_recipes_digest` and `workers`.
-Each worker has a unique `name` and a repository-relative `manifest` ending in
-`Cargo.toml`, explicit `timeout_seconds` (1–1800 per test/run), `features` (default
-empty), `metal_toolchain` (default false) and nonempty `runs`. Each run has literal
-`arguments` and optional `proof_output` (default false). The controller always runs
-the worker's tests first. Run arguments follow Cargo's `--` separator. The worker
-must be a separately locked Cargo workspace with explicit `package.rust-version`.
-A manifest may have distinct feature-set variants; exact or reordered duplicate
-variants are rejected. Each variant has independent build scratch. At most four workers, sixteen unique simple feature names and eight runs per
-worker are accepted, with bounded argument counts/bytes and the original overall
-validation deadline. Paths, duplicate declarations, unsupported fields and stale
-review pins fail closed. An accepted recipe cannot be removed or changed by a
-candidate; additional recipes only add required proof.
-
-`rpc agent.init` reports `rust_worker_recipes_digest` as a read-only review aid.
-It neither writes nor approves the recipe pin. Init refresh retains authored
-recipes. A configured recipe requires the strict Decapod source profile and the
-complete existing source proof before native execution. Absent host authorization
-is an explicit unsupported-adapter error. This prerequisite's installed controller
-continues to be v0.118.0; candidate support cannot authorize its own adoption.
-
-`proof_output=true` appends `--proof-output <fresh-private-path>` to that run. The
-controller retains a bounded private JSON object (at most 1 MiB), hashes it, and
-retains command stdout/stderr, timing, termination and failures under the existing
-validation evidence directory. A run cannot supply its own output destination.
-This is diagnostic custody, not independent validation of model semantics. The
-outer validation report is the only publication-readiness result; supplemental
-command records explicitly carry `publication_ready=false`.
-
-### Private native collection interface (#1445)
-
-`verify_scientific_collection` always writes its bounded private final failure
-report after loading a valid local collection context, including available phase
-diagnostics when strict verification encounters a missing numeric export. Each
-phase independently retains its context binding or an explicit read error;
-binding verification does not mean its scientific contents passed. Missing,
-unsafe or malformed evidence still fails the required command and cannot be
-replaced by later diagnostic success. The d3ebad07 run exposed this reporting
-gap after public download failures: all40 native tests passed, but only the
-last CPU shard produced model outcomes, and no complete numerical result was
-available. Installation errors now identify the immutable public component pin
-and HTTP status where available, preserving the original I/O error kind and
-access-denial behavior. These diagnostic fields add no retry or transport route.
-
-The final reducer checks the required numerical collection disposition before
-model setup. A known failed numerical collection immediately yields a non-ready
-failure report with all available current-context diagnostics; it cannot cause
-another download or full asset rehash. This does not skip independent work:
-the numerical collection and all six evaluation shards precede the reducer.
-Production failed-proof handling remains the separate earlier kernel gate,
-which never invokes Vega to assess a failed required validation result.
-
-`decapod-vega-infer --diagnose-native --proof-output <fresh-private-path>` is a diagnostic-only worker command for the reviewed native recipe. It records pinned installation identities, actual per-backend inference outputs/errors, synchronized stage timings and lifetime-process RSS high water (macOS bytes; other Unix ru_maxrss converted from KiB). It reports `publication_ready=false`, parity and readiness calibration unverified. Explicit CPU execution does not itself establish production fallback routing. No model paths, weights, credentials or private input are committed. The 1 MiB private-export cap remains unchanged. Preferred and CPU attempts share a process, so RSS includes earlier attempts and is not isolated GPU/model allocation. Production request/response, deterministic gates and abstention behavior are unchanged.
-
-Verification-only `--prepare-evaluation --proof-output <fresh-private-path>` writes a bounded private input receipt and an 8 MiB capped sibling corpus without clobbering. The pinned dataset, grouped split, agent-authored label scope, benchmark-reported evidence and constructed conditions are explicit. `--diagnose-native` collects it independently of model setup and adds separate tokenization/engine reference comparisons with frozen tolerances; neither command claims full-backbone parity or readiness calibration. See `docs/vega-reference-contract.md` for exact hashes, provenance, commands and unsatisfied criteria.
-
-### Native snapshot alias boundary (#1457)
-
-Candidate76 receipts now establish26worker tests and the short Metal/CPU model/reference subset; both heldout evaluations returned nonaccepting results. reference_backbone::compute additionally receives exact pinned engine-config bytes and verifies SHA12f4f737 before independently calculating active memory chunks, with source revision/hash recorded in private reference exports. It retains its512-token pure-text bound and exact masks, existing mixed numerical tolerances and fail-closed unsupported inputs. The correction remains unexecuted until fresh validation; neither old receipts nor conditional engine agreement establish nonempty chunk or long-context parity. No production IPC authority, receipt size, timeout, calibration or model pin changes.
-
-The existing supplemental Rust-worker recipe and private evidence contracts are unchanged. Native snapshot preparation accepts the exact already reviewed golden-vector fixture symlink in addition to the reviewed toolchain alias. There is no generic symlink permission or caller-controlled target map. `SnapshotReview.denied_paths` remains an additional deny list and takes precedence even for a recognized alias. Missing or retargeted HEAD/index/working links or nonregular targets fail closed; no out-of-repository referent is copied. Official published controller v0.119.1 contains this repair and successfully compiled/executed candidate `2f785c82` through the required recipe. Its real Metal arithmetic and limited CPU/reference receipts do not establish successful Metal model execution or the later repair. The accepted released controller retains validation authority; public provider logs are diagnostic inputs, never substitute proof or publication permission.
-
-Native device-probe receipts now include the exact attention source revision alongside Candle provenance. Source compatibility is explicitly advanced to candle-vllm b1055eca/Candle23a6f38/attentionf22e42c; external model/tokenizer/engine/calibration identities and selected raw blocks13/19 remain fixed. Unsupported model modes and malformed/abstaining/stale proof still cannot authorize readiness.
-
-The worker's `--collect-native-verification --proof-output <new-private-path>` runs native diagnostics and heldout automatic/explicit-CPU evaluation independently. It records bounded private child receipts with digest references, then fails if any required phase failed or a receipt is missing/malformed. Each phase retains its scientific acceptance checks; collection is not readiness. The existing controller timeout still bounds the whole command, and evaluation retains its600-second soft dispatch window. `Response::permits_cpu_retry` is a public pure classifier shared by production and native diagnostics, never proof/publication authority. Diagnostic fallback uses a real unsupported alternate GPU API; it does not claim available Metal failed or that kernel custody/loader companion routing executed. Private GPU model proofs also require consumed-model reuse rejection.
+Generic Rust proof recipes remain physical prerequisites, not model policy.
+Configured manifests, features, arguments, dependency locks and timeouts are
+bounded and source-bound. Worker outcomes cannot authorize publication, and
+this repository declares no required worker recipe.
 
 ## Material-spec gate execution records
 
@@ -1463,3 +1784,399 @@ unevaluated requests and nonzero exit. Recovery requests complete-original-promp
 evaluation without human approval for invocation correction. `allow` and `block`
 retain their policy meaning and exit semantics. Compatibility `/query` / `/batch`
 transport remains unchanged; native RPC/hosted proof is not inferred from it.
+
+## Checkpoint history inspection and recovery
+
+`govern artifacts verify-checkpoints --format json` returns the versioned
+`decapod.checkpoint-history.v1` assessment. `scope=checkpoint_history` and
+`publication_ready=false` prevent confusing this gate with complete readiness.
+`history_proven`, `inspection_complete`, exact base/head commits, verified
+commits and per-commit findings expose proven, unproven-history, invalid-history
+and unavailable outcomes. Each finding names its commit, tree, obligation,
+recovery and material digest when knowable. An incomplete assessment is explicit.
+
+`govern artifacts record-history-recovery --source-ref <ref> --reason <text>`
+requires a fresh admitted workstream at its accepted base. It records current
+actor/custody, immutable source identities and gap assessment, with
+`historical_proof=not_proven` and `exception_authorized=false`. It neither copies
+source nor changes its ownership/history. Identical calls are idempotent;
+conflicting context is rejected. `resolve-obligation` requires the recovery
+observation to be archived in Git before retiring its active obligation.
+Publication still independently verifies every commit in the new range.
+
+## Event storage compatibility
+
+Event physical layout revision 2 adds no CLI/RPC fields and changes no proof
+encoding. Historical DDL remains available to migration fixtures; current
+initialization no longer creates `idx_events_stream_seq`. The full unique
+`idx_events_stream_seq_unique` continues enforcing stream-local order identity.
+`EVENT_INDEX_COMPACTION_UNSAFE` identifies altered prerequisite definitions.
+Older stores missing the unique tree receive it additively; duplicate sequences
+fail with the original typed storage error and rollback, without normalization.
+Native PostgreSQL uses Propodus's own migrations; the SQLite index migration is
+never sent through cloud RPC.
+
+## Laya-only optional setup and initialization
+
+`setup laya` supports cache-directory, runtime, CPU companion, offline and
+update-check options. `init --laya-decisions[=true|false]` explicitly selects the
+optional assessment policy; omission preserves it. Init preserves current Laya
+settings and opaque user extension tables. Only `[laya]` has model-policy
+semantics. No retired model configuration or receipt type is an API alias.
+
+## Relational compaction compatibility
+
+The `sqlite.compact_redundant_relational_indexes.v001` forward migration
+changes only redundant local SQLite btree structures. No CLI/RPC, Dactyl
+operation, task revision, event sequence, transaction semantics, or cloud
+schema change. An unexpected historical index or missing unique enforcement
+raises `RELATIONAL_INDEX_COMPACTION_UNSAFE` and rolls back all index removal.
+Freed SQLite pages are reusable but are not auto-vacuumed.
+
+## Human setup and cloud handoff presentation
+
+Interactive `decapod init` presents Project, Preferences and Review with
+Recommended/Customize and Apply/Edit/Cancel choices. Arrow keys, typed choices,
+Enter and Escape work in supported terminals; redirected output and `--proof`
+retain unattended behavior. Preview writes nothing; cancellation before apply
+does not create a new directory or initiate cloud authentication. Reinitialization
+preserves existing backend, isolation and structured proof settings.
+
+The cloud review describes account sign-in and service-confirmed repository
+access. It accepts no seat roster, provider credential or local price declaration.
+After apply, the accepted managed-session flow may return `onboarding_pending`,
+`action_required` or a denial; these remain non-success and cannot produce the
+terminal ready receipt. Existing headless continuation, private custody, explicit
+restart and server-readiness contracts are preserved. No managed-project selector
+or protected hosted-payment assurance is added here.
+
+## Validation proof lifecycle
+
+Validation evidence rules execute at the terminal publication boundary. `validation_proof` identifies the actual current invocation's complete-suite proof, not the legacy prerequisite receipt in `governance.json#/sections/validation`. That legacy receipt keeps its direct `receipt_hash` shape and integrity check. Workunit completion applies only to a current task with an explicit durable workunit declaration; journal lookup failures and missing, invalid or stale declared projections block instead of becoming an absent contract.
+
+Only the kernel optional workunit-completion rule can become inapplicable when the authoritative journal reports no declaration. A separate mandatory project or task rule still evaluates and fails when required workunit evidence is absent. Optional manifest epoch fields constrain evidence when provided; the supported current execution binding positively binds the actual epoch when those legacy fields are unset.
+
+Task binding on a managed `agent/<actor>/<topic>` branch reads task identifiers from the topic. A task-shaped actor name does not declare another task. Legacy unnamespaced and `agent/<task>` branches and multiple task identifiers in a topic retain their existing matching and mismatch checks.
+
+## Explicit managed project routing
+
+`cloud projects` and `cloud project use|create` consume the existing version-one account status/register channel. A saved numbered choice references the exact prior directory for its managed account. Creation persists an immutable UUID/name before the request and retains the response reference after success; ambiguous outcomes reconcile the same UUID. Selected project status must echo its project and managed account before use. Text output shows names/status; credentials and routing records remain outside repository configuration.
+
+`tests/supabase_service.rs` declares the separate `local-native-projects-v1` consumer profile. An independent fixture owner supplies two ordinary managed bearers, disposable loopback PostgREST, and private client/receipt paths. The first phase selects a real account project and observes a shared native task through two CLI processes; the second phase requires the owner to revoke one account before checking its next operation. Missing provisioned services are unavailable. Modeled session issuance, HTTP fixtures, real local PostgreSQL, hosted authentication and released artifacts remain distinct proof categories.
+
+The resolved native project also supplies the repository field of newly created tasks. Before the first possible write dispatch, the existing machine-private todo operation journal atomically binds the operation to a digest of its resolved service/project route. Preflight login and initial project selection retain the same operation ID; subsequent selection changes cannot replay an uncertain or successful write into another project. Older unknown records remain bound to their original canonical repository semantics. The real PostgreSQL consumer exposed the former Git-label write mismatch; that failed candidate supplies no successful native proof.
+
+## Versioned cloud mutation receipts
+
+Cloud todo receipt cache v2 is an object with version=2 and records. The reader accepts legacy flat record arrays, preserves their uncertainty and original repository semantics, and rewrites them as v2 under the stable lock. Unsupported future versions fail without replacement. Server request/result contracts and the cloud-session credential record remain unchanged.
+
+## PR 1666: accepted v0.143.2 source integration
+
+The existing public provider and Budget interfaces retain HTTP403/429 failures and cancellation/deadline semantics. Missing or malformed quota reset information cannot authorize another request or a ready judgment. No alternate credential, provider, receipt or daemon is introduced.
+
+## PR1666 current-master integration
+
+Existing snapshot-provider calls and typed failures remain unchanged. HTTP403/429 denial remains immediate and no authentication fallback is added. Integration preserves the current source-CI event contract and its exact base/head binding.
+
+## PR1663 integrated storage behavior
+
+Preserve versioned journal/transfer and inventory outputs, checked write admission and explicit-only page reclamation. Existing custody and resource APIs remain exported. No provider/check requirement is removed; current-source inventory is reviewed after accepted-master integration.
+
+## PR 1662: accepted v0.143.2 source integration
+
+Existing `data database` maintenance/capability/lock/audit CLI and RPC operations report allowed, denied or unsupported capability decisions. Candidate-only opt-in remains `DB_MAINTENANCE_POLICY_UNACCEPTED`; owner repair is separate. Configured local authority cannot imply authenticated cloud access.
+
+## PR1662 current-master preparation
+
+Preserve symmetric data.database CLI/RPC capability discovery, diagnostics, bounded maintenance and audit interfaces. Policy admission must happen before startup migrations for maintenance commands; raw SQL, destructive replacement and arbitrary destinations remain outside the delegated contract.
+
+## Bounded independent collection (#1573)
+
+Public403 failures retain operation/method/endpoint/status and bounded numeric
+reset hints, without treating an authenticated diagnostic client's quota as the
+public reader's grant. A safely replayable collection starts only after the
+reported window and actual workflow production/completion, with source/target
+rechecked. Unknown, missing and unsupported proof cannot become readiness.
+
+## Maintenance proof scope (#1568)
+
+The supported `data database` / `data db maintain` CLI and `data.database.*` RPC
+contracts are unchanged. Required cases exercise default denial, canonical local
+opt-in, worktree self-elevation rejection, policy revocation, scoped capabilities,
+backup restrictions, unsupported destructive operations and concurrent retry.
+Two deterministic workers exercise actual claims/workspaces and custody; this is
+not a demonstration of two native LLM agent integrations. Existing operator
+recovery fixtures remain diagnostic and do not grant agent recovery authority.
+
+## SDK resource and uncertainty compatibility (#1667)
+
+The shipped 0.15/0.16 API adds `ResourceBudget`, `open_with_budget`, `visit_rows`,
+`has_table`, `has_column`, failure-origin/mutation-outcome classifiers and logical
+connector/session types without replacing the existing open/read/write facade.
+The 0.16.1 patch retains identical Rust library bytes. This dependency adoption
+does not claim that every caller has migrated to the additive interfaces or that
+a remote capability error grants local fallback or replay permission. Existing
+backend owners remain authoritative for those decisions.
+
+### Local SDK value and parameter ceilings
+
+The physical local bridge retains an 8 MiB per-value compatibility ceiling and
+allows 16 MiB per bound parameter set so a ceiling-sized value can coexist with
+its primary key and metadata. These are separate resource limits. SDK v1 charges
+BLOB result bytes at 32 times their raw length, so the local decoded-result
+accounting ceiling is 272 MiB: one 8 MiB component plus 16 MiB of accounted
+headroom. This is an accounting bound, not a buffer allocation or a new logical
+field allowance. Row counts and cloud budgets retain SDK defaults; application
+field admission remains unchanged. The real SQLite regression tests the exact 8 MiB boundary with a
+bound key, lossless re-read, unrelated update and rejection before a write of
+a value exceeding the cell ceiling. A codec decoding guard does not authorize
+larger application records.
+
+The journal regression persists and independently reconstructs a retained
+codec-0 component at the full cell ceiling, checking its exact byte length and
+SHA-256 through the production component owner. It does not rewrite historical
+bytes or establish task completion. New text values above the cell ceiling and
+aggregate parameter sets above their separate budget still fail before mutation.
+
+## Full claims with diagnostic gate overrides (#1659)
+
+`READINESS_GATE_OVERRIDE_UNSUPPORTED` identifies an active Git/tooling skip or a
+truthy fingerprint skip. Remove the override and obtain fresh validation in the
+claimed worktree. Presence-only Git/tooling flags remain active even with empty,
+zero or false strings; the existing fingerprint truth-value parser is preserved.
+Explicit `ci_local` and `project_prerequisites` diagnostics retain their output
+scopes and cannot yield `publication_ready=true`. An audited validation bypass
+also remains non-proof. No new command, adapter policy or verdict taxonomy is
+introduced. Older brokers reject unfamiliar context fields; inspect uncertain
+operation outcomes rather than blindly replaying a write.
+
+## Accepted repository-local contract changes (#1658)
+
+The existing validation runtime returns the actionable
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker when a candidate removes or replaces
+accepted local obligations, even with internally consistent new review digests.
+The check precedes execution-provider selection. Remove the weakening and retain
+the accepted checks, or first establish a separately accepted policy transition
+on the target. Additional required checks are allowed. Initial local adoption and
+unchanged accepted contracts continue through the existing runtime and receipt
+interfaces; no new command or bypass is exposed.
+
+### Source-definition changes
+
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED` also identifies replacement of the accepted
+local source-definition digest. Recomputing a candidate digest cannot authorize
+changed inventoried check scripts, build/dependency definitions or provider
+inputs. Retain the accepted inventory or establish the reviewed revision on the
+target before revalidation. Additive commands under that inventory and first
+local adoption remain supported; no override or second policy store is added.
+
+## Group broker workload budget
+
+`src/decapod/core/group_broker.rs` accepts the optional
+`DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS` workload input on the Unix broker path.
+The default is 120000 milliseconds; valid explicit values are 1 through 300000.
+Malformed, zero and oversized client values fail before mutation admission.
+Native peers also face the hard maximum before a new dedupe receipt can be created.
+A matching durable outcome is resolved first: expired or overlong retry deadlines
+cannot replace an existing UNKNOWN or committed result with NOT_COMMITTED. The
+real execution-boundary regression checks both outcomes and both retry timings,
+including the unchanged stored result and commit marker. No new operation runs
+when the same-ID outcome is already recorded.
+The foreground acceptance window follows the originating request budget, and
+existing per-command limits and UNKNOWN/replay handling remain in force.
+
+`tests/group_broker.rs` declares its existing 300-second twenty-client workload
+at both the outer process boundary and broker request boundary, retains the
+all-twenty exact-once assertions, and exercises invalid inputs through the actual
+CLI with no task or receipt mutation. The native oversized-deadline regression
+traverses the real execution boundary. Fresh hosted verification is required;
+these declarations are not a successful validation observation.
+
+## Canonical workunit validation contract (#1660)
+
+Existing workunit CLI operations remain the request surface, extended with
+`decapod govern workunit converge [--task-id <id>] [--dry-run]` and typed
+`proof_status` (`proven` | `not_proven` | `stale` | `absent`), `split_store`,
+`atomic_domain_supported`, `audit_records`, and `convergence_hint` fields on
+`WorkUnitJournalStatus` (and `proof_status`/`split_store`/`atomic_domain_supported`
+on `govern workunit status`). `record-proof` records a declaration; requesting
+VERIFIED requires a current canonical full observation for exactly one supported
+`validate_passes`/`validated_commit` obligation. The kernel derives the result,
+epoch and optional validation-record selector. Caller-supplied selectors cannot
+import producer success. File artifact paths retain byte-integrity semantics.
+Separately initialized workspace-local datastores return
+`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`; explicit `converge` archives
+workspace-local records into `.decapod/data/split-store-audit/` as `not_proven`
+audit history without promoting split records to `VERIFIED`, restoring atomic
+canonical-store execution for fresh validation. Historical JSON omits the
+optional field; Rust manifest literals add `validation_record: None`, and
+verification consumers pass repository context to
+`validate_verified_manifest(root, manifest)`. Publication and human merge
+authorization remain independent operations.
+
+## Scoped container-runtime recovery during prerequisites
+
+`src/decapod/plugins/container.rs::heal_container_runtime_override` first uses
+the existing disabled-runtime marker predicate. A missing or unrelated override
+returns unchanged without probing or starting a container engine. An existing
+disabled-runtime override retains the existing availability probe and scoped
+recovery behavior. Required validation checks and publication proof requirements
+remain independent of this optional preparation step.
+
+The isolated subprocess regression in `tests/unit/plugins/container_tests.rs`
+observes runtime invocations for missing, unrelated and disabled override cases,
+and checks preservation of unrelated content. It does not claim live container
+isolation or publication readiness. The actual CLI runtime probe retains its
+10-second per-call and 20-second aggregate requirements; fresh hosted execution
+must establish the resulting candidate's behavior and timing.
+
+## Legacy input recovery scope (#1657)
+
+Normal supported startup/workspace/task interfaces reuse the existing migration
+owner's inert-placeholder handling. There is no new slash command or agent
+prompt requirement. TASK_JOURNAL_MIGRATION_REQUIRED continues to block non-inert
+TODO inputs beside canonical journal state. Explicit V1 recovery below covers
+only empty input or exact canonical copies; general historical reconciliation
+remains required. See
+`docs/architecture/legacy-todo-recovery.md`.
+
+## Versioned legacy retirement interface (#1657)
+
+`decapod todo journal reconcile-legacy` reviews the canonical main repository's
+local store before normal migration/session-presence writes. JSON distinguishes
+empty/canonical_copy/unmatched/corrupt/unverifiable inputs and returns a review
+SHA only for supported inputs under an explicit `todo.legacy.reconcile` grant.
+`--expected-review sha256:<digest>` requires an active local session password
+and rechecks exact identities, bytes and canonical policy. `--prepare-only`
+requires that review token, persists intent and preserves the source for
+interruption/recovery. The same apply request resumes a prepared operation.
+No arbitrary source path, destination or SQL input is accepted.
+
+`governance.rbac.legacy_todo_reconcile_roles` defaults to empty; neither journal
+repair nor ordinary maintenance grants this permission. The receipt records
+physical archival only: every response leaves `publication_ready=false` and
+`completion_proven=false`. A committed retry reports a historical outcome,
+without asserting current canonical validation; a reappeared legacy source
+blocks reuse. Unsupported nonmatching historical stores stay blocked. See
+`docs/architecture/legacy-todo-recovery.md` for the exact scope and recovery
+limits; this is not completion of all #1657 migration requirements.
+
+## Nix release gate outputs (#1626)
+
+`Select Cachix publisher` retains `publish=true|false`; packaging retains
+`run=true|false`. Both recognize ordinary two-parent release merges and
+one-parent release commits such as `chore: release v0.138.0 (#1624)`. Parent
+shape must be supported and the selected subject must retain the existing
+`chore: release v` prefix. The credential-free owner fetches the exact protected
+pushed SHA at depth two, sufficient for the selected commit/parent subject.
+
+Manual `workflow_dispatch` still requests packaging proof only. The native-owner
+conditions and publisher dependency/ref/event restrictions remain unchanged;
+manual or imported/self-hosted execution cannot grant Cachix publication.
+
+## Canonical local Git proof (#1069)
+
+An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
+
+## Merged governance journal reconciliation (#1780)
+
+`decapod govern artifacts reconcile-merge` provides a supported recovery path
+when a Git 3-way merge (`MERGE_HEAD` present, e.g. `git merge --no-commit -X
+ours`) leaves `.decapod/governance.json` conflicted or failing with
+`Trajectory artifact hash mismatch`. The command requires an active merge
+(`GOVERNANCE_MERGE_NOT_IN_PROGRESS` otherwise), reads only immutable Git commit
+objects (`HEAD`, `MERGE_HEAD`, and `merge-base --all`) rather than trusting
+corrupted working-tree bytes, and fails closed on conflicting unaccepted PR
+authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`), ambiguous merge bases
+(`GOVERNANCE_MERGE_AMBIGUOUS_BASE`), or contradictory check proof statuses
+(`GOVERNANCE_MERGE_PROOF_CONFLICT`).
+
+Same-workstream merges reconcile additive `trajectory` sets, merge `claims`,
+`resolutions`, `checkpoints`, `plan`, and `custody` state (re-sequencing
+divergent custody events/steps and remapping `loop.custody_event_id`), clear any
+stale `validation` receipt when trajectory or validation changed, and recompute
+`proof_status`, `verdicts`, and `artifact_hash` via `with_recomputed_hash()` so
+failed or missing proof never becomes passing. Accepted-target merges
+(`origin/<target_base>`) retain the complete active workstream journal while
+carrying forward newly accepted baseline policy and unresolved obligations.
+`tests/merged_governance_journal_1780.rs` exercises the real binary across
+`git merge --no-commit -X ours` recovery, checkpointed merge commit
+verification (`verify-checkpoints --publication-material`), and negative proof
+and authority controls.
+
+## Todo-scoped /tmp cleanup guidance (#1798)
+
+`src/decapod/core/validate.rs` exposes `resolve_validation_task_id`, `validation_temp_root`, `todo_tmp_cleanup_instruction_for_task`, and `todo_tmp_cleanup_instruction`, resolving the active todo scope (`DECAPOD_TASK_ID` or branch-encoded task ID) to `<temp_dir>/decapod_validate/<task-id>` without modifying internal `create_validation_temp_path` or `cleanup_validation_temp_paths` ownership semantics.
+
+When validation succeeds (`ValidationGuidance::for_outcome(true)`, `ValidationGuidance::for_readiness_outcome(true, Mode::Required, Decision::Accept)`, `decapod validate`, and `validate.run` remote readiness payloads) and when PR creation completes (`workspace::publish_workspace_with_readiness` warnings via `workspace::pr_admission_warnings` and `decapod qa diagnose` `cleanup_guidance` when `next_command == "decapod workspace publish"`), Decapod instructs the agent to flush ONLY that todo's `/tmp` build and scratch directories (such as `<temp_dir>/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). The instruction explicitly forbids wildcard or root-level deletion of `/tmp`, deleting another concurrent agent's or sibling todo's `/tmp` path, and touching shared `/tmp/decapod` controller sockets/state or active sibling directories. The existing `PublishResult`, `WorkspacePublishResult`, and `ValidationGuidance` wire shapes remain unchanged. `docs/agent/command-contracts.md` (`docs_cli::readiness_contract` and the `decapod workspace` contract) and `docs/agent/state-model.md` document the same todo-scoped `/tmp` cleanup rule, verified by `tests/tmp_build_cleanup_guidance_1798.rs` and `tests/unit/plugins/verify_tests.rs`.
+
+## Read-only budgeted projection and retention contract (#1734)
+
+- **Schema & Authority Boundary (`decapod.projection-budget.v1`):** `core/projection_budget.rs` (re-exported through `core/projection.rs`) defines strictly read-only, non-authoritative projection envelopes (`EventProjectionPage`, `WorktreeProjectionPage`) carrying `read_only = true`, `authoritative = false`, `status` (`complete` | `partial_has_more` | `degraded`), `degraded_reasons`, `metrics`, `budget`, and deterministic SHA-256 receipts (`content_sha256`, `window_receipt_sha256`, `continuity_receipt_sha256`, `receipt_sha256`). Independent observability clients (such as Darkmatter) consume these contracts without embedding visualization state machines or UI dependencies into Decapod.
+- **Event Cursor & Retention Interface:** `EventProjectionQuery { stream, after_seq, subject_kind, subject_id, event_type, budget }` executes via `project_events_read_only` (using `core/db.rs::db_connect_readonly_bounded`) or `project_events_on_conn`. `EventProjectionCursor` exposes `after_seq`, `next_seq`, `last_event_id`, `retention_floor_seq`, `retention_anchor_sha256`, `disposition` (`continuous` | `starts_at_retention_floor` | `behind_retention_floor`), and `has_more`. `apply_bounded_event_retention` and `read_retention_anchor` manage `decapod.event-retention-anchor.v1` watermarks in `meta(namespace='event_retention')`.
+- **Worktree Inventory Interface:** `WorktreeProjectionQuery { after_worktree_path, include_dirty_summary, budget }` executes via `project_worktrees_read_only` using `GIT_OPTIONAL_LOCKS=0`, returning deterministically sorted `WorktreeProjectionEntry` items with bounded `dirty_file_count`, `dirty_truncated`, `sample_dirty_paths`, and `next_cursor` pagination.
+
+## Risk-map warning CLI contract (#1782)
+
+`src/decapod/cli.rs` mounts `PolicyCli` (`src/decapod/plugins/policy.rs`) exclusively under `Command::Govern(GovernCommand::Policy)`, exposing risk-map initialization and verification at `decapod govern policy riskmap init` and `decapod govern policy riskmap verify`. Both missing-map diagnostics—`src/decapod/core/validate.rs::validate_risk_map` and `RiskmapSubcommand::Verify` in `src/decapod/plugins/policy.rs`—derive their warning guidance from `plugins::policy::missing_riskmap_warning` and `plugins::policy::RISKMAP_INIT_COMMAND` (`decapod govern policy riskmap init`), removing the previously emitted unsupported `decapod riskmap init` and `decapod policy riskmap init` paths. Read-only `RiskmapSubcommand::Verify` remains unauthenticated by `policy.control`, while `RiskmapSubcommand::Init` retains its existing `enforce_broker_mutation_policy(..., "policy.control")` (`core` trust) gate.
+
+Scoped regression coverage in `tests/unit/core/validate_tests.rs::risk_map_warning_recommends_supported_cli_command_and_clears_when_present`, `tests/plugins/policy.rs::riskmap_verify_recommends_supported_cli_command_when_missing`, and `tests/cli_contract_enforcement.rs::documented_bootstrap::risk_map_warnings_recommend_supported_cli_command_paths` checks `Cli::try_parse_from` and real CLI binary execution across missing-map warning emission, `--help` resolution, unsupported-path rejection, `core`-trust enforcement, and warning clearance once `RISKMAP.json` exists; complete exact-candidate validation remains required before PR publication.
+
+## Compact storage v2 compatibility floor (#1739)
+
+`core::schemas::STORAGE_MIN_READER_VERSION` and `core::schemas::STORAGE_MIN_WRITER_VERSION` are `"0.144.2"`, and `core::migration::all_migrations()` sets `min_version = "0.144.2"` and `target_version = "0.144.2"` on `sqlite.compact_lossless_storage.v002` (`sequence: 1200`), matching the first release that implements `_ce_v1` envelope reconstruction (`core::events::reconstruct_stored_payload`) and component-backed journals. `core::events::{query,query_all_on_conn,query_subject_on_conn,query_subject_event_on_conn}` enforce `check_read_compatibility`, and `core::events::{ensure_tables,append_on_conn,check_subject_append_capacity}` enforce `check_storage_format_compatibility` (`STORAGE_FORMAT_INCOMPATIBLE`). Existing v2 datastores stamped `0.141.0` prior to #1739 are restamped to `0.144.2` on `activate`/migration and write-side table initialization (`reconcile_v2_storage_format_metadata`) without mutating event/task rows, downgrading higher valid floors, touching unmigrated v1 stores, or writing on read-only connections.
+
+## Verifiable broker writer incarnation and orphan recovery (#1783)
+
+`BrokerEvent` in `src/decapod/core/broker.rs` extends new `pending` audit events with backward-compatible optional fields `writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns` populated by `WriterIncarnation::current()`, while terminal and acknowledgment events omit them when unset. `DbBroker::verify_replay` and `decapod data broker verify` populate each `Divergence` with `writer_liveness` (`active` | `stopped` | `unknown`), `human_review_required`, `liveness_detail`, and any captured `writer_*` provenance fields.
+
+`BrokerCommand::Repair` (`src/decapod/cli.rs`, routed to `DbBroker::repair_with_options` in `src/decapod/lib.rs`) adds `--acknowledge-unknown-writer` and reports `writer_liveness`, `human_review_required`, `liveness_detail`, `acknowledgment_required`, and `acknowledged_unknown_writer` in `RepairReport`. Active writers (`writer_liveness = "active"`) are unconditionally refused in both preview and `--apply`. Proven stopped writers (`writer_liveness = "stopped"`) repair directly with `--apply` without waiting on age thresholds or requiring overrides. Legacy provenance-free, partial, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` and `human_review_required = true` in `verify` and `repair` preview, and refuse silent `--apply` unless `--acknowledge-unknown-writer` is explicitly provided after human review. See `docs/agent/error-recovery.md` and `docs/agent/command-contracts.md`.
+
+## Explicit actor identity on claim and workspace boundaries (#1737)
+
+`todo::claim_task_with_lease` (covering CLI `decapod todo claim`, cloud
+`TodoCommand::Claim`, `todo renew`, `todo yield`, `todo heartbeat --autoclaim`,
+`todo worker-run`, `todo add-owner`, and explicit `--owner` on `todo add` /
+`todo edit`), `workspace::ensure_workspace` (CLI `decapod workspace ensure`
+and RPC `workspace.ensure`), and `core::mentor::reflection::custody` reject
+missing, whitespace-only, or `"unknown"` actors via
+`core::authoring::is_missing_or_unknown_actor` before mutating task custody or
+creating a branch/worktree, failing closed with `AUTHORING_ACTOR_REQUIRED` and
+explicit `DECAPOD_AGENT_ID=<actor>` guidance.
+
+Read-only inspection and intake surfaces (`todo list`, `todo get`, `todo show`,
+`workspace status`, `docs ingest`, `eval`) and ownerless `todo add` remain
+usable when `DECAPOD_AGENT_ID` is unset. For pre-existing tasks whose
+`assigned_to` is `"unknown"`, an explicit non-`"unknown"` actor can adopt the
+task via exclusive `todo claim` or `workspace ensure --branch` when
+`authoring_bindings` holds no real-actor checkout custody and `task_owners` holds
+no other real primary owner; adoption emits `task.release` with reason
+`unknown_actor_adopted` and advances `lease_generation` (`lease_lifecycle = "reclaimed"`).
+
+## Acceptance observation export (#1757)
+`decapod trace flight-recorder acceptance --capture <private-index>` reads
+`decapod.agent-acceptance.v1` capture data and prints a redacted, versioned event
+manifest. It reports observed autonomous admission, historical PR identity,
+current applicability, interventions, source classes and unresolved findings.
+Both publication_ready and merge_authorized are always false. Captured original
+objective identity, executable/repository binding and evidence hashes are
+mandatory; agent declarations cannot stand in for tool/kernel observations.
+Consumers must preserve private-capture and cooperative-host assurance limits.
+
+## Audit evidence and invocation scope (#1069)
+
+The refreshed implementation map changes no CLI/RPC interface. Existing native
+context, scope/admission, observed state, validation and publication surfaces
+remain the integration contract. A runtime must invoke them; instruction files
+and hooks cannot intercept arbitrary conversation or shell mutation.
+
+The map distinguishes actual CLI prerequisite admission from complete runtime
+proof in a fixture transport, source-CI execution from a full native receipt,
+physical recovery from task completion and publication eligibility from merge
+authority. It preserves the pending native reference integration and independent
+service/forge enforcement boundaries. Source-bound diagnostic links do not waive
+any required command, provider, custody or current-target requirement.
+
+## Accepted v0.146.0 audit reconciliation
+
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.

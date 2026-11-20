@@ -112,6 +112,7 @@ def decapod_targets():
             "docs/agent/llms.txt",
             "docs/agent/mcp.md",
             "docs/agent/payload-examples.md",
+            "docs/agent/repository-readiness.md",
             "docs/agent/state-model.md",
         ],
         deps = all_crate_deps(build = True),
@@ -212,8 +213,9 @@ def decapod_targets():
 
     rust_test(
         name = "core_tests",
-        srcs = ["tests/core/core.rs"],
+        srcs = ["tests/core/core.rs", "tests/datastore_relational_compaction.rs", "tests/datastore_contract.rs", "tests/datastore_scope.rs"],
         edition = "2024",
+        compile_data = ["docs/datastore-v2/logical_contract_v1.json"],
         crate_features = ["supabase-cloud"],
         rustc_env_files = [":cargo_pkg_env"],
         rustc_env = {
@@ -235,23 +237,55 @@ def decapod_targets():
             # The broker suite includes 20 separately authenticated clients,
             # crash recovery and launch probes. Individual client waits remain
             # bounded; retain a finite aggregate budget for their stage evidence.
-            timeout = "long" if path in ["tests/group_broker.rs", "tests/interop_conformance.rs"] else "moderate",
-            # This suite asserts uncontended process wall-clock budgets. Rust's
+            # Gatling runs the complete 50-case CLI suite. The 300s moderate
+            # ceiling cut off post-merge CI before completion; keep its full
+            # suite and four threads while allowing Bazel's finite 900s budget.
+            # The expanded CLI contract suite took 294s even in isolation.
+            # Use the finite 900s aggregate class for its real CLI fixtures.
+            # The entrypoint suite includes genuine docs CLI admission and
+            # infer_precision; give it the finite 900s budget and exclusive isolation.
+            # Contract enforcement runs 22 real CLI cases sequentially; its
+            # 300s aggregate expired after 16 completed cases in hosted CI.
+            # The shared helper retains a separate 60s subprocess deadline.
+            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs", "tests/cli_contract_enforcement.rs", "tests/entrypoint_correctness.rs"] else "moderate",
+            # These suites depend on finite process/request deadlines. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
+            # Keep all broker clients concurrent within its exclusive target.
             tags = ["exclusive"] if path in [
+                "tests/group_broker.rs",
                 "tests/validate_termination.rs",
                 "tests/cli_contract_enforcement.rs",
+                # This aggregate launches real CLI fixtures sequentially. Its
+                # 300s deadline also needs isolation from the entrypoint suite.
+                "tests/cli_contracts.rs",
+                "tests/entrypoint_correctness.rs",
             ] else [],
             srcs = [path] + [
                 "tests/consumer_readiness.rs",
+                "tests/sqlite_maintenance.rs",
+                "tests/common/consumer_readiness_fixture.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",
                 "tests/support/cli_workunit_recovery.rs",
                 "tests/support/justfile_inventory.rs",
+                "tests/support/storage_inventory.rs",
+                "tests/support/recovery_filesystem.rs",
                 "tests/fixtures/justfile_consumer/src/lib.rs",
                 "tests/fixtures/justfile_consumer/src/distance.rs",
                 "tests/fixtures/justfile_consumer/src/temperature.rs",
-            ] if path == "tests/cli_contracts.rs" else [path] + [
+            ] if path == "tests/cli_contracts.rs" else [
+                path,
+                "tests/common/consumer_readiness_fixture.rs",
+                "tests/support/fresh_docs_readiness.rs",
+                "tests/acceptance/publication_admission.rs",
+                "tests/infer_precision.rs",
+            ] if path == "tests/entrypoint_correctness.rs" else [
+                path,
+                "tests/support/recovery_filesystem.rs",
+            ] if path == "tests/sqlite_maintenance.rs" else [
+                path,
+                "tests/common/consumer_readiness_fixture.rs",
+            ] if path == "tests/consumer_readiness.rs" else [path] + [
                 "assets/tools/release_metadata.rs",
                 "src/decapod/core/release_metadata.rs",
                 "assets/tools/source_ci_profile.rs",
@@ -290,6 +324,7 @@ def decapod_targets():
             crate_root = path,
             compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + (["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
+                ".github/workflows/nix-flake.yml",
             ] if path == "tests/release_metadata_policy.rs" else [
                 ".github/workflows/ci.yml",
                 "//.config/build:decapod.BUILD.bzl",
@@ -324,6 +359,10 @@ def decapod_targets():
                 "docs/agent/command-contracts.md",
                 "docs/agent/payload-examples.md",
             ] if path == "tests/trajectory_docs.rs" else [
+                "docs/agent/README.md",
+                "docs/agent/api-index.md",
+                "docs/agent/llms.txt",
+            ] if path == "tests/contract_conformance.rs" else [
                 "src/decapod/core/assets.rs",
                 "src/decapod/core/docs_cli.rs",
                 "src/decapod/core/validate.rs",
@@ -342,7 +381,7 @@ def decapod_targets():
                 ".github/actions/source-ci-profile/action.yml",
                 "tests/fixtures/derived-release/Cargo.toml.fixture",
                 "src/decapod/core/derived_release_profile_tests.rs",
-            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + (native.glob(["tests/fixtures/justfile_consumer/**"]) if path == "tests/cli_contracts.rs" else []),
+            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + (native.glob(["tests/fixtures/justfile_consumer/**"]) if path == "tests/cli_contracts.rs" else []) + (["tests/fixtures/interop_strict_json.py"] if path == "tests/interop_conformance.rs" else []),
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],
@@ -398,6 +437,11 @@ def decapod_targets():
     [
         rust_test(
             name = "plugins_" + path[14:-3] + "_tests",  # e.g., plugins_todo_tests
+            # Forty sequential custody/storage cases exhausted the moderate
+            # aggregate in hosted CI. Keep the complete suite finite and
+            # isolated; its internal concurrent workers still run together.
+            timeout = "long" if path == "tests/plugins/todo.rs" else "moderate",
+            tags = ["exclusive"] if path == "tests/plugins/todo.rs" else [],
             srcs = [path],
             edition = "2024",
             crate_features = ["supabase-cloud"],

@@ -14,13 +14,6 @@ PR and corresponding issue updates; no row below claims full umbrella completion
 | #1399 | Real isolated release-plz transformation; actual cargo-dist packaging of all four configured archives; bind derived source/artifacts | `assets/tools/derived_release_proof.rs`, `derived_release_aggregate.rs`, `release_artifacts.rs`, release fixtures and workflows | Source fixtures/declarations are insufficient. Actual nonpublishing transformation and all required platform archives remain execution obligations. |
 | #1069 / #1052 | Binary readiness, bounded execution/cancellation, exact final material/base rechecks, nonempty plan, strict version-only reuse and terminal current-head checks | Existing readiness planner/runtime/evidence verifier and publication predicate | Reconcile entire scopes and run affected regressions plus full validation; focused #1397 delivery alone does not close these issues. |
 | #1064 / #1084 (required portions) | Consume publication lifecycle and obligation ledger where needed | Existing publication/custody verifier, obligation ledger and consumer projections | Reuse shipped mechanisms; unrelated publication modes and broader ledger scope are not claimed solved. |
-| Dependabot #4 | Remove vulnerable Thrift from the native worker without suppressing the advisory | `assets/tools/vega-native/Cargo.toml` and `Cargo.lock`: pinned Parquet 59.3.1 removes Thrift; existing corpus integrity/reader and native regression checks | Completed by PR #1462. GitHub reports alert 4 fixed at 2026-10-21T03:25:47Z. Actual native qualification and reader compatibility passed; all nine native Git/model identities and numerical tolerances were preserved. |
-
-
-Completed prerequisites #1396, #1448/#1450, #1452/#1453, #1455 and #1457/#1458
-remain accepted. #1460 is merged and #1445 is closed. The active Vega integration,
-Metal/CPU behavior, original numerical tolerances, evidence binding, safe-abstention
-qualification and unestablished domain accuracy remain preserved.
 
 The controller was installed through the official supported cargo-binstall route
 and reports 0.120.0 via `decapod system version`. Every new commit has one material

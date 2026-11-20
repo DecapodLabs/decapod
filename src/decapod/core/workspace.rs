@@ -46,6 +46,9 @@ pub struct WorkspaceStatus {
     /// Dirty source files are retained in place; workspaces use committed Git objects only.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root_isolation: Option<RootIsolation>,
+    /// Bounded credential capability status for container workspaces (#1066).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub credentials: Option<crate::core::container_signer::WorkspaceCredentialsReport>,
 }
 
 /// Read-only source inventory shared by status and workspace creation.
@@ -264,24 +267,74 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
             .push("Run `decapod workspace ensure` and cd into the created worktree".to_string());
     }
 
-    let mut can_work = !git.is_main_repo && !git.is_protected;
+    let mut can_work = git.in_worktree && !git.is_main_repo && !git.is_protected;
+    if !git.in_worktree && !git.is_main_repo && !git.is_protected {
+        blockers.push(Blocker {
+            kind: BlockerKind::WorkspaceRequired,
+            message: "AUTHORING_CHECKOUT_UNVERIFIED: current directory is not a registered Git worktree.".to_string(),
+            resolve_hint: "Enter an initialized Decapod repository and run `decapod workspace ensure` to bind an isolated worktree.".to_string(),
+        });
+        required_actions
+            .push("Run `decapod workspace ensure` from the initialized repository".to_string());
+    }
     if can_work && is_canonical_decapod_workspace_path(repo_root) {
-        let main = get_main_repo_root(repo_root)?;
-        if let Err(reason) = todo::check_authoring(
-            &main.join(".decapod/data"),
-            repo_root,
-            &crate::current_agent_id(),
-            false,
-        ) {
-            can_work = false;
-            blockers.push(Blocker { kind: BlockerKind::WorkspaceRequired, message: reason.to_string(),
-                resolve_hint: "Inspect current task/actor/lease and run workspace ensure to verify and bind this checkout; a claim alone does not admit authoring.".into() });
+        match get_main_repo_root(repo_root) {
+            Ok(main) => {
+                if let Err(reason) = todo::check_authoring(
+                    &main.join(".decapod/data"),
+                    repo_root,
+                    &crate::current_agent_id(),
+                    false,
+                ) {
+                    can_work = false;
+                    let msg = reason.to_string();
+                    let resolve_hint = if msg.contains("AUTHORING_PROFILE_UNSUPPORTED") {
+                        "Cloud task profiles do not infer host checkout bindings; switch to a local task custody profile or run read-only cloud inspection.".to_string()
+                    } else if msg.contains("AUTHORING_ACTOR_REQUIRED") {
+                        "Set explicit agent identity (`DECAPOD_AGENT_ID`) matching the task lease owner, then run `decapod workspace ensure`.".to_string()
+                    } else if msg.contains("AUTHORING_EVIDENCE_UNAVAILABLE") {
+                        "Canonical `.decapod/data` task custody evidence is unavailable; verify main repository initialization before authoring.".to_string()
+                    } else if msg.contains("AUTHORING_CHECKOUT_OCCUPIED")
+                        || msg.contains("AUTHORING_TASK_ALREADY_BOUND")
+                    {
+                        "Checkout/task binding is already occupied by active custody; create a distinct task-scoped worktree with `decapod workspace ensure` or retire the prior lease first.".to_string()
+                    } else if msg.contains("AUTHORING_CUSTODY_STALE") {
+                        "Active exclusive lease custody is missing or expired; run `decapod todo claim --id <task-id>` (or `todo renew`) and then `decapod workspace ensure`.".to_string()
+                    } else {
+                        "Inspect current task/actor/lease and run `decapod workspace ensure` to verify and bind this checkout; a claim alone does not admit authoring.".to_string()
+                    };
+                    blockers.push(Blocker {
+                        kind: BlockerKind::WorkspaceRequired,
+                        message: msg,
+                        resolve_hint,
+                    });
+                    required_actions.push(
+                        "Verify active task lease custody and run `decapod workspace ensure`"
+                            .to_string(),
+                    );
+                }
+            }
+            Err(reason) => {
+                can_work = false;
+                blockers.push(Blocker {
+                    kind: BlockerKind::WorkspaceRequired,
+                    message: format!(
+                        "AUTHORING_EVIDENCE_UNAVAILABLE: could not resolve main repository root: {reason}"
+                    ),
+                    resolve_hint: "Verify the linked Git worktree metadata and rerun `decapod workspace ensure`.".to_string(),
+                });
+                required_actions.push(
+                    "Repair or recreate the linked Git worktree with `decapod workspace ensure`"
+                        .to_string(),
+                );
+            }
         }
     }
     let root_isolation = git
         .is_main_repo
         .then(|| root_isolation(repo_root))
         .transpose()?;
+    let credentials = resolve_workspace_credentials_report(repo_root);
 
     Ok(WorkspaceStatus {
         can_work,
@@ -290,7 +343,42 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
         blockers,
         required_actions,
         root_isolation,
+        credentials,
     })
+}
+
+fn resolve_workspace_credentials_report(
+    repo_root: &Path,
+) -> Option<crate::core::container_signer::WorkspaceCredentialsReport> {
+    let config = crate::cli::DecapodProjectConfig::load(repo_root).ok()?;
+    let creds = &config.workspace.credentials;
+    if creds.is_default() && !config.repo.effective_backend().is_cloud() {
+        return None;
+    }
+    let origin = crate::core::cloud_client::selected_origin().unwrap_or_default();
+    let repo_id = crate::core::repo_identity::resolve_repository_identity(repo_root)
+        .map(|id| id.canonical_name)
+        .unwrap_or_default();
+    let device_key_store = if !origin.is_empty() && !repo_id.is_empty() {
+        crate::core::cloud_dpop::DeviceKeyStore::for_project(&origin, &repo_id, repo_root).ok()
+    } else {
+        None
+    };
+    let now_secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    let policy = crate::core::container_signer::ContainerSignerPolicy {
+        allowed_repository: repo_id,
+        allowed_origin: origin,
+        allowed_agent_id: crate::current_agent_id(),
+        credentials: creds.clone(),
+        session_expires_at: 0,
+        revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        device_key_store,
+        access_token_digest: None,
+    };
+    Some(policy.evaluate_report(now_secs))
 }
 
 fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
@@ -523,7 +611,7 @@ fn claim_branch_scoped_open_tasks(
                 task.id, task.assigned_to
             )));
         }
-        if !task.assigned_to.is_empty() {
+        if !task.assigned_to.is_empty() && !todo::is_missing_or_unknown_actor(&task.assigned_to) {
             return Err(DecapodError::ValidationError(format!(
                 "AUTOREMEDIABLE_VALIDATION_ERROR code=WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT severity=transient auto_remediable=true audience=agent agent_action=\"switch to the agent that owns todo {} or choose a different todo-scoped workspace; Decapod is preventing cross-work while preserving the captured todo\" user_note=\"This branch already belongs to another agent's Decapod todo claim; use the owner or a different todo-scoped workspace.\"\nBranch '{}' is scoped to todo {} but it is already claimed by {}.",
                 task.id, current_branch, task.id, task.assigned_to
@@ -609,9 +697,11 @@ pub(crate) fn initialize_workbranch_governance_at(
     } else {
         scoped
     };
-    let context = (selected.len() == 1).then(|| {
+    let context = if selected.len() == 1 {
         let task = selected[0];
-        crate::core::governance_document::BranchWorkContext {
+        let scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+            .map_err(DecapodError::ValidationError)?;
+        Some(crate::core::governance_document::BranchWorkContext {
             title: task.title.clone(),
             intent: if task.description.trim().is_empty() {
                 task.title.clone()
@@ -619,15 +709,11 @@ pub(crate) fn initialize_workbranch_governance_at(
                 format!("{}\n\n{}", task.title, task.description)
             },
             todo_ids: vec![task.id.clone()],
-            scope: task
-                .scope
-                .split(',')
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .collect(),
-        }
-    });
+            scope,
+        })
+    } else {
+        None
+    };
     crate::core::governance_document::initialize_workbranch_at(
         repo_root,
         &base_ref,
@@ -643,6 +729,9 @@ pub fn ensure_workspace(
     config: Option<WorkspaceConfig>,
     agent_id: &str,
 ) -> Result<WorkspaceStatus, DecapodError> {
+    if todo::is_missing_or_unknown_actor(agent_id) {
+        return Err(todo::authoring_actor_required_error());
+    }
     let main_repo = get_main_repo_root(repo_root)?;
     verify_workspace_parent(&main_repo)?;
     let source_inventory = root_isolation(&main_repo)?;
@@ -1267,6 +1356,23 @@ fn registered_worktree(repo: &Path, canonical: &Path) -> bool {
     })
 }
 
+/// Fail-closed check for whether `target_worktree_id` still corresponds to a
+/// live, on-disk Git-registered worktree of `main_repo`. If Git worktree
+/// inspection itself is unavailable, return `true` so a transient failure
+/// never evicts an active checkout binding.
+pub(crate) fn is_registered_worktree_id(main_repo: &Path, target_worktree_id: &str) -> bool {
+    let Some(listed) = git_output(main_repo, &["worktree", "list", "--porcelain"]) else {
+        return true;
+    };
+    listed.lines().any(|line| {
+        let Some(raw) = line.strip_prefix("worktree ") else {
+            return false;
+        };
+        let path = Path::new(raw.trim());
+        path.exists() && observe_checkout(path).worktree_id == target_worktree_id
+    })
+}
+
 /// Observe a checkout. Aliases resolve to the same physical identity;
 /// missing paths and unregistered checkouts are not verified.
 pub fn observe_checkout(path: &Path) -> CheckoutIdentity {
@@ -1404,10 +1510,24 @@ pub fn resolve_base_branch(repo_root: &Path, explicit: Option<&str>) -> String {
         .filter(|branch| !branch.trim().is_empty())
         .map(str::to_string)
         .or_else(|| {
-            crate::cli::DecapodProjectConfig::load(repo_root)
+            crate::core::db_maintenance::resolve_accepted_project_config(repo_root)
                 .ok()
-                .and_then(|config| config.repo.base_branch)
+                .and_then(|(_main_root, config, _unmerged)| config.repo.base_branch)
                 .filter(|branch| !branch.trim().is_empty())
+        })
+        .or_else(|| {
+            let main_root =
+                get_main_repo_root(repo_root).unwrap_or_else(|_| repo_root.to_path_buf());
+            let on_worktree =
+                std::fs::canonicalize(repo_root).ok() != std::fs::canonicalize(&main_root).ok();
+            if on_worktree {
+                detect_base_branch(&main_root)
+            } else {
+                crate::cli::DecapodProjectConfig::load(repo_root)
+                    .ok()
+                    .and_then(|config| config.repo.base_branch)
+                    .filter(|branch| !branch.trim().is_empty())
+            }
         })
         .or_else(|| detect_base_branch(repo_root))
         .unwrap_or_else(|| "master".to_string())
@@ -1942,7 +2062,8 @@ pub struct PublishResult {
     /// Exact pushed commit and final remote diff were read back.
     #[serde(default)]
     pub remote_verified: bool,
-    /// A matching open PR and its complete diff were verified.
+    /// A matching open PR and its complete diff were verified at admission.
+    /// This observation does not authorize a later merge or survive head/base drift.
     #[serde(default)]
     pub pr_verified: bool,
     /// Non-blocking publication limitations; never substitutes for failed proof.
@@ -2122,9 +2243,157 @@ pub(crate) fn inherit_network_remotes_from_parent(
 /// Resolve the same repository identity as publication without adding remotes,
 /// fetching, pushing, or changing the original work branch. A local-clone
 /// workspace may inspect its known parent remote but cannot silently rewrite it.
+/// Readiness identity is deliberately separate from authenticated cloud/forge
+/// identity. A local proof cannot be presented as a GitHub repository judgment.
+pub(crate) struct ReadinessRepository {
+    pub canonical_name: String,
+    pub owner: String,
+    pub repository: String,
+    pub remote_url: String,
+    pub local_target_root: Option<PathBuf>,
+}
+
+/// Pure, bounded local object/ref reads. No transport, URL rewrite, shell,
+/// credentials, hooks, ambient Git redirects or replacement objects participate.
+pub(crate) fn read_canonical_local_git(
+    root: &Path,
+    program: &Path,
+    args: &[&str],
+) -> Result<String, DecapodError> {
+    let output = Command::new(program)
+        .current_dir(root)
+        .env_clear()
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_CONFIG_GLOBAL", "/dev/null")
+        .env("GIT_CONFIG_COUNT", "0")
+        .env("GIT_NO_REPLACE_OBJECTS", "1")
+        .env("GIT_GRAFT_FILE", "/dev/null")
+        .args(["--no-replace-objects", "-c", "protocol.allow=never"])
+        .args(args)
+        .bounded_capture(
+            crate::core::bounded_process::ProcessLimits {
+                timeout: std::time::Duration::from_secs(30),
+                max_output_bytes: 1024 * 1024,
+            },
+            &crate::core::bounded_process::Cancellation::default(),
+        )?;
+    if output.termination != crate::core::bounded_process::Termination::Exited
+        || !output.output.status.success()
+    {
+        return Err(DecapodError::ValidationError(
+            "LOCAL_TARGET_UNAVAILABLE: canonical local Git read failed".into(),
+        ));
+    }
+    String::from_utf8(output.output.stdout)
+        .map(|text| text.trim().to_owned())
+        .map_err(|_| {
+            DecapodError::ValidationError("LOCAL_TARGET_INVALID: non-UTF8 Git output".into())
+        })
+}
+
+fn canonical_local_readiness_repository(
+    repo_root: &Path,
+    candidate: &crate::cli::DecapodProjectConfig,
+) -> Result<ReadinessRepository, DecapodError> {
+    let denied = || {
+        DecapodError::ValidationError(
+        "LOCAL_TARGET_POLICY_UNACCEPTED: canonical local Git authority requires an already accepted repository-local contract, local backend, and unchanged target branch; no cloud or forge fallback is permitted".into(),
+    )
+    };
+    let root = get_main_repo_root(repo_root)?.canonicalize()?;
+    let git_dir = root.join(".git");
+    let metadata = std::fs::symlink_metadata(&git_dir)?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() {
+        return Err(denied());
+    }
+    let canonical = crate::cli::DecapodProjectConfig::load(&root)?;
+    let local_profile = |config: &crate::cli::DecapodProjectConfig| {
+        config.repo.backend == Some(crate::cli::BackendType::Local)
+            && !config.proof.validation_buildkite_preflights
+            && config
+                .proof
+                .required_profile
+                .as_ref()
+                .is_some_and(|profile| {
+                    profile.id == crate::core::repository_profile::REQUIRED_PROFILE
+                })
+            && config
+                .proof
+                .repository_contract
+                .as_ref()
+                .is_some_and(|contract| contract.canonical_local_target)
+    };
+    let branch = resolve_base_branch(&root, None);
+    let reference = format!("refs/heads/{branch}");
+    if !local_profile(candidate)
+        || !local_profile(&canonical)
+        || resolve_base_branch(repo_root, None) != branch
+        || !crate::core::snapshot_provider::branch(&reference)
+    {
+        return Err(denied());
+    }
+    let git = crate::readiness_installed_tool(repo_root, "git")?;
+    let bytes = read_canonical_local_git(
+        &root,
+        &git,
+        &["show", &format!("{reference}:.decapod/config.toml")],
+    )?;
+    let accepted: crate::cli::DecapodProjectConfig =
+        toml::from_str(&bytes).map_err(|_| denied())?;
+    if !local_profile(&accepted)
+        || resolve_base_branch_from_config(&accepted) != Some(branch.as_str())
+    {
+        return Err(denied());
+    }
+    crate::core::repository_profile::preserve_accepted(
+        &candidate.proof.commands,
+        candidate.proof.repository_contract.as_ref(),
+        &accepted.proof.commands,
+        accepted.proof.repository_contract.as_ref(),
+    )
+    .map_err(|_| denied())?;
+    // A location-bound local identity is intentionally nonportable. Moving the
+    // canonical repository or replacing its target requires fresh validation.
+    let identity = crate::core::readiness_evidence::digest(&(
+        "canonical_local_git.v1",
+        &root,
+        git_dir.canonicalize()?,
+    ))
+    .map_err(|_| denied())?;
+    Ok(ReadinessRepository {
+        canonical_name: format!("local-git:{identity}"),
+        owner: String::new(),
+        repository: String::new(),
+        remote_url: root.to_string_lossy().into_owned(),
+        local_target_root: Some(root),
+    })
+}
+
+fn resolve_base_branch_from_config(config: &crate::cli::DecapodProjectConfig) -> Option<&str> {
+    config.repo.base_branch.as_deref()
+}
+
 pub(crate) fn resolve_readiness_repository(
     repo_root: &Path,
-) -> Result<crate::core::repo_identity::RepositoryIdentity, DecapodError> {
+) -> Result<ReadinessRepository, DecapodError> {
+    if let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root) {
+        let requests_local = |config: &crate::cli::DecapodProjectConfig| {
+            config
+                .proof
+                .repository_contract
+                .as_ref()
+                .is_some_and(|contract| contract.canonical_local_target)
+        };
+        let canonical_requests_local = get_main_repo_root(repo_root)
+            .ok()
+            .and_then(|root| crate::cli::DecapodProjectConfig::load(&root).ok())
+            .is_some_and(|canonical| requests_local(&canonical));
+        if requests_local(&config) || canonical_requests_local {
+            // Removing the candidate flag cannot switch an accepted local
+            // authority to a candidate-selected network remote.
+            return canonical_local_readiness_repository(repo_root, &config);
+        }
+    }
     let mut candidates = collect_network_remotes(repo_root)?;
     if candidates.is_empty() {
         let mut parents = local_remote_paths(repo_root)?;
@@ -2149,9 +2418,16 @@ pub(crate) fn resolve_readiness_repository(
                     .into(),
             )
         })?;
-    crate::core::repo_identity::resolve_repository_identity_from_remote(&format!(
+    let identity = crate::core::repo_identity::resolve_repository_identity_from_remote(&format!(
         "https://github.com/{canonical}.git"
-    ))
+    ))?;
+    Ok(ReadinessRepository {
+        canonical_name: identity.canonical_name,
+        owner: identity.owner,
+        repository: identity.repository,
+        remote_url: identity.remote_url,
+        local_target_root: None,
+    })
 }
 
 fn resolve_publish_remote(repo_root: &Path) -> Result<PublishRemote, DecapodError> {
@@ -2210,12 +2486,21 @@ pub fn publish_workspace(
     )
 }
 
+/// Warnings emitted when a workspace PR is created and admitted.
+pub fn pr_admission_warnings(repo_root: &Path) -> Vec<String> {
+    vec![
+        "PR admission applies to the observed head and base only. It does not authorize merge; subsequent head, base or required-context changes require fresh applicable proof and merge checks.".into(),
+        crate::core::validate::todo_tmp_cleanup_instruction(repo_root),
+    ]
+}
+
 pub(crate) fn publish_workspace_with_readiness(
     repo_root: &Path,
     title: Option<String>,
     description: Option<String>,
     readiness_invocation: &crate::ReadinessInvocation,
 ) -> Result<PublishResult, DecapodError> {
+    crate::core::validation_runtime::require_full_readiness_environment()?;
     readiness_invocation.validate()?;
     let status = get_workspace_status(repo_root)?;
 
@@ -2236,11 +2521,30 @@ pub(crate) fn publish_workspace_with_readiness(
     verify_current_governance_for_publish(repo_root)?;
     eval::verify_eval_gate_for_publish(&repo_root.join(".decapod").join("data"))?;
 
+    if crate::cli::DecapodProjectConfig::load(repo_root)?
+        .proof
+        .repository_contract
+        .as_ref()
+        .is_some_and(|contract| contract.canonical_local_target)
+    {
+        return Err(DecapodError::ValidationError(
+            "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: canonical local Git proof cannot authorize forge publication; establish target equivalence and independent publication authority".into(),
+        ));
+    }
+
     // Resolve the actual network remote before committing. Decapod-created
     // worktrees can inherit a local-clone origin, which must never be
     // treated as publication to the upstream GitHub repository.
     let publish_remote = resolve_publish_remote(repo_root)?;
     let base_branch = resolve_base_branch(repo_root, None);
+    let main_repo = get_main_repo_root(repo_root)?;
+    let base_integration_resource = format!("resource:integration:{base_branch}");
+    todo::enforce_shared_resource_available(
+        &main_repo.join(".decapod/data"),
+        &crate::current_agent_id(),
+        &["resource:integration", &base_integration_resource],
+        "workspace.publish",
+    )?;
 
     let dir = repo_root.to_str().unwrap_or(".");
 
@@ -2307,8 +2611,10 @@ pub(crate) fn publish_workspace_with_readiness(
     // Auto-commit above changes HEAD. Evaluate the current committed work
     // branch now, immediately before its first publication, through the same
     // full binary readiness contract as CLI/RPC validate.
-    let snapshot_handoff =
+    let readiness =
         crate::enforce_workbranch_readiness_before_push(repo_root, readiness_invocation)?;
+
+    publication::verify_committed_bundle(repo_root, &commit_hash)?;
 
     // 3. Push branch to the selected network remote.
     let push_output = Command::new("git")
@@ -2348,31 +2654,26 @@ pub(crate) fn publish_workspace_with_readiness(
     {
         let url = publication::ensure_and_verify_pr(
             repo_root,
+            &publish_remote.url,
             &slug,
             &status.git.current_branch,
             &base_branch,
             &proof,
+            &readiness,
             title.as_deref().unwrap_or(&status.git.current_branch),
             description.as_deref().unwrap_or(""),
         )
         .map_err(publication::after_push)?;
-        // Detect a branch/base movement while GitHub was serving the PR pages.
-        publication::verify_remote_unchanged(
-            repo_root,
-            &publish_remote.url,
-            &status.git.current_branch,
-            &base_branch,
-            &proof,
-        )
-        .map_err(publication::after_push)?;
-        (Some(url), Vec::new())
+        // The publisher's final admission callback rechecks remote and local
+        // proof; failures there quarantine the existing PR before returning.
+        (Some(url), pr_admission_warnings(repo_root))
     } else {
         (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
     };
 
     if pr_url.is_some()
-        && let Some(handoff) = snapshot_handoff
-        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, &handoff)
+        && let Some(handoff) = readiness.snapshot_handoff()
+        && let Err(error) = crate::cleanup_published_readiness_snapshot(repo_root, handoff)
     {
         warnings.push(format!("Publication is verified; temporary snapshot cleanup needs recovery: {error}. Preserve handoff {}", handoff.display()));
     }
@@ -2388,9 +2689,15 @@ pub(crate) fn publish_workspace_with_readiness(
 }
 
 pub fn extract_task_ids_from_branch(branch: &str) -> Vec<String> {
+    // Managed branches are agent/<actor>/<topic>. Task-shaped actor names
+    // identify the owner, not an additional task. Keep legacy unscoped refs.
+    let topic = match branch.strip_prefix("agent/") {
+        Some(scoped) => scoped.split_once('/').map_or(scoped, |(_, topic)| topic),
+        None => branch,
+    };
     let re = Regex::new(r"(?i)(?<![a-z0-9])(?:aiml|apis|appl|arch|bend|bugs|cicd|code|data|desn|devx|docs|feat|fend|infr|lang|perf|plat|proj|r|refa|reft|root|secu|spec|test|todo|tool)[_-][a-z0-9]{6,}").expect("static regex");
     let mut out: Vec<String> = re
-        .find_iter(branch)
+        .find_iter(topic)
         .filter_map(|m| m.ok())
         .map(|m| m.as_str().replace('-', "_").to_lowercase())
         .collect();
@@ -2529,6 +2836,7 @@ pub fn verify_workunit_gate_for_publish(
                 task_id, manifest.status
             )));
         }
+        workunit::validate_verified_manifest(repo_root, &manifest)?;
         workunit::verify_capsule_policy_lineage_for_task(repo_root, &manifest)?;
     }
 
@@ -2753,8 +3061,11 @@ fn ensure_validation_artifacts_staged(repo_root: &Path) -> Result<(), DecapodErr
     Ok(())
 }
 
-/// Require the normalized document in the PR delta and a valid checkpoint for
-/// every authored commit. Receipt/trajectory binding is checked independently by
+/// Require the normalized document in the PR delta and current-governance
+/// admission against the accepted base. Fresh workstreams retain strict commit
+/// history; inherited accepted context uses current exact-head proof, without
+/// upgrading absent historical checkpoints. Receipt/trajectory binding is
+/// checked independently by
 /// [`verify_validation_artifacts_for_publish`].
 pub fn ensure_required_governance_artifacts_in_pr(
     repo_root: &Path,
@@ -2841,12 +3152,12 @@ pub fn ensure_required_governance_artifacts_in_pr(
         .collect();
     if !missing.is_empty() {
         return Err(DecapodError::ValidationError(format!(
-            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Every project PR must update the normalized governance document and preserve checkpoint coverage of each authored commit.",
+            "Cannot publish: required governance artifacts are not included in the PR diff against '{base_ref}': {}. Current publication material must include the normalized governance document.",
             missing.join(", ")
         )));
     }
 
-    crate::core::governance_document::verify_pr_checkpoints_for_target(
+    crate::core::governance_document::verify_pr_continuation_for_target(
         repo_root,
         &base_ref,
         "HEAD",
@@ -3461,6 +3772,8 @@ fn prune_workspaces_report_with_process_dir(
                 continue;
             }
 
+            let observed_worktree_id = observe_checkout(&dir_path).worktree_id;
+
             // Attempt to remove git worktree if registered
             if matching_wt.is_some() {
                 let mut args = vec!["worktree", "remove"];
@@ -3520,6 +3833,15 @@ fn prune_workspaces_report_with_process_dir(
                     detail: format!("workspace cleanup incomplete: {error}"),
                 });
                 continue;
+            }
+
+            if !observed_worktree_id.is_empty() {
+                let _ = todo::release_authoring_binding(
+                    &main_repo.join(".decapod/data"),
+                    &observed_worktree_id,
+                    &crate::current_agent_id(),
+                    "workspace.prune",
+                );
             }
 
             pruned.push(PrunedWorkspace {

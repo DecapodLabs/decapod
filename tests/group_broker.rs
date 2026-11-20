@@ -211,6 +211,58 @@ fn broker_no_sqlite_busy_surfaced_under_concurrent_mutators() {
     assert_concurrent_mutators(false);
 }
 
+#[test]
+fn invalid_broker_request_budgets_cannot_admit_a_mutation() {
+    let (_tmp, dir, password) = setup_repo_with(run_contention_setup);
+    assert!(
+        broker_socket_supported_with(&dir, &password, run_contention_setup),
+        "required broker socket acceptance did not run"
+    );
+    let agent = "broker-budget-boundary";
+    let password = acquire_session_password_with(&dir, agent, run_contention_setup);
+    for (index, budget) in ["0", "300001", "invalid"].into_iter().enumerate() {
+        let title = format!("invalid-broker-budget-{index}");
+        let request = format!("BROKER_INVALID_BUDGET_{index}");
+        let output = run_contention_command(
+            &dir,
+            &["todo", "add", &title],
+            &[
+                ("DECAPOD_AGENT_ID", agent),
+                ("DECAPOD_SESSION_PASSWORD", &password),
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+                ("DECAPOD_GROUP_BROKER_REQUEST_ID", &request),
+                ("DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS", budget),
+            ],
+            Duration::from_secs(30),
+            "invalid request budget",
+        );
+        assert!(!output.status.success());
+        assert!(
+            String::from_utf8_lossy(&output.stderr).contains("BROKER_REQUEST_BUDGET_INVALID"),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let conn =
+            decapod::core::db::Connection::open(dir.join(".decapod/data/decapod.db")).unwrap();
+        let tasks: i64 = conn
+            .query_row(
+                "SELECT count(*) FROM tasks WHERE title=?1",
+                [&title],
+                |row| row.get(0),
+            )
+            .unwrap();
+        let receipts: i64 = conn
+            .query_row(
+                "SELECT count(*) FROM request_dedupe WHERE request_id=?1",
+                [&request],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(tasks, 0, "invalid budget changed task state");
+        assert_eq!(receipts, 0, "invalid budget created a receipt");
+    }
+}
+
 #[cfg(unix)]
 #[test]
 fn reusable_connection_handles_twenty_concurrent_mutators() {
@@ -259,6 +311,11 @@ fn assert_concurrent_mutators(reuse_connection: bool) {
                 (
                     "DECAPOD_GROUP_BROKER_IDLE_SECS".to_string(),
                     "3".to_string(),
+                ),
+                // Queueing and execution share the workload's declared budget.
+                (
+                    "DECAPOD_GROUP_BROKER_REQUEST_BUDGET_MS".to_string(),
+                    "300000".to_string(),
                 ),
                 ("DECAPOD_GROUP_BROKER_REQUEST_ID".to_string(), req_id),
                 (
@@ -721,8 +778,11 @@ fn claim_preparation_probe(broker: bool) {
             Err(error) => panic!("AF_UNIX capability probe failed: {error}"),
         }
     }
+    let claim_pw = acquire_session_password_with(&dir, "broker-claim-probe", run_decapod_bounded);
+    let _ = password;
     let envs = [
-        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_AGENT_ID", "broker-claim-probe"),
+        ("DECAPOD_SESSION_PASSWORD", claim_pw.as_str()),
         ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
         ("DECAPOD_GROUP_BROKER_IDLE_SECS", "1"),
         (
@@ -806,6 +866,9 @@ fn claim_preparation_probe(broker: bool) {
     let start = Instant::now();
     claim_probe_stage("competing mutation");
     let competing = run_decapod_bounded(&dir, &["todo", "add", "while preparation waits"], &envs);
+    let competing_elapsed = start.elapsed();
+    let preparation_still_blocked =
+        !release.exists() && std::fs::metadata(&output_path).unwrap().len() == 0;
     std::fs::write(&release, "release").unwrap(); // always release before assertions
     claim_probe_stage("await final claim envelope");
     let output = child.output(&output_path, &progress, &hooks, "claim completion");
@@ -814,7 +877,11 @@ fn claim_preparation_probe(broker: bool) {
         "{}",
         String::from_utf8_lossy(&competing.stderr)
     );
-    assert!(start.elapsed() < Duration::from_secs(10));
+    assert!(preparation_still_blocked);
+    assert!(
+        competing_elapsed < Duration::from_secs(10),
+        "competing mutation took {competing_elapsed:?} before preparation release"
+    );
     assert!(
         output.status.success(),
         "{}",

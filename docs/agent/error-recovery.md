@@ -17,6 +17,26 @@ output when a caller must distinguish failure kinds.
 
 ## Common Error Patterns
 
+### Agent-owned cloud connection
+
+The human runs `decapod init` once per repository. Own subsequent Decapod
+operations, including sign-in continuation and recovery. On `onboarding_pending`
+with `authorization_url`, share the validated browser link, then run
+`decapod cloud login` every two seconds for up to five minutes. Resume work as
+soon as it succeeds; do not wait for another user message saying sign-in is
+done. Preserve an incomplete flow for later continuation. Never copy private
+session, PKCE, polling, or refresh material into chat or Git.
+
+An interrupted one-time exchange remains uncertain. Follow `restart_required`
+using `decapod cloud login --restart`, share the fresh browser link, and resume
+normally. Preserve the task and its operation ID. Account confirmation can be
+retried with the saved session; `repository_denied` and `action_required` need
+the stated account action rather than repeated browser sign-in.
+
+For a cloud `todo add` handoff, retain the returned `operation_id`. After login,
+repeat the original arguments with that same `--operation-id`; a fresh add is
+not a retry. Login continuation never proves the task was created.
+
 ### Interrupted runtime checkpoint or projection write
 
 Inspect `todo journal verify` or `govern workunit journal-status --task-id <id>`
@@ -40,6 +60,30 @@ problem. The failure is neither a success receipt nor a rollback receipt.
 
 `PROOF_HOOK_FAILED` means a completion claim lacks current accepted proof; a
 historical green PR is not automatically a Decapod verification baseline.
+If full validation was recorded for the original candidate, inspect that exact
+SHA and complete or repair the original task through historical verification:
+
+```bash
+decapod qa verify commit <full-candidate-sha>
+decapod todo done <task-id> --validated --commit <full-candidate-sha>
+```
+
+This path verifies the original task and ownership lineage plus integration into
+the accepted branch. It does not revalidate a stale pre-merge workspace, create
+another pending PR or borrow another agent's workspace. It preserves the
+completion timestamp of an already-done task. A changed contract, incomplete
+lineage or unproven integration remains a blocker. Inspect the actual record;
+do not substitute the merge SHA for the candidate SHA that was validated.
+If the accepted objects are absent locally, fetch the accepted branch through
+the normal governed VCS path and retry the original command. This version's
+integration observer supports public GitHub HTTPS; private-repository integration
+requires a future supported transport. Squash/rebase integration must preserve
+the complete candidate tree in the bounded accepted history, not merely the
+task's patch. A new lease generation, including renewal, invalidates the old
+task binding and requires fresh proof.
+
+If no durable full record exists, historical completion is unavailable. Older
+temporary proof directories and prerequisite receipts are not silently promoted.
 For multiple completed tasks without captured artifacts, select current files
 relevant to each task and use the explicit batch capture path:
 
@@ -203,6 +247,14 @@ This supported transition does not waive `TODO_PROJECTION_MISSING`.
   4. Verify with `decapod validate --projections`. Confirm `federation.rebuild_determinism` is green and that a second rebuild makes no further semantic change.
 - **If repair aborts:** The error names the event ID and reason (type/identity mismatch, non-object payload). Preserve the store and request human review; partial unwrap is never committed.
 
+### `container_cgroup_permission_denied` and `container_invalid_cgroup_parent`
+- **Reason:** Rootless Podman (`cgroupfs` manager on cgroup v2 without a user systemd instance) or the OCI runtime (`crun`/`runc`) could not create or configure the container cgroup under `/sys/fs/cgroup` (e.g., `cannot set limits without cgroups: create /sys/fs/cgroup/...: Permission denied`), or an explicit `--cgroup-parent` / `DECAPOD_CONTAINER_CGROUP_PARENT` value failed fail-closed validation. This is distinct from `container_workspace_permission_denied`, which covers workspace directory or Git lockfile ownership failures.
+- **Protocol:**
+  1. Do **not** disable cgroups or relax `--cpus`, `--memory`, or `--pids-limit`.
+  2. Supply a validated delegated cgroup v2 parent whose `cgroup.subtree_control` enables `cpu`, `memory`, and `pids` via `--cgroup-parent /<delegated-path>` (or `DECAPOD_CONTAINER_CGROUP_PARENT=/<delegated-path>`), or place the calling process inside a delegated cgroup v2 subtree so local rootless Podman `cgroupfs` auto-detection selects it.
+  3. Omit the `/sys/fs/cgroup` mount prefix when passing a cgroup hierarchy path, and never use `..`, `.`, trailing slashes, whitespace, control characters, or shell metacharacters (invalid inputs fail closed with `container_invalid_cgroup_parent` before touching the runtime).
+  4. Re-run the `decapod auto container run` command; if the host has not delegated a writable cgroup v2 subtree with `cpu`, `memory`, and `pids` controllers, request that host delegation from the operator.
+
 ## General Strategy
 
 ### Invalid governance document or legacy claim ledger
@@ -228,19 +280,37 @@ and record a new checkpoint ID before committing. An identical retry with the
 same material and summary and the same proof-reference set is a no-op. Do not
 rewrite a published commit or remove prior records to reuse its ID.
 
+`Trajectory artifact hash mismatch` after a Git 3-way merge (`MERGE_HEAD`
+present) means line-based merging mixed `.decapod/governance.json` trajectory or
+custody fields across two commits. Do not hand-edit hashes or clear failed
+checks. Run `decapod govern artifacts reconcile-merge`, which reads only the
+immutable Git parents (`HEAD`, `MERGE_HEAD`, `merge-base --all`), refuses
+unaccepted conflicting-PR authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`) or
+conflicting check proofs (`GOVERNANCE_MERGE_PROOF_CONFLICT`), preserves complete
+active journal history and failed/missing proof states, and writes a valid
+canonical document ready for a follow-up checkpoint before committing the merge.
+
 ### Orphan broker audit entries (`data broker verify`)
 
 `data broker verify` checks audit lifecycle evidence, not SQLite structural
 integrity. A pending entry without terminal evidence does not establish whether
 the underlying write committed. Do not retry that write blindly.
 
-1. Inspect `decapod data broker audit` and identify the pending event ID reported
-   by `decapod data broker verify`. Establish that the original writer has stopped;
-   an old timestamp alone is not evidence of a crash.
+1. Inspect `decapod data broker verify` and `decapod data broker audit` to identify
+   the pending event ID and its `writer_liveness` classification (`active`,
+   `stopped`, or `unknown`). New `pending` events record `writer_pid`,
+   `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns`;
+   an old timestamp or bare PID check alone never proves writer termination.
 2. Preview `decapod data broker repair --event-id <id> --reason "<why the writer is stopped>"`.
-   The command refuses events younger than 300 seconds, future-dated events,
-   unknown targets, and entries already completed by a normal terminal event.
+   The command refuses active writers (`writer_liveness: "active"`), unknown
+   targets, and entries already completed by a normal terminal event. For
+   historical/legacy events lacking provenance or cross-host/unverifiable
+   incarnations, preview succeeds and reports `writer_liveness: "unknown"` with
+   `human_review_required: true`.
 3. Apply that same command with `--apply` to append an abandonment acknowledgment.
+   When `writer_liveness` is `stopped`, `--apply` succeeds directly; when
+   `writer_liveness` is `unknown`, `--apply` fails closed unless human review
+   confirms the writer has stopped and passes `--acknowledge-unknown-writer`.
    The original pending record remains, the reason and actor are recorded, and
    the original data outcome remains `unknown`. Repair targets exactly one event,
    even when other pending entries share its intent or correlation identifier.
@@ -288,3 +358,17 @@ options are omitted, including with `--force`. Explicit flags can change those
 settings. Dry-run distinguishes config.toml from scaffold documentation. Generated
 GitHub validation uses full checkout history and immutable event/base/head context;
 never replace those revisions with mutable branch names or omit them in CI.
+
+### `LEGACY_TODO_RECOVERY_PENDING` / `LEGACY_TODO_RECONCILIATION`
+
+A versioned physical retirement is prepared but not committed, or its required
+source, archive, canonical state, policy or integrity cannot be established.
+Preserve all inputs. Inspect `decapod todo journal reconcile-legacy` and resume
+with the original `--expected-review` token only while the independently
+remeasured bindings and explicit canonical grant remain valid. A missing legacy
+filename alone does not prove completion. Changed canonical inputs/policy,
+unknown archives, sidecars, corrupt receipts or unmatched historical layouts
+block automatic recovery. V1 supports only empty input or exact canonical copies
+and has no automatic cancellation/supersession path. Do not remove files,
+rewrite receipt phases, replay unknown task mutations or invent a completion
+claim. A committed physical retirement still requires ordinary task validation.

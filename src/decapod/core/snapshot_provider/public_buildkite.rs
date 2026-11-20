@@ -1740,6 +1740,7 @@ impl NamedArchiveSelection {
             deadline: budget.deadline,
             cancel: budget.cancel,
             max_bytes: self.capture_limit(),
+            github_quota: budget.github_quota.clone(),
         };
         let bytes = read_request(reader, &self.request, &artifact_budget)?;
         self.verify(bytes, budget)

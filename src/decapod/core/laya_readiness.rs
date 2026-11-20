@@ -7,7 +7,7 @@ use super::{
         self as wire, Backend, BackendPreference, Judgment, RUBRIC, Request, Response,
         WORKER_SCHEMA,
     },
-    laya_setup, readiness_evidence as evidence, vega_readiness as shared, vega_runtime,
+    laya_runtime, laya_setup, readiness_assessment as shared, readiness_evidence as evidence,
 };
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
@@ -94,16 +94,6 @@ pub(crate) fn configuration_from_bytes(bytes: &[u8]) -> io::Result<Configuration
             "laya_reviewed_manifest_required: run decapod setup laya and commit its shared manifest digest; each maintainer registers a private runtime",
         ));
     }
-    if value
-        .get("vega")
-        .and_then(|v| v.get("mode"))
-        .and_then(|v| v.as_str())
-        == Some("required")
-    {
-        return Err(invalid(
-            "LAYA_EXPLICIT_MIGRATION_REQUIRED: legacy required Vega policy is not silently disabled or interpreted as Laya; review and accept the explicit team policy migration",
-        ));
-    }
     Ok(config)
 }
 pub(crate) fn verify_policy_acceptance(
@@ -124,7 +114,7 @@ pub(crate) fn capture_installation(config: &Configuration) -> io::Result<Option<
     let installation = match &config.installation {
         Some(installation) => installation.clone(),
         None => {
-            vega_runtime::resolve_at(&laya_setup::default_cache()?, &config.model_manifest_digest)?
+            laya_runtime::resolve_at(&laya_setup::default_cache()?, &config.model_manifest_digest)?
         }
     };
     if installation.manifest_digest != config.model_manifest_digest {

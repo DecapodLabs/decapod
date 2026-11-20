@@ -107,7 +107,6 @@ pub fn initialize_obligation_db(root: &Path) -> Result<(), error::DecapodError> 
         // available even when obligation initialization is the first local
         // subsystem touched in a fresh repository.
         conn.execute(schemas::TODO_DB_SCHEMA_RISK_ZONES, [])?;
-        conn.execute(schemas::TODO_DB_SCHEMA_INDEX_RISK_ZONES_NAME, [])?;
         Ok(())
     })
 }

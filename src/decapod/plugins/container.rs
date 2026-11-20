@@ -16,6 +16,10 @@ use std::time::{Duration, Instant};
 
 pub const MANAGED_DOCKERFILE_REL_PATH: &str = ".decapod/managed/Dockerfile.decapod";
 const LEGACY_MANAGED_DOCKERFILE_REL_PATH: &str = ".decapod/managed/Dockerfile";
+pub const CONTAINER_CGROUP_PARENT_ENV: &str = "DECAPOD_CONTAINER_CGROUP_PARENT";
+const MAX_CGROUP_PARENT_LEN: usize = 256;
+const PROC_SELF_CGROUP_PATH: &str = "/proc/self/cgroup";
+const SYS_FS_CGROUP_ROOT: &str = "/sys/fs/cgroup";
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 pub enum ImageProfile {
@@ -65,6 +69,9 @@ pub enum ContainerCommand {
         memory: String,
         #[clap(long, default_value = "2.0")]
         cpus: String,
+        /// Validated delegated cgroup parent passed to the container runtime (e.g. `/delegated/decapod` or `decapod.slice`).
+        #[clap(long)]
+        cgroup_parent: Option<String>,
         #[clap(long)]
         repo: Option<String>,
         #[clap(long, default_value_t = false)]
@@ -106,9 +113,35 @@ fn auto_remediable_validation_error(
     ))
 }
 
+fn is_cgroup_permission_failure(combined: &str) -> bool {
+    let has_perm_or_ro = combined.contains("permission denied")
+        || combined.contains("operation not permitted")
+        || combined.contains("read-only file system");
+    let mentions_cgroup_fs = combined.contains("/sys/fs/cgroup");
+    let mentions_oci_cgroup = (combined.contains("crun:")
+        || combined.contains("runc:")
+        || combined.contains("runc create failed")
+        || combined.contains("oci runtime error"))
+        && (combined.contains("cgroup") || combined.contains("cannot set limits"));
+    let mentions_explicit_cgroup_limit_error = combined
+        .contains("cannot set limits without cgroups")
+        || combined.contains("unable to apply cgroup configuration")
+        || combined.contains("failed to create cgroup")
+        || combined.contains("cgroup.subtree_control")
+        || combined.contains("cgroup.procs");
+
+    mentions_explicit_cgroup_limit_error
+        || (has_perm_or_ro && (mentions_cgroup_fs || mentions_oci_cgroup))
+}
+
 fn classify_container_failure(stdout: &str, stderr: &str) -> (&'static str, &'static str) {
     let combined = format!("{stdout}\n{stderr}").to_lowercase();
-    if combined.contains("permission denied")
+    if is_cgroup_permission_failure(&combined) {
+        (
+            "container_cgroup_permission_denied",
+            "Agent: configure a delegated cgroup v2 parent with cpu, memory, and pids controllers enabled via --cgroup-parent or DECAPOD_CONTAINER_CGROUP_PARENT (or run inside a delegated cgroup v2 subtree for rootless Podman cgroupfs), without disabling cgroups or relaxing resource limits.",
+        )
+    } else if combined.contains("permission denied")
         || combined.contains("operation not permitted")
         || combined.contains("index.lock")
     {
@@ -163,6 +196,7 @@ pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::
             timeout_seconds,
             memory,
             cpus,
+            cgroup_parent,
             repo,
             keep_worktree,
             inherit_env,
@@ -183,6 +217,7 @@ pub fn run_container_cli(store: &Store, cli: ContainerCli) -> Result<(), error::
             timeout_seconds,
             &memory,
             &cpus,
+            cgroup_parent.as_deref(),
             repo.as_deref(),
             keep_worktree,
             inherit_env,
@@ -237,6 +272,7 @@ pub fn run_container_for_claim(
         1800,
         "2g",
         "2.0",
+        None,
         Some(repo.to_str().ok_or_else(|| {
             error::DecapodError::PathError("invalid repository path".to_string())
         })?),
@@ -265,12 +301,14 @@ fn run_container(
     timeout_seconds: u64,
     memory: &str,
     cpus: &str,
+    cgroup_parent: Option<&str>,
     repo_override: Option<&str>,
     keep_worktree: bool,
     inherit_env: bool,
     local_only: bool,
 ) -> Result<RunSummary, error::DecapodError> {
     validate_container_publication_options(local_only, push, pr)?;
+    let explicit_cgroup_parent = resolve_explicit_cgroup_parent(cgroup_parent)?;
     let repo = resolve_repo_path(repo_override)?;
     let docker = match container_runtime::find_container_runtime() {
         Ok(runtime) => runtime,
@@ -295,7 +333,9 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         ));
     }
 
-    ensure_container_runtime_access(&docker)?;
+    let runtime_info_stdout = ensure_container_runtime_access_with_info(&docker)?;
+    let effective_cgroup_parent =
+        resolve_effective_cgroup_parent(&docker, explicit_cgroup_parent, &runtime_info_stdout);
 
     let image = resolve_runtime_image(&docker, &repo, image_profile, image_override)?;
 
@@ -322,6 +362,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         &workspace.base_branch,
         memory,
         cpus,
+        effective_cgroup_parent.as_deref(),
         task_id,
         inherit_env,
         local_only,
@@ -337,6 +378,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
             ),
         ],
     );
+    let _signer_server = prepare_container_signer_server(&repo, agent, &mut spec)?;
 
     let start = Instant::now();
     let output = execute_container_with_timeout(&docker, &spec.args, timeout_seconds).map_err(
@@ -411,6 +453,7 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
         "status": status,
         "agent": agent,
         "runtime": docker,
+        "cgroup_parent": effective_cgroup_parent,
         "image": image,
         "container_name": spec.container_name,
         "repo": repo,
@@ -559,6 +602,11 @@ fn clear_container_runtime_override(repo_root: &Path) -> Result<bool, error::Dec
 pub(crate) fn heal_container_runtime_override(
     repo_root: &Path,
 ) -> Result<ContainerRuntimeOverrideHeal, error::DecapodError> {
+    // Runtime recovery is needed only for an existing disabled-runtime override.
+    // Ordinary local validation must not probe or start an unrelated engine.
+    if !container_runtime_disabled(repo_root)? {
+        return Ok(ContainerRuntimeOverrideHeal::Unchanged);
+    }
     match container_runtime::find_container_runtime() {
         Ok(runtime) if ensure_container_runtime_access(&runtime).is_ok() => {
             if clear_container_runtime_override(repo_root)? {
@@ -585,12 +633,16 @@ fn repo_root_from_store(store: &Store) -> Result<PathBuf, error::DecapodError> {
 }
 
 fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodError> {
+    ensure_container_runtime_access_with_info(runtime).map(|_| ())
+}
+
+fn ensure_container_runtime_access_with_info(runtime: &str) -> Result<String, error::DecapodError> {
     let mut output = Command::new(runtime)
         .arg("info")
         .bounded_output(CONTROL_TIMEOUT)
         .map_err(error::DecapodError::IoError)?;
     if output.status.success() {
-        return Ok(());
+        return Ok(String::from_utf8_lossy(&output.stdout).into_owned());
     }
 
     let mut machine_start_output = None;
@@ -605,7 +657,7 @@ fn ensure_container_runtime_access(runtime: &str) -> Result<(), error::DecapodEr
             .bounded_output(CONTROL_TIMEOUT)
             .map_err(error::DecapodError::IoError)?;
         if output.status.success() {
-            return Ok(());
+            return Ok(String::from_utf8_lossy(&output.stdout).into_owned());
         }
     }
 
@@ -1643,6 +1695,302 @@ fn cleanup_workspace_clone(
     Ok("removed")
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct PodmanRuntimeInfo {
+    rootless: bool,
+    cgroup_manager: Option<String>,
+    cgroup_version: Option<String>,
+    service_is_remote: bool,
+}
+
+impl PodmanRuntimeInfo {
+    fn is_local_rootless_cgroupfs_v2(&self) -> bool {
+        self.rootless
+            && !self.service_is_remote
+            && self
+                .cgroup_manager
+                .as_deref()
+                .is_some_and(|m| m.eq_ignore_ascii_case("cgroupfs"))
+            && self
+                .cgroup_version
+                .as_deref()
+                .is_some_and(|v| v.eq_ignore_ascii_case("v2"))
+    }
+}
+
+fn parse_podman_info(stdout: &str) -> PodmanRuntimeInfo {
+    let mut info = PodmanRuntimeInfo::default();
+    let mut in_host = false;
+    let mut security_indent: Option<usize> = None;
+
+    for raw_line in stdout.lines() {
+        let trimmed_end = raw_line.trim_end();
+        let trimmed = trimmed_end.trim_start_matches(' ');
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        let indent = trimmed_end.len() - trimmed.len();
+        if indent == 0 {
+            in_host = trimmed == "host:";
+            security_indent = None;
+            continue;
+        }
+        if !in_host {
+            continue;
+        }
+        if let Some(sec_indent) = security_indent
+            && indent <= sec_indent
+        {
+            security_indent = None;
+        }
+        let Some((raw_key, raw_val)) = trimmed.split_once(':') else {
+            continue;
+        };
+        let key = raw_key.trim().to_ascii_lowercase();
+        let val = raw_val.trim().trim_matches('"').trim_matches('\'');
+        if security_indent.is_some() {
+            if key == "rootless" {
+                info.rootless = val.eq_ignore_ascii_case("true");
+            }
+        } else if key == "security" && val.is_empty() {
+            security_indent = Some(indent);
+        } else if key == "cgroupmanager" && !val.is_empty() {
+            info.cgroup_manager = Some(val.to_string());
+        } else if key == "cgroupversion" && !val.is_empty() {
+            info.cgroup_version = Some(val.to_string());
+        } else if key == "serviceisremote" {
+            info.service_is_remote = val.eq_ignore_ascii_case("true");
+        }
+    }
+
+    info
+}
+
+fn invalid_cgroup_parent_error(detail: impl AsRef<str>) -> error::DecapodError {
+    auto_remediable_validation_error(
+        "container_invalid_cgroup_parent",
+        format!(
+            "Invalid container cgroup parent: {}; no container was started",
+            detail.as_ref()
+        ),
+        "Agent: supply a validated absolute cgroup hierarchy path (e.g. /delegated/decapod, without /sys/fs/cgroup prefix or traversal) or systemd slice name (e.g. decapod.slice) via --cgroup-parent or DECAPOD_CONTAINER_CGROUP_PARENT.",
+    )
+}
+
+fn is_valid_cgroup_segment(segment: &str) -> bool {
+    if segment.is_empty() || segment == "." || segment == ".." {
+        return false;
+    }
+    let mut chars = segment.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    if !(first.is_ascii_alphanumeric() || first == '_') {
+        return false;
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_' | '@'))
+}
+
+pub fn validate_cgroup_parent(raw: &str) -> Result<String, error::DecapodError> {
+    if raw.is_empty() {
+        return Err(invalid_cgroup_parent_error("value must not be empty"));
+    }
+    if raw.len() > MAX_CGROUP_PARENT_LEN {
+        return Err(invalid_cgroup_parent_error(format!(
+            "value exceeds maximum length of {MAX_CGROUP_PARENT_LEN} bytes"
+        )));
+    }
+    if raw.chars().any(|c| c.is_control() || c.is_whitespace()) {
+        return Err(invalid_cgroup_parent_error(
+            "value must not contain whitespace, NUL, or control characters",
+        ));
+    }
+    if raw.starts_with('-') {
+        return Err(invalid_cgroup_parent_error("value must not start with '-'"));
+    }
+    if raw.contains("..") {
+        return Err(invalid_cgroup_parent_error(
+            "value must not contain parent-directory traversal ('..')",
+        ));
+    }
+
+    if let Some(stripped) = raw.strip_prefix('/') {
+        if raw == "/" {
+            return Err(invalid_cgroup_parent_error(
+                "root cgroup '/' is not a delegated cgroup parent",
+            ));
+        }
+        if raw.ends_with('/') {
+            return Err(invalid_cgroup_parent_error(
+                "path must not end with a trailing '/'",
+            ));
+        }
+        if raw == SYS_FS_CGROUP_ROOT || raw.starts_with("/sys/fs/cgroup/") {
+            return Err(invalid_cgroup_parent_error(
+                "omit the '/sys/fs/cgroup' mount prefix and pass the cgroup hierarchy path (e.g. '/delegated/decapod')",
+            ));
+        }
+        for segment in stripped.split('/') {
+            if !is_valid_cgroup_segment(segment) {
+                return Err(invalid_cgroup_parent_error(format!(
+                    "invalid cgroup path segment '{segment}'"
+                )));
+            }
+        }
+        return Ok(raw.to_string());
+    }
+
+    if !raw.contains('/')
+        && let Some(prefix) = raw.strip_suffix(".slice")
+        && !prefix.is_empty()
+        && is_valid_cgroup_segment(raw)
+    {
+        return Ok(raw.to_string());
+    }
+
+    Err(invalid_cgroup_parent_error(format!(
+        "'{raw}' must be an absolute cgroup hierarchy path (e.g. '/delegated/decapod') or a systemd slice name (e.g. 'decapod.slice')"
+    )))
+}
+
+fn resolve_explicit_cgroup_parent(
+    cli_override: Option<&str>,
+) -> Result<Option<String>, error::DecapodError> {
+    if let Some(raw) = cli_override {
+        return validate_cgroup_parent(raw).map(Some);
+    }
+    match std::env::var_os(CONTAINER_CGROUP_PARENT_ENV) {
+        None => Ok(None),
+        Some(raw_os) => {
+            let Some(raw) = raw_os.to_str() else {
+                return Err(invalid_cgroup_parent_error(format!(
+                    "{CONTAINER_CGROUP_PARENT_ENV} must be valid UTF-8"
+                )));
+            };
+            if raw.is_empty() {
+                return Ok(None);
+            }
+            validate_cgroup_parent(raw).map(Some)
+        }
+    }
+}
+
+#[cfg(unix)]
+fn is_dir_writable_by_current_user(path: &Path) -> bool {
+    use std::ffi::CString;
+    use std::os::unix::ffi::OsStrExt;
+    use std::os::unix::fs::PermissionsExt;
+
+    let Ok(meta) = fs::symlink_metadata(path) else {
+        return false;
+    };
+    if !meta.file_type().is_dir() || (meta.permissions().mode() & 0o222 == 0) {
+        return false;
+    }
+    let Ok(c_path) = CString::new(path.as_os_str().as_bytes()) else {
+        return false;
+    };
+    // SAFETY: c_path is a valid NUL-terminated path buffer for the duration of the syscall.
+    unsafe { libc::access(c_path.as_ptr(), libc::W_OK | libc::X_OK) == 0 }
+}
+
+#[cfg(not(unix))]
+fn is_dir_writable_by_current_user(_path: &Path) -> bool {
+    false
+}
+
+fn is_valid_delegated_cgroup_v2_dir(cgroup_root: &Path, cgroup_path: &str) -> bool {
+    let Some(stripped) = cgroup_path.strip_prefix('/') else {
+        return false;
+    };
+    if validate_cgroup_parent(cgroup_path).is_err() {
+        return false;
+    }
+    let Ok(canon_root) = fs::canonicalize(cgroup_root) else {
+        return false;
+    };
+    let mut current = cgroup_root.to_path_buf();
+    for segment in stripped.split('/') {
+        current.push(segment);
+        let Ok(meta) = fs::symlink_metadata(&current) else {
+            return false;
+        };
+        if !meta.file_type().is_dir() {
+            return false;
+        }
+    }
+    let Ok(canon_dir) = fs::canonicalize(&current) else {
+        return false;
+    };
+    if !canon_dir.starts_with(&canon_root) || canon_dir == canon_root {
+        return false;
+    }
+    if !is_dir_writable_by_current_user(&current) {
+        return false;
+    }
+    let subtree_control = current.join("cgroup.subtree_control");
+    let Ok(control_meta) = fs::symlink_metadata(&subtree_control) else {
+        return false;
+    };
+    if !control_meta.file_type().is_file() {
+        return false;
+    }
+    let Ok(controllers_raw) = fs::read_to_string(&subtree_control) else {
+        return false;
+    };
+    let controllers: BTreeSet<&str> = controllers_raw.split_whitespace().collect();
+    ["cpu", "memory", "pids"]
+        .iter()
+        .all(|required| controllers.contains(required))
+}
+
+fn detect_delegated_cgroup_v2_parent_from(
+    proc_cgroup_path: &Path,
+    cgroup_root: &Path,
+) -> Option<String> {
+    let content = fs::read_to_string(proc_cgroup_path).ok()?;
+    let mut candidate = content
+        .lines()
+        .find_map(|line| line.strip_prefix("0::"))
+        .map(|raw| raw.trim_end_matches(['\r', '\n']))?;
+
+    while !candidate.is_empty() && candidate != "/" {
+        if is_valid_delegated_cgroup_v2_dir(cgroup_root, candidate) {
+            return Some(candidate.to_string());
+        }
+        match candidate.rfind('/') {
+            Some(0) | None => break,
+            Some(idx) => candidate = &candidate[..idx],
+        }
+    }
+    None
+}
+
+fn detect_delegated_cgroup_v2_parent() -> Option<String> {
+    detect_delegated_cgroup_v2_parent_from(
+        Path::new(PROC_SELF_CGROUP_PATH),
+        Path::new(SYS_FS_CGROUP_ROOT),
+    )
+}
+
+fn resolve_effective_cgroup_parent(
+    runtime: &str,
+    explicit_cgroup_parent: Option<String>,
+    runtime_info_stdout: &str,
+) -> Option<String> {
+    if explicit_cgroup_parent.is_some() {
+        return explicit_cgroup_parent;
+    }
+    if runtime != "podman" {
+        return None;
+    }
+    let podman_info = parse_podman_info(runtime_info_stdout);
+    if !podman_info.is_local_rootless_cgroupfs_v2() {
+        return None;
+    }
+    detect_delegated_cgroup_v2_parent()
+}
+
 #[allow(clippy::too_many_arguments)]
 fn build_docker_spec(
     runtime: &str,
@@ -1655,6 +2003,7 @@ fn build_docker_spec(
     base_branch: &str,
     memory: &str,
     cpus: &str,
+    cgroup_parent: Option<&str>,
     task_id: Option<&str>,
     inherit_env: bool,
     local_only: bool,
@@ -1699,6 +2048,13 @@ fn build_docker_spec(
         memory.to_string(),
         "--cpus".to_string(),
         cpus.to_string(),
+    ];
+    if let Some(cgroup_parent) = cgroup_parent {
+        let validated = validate_cgroup_parent(cgroup_parent)?;
+        args.push("--cgroup-parent".to_string());
+        args.push(validated);
+    }
+    args.extend([
         "--tmpfs".to_string(),
         "/tmp:rw,noexec,nosuid,size=256m".to_string(),
         "-e".to_string(),
@@ -1729,7 +2085,7 @@ fn build_docker_spec(
         format!("{decapod_dir_str}:{decapod_dir_str}"),
         "-w".to_string(),
         workspace_str.to_string(),
-    ];
+    ]);
 
     // Host-root runtime lookups must still see the branch's generated state.
     // This aliases the workspace volume, never the host's tracked specs.
@@ -1816,12 +2172,81 @@ fn build_docker_spec(
 fn inherited_env_vars() -> BTreeMap<String, String> {
     let mut vars = BTreeMap::new();
     for (k, v) in std::env::vars() {
-        if k == "PATH" || k.starts_with("BASH_FUNC_") {
+        if k == "PATH"
+            || k.starts_with("BASH_FUNC_")
+            || crate::core::container_signer::is_secret_env_key(&k)
+        {
             continue;
         }
         vars.insert(k, v);
     }
     vars
+}
+
+fn prepare_container_signer_server(
+    repo_root: &Path,
+    agent: &str,
+    spec: &mut DockerSpec,
+) -> Result<Option<crate::core::container_signer::HostContainerSignerServer>, error::DecapodError> {
+    let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root) else {
+        return Ok(None);
+    };
+    let creds = &config.workspace.credentials;
+    let enabled = creds
+        .propodus_cloud
+        .as_deref()
+        .is_some_and(|v| v == "signer-broker" || v == "propodus-token");
+    if !enabled {
+        return Ok(None);
+    }
+    let origin = crate::core::cloud_client::selected_origin().unwrap_or_default();
+    let repo_id = crate::core::repo_identity::resolve_repository_identity(repo_root)
+        .map(|id| id.canonical_name)
+        .unwrap_or_default();
+    if origin.is_empty() || repo_id.is_empty() {
+        return Ok(None);
+    }
+    let key_store =
+        crate::core::cloud_dpop::DeviceKeyStore::for_project(&origin, &repo_id, repo_root)?;
+    let sock_name = format!(
+        "signer-{}.sock",
+        crate::core::ulid::new_ulid().to_lowercase()
+    );
+    let data_dir = repo_root.join(".decapod/data");
+    let sock_path = if data_dir.is_dir() {
+        crate::core::local_socket::path(&data_dir, &sock_name)
+            .map_err(error::DecapodError::IoError)?
+    } else {
+        std::env::temp_dir()
+            .join("decapod-container-signer")
+            .join(&sock_name)
+    };
+    let policy = crate::core::container_signer::ContainerSignerPolicy {
+        allowed_repository: repo_id.clone(),
+        allowed_origin: origin,
+        allowed_agent_id: agent.to_string(),
+        credentials: creds.clone(),
+        session_expires_at: 0,
+        revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        device_key_store: Some(key_store),
+        access_token_digest: None,
+    };
+    let server =
+        crate::core::container_signer::HostContainerSignerServer::bind(&sock_path, policy)?;
+    let sock_str = server.socket_path().to_string_lossy().to_string();
+    let insert_idx = spec.args.len().saturating_sub(3);
+    spec.args.splice(
+        insert_idx..insert_idx,
+        [
+            "-v".to_string(),
+            format!("{sock_str}:{sock_str}"),
+            "-e".to_string(),
+            format!("DECAPOD_CONTAINER_SIGNER_SOCKET={sock_str}"),
+            "-e".to_string(),
+            format!("DECAPOD_CONTAINER_SIGNER_REPO={repo_id}"),
+        ],
+    );
+    Ok(Some(server))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1914,8 +2339,9 @@ pub fn schema() -> serde_json::Value {
         "version": "0.2.0",
         "description": "Ephemeral containerized agent execution with isolated local clone workspaces and host-branch foldback",
         "commands": [
-            { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "repo", "keep_worktree", "inherit_env", "local_only"] }
+            { "name": "run", "parameters": ["agent", "cmd", "branch", "task_id", "push", "pr", "pr_base", "pr_title", "pr_body", "image_profile", "image", "timeout_seconds", "memory", "cpus", "cgroup_parent", "repo", "keep_worktree", "inherit_env", "local_only"] }
         ],
+        "cgroup_parent_env": CONTAINER_CGROUP_PARENT_ENV,
         "profiles": {
             "debian-slim": "rust:1.96.1",
             "alpine": "local build from .decapod/managed/Dockerfile.decapod (Decapod workspace seed + detected project dependencies + current decapod binary)"

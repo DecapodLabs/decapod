@@ -2,6 +2,10 @@
 //! service. The external fixture owner creates and destroys a disposable
 //! database/namespace, provisions policy, and checks the event ledger. This
 //! test never treats the local HTTP fixture as PostgreSQL proof.
+//!
+//! The legacy fixture cannot bind the managed CLI route or private custody.
+//! Explicit profile selection fails before fixture reads, CLI or network I/O;
+//! the real-service assertions remain for a separately reviewed fixture update.
 #![cfg(feature = "supabase-cloud")]
 
 use serde::Deserialize;
@@ -9,6 +13,12 @@ use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 use tempfile::TempDir;
+
+fn require_managed_cli_fixture() -> Result<(), &'static str> {
+    Err(
+        "MANAGED_CLI_FIXTURE_UNAVAILABLE: legacy endpoint/token environment fixtures cannot bind the managed CLI origin or private custody; unavailable is not a pass",
+    )
+}
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -89,6 +99,7 @@ fn project(repository: &str) -> TempDir {
 }
 
 fn cli(fixture: &Fixture, root: &Path, actor: &str, token: &str, args: &[&str]) -> Command {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     let mut command = Command::new(
         std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod"))
             .expect("resolve decapod binary before changing working directory"),
@@ -155,6 +166,7 @@ fn rejected_transition(fixture: &Fixture, root: &Path, actor: &str, token: &str,
 }
 
 fn run(profile: &str) {
+    require_managed_cli_fixture().expect("protected production-command proof is unavailable");
     let path = std::env::var_os("DECAPOD_SUPABASE_FIXTURE").expect(
         "DECAPOD_SUPABASE_FIXTURE must name a protected fixture file; unavailable is not a pass",
     );
@@ -342,8 +354,26 @@ fn run(profile: &str) {
             (first.path(), "proof-one", one),
         )
     };
-    // Repository access does not grant ownership of another principal's claim.
+    // A different authenticated principal cannot release or complete a task
+    // merely by copying its current agent label. Role assignment is service-
+    // resolved; DECAPOD_AGENT_ID is never an authorization credential.
     for operation in ["release", "done"] {
+        let spoofed = cli(
+            &fixture,
+            other_root,
+            actor,
+            other_token,
+            &[operation, "--id", id],
+        )
+        .output()
+        .unwrap();
+        assert_safe(&spoofed, &fixture);
+        assert!(
+            !spoofed.status.success(),
+            "a copied agent label must not transfer authenticated task custody"
+        );
+        assert_no_fallback(other_root);
+        // The original cross-agent claim remains forbidden too.
         rejected_transition(
             &fixture,
             other_root,
@@ -496,13 +526,228 @@ fn run(profile: &str) {
 }
 
 #[test]
-#[ignore = "requires authenticated disposable PostgreSQL service fixture and external cleanup"]
+#[ignore = "unavailable until the protected fixture binds the managed CLI; real PostgreSQL acceptance remains required"]
 fn local_postgres_service_contract() {
     run("local-postgres");
 }
 
 #[test]
-#[ignore = "requires protected opt-in hosted Supabase fixture and external disposable-data cleanup"]
+#[ignore = "unavailable until the protected fixture binds the managed CLI; hosted acceptance remains required"]
 fn protected_hosted_supabase_service_contract() {
     run("hosted-supabase");
+}
+
+#[test]
+#[should_panic(expected = "MANAGED_CLI_FIXTURE_UNAVAILABLE")]
+fn legacy_cli_profile_fails_before_fixture_or_network_access() {
+    run("local-postgres");
+}
+
+#[path = "common/cloud_managed.rs"]
+mod managed;
+
+/// Separate from the legacy gateway profile: the external owner provisions
+/// real managed account rows, paid assignments and a native PostgREST boundary.
+/// OAuth/session issuance remains modeled and no hosted proof is implied.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ManagedProjectFixture {
+    profile: String,
+    endpoint: String,
+    repository: String,
+    project_name: String,
+    allowed_tokens: [String; 2],
+    disposable: bool,
+    client_root: PathBuf,
+    receipt_path: PathBuf,
+}
+
+fn managed_project_fixture() -> ManagedProjectFixture {
+    let path=std::env::var("DECAPOD_NATIVE_PROJECT_FIXTURE").expect("UNAVAILABLE: a disposable native managed-project fixture is required; unavailable is not a pass");
+    let path = Path::new(&path);
+    let size = std::fs::metadata(path)
+        .expect("native project fixture metadata")
+        .len();
+    assert!(size <= 1024 * 1024, "native fixture exceeds its byte bound");
+    let fixture: ManagedProjectFixture =
+        serde_json::from_slice(&std::fs::read(path).unwrap()).expect("native fixture contract");
+    assert_eq!(fixture.profile, "local-native-projects-v1");
+    assert!(fixture.disposable, "native proof requires disposable state");
+    assert!(
+        fixture.endpoint.starts_with("http://127.0.0.1:")
+            || fixture.endpoint.starts_with("http://[::1]:"),
+        "this profile is confined to literal loopback services"
+    );
+    dactyl_db::CloudConnector::validate_origin(&fixture.endpoint).unwrap();
+    assert!(fixture.client_root.is_absolute() && fixture.client_root.is_dir());
+    assert!(fixture.receipt_path.is_absolute());
+    assert!(
+        fixture
+            .allowed_tokens
+            .iter()
+            .all(|s| !s.is_empty() && s.len() <= 16384)
+    );
+    assert!(
+        fixture.project_name.len() <= 800 && !fixture.project_name.chars().any(char::is_control)
+    );
+    fixture
+}
+
+fn managed_client(f: &ManagedProjectFixture, index: usize, args: &[&str]) -> Output {
+    let root = f.client_root.join(format!("client-{index}"));
+    let machine = f.client_root.join(format!("machine-{index}"));
+    let out = Command::new(std::fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).unwrap())
+        .args(args)
+        .current_dir(root)
+        .env("HOME", &machine)
+        .env("XDG_CONFIG_HOME", machine.join("config"))
+        .env("XDG_DATA_HOME", machine.join("data"))
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", &f.endpoint)
+        .env("DECAPOD_TEST_MODE", "1")
+        .env("DECAPOD_AGENT_ID", format!("native-managed-client-{index}"))
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .env_remove("DECAPOD_MANAGED_TEST_SEED")
+        .stdin(std::process::Stdio::null())
+        .output()
+        .unwrap();
+    for token in &f.allowed_tokens {
+        assert!(
+            !String::from_utf8_lossy(&out.stdout).contains(token),
+            "native CLI stdout leaked a managed credential"
+        );
+        assert!(
+            !String::from_utf8_lossy(&out.stderr).contains(token),
+            "native CLI stderr leaked a managed credential"
+        );
+    }
+    for path in [".decapod/data/decapod.db", ".decapod/data/todo.db"] {
+        assert!(
+            !f.client_root
+                .join(format!("client-{index}"))
+                .join(path)
+                .exists(),
+            "native client created local fallback state"
+        );
+    }
+    out
+}
+
+fn native_success(output: Output) -> Output {
+    assert!(
+        output.status.success(),
+        "native CLI failed: {}{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    output
+}
+
+#[test]
+#[ignore = "requires an independently provisioned disposable PostgreSQL/PostgREST native project fixture"]
+fn local_native_managed_project_contract() {
+    let fixture = managed_project_fixture();
+    for index in 0..2 {
+        let root = fixture.client_root.join(format!("client-{index}"));
+        let machine = fixture.client_root.join(format!("machine-{index}"));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::create_dir_all(&machine).unwrap();
+        let remote = format!("https://github.com/{}.git", fixture.repository);
+        for args in [
+            vec!["init", "--quiet"],
+            vec!["remote", "add", "origin", &remote],
+        ] {
+            let result = Command::new("git")
+                .args(args)
+                .current_dir(&root)
+                .output()
+                .unwrap();
+            assert!(result.status.success());
+        }
+        native_success(managed_client(
+            &fixture,
+            index,
+            &["init", "--proof", "--backend", "cloud"],
+        ));
+        managed::seed_ready(
+            &root,
+            &machine,
+            &fixture.endpoint,
+            &fixture.repository,
+            decapod::core::cloud_session::Session {
+                access_token: fixture.allowed_tokens[index].clone(),
+                refresh_token: None,
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            },
+        );
+        let unbound = managed_client(&fixture, index, &["todo", "list", "--format", "json"]);
+        assert!(
+            !unbound.status.success(),
+            "unbound Git label unexpectedly selected the native account project"
+        );
+        let directory = native_success(managed_client(&fixture, index, &["cloud", "projects"]));
+        assert!(String::from_utf8_lossy(&directory.stdout).contains(&fixture.project_name));
+        native_success(managed_client(
+            &fixture,
+            index,
+            &["cloud", "project", "use", &fixture.project_name],
+        ));
+    }
+    let created = native_success(managed_client(
+        &fixture,
+        0,
+        &[
+            "todo",
+            "add",
+            "Native managed project shared task",
+            "--format",
+            "json",
+        ],
+    ));
+    let value: Value = serde_json::from_slice(&created.stdout).expect("native task receipt");
+    let task = value
+        .get("id")
+        .and_then(Value::as_str)
+        .or_else(|| {
+            value
+                .get("task")
+                .and_then(|t| t.get("id"))
+                .and_then(Value::as_str)
+        })
+        .expect("native task identifier");
+    let listed = native_success(managed_client(
+        &fixture,
+        1,
+        &["todo", "list", "--format", "json"],
+    ));
+    assert!(
+        String::from_utf8_lossy(&listed.stdout).contains(task),
+        "second managed account did not observe the first account's native write"
+    );
+    let receipt = json!({"profile":"local-native-projects-v1","task_id":task,"status":"shared_native_write_observed","clients":2});
+    decapod::core::atomic::write_atomic(
+        &fixture.receipt_path,
+        &serde_json::to_vec(&receipt).unwrap(),
+    )
+    .unwrap();
+}
+
+#[test]
+#[ignore = "external fixture owner must first revoke the second account after the shared native phase"]
+fn local_native_managed_project_revocation() {
+    let fixture = managed_project_fixture();
+    let denied = managed_client(&fixture, 1, &["todo", "list", "--format", "json"]);
+    assert!(
+        !denied.status.success(),
+        "revoked managed account retained native access"
+    );
+    assert!(
+        String::from_utf8_lossy(&denied.stdout).contains("action_required")
+            || String::from_utf8_lossy(&denied.stderr).contains("selected cloud project"),
+        "revocation did not surface current project denial"
+    );
+    native_success(managed_client(
+        &fixture,
+        0,
+        &["todo", "list", "--format", "json"],
+    ));
 }

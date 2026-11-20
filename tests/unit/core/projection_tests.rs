@@ -159,9 +159,15 @@ fn validation_projection_never_turns_stale_or_unknown_into_ready() {
     });
     let proj = project_validation_report(&pass_report);
     assert_eq!(proj.status, "pass");
-    assert!(proj.publication_ready);
+    assert!(!proj.publication_ready);
     assert!(!proj.stale);
-    assert_eq!(proj.proof_judgment.as_deref(), Some("proven"));
+    assert_eq!(proj.proof_judgment.as_deref(), Some("not_proven"));
+    assert!(
+        proj.proof_reason
+            .as_deref()
+            .unwrap()
+            .contains("canonical validation")
+    );
     assert_eq!(proj.candidate.as_deref(), Some("abc123abc123"));
     assert_eq!(proj.epoch_id.as_deref(), Some("epoch-1"));
 

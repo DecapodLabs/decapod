@@ -25,10 +25,20 @@ nonempty set of unique `proof.commands` with `required = true`, and an explicit
   passed or skipped check. When every discovered workflow is `ci_only`, the
   required local commands still execute normally as the repository's local
   build/test contract.
-- `executions`: a table keyed by each required command name, containing `program`
-  (absolute canonical installed executable), `toolchain_files` (nonempty map of
-  labels to absolute canonical tool/runtime files), `environment` (explicit map),
-  `directory` (repository-relative, default `.`), and `timeout_seconds` (1–7200)
+- `executions`: a table keyed by each required command name, containing either
+  single-platform `program` (absolute canonical installed executable) and
+  `toolchain_files` (nonempty map of labels to absolute canonical tool/runtime
+  files), or a per-platform `platforms` table keyed by explicit canonical
+  platform keys (`linux-x86_64`, `linux-aarch64`, `macos-x86_64`,
+  `macos-aarch64`) where each platform entry provides its own `program` and
+  nonempty `toolchain_files` (mutually exclusive with top-level `program` and
+  `toolchain_files`), together with `environment` (explicit map), `directory`
+  (repository-relative, default `.`), and `timeout_seconds` (1–7200). Every
+  declared platform alternative is pinned by `reviewed_commands_digest` and
+  preserved across accepted targets (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`); at
+  execution time the host selects and byte-measures only the current host's
+  reviewed platform entry, failing closed if that platform is missing or
+  unsupported.
 
 `proof.required_profile.reviewed_sources_digest` separately pins the full
 workflow/action/helper/build inventory. `init` and `rpc --op agent.init` report
@@ -46,6 +56,18 @@ agent-writable mutation operation that updates coverage or digests; `init` and
 `agent.init` only report them as read-only review aids. This manual
 reconciliation path is an explicit, separate limitation of the profile (#1531),
 not a gap agents can close through any RPC op.
+
+Review digests establish internal content consistency. Once the accepted target
+has a repository-local contract, the candidate must preserve its required command
+names, programs, arguments, measured-tool declarations, environment, directory,
+timeouts and workflow coverage. Additional required checks are allowed. Replacing
+or removing accepted checks, converting their coverage to CI-only, or changing
+profiles returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` before execution selection.
+Editing and repinning candidate configuration cannot authorize that transition.
+Replacement policy must first be independently accepted on the target through
+repository-maintainer authority. There is no agent-side waiver or automatic
+policy migration. First adoption still requires explicit operator review; a
+matching digest does not authenticate that reviewer.
 
 `proof.commands[].command` names the declared executable (or uses its absolute
 path); `args` remain separate literal arguments. Runtime resolves no YAML, shell
@@ -163,161 +185,107 @@ bounded by the declared requirements and checks. A subsequent readiness decision
 can evaluate that result; the agent publishes through the applicable gate and
 the human retains merge authority. This principle adds no unimplemented guarantee.
 
-## Optional vega post-validation assessment
+## Optional Laya post-validation assessment
 
-Vega runs only after the complete deterministic proof profile passes. Failed, missing or stale required validation returns before model inference and blocks PR readiness directly. Vega cannot supply proof, waive checks, alter policy or publish. The agent creates the PR through the existing gate; the human merges. Active Jev integration is removed; historical observations remain readable without governing work. Selecting Vega during init does not add this repository's scientific model-verification corpus or Metal development recipe to other projects.
+```toml
+[laya]
+mode = "disabled" # default; no model/runtime needed
+```
 
-`init --vega-decisions[=true|false]` and `init with --vega-decisions[=true|false]`
-select required or disabled Vega assessment. Interactive init offers the same
-choice. Refresh preserves the existing choice and installation pins unless
-explicitly changed. Selection installs no model and executes no inference.
+Explicit opt-in uses `mode = "required"` and the reviewed `model_manifest_digest`
+printed by `decapod setup laya`. Init can select that reviewed digest without
+installing or executing a model. Omitted options preserve current Laya policy,
+backend preference, CPU fallback and local binding settings. Dry-run is read-only.
 
-Init refresh retires only a recognized `[decision].provider = "none" | "jev"`
-selector, removes an empty retired section, and preserves unrelated authored
-settings, including extension keys in that section. Unknown or malformed provider
-selectors stop refresh without rewriting the configuration. Dry-run remains read-only.
+### Diagnostic gate overrides and full readiness
 
-By default `[vega]` is disabled. Required mode additionally needs a positive
-singleton yes, no abstention or unbound/OOD signal, and unchanged exact validated
-material, intent, proof, configuration and model/runtime pins. Negative singleton
-rejects; ambiguous/missing sets, invalid numerical output and unavailable runtime
-abstain. Upstream confidence and conformal settings are not established
-code-readiness risk guarantees.
-The bounded `validation-results.v3` input retains declared proof hooks,
-unresolved and deferred questions, contradictions, stop conditions and phase
-gates alongside intent and actual check observations. Gate satisfaction flags
-remain plan declarations, not independent execution proof. Oversized inputs
-are refused without truncating obligations; administrative metadata and raw
-logs are not supplied. The final custody check rejects changed governance.
-Supported `alpha` values are `"0.1"` and `"0.05"`; `risk` values are `"0.05"`,
-`"0.1"` and `"0.2"`. These select pinned upstream calibration entries, not
-readiness-domain guarantees. `[vega].model_manifest_digest` is the shared immutable
-compound model pin. `setup vega --runtime <installed-worker>` explicitly registers
-each maintainer's canonical runtime path and executable hash in private local cache
-metadata. Registration does not build or execute the worker or certify its source.
-The team configuration contains no maintainer-specific path. Legacy explicit
-`[vega.installation]` directory/runtime/manifest/hash bindings remain supported;
-if both forms are present their model identities must agree.
+`DECAPOD_VALIDATE_SKIP_GIT_GATES` and
+`DECAPOD_VALIDATE_SKIP_TOOLING_GATES` are presence-based diagnostic flags.
+`DECAPOD_VALIDATE_SKIP_FINGERPRINT_GATES` uses its existing truth-value parser.
+An active override produces `READINESS_GATE_OVERRIDE_UNSUPPORTED` for full
+validation, supported workspace publication and validated completion, including
+historical completion admission. Remove it and collect fresh applicable proof;
+reusing a cached receipt does not grant the missing authority.
 
-An already-required accepted-target vega policy cannot be disabled, repinned or
-have its calibration settings changed by the candidate it governs. Validation
-rejects that transition before proof execution with `VEGA_ACCEPTED_POLICY_CHANGED`;
-it needs independent acceptance of the policy change. A disabled accepted target
-retains ordinary behavior and may add an explicit required assessment. Setup
-refresh changes the cache only and never silently rewrites publication policy.
+CI-local and project-prerequisite diagnostics keep explicit partial scope and
+cannot authorize publication. Historical observations remain inspectable. Broker
+requests preserve their caller diagnostic scope, and local validated completion
+rejects before broker handoff. An unknown write outcome still requires inspection;
+never replay it merely because an override was removed. Direct unrestricted Git
+and filesystem access remain outside this local operation boundary.
 
-`validation-results.v3` contains actual check outcomes, stage dispositions,
-exclusions, simulated stages, blockers and unresolved trajectory facts, plus
-declared intent, explicit plan obligations and changed paths. Identical semantic observations and
-stage definitions are indexed once. Every check keeps its identity and outcome;
-missing checks remain explicit. Full custody identities bind the complete report
-outside the model prompt. No whole plan, source diff or raw log enters the prompt;
-unrepresented warnings and untested intent remain unknown. The 32 KiB projection
-and 4,096 total-token limits fail closed rather than clipping evidence.
+### Updating an accepted local verification-source inventory
 
-### Explicit installation
+For an already accepted `repo.pr-readiness.v1` contract, candidate review cannot
+replace the accepted source-definition digest. This includes inventoried check
+scripts and build, dependency and provider definitions. A new candidate digest
+for changed definitions returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`; establish
+the intended policy revision on the accepted target before revalidation.
+Additional required commands under the existing inventory remain possible. New
+inventoried check files require the same separate policy transition. First
+adoption remains supported. Normal subject changes still receive fresh checks
+and exact source bindings. Discovery and declared tool closure do not infer the
+semantic or transitive completeness of arbitrary verification commands.
 
-`decapod setup vega` installs verified external model data in a private cache.
-`--check-updates` checks bounded official metadata, `--refresh` explicitly selects
-a compatible new revision, `--offline` verifies cached files without networking,
-and `--rollback <manifest-digest>` atomically activates a verified prior install.
-Use `--cache-directory` to select another private cache. Engine/config/calibration,
-backbone, tokenizer and source/license identities have independent immutable pins.
-Unchanged backbone components are reused by content hash without another download.
-Each immutable installation receives a separately verified private copy, requiring
-additional disk space while retaining the single-link storage safety contract.
-Incomplete or cancelled copies never activate an installation. Unsupported architecture,
-quantization, tokenizer or adapter changes fail compatibility checks. A changed
-upstream source revision is surfaced for review, never substituted as runtime code.
+## Offline canonical local Git targets
 
-Setup prints disabled portable TOML with the verified compound model digest.
-It does not pretend to install a native executable. The Rust worker is built from
-`assets/tools/vega-native/Cargo.toml`. A source-install command from
-a reviewed release is `cargo install --path assets/tools/vega-native --locked`.
-Repository development builds/tests remain owned by ordinary governed validation.
-Run the worker's `--probe` to require a genuine finite Metal numerical result.
-Register the installed worker with `decapod setup vega --offline --runtime <canonical-worker-path>`.
-Apply the shared `model_manifest_digest` from setup and explicitly choose
-`[vega] mode = "required"`, or select `--vega-decisions` during init. Each maintainer
-performs local setup; validation freezes that binding before proof and rechecks it
-before inference and publication. Missing, replaced or malformed local metadata
-cannot authorize readiness. Runtime bytes and model files are reverified locally.
-Runtime digests use `sha256:<64 lowercase hex>`.
+For a solo local repository, an operator may explicitly accept
+`proof.repository_contract.canonical_local_target = true` together with
+`repo.backend = "local"`, an explicit `repo.base_branch`, the existing
+`repo.pr-readiness.v1` profile and `validation_buildkite_preflights = false`.
+Review the complete commands, execution closure and source coverage first;
+`agent.init` reports the new command-contract digest without accepting it.
+The target choice is part of that digest. Commit this reviewed contract on the
+canonical repository's accepted branch **before** creating the worker. A
+candidate-only flag, repinned digest or changed branch cannot authorize it.
+Absence/false retains the existing GitHub target transport and prior digests.
 
-Runtime never follows a floating active pointer, downloads artifacts or selects a
-different model during fallback. `[vega] backend = "auto"` (the default) prefers
-Metal on macOS and CUDA elsewhere; `metal`, `cuda` and `cpu` explicitly select a
-backend. `cpu_fallback` defaults true. A CUDA-enabled non-Apple worker requires
-its `cuda` Cargo feature and NVIDIA toolchain; ordinary CPU builds need no CUDA
-toolkit. AMD/Intel GPU acceleration is not implemented. These source paths still
-require execution evidence before portability can be claimed.
+Create/claim the task and use `workspace ensure` normally. From its clean,
+checkpointed, committed candidate, the runtime contract is the ordinary command:
 
-A CUDA-linked executable may fail in the OS loader before it can select CPU.
-`setup vega --runtime <gpu-worker> --cpu-runtime <cpu-only-worker>` verifies and
-atomically registers both executable pins in private local metadata. The CPU
-companion uses the same reviewed Rust source with CUDA disabled. Neither path
-belongs in shared project policy; no runtime is built or executed during setup.
+```console
+decapod validate --format json
+decapod qa verify commit <exact-candidate-sha>
+```
 
-After deterministic proof passes, a bounded `--backend-check <metal|cuda>` process
-checks GPU startup and real model-free arithmetic without receiving model paths,
-validation state or an inference request. A typed hardware-unavailable result may
-select CPU. A verified executable reporting an absent ELF interpreter or empty
-loader exit 127 may use only an explicitly pinned CPU companion. Every executable
-pin and the model binding are rechecked before fallback; the overall deadline
-and model/calibration identities stay fixed. Missing companions fail closed.
+The first command runs the real declared checks through the existing sealed
+snapshot runner; the second independently inspects durable canonical history.
+No hosted CI invocation, forge API, model prompt instruction, transport override
+or replacement verifier is needed for this target. The JSON readiness result
+uses `scope=repository_local_git_readiness`, with `ready=true` only when the
+required local proof passes, and outer `publication_ready=false`. The separate
+`workspace publish` boundary rejects this authority before remote mutation.
+Local readiness does not authenticate a forge target or grant a merge right.
 
-Malformed or contradictory capability reports, crashes, timeouts and numerical
-errors fail closed. Once inference starts, only typed hardware unavailability
-without any tokens or outcome permits a fresh CPU attempt. Negative decisions,
-abstention and malformed model results never trigger a retry to seek acceptance.
-Set `cpu_fallback = false` to require the selected accelerator. Receipts distinguish
-capability checks from inference and disclose each runtime digest and actual final
-backend. CPU success never proves Metal ran. These paths need actual native
-execution evidence; authored tests and source inspection do not establish it.
+The identity is bound to the canonical local repository location and Git metadata,
+not a user-authored repository label. The kernel reads that repository's exact
+`refs/heads/<accepted-branch>` with installed Git and disabled ambient redirects,
+replacement objects, transport and hooks. It checks authority and target before
+and after proof, alongside the existing candidate, computed integration,
+requirements, tools and custody bindings. Changing source, accepted target,
+authority or required policy makes old proof inapplicable; historical success is
+preserved. Refresh the workspace's accepted base through governed synchronization
+and revalidate the resulting candidate. A fake success report cannot supply
+missing current canonical proof.
 
-The pinned Candle GPU path captures raw blocks 13/19 and pools
-F32 state/question/option/chunk features. The separate Rust CPU path uses the same
-checkpoint and pooling with CPU attention/recurrence, without a generation API.
-It is not an independently reviewed parity reference. The verified BF16 backbone is
-upcast to F32, increasing weight memory accordingly. Base dynamics run in Rust F32
-on CPU; calibration uses F64 probabilities. This profile has adapters off, no image
-path and fresh recurrent state for every request.
+This first adapter supports a canonical non-bare local checkout and its governed
+Git worktrees/local-clone workspaces. Arbitrary bare upstreams, portable identities
+across moved repositories, isolated execution and authenticated cloud/forge
+acceptance remain unsupported. Local policy, verifier, task state and source
+share the OS user's trust domain: protect the canonical checkout and toolchain;
+hashes/session files are not an independent security boundary. Cloud selection
+never falls back to local proof. An accepted strict source-PR or external proof
+requirement remains required. A reviewed `ci_only` limitation is not execution
+of the external job or equivalent assurance.
 
-### Honest native evidence
-
-Vega supplies a bounded model judgment about validated work, intent and explicit
-obligations. Required mode is active: a current valid affirmative answer satisfies
-the model condition; rejection, abstention, invalid output and execution failure
-prevent readiness. It cannot certify facts omitted from its input or waive proof.
-Domain-level readiness reliability and production-calibrated accuracy remain
-**unestablished**. Upstream confidence/conformal settings are not repository risk
-guarantees. Teams choosing this additional gate must retain the human review and
-deterministic validation authority described above.
-
-On 2026-10-20 the maintainer explicitly replaced this implementation's statistical
-59-acceptance/5%-risk/95%-confidence/50%-coverage prerequisite with functional
-integration acceptance. The old studies and failures remain diagnostic history,
-not a passing original criterion. Fixed functional cases use shared production
-projection, request, response and final predicate on actual Metal and CPU. They
-require meaningful positive acceptance as well as rejection/uncertainty and
-failed/stale/malformed proof controls; collection alone cannot pass the aggregate.
-Following the maintainer's delegated functional interpretation, qualification
-requires genuine approval on each actual backend and every adverse/control case.
-A ready control may validly abstain, but its expected-accept mismatch remains
-reported separately and that assessed work remains blocked. An always-abstaining
-model cannot qualify. This changes no production threshold or publication rule.
-The [completion checklist](../vega-completion-checklist.md) separates these checks
-from unestablished domain accuracy. No inactive/advisory substitute is used.
-
-The private bounded `--proof-output` diagnostic contains exact tokens/spans,
-pooled vectors, engine/calibrated outputs and synchronized timing. Candidate
-`59eaf087` passed 57 native tests and three fixed 138/314/4,096-token Metal/CPU
-comparisons against separate Rust calculations; 4,097 tokens reject. This is
-fixed fresh pure-text evidence with shared authorship/infrastructure, not all-mode
-or independently human-reviewed equivalence. Actual unsupported CUDA followed by
-fresh CPU inference exercised component fallback; NVIDIA hardware and full Linux
-loader-companion routing remain unmeasured. Both backends approved two meaningful
-ready controls; a third validly abstained and missed its expected-accept label.
-The original strict aggregate failed, and domain-level accuracy remains unestablished. See
-[the reference contract](../vega-reference-contract.md) for pins, unchanged
-tolerances, timings/memory scope, historical failures and current-candidate results.
+`tests/entrypoint_correctness.rs::canonical_local_target_cli_readiness_is_source_bound`
+reproduces operator-reviewed acceptance, task claim, governed workspace, actual
+CLI proof, history inspection, unchanged revalidation, and stale/forged-source,
+target-movement, revocation and publication refusals. It uses the actual binary
+without a replacement `Host` or fake command output. Required GitHub execution
+supplies regression evidence; the fixture's own acceptance path invokes no
+hosted provider. Test workers are deterministic, not LLM integration proof.
+The test emits bounded timing and retained-evidence-size observations. No new
+journal/table or duplicate source snapshot store is introduced; existing evidence
+retention and validation history apply. Full ten-worker A–H proof and independent
+remote publication remain separate unresolved requirements.

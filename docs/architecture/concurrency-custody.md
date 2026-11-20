@@ -37,16 +37,33 @@ canonical Git directories, filesystem device/inode and creation time. It is not
 a global cloud identity. No API accepts a caller's `verified=true` assertion.
 
 The existing canonical datastore gains a version-one `authoring_bindings` table,
-keyed by observed checkout identity, with a matching `authoring.bind` event in the existing workspace lifecycle
-stream in its transaction. Admission checks task journal authority without
-creating an uncheckpointed task-event suffix. No second database or lock service is introduced. A live
-binding survives a branch switch and excludes another task, including another
-task held by the same actor. Only durably inactive custody can retire a binding;
-renewed/transferred generations require explicit fresh admission. Observations
-are repeated inside the admission transaction and at governed CLI/RPC authoring
-entrypoints. They are cooperative admission checks, not an operating-system
-sandbox against an unrestricted local process or an external Git edit racing
-after the final observation.
+keyed by observed checkout identity (`worktree_id` primary key) and uniquely
+indexed by `task_id` (`idx_authoring_bindings_task_id`), with a matching
+`authoring.bind` / `authoring.renew` / `authoring.release` event in the existing
+workspace lifecycle stream inside dedicated `workspace.authoring.bind` and
+`workspace.authoring.release` broker transactions (`workspace.authoring` risk zone).
+Admission checks task journal authority without creating an uncheckpointed
+task-event suffix. No second database or lock service is introduced. A live
+binding survives a branch switch and excludes another task (`AUTHORING_CHECKOUT_OCCUPIED`),
+including another task held by the same actor, while one active task lease binds at
+most one live registered Git worktree (`AUTHORING_TASK_ALREADY_BOUND`). If a bound
+worktree directory is deleted or unregistered, fresh admission atomically retires
+the missing worktree row and records `replaced_missing_worktree`. Same-owner
+`todo renew` advances an already-admitted binding's `lease_generation` in-transaction,
+whereas `yield`, `release`, `reclaim`, `handoff`, `done`, `archive`, and `workspace prune`
+retire bindings so transferred or reclaimed generations require explicit fresh
+`workspace ensure` admission. Observations are repeated inside the admission
+transaction and at governed CLI/RPC authoring entrypoints (`get_workspace_status`
+fails closed with `can_work=false` whenever custody or datastore evidence is
+missing, stale or occupied). They are cooperative admission checks, not an
+operating-system sandbox against an unrestricted local process or an external
+Git edit racing after the final observation.
+
+Non-Git projects retain bounded prerequisite diagnostics through
+`decapod govern project-check`; the result explicitly has
+`scope=project_prerequisites`, `publication_ready=false`, and no readiness
+judgment. This diagnostic path does not make `workspace status` report
+`can_work=true`. Full `decapod validate` still rejects the non-Git checkout.
 
 Secondary task membership does not imply the primary lease or access to its
 checkout. An explicit secondary task workspace request returns

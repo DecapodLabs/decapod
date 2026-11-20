@@ -106,6 +106,7 @@ fn validation_rejects_verified_without_admissible_evidence() {
     // An entry that is implemented but claims verified with a fabricated test id.
     let mut cap = manifest.capabilities[0].clone();
     cap.id = "rpc:fabricated".to_string();
+    cap.evidence.state = VerificationState::Verified;
     cap.evidence.conformance_test = "some_fake_test".to_string();
     cap.evidence.evidence_ref = Some("nowhere".to_string());
     manifest.capabilities.push(cap);
@@ -120,6 +121,7 @@ fn validation_rejects_verified_without_admissible_evidence() {
     let mut manifest = sample_manifest();
     let mut cap = manifest.capabilities[0].clone();
     cap.id = "rpc:noevidence".to_string();
+    cap.evidence.state = VerificationState::Verified;
     cap.evidence.conformance_test = KNOWN_CONFORMANCE_TESTS[0].to_string();
     cap.evidence.evidence_ref = None;
     manifest.capabilities.push(cap);
@@ -129,6 +131,47 @@ fn validation_rejects_verified_without_admissible_evidence() {
             .iter()
             .any(|v| v.code == "verification_without_evidence_ref")
     );
+}
+
+#[test]
+fn registered_test_names_cannot_authenticate_execution_and_recovery_preserves_coverage() {
+    let baseline = sample_manifest();
+    assert!(
+        baseline
+            .capabilities
+            .iter()
+            .all(|cap| { cap.evidence.state == VerificationState::NotRun })
+    );
+    assert!(baseline.capabilities.iter().any(|cap| {
+        !cap.evidence.conformance_test.is_empty() && cap.evidence.evidence_ref.is_some()
+    }));
+    for test in KNOWN_CONFORMANCE_TESTS {
+        for state in [VerificationState::Verified, VerificationState::Failed] {
+            for reference in [
+                "tests/interop_conformance.rs::discovery_and_negotiation",
+                "https://executor.invalid/current-green-run",
+                "sha256:abc",
+            ] {
+                let mut declared = baseline.clone();
+                let evidence = &mut declared.capabilities[0].evidence;
+                evidence.conformance_test = (*test).into();
+                evidence.evidence_ref = Some(reference.into());
+                evidence.state = state;
+                let violations = validate_manifest(&declared).unwrap_err();
+                assert!(
+                    violations
+                        .iter()
+                        .any(|v| v.code == "unobserved_conformance")
+                );
+                // Correcting an unsupported assertion does not delete the
+                // source coverage or require permission to negotiate.
+                declared.capabilities[0].evidence.state = VerificationState::NotRun;
+                assert!(validate_manifest(&declared).is_ok());
+                assert!(negotiate(&declared, &NegotiationRequest::default()).is_ok());
+                assert_eq!(declared.capabilities[0].evidence.conformance_test, *test);
+            }
+        }
+    }
 }
 
 #[test]

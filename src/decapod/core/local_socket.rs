@@ -190,7 +190,22 @@ mod tests {
         assert!(socket.exists(), "old owner removed replacement endpoint");
         drop(listener);
         drop(replacement);
-        remove_stale(&socket).unwrap();
+        // Parallel test processes can briefly retain a listener descriptor
+        // between fork and exec. Keep the live-peer refusal intact and wait
+        // only for that bounded kernel teardown before requiring stale cleanup.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        loop {
+            match remove_stale(&socket) {
+                Ok(()) => break,
+                Err(error)
+                    if error.kind() == io::ErrorKind::AddrInUse
+                        && std::time::Instant::now() < deadline =>
+                {
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+                Err(error) => panic!("closed fixture socket could not be cleaned: {error}"),
+            }
+        }
         assert!(!socket.exists());
         let alias = root.path().join("alias");
         std::os::unix::fs::symlink(&data, &alias).unwrap();

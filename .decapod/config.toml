@@ -12,6 +12,7 @@ entrypoints = [
 ]
 
 [repo]
+_allow_entrypoint_version_drift = true
 product_name = "decapod"
 product_summary = "Decapod is the daemonless, local-first governance kernel behind AI coding agents. Agents call it on demand to converge on human intent, shape context before inference, enforce boundaries, and deliver proof-backed completion across concurrent multi-agent work."
 architecture_direction = "cli"
@@ -57,33 +58,26 @@ expected_exit_code = 0
 protected_paths = []
 approval_categories = ["destructive_operations"]
 
+# Exceptional operations are denied unless explicitly granted here.
+# Actor labels are cooperative; protect this policy with human code review.
+[governance.rbac]
+journal_repair_roles = ["maintainer"]
+validation_bypass_roles = []
+
+[governance.rbac.actor_roles]
+operator = ["maintainer"]
+
+# Laya is strictly opt-in. Only 'required' runs post-proof inference.
+[laya]
+mode = "disabled"
+
 [proof]
 validation_buildkite_preflights = true
 commands = []
 
-[proof.rust_workers]
-reviewed_recipes_digest = "sha256:d6d9c7ff0ea68ac067f2c25e5c3544407d9ed00a63d021330061e47244cfe1c1"
-
-[[proof.rust_workers.workers]]
-name = "vega-native"
-manifest = "assets/tools/vega-native/Cargo.toml"
-features = []
-metal_toolchain = true
-timeout_seconds = 1800
-runs = [
-    { arguments = ["--collect-scientific-numerics"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "0"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "1"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "2"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "3"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "4"], proof_output = true },
-    { arguments = ["--collect-readiness-shard", "--index", "5"], proof_output = true },
-    { arguments = ["--verify-scientific-collection"], proof_output = true },
-]
-
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:8dc6026340b2de93c57224647e43f900e04fda0e8eff166cdc38d212b38ff42f"
+reviewed_sources_digest = "sha256:35d28c6858a245822d6d893e5dc658b5f3bcf47485f2601c4f019d756c82502f"
 
 [custody]
 isolation = "container"
