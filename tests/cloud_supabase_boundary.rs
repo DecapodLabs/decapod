@@ -310,6 +310,10 @@ mod enabled {
                     is_reconciliation
                         || (path == "/query" && is_query)
                         || (path == "/batch" && is_batch)
+                        || (path == "/account-status"
+                            && headers.starts_with(
+                                "post /functions/v1/decapod-onboarding/account-status "
+                            ))
                 );
                 assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
                 assert!(!headers.contains("ambient-token-must-not-be-forwarded"));
@@ -414,6 +418,61 @@ mod enabled {
         assert!(!diagnostic.contains("private database details"));
         assert!(!diagnostic.contains("Supabase command fixture"));
         assert_no_fallback(root);
+    }
+
+    #[test]
+    fn live_cloud_status_reads_only_the_authenticated_spend_summary() {
+        let root = project();
+        let machine = TempDir::new().unwrap();
+        let (origin, request) = request_server("/account-status", 200, |_| {
+            json!({"version":1,"backend_authorized":true,"resource_limits":{
+                "window_month":"2026-11","paid_overages":{"opted_in":true,
+                "monthly_spend_cap_cents":100,"spent_cents":80,"remaining_spend_cents":20,
+                "status":"warning"},"metrics":[]
+            }})
+        });
+        managed::seed_ready(
+            root.path(),
+            machine.path(),
+            &origin,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: managed::ACCESS.into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            },
+        );
+        let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["cloud", "--format", "json", "status", "--live"])
+            .current_dir(root.path())
+            .env("HOME", machine.path())
+            .env("XDG_DATA_HOME", machine.path().join("data"))
+            .env("XDG_CONFIG_HOME", machine.path().join("config"))
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", origin)
+            .env_remove("DECAPOD_CLOUD_AUTH_SCHEME")
+            .env_remove("DECAPOD_CONTAINER_SIGNER_SOCKET")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(value["server_readiness"], "not_checked");
+        assert_eq!(
+            value["resource_limits"]["paid_overages"]["status"],
+            "warning"
+        );
+        assert!(!value.to_string().contains(managed::ACCESS));
+        assert_eq!(
+            request.join().unwrap(),
+            json!({
+                "version":1,"project_id":"example/supabase-proof","operation":"resource_limits"
+            })
+        );
+        assert_no_fallback(root.path());
     }
 
     #[test]

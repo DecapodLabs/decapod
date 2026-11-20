@@ -422,6 +422,18 @@ real PostgreSQL, hosted account enforcement, or full remote governance proof.
 
 ## Agent delegation and cloud authorization interface
 
+Cloud client diagnostics preserve `quota_exceeded`, `overage_cap_exhausted`,
+and `provider_disabled` as separate JSON statuses. Cloud task operations
+classify these service policy denials as non-retryable. The user can review
+quota and spend-cap policy with a billing administrator or choose an enabled
+sign-in provider. The service continues to decide whether an operation is
+admitted.
+
+`decapod cloud status --live --format json` uses the current repository-bound
+managed session and the service's read-only account resource-limit operation.
+It reports the service summary after project selection. Ordinary `cloud status`
+continues to read the local session only.
+
 Decapod is invoked by each contributor's coding agent in the repository.
 Local `DECAPOD_AGENT_ID` labels and `[governance.rbac]` describe cooperative
 identity and exceptional local grants only. Cloud `todo` calls use a
@@ -1539,7 +1551,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882`
+- Repository signal fingerprint: `25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

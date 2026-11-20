@@ -224,6 +224,9 @@ pub fn failure_kind(error: &DecapodError) -> FailureKind {
             | CloudAuthStatus::RepositoryDenied
             | CloudAuthStatus::EntitlementDenied
             | CloudAuthStatus::PaymentPending
+            | CloudAuthStatus::QuotaExceeded
+            | CloudAuthStatus::OverageCapExhausted
+            | CloudAuthStatus::ProviderDisabled
             | CloudAuthStatus::ActionRequired => FailureKind::Authorization,
             CloudAuthStatus::Revoked
             | CloudAuthStatus::DeviceRevoked
@@ -262,6 +265,12 @@ pub fn anyhow_failure(error: &anyhow::Error) -> (Outcome, FailureKind) {
 
 fn dactyl_failure_kind(error: &dactyl_db::DactylError) -> FailureKind {
     use dactyl_db::AdapterErrorKind as K;
+    if matches!(
+        error.adapter_code(),
+        Some("quota_exceeded" | "overage_cap_exhausted" | "provider_disabled")
+    ) {
+        return FailureKind::Authorization;
+    }
     match error.adapter_kind() {
         Some(K::Authentication) => FailureKind::Authentication,
         Some(K::Authorization) => FailureKind::Authorization,

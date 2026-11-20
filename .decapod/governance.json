@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
+    "accepted_commit": "ba21c8f161f0be2716c76cb76aa035cc0312971c",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -12,6 +12,14 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "claim:accepted-behavior-controls": {
+        "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
+        "status": "open"
+      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -88,6 +96,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:canonical-scope-projection": {
+        "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/scope.rs"
+        ],
+        "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
+        "status": "open"
       },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
@@ -300,6 +316,14 @@
         "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
         "status": "open"
       },
+      "claim:owned-native-path-authority": {
+        "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/path.rs"
+        ],
+        "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
+        "status": "open"
+      },
       "claim:pr1609-governed-publication": {
         "falsifier": "Any authored commit lacks a staged-material checkpoint, governance artifact, or required generated projection; exact-candidate validation fails",
         "proof_refs": [
@@ -369,6 +393,22 @@
         "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
         "status": "open"
       },
+      "claim:recorded-blocker-parity": {
+        "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
+        "proof_refs": [
+          "tests/unit/plan_governance_tests.rs"
+        ],
+        "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
+        "status": "open"
+      },
+      "claim:recorded-instruction-lineage": {
+        "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
+        "proof_refs": [
+          "tests/infer_precision.rs"
+        ],
+        "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
+        "status": "open"
+      },
       "claim:recovery-workspace-artifact-lookup": {
         "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
         "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
@@ -425,6 +465,14 @@
           "src/decapod/core/validation_runtime/snapshot/source_import.rs"
         ],
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+        "status": "open"
+      },
+      "claim:selected-root-and-relation-conservation": {
+        "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
+        "proof_refs": [
+          "src/decapod/core/intent_reconcile/selected.rs"
+        ],
+        "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
         "status": "open"
       },
       "claim:strict-protocol-rollout": {
@@ -774,176 +822,46 @@
     }
   },
   "change": {
-    "id": "change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-    "base_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
+    "id": "change_01M7XKSE571FTZ40TSVA5TC3JZ",
+    "base_commit": "ba21c8f161f0be2716c76cb76aa035cc0312971c",
     "target_base": "origin/master"
   },
   "claims": {
-    "accepted-behavior-controls": {
-      "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
-      "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
-      "status": "open",
+    "quota-diagnostics": {
+      "statement": "The CLI identifies cloud policy denials and reads the live spend summary using a scoped managed session.",
+      "falsifier": "Quota is treated as retryable or live status leaks a bearer, starts a sign-in, or falls back to local storage.",
+      "status": "supported",
       "proof_refs": [
-        "tests/consumer_readiness.rs"
-      ]
-    },
-    "canonical-scope-projection": {
-      "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
-      "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/trajectory/scope.rs"
-      ]
-    },
-    "owned-native-path-authority": {
-      "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
-      "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/trajectory/path.rs"
-      ]
-    },
-    "recorded-blocker-parity": {
-      "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
-      "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
-      "status": "open",
-      "proof_refs": [
-        "tests/unit/plan_governance_tests.rs"
-      ]
-    },
-    "recorded-instruction-lineage": {
-      "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
-      "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
-      "status": "open",
-      "proof_refs": [
-        "tests/infer_precision.rs"
-      ]
-    },
-    "selected-root-and-relation-conservation": {
-      "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
-      "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
-      "status": "open",
-      "proof_refs": [
-        "src/decapod/core/intent_reconcile/selected.rs"
-      ]
-    }
-  },
-  "resolutions": {
-    "history-recovery:1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8": {
-      "obligation_digest": "sha256:a97ee6af7c540f72d1231c179a9d003d09e453add5986d2dd30fd433a271378c",
-      "resolution": "Reviewed implementation and authored documentation were reauthored in fresh task feat_01m7pqj9rg9p2w2p against independently captured34f837d4. Original source, PR1766 and failed history remain preserved. This disposes the current recovery workflow only: old historical proof remains not_proven, no exception or merge is authorized, and the new exact candidate still requires complete native/CI and acceptance evidence.",
-      "proof_refs": [
-        "git:1d5b9e59cd357fc75c25ecacf3d5167d5c46eee8",
-        "git:8ac775e0"
+        "One unit test and two cloud CLI fixture tests passed."
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "reauthor-contracts-with-present-history-observation",
-      "summary": "Reauthor66 reviewed material paths from immutable1d5b9e59 against accepted34f837d4; preserve PR1766, original commits/0f2e520d, active old journal and actual20-finding assessment in native recovery record. New current task/plan and falsifiable claims; no past proof, exception, admission or merge is granted. Native source verification and actual candidate tests remain required.",
-      "input_digest": "sha256:da26c698ca1998a2425cabd83bdb2129700b417dc4a89eb051b1a557ed57f860"
-    },
-    {
-      "id": "preserve-history-disposition-and-current-proof-obligations",
-      "summary": "Separately dispose archived present-time history observation after authentic source8ac775e0 checkpoint. Original1d5b9e59 history remains not_proven and preserved; no exception/retroactive proof. This exact new workstream still requires complete native validation and current acceptance; native first-commit history verifier passed only its narrow checkpoint scope.",
-      "input_digest": "sha256:796bea89e7490af2b363e2ad96712e520e70aebec8de45ebda388b7bc35b653d"
-    },
-    {
-      "id": "contracts-integrate-accepted-352d",
-      "summary": "Integrate accepted interop conformance and v0.148.11; preserve complete active journal and accepted parent, align cold state descriptors with actual guards, retain required proof graph and reviewed release-only source inventory. Historical a62 proof grants no current admission.",
-      "input_digest": "sha256:5229df747996acfb9fd58cdb6e6f303d9aa6e557280becaa1b3d1477a50244ed"
-    },
-    {
-      "id": "retain-pending-review-through-plan-reset",
-      "summary": "Actual38b eighteen-operation CLI counterexample: pending spec decision refused approval, same-task init erased it, approval and execution then returned0 without decision. Reuse concurrent1764 owner ffbb3375 sticky pending reviews and acceptance invalidation, extend existing regression and lifecycle test; retain one canonical projection and explicit resolve-spec-review remedy. Old38b native collector superseded; no prior green proves this repair, human authentication, source PR admission or merge. Fresh complete native/CI and actual-binary guard-held evidence required.",
-      "input_digest": "sha256:efe6a92d175523fbd8995b8bc83320d6b734bc2d0303950de0e7a434f889886e"
-    },
-    {
-      "id": "integrate-accepted-strict-json-release12",
-      "summary": "Integrate accepted1791 and release7bd0a915 v0.148.12; retain active journal whole and accepted Git merge parent; independent official registry12 projections/spec reviews and105-source review. Only Bazel fixture inclusion and Cargo versions change proof inventory. Preserve actual38b decision counterexample and7b48 guard-held run;7b48 full validation failed on target ancestry. New exact candidate full native/required CI remain necessary; original PR1766 history not waived, no human authentication or merge grant.",
-      "input_digest": "sha256:795da27039b93570134555db017ba07063b616ddc6571c94f1b9b9814fca5be7"
-    },
-    {
-      "id": "reconcile-accepted-1531-contracts",
-      "summary": "Integrate accepted d41056ce with existing instruction, selected work, and observed path contracts. Reuse upstream task-scope parser, retain legacy repair and preserve original history. Official 0.153.1 projections and all living-spec reviews refreshed. GitHub proof will be collected on current candidate and target.",
-      "input_digest": "sha256:1360c7dd4c38d0a2f521bbb102ad161596a8c5333e9cdc80c67145c115d2b5d9"
-    },
-    {
-      "id": "reconcile-accepted-1532-contracts",
-      "summary": "Carry accepted v0.153.2 through exact governed source. Preserve canonical entrypoints and refreshed release projections. Formatting and manifest hashes verified. GitHub Actions and external observer evidence remain pending.",
-      "input_digest": "sha256:0d650d2b58b5cca0879c27948df21a1d03ca0e42cce5a2d96925b0f8cb8a9fe5"
-    },
-    {
-      "id": "reconcile-shared-instruction-history",
-      "summary": "Repair the current base integration compile failure with immutable origin and append-only lineage in the governance merge reconciler. Add one-parent continuation and conflict regressions. GitHub Actions rerun pending.",
-      "input_digest": "sha256:4a1350cfaad557052f3003551cf7bf8d9e42c059fac334f936c7fbb4d3e68f43"
-    },
-    {
-      "id": "reconcile-platform-test-policy-fields",
-      "summary": "Keep the legacy platform test fixture compiling with the optional selected-work and observed-path policies disabled. Preserve real measured prior CI failures. Run the refreshed head in GitHub Actions.",
-      "input_digest": "sha256:16c556f561d0a64717f9d5d90f77b363c3303b9bf5d25327449ca26f74ac7e18"
-    },
-    {
-      "id": "stack-governance-and-release-on-868f756e",
-      "summary": "Preserve the original signed recovery and release histories under a common delivery. Keep accepted recorded readiness, native decisions and source projection contracts. Hosted checks and review pending.",
-      "input_digest": "sha256:91cecc8ef6acca1d6c21fca5857c73bd9c5612df4b6ad153d14d281e6e8e78ba"
-    },
-    {
-      "id": "stack-v1540-and-test-fixture-parity",
-      "summary": "Carry accepted release v0.154.0 and the latest original release-verifier commit while preserving both histories. Repair test-only proof initializer defaults found by hosted Clippy. Current hosted validation pending.",
-      "input_digest": "sha256:a4685baa44fa0fe4c4bc88659b356a58ecf12855997e1286c75253097ad38d1a"
-    },
-    {
-      "id": "stack-v1540-readiness-fixtures",
-      "summary": "Retain sixteen source ancestors and the current release verifier refresh. Remove duplicate readiness test initialization, preserve exact optional proof defaults and refresh the v0.154.0 projections. Hosted execution pending.",
-      "input_digest": "sha256:b899fe450d5a605f3964932f17e1bd0785d832c03ba6da743d2177f4adac08bd"
-    },
-    {
-      "id": "stack-v1550-fix-actions-checks",
-      "summary": "Preserve both branch histories on accepted v0.155.0 and repair legacy scope fixture initialization for required Actions",
-      "input_digest": "sha256:24bfbe2419b863c7da0d3909bc581cddb4ff524dd49a12b787dba8a4555d0ea3"
-    },
-    {
-      "id": "stack-after-1862-accepted",
-      "summary": "Carry the completed release-verifier merge into the accepted base while preserving the checked integration tree and both source histories",
-      "input_digest": "sha256:24bfbe2419b863c7da0d3909bc581cddb4ff524dd49a12b787dba8a4555d0ea3"
-    },
-    {
-      "id": "stack-fix-release-manifest-bindings",
-      "summary": "Repair test-only merge initializers and verify preserved content and release renderer manifest bindings",
-      "input_digest": "sha256:1c874c1ee200d140a6dd466070bf17aa48ec35f18e92c0cf64ca04571f373115"
-    },
-    {
-      "id": "stack-sync-v1551-accepted-release",
-      "summary": "Sync the accepted v0.155.1 release and regenerate exact projection metadata with its hosted evaluator",
-      "input_digest": "sha256:e44559c8cb92be3da593d684d65a38463acef9cac06d0ffab868df082fee8a30"
+      "id": "quota-diagnostics-initial",
+      "summary": "Expose live spend-cap status and typed policy denials",
+      "input_digest": "sha256:042cae904ceec0306621aae37098f83063839da0c5316179ce968fdf31a9eef1"
     }
   ],
   "intents": {
-    "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ": {
+    "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "paths:[\"src\"",
-        "\"tests\"",
-        "\"docs\"",
-        "\".decapod\"",
-        "\"README.md\"",
-        "\"AGENTS.md\"",
-        "\"CLAUDE.md\"",
-        "\"CODEX.md\"",
-        "\"GEMINI.md\"]"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+      "id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Recover issue-contract implementation with independently current proof\n\nContinue the authorized work on Decapod issues 1761,1762,1763,1764,1767,1768,1770 while preserving existing PR1766. Reauthor reviewed source from immutable1d5b9e59 on fresh accepted34f837d4 as prescribed by20 invalid-history findings. Retain old branch/journal and explicit present-time recovery observation; do not invent past proof, replace the PR, force-push, modify protected main, waive required gates or merge. Prove original instruction custody, canonical blockers, accepted behavioral negatives, selected-root conservation, typed eq/ne consistency and current owned native-path authority with actual negative/repair CLI and full native/required CI. Scope dependency1760 is the canonical parser and archived known-projection repair only. Exact code provenance includes preserved originalPR and0f2e520d Constitution work.",
-      "refined_intent": "Recover issue-contract implementation with independently current proof\n\nContinue the authorized work on Decapod issues 1761,1762,1763,1764,1767,1768,1770 while preserving existing PR1766. Reauthor reviewed source from immutable1d5b9e59 on fresh accepted34f837d4 as prescribed by20 invalid-history findings. Retain old branch/journal and explicit present-time recovery observation; do not invent past proof, replace the PR, force-push, modify protected main, waive required gates or merge. Prove original instruction custody, canonical blockers, accepted behavioral negatives, selected-root conservation, typed eq/ne consistency and current owned native-path authority with actual negative/repair CLI and full native/required CI. Scope dependency1760 is the canonical parser and archived known-projection repair only. Exact code provenance includes preserved originalPR and0f2e520d Constitution work.",
+      "raw_intent": "Decapod #1836: classify paid quota and disabled providers and expose authenticated live spend-cap status",
+      "refined_intent": "Decapod #1836: classify paid quota and disabled providers and expose authenticated live spend-cap status",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -956,468 +874,125 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Recover issue-contract implementation with independently current proof\n\nContinue the authorized work on Decapod issues 1761,1762,1763,1764,1767,1768,1770 while preserving existing PR1766. Reauthor reviewed source from immutable1d5b9e59 on fresh accepted34f837d4 as prescribed by20 invalid-history findings. Retain old branch/journal and explicit present-time recovery observation; do not invent past proof, replace the PR, force-push, modify protected main, waive required gates or merge. Prove original instruction custody, canonical blockers, accepted behavioral negatives, selected-root conservation, typed eq/ne consistency and current owned native-path authority with actual negative/repair CLI and full native/required CI. Scope dependency1760 is the canonical parser and archived known-projection repair only. Exact code provenance includes preserved originalPR and0f2e520d Constitution work.",
+      "intent": "Preserve structured service policy denials in CLI JSON and prevent automatic retry until billing or provider policy changes.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Regression tests cover the structured diagnostics, redaction and retryability."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the existing accepted deployment target and observed-path proof architecture against the v0.155.1 projections.",
-          "reviewed_code_fingerprint": "ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882",
+          "reason": "The quota summary uses the existing Dactyl account-status route and scoped session store.",
+          "reviewed_code_fingerprint": "25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b",
           "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verify the independent stored content and release renderer fields described in the living interface.",
-          "reviewed_code_fingerprint": "ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882",
-          "spec_material_hash": "696b81ee20708c04db8b5405105acfbd5696ffd7b921f2549f9b948fb4c91907"
+          "reason": "Documents permanent quota and provider denials and the opt-in live account resource summary.",
+          "reviewed_code_fingerprint": "25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b",
+          "spec_material_hash": "d306566c7a6ee6426af8ab959169034635c91ffa5960f61becc8a987b6fa73d1"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verify the scoped immutable release lineage checks and current generated attestation.",
-          "reviewed_code_fingerprint": "ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882",
+          "reason": "Live status requires an active managed session and leaves authorization to the authenticated account boundary.",
+          "reviewed_code_fingerprint": "25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Recover issue-contract implementation with independently current proof",
+      "title": "Classify cloud quota and disabled providers",
       "todo_ids": [
-        "feat_01m7pqj9rg9p2w2p"
+        "secu_01m7xkqvszen8y4p"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795209777Z"
+      "updated_at": "1795218571Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch",
-        "Deliver PRs 1862 and 1865 in one protected merge, preserving fifteen existing signed commits and the original draft.",
-        "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:907b06fb161cc40632d39dd8a97d86a842a3ddb2ed44733e82d78cfd9c50e353",
+      "artifact_hash": "sha256:e9c4a414bf8eace2366d39cf8e1cdf478ec964d9f377decb04edf19dbb26b55f",
       "checks": [
         {
-          "name": "2092274a-macos-compile",
-          "status": "failed"
-        },
-        {
-          "name": "e27a0bd-unit-fixture-compile",
-          "status": "failed"
-        },
-        {
-          "name": "format",
-          "status": "passed"
-        },
-        {
-          "name": "pr-44816099391-supabase-compilation",
-          "status": "failed"
-        },
-        {
-          "name": "pr-44817241351-release-validation",
-          "status": "failed"
-        },
-        {
-          "name": "previous-stack-clippy",
-          "status": "failed"
-        },
-        {
-          "name": "previous-stack-supabase-compile",
-          "status": "failed"
-        },
-        {
-          "name": "projection-hashes",
-          "status": "passed"
-        },
-        {
-          "name": "release-1540-projections",
-          "status": "passed"
-        },
-        {
-          "name": "release-1869-projection-binary",
-          "status": "failed"
-        },
-        {
-          "name": "stack-format",
-          "status": "passed"
-        },
-        {
-          "name": "stack-inventory-and-projections",
-          "status": "passed"
-        },
-        {
-          "name": "v1550-combined-formatting",
-          "status": "passed"
-        },
-        {
-          "name": "v1550-projection-content-hashes",
-          "status": "passed"
-        },
-        {
-          "name": "v1551-projection-content-hashes",
+          "name": "cloud-quota-status",
           "status": "passed"
         }
       ],
-      "current_phase": "verifying",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "detail": "trajectory:branch_01M7XKSEBSEFAKEYAWXATFVWXW",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:11",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "event_id": "event:12",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
-        "schema_version": "1.0.0",
+        "next_sequence": 4,
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
+          "branch_01M7XKSEBSEFAKEYAWXATFVWXW": {
             "evidence_only": true,
-            "id": "branch_01M7PQMADCS3EAWQSXB0HVXNQP",
-            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "id": "branch_01M7XKSEBSEFAKEYAWXATFVWXW",
+            "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
             "steps": [
               {
-                "action": "verification",
-                "command": "cargo fmt --all -- --check",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
+                  "One unit test and two cloud CLI fixture tests passed."
                 ],
                 "proof_refs": [
-                  "format",
-                  "projection-hashes"
+                  "cloud-quota-status"
                 ],
                 "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending."
-                ],
-                "proof_refs": [
-                  "2092274a-macos-compile"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending."
-                ],
-                "proof_refs": [
-                  "e27a0bd-unit-fixture-compile"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Formatting is clean. All 105 reviewed input hashes match release verifier head 42e1becf and all 12 refreshed manifest entries match their files."
-                ],
-                "proof_refs": [
-                  "stack-format",
-                  "stack-inventory-and-projections"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "Earlier exact standalone PR validation passed. Clippy job 136220526644 found missing optional fields in a legacy fixture. All remaining explicit test fixtures now set those defaults. Refreshed v0.154.0 hashes and 105 reviewed inputs verified."
-                ],
-                "proof_refs": [
-                  "previous-stack-clippy",
-                  "release-1540-projections"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "Job 136220526588 exposed duplicate readiness in a unit test initializer. The current source removes that duplicate and retains original release verifier head 6d2edebe with unchanged authored implementation."
-                ],
-                "proof_refs": [
-                  "previous-stack-supabase-compile"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "tests/unit/core/trajectory_tests.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "The previous Supabase Actions check failed during fixture initialization at tests/unit/core/trajectory_tests.rs. This fixture now initializes a valid explicit declaration and seeds the old comma-split journal afterward. The changed fixture awaits hosted execution.",
-                  "Accepted target fff1f478 and the two source histories are represented by the signed integration. Reviewed source inventory has 105 exact inputs and v0.155.0 projection hashes match all 12 files."
-                ],
-                "proof_refs": [
-                  "v1550-combined-formatting",
-                  "v1550-projection-content-hashes"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 10,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:11",
-                "observations": [
-                  "Actions exposed two test-only struct constructors missing newly merged fields and a release manifest whose historical stored content and compiled template hashes differ. The candidate initializes both fields and independently verifies the two manifest bindings. Repaired candidate awaits Actions."
-                ],
-                "proof_refs": [
-                  "pr-44816099391-supabase-compilation",
-                  "pr-44817241351-release-validation"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 11,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:12",
-                "observations": [
-                  "The exact checksum-verified Actions build of the v0.155.1 release rejected the independently refreshed v0.155.1 candidate with baseline entrypoint inventory or template hashes are not canonical. That same trusted evaluator regenerated managed projections for the new combined material. All 12 content hashes verified."
-                ],
-                "proof_refs": [
-                  "v1551-projection-content-hashes",
-                  "release-1869-projection-binary"
-                ],
-                "scope": [
-                  "\".decapod\"",
-                  "\"AGENTS.md\"",
-                  "\"CLAUDE.md\"",
-                  "\"CODEX.md\"",
-                  "\"GEMINI.md\"]",
-                  "\"README.md\"",
-                  "\"docs\"",
-                  "\"tests\"",
-                  "paths:[\"src\""
-                ],
-                "sequence": 12,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo fmt --all -- --check"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Accepted target fff1f478 and the two source histories are represented by the signed integration. Reviewed source inventory has 105 exact inputs and v0.155.0 projection hashes match all 12 files.",
-        "Actions exposed two test-only struct constructors missing newly merged fields and a release manifest whose historical stored content and compiled template hashes differ. The candidate initializes both fields and independently verifies the two manifest bindings. Repaired candidate awaits Actions.",
-        "Earlier exact standalone PR validation passed. Clippy job 136220526644 found missing optional fields in a legacy fixture. All remaining explicit test fixtures now set those defaults. Refreshed v0.154.0 hashes and 105 reviewed inputs verified.",
-        "Formatting is clean. All 105 reviewed input hashes match release verifier head 42e1becf and all 12 refreshed manifest entries match their files.",
-        "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",
-        "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending.",
-        "Job 136220526588 exposed duplicate readiness in a unit test initializer. The current source removes that duplicate and retains original release verifier head 6d2edebe with unchanged authored implementation.",
-        "The exact checksum-verified Actions build of the v0.155.1 release rejected the independently refreshed v0.155.1 candidate with baseline entrypoint inventory or template hashes are not canonical. That same trusted evaluator regenerated managed projections for the new combined material. All 12 content hashes verified.",
-        "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1.",
-        "The previous Supabase Actions check failed during fixture initialization at tests/unit/core/trajectory_tests.rs. This fixture now initializes a valid explicit declaration and seeds the old comma-split journal afterward. The changed fixture awaits hosted execution."
+        "One unit test and two cloud CLI fixture tests passed."
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
-      "modified_files": [
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "tests/unit/core/trajectory_tests.rs"
-      ],
+      "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
+      "modified_files": [],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks",
-        "Run GitHub Actions for the pushed source and accepted master. Preserve any missing independent external observer evidence.",
-        "Run current-head GitHub Actions on accepted 0f44f780 and obtain the repository review or authorized exception.",
-        "Verify stack checkpoints, run GitHub Actions and merge via protected master when eligible."
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "\".decapod\"",
-        "\"AGENTS.md\"",
-        "\"CLAUDE.md\"",
-        "\"CODEX.md\"",
-        "\"GEMINI.md\"]",
-        "\"README.md\"",
-        "\"docs\"",
-        "\"tests\"",
-        "paths:[\"src\""
+        "root"
       ],
-      "run_id": "branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+      "run_id": "branch_01M7XKSEBSEFAKEYAWXATFVWXW",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m7pqj9rg9p2w2p",
+      "task_id": "secu_01m7xkqvszen8y4p",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

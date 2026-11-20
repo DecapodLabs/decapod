@@ -1038,8 +1038,12 @@ pub(crate) enum CloudCommand {
         #[clap(long)]
         restart: bool,
     },
-    /// Inspect private managed-session state without network I/O or a live readiness claim.
-    Status,
+    /// Inspect private managed-session state.
+    Status {
+        /// Read included usage and spend-cap status using an existing managed session.
+        #[clap(long)]
+        live: bool,
+    },
     /// Clear the local repository-scoped cloud session without exposing tokens.
     Logout,
     /// Revoke the enrolled device key and clear local cloud credentials for this repository.

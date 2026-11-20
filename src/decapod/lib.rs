@@ -346,10 +346,19 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 }
             }
         }
-        CloudCommand::Status => {
+        CloudCommand::Status { live } => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
             let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
-            let status = core::cloud_client::status(&project_root, &identity)?;
+            let result = if live {
+                core::cloud_client::status_live(&project_root, &identity)
+            } else {
+                core::cloud_client::status(&project_root, &identity)
+            };
+            let status = result.inspect_err(|error| {
+                if let error::DecapodError::CloudAuth(diagnostic) = error {
+                    print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                }
+            })?;
             println!(
                 "{}",
                 serde_json::to_string_pretty(&status).map_err(std::io::Error::other)?

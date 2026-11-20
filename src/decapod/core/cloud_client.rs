@@ -4,9 +4,10 @@
 use crate::core::backend::StorageContext;
 #[cfg(feature = "supabase-cloud")]
 use crate::core::backend::{BackendRoute, CloudDatastore};
+use crate::core::cloud_session::SessionState;
 use crate::core::cloud_session::SessionStore;
 #[cfg(feature = "supabase-cloud")]
-use crate::core::cloud_session::{Bootstrap, Phase, Session, SessionGuard, SessionState};
+use crate::core::cloud_session::{Bootstrap, Phase, Session, SessionGuard};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::repo_identity::RepositoryIdentity;
 use std::path::Path;
@@ -80,6 +81,21 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
             CloudAuthStatus::PaymentPending,
             "Payment confirmation is still pending for this repository entitlement.",
             "Wait for billing settlement or ask the account owner to complete payment, then retry.",
+        ),
+        Some("quota_exceeded") => (
+            CloudAuthStatus::QuotaExceeded,
+            "The cloud service declined the request because the included quota is exhausted.",
+            "Ask a billing administrator to review the plan or eligible paid overages in Cloud Admin before trying again.",
+        ),
+        Some("overage_cap_exhausted") => (
+            CloudAuthStatus::OverageCapExhausted,
+            "The cloud service declined new billable usage because the spend cap was reached.",
+            "Ask a billing administrator to review the current spend cap in Cloud Admin. Already admitted tasks can still use supported terminal operations.",
+        ),
+        Some("provider_disabled") => (
+            CloudAuthStatus::ProviderDisabled,
+            "This sign-in provider is disabled for the cloud deployment.",
+            "Choose an enabled provider on the Cloud Admin sign-in page.",
         ),
         Some("entitlement_denied") => (
             CloudAuthStatus::EntitlementDenied,
@@ -639,15 +655,23 @@ pub fn status(
     let origin = selected_origin()?;
     let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
     let guard = store.lock(LOCK_TIMEOUT)?;
-    let state = guard.state();
+    Ok(local_status(project_root, identity, &origin, guard.state()))
+}
+
+fn local_status(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    origin: &str,
+    state: &SessionState,
+) -> serde_json::Value {
     let device_key = crate::core::cloud_dpop::DeviceKeyStore::for_project(
-        &origin,
+        origin,
         &identity.canonical_name,
         project_root,
     )
     .ok()
     .and_then(|ks| ks.load().ok().flatten());
-    Ok(serde_json::json!({
+    serde_json::json!({
         "schema_version": "decapod.cloud.session.v1",
         "repository": identity.canonical_name,
         "phase": state.phase,
@@ -657,7 +681,78 @@ pub fn status(
         "device_jkt": device_key.as_ref().map(|k| k.jkt.clone()),
         "device_keystore": device_key.as_ref().map(|k| k.backend.as_str()),
         "server_readiness": "not_checked",
-    }))
+    })
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub fn status_live(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    use dactyl_db::{AccountOperation, CloudConnector};
+
+    let origin = selected_origin()?;
+    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
+    let guard = store.lock(LOCK_TIMEOUT)?;
+    let state = guard.state();
+    let session = state
+        .session
+        .as_ref()
+        .filter(|session| {
+            matches!(state.phase, Phase::Ready | Phase::CheckingReadiness)
+                && session.expires_at > now()
+        })
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::AuthRequired,
+                "Live cloud status requires a current managed session.",
+                "Run `decapod cloud login` to establish a session, then repeat live status.",
+            )
+        })?;
+    let mut connector = CloudConnector::discover(&origin).map_err(transport_error)?;
+    if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
+        connector.origin(),
+        &identity.canonical_name,
+        project_root,
+    ) {
+        connector = connector.with_proof_signer(signer);
+    }
+    let selected =
+        crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity)?;
+    let response = connector
+        .account_request(
+            AccountOperation::Status,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": selected.canonical_name,
+                "operation": "resource_limits",
+            }),
+            &session.access_token,
+            None,
+        )
+        .map_err(transport_error)?;
+    let resources = response
+        .get("resource_limits")
+        .filter(|value| response["version"] == 1 && value.is_object())
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::ProviderUnavailable,
+                "The service did not return a resource-limit summary.",
+                "Check the selected project's usage and spend cap in Cloud Admin.",
+            )
+        })?;
+    let mut result = local_status(project_root, identity, &origin, state);
+    result["resource_limits"] = resources.clone();
+    Ok(result)
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+pub fn status_live(
+    _project_root: &Path,
+    _identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    selected_origin()?;
+    unreachable!("cloud origin is unavailable without the supabase-cloud feature")
 }
 
 pub fn logout(
