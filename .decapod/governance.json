@@ -913,6 +913,11 @@
       "id": "stack-fix-release-manifest-bindings",
       "summary": "Repair test-only merge initializers and verify preserved content and release renderer manifest bindings",
       "input_digest": "sha256:1c874c1ee200d140a6dd466070bf17aa48ec35f18e92c0cf64ca04571f373115"
+    },
+    {
+      "id": "stack-sync-v1551-accepted-release",
+      "summary": "Sync the accepted v0.155.1 release and regenerate exact projection metadata with its hosted evaluator",
+      "input_digest": "sha256:e44559c8cb92be3da593d684d65a38463acef9cac06d0ffab868df082fee8a30"
     }
   ],
   "intents": {
@@ -961,22 +966,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retain accepted proof architecture and source release authority while refreshing exact candidate attestation.",
-          "reviewed_code_fingerprint": "8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c",
+          "reason": "Review the existing accepted deployment target and observed-path proof architecture against the v0.155.1 projections.",
+          "reviewed_code_fingerprint": "ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882",
           "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Describe and verify the distinct immutable content hash and evaluator release template fields.",
-          "reviewed_code_fingerprint": "8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c",
+          "reason": "Verify the independent stored content and release renderer fields described in the living interface.",
+          "reviewed_code_fingerprint": "ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882",
           "spec_material_hash": "696b81ee20708c04db8b5405105acfbd5696ffd7b921f2549f9b948fb4c91907"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Keep immutable Git lineage scoped entrypoint preservation and the exact projection checks intact.",
-          "reviewed_code_fingerprint": "8549184e71ccdedd072fcbd12db0354a13794066e0b570c50921e234c615568c",
+          "reason": "Verify the scoped immutable release lineage checks and current generated attestation.",
+          "reviewed_code_fingerprint": "ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -988,7 +993,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795209505Z"
+      "updated_at": "1795209777Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -996,7 +1001,7 @@
         "Deliver PRs 1862 and 1865 in one protected merge, preserving fifteen existing signed commits and the original draft.",
         "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:1709f08a9445c1e3bfa906a6dc779fd010f40cc5acd89d18d4f87fc645de16ac",
+      "artifact_hash": "sha256:907b06fb161cc40632d39dd8a97d86a842a3ddb2ed44733e82d78cfd9c50e353",
       "checks": [
         {
           "name": "2092274a-macos-compile",
@@ -1035,6 +1040,10 @@
           "status": "passed"
         },
         {
+          "name": "release-1869-projection-binary",
+          "status": "failed"
+        },
+        {
           "name": "stack-format",
           "status": "passed"
         },
@@ -1048,6 +1057,10 @@
         },
         {
           "name": "v1550-projection-content-hashes",
+          "status": "passed"
+        },
+        {
+          "name": "v1551-projection-content-hashes",
           "status": "passed"
         }
       ],
@@ -1121,10 +1134,17 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "trajectory_step_recorded",
             "sequence": 11
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:12",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 12
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 11,
+        "next_sequence": 12,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
@@ -1325,6 +1345,30 @@
                 ],
                 "sequence": 11,
                 "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:12",
+                "observations": [
+                  "The exact checksum-verified Actions build of the v0.155.1 release rejected the independently refreshed v0.155.1 candidate with baseline entrypoint inventory or template hashes are not canonical. That same trusted evaluator regenerated managed projections for the new combined material. All 12 content hashes verified."
+                ],
+                "proof_refs": [
+                  "v1551-projection-content-hashes",
+                  "release-1869-projection-binary"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 12,
+                "validation_findings": []
               }
             ]
           }
@@ -1342,6 +1386,7 @@
         "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",
         "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending.",
         "Job 136220526588 exposed duplicate readiness in a unit test initializer. The current source removes that duplicate and retains original release verifier head 6d2edebe with unchanged authored implementation.",
+        "The exact checksum-verified Actions build of the v0.155.1 release rejected the independently refreshed v0.155.1 candidate with baseline entrypoint inventory or template hashes are not canonical. That same trusted evaluator regenerated managed projections for the new combined material. All 12 content hashes verified.",
         "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1.",
         "The previous Supabase Actions check failed during fixture initialization at tests/unit/core/trajectory_tests.rs. This fixture now initializes a valid explicit declaration and seeds the old comma-split journal afterward. The changed fixture awaits hosted execution."
       ],
