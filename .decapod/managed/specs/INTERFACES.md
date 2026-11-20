@@ -1539,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Repository signal fingerprint: `0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2190,12 +2190,6 @@ any required command, provider, custody or current-target requirement.
 
 This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
 
-## Versioned encoding-plane artifacts
-
-`docs/conformance/json-v1.md` defines encoding profile1.0.0, with a machine-readable vector schema at `assets/schemas/interop-json-vectors.schema.json` and pinned raw inputs at `tests/fixtures/interop_json_vectors.v1.json`. Both consumers receive the same original text, never expected answers or a reserialized input. `accepted` and `invalid_json` describe decoding only. The existing `interop.project` result still labels caller-supplied data and `canonical_state_verified=false`. Numeric decoding does not promise arbitrary precision, canonical numeric hashes or authorization.
-
-The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
-
 ## Accepted repository-local contract changes (#1658, #1738)
 
 The existing validation runtime returns the actionable
@@ -2248,3 +2242,15 @@ digests before revalidation; no override or second policy store is added.
 `--offline` reports remote dimensions unavailable without contacting the
 forge. The default publication diagnosis lists blockers and sends agents
 to the live publisher for exact validation and readback.
+
+## Exact release projection interpretation
+
+The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.
+
+Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.
+
+## Versioned encoding-plane artifacts
+
+`docs/conformance/json-v1.md` defines encoding profile1.0.0, with a machine-readable vector schema at `assets/schemas/interop-json-vectors.schema.json` and pinned raw inputs at `tests/fixtures/interop_json_vectors.v1.json`. Both consumers receive the same original text, never expected answers or a reserialized input. `accepted` and `invalid_json` describe decoding only. The existing `interop.project` result still labels caller-supplied data and `canonical_state_verified=false`. Numeric decoding does not promise arbitrary precision, canonical numeric hashes or authorization.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.

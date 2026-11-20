@@ -834,6 +834,11 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/44717983927/job/136261849254"
       ]
+    },
+    {
+      "id": "cp-sync-9b6a33b0e",
+      "summary": "Sync accepted master 9b6a33b0e (v0.155.0) and verify interop strict JSON decoding conformance (#1866)",
+      "input_digest": "sha256:095af6c14eb109ebd367e9341c0c617677a418d15af9b647ccba3a0d676d5bd0"
     }
   ],
   "intents": {
@@ -877,23 +882,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted v0.155.0 semantics and independently review retained encoding conformance scope and unchanged full verification requirements.",
-          "reviewed_code_fingerprint": "a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe",
-          "spec_material_hash": "461fddaf46a884b89cedf19d7ad7dafa6f6913d072d80ff02d46a424a967a076"
+          "reason": "Synced independent JSON interop conformance vectors (#1866) with accepted master 9b6a33b0e (v0.155.0).",
+          "reviewed_code_fingerprint": "0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65",
+          "spec_material_hash": "888bf8792ade1725d9fc5af1b0cc9bdd0b13683b756eca75db59455acb7775b1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Integrate accepted v0.155.0 semantics and independently review retained encoding conformance scope and unchanged full verification requirements.",
-          "reviewed_code_fingerprint": "a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe",
-          "spec_material_hash": "8767f4e0c2b139dfd94623b7d347cfb970e9e171809c0313adf38f8277498da3"
+          "reason": "Synced interop JSON v1 conformance schema and refusal interfaces (#1866) with accepted master 9b6a33b0e (v0.155.0).",
+          "reviewed_code_fingerprint": "0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65",
+          "spec_material_hash": "da378ac9a6743d9d6ea2b789809963d7de620d51a1180f332a088cfdb7efbc62"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrate accepted v0.155.0 semantics and independently review retained encoding conformance scope and unchanged full verification requirements.",
-          "reviewed_code_fingerprint": "a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe",
-          "spec_material_hash": "154ed88cc153ee31fa7a113e7229c51136460ab1f40940296451e27f938003ff"
+          "reason": "Synced strict JSON decoding refusal security guarantees (#1866) with accepted master 9b6a33b0e (v0.155.0).",
+          "reviewed_code_fingerprint": "0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65",
+          "spec_material_hash": "f90be21b8ad9057b7436a5de87f7238eebb03a6e60ca1f0dd00187798025d644"
         }
       ],
       "state": "APPROVED",
@@ -904,13 +909,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795207843Z"
+      "updated_at": "1795208827Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0da86f981033cddb507dbf3abbf1f1d9737297d7bb2b6a55f55582ee7ddacaf9",
+      "artifact_hash": "sha256:f5a8aeb0871925ba2cde5f0f56243b8e3a0c9a8ad66e353ca1f6058f8b7b3e18",
       "checks": [
         {
           "name": "accepted-observer-integration",
@@ -968,10 +973,17 @@
             "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
@@ -1052,6 +1064,24 @@
                 "validation_findings": [
                   "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1063,6 +1093,7 @@
         "/private/tmp/attack-gaps-controller154-install.json",
         "/private/tmp/attack-gaps-interop-depth-before.json",
         "/private/tmp/attack-gaps-interop-surrogate-before.json",
+        "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests",
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
@@ -1074,6 +1105,8 @@
       "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         "assets/schemas/interop-json-vectors.schema.json",
         "docs/conformance/json-v1.md",
         "tests/fixtures/interop_json_vectors.v1.json",

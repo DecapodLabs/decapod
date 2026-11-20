@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Repository signal fingerprint: `0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2552,12 +2552,6 @@ execution/collection graph remain separate obligations. No fixture, digest
 update, source-CI subset or generated checkpoint grants release authority or
 converts missing platform evidence into success.
 
-## Portable encoding execution plan
-
-The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.
-
-The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
-
 ## Governed repository proof-policy migration (#1738)
 
 `tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
@@ -2578,4 +2572,8 @@ committed candidate.
 
 Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.
 
-For the v0.155.0 candidate, run the existing full core suite against current master. The prior v0.154.0 PR runs exercised the encoding vectors and exposed separate validation and broker timing failures. Preserve the original outcomes and retain the full suite and timing assertions on the new base.
+## Portable encoding execution plan
+
+The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.

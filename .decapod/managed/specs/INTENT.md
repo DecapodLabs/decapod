@@ -717,7 +717,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Repository signal fingerprint: `0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1202,6 +1202,30 @@ not duplicate implementation or unsupported issue closure.
 
 This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
 
+## Read-only workspace diagnosis (#1071)
+
+Operators and agents need one command to identify the next recovery step
+when a workspace is blocked. The diagnostic shows accepted authority and
+worktree proposals separately and continues to explain malformed config
+without bootstrapping or repairing state. Verification and admission stay
+with the existing governed operations.
+
+## Version-only release proof
+
+Decapod release metadata must remain independently distinguishable from source, policy, dependency and authored-spec changes. Its existing immutable classifier and exact projection verifier own this boundary. A canonical Decapod source checkout may retain version-bound agent entrypoints under its already accepted source-development policy. Release proof must preserve those exact committed bytes when that policy verifies origin, immutable source ancestry, canonical template payload and each version-bound fingerprint. This does not permit a caller-selected header or a source/configuration change to masquerade as release metadata. Required Actions will exercise this correction; implementation and registered test locations alone are not passing evidence.
+
+The current candidate integrates accepted release0.153.2 at34b98ab1. Its first Actions attempt was rejected before execution after the accepted target advanced; that refusal remains historical. Release projections are regenerated through official0.153.2, and the complete105-file source inventory is independently remeasured. The reviewed regression fixture is the only inventory input changed from the accepted base. GitHub Actions for the integrated exact candidate remain required; old passes and source registration do not establish current execution.
+
+Actions exposed a standalone-tool integration error in the first current-base candidate: the shared verifier could not call its crate-private source reader. The existing read-only predicate is now exported as an internal documented-hidden helper for that wrapper. Source-lineage regression setup stays in the library-only harness; the standalone wrapper retains its existing complete shared regression suite. No test is removed from the required library execution.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
+
+Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.
+
+Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.
+
 ## Portable encoding interpretation assurance
 
 The existing governance interoperability work now includes a narrowly versioned raw-JSON decoding contract at `docs/conformance/json-v1.md`. Its purpose is to make the independent standard-library Python consumer agree with the real native RPC parser on malformed input and legitimate Unicode, finite-number and nesting boundaries. The 22 pinned inputs protect rejection and ordinary read-only operation. This is one encoding-plane correction; it does not complete the independent governance-envelope profile or authenticate imported proof, approval or custody.
@@ -1211,11 +1235,3 @@ The encoding profile and independently retained agent-run coverage remain separa
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
-
-## Read-only workspace diagnosis (#1071)
-
-Operators and agents need one command to identify the next recovery step
-when a workspace is blocked. The diagnostic shows accepted authority and
-worktree proposals separately and continues to explain malformed config
-without bootstrapping or repairing state. Verification and admission stay
-with the existing governed operations.

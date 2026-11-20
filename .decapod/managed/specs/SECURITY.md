@@ -801,7 +801,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Repository signal fingerprint: `0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1349,14 +1349,6 @@ interventions and created-but-not-admitted PRs cannot become autonomous success.
 ## Fail-closed host attribution
 Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.
 
-## Decoder differential falsifiers and authority limits
-
-Actual official0.153.2 rejected an unpaired surrogate that the prior Python decoder accepted; the prior independent decoder also accepted excessive nesting and overflowing integer tokens. The correction narrows that independent consumer to the existing native boundary. Positive twins preserve valid surrogate pairs, escaped control characters, distinct Unicode keys, finite large numbers and boundary-sized nesting. Malformed vectors must fail before project/session startup, with the specific JSON refusal rather than an unrelated initialization error. Diagnostic conformance reports identify actual consumers and inputs but do not authenticate an independent host, current proof, human consent, replay protection or cross-tenant authority. Those original campaign obligations remain open.
-
-The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
-
-The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
-
 ## Candidate repinning and governed policy transitions (#1658, #1738)
 
 The accepted target's local proof requirements remain authoritative even when a
@@ -1410,3 +1402,21 @@ material. Only the existing policy resolver supplies accepted authority,
 with its local assurance level visible. Raw parser and transport errors,
 credential values, and task intent text stay out of the diagnostic. Current
 forge checks alone cannot establish Decapod admission.
+
+## Source development release boundary
+
+Preserving canonical source entrypoint metadata is conditional on the existing repository/origin/ancestry/template proof, not a configuration flag or caller-computed digest alone. The release verifier additionally compares the current entrypoint to the immutable classified head. This prevents a valid-looking replacement version from gaining authority during refresh. Existing exact current manifest, Dockerfile, source/configuration inventory and staged-edit checks remain enforced. The regression uses the existing published-root source fixture and includes header replacement, payload tampering and foreign-origin refusals; successful CI execution remains distinct from test registration.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
+
+Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.
+
+## Decoder differential falsifiers and authority limits
+
+Actual official0.153.2 rejected an unpaired surrogate that the prior Python decoder accepted; the prior independent decoder also accepted excessive nesting and overflowing integer tokens. The correction narrows that independent consumer to the existing native boundary. Positive twins preserve valid surrogate pairs, escaped control characters, distinct Unicode keys, finite large numbers and boundary-sized nesting. Malformed vectors must fail before project/session startup, with the specific JSON refusal rather than an unrelated initialization error. Diagnostic conformance reports identify actual consumers and inputs but do not authenticate an independent host, current proof, human consent, replay protection or cross-tenant authority. Those original campaign obligations remain open.
+
+The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
+
+The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.

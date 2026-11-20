@@ -1189,7 +1189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a2f3f64e4fba8df633d1f1d701d419813efd45dd9851e31cca48bbefc5265abe`
+- Repository signal fingerprint: `0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1753,16 +1753,6 @@ released controller, with complete baseline/provider proof still outstanding.
 This infrastructure work preserves PR #1575 and does not reconcile Laya policy
 inside a candidate-controlled validation definition.
 
-## Independent raw-input decoding boundary
-
-`tests/fixtures/interop_strict_json.py` remains an independent, same-host Python decoder with no Decapod import or storage access. It now checks Unicode scalar strings/keys, finite integer overflow and the native 127-container depth limit after unique-key parsing. `tests/fixtures/interop_json_vectors.v1.json` preserves raw parameter strings; the existing unfiltered `tests/interop_conformance.rs` target compares actual native rejection reasons and legitimate projection execution. The existing Bazel target declares both compile-time data inputs explicitly. No production parser, policy engine, proof producer, workflow or required test recipe is replaced.
-
-The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
-
-The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
-
-The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
-
 ## Target-scoped deployment closure (#1740)
 
 `repository_profile::resolve_target_closure` resolves a selected target's transitive `depends_on` closure plus any additional targets whose `shared_inputs` prefixes/globs (`matches_shared_input`) intersect `<accepted_base>..HEAD` changed paths (`ApplicabilityFacts.changed_paths`), failing closed on unknown targets (`UNKNOWN_DEPLOYMENT_TARGET`), dependency cycles (`DEPLOYMENT_TARGET_CYCLE`), invalid patterns (`REPOSITORY_CONTRACT_INVALID`), or missing diff context (`MISSING_SHARED_INPUT_DIFF_CONTEXT`). `repository_profile::required_catalog_for_target` builds `Obligation`s solely for commands in the resolved closure while recording excluded commands as `StageDispositionKind::NonApplicable` (`out_of_target_scope_no_assurance`) and binding the resolved scope into `definition_digest` and `RequiredCatalog.source_inventory_digest`. `RepositoryHost::select_commands` verifies platform compatibility (`INCOMPATIBLE_TARGET_EXECUTOR`) and installed executables only for targets in `resolved_targets`, allowing a Linux-only slice to run without unrelated macOS executables while full validation (`options.target == None`) remains unchanged.
@@ -1774,3 +1764,27 @@ policy resolver, checkout and task custody readers, governance artifact
 inventory, historical validation reader, and optional GitHub readback.
 It projects local operation eligibility and proof applicability from those
 owners without introducing another admission authority.
+
+## Release projections and source template authority
+
+`core::release_projection_drift::verify` reuses `entrypoint_integrity::preserves_source_entrypoint_versions` for Decapod source development rather than implementing another version exception or template reader. In that mode the expected entrypoint is its immutable release-head blob, and the working entrypoint must equal it byte for byte. The existing predicate independently validates canonical committed source templates, repository origin, ungrafted ancestry, policy opt-in and version-bound fingerprints. Other repositories retain the binary-release rendering path. Immutable release classification, staged/working change inventory, exact Dockerfile/spec/manifest hashes and all other-field comparisons remain required.
+
+The standalone `assets/tools/release_projection_drift.rs` wrapper links the ordinary Decapod library while compiling the shared verifier. Its source-version predicate must therefore be available across that crate boundary; it remains a read-only helper, not a grant. The shared projection fixture accepts an existing source root, while library-only lineage tests supply the existing published-root fixture from `entrypoint_integrity/history/tests.rs`.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
+
+Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
+
+Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.
+
+Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.
+
+## Independent raw-input decoding boundary
+
+`tests/fixtures/interop_strict_json.py` remains an independent, same-host Python decoder with no Decapod import or storage access. It now checks Unicode scalar strings/keys, finite integer overflow and the native 127-container depth limit after unique-key parsing. `tests/fixtures/interop_json_vectors.v1.json` preserves raw parameter strings; the existing unfiltered `tests/interop_conformance.rs` target compares actual native rejection reasons and legitimate projection execution. The existing Bazel target declares both compile-time data inputs explicitly. No production parser, policy engine, proof producer, workflow or required test recipe is replaced.
+
+The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
+
+The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
