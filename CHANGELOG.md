@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.153.0](https://github.com/DecapodLabs/decapod/compare/v0.152.0...v0.153.0) - 2026-11-20
+
+### Added
+
+- *(observer)* reauthor evidence correlation with explicit history custody
+
+### Fixed
+
+- *(broker)* establish writer incarnation provenance for orphan recovery ([#1783](https://github.com/DecapodLabs/decapod/pull/1783))
+- *(custody)* reject unknown actor on claim and workspace ensure ([#1737](https://github.com/DecapodLabs/decapod/pull/1737))
+- *(storage)* align v2 storage compatibility floor with _ce_v1 codec
+
+### Other
+
+- *(govern)* sync accepted master 6f2ec99dc (v0.152.0, #1455)
+- *(govern)* sync accepted master c6439c7df (v0.152.0, #1757)
+- *(govern)* sync accepted master bc6475824 (v0.152.0, #1737)
+- *(govern)* sync accepted master 9fff41ffc (v0.152.0, #1783)
+- *(govern)* refresh managed Dockerfile pin to v0.152.0 ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(govern)* sync accepted master 5cc32689e (v0.152.0, #1739)
+- *(govern)* sync accepted master 363d6e3ec (v0.151.0, #1739)
+- Merge commit '755bbac6e0af03c5dde4bd555cd749c426ae6472' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge commit '84f9673824ba0b60ee0e87449f2cbb23387f5717' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(governance)* integrate origin/master 89906b666 (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(governance)* integrate origin/master 845ff9799 (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(merge)* reconcile origin/master 845ff9799 (v0.149.3, PR #1818) and refresh specs for #1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge commit 'cfe2565daab82c3c7829cf9b83d5121e37dd5e8e' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* reconcile origin/master cfe2565da (v0.149.3, PR #1816) and refresh specs for #1783
+- *(governance)* integrate origin/master cfe2565da (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(govern)* refresh v0.149.3 Dockerfile.decapod pin ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(governance)* integrate origin/master v0.149.3 ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- Merge commit '102d6eb22046032e7214ee821ab166f06271585c' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* reconcile origin/master 102d6eb22 (v0.149.3) and refresh specs for #1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1783/bugs_01m7r13b7j70bp8x-issue-1783
+- *(merge)* reconcile origin/master 205d4e8d (v0.149.1) and refresh specs for #1739
+- Merge commit '205d4e8dad2e7690100eb401e12ea6d6f8e23665' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1783/bugs_01m7r13b7j70bp8x-issue-1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* sync origin/master a5a1edad (v0.149.0) and reconcile proof ([#1783](https://github.com/DecapodLabs/decapod/pull/1783))
+- *(govern)* checkpoint updated v0.149.0 spec reviews for #1739
+- *(merge)* reconcile origin/master v0.149.0 and refresh governance/specs for #1739
+- *(merge)* sync origin/master 2f12638a (v0.148.14) and reconcile proof
+- *(specs)* refresh manifest config_input_hash after config.toml update
+- *(proof)* update reviewed_sources_digest to v0.148.13
+- *(proof)* reconcile reviewed_sources_digest for v0.148.13
+- *(governance)* align release11 pin and release history
+- Merge accepted conformance fixes and release0.148.11
+- *(governance)* refresh native release-bound projections
+- *(validation)* reconcile accepted release source inventory
+- Merge accepted release metadata into observer delivery
+- Merge accepted policy boundaries into observer delivery
+- *(observer)* record current recovery disposition
+- *(governance)* integrate current master for PR1700 with Decapod v0.147.0
+- *(specs)* distinguish v0.147.0 audit baseline from historical proof
+- *(audit)* bind current implementation map to accepted v0.147.0
+- *(governance)* integrate current master for PR1700 with Decapod v0.147.0
+- *(governance)* finalize PR1700 on Decapod v0.146.0 (bdd32e5228a5)
+- *(specs)* preserve scoped proof after bounded recovery acceptance
+- *(audit)* include accepted bounded recovery and exact integration identity
+- *(governance)* finalize PR1700 on Decapod v0.146.0 (e13c656aefa6)
+- *(governance)* finalize PR1700 on Decapod v0.146.0
+- *(specs)* reconcile validation with accepted v0.146.0 scope
+- *(specs)* reconcile interfaces with accepted v0.146.0 scope
+- *(specs)* reconcile architecture with accepted v0.146.0 scope
+- *(specs)* reconcile intent with accepted v0.146.0 scope
+- *(audit)* account for accepted v0.146.0 escalation and exact proof scope
+- rebase PR1700 VALIDATION.md on v0.146.0
+- rebase PR1700 INTERFACES.md on v0.146.0
+- rebase PR1700 ARCHITECTURE.md on v0.146.0
+- rebase PR1700 continuous-governance-implementation-map.md on v0.146.0
+- rebase PR1700 INTENT.md on v0.146.0
+
 ## [0.152.0](https://github.com/DecapodLabs/decapod/compare/v0.151.0...v0.152.0) - 2026-11-20
 
 ### Fixed
