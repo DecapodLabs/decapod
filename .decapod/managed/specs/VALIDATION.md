@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65`
+- Repository signal fingerprint: `437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2577,3 +2577,5 @@ Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/cor
 The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+Run encoding conformance against the v0.155.1 release base. The release metadata merge preserves all 22 raw inputs and corresponding positive controls. Retain the full core suite and the timing assertions.

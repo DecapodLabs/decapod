@@ -839,6 +839,14 @@
       "id": "cp-sync-9b6a33b0e",
       "summary": "Sync accepted master 9b6a33b0e (v0.155.0) and verify interop strict JSON decoding conformance (#1866)",
       "input_digest": "sha256:095af6c14eb109ebd367e9341c0c617677a418d15af9b647ccba3a0d676d5bd0"
+    },
+    {
+      "id": "encoding-accepted-v1551-2e206",
+      "summary": "Integrate accepted v0.155.1 metadata, refresh managed projections and review the unchanged 22-vector encoding test scope",
+      "input_digest": "sha256:cc9644313cf2242f63431c6f79a4a97ed04ab6192290fa2baf6fcbe3936e6eba",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1869"
+      ]
     }
   ],
   "intents": {
@@ -882,22 +890,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced independent JSON interop conformance vectors (#1866) with accepted master 9b6a33b0e (v0.155.0).",
-          "reviewed_code_fingerprint": "0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65",
+          "reason": "Review the encoding contract against the accepted v0.155.1 release and retain the exact decoder, scope and authority assertions.",
+          "reviewed_code_fingerprint": "437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a",
           "spec_material_hash": "888bf8792ade1725d9fc5af1b0cc9bdd0b13683b756eca75db59455acb7775b1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced interop JSON v1 conformance schema and refusal interfaces (#1866) with accepted master 9b6a33b0e (v0.155.0).",
-          "reviewed_code_fingerprint": "0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65",
+          "reason": "Review the encoding contract against the accepted v0.155.1 release and retain the exact decoder, scope and authority assertions.",
+          "reviewed_code_fingerprint": "437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a",
           "spec_material_hash": "da378ac9a6743d9d6ea2b789809963d7de620d51a1180f332a088cfdb7efbc62"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced strict JSON decoding refusal security guarantees (#1866) with accepted master 9b6a33b0e (v0.155.0).",
-          "reviewed_code_fingerprint": "0d839539629eed6400aac8aaebba5e38bfb3269489428e38ef378d70584b1d65",
+          "reason": "Review the encoding contract against the accepted v0.155.1 release and retain the exact decoder, scope and authority assertions.",
+          "reviewed_code_fingerprint": "437f15da3d6395488c0b2f177e83ac19cc3e5f6b86ff665176e06dc9e2fffc1a",
           "spec_material_hash": "f90be21b8ad9057b7436a5de87f7238eebb03a6e60ca1f0dd00187798025d644"
         }
       ],
@@ -909,7 +917,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795208827Z"
+      "updated_at": "1795210005Z"
     },
     "trajectory": {
       "active_boundaries": [
