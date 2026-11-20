@@ -15,6 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path};
 
 pub const REQUIRED_PROFILE: &str = "repo.pr-readiness.v1";
+pub const POLICY_TRANSITION_SCOPE: &str = REQUIRED_PROFILE;
 pub const READINESS_SCOPE: &str = "repository_local_readiness";
 pub const LOCAL_GIT_READINESS_SCOPE: &str = "repository_local_git_readiness";
 
@@ -239,6 +240,146 @@ pub(crate) fn preserve_accepted(
         }
     }
     Ok(())
+}
+
+/// Canonical deterministic policy-transition approval identifier bound to the
+/// exact accepted base, candidate head, source-inventory digests, and
+/// command-contract digests under scope `"repo.pr-readiness.v1"`.
+pub fn repo_policy_transition_id(
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+    accepted_sources_digest: &str,
+    candidate_sources_digest: &str,
+    accepted_commands_digest: &str,
+    candidate_commands_digest: &str,
+) -> Result<String, PlanningFailure> {
+    let raw = super::readiness_evidence::digest(&(
+        "repo.pr-readiness.policy-transition.v1",
+        POLICY_TRANSITION_SCOPE,
+        accepted_base_sha,
+        candidate_head_sha,
+        accepted_sources_digest,
+        candidate_sources_digest,
+        accepted_commands_digest,
+        candidate_commands_digest,
+    ))
+    .map_err(|_| PlanningFailure::Serialization)?;
+    Ok(raw.strip_prefix("sha256:").unwrap_or(&raw).to_string())
+}
+
+pub(crate) fn has_active_policy_transition_approval(
+    checkout_root: &Path,
+    transition_id: &str,
+) -> Result<bool, PlanningFailure> {
+    let Ok(main_root) = super::workspace::get_main_repo_root(checkout_root) else {
+        return Ok(false);
+    };
+    let data_root = main_root.join(".decapod").join("data");
+    let db_path = crate::plugins::policy::policy_db_path(&data_root);
+    match std::fs::symlink_metadata(&db_path) {
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(_) => return Ok(false),
+        Ok(meta) if meta.file_type().is_symlink() || !meta.is_file() => {
+            return Err(invalid(
+                "POLICY_STORE_UNSAFE: canonical policy datastore must be a regular file",
+            ));
+        }
+        Ok(_) => {}
+    }
+    let Some(db_str) = db_path.to_str() else {
+        return Err(invalid(
+            "POLICY_STORE_UNSAFE: canonical policy datastore path is not valid UTF-8",
+        ));
+    };
+    let conn = super::db::db_connect_for_validate(db_str)
+        .map_err(|e| invalid(format!("POLICY_STORE_UNAVAILABLE: {e}")))?;
+    crate::plugins::policy::has_live_scoped_approval_on_conn(
+        &conn,
+        transition_id,
+        POLICY_TRANSITION_SCOPE,
+    )
+    .map_err(|e| invalid(format!("POLICY_APPROVAL_CHECK_FAILED: {e}")))
+}
+
+/// Enforce accepted `repo.pr-readiness.v1` preservation unless the repository's
+/// canonical main `.decapod/data` policy ledger holds an active, bounded,
+/// `policy.control`-authorized approval for this exact base, head, source, and
+/// command-contract transition.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn verify_accepted_transition(
+    checkout_root: &Path,
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+    accepted_profile: Option<&ProfileDeclaration>,
+    candidate_profile: Option<&ProfileDeclaration>,
+    accepted_commands: &[ProofDef],
+    candidate_commands: &[ProofDef],
+    accepted_contract: Option<&RepositoryContract>,
+    candidate_contract: Option<&RepositoryContract>,
+) -> Result<(), PlanningFailure> {
+    let Some(accepted_decl) = accepted_profile.filter(|p| p.id == REQUIRED_PROFILE) else {
+        return Ok(());
+    };
+    let Some(candidate_decl) = candidate_profile.filter(|p| p.id == REQUIRED_PROFILE) else {
+        return Err(invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
+        ));
+    };
+    let accepted = accepted_contract.ok_or_else(|| {
+        invalid("ACCEPTED_REPOSITORY_CONTRACT_CHANGED: accepted repository contract is missing")
+    })?;
+    let candidate = candidate_contract.ok_or_else(|| {
+        invalid("ACCEPTED_REPOSITORY_CONTRACT_CHANGED: preserve the accepted local checks, execution declarations and coverage; candidate repository_contract is missing")
+    })?;
+    if accepted.canonical_local_target != candidate.canonical_local_target {
+        return Err(invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: canonical_local_target cannot change through a candidate policy transition",
+        ));
+    }
+    if accepted_commands.is_empty()
+        || command_contract_digest(accepted_commands, accepted)?
+            != accepted.reviewed_commands_digest
+    {
+        return Err(invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: accepted repository contract digest is invalid",
+        ));
+    }
+    let sources_unchanged =
+        candidate_decl.reviewed_sources_digest == accepted_decl.reviewed_sources_digest;
+    let commands_preserved = preserve_accepted(
+        candidate_commands,
+        Some(candidate),
+        accepted_commands,
+        Some(accepted),
+    )
+    .is_ok();
+    if sources_unchanged && commands_preserved {
+        return Ok(());
+    }
+    if command_contract_digest(candidate_commands, candidate)? != candidate.reviewed_commands_digest
+    {
+        return Err(invalid(
+            "STALE_COMMAND_CONTRACT: review commands, execution inputs and source coverage before updating the digest",
+        ));
+    }
+    let transition_id = repo_policy_transition_id(
+        accepted_base_sha,
+        candidate_head_sha,
+        &accepted_decl.reviewed_sources_digest,
+        &candidate_decl.reviewed_sources_digest,
+        &accepted.reviewed_commands_digest,
+        &candidate.reviewed_commands_digest,
+    )?;
+    if has_active_policy_transition_approval(checkout_root, &transition_id)? {
+        return Ok(());
+    }
+    Err(invalid(format!(
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or source inventory changed without an active policy.control transition approval (base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}). Review the diff and run `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}` as a policy.control-authorized maintainer before revalidation",
+        accepted_decl.reviewed_sources_digest,
+        candidate_decl.reviewed_sources_digest,
+        accepted.reviewed_commands_digest,
+        candidate.reviewed_commands_digest,
+    )))
 }
 fn relative(path: &str) -> bool {
     !path.is_empty()

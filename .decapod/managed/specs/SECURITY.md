@@ -801,7 +801,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50f5304cac447c6dfcf083570e774a5b21aa45c231559ab0f49e73590224bc2c`
+- Repository signal fingerprint: `d6b99ec84a98fb3c7966af2ed110d991b56738235b9ea274f8edb36d4b7ebc58`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1348,3 +1348,49 @@ interventions and created-but-not-admitted PRs cannot become autonomous success.
 
 ## Fail-closed host attribution
 Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.
+
+## Candidate repinning and governed policy transitions (#1658, #1738)
+
+The accepted target's local proof requirements remain authoritative even when a
+candidate supplies a valid new digest for different commands, execution inputs,
+coverage, or source inventory. `repository_profile::verify_accepted_transition`
+and the built-in `decapod.policy.accepted_repository_contract` kernel rule
+(`RuleAuthority::KernelInvariant`, `EvaluationPhase::PreExecution`,
+`RuleSeverity::Critical`, `autonomous_remediation_permitted = false`) reject
+unapproved replacements before execution selection; required failures cannot
+disappear through candidate review or `governance.json` plan prose.
+
+Legitimate `repo.pr-readiness.v1` transitions reuse Decapod's existing
+`"policy.control"`-gated approval ledger (`src/decapod/plugins/policy.rs`,
+`PolicyCommand::Approve` / `PolicyCommand::Revoke`). `PolicyCommand::Approve`
+unconditionally enforces `core` trust for `"policy.control"` and rejects
+`"unknown"` or empty `--actor` labels and malformed transition IDs. Approvals
+are stored in the canonical main `.decapod/data` datastore (`decapod.db`, never
+a worktree-local copy), carry bounded lifetimes (`expires_at` required), and
+bind to the 64-hex-character `repo_policy_transition_id` covering exact
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+under scope `"repo.pr-readiness.v1"`. Missing, unauthorized, wrong-scope,
+expired, revoked, or stale approvals fail closed with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, and downgrading `decapod.pr-readiness.v1`
+remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. Local
+cooperative actor labels and host-local SQLite retain their shared-UID trust
+boundary and do not claim cryptographic identity or OS sandboxing.
+
+The regression boundary uses real Git targets and native subprocess checks,
+including a replacement command that only prints claimed success. These tests
+exercise kernel admission; a model refusal or a predetermined provider error
+would not establish the guarantee. Accepted-target observation and the configured
+executor remain trust roots. This repair does not claim OS isolation from an
+unrestricted agent or add authenticated cloud authority.
+
+### Hosted source-check substitution control
+
+Buildkite9472 on candidate059dec1b actually returned local `ready=true` and
+`proof_ready=true` after a candidate corrupted source, replaced its inventoried
+check script with a success-printing script and repinned the source digest.
+Command-only preservation was insufficient. The runtime now also preserves the
+accepted local source-definition digest before selection. The failed observation
+remains historical; fresh hosted execution must establish the repair. This is a
+local-readiness finding, not evidence of bypassing an independent remote merge
+service or of OS isolation from an unrestricted producer.
