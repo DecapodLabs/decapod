@@ -717,8 +717,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b308881bcd400971f98c68e7793b09c6cfc692840bf19dce7dea57425d9bc42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1029,6 +1029,11 @@ not become authoritative merely because the candidate recomputes a review digest
 `repository_profile` owns this preservation check; `validation_runtime` must apply
 it before selecting an execution provider. A previously accepted strict profile
 continues to require its existing external assurance.
+
+Maintainers can approve the exact transition from a different checkout when
+CI or Decapod Cloud provides independent approval custody. An upgrade to source
+inventory discovery can change the reviewed digest without changing source
+files, so the old and new measurements remain part of the reviewed transition.
 
 The dedicated change restores the preserved repair against v0.144.3 and adds
 real-process consumer regressions for repinning, additive checks and stale source.

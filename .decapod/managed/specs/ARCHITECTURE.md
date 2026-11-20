@@ -1189,8 +1189,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b308881bcd400971f98c68e7793b09c6cfc692840bf19dce7dea57425d9bc42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1252,6 +1252,12 @@ unsupported; it does not interpret workflow YAML or introduce an orchestration
 engine. Every command runs in the frozen source snapshot, with byte-measured
 declared tool inputs before and after execution and fresh accepted-target queries.
 Source/configuration/tool/target drift invalidates proof.
+
+`repository_policy_approval.rs` checks portable Ed25519 approvals against
+only the accepted Git commit's signer list. Decapod Cloud can also resolve a
+repository-scoped decision through the authenticated Dactyl governance RPC.
+The local ledger remains the approval source for local repositories without a
+portable receipt. Each carrier admits an exact policy change before execution.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The

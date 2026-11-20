@@ -801,8 +801,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b308881bcd400971f98c68e7793b09c6cfc692840bf19dce7dea57425d9bc42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1376,6 +1376,13 @@ expired, revoked, or stale approvals fail closed with
 remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. Local
 cooperative actor labels and host-local SQLite retain their shared-UID trust
 boundary and do not claim cryptographic identity or OS sandboxing.
+
+The CI policy evaluator resolves the protected base from the CI runner and its
+remote-tracking refs. It verifies the exact signed transition using public keys
+read from that immutable base. Cloud policy approval requires authenticated
+repository governance authority, and validation checks the service decision's
+current generation, exact subject and expiry. CI checks use no runner-local
+SQLite authority. Approval changes which reviewed contract can run.
 
 The regression boundary uses real Git targets and native subprocess checks,
 including a replacement command that only prints claimed success. These tests

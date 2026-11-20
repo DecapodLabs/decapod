@@ -1539,8 +1539,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1b308881bcd400971f98c68e7793b09c6cfc692840bf19dce7dea57425d9bc42`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2229,7 +2229,12 @@ the accepted local source-definition digest. Recomputing a candidate digest
 cannot self-authorize changed inventoried check scripts, build/dependency
 definitions, or provider inputs. Retain the accepted inventory or obtain a
 `policy.control` transition approval bound to the exact base, head, and source/command
-digests before revalidation; no override or second policy store is added.
+digests before revalidation. CI receives an exact signed receipt through
+`DECAPOD_REPO_TRANSITION_APPROVAL` and reads signer public keys from the accepted
+base. Cloud maintainers receive a decision ID from `govern policy approve`;
+validators present it as `DECAPOD_REPO_TRANSITION_DECISION_ID` and read the
+exact decision through authenticated Dactyl governance. Both paths require
+current approval and let the normal validation engine evaluate proof.
 
 ## Target-scoped repository proof (#1740)
 

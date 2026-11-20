@@ -801,6 +801,14 @@
       "proof_refs": [
         "fresh_ci_checkout_cannot_inherit_another_checkouts_local_policy_approval"
       ]
+    },
+    "portable-transition-1833": {
+      "statement": "CI and Cloud independently authenticate approval for the exact accepted repository policy transition before required proof executes.",
+      "falsifier": "An expired or stale approval, a signer installed only by the candidate, or a Cloud response for a different subject admits a transition.",
+      "status": "supported",
+      "proof_refs": [
+        "repository_profile::transition_approval tests and fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade"
+      ]
     }
   },
   "checkpoints": [
@@ -821,6 +829,14 @@
       "id": "issue-1833-sync-ba21c8f16",
       "summary": "Integrate the accepted v0.156.0 release metadata",
       "input_digest": "sha256:b78f3de2ec4db5510f458d40c74a79b261496f808fa22a954bd8923dfe06c073"
+    },
+    {
+      "id": "issue-1833-portable-transition",
+      "summary": "Add independent CI and Cloud repository policy approvals",
+      "input_digest": "sha256:a4acabce5efccb7bfa54a4b44b2a17b17638663bad9726f13bf3a701d86c97c2",
+      "proof_refs": [
+        "Portable approval unit tests and fresh-checkout transition regression passed"
+      ]
     }
   ],
   "intents": {
@@ -859,28 +875,28 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "This regression exercises existing pre-execution rules and adds no approval provider or backend.",
-          "reviewed_code_fingerprint": "d0c9bc2ac9be6aa1c4d53dff2b848eb5f3898b9d565986210539b610c9dd457c",
-          "spec_material_hash": "16bc73fa00c32665fbf8add1cc12c811ddb513546f8dd18bbecc52898fabd89b"
+          "reason": "Describe the independently verified CI signing and Cloud Dactyl approval carriers.",
+          "reviewed_code_fingerprint": "a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066",
+          "spec_material_hash": "6405d23bbb6e5d991f1a7ed8b20e0485444025a92be23a7f1ccfb73da8deae47"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document that local approval is unavailable in independent CI checkouts.",
-          "reviewed_code_fingerprint": "d0c9bc2ac9be6aa1c4d53dff2b848eb5f3898b9d565986210539b610c9dd457c",
-          "spec_material_hash": "b47759abe14e1fc70c07fc67737cfc18eded99e0db85f731f01d33b55fe99d58"
+          "reason": "Describe exact approval receipt and decision ID inputs for CI and Cloud.",
+          "reviewed_code_fingerprint": "a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066",
+          "spec_material_hash": "a3da81bb100e90758e6256aa20ef8d391a2371b2a092d6764b157274672257de"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The regression verifies the local ledger trust boundary documented in this spec and changes no authority.",
-          "reviewed_code_fingerprint": "d0c9bc2ac9be6aa1c4d53dff2b848eb5f3898b9d565986210539b610c9dd457c",
-          "spec_material_hash": "9e339b89e8e6fee3b7ffb5a302984f70a3d5145e30c617dac94bc1f0b57d8d12"
+          "reason": "Record trusted accepted keys and exact authenticated cloud authorization.",
+          "reviewed_code_fingerprint": "a67fbe2a29792e70528b00ea0674a0d1edd1638130bc04e86d54fb681dafa066",
+          "spec_material_hash": "24af5a8132ac64807c77741d40ce8c18efbb619f108a0c48baa465cef345f133"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Establish portable repository policy transition proof",
       "todo_ids": [
@@ -888,19 +904,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795213555Z"
+      "updated_at": "1795214820Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b4e2d1f474ee810a40c634d78db0b6363982252b81a9a2796ec7796c32aefdf3",
-      "blockers": [
-        "The cloud client and Propodus proof acceptance API expose post-execution proof operations. A pre-execution policy-transition approval needs independently authenticated issuance, lookup, expiry and revocation for an exact transition. Candidate bytes cannot supply authority."
-      ],
+      "artifact_hash": "sha256:b85498b6f910fefa172cfefb4e8f8477bff8f40cf04f673175439be61794948f",
       "checks": [
         {
+          "name": "ci_checkout_inventory_transition",
+          "status": "passed"
+        },
+        {
           "name": "ci_clone_regression",
+          "status": "passed"
+        },
+        {
+          "name": "ci_signature_and_cloud_decision_unit_tests",
           "status": "passed"
         },
         {
@@ -944,10 +965,17 @@
             "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XEJYDET27439XRSKSWYKZ6",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XEJYDET27439XRSKSWYKZ6": {
@@ -989,6 +1017,27 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/repository_policy_approval.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "Exact signed approvals pass in a fresh clone after a simulated scanner upgrade. Missing, expired, stale, and candidate-signed approvals fail closed. Cloud decision unit tests bind repository, generation, candidate tree, and transition."
+                ],
+                "proof_refs": [
+                  "ci_signature_and_cloud_decision_unit_tests",
+                  "ci_checkout_inventory_transition"
+                ],
+                "scope": [
+                  "src/decapod/core/validation_rules.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -998,6 +1047,7 @@
       "destination": "pull request",
       "evidence": [
         "A simulated scanner upgrade changed only the config digest. The exact transition passed with local maintainer approval and was rejected in a fresh clone of the same head and base.",
+        "Exact signed approvals pass in a fresh clone after a simulated scanner upgrade. Missing, expired, stale, and candidate-signed approvals fail closed. Cloud decision unit tests bind repository, generation, candidate tree, and transition.",
         "Host project check reported container_workspace_required and two pre-existing done TODOs without VERIFIED proof."
       ],
       "inspected_files": [
@@ -1006,7 +1056,11 @@
       ],
       "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
       "modified_files": [
-        "src/decapod/core/validation_rules.rs"
+        "src/decapod/core/repository_policy_approval.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_rules.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/plugins/policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

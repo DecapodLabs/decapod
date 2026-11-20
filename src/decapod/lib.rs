@@ -8809,7 +8809,9 @@ fn run_govern_command(
             project_store,
             ValidationScope::ProjectPrerequisites,
         )?,
-        GovernCommand::Policy(policy_cli) => policy::run_policy_cli(project_store, policy_cli)?,
+        GovernCommand::Policy(policy_cli) => {
+            policy::run_policy_cli_in_workspace(project_store, workspace_root, policy_cli)?
+        }
         GovernCommand::Health(health_cli) => health::run_health_cli(project_store, health_cli)?,
         GovernCommand::Proof(proof_cli) => proof::execute_proof_cli(&proof_cli, store_root)?,
         GovernCommand::Watcher(watcher_cli) => match watcher_cli.command {
