@@ -883,6 +883,11 @@
       "id": "sync-1873-issue-1832",
       "summary": "Reconcile accepted master and exercise the committed platform and downgrade fixtures",
       "input_digest": "sha256:5b0ea9f7b4729d499bce3084bd32cf230802182629558f357e4fd3fbb98f110b"
+    },
+    {
+      "id": "sync-v1561-issue-1832",
+      "summary": "Reconcile the accepted v0.156.1 release and refresh exactly measured repository projections",
+      "input_digest": "sha256:5d5340742a76b515d4a43ab5e173650fb1e2732fe92a55bb8e12e9a794c388b0"
     }
   ],
   "intents": {
@@ -924,22 +929,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved the authored design and reviewed it with the current accepted architecture",
-          "reviewed_code_fingerprint": "3a14dac692c5f752cb9018ca0d0775c57b4dee78168a914720e2887aa719ad4b",
+          "reason": "Reviewed the authored architecture with the accepted v0.156.1 source snapshot",
+          "reviewed_code_fingerprint": "e2df1d09dcd708f21a6fe5284f0998a9c470c1e6fb94a56a1c50bc2aabfdb5bd",
           "spec_material_hash": "90afa10536338a20d2632bedf518a03c6d182c265acecc74bcb232ade4866e14"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the interface contract alongside the accepted publication and policy changes",
-          "reviewed_code_fingerprint": "3a14dac692c5f752cb9018ca0d0775c57b4dee78168a914720e2887aa719ad4b",
+          "reason": "Reviewed the authored interfaces with the accepted v0.156.1 source snapshot",
+          "reviewed_code_fingerprint": "e2df1d09dcd708f21a6fe5284f0998a9c470c1e6fb94a56a1c50bc2aabfdb5bd",
           "spec_material_hash": "0db3885a54f2ee77a2789b25965de465e47346df1478bf89cc859a9fcc8e64e4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved the authored security contract and reviewed it against the new accepted base",
-          "reviewed_code_fingerprint": "3a14dac692c5f752cb9018ca0d0775c57b4dee78168a914720e2887aa719ad4b",
+          "reason": "Reviewed the authored security material with the accepted v0.156.1 source snapshot",
+          "reviewed_code_fingerprint": "e2df1d09dcd708f21a6fe5284f0998a9c470c1e6fb94a56a1c50bc2aabfdb5bd",
           "spec_material_hash": "d9ade5825045e5f2e6a38950afb46665f947f1de0ede34c0df99eb82a2afb8cd"
         }
       ],
@@ -951,7 +956,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218078Z"
+      "updated_at": "1795218531Z"
     },
     "trajectory": {
       "active_boundaries": [
