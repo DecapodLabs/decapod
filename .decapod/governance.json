@@ -816,6 +816,11 @@
       "id": "issue-1834-sync-d96bf819",
       "summary": "Sync accepted master and preserve the PR metadata change",
       "input_digest": "sha256:81c4f321323bc834d55796e12ead391b5b085f632581c81090373aac617796c3"
+    },
+    {
+      "id": "issue-1834-sync-ba21c8f16",
+      "summary": "Sync accepted v0.156.0 release for PR metadata",
+      "input_digest": "sha256:73f04e6e682c05fb67a6e720dce0d87d29e2537afb623be9e0e6c6c9a7f27571"
     }
   ],
   "intents": {
@@ -857,22 +862,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Apply the metadata derivation and exact-head admission ordering on the accepted target specs.",
-          "reviewed_code_fingerprint": "1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382",
+          "reason": "Retain the exact commit range and admission ordering after the accepted release.",
+          "reviewed_code_fingerprint": "e0eaf7cd781a9d43dd14909236c1c8f43c59dceca9ab491e4808e97ba6a87af2",
           "spec_material_hash": "a0e9cd6a2a819b54cef571f05086a03b01ffa17dca82ec3ae3acc083c48afd30"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Carry the omitted metadata behavior and ambiguity diagnostic forward on the accepted target specs.",
-          "reviewed_code_fingerprint": "1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382",
+          "reason": "Retain omitted PR metadata behavior after the accepted release.",
+          "reviewed_code_fingerprint": "e0eaf7cd781a9d43dd14909236c1c8f43c59dceca9ab491e4808e97ba6a87af2",
           "spec_material_hash": "9155b3924b976559bf0943e44517c69c1523e506047a24c918af484b9b774163"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted security semantics cover admission independently of PR metadata selection.",
-          "reviewed_code_fingerprint": "1870464dbf13f6d60576b3e293dc8c881d9143f26b19b99c8a3a285cb1d5a382",
+          "reason": "PR metadata has no role in GitHub admission authority.",
+          "reviewed_code_fingerprint": "e0eaf7cd781a9d43dd14909236c1c8f43c59dceca9ab491e4808e97ba6a87af2",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -884,7 +889,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795213476Z"
+      "updated_at": "1795214235Z"
     },
     "trajectory": {
       "active_boundaries": [
