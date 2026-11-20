@@ -822,6 +822,14 @@
       "proof_refs": [
         "Released scanner matches accepted 105-source inventory on this branch"
       ]
+    },
+    {
+      "id": "issue-1832-v0156-container-projection",
+      "summary": "Refresh the generated Dockerfile to the accepting v0.156.0 release",
+      "input_digest": "sha256:8d0aabad91121402fd35abb3f82bd89e36b4c594050f61b7b0f78a8b0a972561",
+      "proof_refs": [
+        "GitHub Decapod Validate 44831515823 measured the required v0.156.0 Dockerfile projection"
+      ]
     }
   ],
   "intents": {
