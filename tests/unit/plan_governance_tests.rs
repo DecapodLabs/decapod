@@ -156,6 +156,17 @@ fn accepted_global_conflict_has_one_source_backed_blocker_across_all_phases() {
     );
     let mut legacy = plan.clone();
     legacy.state = PlanState::Approved;
+    legacy.phases.push(Phase {
+        id: "work".into(),
+        name: "Work".into(),
+        description: "Legacy approved phase".into(),
+        entry_gates: vec![],
+        exit_gates: vec![],
+        entered: true,
+        completed: true,
+        entered_at: Some("1780000000Z".into()),
+        completed_at: Some("1780000001Z".into()),
+    });
     save_plan(root, &legacy).unwrap();
     let missing_store = root.join(".decapod/data");
     assert!(
@@ -195,8 +206,85 @@ fn accepted_global_conflict_has_one_source_backed_blocker_across_all_phases() {
     git(&["merge-base", "--is-ancestor", &base, &repaired]);
     git(&["update-ref", "refs/heads/main", &repaired, &base]);
     let current = instruction_readiness_at(root, &legacy, EvaluationPhase::PreExecution).unwrap();
-    assert_eq!(current.verdict, RuleVerdict::Pass);
+    assert_eq!(
+        current.global_consistency.as_ref().unwrap().verdict,
+        RuleVerdict::Pass
+    );
     assert_ne!(current.source_revision, initial.source_revision);
+    assert_eq!(current.verdict, RuleVerdict::Fail);
+    assert_eq!(
+        current.remediation.as_ref().unwrap().error_code,
+        "NEEDS_PLAN_APPROVAL"
+    );
+    assert!(
+        !current
+            .remediation
+            .as_ref()
+            .unwrap()
+            .human_authorization_required
+    );
+    assert!(
+        ensure_execute_ready(ExecuteCheckInput {
+            project_root: root,
+            store_root: &missing_store,
+            todo_id: Some("task:global"),
+        })
+        .unwrap_err()
+        .to_string()
+        .contains("NEEDS_PLAN_APPROVAL"),
+        "a repaired policy must not revive a legacy approval"
+    );
+    let approved = patch_plan(
+        root,
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let after_approval =
+        instruction_readiness_at(root, &approved, EvaluationPhase::PreExecution).unwrap();
+    assert_eq!(after_approval.verdict, RuleVerdict::Pass);
+    assert_eq!(after_approval.source_revision, current.source_revision);
+    assert!(!approved.phases[0].entered);
+    assert!(!approved.phases[0].completed);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "--allow-empty",
+        "-m",
+        "unrelated accepted target movement",
+    ]);
+    let advanced = git(&["rev-parse", "HEAD"]);
+    git(&["update-ref", "refs/heads/main", &advanced, &repaired]);
+    assert_eq!(
+        instruction_readiness_at(root, &approved, EvaluationPhase::PreExecution)
+            .unwrap()
+            .verdict,
+        RuleVerdict::Pass,
+        "unchanged accepted selected-work policy must preserve approval"
+    );
+
+    config.proof.selected_work.as_mut().unwrap().relations[2].right = "D".into();
+    fs::write(
+        root.join(".decapod/config.toml"),
+        toml::to_string(&config).unwrap(),
+    )
+    .unwrap();
+    git(&["add", ".decapod/config.toml"]);
+    git(&[
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-m",
+        "accept a different satisfiable relation set",
+    ]);
+    let revised = git(&["rev-parse", "HEAD"]);
+    git(&["update-ref", "refs/heads/main", &revised, &advanced]);
+    let stale = instruction_readiness_at(root, &approved, EvaluationPhase::PreExecution).unwrap();
+    assert_eq!(stale.global_consistency.unwrap().verdict, RuleVerdict::Pass);
+    assert_eq!(stale.remediation.unwrap().error_code, "NEEDS_PLAN_APPROVAL");
     assert_eq!(
         initial.verdict,
         RuleVerdict::Fail,
