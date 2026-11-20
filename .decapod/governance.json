@@ -793,6 +793,11 @@
       "id": "release-proof-accepted1532-integration-20261120",
       "summary": "Integrate accepted release1532 and exact reviewed inputs; preserve stale-context and transport failures",
       "input_digest": "sha256:0e2b940e11c8aad35001999980e389b27cda4cb5b552e3b9bb3e0349a394f4eb"
+    },
+    {
+      "id": "release-proof-standalone-wrapper-repair-20261120",
+      "summary": "Repair observed standalone visibility failure and retain library source-lineage controls",
+      "input_digest": "sha256:cd02e4a61e3ae03403f7eed7e9ba046f77a6e2eb1d92558f023813c32848eefc"
     }
   ],
   "intents": {
@@ -833,22 +838,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed source-policy reuse and exact immutable-head bytes after accepted34b integration and official1532 generation; full source graph retained.",
-          "reviewed_code_fingerprint": "1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308",
-          "spec_material_hash": "1e6d58f76e6b27911507a284667c65de78cca05dba65f7775dd517090b18f4ad"
+          "reason": "Fix the actual standalone crate-boundary compile failure using existing read-only predicate exported hidden; shared test fixture takes a supplied source root, source-lineage tests stay in library harness.",
+          "reviewed_code_fingerprint": "eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707",
+          "spec_material_hash": "862094e10c8b3a56170f0cfe074e9875da4f4ef63f5d17674933b72386024722"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current1532 projections retain conditional source version preservation and exact current immutable bytes; execution still pending Actions.",
-          "reviewed_code_fingerprint": "1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308",
+          "reason": "Read-only helper visibility supports established standalone verifier without adding an authority or RPC operation; all exact projection checks remain.",
+          "reviewed_code_fingerprint": "eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707",
           "spec_material_hash": "ab5445cf5a6f8eebfedb4108d6e048abeabb87fccbc84280fb73be17b4a79def"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current base, unchanged trusted-source predicate, header/payload/origin refusals and all105 inputs; required recipes unchanged.",
-          "reviewed_code_fingerprint": "1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308",
+          "reason": "Existing source/origin/ancestry/template predicate unchanged. Byte-exact header controls and payload/origin refusals remain selected in required full library tests.",
+          "reviewed_code_fingerprint": "eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707",
           "spec_material_hash": "d013f22014a8b0d8142a917979689fca1ff96fc842d68eed5148def919084c9a"
         }
       ],
@@ -860,13 +865,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795162688Z"
+      "updated_at": "1795163326Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c36af98b4094ded244e4f75bd991b153a155a9ace2482f71b20424e578de2c39",
+      "artifact_hash": "sha256:89ee825cbd4eb523cc3eff4ca162f4a5958591c49486db254ee078c51b8e73aa",
       "checks": [
         {
           "name": "candidate-regression-execution",
@@ -875,6 +880,10 @@
         {
           "name": "candidate-runtime",
           "status": "unavailable"
+        },
+        {
+          "name": "current-base-standalone-compile",
+          "status": "failed"
         },
         {
           "name": "first-actions-context",
@@ -887,6 +896,10 @@
         {
           "name": "release1858-actual-before",
           "status": "failed"
+        },
+        {
+          "name": "wrapper-runtime",
+          "status": "unavailable"
         }
       ],
       "current_phase": "intent",
@@ -917,10 +930,17 @@
             "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VYYH74AZEP39ERERBKPVWM": {
@@ -967,6 +987,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Actions job136170941138 caught E0603: standalone wrapper could not access crate-private existing reader; log SHA256c2cd3c095d2f64e05d86e58b9412088ea993666be3a9e89876694bbe8a558120. Export read-only helper hidden, keep existing shared wrapper regression suite intact, and move new source-lineage controls to existing library-only source fixture harness. All105 inputs remeasured, only reviewed assets test fixture differs from accepted base. No runtime pass claimed or required graph changed.",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "/private/tmp/attack-gaps-1862-73b-validate-failure.log",
+                  "/private/tmp/attack-gaps-release-wrapper-inventory-review.json"
+                ],
+                "proof_refs": [
+                  "current-base-standalone-compile",
+                  "wrapper-runtime"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -974,12 +1012,15 @@
       },
       "declared_commands": [
         "Accepted target moved to34b98ab1; integrate release1532 and native projections through official1532. All105 source inputs measured; only reviewed regression fixture changes versus accepted base. Initial Actions context rejected before tests. A spec-review write returned STORAGE_OWNER_TRANSPORT_OUTCOME_UNKNOWN; native status confirmed the older review persisted and no new review was recorded, so retry is current-content-bound and idempotent. User excludes all Buildkite; Actions result remains pending.",
+        "Actions job136170941138 caught E0603: standalone wrapper could not access crate-private existing reader; log SHA256c2cd3c095d2f64e05d86e58b9412088ea993666be3a9e89876694bbe8a558120. Export read-only helper hidden, keep existing shared wrapper regression suite intact, and move new source-lineage controls to existing library-only source fixture harness. All105 inputs remeasured, only reviewed assets test fixture differs from accepted base. No runtime pass claimed or required graph changed.",
         "Actual release1858 standalone validation191pass1fail17skip rejected FINGERPRINT_ONLY_SPECS; log SHA256924dbf78734b5049b06c61452802fa2834472e198b53d2ae70749c86efe59966. Implement reviewed source-policy reuse and negative/positive controls; no candidate runtime success claimed. Native approval initially hit database Busy and supported same-intent retry reached APPROVED. User explicitly directs publish PRs, ignore all Buildkite, verify GitHub Actions, merge and release cuts. Preserve configured policy and all failures; source-CI is not retroactive authenticated native admission."
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/attack-gaps-1862-73b-validate-failure.log",
         "/private/tmp/attack-gaps-1862-first-context-failure.log",
         "/private/tmp/attack-gaps-release-current-inventory-review.json",
+        "/private/tmp/attack-gaps-release-wrapper-inventory-review.json",
         "/private/tmp/attack-gaps-release1858-validate-failure.log"
       ],
       "inspected_files": [

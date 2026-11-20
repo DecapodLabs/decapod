@@ -711,7 +711,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308`
+- Repository signal fingerprint: `eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1201,3 +1201,5 @@ This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and
 Decapod release metadata must remain independently distinguishable from source, policy, dependency and authored-spec changes. Its existing immutable classifier and exact projection verifier own this boundary. A canonical Decapod source checkout may retain version-bound agent entrypoints under its already accepted source-development policy. Release proof must preserve those exact committed bytes when that policy verifies origin, immutable source ancestry, canonical template payload and each version-bound fingerprint. This does not permit a caller-selected header or a source/configuration change to masquerade as release metadata. Required Actions will exercise this correction; implementation and registered test locations alone are not passing evidence.
 
 The current candidate integrates accepted release0.153.2 at34b98ab1. Its first Actions attempt was rejected before execution after the accepted target advanced; that refusal remains historical. Release projections are regenerated through official0.153.2, and the complete105-file source inventory is independently remeasured. The reviewed regression fixture is the only inventory input changed from the accepted base. GitHub Actions for the integrated exact candidate remain required; old passes and source registration do not establish current execution.
+
+Actions exposed a standalone-tool integration error in the first current-base candidate: the shared verifier could not call its crate-private source reader. The existing read-only predicate is now exported as an internal documented-hidden helper for that wrapper. Source-lineage regression setup stays in the library-only harness; the standalone wrapper retains its existing complete shared regression suite. No test is removed from the required library execution.

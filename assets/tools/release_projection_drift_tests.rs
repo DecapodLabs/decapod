@@ -11,15 +11,16 @@ pub(crate) struct Fixture {
 
 impl Fixture {
     pub(crate) fn new() -> Self {
-        Self::with_source_versions(false)
+        Self::with_root(None)
     }
 
-    fn with_source_versions(preserve: bool) -> Self {
-        let root = if preserve {
-            entrypoints::development_source_fixture()
-        } else {
-            tempfile::tempdir().unwrap()
-        };
+    pub(crate) fn with_source_versions(root: tempfile::TempDir) -> Self {
+        Self::with_root(Some(root))
+    }
+
+    fn with_root(root: Option<tempfile::TempDir>) -> Self {
+        let preserve = root.is_some();
+        let root = root.unwrap_or_else(|| tempfile::tempdir().unwrap());
         let repo = root.path();
         if !preserve {
             git(repo, &["init", "-q", "-b", "master"]).unwrap();
@@ -149,65 +150,6 @@ fn accepts_only_exact_current_release_projections_without_mutating_checkout() {
     assert_eq!(before, git(fixture.root.path(), &["diff", "HEAD"]).unwrap());
     fixture.refresh();
     fixture.verify().unwrap();
-}
-
-#[test]
-fn accepts_preserved_source_versions_from_committed_development_templates() {
-    let fixture = Fixture::with_source_versions(true);
-    let repo = fixture.root.path();
-    assert!(entrypoints::preserves_source_entrypoint_versions(repo));
-    for path in entrypoints::ENTRYPOINT_FILES {
-        assert_eq!(
-            read_regular(repo, path).unwrap(),
-            blob(repo, &fixture.head, path).unwrap()
-        );
-        assert!(
-            read_regular(repo, path)
-                .unwrap()
-                .starts_with("<!-- decapod-release: 0.0.0 -->")
-        );
-    }
-    let before = git(repo, &["diff", "HEAD"]).unwrap();
-    fixture.verify().unwrap();
-    fixture.refresh();
-    fixture.verify().unwrap();
-    assert_eq!(before, git(repo, &["diff", "HEAD"]).unwrap());
-}
-
-#[test]
-fn preserved_source_versions_do_not_authorize_header_payload_or_origin_drift() {
-    for alteration in ["header", "payload", "origin"] {
-        let fixture = Fixture::with_source_versions(true);
-        let repo = fixture.root.path();
-        assert!(entrypoints::preserves_source_entrypoint_versions(repo));
-        match alteration {
-            "header" => {
-                fs::write(
-                    repo.join("AGENTS.md"),
-                    entrypoints::render_entrypoint_for_release("AGENTS.md", "0.0.2").unwrap(),
-                )
-                .unwrap();
-                // A valid version-bound fingerprint still cannot replace the
-                // immutable release head's preserved entrypoint metadata.
-                assert!(entrypoints::preserves_source_entrypoint_versions(repo));
-            }
-            "payload" => fixture.edit("AGENTS.md", |text| text.replace("Decapod", "Counterfeit")),
-            "origin" => {
-                git(
-                    repo,
-                    &[
-                        "remote",
-                        "set-url",
-                        "origin",
-                        "https://github.com/foreign/consumer",
-                    ],
-                )
-                .unwrap();
-            }
-            _ => unreachable!(),
-        }
-        assert!(fixture.verify().is_err(), "accepted {alteration} drift");
-    }
 }
 
 #[test]
