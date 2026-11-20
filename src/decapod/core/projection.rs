@@ -8,6 +8,16 @@
 use crate::core::rpc::{BlockerKind, RpcResponse};
 use serde::{Deserialize, Serialize};
 
+pub use crate::core::projection_budget::{
+    CursorDisposition, DegradedReason, EventProjectionCursor, EventProjectionPage,
+    EventProjectionQuery, EventRetentionAnchor, EventRetentionReport,
+    PROJECTION_BUDGET_SCHEMA_VERSION, ProjectionBudget, ProjectionMetrics, ProjectionStatus,
+    WorktreeProjectionEntry, WorktreeProjectionPage, WorktreeProjectionQuery,
+    apply_bounded_event_retention, project_events_on_conn, project_events_on_conn_with_deadline,
+    project_events_read_only, project_worktrees_read_only,
+    project_worktrees_read_only_with_deadline, read_retention_anchor,
+};
+
 /// Observed operation status. Derived only from actual response fields.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

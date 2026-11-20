@@ -473,6 +473,34 @@ pub(crate) fn capture_task_binding(
 ) -> Result<Option<ValidationBinding>, DecapodError> {
     capture_task_binding_inner(store, root, true)
 }
+
+pub(crate) fn capture_task_binding_with_budget(
+    store: &Store,
+    root: &Path,
+    validation_budget: Duration,
+) -> Result<Option<ValidationBinding>, DecapodError> {
+    if history_is_cloud(store, root)? {
+        return Ok(None);
+    }
+    let (_, _, trajectory) = governance(root)?;
+    let task_id = trajectory
+        .get("task_id")
+        .and_then(Value::as_str)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("full validation requires a task-bound trajectory"))?;
+    // Never rotate custody implicitly: renewing bumps `lease_generation`, which
+    // invalidates workunit execution checkpoints. Default is a read-only advisory.
+    let mode = todo::ValidationLeaseTtlMode::from_env_value(
+        std::env::var("DECAPOD_VALIDATE_LEASE_TTL").ok().as_deref(),
+    );
+    let min_ttl_secs = validation_budget.as_secs().saturating_add(300);
+    if let todo::ValidationLeaseTtl::Low { advisory, .. } =
+        todo::ensure_validation_lease_ttl(&store.root, task_id, min_ttl_secs, mode)?
+    {
+        eprintln!("{advisory}");
+    }
+    capture_task_binding_inner(store, root, true)
+}
 fn capture_task_binding_inner(
     store: &Store,
     root: &Path,
@@ -787,8 +815,10 @@ fn history_is_cloud(store: &Store, root: &Path) -> Result<bool, DecapodError> {
     let selected = crate::cli::DecapodProjectConfig::load(root)?
         .repo
         .effective_backend();
-    let store_project =
-        super::store::find_decapod_project_root(&store.root).unwrap_or_else(|_| root.into());
+    let store_project = super::store::find_decapod_project_root(&store.root)
+        .ok()
+        .filter(|found| store.root.starts_with(found.join(".decapod")))
+        .unwrap_or_else(|| root.into());
     let routed = crate::cli::DecapodProjectConfig::load(&store_project)?
         .repo
         .effective_backend();
@@ -817,6 +847,25 @@ pub(crate) fn finish_archive(
     report: &ValidationReport,
 ) -> Result<(), DecapodError> {
     if !report.ready {
+        if let Some(subject) = &binding.workunit_subject
+            && matches!(
+                report.scope,
+                validation_runtime::READINESS_SCOPE
+                    | super::repository_profile::READINESS_SCOPE
+                    | super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+            )
+        {
+            let current = capture_task_binding_inner(store, root, false)?
+                .ok_or_else(|| invalid("current task authority is unavailable"))?;
+            let mut original = binding.clone();
+            original.workunit_subject = None;
+            if current != original {
+                return Err(invalid(
+                    "task, custody or validation context changed during validation",
+                ));
+            }
+            super::workunit::invalidate_current_validation(root, &binding.task, subject)?;
+        }
         return Ok(());
     }
     require_local(store, root)?;
@@ -1053,6 +1102,87 @@ pub(crate) fn lookup_record(
     lookup_inner(root, store, sha, Some(record_id))
 }
 
+/// Advisory read-only lookup of the latest recorded candidate SHA for `task_id`
+/// in the verification event stream, used solely to enrich recovery guidance.
+pub(crate) fn latest_candidate_for_task(store: &Store, task_id: &str) -> Option<String> {
+    let path = events::canonical_db_path(&store.root);
+    if !path.is_file() {
+        return None;
+    }
+    let history = DbBroker::new(&store.root)
+        .with_conn(
+            &path,
+            "decapod",
+            None,
+            "verify.history.candidate_hint",
+            |conn| events::query_all_on_conn(conn, events::VERIFICATION),
+        )
+        .ok()?;
+    for event in history.iter().rev().take(256) {
+        if event
+            .payload
+            .pointer("/task_binding/task_id")
+            .and_then(Value::as_str)
+            == Some(task_id)
+            && let Some(sha) = event.payload.get("candidate_sha").and_then(Value::as_str)
+            && full_sha(sha)
+        {
+            return Some(sha.to_owned());
+        }
+    }
+    None
+}
+
+/// Current custody is an exact selector, never permission to borrow a prior
+/// owner's result. Generic historical lookup deliberately remains ambiguous.
+fn lookup_current_workunit(
+    root: &Path,
+    store: &Store,
+    binding: &ValidationBinding,
+) -> Result<HistoricalValidationProof, DecapodError> {
+    require_sha(&binding.candidate_sha)?;
+    require_local(store, root)?;
+    let path = events::canonical_db_path(&store.root);
+    if !path.is_file() {
+        return Err(invalid(
+            "no canonical full validation proof was recorded for this commit",
+        ));
+    }
+    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    let history = events::query_subject_on_conn(
+        &conn,
+        events::VERIFICATION,
+        "commit",
+        &binding.candidate_sha,
+        MAX_RECORDS,
+    )?;
+    if history.is_empty() {
+        return Err(invalid(
+            "no canonical full validation proof was recorded for this commit",
+        ));
+    }
+    let mut selected = None;
+    for event in &history {
+        let record = decode(event)?;
+        if record.candidate_sha != binding.candidate_sha
+            || record.proof.material.repository != binding.repository
+        {
+            return Err(invalid(
+                "subject journal contains another commit or repository",
+            ));
+        }
+        if record.task_binding == binding.task {
+            selected = Some(record);
+        }
+    }
+    Ok(HistoricalValidationProof {
+        record: selected.ok_or_else(|| invalid(
+            "WORKUNIT_PROOF_STALE: no successful full validation for current task and custody; obtain fresh full validation"
+        ))?,
+        store_root: store.root.clone(),
+    })
+}
+
 /// Fence the canonical task/custody and producer reference in the same
 /// transaction that accepts a VERIFIED workunit. No second connection, command
 /// execution or agent-supplied success is trusted at this commit boundary.
@@ -1125,7 +1255,7 @@ pub(crate) fn current_workunit_proof(
         }
         lookup_record(root, &store, candidate, record)?
     } else {
-        lookup(root, &store, &binding.candidate_sha)?
+        lookup_current_workunit(root, &store, &binding)?
     };
     let record = &proof.record;
     if record.task_binding != binding.task
@@ -1215,15 +1345,21 @@ impl HistoricalValidationProof {
             "validation.history.integration",
             &program.to_string_lossy(),
         )?;
-        let remote = if let Some(root) = repository.local_target_root {
+        let remote = if let Some(local_root) = &repository.local_target_root {
             let oid = workspace::read_canonical_local_git(
-                &root,
+                local_root,
                 &program,
                 &["rev-parse", "--verify", &format!("{branch_ref}^{{commit}}")],
             )?;
             format!("{oid}\t{branch_ref}")
         } else {
-            accepted_target(&program, &repository.remote_url, &branch_ref)?
+            accepted_target_for_repository(
+                root,
+                &self.store_root,
+                &program,
+                &repository,
+                &branch_ref,
+            )?
         };
         let lines: Vec<_> = remote.lines().collect();
         let (accepted_sha, returned_ref) = lines
@@ -1470,6 +1606,208 @@ fn accepted_target(program: &Path, remote: &str, branch_ref: &str) -> Result<Str
         .map_err(invalid)?
         .trim()
         .to_owned())
+}
+
+#[derive(Deserialize)]
+struct GithubGitRefResponse {
+    #[serde(rename = "ref")]
+    ref_name: String,
+    object: GithubGitRefObject,
+}
+
+#[derive(Deserialize)]
+struct GithubGitRefObject {
+    sha: String,
+    #[serde(rename = "type")]
+    object_type: String,
+}
+
+fn github_ref_api_endpoint(
+    owner: &str,
+    repository: &str,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    let repo = super::snapshot_provider::Repository::new(owner, repository).map_err(invalid)?;
+    let suffix = branch_ref
+        .strip_prefix("refs/")
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| invalid("accepted branch must start with refs/"))?;
+    let encoded_segments: Vec<String> = suffix
+        .split('/')
+        .map(super::snapshot_provider::encode_path)
+        .collect();
+    Ok(format!(
+        "{}/git/ref/{}",
+        repo.api(),
+        encoded_segments.join("/")
+    ))
+}
+
+fn accepted_target_via_gh_runner(
+    runner: &mut impl super::snapshot_provider::Runner,
+    root: &Path,
+    owner: &str,
+    repository: &str,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    let endpoint = github_ref_api_endpoint(owner, repository, branch_ref)?;
+    let spec = super::snapshot_provider::CommandSpec {
+        program: super::snapshot_provider::Program::Github,
+        args: vec![
+            "api".into(),
+            "--hostname".into(),
+            "github.com".into(),
+            "--method".into(),
+            "GET".into(),
+            "--header".into(),
+            "Accept: application/vnd.github+json".into(),
+            endpoint.clone(),
+        ],
+        cwd: root.to_path_buf(),
+        organization: None,
+        provider_request: Some(super::snapshot_provider::ProviderRequest::GithubGet {
+            path: endpoint,
+        }),
+    };
+    let cancel = Cancellation::default();
+    let budget = super::snapshot_provider::Budget::new(Duration::from_secs(30), 64 * 1024, &cancel)
+        .map_err(invalid)?;
+    let reply = runner
+        .execute(&spec, &budget)
+        .map_err(|_| invalid("authenticated GitHub CLI accepted target read did not complete"))?;
+    if reply.exit_code != 0 {
+        return Err(invalid(
+            "authenticated GitHub CLI accepted target read failed",
+        ));
+    }
+    let parsed: GithubGitRefResponse = serde_json::from_slice(&reply.stdout)
+        .map_err(|_| invalid("authenticated GitHub CLI returned invalid branch ref payload"))?;
+    if parsed.ref_name != branch_ref || parsed.object.object_type != "commit" {
+        return Err(invalid(
+            "authenticated GitHub CLI returned an unexpected ref or non-commit object",
+        ));
+    }
+    require_sha(&parsed.object.sha)?;
+    Ok(format!("{}\t{branch_ref}", parsed.object.sha))
+}
+
+fn accepted_target_authenticated_git(
+    program: &Path,
+    remote: &str,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    // Isolate from checkout .git/config and hooks, but retain host-user
+    // credential helper / environment lookups over strict non-redirect HTTPS.
+    let scratch = tempfile::tempdir()?;
+    let mut command = Command::new(program);
+    command
+        .current_dir(scratch.path())
+        .env_clear()
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_NO_LAZY_FETCH", "1")
+        .env("GIT_NO_REPLACE_OBJECTS", "1")
+        .env("GIT_GRAFT_FILE", "/dev/null")
+        .env("GIT_CEILING_DIRECTORIES", scratch.path())
+        .args([
+            "-c",
+            "protocol.allow=never",
+            "-c",
+            "protocol.https.allow=always",
+            "-c",
+            "http.followRedirects=false",
+            "ls-remote",
+            "--refs",
+            "--exit-code",
+            remote,
+            branch_ref,
+        ]);
+    for name in [
+        "PATH",
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "TMPDIR",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "GIT_ASKPASS",
+        "GH_TOKEN",
+        "GITHUB_TOKEN",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "ALL_PROXY",
+        "NO_PROXY",
+        "https_proxy",
+        "http_proxy",
+        "all_proxy",
+        "no_proxy",
+    ] {
+        if let Some(value) = std::env::var_os(name) {
+            command.env(name, value);
+        }
+    }
+    let capture = command.bounded_capture(
+        ProcessLimits {
+            timeout: Duration::from_secs(30),
+            max_output_bytes: 4096,
+        },
+        &Cancellation::default(),
+    )?;
+    if capture.termination != Termination::Exited || !capture.output.status.success() {
+        return Err(invalid(
+            "isolated host-user authenticated Git accepted target read failed",
+        ));
+    }
+    Ok(String::from_utf8(capture.output.stdout)
+        .map_err(invalid)?
+        .trim()
+        .to_owned())
+}
+
+fn accepted_target_for_repository(
+    root: &Path,
+    store_root: &Path,
+    program: &Path,
+    repository: &workspace::ReadinessRepository,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    if let Ok(public) = accepted_target(program, &repository.remote_url, branch_ref) {
+        return Ok(public);
+    }
+    if !repository.owner.is_empty()
+        && !repository.repository.is_empty()
+        && let Ok(gh_path) = crate::readiness_installed_tool(root, "gh")
+    {
+        let auth_store = store_root.to_path_buf();
+        if let Ok(mut runner) = super::snapshot_provider::OfficialCli::new(
+            program.to_path_buf(),
+            gh_path,
+            None,
+            move |spec, executable| {
+                let request = spec.authorize_provider_read()?;
+                external_action::authorize_official_github_read(&auth_store, executable, &request)
+                    .map_err(std::io::Error::other)
+            },
+        ) && let Ok(authenticated) = accepted_target_via_gh_runner(
+            &mut runner,
+            root,
+            &repository.owner,
+            &repository.repository,
+            branch_ref,
+        ) {
+            return Ok(authenticated);
+        }
+    }
+    if let Ok(authenticated) =
+        accepted_target_authenticated_git(program, &repository.remote_url, branch_ref)
+    {
+        return Ok(authenticated);
+    }
+    Err(invalid(
+        "accepted target is unavailable through reviewed public HTTPS and isolated host-user authenticated transport; check host GitHub CLI (`gh auth status`) or Git credentials and repository access (raw transport diagnostics are withheld to protect credentials)",
+    ))
 }
 fn reject_history_overrides(root: &Path) -> Result<(), DecapodError> {
     // Git ancestry must describe object parents, never a mutable graft file.

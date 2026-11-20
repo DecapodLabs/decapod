@@ -48,6 +48,14 @@ pub enum PolicyCommand {
     },
 }
 
+/// Canonical CLI command path for initializing the blast-radius risk map.
+pub const RISKMAP_INIT_COMMAND: &str = "decapod govern policy riskmap init";
+
+/// Canonical diagnostic text emitted when `RISKMAP.json` is absent.
+pub fn missing_riskmap_warning() -> String {
+    format!("Risk map missing (run `{RISKMAP_INIT_COMMAND}`)")
+}
+
 #[derive(Subcommand, Debug)]
 pub enum RiskmapSubcommand {
     /// Initialize a default risk map.
@@ -152,7 +160,7 @@ pub fn run_policy_cli_as(
                     if risk_map_path.exists() {
                         println!("Risk map present and readable.");
                     } else {
-                        println!("Risk map missing (run `decapod policy riskmap init`).");
+                        println!("{}.", missing_riskmap_warning());
                     }
                 }
             }
@@ -524,7 +532,18 @@ pub fn is_hitl_disabled_by_override(store: &Store, scope: &str, level: RiskLevel
     let Some(repo_root) = find_repo_root_from_store(store) else {
         return false;
     };
-    let Some(policy_override) = assets::get_override_doc(&repo_root, "plugins/POLICY") else {
+    let policy_override = match crate::core::db_maintenance::resolve_repository_override(&repo_root)
+    {
+        Ok(Some(text)) => assets::override_doc_from_text(&text, "plugins/POLICY")
+            .ok()
+            .flatten(),
+        Ok(None) => None,
+        Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+            assets::get_override_doc(&repo_root, "plugins/POLICY")
+        }
+        Err(_) => None,
+    };
+    let Some(policy_override) = policy_override else {
         return false;
     };
 

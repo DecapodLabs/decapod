@@ -178,12 +178,22 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
           "PR source diff and pending remote validation"
         ],
         "statement": "No Dagger-specific engine execution or authorization capability remains; generic proof custody is retained",
+        "status": "open"
+      },
+      "claim:duplicate-key-required-semantics": {
+        "falsifier": "Duplicate or escaped-equivalent required_extensions erases the unsupported requirement, nested ambiguous JSON is accepted, or legitimate unique-key negotiation fails after refusal.",
+        "statement": "Both RPC routes reject duplicate decoded JSON keys before startup; later fields cannot erase required extension semantics and unique-key ordinary negotiation can recover.",
         "status": "open"
       },
       "claim:durable-artifact-publication": {
@@ -477,6 +487,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -615,6 +626,11 @@
       "id": "reporting-accepted12-integration-20261118",
       "summary": "Integrate accepted release12 with reviewed report provenance; preserve actual failures and canonical proof boundary",
       "input_digest": "sha256:9f0ecabb2c008f7f87c5b8a34dedbefbdafefb2e7b8be3fe9c66b4f6dc7b94ba"
+    },
+    {
+      "id": "reporting-v01510-sync",
+      "summary": "Sync origin/master 11e0cdc76 (v0.151.0), refresh v0.151.0 projections, fix SECURITY.md spec review disposition, and reconcile governance (#1793)",
+      "input_digest": "sha256:fd78bb377ff76c11f744759ff5843c2d92d3c554da7ea5d42f62383d8ef12765"
     }
   ],
   "intents": {
@@ -655,23 +671,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed accepted strict-JSON decoder and reporting input provenance together at accepted 7bd0a915 release0.148.12. Pure projections retain caller origin and cannot authenticate current execution or policy authority.",
-          "reviewed_code_fingerprint": "9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e",
-          "spec_material_hash": "1033dc8ac29b7ec8da8ff860cbac91f57d30beafe70af776d8f541da8ead867c"
+          "reason": "Preserved Pure report projection does not authenticate proof (#1726) in ARCHITECTURE.md alongside v0.151.0 upstream specs.",
+          "reviewed_code_fingerprint": "45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102",
+          "spec_material_hash": "2900d7eb502d4612e0747975dfa86dd7aabc7819dfd7b91f909e970e034dd73d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed preserved strict decoder rejection/optional Unicode behavior plus additive input_origin and canonical_state_verified fields; no new canonical proof or policy authority.",
-          "reviewed_code_fingerprint": "9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e",
-          "spec_material_hash": "e02840520007fec8bdf4ab5480bd288e92e6dabe2eabe70ceaafdf0881f4f084"
+          "reason": "Preserved Caller-supplied validation report projections (#1726) in INTERFACES.md alongside v0.151.0 upstream specs.",
+          "reviewed_code_fingerprint": "45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102",
+          "spec_material_hash": "6e5f7809c91b10569b2abaf65cd2f843c0fc959e9a9b67fcd4ce1312f64b9edc"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed current released12 counterfeit projection controls, failed local preparation, accepted source scanner findings, and unchanged canonical admission authority; no merge or completion claim.",
-          "reviewed_code_fingerprint": "9f2de0a4aeb9a8202741b3eb75fb9f4b8c9fbd90cba33d4426db94b3828cbd7e",
-          "spec_material_hash": "9d11c08d69c5a99641a0d006db91d357c43458787eb442f659ffe7ac04be2a7e"
+          "reason": "PR #1793 keeps caller-supplied report projections outside canonical proof authority and documents this in INTENT/ARCHITECTURE/INTERFACES without materially modifying SECURITY.md versus accepted master v0.151.0.",
+          "reviewed_code_fingerprint": "45d66305ba0298a9350be0b1634a7fb0e539279fe0edc2ca0f4d8a5493d09102",
+          "spec_material_hash": "5d5e6d393e35b9d5b1987ca692fbdd18b0b238b96d5e62181e43480d0fea8aee"
         }
       ],
       "state": "APPROVED",
@@ -682,14 +698,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795009644Z"
+      "updated_at": "1795135884Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5a1cfabc2ef396166fe9b57ac1525daf2e036202e36249d70928b410d9f53e1a",
+      "artifact_hash": "sha256:24004ba4ec6cdfaafdc2241b48ef361d182c993344a89e577e4212a4d3912036",
       "checks": [
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "clippy_all_targets",
+          "status": "passed"
+        },
         {
           "name": "diff-whitespace",
           "status": "passed"
@@ -728,6 +752,10 @@
         },
         {
           "name": "rustfmt",
+          "status": "passed"
+        },
+        {
+          "name": "targeted_tests",
           "status": "passed"
         }
       ],
@@ -780,10 +808,17 @@
             "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7Q97QGBQF64V09927P0590A",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q97QGBQF64V09927P0590A": {
@@ -900,6 +935,32 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Merged origin/master 11e0cdc76 (v0.151.0) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed v0.151.0 Dockerfile/manifest, corrected SECURITY.md review disposition to unchanged-with-reason, verified clippy --all-targets --all-features -D warnings, docs build (0 diff), and targeted reporting/interop tests."
+                ],
+                "proof_refs": [
+                  "clippy_all_targets",
+                  "targeted_tests",
+                  "cargo_fmt"
+                ],
+                "scope": [
+                  "issue-1726"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -913,9 +974,14 @@
         "/private/tmp/attack-gaps-1793-release12-gatekeeper-review.json",
         "/private/tmp/attack-gaps-1793-release12-inventory-review.json",
         "/private/tmp/attack-gaps-1793-release12-project-check.json",
-        "/private/tmp/attack-gaps-release12-rpc-controls.json"
+        "/private/tmp/attack-gaps-release12-rpc-controls.json",
+        "Merged origin/master 11e0cdc76 (v0.151.0) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed v0.151.0 Dockerfile/manifest, corrected SECURITY.md review disposition to unchanged-with-reason, verified clippy --all-targets --all-features -D warnings, docs build (0 diff), and targeted reporting/interop tests."
       ],
       "inspected_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "src/decapod/core/governed_transition.rs",
         "src/decapod/core/projection.rs",
         "src/decapod/core/rpc.rs",
@@ -925,6 +991,8 @@
       ],
       "intent_id": "intent:change_01M7Q97QD8Z4RM9340YANFM396",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
