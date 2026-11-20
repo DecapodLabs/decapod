@@ -779,6 +779,15 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "claim:release-v0-155-0-projections": {
+      "statement": "Release v0.155.0 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
+      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.155.0.",
+      "status": "supported",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json"
+      ]
+    },
     "diagnostic-read-only-authority": {
       "statement": "Workspace diagnosis keeps accepted policy separate from proposed config and override content, and it cannot grant publication.",
       "falsifier": "A candidate proposal or historical receipt makes publication ready, or diagnosis changes observed fixture state.",
@@ -800,6 +809,14 @@
       "id": "cp-sync-495808c0f",
       "summary": "Merge accepted master 495808c0f (v0.154.0), rebuild agent docs, and verify workspace diagnose (#1071)",
       "input_digest": "sha256:56a4b64f5783eeeba6ddedfc22e5dda7bc73f86405626a55bc90df0cba42398a"
+    },
+    {
+      "id": "ckpt-release-v0-155-0",
+      "summary": "Refresh v0.155.0 release projections and governance",
+      "input_digest": "sha256:195840d5297fdb13111bd49afdae07d05f374adfd6ddedc16b837674e8a4725b",
+      "proof_refs": [
+        ".decapod/managed/specs/.manifest.json"
+      ]
     }
   ],
   "intents": {
@@ -830,51 +847,48 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1071 using existing accepted policy, task custody, artifact and proof readers. Preserve live admission and all required proof.",
+      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.155.0 on PR #1868",
       "phases": [],
-      "proof_hooks": [
-        "cargo test --test init_config_behavior --test sqlite_maintenance diagnostic_",
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced #1071 workspace diagnosis read-only architecture with accepted master 495808c0f (v0.154.0).",
-          "reviewed_code_fingerprint": "a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9",
+          "reason": "v0.155.0 version-only release cut does not alter system architecture",
+          "reviewed_code_fingerprint": "67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865",
           "spec_material_hash": "2bf5dc2558f400b41e0e6dea2f73451f13dc052c21faadc5e25723fef40d0914"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced #1071 decapod workspace diagnose CLI & JSON contract with accepted master 495808c0f (v0.154.0).",
-          "reviewed_code_fingerprint": "a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9",
+          "reason": "v0.155.0 version-only release cut does not alter CLI or RPC interfaces",
+          "reviewed_code_fingerprint": "67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865",
           "spec_material_hash": "c0eaabcc443302ee7708c0a8d4f74e07b9aa21313af81104ba62252e6b961225"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Synced #1071 read-only diagnostic non-mutation and credential redaction guarantees with accepted master 495808c0f (v0.154.0).",
-          "reviewed_code_fingerprint": "a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9",
+          "reason": "v0.155.0 version-only release cut does not alter security boundaries",
+          "reviewed_code_fingerprint": "67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865",
           "spec_material_hash": "d3fed735402f3756448338e5abf7b4b8ad082f068312fcd0a1a3aea70ef7937f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Read-only workspace diagnostic",
+      "title": "Align release v0.155.0 projections and governance (#1868)",
       "todo_ids": [
-        "code_01m7pnk80k7ekc93"
+        "code_01m7srddt2dc4pyp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795193194Z"
+      "updated_at": "1795204574Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:45c9a68b583ecbbdc32b8c66d828d4795d094a791f2acafbbedabd6eb3b2fa59",
+      "artifact_hash": "sha256:c64ded903694dbc6c18b63370d632d7028d3bfb7c08663591a6acd4382ca3dad",
       "checks": [
         {
           "name": "initial_draft_ci",
@@ -886,6 +900,10 @@
         },
         {
           "name": "native_workspace_diagnostics_2_of_2",
+          "status": "passed"
+        },
+        {
+          "name": "project_check_0_155_0",
           "status": "passed"
         },
         {
@@ -928,10 +946,17 @@
             "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PNTY4AR0ZXQ0RQS74779N8": {
@@ -988,6 +1013,24 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/.manifest.json"
+                ],
+                "proof_refs": [
+                  "project_check_0_155_0"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -996,6 +1039,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        ".decapod/managed/specs/.manifest.json",
         "Merged origin/master 495808c0f (v0.154.0); ran candidate docs build, cargo fmt, clippy --all-targets --all-features -D warnings, workspace_diagnostic, cli_contracts diagnose, and doc_alignment tests"
       ],
       "inspected_files": [
@@ -1004,6 +1048,9 @@
       ],
       "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/OPERATIONS.md",
         "docs/agent/command-contracts.md",
         "src/decapod/core/docs_cli.rs",
         "src/decapod/core/workspace.rs",
@@ -1018,7 +1065,7 @@
       "run_id": "branch_01M7PNTY4AR0ZXQ0RQS74779N8",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7pnk80k7ekc93",
+      "task_id": "code_01m7srddt2dc4pyp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
