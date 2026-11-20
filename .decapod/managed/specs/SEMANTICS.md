@@ -1,5 +1,22 @@
 # Semantics
 
+## Reversible integration removal invariants (#1704)
+
+- **Preview purity:** `decapod integration preview` never creates `.lock`, `-wal`,
+  `-shm`, session, Git, or temporary files in the repository or `XDG_CONFIG_HOME`.
+- **Ownership requirement:** Filename resemblance or body similarity without
+  ownership evidence never authorizes deletion.
+- **Fail-closed custody and symlink boundaries:** Any active todo lease,
+  `authoring_binding`, registered/non-empty workspace directory, held storage
+  or workspace lease lock, symlink component, or corrupt manifest aborts
+  removal before any mutation.
+- **Idempotence:** Repeating `remove --authorize` after removal or interruption
+  preserves the restoration manifest and converges cleanly; repeating `restore`
+  on already-restored matching files is a no-op; `restore` refuses to overwrite
+  divergent newly authored files.
+- **Boundary separation:** Bounded integration removal never deletes
+  `.decapod/data/`, `.decapod/governance.json`, `*.bak`, or global credentials.
+
 ## Reflection, progress and authority
 
 Distinct recorded human questions and spec-review decisions retain distinct
@@ -373,11 +390,24 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (241 files)
+- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
 ## PR1663 integrated storage behavior
 
 Keep lossless decoded event and task projection semantics across compaction, v1/v2 journals and self-contained transfers. A changed encoding or schema never grants task ownership, publication authority or successful proof; current evidence remains bound to its actual candidate and accepted target.
+
+## Shared-State Transition Semantics (#1247)
+
+Decapod enforces single-writer custody, atomic task+event commits, and fail-closed proof/cloud boundaries across both local SQLite (`src/decapod/core/todo.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/task_journal.rs`) and Dactyl/Propodus HTTP storage (`src/decapod/core/dactyl_todo.rs`, `src/decapod/core/cloud_todo_operation.rs`):
+
+1. **Single-winner exclusive arbitration and shared-claim policy:** Concurrent exclusive claims (`claim_task_with_lease`, `DactylTodoStore::claim_task`) admit at most one durable primary assignee (`tasks.assigned_to` / `task_owners` `claim_type = 'primary'`), returning inspectable conflict/contention outcomes to all losing contenders without emitting phantom claim events. Shared claims (`ClaimMode::Shared`) preserve the primary owner and require verified trust (or an explicit `[governance].allow_basic_shared_claims` main-repo policy digest).
+2. **Monotonic fencing, stale custody, and strict session enforcement:** Exclusive custody advances monotonic `lease_generation` and `tasks.revision` fences across expiry/reclaim, ABA re-claim, owner/recovery handoffs (`handoff_task_as` / `todo.handoff` policy + exact-target bounded approval), and authoring bindings (`admit_authoring` / `check_authoring`). Expired, reclaimed, or handed-off fences fail closed (`stale_task_revision`, `not_assignee`, `AUTHORING_CUSTODY_STALE`), cross-task checkpoint substitution is rejected (`TASK_JOURNAL_CONFLICT` / `WORKUNIT_CHECKPOINT_REQUIRED`), and strict local/cloud session checks (`verify_strict_local_agent_session`, `CloudAuthStatus::Revoked`) refuse forged or revoked credentials.
+3. **Atomic state + event commits and lost-ack reconciliation:**
+   - Local SQLite executes `tasks` updates, `events` insertion, and `task_journal` checkpoints inside one transaction; `edit_task` returns early when `changed == 0` so missing task IDs never emit phantom `task.edit` events, and `claim_task_with_lease` / `renew_claim_lease` / `yield_claim_lease` / `add_task_owner` / `remove_task_owner` attribute journal/owner records to the actual acting agent rather than `"decapod"`.
+   - `DactylTodoStore::operation_timestamp` uses a per-process monotonic `AtomicU64` nanosecond floor, and `DactylTodoStore::atomic_mutation` requires both `tasks.updated_at == event_params.event_ts` and an `event_type`-scoped static SQL post-condition inside the `INSERT INTO events ... WHERE EXISTS (...)` guard so a losing concurrent write cannot emit a phantom event while remaining statically provable by `gatekeeper::sql_context`.
+   - Cloud operations distinguish `Outcome::BlockedBeforeSubmit` (no server write) from `Outcome::OutcomeUnknown` (dispatched batch whose ack/reconcile outcome is uncertain), prohibit unproved auto-replay or payload mutation under an existing `operation_id` (`OperationRecord::new`), and reconcile same-ID retries via event lookup without executing a second write.
+4. **Proof and validation binding:** `judge_completion`, `judge_stored_verification`, `WorkUnitManifest`, and `get_work_claim` bind completion and publication to exact candidate commit SHA (`canonical_head` / `head`), `rules_fingerprint`, `verifier`, reconstructed `file_artifacts` + `receipt_hash`, `task_revision`, `accepted_target`, and checkpoint material. Advancing `HEAD`, altering `rules_fingerprint`, or materially editing a completed task transitions proof to `Stale` / `Blocked` while preserving readable historical `proof_refs` and event records.
+5. **Cloud fail-closed boundary (no local fallback) and hosted boundary:** Cloud authorization denials (`401`/`403`) and transport/provider unavailability (`503` or unreachable endpoint) fail closed in `run_cloud_todo_command_with_store` without creating or mutating local `.decapod/data/{decapod,todo}.db`. Conformance suite `tests/shared_state_semantics_1247.rs` verifies all five invariants against local SQLite and mock/denial Dactyl HTTP boundaries; live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent.

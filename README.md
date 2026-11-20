@@ -115,13 +115,15 @@ State lives with the project:
 
 Validation runs locally by default, with optional remote Buildkite preflight. The configured checks and recorded evidence define what Decapod can recognize as verified completion.
 
-[Governed execution architecture](docs/architecture/governed-execution.md) · [Configuration reference](docs/book/src/reference/config-toml.md)
+[Governed execution architecture](docs/architecture/governed-execution.md) · [BYOA & interoperability](docs/book/src/concepts/interoperability.md) · [Multi-agent concurrency](docs/book/src/workflows/multi-agent.md) · [Configuration reference](docs/book/src/reference/config-toml.md)
 
-## The Constitution
+Both `backend = "local"` (`.decapod/data/decapod.db`) and `backend = "cloud"` (shared live task custody through Dactyl, subject to verified repository access) remain repo-native: specs, plans, claims, worktrees, and Git proof live with the repository.
 
-Decapod includes engineering guidance for architecture, security, testing, and other development decisions. Agents consult it during planning and implementation.
+## The Constitution (Reference Layer)
 
-`.decapod/OVERRIDE.md` adds project-specific instructions. The repository carries the shared rules and local requirements together, giving each agent the same starting point.
+Decapod includes a global, embedded engineering Constitution (architecture, security, testing, research, and software-business golden paths) that agents consult inside the governed loop—not as a per-project instruction blob, and not as a substitute for validation proof. It is community-contributable through pull requests.
+
+`.decapod/OVERRIDE.md` adds project-specific instructions. The repository carries the shared rules and local requirements together, giving every agent the same starting point.
 
 Conflicts that require a decision remain visible so they can be resolved explicitly and preserved for subsequent work.
 

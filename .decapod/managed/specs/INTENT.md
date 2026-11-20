@@ -1,5 +1,89 @@
 # Intent
 
+## Reporting claims and current proof (#1726, #1735)
+
+Decapod remains the repo-native governance kernel; consumers must distinguish
+reported outcomes from its canonical current validation and admission decisions.
+Official0.148.11 reproduced a reporting false accept: `interop.project` returned
+`proven` and publication-ready from fabricated pass/head/digest fields, even when
+the caller supplied its own matching verifier and rule labels. No validation or
+actual publication occurred. Pure report projection must instead retain the
+reported status while refusing current proof, explain the missing canonical
+authority, preserve negative/stale diagnostics, and permit ordinary operation.
+This correction adds no validator, report generator or receipt store.
+
+A second actual control showed approval formatting claiming that policy had
+recorded a caller-supplied boolean despite no policy operation. All pure
+projection inputs must be explicitly caller-owned and not canonically verified.
+Reported approval/operation statuses remain display data; their formatting
+cannot authenticate a principal, grant or observed effect.
+
+## Single-header docs book layout and viewport page spacing (#1849)
+
+The public documentation book (`docs/book/src/index.md` and `docs/book/src/custom.css`) maintains the shared mdBook navigation bar as the single site header across all pages and viewports:
+
+- Removes the duplicate Welcome-page `.decapod-docs-brand` header strip and its theme-specific `.decapod-docs-brand` CSS overrides so navigation remains unified in the shared `#menu-bar`.
+- Increases top content spacing (`#content main`) and aligns the right reading rail (`.decapod-reading-rail`) padding (`clamp(44px, 4.8vw, 80px)` on desktop, `47px` on tablet, `37px` on mobile) for balanced layout breathing room across viewports.
+- This layout fix modifies human-facing mdBook content and stylesheet rules only; it introduces no runtime, CLI, RPC, schema, or security-boundary changes.
+
+## Agent-agnostic, daemonless kernel application positioning in the docs book (#1847)
+
+The public documentation book (`docs/book/src/index.md`, `docs/book/src/introduction.md`, and `docs/book/src/mental-model.md`) explicitly frames Decapod as an **agent-agnostic, daemonless metacognitive governance kernel application** rather than an agent harness, prompt framework, or background daemon:
+
+- Coding agents across harnesses (Codex, Claude Code, Cursor, Antigravity, and other compatible tools) invoke Decapod on demand through its CLI and structured RPC (`decapod rpc`) interface whenever work crosses an orientation, task-custody, workspace-isolation, boundary, or exact-commit validation gate.
+- Each invocation terminates cleanly without leaving a resident background daemon (`INV-DAEMONLESS`), while the repository (`.decapod/` and Git history) preserves durable governance state, intent, constraints, and proof across agents, models, processes, and sessions.
+- This clarification updates human-facing documentation prose only; it introduces no runtime, CLI, RPC, schema, or security-boundary changes.
+
+## Cloud control-plane, Dactyl 0.18.0 adoption, and Decapod Local/Cloud unification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1376, #1377, #1380)
+
+Decapod adopts published registry crate `dactyl-db = "=0.18.0"` (SHA-256
+`6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`, preserving
+`quinn-proto >= 0.11.19` and synchronized `Cargo.lock` + Bazel `MODULE.bazel.lock`)
+without path or Git overrides, and unifies all user- and agent-facing CLI,
+capabilities, embedded docs, and human book documentation around **Decapod Local**
+(`local`, free, offline, no account required) and **Decapod Cloud** (`cloud`,
+account required):
+
+- **Decapod Local/Cloud branding & docs (#1808, #1769)**: Retires the legacy
+  Vercel preview URL default so unconfigured explicit `neon`/`supabase`
+  datastores fail closed with `DECAPOD_CLOUD_API_URL` guidance. Introduces
+  canonical `DECAPOD_CLOUD_*` env vars while retaining `DECAPOD_PROPODUS_API_URL`
+  as a backwards-compatible alias emitting structured `decapod.deprecation.v1`
+  notices, recognizes `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*`
+  diagnostic headers, and adds a responsive **Decapod Local** vs **Decapod Cloud**
+  offerings section on `docs/book/src/index.md` linking to
+  `https://decapodlabs.github.io/offerings.html` without public pricing or
+  checkout routes.
+- **Mixed-worktree routing & inline cloud parity (#1777, #1034, #1158)**: CLI
+  and inline todo helpers resolve backend selection (`local` vs `cloud`) and
+  canonical repository identity strictly from the invoking worktree rather than
+  falling back to the root checkout's SQLite store in either direction
+  (local-root/cloud-worktree or cloud-root/local-worktree), while honoring
+  `#1776` accepted-cloud fail-closed enforcement against unaccepted local downgrades.
+- **Device-bound DPoP custody & container signer broker (#1778, #1033, #1040, #1066)**:
+  Dedicated per-origin/per-repository Ed25519 device keys are persisted outside
+  Git (OS Keychain where available, otherwise mode-0600 `O_NOFOLLOW` external
+  private file), wired into `dactyl-db 0.18.0` `RequestProofSigner` (RFC 9449
+  `DPoP`) and `AccountOperation::{DeviceChallenge, DeviceEnroll, DeviceStepUp, DeviceRevoke}`,
+  plus `decapod cloud logout|revoke` and a bounded host-side Unix-socket
+  container request-signer broker (`[workspace.credentials]`) so container
+  workspaces never receive private keys or raw bearer/refresh secrets.
+- **Repository access tiers & owner repair (#1590)**: Local `db.recover`
+  requires merged canonical `owner_repair_enabled = true` and RBAC `owner`
+  authority; cloud repair queries `propodus_repository_access_v1` (`Read` +
+  audited `Write`) via `CloudConnector::control_request` and executes
+  `owner_repair_v1` atomically via `DactylBridge::atomic` with zero local
+  SQLite fallback.
+- **Hosted lease fencing & 5-state proof acceptance (#1809, #1038)**: Removes
+  the `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` placeholder in favor of hosted
+  exclusive lease fencing/renewal/release and wires `propodus_proof_acceptance_v1`
+  / `propodus_proof_acceptance_get_v1` (`captured -> independently_verified ->
+  currently_admissible -> published -> historically_accepted`) with safe
+  `outcome_unknown` reconciliation and distinct `403`/`413`/`429` error types.
+  Offline/loopback and local PG17 + PostgREST runs prove client wire and native
+  database contracts without claiming hosted production acceptance or unrun Nix
+  builds on hosts where `nix` is absent.
+
 ## Accepted release12 continuity
 
 The accepted target advanced again to `7bd0a915` (0.148.12), which changes only the root package versions and changelog after9c. The prior9c merge remains a real parent with its own checkpoint; this release integration gets a new native checkpoint. All105 verification-source inputs were independently remeasured: Cargo.toml/Cargo.lock version bytes changed and103 remained identical. Required helpers, graph, commands and toolchain remain unchanged. Official session acquire installed a private0.148.12 controller (SHA256 `1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3`) and restored the temporary config opt-in; old/shared binaries remain intact. Native projection refresh does not transfer earlier Actions success or establish current admission.
@@ -627,8 +711,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (237 files), `tests/` (241 files)
+- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1060,3 +1144,20 @@ The report's manifest and managed Docker pin must be generated by the actual
 0.148.7 evaluating binary. An earlier CI-local pass with 0.148.6 projections was
 not full readiness. Only supported CLI regeneration repairs that metadata;
 the current candidate still requires complete fresh proof before publication.
+
+## First-class BYOA and agent-invoked metacognition documentation (#1789)
+
+Make the public mdBook and README landing experience accurately express how
+engineers and coding agents use Decapod in practice: humans prompt their chosen
+coding agents (Codex, Claude Code, Cursor, Antigravity, or custom harnesses);
+coding agents invoke Decapod at decision, custody, workspace, and validation
+boundaries; parallel work coordinates claims, leases, and worktrees while
+preserving Git/review/CI conflict boundaries; the embedded Constitution acts as a
+subordinate reference canon inside the governed loop; and both `backend = "local"`
+and `backend = "cloud"` keep governance state repo-native.
+
+Three concrete reader journeys (switching agents mid-repo, two engineers working
+with different agents in parallel, and recovering from failed validation on an
+exact revised commit) plus explicit negative cases (conflicting claims, expired
+leases, unregistered/malformed RPC, stale proof, and Cloud denial) are grounded
+in the `0.148.14` binary CLI/RPC help and existing integration tests.

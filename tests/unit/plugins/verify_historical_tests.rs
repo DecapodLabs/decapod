@@ -546,3 +546,52 @@ fn historical_witness_cannot_substitute_another_target_branch() {
     );
     assert!(target(&fixture).artifacts.is_none());
 }
+
+#[test]
+fn prepared_done_handoff_roundtrips_and_rejects_mismatched_commit_or_request() {
+    let fixture = fixture();
+    let prepared = prepare(&fixture);
+    let request_id = "01TESTHANDOFFREQ0000000001";
+    let handoff_path = write_prepared_done_handoff(&fixture.store, request_id, &prepared).unwrap();
+    assert!(handoff_path.is_file());
+
+    // Wrong commit rejects and consumes the file cleanly.
+    let wrong_commit = "f".repeat(40);
+    let err = consume_prepared_done_handoff(
+        &fixture.store,
+        &fixture.repo,
+        ID,
+        Some(&wrong_commit),
+        request_id,
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("PREPARED_DONE_HANDOFF_MISMATCH"));
+    assert!(!handoff_path.exists());
+
+    // Valid request_id + commit re-hydrates from canonical journal and passes.
+    write_prepared_done_handoff(&fixture.store, request_id, &prepared).unwrap();
+    let consumed = consume_prepared_done_handoff(
+        &fixture.store,
+        &fixture.repo,
+        ID,
+        Some(fixture.proof.candidate_sha()),
+        request_id,
+    )
+    .unwrap()
+    .unwrap();
+    assert_eq!(consumed.expected_revision(), prepared.expected_revision());
+    assert!(!handoff_path.exists());
+}
+
+#[test]
+fn missing_artifacts_remediation_surfaces_historical_commit_and_regen_guidance() {
+    let fixture = fixture();
+    let msg =
+        missing_artifacts_remediation(&fixture.store.root, ID, "Missing verification_artifacts.");
+    assert!(msg.contains("decapod todo done"));
+    assert!(msg.contains(&format!(
+        "--validated --commit {}",
+        fixture.proof.candidate_sha()
+    )));
+    assert!(msg.contains(&format!("decapod qa verify regen {ID}")));
+}

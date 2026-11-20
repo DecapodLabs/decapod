@@ -1309,4 +1309,244 @@ mod documented_bootstrap {
         );
         fixture.close().expect("remove isolated bootstrap fixture");
     }
+
+    #[test]
+    fn risk_map_warnings_recommend_supported_cli_command_paths() {
+        let fixture = contract_fixture();
+        let root = fixture.path().join("repo");
+        let home = fixture.path().join("home");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::create_dir_all(&home).unwrap();
+        let root = root.canonicalize().unwrap();
+        let home = home.canonicalize().unwrap();
+        let binary = super::resolve_decapod_bin();
+
+        let cli = |agent: &str, args: &[&str], extra_envs: &[(&str, &str)]| {
+            let mut cmd = isolated_command(&binary, &root, &home);
+            cmd.env("DECAPOD_AGENT_ID", agent);
+            for (k, v) in extra_envs {
+                cmd.env(k, v);
+            }
+            cmd.args(args).output().expect("execute real decapod CLI")
+        };
+
+        success(
+            cli(
+                "operator",
+                &["init", "--no-git", "--no-ci", "--no-container-workspaces"],
+                &[],
+            ),
+            "init fixture",
+        );
+        success(
+            isolated_command(Path::new("git"), &root, &home)
+                .args(["init", "-q", "-b", "master"])
+                .output()
+                .expect("git init"),
+            "git init",
+        );
+        success(
+            isolated_command(Path::new("git"), &root, &home)
+                .args(["config", "user.name", "Contract Test"])
+                .output()
+                .expect("git config user.name"),
+            "git config user.name",
+        );
+        success(
+            isolated_command(Path::new("git"), &root, &home)
+                .args(["config", "user.email", "contract@example.invalid"])
+                .output()
+                .expect("git config user.email"),
+            "git config user.email",
+        );
+        success(
+            isolated_command(Path::new("git"), &root, &home)
+                .args(["add", "."])
+                .output()
+                .expect("git add"),
+            "git add",
+        );
+        success(
+            isolated_command(Path::new("git"), &root, &home)
+                .args(["commit", "-qm", "Initialize fixture"])
+                .output()
+                .expect("git commit"),
+            "git commit",
+        );
+
+        let verify_missing = success(
+            cli(
+                "basic-agent",
+                &["govern", "policy", "riskmap", "verify"],
+                &[],
+            ),
+            "govern policy riskmap verify",
+        );
+        let verify_stdout = String::from_utf8_lossy(&verify_missing.stdout);
+        assert!(
+            verify_stdout.contains("Risk map missing (run `decapod govern policy riskmap init`)."),
+            "unexpected verify output: {verify_stdout}"
+        );
+        let verify_cmd = verify_stdout
+            .split('`')
+            .nth(1)
+            .expect("verify output must recommend a backticked command");
+
+        let validate_missing = cli(
+            "basic-agent",
+            &["validate", "--format", "json"],
+            &[
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+                ("GITHUB_ACTIONS", "true"),
+            ],
+        );
+        let validate_stdout = String::from_utf8_lossy(&validate_missing.stdout);
+        let validate_json: serde_json::Value = serde_json::from_str(&validate_stdout)
+            .unwrap_or_else(|e| panic!("invalid validate json ({e}):\n{validate_stdout}"));
+        let warnings = validate_json["report"]["warnings"]
+            .as_array()
+            .expect("report.warnings array");
+        let riskmap_warning = warnings
+            .iter()
+            .filter_map(|v| v.as_str())
+            .find(|msg| msg.contains("Risk map missing"))
+            .unwrap_or_else(|| panic!("expected Risk map missing warning in {warnings:?}"));
+        assert_eq!(
+            riskmap_warning,
+            "Risk map missing (run `decapod govern policy riskmap init`)"
+        );
+        let validate_cmd = riskmap_warning
+            .split('`')
+            .nth(1)
+            .expect("validate warning must recommend a backticked command");
+        assert_eq!(verify_cmd, validate_cmd);
+        assert_eq!(verify_cmd, "decapod govern policy riskmap init");
+
+        // The previous unsupported command paths must remain rejected by clap (exit 2).
+        for unsupported in [
+            vec!["riskmap", "init", "--help"],
+            vec!["policy", "riskmap", "init", "--help"],
+        ] {
+            let rejected = cli("basic-agent", &unsupported, &[]);
+            assert_eq!(
+                rejected.status.code(),
+                Some(2),
+                "expected syntax rejection for {unsupported:?}, got: {:?}",
+                rejected.status
+            );
+        }
+
+        // The recommended command must resolve cleanly through the CLI parser.
+        let tokens: Vec<&str> = verify_cmd.split_whitespace().collect();
+        assert_eq!(tokens.first().copied(), Some("decapod"));
+        let mut help_args = tokens[1..].to_vec();
+        help_args.push("--help");
+        success(
+            cli("basic-agent", &help_args, &[]),
+            "recommended riskmap init --help",
+        );
+
+        // Basic callers still reach policy enforcement (not unknown-subcommand exit 2).
+        let denied = cli("basic-agent", &tokens[1..], &[]);
+        assert_ne!(denied.status.code(), Some(0));
+        assert_ne!(denied.status.code(), Some(2));
+        let denied_err = String::from_utf8_lossy(&denied.stderr);
+        assert!(
+            denied_err.contains("requires trust 'core'"),
+            "expected core trust gate for basic caller, got: {denied_err}"
+        );
+
+        // With core trust ('operator'), executing the exact recommended command
+        // creates RISKMAP.json and clears both verify and validate warnings.
+        success(
+            cli("operator", &tokens[1..], &[]),
+            "execute recommended riskmap init",
+        );
+        assert!(root.join(".decapod/data/RISKMAP.json").exists());
+
+        let verify_present = success(
+            cli(
+                "basic-agent",
+                &["govern", "policy", "riskmap", "verify"],
+                &[],
+            ),
+            "govern policy riskmap verify after init",
+        );
+        assert!(
+            String::from_utf8_lossy(&verify_present.stdout)
+                .contains("Risk map present and readable.")
+        );
+
+        let validate_after = cli(
+            "basic-agent",
+            &["validate", "--format", "json"],
+            &[
+                ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+                ("GITHUB_ACTIONS", "true"),
+            ],
+        );
+        let validate_after_json: serde_json::Value =
+            serde_json::from_slice(&validate_after.stdout).expect("validate json after init");
+        let after_warnings = validate_after_json["report"]["warnings"]
+            .as_array()
+            .expect("report.warnings array after init");
+        assert!(
+            !after_warnings
+                .iter()
+                .filter_map(|v| v.as_str())
+                .any(|msg| msg.contains("Risk map missing")),
+            "expected risk-map warning to clear after init, got: {after_warnings:?}"
+        );
+
+        fixture.close().expect("remove fixture");
+    }
+}
+
+#[test]
+fn cli_help_capabilities_and_docs_unify_decapod_local_and_cloud_branding() {
+    let (_tmp, dir) = setup_repo();
+
+    let root_help = run_decapod(dir, &["--help"]);
+    assert!(root_help.status.success());
+    let root_help_text = String::from_utf8_lossy(&root_help.stdout);
+    assert!(root_help_text.contains("Decapod Cloud"));
+    assert!(!root_help_text.contains("Propodus"));
+
+    let init_help = run_decapod(dir, &["init", "--help"]);
+    assert!(init_help.status.success());
+    let init_help_text = String::from_utf8_lossy(&init_help.stdout);
+    assert!(init_help_text.contains("Decapod Local"));
+    assert!(init_help_text.contains("Decapod Cloud"));
+    assert!(!init_help_text.contains("Propodus"));
+
+    let caps_out = run_decapod(dir, &["capabilities", "--format", "json"]);
+    assert!(caps_out.status.success());
+    let caps: serde_json::Value = serde_json::from_slice(&caps_out.stdout).expect("valid JSON");
+    let backends = caps["backends"].as_array().expect("backends array");
+    assert!(
+        backends
+            .iter()
+            .any(|b| b["id"] == "local" && b["name"] == "Decapod Local" && b["default"] == true)
+    );
+    assert!(
+        backends
+            .iter()
+            .any(|b| b["id"] == "cloud" && b["name"] == "Decapod Cloud" && b["default"] == false)
+    );
+    let cap_names: Vec<&str> = caps["capabilities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c["name"].as_str())
+        .collect();
+    assert!(cap_names.contains(&"backend.local"));
+    assert!(cap_names.contains(&"backend.cloud"));
+
+    let ingest_out = run_decapod(dir, &["docs", "ingest"]);
+    assert!(ingest_out.status.success());
+    let ingest_text = String::from_utf8_lossy(&ingest_out.stdout);
+    assert!(ingest_text.contains("Decapod Local"));
+    assert!(ingest_text.contains("Decapod Cloud"));
+    assert!(ingest_text.contains("DECAPOD_CLOUD_API_URL"));
+    assert!(!ingest_text.contains("project-oqn7i"));
 }

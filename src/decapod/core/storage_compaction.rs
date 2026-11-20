@@ -44,6 +44,79 @@ fn parse_strict_semver(version: &str) -> Option<[u64; 3]> {
     ])
 }
 
+fn query_storage_meta_value(conn: &Connection, key: &str) -> Result<Option<String>, DecapodError> {
+    conn.query_row(
+        "SELECT value FROM meta WHERE namespace = ?1 AND key = ?2",
+        params![schemas::STORAGE_FORMAT_META_NAMESPACE, key],
+        |r| r.get(0),
+    )
+    .optional()
+    .map_err(DecapodError::StorageError)
+}
+
+fn upsert_storage_meta_value(
+    conn: &Connection,
+    key: &str,
+    value: &str,
+) -> Result<(), DecapodError> {
+    conn.execute(
+        "INSERT INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)
+         ON CONFLICT(namespace, key) DO UPDATE SET value = excluded.value",
+        params![schemas::STORAGE_FORMAT_META_NAMESPACE, key, value],
+    )?;
+    Ok(())
+}
+
+struct FloorTarget {
+    version: String,
+    needs_update: bool,
+}
+
+fn max_semver_floor(
+    existing: Option<&str>,
+    floor: &str,
+    key: &str,
+) -> Result<FloorTarget, DecapodError> {
+    let floor_semver = parse_strict_semver(floor).ok_or_else(|| {
+        incompatible_format(format!("invalid target storage.{key} floor '{floor}'"))
+    })?;
+    match existing {
+        Some(raw) => {
+            let observed = parse_strict_semver(raw).ok_or_else(|| {
+                incompatible_format(format!("malformed storage.{key} '{raw}' in meta"))
+            })?;
+            if observed >= floor_semver {
+                Ok(FloorTarget {
+                    version: raw.to_owned(),
+                    needs_update: false,
+                })
+            } else {
+                Ok(FloorTarget {
+                    version: floor.to_owned(),
+                    needs_update: true,
+                })
+            }
+        }
+        None => Ok(FloorTarget {
+            version: floor.to_owned(),
+            needs_update: true,
+        }),
+    }
+}
+
+fn is_current_v2_format_store(conn: &Connection) -> Result<bool, DecapodError> {
+    if !conn.has_table("meta")? {
+        return Ok(false);
+    }
+    let Some(raw) = query_storage_meta_value(conn, STORAGE_FORMAT_VERSION_KEY)? else {
+        return Ok(false);
+    };
+    let observed = raw.parse::<u32>().map_err(|_| {
+        incompatible_format(format!("malformed storage.format_version '{raw}' in meta"))
+    })?;
+    Ok(observed == schemas::STORAGE_FORMAT_VERSION)
+}
+
 /// Fail closed when opening a datastore stamped by a newer incompatible storage
 /// format or requiring a newer reader/writer binary version.
 pub fn check_storage_format_compatibility(conn: &Connection) -> Result<(), DecapodError> {
@@ -69,17 +142,7 @@ pub fn check_storage_format_compatibility_for_version(
         ))
     })?;
 
-    let format_raw: Option<String> = conn
-        .query_row(
-            "SELECT value FROM meta WHERE namespace = ?1 AND key = ?2",
-            params![
-                schemas::STORAGE_FORMAT_META_NAMESPACE,
-                STORAGE_FORMAT_VERSION_KEY
-            ],
-            |r| r.get(0),
-        )
-        .optional()?;
-    if let Some(raw) = format_raw {
+    if let Some(raw) = query_storage_meta_value(conn, STORAGE_FORMAT_VERSION_KEY)? {
         let observed = raw.parse::<u32>().map_err(|_| {
             incompatible_format(format!("malformed storage.format_version '{raw}' in meta"))
         })?;
@@ -91,17 +154,7 @@ pub fn check_storage_format_compatibility_for_version(
         }
     }
 
-    let min_reader_raw: Option<String> = conn
-        .query_row(
-            "SELECT value FROM meta WHERE namespace = ?1 AND key = ?2",
-            params![
-                schemas::STORAGE_FORMAT_META_NAMESPACE,
-                STORAGE_MIN_READER_VERSION_KEY
-            ],
-            |r| r.get(0),
-        )
-        .optional()?;
-    if let Some(min_reader) = min_reader_raw {
+    if let Some(min_reader) = query_storage_meta_value(conn, STORAGE_MIN_READER_VERSION_KEY)? {
         let required = parse_strict_semver(&min_reader).ok_or_else(|| {
             incompatible_format(format!(
                 "malformed storage.min_reader_version '{min_reader}' in meta"
@@ -114,56 +167,97 @@ pub fn check_storage_format_compatibility_for_version(
         }
     }
 
-    if require_write {
-        let min_writer_raw: Option<String> = conn
-            .query_row(
-                "SELECT value FROM meta WHERE namespace = ?1 AND key = ?2",
-                params![
-                    schemas::STORAGE_FORMAT_META_NAMESPACE,
-                    STORAGE_MIN_WRITER_VERSION_KEY
-                ],
-                |r| r.get(0),
-            )
-            .optional()?;
-        if let Some(min_writer) = min_writer_raw {
-            let required = parse_strict_semver(&min_writer).ok_or_else(|| {
-                incompatible_format(format!(
-                    "malformed storage.min_writer_version '{min_writer}' in meta"
-                ))
-            })?;
-            if current_semver < required {
-                return Err(incompatible_format(format!(
-                    "datastore requires writer >= {min_writer}, found {binary_version}"
-                )));
-            }
+    if require_write
+        && let Some(min_writer) = query_storage_meta_value(conn, STORAGE_MIN_WRITER_VERSION_KEY)?
+    {
+        let required = parse_strict_semver(&min_writer).ok_or_else(|| {
+            incompatible_format(format!(
+                "malformed storage.min_writer_version '{min_writer}' in meta"
+            ))
+        })?;
+        if current_semver < required {
+            return Err(incompatible_format(format!(
+                "datastore requires writer >= {min_writer}, found {binary_version}"
+            )));
         }
     }
 
     Ok(())
 }
 
-/// Stamp v2 compact storage format metadata in `meta`.
+fn resolve_v2_floor_versions(
+    conn: &Connection,
+) -> Result<(FloorTarget, FloorTarget), DecapodError> {
+    let existing_reader = query_storage_meta_value(conn, STORAGE_MIN_READER_VERSION_KEY)?;
+    let existing_writer = query_storage_meta_value(conn, STORAGE_MIN_WRITER_VERSION_KEY)?;
+    let reader = max_semver_floor(
+        existing_reader.as_deref(),
+        schemas::STORAGE_MIN_READER_VERSION,
+        STORAGE_MIN_READER_VERSION_KEY,
+    )?;
+    let writer = max_semver_floor(
+        existing_writer.as_deref(),
+        schemas::STORAGE_MIN_WRITER_VERSION,
+        STORAGE_MIN_WRITER_VERSION_KEY,
+    )?;
+    Ok((reader, writer))
+}
+
+fn plan_v2_floor_upgrade(
+    conn: &Connection,
+) -> Result<Option<(FloorTarget, FloorTarget)>, DecapodError> {
+    check_storage_format_compatibility(conn)?;
+    if !is_current_v2_format_store(conn)? {
+        return Ok(None);
+    }
+    let (reader, writer) = resolve_v2_floor_versions(conn)?;
+    if !reader.needs_update && !writer.needs_update {
+        return Ok(None);
+    }
+    Ok(Some((reader, writer)))
+}
+
+/// True when an already-migrated v2 datastore carries a stale reader/writer
+/// floor below `0.144.2` (for example `0.141.0` from prior releases) or omits
+/// those floor keys, and therefore needs safe metadata restamping.
+pub fn v2_format_metadata_needs_floor_upgrade(conn: &Connection) -> Result<bool, DecapodError> {
+    Ok(plan_v2_floor_upgrade(conn)?.is_some())
+}
+
+/// Safely upgrade legacy v2 `storage.min_reader_version` / `storage.min_writer_version`
+/// metadata (such as `0.141.0` stamps written prior to #1739) up to the true `_ce_v1`
+/// compatibility floor (`0.144.2`) without mutating data rows, read-only connections,
+/// unmigrated v1 stores, or higher valid floors.
+pub fn reconcile_v2_storage_format_metadata(conn: &Connection) -> Result<bool, DecapodError> {
+    if conn.is_read_only() {
+        return Ok(false);
+    }
+    let Some((reader, writer)) = plan_v2_floor_upgrade(conn)? else {
+        return Ok(false);
+    };
+    if reader.needs_update {
+        upsert_storage_meta_value(conn, STORAGE_MIN_READER_VERSION_KEY, &reader.version)?;
+    }
+    if writer.needs_update {
+        upsert_storage_meta_value(conn, STORAGE_MIN_WRITER_VERSION_KEY, &writer.version)?;
+    }
+    Ok(true)
+}
+
+/// Stamp v2 compact storage format metadata in `meta`, preserving any higher
+/// existing `min_reader_version` / `min_writer_version` floor.
 pub fn stamp_storage_format_metadata(conn: &Connection) -> Result<(), DecapodError> {
     conn.execute(schemas::TODO_DB_SCHEMA_META, [])?;
+    let (reader, writer) = resolve_v2_floor_versions(conn)?;
     for (key, val) in [
         (
             STORAGE_FORMAT_VERSION_KEY,
             schemas::STORAGE_FORMAT_VERSION.to_string(),
         ),
-        (
-            STORAGE_MIN_READER_VERSION_KEY,
-            schemas::STORAGE_MIN_READER_VERSION.to_string(),
-        ),
-        (
-            STORAGE_MIN_WRITER_VERSION_KEY,
-            schemas::STORAGE_MIN_WRITER_VERSION.to_string(),
-        ),
+        (STORAGE_MIN_READER_VERSION_KEY, reader.version),
+        (STORAGE_MIN_WRITER_VERSION_KEY, writer.version),
     ] {
-        conn.execute(
-            "INSERT INTO meta(namespace, key, value) VALUES(?1, ?2, ?3)
-             ON CONFLICT(namespace, key) DO UPDATE SET value = excluded.value",
-            params![schemas::STORAGE_FORMAT_META_NAMESPACE, key, val],
-        )?;
+        upsert_storage_meta_value(conn, key, &val)?;
     }
     Ok(())
 }
@@ -798,12 +892,16 @@ pub fn apply_v2_compaction_migration(
         }
 
         stamp_storage_format_metadata(conn)?;
+        let stamped_min_reader = query_storage_meta_value(conn, STORAGE_MIN_READER_VERSION_KEY)?
+            .unwrap_or_else(|| schemas::STORAGE_MIN_READER_VERSION.to_owned());
+        let stamped_min_writer = query_storage_meta_value(conn, STORAGE_MIN_WRITER_VERSION_KEY)?
+            .unwrap_or_else(|| schemas::STORAGE_MIN_WRITER_VERSION.to_owned());
 
         let summary_json = json!({
             "migration_id": V2_COMPACTION_MIGRATION_ID,
             "format_version": schemas::STORAGE_FORMAT_VERSION,
-            "min_reader_version": schemas::STORAGE_MIN_READER_VERSION,
-            "min_writer_version": schemas::STORAGE_MIN_WRITER_VERSION,
+            "min_reader_version": stamped_min_reader,
+            "min_writer_version": stamped_min_writer,
             "pre_events_count": pre_events_count,
             "post_events_count": post_events_count,
             "events_logical_sha256": post_events_sha,

@@ -178,6 +178,11 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
@@ -477,6 +482,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -634,6 +640,11 @@
       "id": "cp-1783-8",
       "summary": "Reconcile origin/master 845ff9799 (PR #1818, v0.149.3), refresh specs, and record review-spec x3 for #1783",
       "input_digest": "sha256:652f10e791b7da9251ee3608e9f7cc4a604c33c9639fb62832b1bd9be296611b"
+    },
+    {
+      "id": "cp-sync-9fff41ffc",
+      "summary": "Integrate accepted master 9fff41ffc (v0.152.0), rebuild docs/agent, and refresh specs for #1783",
+      "input_digest": "sha256:f050f367cd2c2bc0c7e27b0a56bc1d9ac7db10589d0c893741521ac3bac95ce4"
     }
   ],
   "intents": {
@@ -674,23 +685,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled on origin/master 845ff9799 (PR #1818, v0.149.3): preserved #1469 concurrent worktree architecture alongside #1783 WriterIncarnation provenance.",
-          "reviewed_code_fingerprint": "72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277",
-          "spec_material_hash": "3f309dd2e6f9633c7e26e5b04268efc4c27ba7d2471f7b6b16a115925f616580"
+          "reason": "Synced #1783 broker writer incarnation provenance with accepted master 9fff41ffc (v0.152.0).",
+          "reviewed_code_fingerprint": "dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56",
+          "spec_material_hash": "5eff8ad4e212d8373599c234f6748c72ab4f070175f77dd11690813e41f45726"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled on origin/master 845ff9799 (PR #1818, v0.149.3): verified broker verify/repair --acknowledge-unknown-writer CLI and provenance contracts.",
-          "reviewed_code_fingerprint": "72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277",
-          "spec_material_hash": "0c810d04c62a55d1935a9c59c78cea79cf0a28477ed58589c6898d16fd4c6a5a"
+          "reason": "Synced #1783 verifiable broker writer incarnation contract with accepted master 9fff41ffc (v0.152.0).",
+          "reviewed_code_fingerprint": "dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56",
+          "spec_material_hash": "2d8acde3aea49b2c3e1b25440e16ff027a48cc03d14eec54e74b8da9e4acbd63"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled on origin/master 845ff9799 (PR #1818, v0.149.3): verified fail-closed unknown-writer orphan recovery and explicit human review gate.",
-          "reviewed_code_fingerprint": "72dade1f9117fe8da6553750ca899564a7066cc8618e15593b791f4de63ce277",
-          "spec_material_hash": "4368481217d44d7913768939bf5b66594c3a6004cb510e8090a922d78b97f2b8"
+          "reason": "Synced #1783 fail-closed broker orphan acknowledgment with accepted master 9fff41ffc (v0.152.0).",
+          "reviewed_code_fingerprint": "dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56",
+          "spec_material_hash": "8a4b1c8ad5c4138bf24941b192c7206f5f9d8e6d5772cad4f7d50cb1abce1293"
         }
       ],
       "state": "APPROVED",
@@ -701,13 +712,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795054291Z"
+      "updated_at": "1795142809Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9ca49b62983c15ecc407262d77f01385bc22d13b6a2806a1dd01b052c71403e2",
+      "artifact_hash": "sha256:5f32eb69aa13d61c88009bca4601bdba0e7e1fc53be8d62dfd2b2622c7f567ad",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -774,10 +785,17 @@
             "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7R1CX1G0E1K1F07ZPNJDYTA",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7R1CWXC45KTFHQQ66YZABEX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7R1CX1G0E1K1F07ZPNJDYTA": {
@@ -843,6 +861,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/command-contracts.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Merged origin/master 9fff41ffc (v0.152.0); docs build, fmt, clippy --all-targets --all-features, crash_consistency, and broker_* tests passed"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -851,6 +887,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master 9fff41ffc (v0.152.0); docs build, fmt, clippy --all-targets --all-features, crash_consistency, and broker_* tests passed",
         "Merged origin/master a5a1edad (v0.149.0) cleanly; core::broker::tests 7/7, crash_consistency 8/8, doc_alignment 4/4, single_datastore 9/9, core_tests broker 4/4, fmt, clippy all passed",
         "core::broker::tests 7/7 passed; crash_consistency 8/8 passed; cli_contract_enforcement 22/22 passed; doc_alignment 4/4 passed; single_datastore 9/9 passed; clippy and fmt clean"
       ],

@@ -626,7 +626,6 @@ const SAFE_BLOCKER_LABELS: &[&str] = &[
     "READINESS_REPOSITORY_MISSING",
     "READINESS_REPOSITORY_UNSUPPORTED",
     "REQUIRED_PROFILE_DOWNGRADE",
-    "RESOURCE_CUSTODY_PROFILE_UNSUPPORTED",
     "RUST_WORKER_CONTRACT_INVALID",
     "RUST_WORKER_FAILED",
     "RUST_WORKER_INPUT_UNTRACKED",
@@ -1747,9 +1746,11 @@ fn verify_target(
         Some(v) if !v.trim().is_empty() => v,
         _ => {
             result.status = "unknown".to_string();
-            result.notes.push(
-                "Missing verification metadata. Remediation: mark task done with `--validated` or capture verification artifacts for this TODO.".to_string(),
-            );
+            result.notes.push(missing_artifacts_remediation(
+                store_root,
+                &target.todo_id,
+                "Missing verification metadata.",
+            ));
             return Ok(result);
         }
     };
@@ -1784,9 +1785,11 @@ fn verify_target(
         Some(v) if !v.trim().is_empty() => v,
         _ => {
             result.status = "unknown".to_string();
-            result.notes.push(
-                "Missing verification_artifacts. Remediation: capture verification artifacts for this TODO.".to_string(),
-            );
+            result.notes.push(missing_artifacts_remediation(
+                store_root,
+                &target.todo_id,
+                "Missing verification_artifacts.",
+            ));
             return Ok(result);
         }
     };
@@ -2397,6 +2400,214 @@ pub(crate) fn prepare_verified_completion(
     prepare_verified_completion_for_cli(store, repo_root, todo_id, artifact_paths, false)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PreparedDoneHandoff {
+    schema_version: String,
+    request_id: String,
+    todo_id: String,
+    expected_revision: i64,
+    expected_status: String,
+    repo_root: PathBuf,
+    artifact_paths: Vec<PathBuf>,
+    artifacts: VerificationArtifacts,
+    historical_record_id: Option<String>,
+    historical_candidate_sha: Option<String>,
+    historical_record_digest: Option<String>,
+}
+
+fn prepared_done_handoff_path(
+    store_root: &Path,
+    request_id: &str,
+) -> Result<PathBuf, error::DecapodError> {
+    if request_id.is_empty()
+        || !request_id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_'))
+    {
+        return Err(error::DecapodError::ValidationError(
+            "invalid broker request id for prepared completion handoff".into(),
+        ));
+    }
+    Ok(store_root
+        .join("broker-runtime")
+        .join(format!("prepared-done-{request_id}.json")))
+}
+
+pub(crate) fn write_prepared_done_handoff(
+    store: &Store,
+    request_id: &str,
+    prepared: &PreparedTodoVerification,
+) -> Result<PathBuf, error::DecapodError> {
+    let path = prepared_done_handoff_path(&store.root, request_id)?;
+    if let Some(parent) = path.parent() {
+        crate::core::fs_permissions::ensure_storage_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
+    }
+    let payload = PreparedDoneHandoff {
+        schema_version: "decapod.prepared-done-handoff.v1".to_string(),
+        request_id: request_id.to_string(),
+        todo_id: prepared.todo_id.clone(),
+        expected_revision: prepared.expected_revision,
+        expected_status: prepared.expected_status.clone(),
+        repo_root: prepared.repo_root.clone(),
+        artifact_paths: prepared.artifact_paths.clone(),
+        artifacts: prepared.artifacts.clone(),
+        historical_record_id: prepared
+            .historical
+            .as_ref()
+            .map(|proof| proof.record_id().to_string()),
+        historical_candidate_sha: prepared
+            .historical
+            .as_ref()
+            .map(|proof| proof.candidate_sha().to_string()),
+        historical_record_digest: prepared
+            .historical
+            .as_ref()
+            .map(|proof| proof.record_digest().to_string()),
+    };
+    let bytes = serde_json::to_vec(&payload)
+        .map_err(|err| error::DecapodError::ValidationError(err.to_string()))?;
+    use std::io::Write;
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let mut file = options.open(&path).map_err(error::DecapodError::IoError)?;
+    file.write_all(&bytes)
+        .map_err(error::DecapodError::IoError)?;
+    file.sync_all().map_err(error::DecapodError::IoError)?;
+    Ok(path)
+}
+
+pub(crate) fn remove_prepared_done_handoff(store_root: &Path, request_id: &str) {
+    if let Ok(path) = prepared_done_handoff_path(store_root, request_id) {
+        let _ = std::fs::remove_file(path);
+    }
+}
+
+pub(crate) fn consume_prepared_done_handoff(
+    store: &Store,
+    repo_root: &Path,
+    todo_id: &str,
+    commit: Option<&str>,
+    request_id: &str,
+) -> Result<Option<PreparedTodoVerification>, error::DecapodError> {
+    let path = prepared_done_handoff_path(&store.root, request_id)?;
+    if !path.is_file() {
+        return Ok(None);
+    }
+    let bytes = std::fs::read(&path).map_err(error::DecapodError::IoError)?;
+    let _ = std::fs::remove_file(&path);
+    let handoff: PreparedDoneHandoff = serde_json::from_slice(&bytes)
+        .map_err(|err| error::DecapodError::ValidationError(err.to_string()))?;
+    if handoff.schema_version != "decapod.prepared-done-handoff.v1"
+        || handoff.request_id != request_id
+        || handoff.todo_id != todo_id
+        || handoff.repo_root != repo_root
+    {
+        return Err(error::DecapodError::ValidationError(
+            "PREPARED_DONE_HANDOFF_MISMATCH: prepared completion handoff does not match this request".into(),
+        ));
+    }
+    let prepared = if let Some(sha) = commit {
+        let record_id = handoff.historical_record_id.as_deref().ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: missing historical record id".into(),
+            )
+        })?;
+        let candidate_sha = handoff.historical_candidate_sha.as_deref().ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: missing historical candidate sha".into(),
+            )
+        })?;
+        let expected_digest = handoff.historical_record_digest.as_deref().ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: missing historical record digest".into(),
+            )
+        })?;
+        if candidate_sha != sha {
+            return Err(error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: prepared historical commit differs".into(),
+            ));
+        }
+        let history = handoff.artifacts.historical_validation.ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: missing integration witness".into(),
+            )
+        })?;
+        let proof = validation_history::lookup_record(repo_root, store, sha, record_id)?;
+        if proof.record_digest() != expected_digest {
+            return Err(error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: canonical validation record digest changed".into(),
+            ));
+        }
+        if proof.task_binding().task_id != todo_id {
+            return Err(error::DecapodError::ValidationError(
+                "VALIDATION_HISTORY_TASK_MISMATCH: commit validation belongs to another task"
+                    .into(),
+            ));
+        }
+        if proof.task_binding().assignee != crate::current_agent_id() {
+            return Err(error::DecapodError::ValidationError(
+                "VALIDATION_HISTORY_OWNER_MISMATCH: historical completion requires the recorded task owner".into(),
+            ));
+        }
+        let targets = load_targets(store, Some(todo_id))?;
+        let target = targets
+            .into_iter()
+            .next()
+            .ok_or_else(|| error::DecapodError::NotFound(format!("TODO not found: {todo_id}")))?;
+        prepare_historical_completion_from_evidence(
+            store,
+            repo_root,
+            target,
+            proof,
+            history.integration,
+        )?
+    } else {
+        if handoff.artifacts.historical_validation.is_some()
+            || handoff.historical_record_id.is_some()
+        {
+            return Err(error::DecapodError::ValidationError(
+                "PREPARED_DONE_HANDOFF_MISMATCH: unexpected historical evidence".into(),
+            ));
+        }
+        let prepared = PreparedTodoVerification {
+            todo_id: handoff.todo_id,
+            expected_revision: handoff.expected_revision,
+            expected_status: handoff.expected_status,
+            repo_root: handoff.repo_root,
+            artifact_paths: handoff.artifact_paths,
+            artifacts: handoff.artifacts,
+            historical: None,
+            inspected_target: None,
+        };
+        prepared.check_material()?;
+        prepared
+    };
+    Ok(Some(prepared))
+}
+
+fn missing_artifacts_remediation(store_root: &Path, todo_id: &str, prefix: &str) -> String {
+    let store = Store {
+        kind: crate::core::store::StoreKind::Repo,
+        root: store_root.to_path_buf(),
+    };
+    if let Some(sha) = validation_history::latest_candidate_for_task(&store, todo_id) {
+        format!(
+            "{prefix} Remediation: repair proof with `decapod todo done {todo_id} --validated --commit {sha}` (if already integrated into the accepted branch), `decapod qa verify regen {todo_id}`, or `decapod qa verify recover --artifact {todo_id}=<current-file>`."
+        )
+    } else {
+        format!(
+            "{prefix} Remediation: capture proof with `decapod qa verify regen {todo_id}` or `decapod qa verify recover --artifact {todo_id}=<current-file>` (or `decapod todo done {todo_id} --validated --commit <sha>` if a historical validation commit exists)."
+        )
+    }
+}
+
 /// Admit a prior full result for the same task and a proven accepted integration.
 /// This observes immutable evidence; it never executes current publication gates.
 fn ensure_historical_proof_plan(plan: Option<&str>) -> Result<(), error::DecapodError> {
@@ -2656,6 +2867,7 @@ fn capture_baseline_for_todo_impl(
             "Task must be in done state before capturing verification artifacts".to_string(),
         ));
     }
+    let _verifying = VerifyingTodosGuard::enter(todo_id);
     let prepared = prepare_verified_completion_for_cli(
         store,
         repo_root,
@@ -3640,6 +3852,11 @@ pub fn run_diagnose_cli(
                 {
                     println!("  proof note: {reason}");
                 }
+                if let Some(cleanup) = task["cleanup_guidance"].as_str()
+                    && !cleanup.is_empty()
+                {
+                    println!("  cleanup: {cleanup}");
+                }
             }
         }
         println!(
@@ -3715,6 +3932,9 @@ fn diagnose_task(
         "decapod workspace publish".to_string()
     };
 
+    let cleanup_guidance = (next_command == "decapod workspace publish")
+        .then(|| crate::core::validate::todo_tmp_cleanup_instruction_for_task(&task.id, None));
+
     serde_json::json!({
         "todo_id": task.id,
         "state": task.status,
@@ -3729,6 +3949,7 @@ fn diagnose_task(
             "validation_hash_current": "not executed by read-only diagnose",
         },
         "next_command": next_command,
+        "cleanup_guidance": cleanup_guidance,
     })
 }
 #[cfg(test)]
