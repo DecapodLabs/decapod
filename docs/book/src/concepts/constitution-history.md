@@ -26,8 +26,8 @@ capsules, override provenance, workspace refusal and proof-gate implementation.
 Missing evidence stays null. Its deterministic fixtures exclude an unaccepted
 orphan branch and distinguish a version tag from a published release.
 
-The checked-in [generated facts](../../../research/constitution-public-history.json)
-bind the [public source capture](../../../research/constitution-public-source-evidence.json).
+The checked-in [generated facts](https://github.com/DecapodLabs/decapod/blob/master/docs/research/constitution-public-history.json)
+bind the [public source capture](https://github.com/DecapodLabs/decapod/blob/master/docs/research/constitution-public-source-evidence.json).
 The capture records 594 public plain version tags and 592 nondraft, nonprerelease
 GitHub releases observed on 2026-11-17. It was collected read-only with
 `git ls-remote --tags origin` and `gh api --paginate repos/DecapodLabs/decapod/releases`.

@@ -818,6 +818,15 @@
         "tests/unit/core/outcome_comparison_tests.rs",
         "tests/unit/plugins/knowledge_tests.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1532-evidence-links-02",
+      "summary": "Link the published chronology to the tracked source capture and generated facts",
+      "input_digest": "sha256:903407a45a3b223ae20b8c518de7a0a02cd6bdd19e9ff7bb9226660582bf3af1",
+      "proof_refs": [
+        "docs/research/constitution-public-history.json",
+        "docs/research/constitution-public-source-evidence.json"
+      ]
     }
   ],
   "intents": {
@@ -893,10 +902,14 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a5628df158c418ad5a98d127b13c78b28253b74638aa001d252ceb0be46a55bb",
+      "artifact_hash": "sha256:b22f0de8e0c59b8d66bdd7ab154d401ac33779209c5150403d4bd0a5b91f0baa",
       "checks": [
         {
           "name": "activation-conformance",
+          "status": "passed"
+        },
+        {
+          "name": "chronology-evidence-targets",
           "status": "passed"
         },
         {
@@ -912,6 +925,10 @@
           "status": "passed"
         },
         {
+          "name": "focused-regressions",
+          "status": "passed"
+        },
+        {
           "name": "formatting",
           "status": "passed"
         },
@@ -924,7 +941,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "review",
       "custody": {
         "events": [
           {
@@ -952,10 +969,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1002,6 +1026,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "review",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim."
+                ],
+                "proof_refs": [
+                  "focused-regressions",
+                  "chronology-evidence-targets"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1010,6 +1050,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
       ],
