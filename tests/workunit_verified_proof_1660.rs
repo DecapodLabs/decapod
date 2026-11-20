@@ -279,6 +279,7 @@ impl GovernedRepoFixture {
                 reason: None,
             }],
             executions: BTreeMap::from([("inspect-source".into(), execution)]),
+            targets: BTreeMap::new(),
         };
         contract.reviewed_commands_digest =
             repository_profile::command_contract_digest(&commands, &contract).unwrap();
@@ -294,6 +295,7 @@ impl GovernedRepoFixture {
             max_input_bytes: 64 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         let sources =
             runtime::discover_source_inventory(&options, &Cancellation::default()).unwrap();
@@ -406,6 +408,7 @@ impl GovernedRepoFixture {
             max_input_bytes: 64 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         self.proof
             .required_profile

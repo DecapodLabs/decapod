@@ -64,10 +64,11 @@ timeouts and workflow coverage. Additional required checks are allowed. Replacin
 or removing accepted checks, converting their coverage to CI-only, or changing
 profiles returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` before execution selection.
 Editing and repinning candidate configuration cannot authorize that transition.
-Replacement policy must first be independently accepted on the target through
-repository-maintainer authority. There is no agent-side waiver or automatic
-policy migration. First adoption still requires explicit operator review; a
-matching digest does not authenticate that reviewer.
+Replacement policy must first be independently accepted on the target or
+authorized through a bounded, `policy.control`-gated transition approval in the
+canonical main repository policy ledger. There is no agent-side waiver or
+automatic policy migration. First adoption still requires explicit operator
+review; a matching digest does not authenticate that reviewer.
 
 `proof.commands[].command` names the declared executable (or uses its absolute
 path); `args` remain separate literal arguments. Runtime resolves no YAML, shell
@@ -214,18 +215,52 @@ rejects before broker handoff. An unknown write outcome still requires inspectio
 never replay it merely because an override was removed. Direct unrestricted Git
 and filesystem access remain outside this local operation boundary.
 
-### Updating an accepted local verification-source inventory
+### Updating an accepted local verification-source inventory or proof policy (#1738)
 
 For an already accepted `repo.pr-readiness.v1` contract, candidate review cannot
-replace the accepted source-definition digest. This includes inventoried check
-scripts and build, dependency and provider definitions. A new candidate digest
-for changed definitions returns `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`; establish
-the intended policy revision on the accepted target before revalidation.
-Additional required commands under the existing inventory remain possible. New
-inventoried check files require the same separate policy transition. First
-adoption remains supported. Normal subject changes still receive fresh checks
-and exact source bindings. Discovery and declared tool closure do not infer the
-semantic or transitive completeness of arbitrary verification commands.
+self-authorize a changed `reviewed_sources_digest` or replacement
+`commands`/`executions`/`source_coverage` declarations. Without independent
+acceptance, `decapod validate` fails closed before execution selection with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, reporting the old-to-new digests and the
+exact deterministic transition command:
+
+```console
+decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1
+```
+
+`<transition-id>` (`repository_profile::repo_policy_transition_id`) is a
+64-hex-character SHA-256 digest bound to the exact
+`(accepted_base_sha, candidate_head_sha, accepted_sources_digest,
+candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
+tuple under scope `repo.pr-readiness.v1`.
+
+1. **Structural self-consistency first:** Update the candidate's reviewed
+   digests (`reviewed_sources_digest` via `rpc --op agent.init` and
+   `reviewed_commands_digest` via `command_contract_digest`), stage and commit
+   the candidate, then run `decapod validate`. Unreconciled source inventories or
+   stale command digests still fail with `PROOF_PROFILE_RECONCILIATION_REQUIRED`
+   or `STALE_COMMAND_CONTRACT`.
+2. **Privilege-gated maintainer approval:** `decapod govern policy approve` is
+   gated on `"policy.control"` (core trust) in the canonical main `.decapod/data`
+   policy ledger (`decapod.db`). Ordinary agents and `"unknown"` callers are
+   rejected fail-closed, and candidate `.decapod/config.toml` or `governance.json`
+   plan prose can never authorize a transition.
+3. **Bounded, exact-subject validity:** Approvals carry a bounded lifetime
+   (`--expires-in-seconds`, default 900) and can be revoked at any time via
+   `decapod govern policy revoke --id <approval-id>`. Any change to the accepted
+   base SHA, candidate head SHA, `reviewed_sources_digest`, or
+   `reviewed_commands_digest`, as well as wrong scope, expiration, or revocation,
+   invalidates the approval and fails closed with
+   `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+4. **Full execution through the standard gate:** When a valid active approval
+   matches the exact transition, validation admits the candidate's reviewed
+   `repo.pr-readiness.v1` contract into the normal validation engine so all
+   transitioned required checks run against the exact candidate before
+   `workspace publish`. First adoption remains supported; additive commands under
+   the existing inventory remain possible without transition approval; and
+   downgrading an accepted `decapod.pr-readiness.v1` strict profile to
+   `repo.pr-readiness.v1` remains unconditionally blocked with
+   `REQUIRED_PROFILE_DOWNGRADE`.
 
 ## Offline canonical local Git targets
 
@@ -289,3 +324,33 @@ The test emits bounded timing and retained-evidence-size observations. No new
 journal/table or duplicate source snapshot store is introduced; existing evidence
 retention and validation history apply. Full ten-worker A–H proof and independent
 remote publication remain separate unresolved requirements.
+
+## Target-scoped repository proof (#1740)
+
+Repositories using `repo.pr-readiness.v1` may declare an optional reviewed map
+`[proof.repository_contract.targets.<name>]` (`DeploymentTargetContract`) with:
+
+- `commands`: non-empty list of configured required command names for that target slice
+- `depends_on`: optional upstream target names included transitively
+- `shared_inputs`: optional repository-relative prefixes or globs (`*`, `**`) whose
+  intersection with `<accepted_base>..HEAD` changed paths expands proof to include
+  that target and its dependencies
+- `platforms`: optional canonical host platform keys (`linux-aarch64`, `linux-x86_64`,
+  `macos-aarch64`, `macos-x86_64`) compatible with that target's executor
+
+`command_contract_digest` preserves pre-#1740 digests byte-for-byte when `targets` is
+empty and binds `targets` when non-empty. `repository_profile::preserve_accepted`
+rejects candidate target removal, required command removal, `depends_on` or
+`shared_inputs` narrowing, and `platforms` changes with
+`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+
+Passing `--target <name>` to `decapod validate` (or `target` on RPC `validate.run`)
+resolves the selected target's `depends_on` closure plus any targets matched by
+changed `shared_inputs`, and runs only those obligations on compatible executors.
+Unrelated targets and unavailable foreign-host executables are excluded without
+weakening full validation (`decapod validate` without `--target`). Target-scoped
+results carry `scope = "repository_target_readiness"` (or
+`"repository_local_git_target_readiness"`), bind the target closure and exact
+candidate SHA into `native-readiness-receipt.json` and `CompletedReadinessEvidence`,
+keep `publication_ready = false`, and are rejected by full-repository PR publication,
+workunit `VERIFIED` promotion, and unrelated target lookups.

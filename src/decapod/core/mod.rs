@@ -113,6 +113,7 @@ pub mod validation_rules;
 pub mod validation_runtime;
 pub mod work_claim;
 pub mod workspace;
+pub(crate) mod workspace_diagnostic;
 pub mod workspace_lifecycle;
 pub mod workunit;
 

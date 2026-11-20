@@ -1201,6 +1201,7 @@ mod tests {
             max_input_bytes: 1024 * 1024,
             max_files: 10,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         let cancel = Cancellation::default();
         let budget = RuntimeBudget {

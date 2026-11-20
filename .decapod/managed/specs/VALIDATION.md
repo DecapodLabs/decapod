@@ -1534,8 +1534,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6ac3c34a9cdd9784e77813a3bb477a7847d863db4485045587ff7f26754dd984`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
+- Repository signal fingerprint: `95b71cd0613384792b492ae35e8506a8877e0ab563074c6695c36a76247aaee4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2552,6 +2552,26 @@ execution/collection graph remain separate obligations. No fixture, digest
 update, source-CI subset or generated checkpoint grants release authority or
 converts missing platform evidence into success.
 
+## Governed repository proof-policy migration (#1738)
+
+`tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
+cover the `repo.pr-readiness.v1` transition contract across source-inventory
+updates (`reviewed_sources_digest`) and command/execution upgrades
+(`reviewed_commands_digest` + `executions`), verifying full native execution and
+readiness receipt generation after `policy.control`-authorized approval in the
+canonical main `.decapod/data` ledger as well as fail-closed rejection for
+missing approvals (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`), unauthorized callers
+(`ordinary-agent`, `"unknown"`, and `--actor unknown`), stale approvals (moved
+base SHA, moved candidate SHA, or changed policy digest), revoked/expired
+approvals, and unconditional `REQUIRED_PROFILE_DOWNGRADE` enforcement. Local
+unit and integration tests exercise real Git targets, SQLite policy ledgers, and
+native execution; full repository readiness requires Buildkite validation on the
+committed candidate.
+
+## Target-scoped repository proof verification (#1740)
+
+Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.
+
 ## Acceptance of combined instruction contracts
 
 Use actual failing and repaired candidates for origin continuity, contradictory requests, pending spec decisions, selected roots and required behavior. Record plan, instruction, policy, candidate, target and custody identities with current observations. Verify that scope, lease or target movement invalidates the affected evidence. A green test without an accepted criterion leaves semantic alignment unresolved. The archived source and fixture receipts remain tied to their original subjects and must be refreshed for this integration.
@@ -2559,3 +2579,8 @@ Use actual failing and repaired candidates for origin continuity, contradictory 
 ## Release and recorded instruction checks
 
 Version-only release verification checks canonical projections against the classified release head. The recorded-instruction readiness predicate continues to govern approval, execution checkpoints, validation, and publication. Each result retains its own measured evidence.
+
+The legacy scope reconciliation test initializes a valid explicit path declaration
+and then seeds the historical comma-split projection in its temporary journal.
+It checks that repair requires a recoverable journal, preserves previous evidence,
+revokes plan acceptance, and refuses independently changed constraints.

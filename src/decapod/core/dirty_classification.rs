@@ -59,6 +59,7 @@ pub fn classify_with_pre_existing(
     pre_existing: &[String],
 ) -> Result<DirtyClassification, std::io::Error> {
     let output = Command::new("git")
+        .env("GIT_OPTIONAL_LOCKS", "0")
         .current_dir(repo_root)
         .args(["status", "--porcelain=v1", "--untracked-files=all"])
         .bounded_output(CONTROL_TIMEOUT)?;
@@ -131,6 +132,7 @@ pub fn classify_with_pre_existing(
 /// Uses NUL-delimited Git paths so quotes, newlines and rename source names are unambiguous.
 pub fn classify_isolation(repo_root: &Path) -> Result<Vec<DirtyFile>, std::io::Error> {
     let output = Command::new("git")
+        .env("GIT_OPTIONAL_LOCKS", "0")
         .current_dir(repo_root)
         .env("GIT_OPTIONAL_LOCKS", "0")
         .args([

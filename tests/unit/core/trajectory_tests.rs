@@ -42,13 +42,11 @@ fn legacy_task_scope_reconciliation_preserves_history_and_revokes_acceptance() {
     let conn = db::db_connect(&todo::todo_db_path(&store.root).to_string_lossy()).unwrap();
     conn.execute("INSERT INTO tasks(id,hash,title,status,created_at,updated_at,dir_path,scope,revision) VALUES('task_scope','scope','Preserve explicit scope','open','1Z','1Z',?1,?2,1)", db::params![root.to_string_lossy().as_ref(),raw]).unwrap();
     drop(conn);
-    // This is the actual old producer's projection, written through the
-    // canonical fixture constructor rather than hand-editing a live journal.
     let context = governance_document::BranchWorkContext {
         title: "Scope fixture".into(),
         intent: "Preserve original task and scope".into(),
         todo_ids: vec!["task_scope".into()],
-        scope: raw.split(',').map(str::trim).map(str::to_owned).collect(),
+        scope: vec![raw.into()],
     };
     governance_document::initialize_workbranch(root, "main", Some(&context)).unwrap();
     plan_governance::patch_plan(
@@ -72,6 +70,22 @@ fn legacy_task_scope_reconciliation_preserves_history_and_revokes_acceptance() {
         },
     )
     .unwrap();
+    // Seed the old comma-split projection after initializing with a valid declaration.
+    let mut legacy = load_trajectory_cookie(root).unwrap().unwrap();
+    let legacy_paths = raw
+        .split(',')
+        .map(|value| crate::core::path_policy::normalize_persisted_path(root, value.trim()))
+        .collect::<Vec<_>>();
+    legacy.repo_scope = legacy_paths.clone();
+    legacy
+        .custody
+        .intents
+        .get_mut(legacy.intent_id.as_ref().unwrap())
+        .unwrap()
+        .constraints = legacy_paths;
+    let legacy = legacy.with_recomputed_hash().unwrap();
+    governance_document::write_section(root, "trajectory", &serde_json::to_value(legacy).unwrap())
+        .unwrap();
     let before = fs::read(root.join(TRAJECTORY_PATH)).unwrap();
     assert!(
         reconcile_task_scope_projection(root, "task_scope", raw)

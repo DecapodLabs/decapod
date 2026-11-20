@@ -1167,6 +1167,7 @@ mod tests {
             facts,
             release: None,
             catalog,
+            target_scope: None,
             identity_inputs: IdentityInputs {
                 root: root.into(),
                 git_program: PathBuf::from("/usr/bin/git").canonicalize().unwrap(),
@@ -1215,6 +1216,7 @@ mod tests {
             max_input_bytes: 128 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         let runner = LocalOnly {
             official: OfficialCli::new(

@@ -305,6 +305,7 @@ impl ConsumerRepo {
                 .iter()
                 .map(|c| (c.name.clone(), execution.clone()))
                 .collect(),
+            targets: BTreeMap::new(),
         };
         contract.reviewed_commands_digest =
             repository_profile::command_contract_digest(&commands, &contract).unwrap();
@@ -320,6 +321,7 @@ impl ConsumerRepo {
             max_input_bytes: 64 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         fs::create_dir_all(&opts.evidence_parent).unwrap();
         let sources = runtime::discover_source_inventory(&opts, &Cancellation::default()).unwrap();
