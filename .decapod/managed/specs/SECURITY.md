@@ -797,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951`
+- Repository signal fingerprint: `dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1299,3 +1299,7 @@ Git merge reconciliation from laundering invalid or partial proof:
    non-additive edits fail closed with `GOVERNANCE_MERGE_AUTHORITY_CONFLICT`.
    Full merge-commit checkpoint verification (`verify-checkpoints`) remains
    independently enforced after committing the merge.
+
+## Per-platform execution selection boundary (#1736)
+
+`repo.pr-readiness.v1` per-platform execution entries (`RepositoryExecution::platforms` / `PlatformExecution`) preserve fail-closed `#[serde(deny_unknown_fields)]` schema strictness, reject ambient `PATH` resolution, relative paths, mixed top-level/per-platform declarations, and uncanonical or unsupported platform keys, and bind every declared platform alternative into `command_contract_digest` and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Candidate additions, removals, or edits to any platform table—including non-host platforms—cannot self-approve and remain rejected until independently accepted on the target (tracked separately from policy migration in #1738). At host selection and execution time (`RepositoryExecution::resolve_for_platform`, `repository_host::select_commands_for_platform`, `native_proof::validate_invocation`), only the current host platform's reviewed executable and `toolchain_files` are selected, checked for canonical host binary format, and byte-measured before and after execution; missing or unsupported host platforms fail closed without fallback.

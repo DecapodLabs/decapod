@@ -1511,7 +1511,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951`
+- Repository signal fingerprint: `dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1559,9 +1559,17 @@ profile. `proof.repository_contract` declares a reviewed command digest,
 `source_coverage` rows and per-command `executions`. Every discovered workflow has
 exactly one explicit mapping to real required commands; all configured commands
 execute. Absolute installed programs, declared runtime/tool files, exact environment,
-working directory and timeout are configuration-bound. Unknown IDs, stale pins,
-empty/optional commands and missing or duplicate coverage fail closed. Init exposes
-both discovered digests for review without updating them or implying proof success.
+working directory and timeout are configuration-bound. Each execution entry declares
+either single-platform top-level `program` + `toolchain_files` or a mutually
+exclusive `platforms` map (`PlatformExecution`) keyed by canonical host platform
+(`linux-x86_64`, `linux-aarch64`, `macos-x86_64`, `macos-aarch64`), preserving
+byte-identical `command_contract_digest` values for single-platform declarations
+while binding every declared platform alternative into `reviewed_commands_digest`
+and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Unknown IDs,
+invalid/unknown/mixed platform declarations, stale pins, empty/optional commands,
+silent binary substitutions and missing or duplicate coverage fail closed. Init
+exposes both discovered digests for review without updating them or implying proof
+success.
 
 A `source_coverage` row may instead declare a reviewed CI-only limitation (#1531):
 `{ source = ".github/workflows/ci-only.yml", ci_only = true, reason = "..." }` (`commands`

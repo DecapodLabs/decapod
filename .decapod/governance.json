@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
+    "accepted_commit": "c5bafce62bf9120b590436e7d18ce61651037206",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -579,86 +579,39 @@
     }
   },
   "change": {
-    "id": "change_01M7QC4ST58WGCQ5JNZKJPCTF1",
-    "base_commit": "9c7e6cff94908dbfe87f4e4c0dbb1f1e0f4b12d5",
+    "id": "change_01M7QNGXR8M0YARA25DCX9933Z",
+    "base_commit": "c5bafce62bf9120b590436e7d18ce61651037206",
     "target_base": "origin/master"
   },
   "checkpoints": [
     {
-      "id": "cp-1782-1",
-      "summary": "Fix #1782 risk-map warnings to recommend decapod govern policy riskmap init with unit, plugin, CLI contract tests, and INTERFACES.md spec",
-      "input_digest": "sha256:320c7d6ae99634c31827b1fe8c80947d6a52de2bb437be599ea7aaa6f660e041",
-      "proof_refs": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --lib core::validate::tests (61 passed)",
-        "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
-        "cargo test --test gatling t070_policy (1 passed)",
-        "cargo test --test plugins_policy_tests (21 passed)"
-      ]
+      "id": "cp-1736-1",
+      "summary": "Implement reviewed per-platform executables and toolchain_files for repo.pr-readiness.v1 (#1736)",
+      "input_digest": "sha256:b0fd218cf9dbd6cdeb6ed009730837630096c135237f2984e543c90f8479838c"
     },
     {
-      "id": "cp-1782-2",
-      "summary": "Sync origin/master v0.148.12 and refresh living spec attestation for #1782",
-      "input_digest": "sha256:c56cdf383143ec7911c952608ec5336610cf7d945a6353c40db4e04667f35519",
-      "proof_refs": [
-        "cargo test --lib risk_map_warning (1 passed)",
-        "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
-        "cargo test --test plugins_policy_tests (21 passed)"
-      ]
+      "id": "cp-1736-2",
+      "summary": "Align reviewed_sources_digest, Dockerfile.decapod, and specs manifest with v0.148.13",
+      "input_digest": "sha256:96dc6537425a2f06363850b5c3f981aae2ccacdc8a9b649255e9c368ec8d805b"
     },
     {
-      "id": "cp-1782-3",
-      "summary": "Reconcile reviewed_sources_digest for v0.148.12 release bump (7bd0a915)",
-      "input_digest": "sha256:96d1598c4aa83f6d388f8ed36bda178a593d6c1cccc16694cc0ee16f0e408253",
-      "proof_refs": [
-        "agent.init inventory_digest sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
-        "git diff 9c7e6cff..7bd0a915 (Cargo.toml/Cargo.lock/CHANGELOG.md only)"
-      ]
+      "id": "cp-1736-3",
+      "summary": "Merge origin/master v0.148.14 (2f12638a) and align config digest, Dockerfile, and specs manifest",
+      "input_digest": "sha256:3c4e1cb9fbbde0a003b620835088d0d4322c9b85976f0bc58c8b4e9816d5afb5"
     },
     {
-      "id": "cp-1782-4",
-      "summary": "Sync origin/master caeeaba8 (#1792) and verify #1782 risk-map contract tests",
-      "input_digest": "sha256:285507e74d31a744966a5dee940e8f9e40af2d27d9b92cf5ca0348bef69d297f",
-      "proof_refs": [
-        "cargo fmt --check",
-        "cargo test --lib risk_map_warning (1 passed)",
-        "cargo test --test cli_contract_enforcement risk_map_warnings (1 passed)",
-        "cargo test --test plugins_policy_tests (21 passed)"
-      ]
+      "id": "cp-1736-4",
+      "summary": "Sync origin/master d60a639c8 (v0.150.8), refresh v0.150.8 projections, reconcile governance journal, and verify #1736 per-platform readiness",
+      "input_digest": "sha256:c6e79399adea09871cfe00d09734ed1e8e741a534fe5e004c05473ab5d4ce589"
     },
     {
-      "id": "cp-1782-5",
-      "summary": "Sync origin/master c5bafce6 (v0.148.13) and reconcile reviewed_sources_digest",
-      "input_digest": "sha256:bf77d81d97450606989d9288aebdd7f28ff5c29676d9cae3082c80ce84e4fe0a",
-      "proof_refs": [
-        "agent.init inventory_digest sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
-        "cargo fmt --check",
-        "git diff caeeaba8..c5bafce6 (Cargo.toml/Cargo.lock/CHANGELOG.md only)"
-      ]
-    },
-    {
-      "id": "cp-1782-6",
-      "summary": "Refresh v0.148.13 projections and complete ARCHITECTURE/SECURITY publication spec reviews",
-      "input_digest": "sha256:a46fccee1985cb155c0854a6cef4205130a2c7f27bd3504f00966ddecca7a9ef",
-      "proof_refs": [
-        "cargo fmt --check",
-        "govern plan review-spec INTERFACES.md/ARCHITECTURE.md/SECURITY.md",
-        "target/debug/decapod (0.148.13) rpc --op specs.refresh & project-check projection refresh"
-      ]
-    },
-    {
-      "id": "cp-1782-7",
-      "summary": "Sync origin/master ef6c2003d (v0.150.7), reconcile governance journal, refresh specs, and verify #1782 risk-map warning paths",
-      "input_digest": "sha256:c487e2e29bd6d09003fc2db0e71db84351a8f111a52ede2fad1201a993464792"
-    },
-    {
-      "id": "cp-1782-8",
-      "summary": "Use literal include_str! path in tests/unit/core/validate_tests.rs for gatekeeper decapod.scope.protected_paths verification (#1782)",
-      "input_digest": "sha256:8356af2ccabb1136298b2827b7df24879f611e2ff3f1a3f9dec7cbda9927cd3b"
+      "id": "cp-1736-5",
+      "summary": "Initialize RepositoryExecution::platforms in 6 upstream integration test fixtures and verify clippy --all-targets (#1736)",
+      "input_digest": "sha256:3b2c36eb5b83a3633f4f8101e118aecdf6c470bc7e88b43d1693334292f6865f"
     }
   ],
   "intents": {
-    "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1": {
+    "intent:change_01M7QNGXR8M0YARA25DCX9933Z": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -667,14 +620,15 @@
       "constraints": [
         "paths:[\"src/decapod\"",
         "\"tests\"",
+        "\"docs\"",
         "\".decapod/managed/specs\"]"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+      "id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1782: align risk-map warning paths with supported CLI commands\n\nAlign risk-map warning guidance with supported Decapod CLI contracts per Alex's CLI architecture",
-      "refined_intent": "Fix #1782: align risk-map warning paths with supported CLI commands\n\nAlign risk-map warning guidance with supported Decapod CLI contracts per Alex's CLI architecture",
+      "raw_intent": "Feat #1736: support reviewed per-platform executables for repo.pr-readiness.v1\n\nSupport reviewed per-platform executable and toolchain_files declarations in RepositoryContract bound into command_contract_digest and accepted-target preservation",
+      "refined_intent": "Feat #1736: support reviewed per-platform executables for repo.pr-readiness.v1\n\nSupport reviewed per-platform executable and toolchain_files declarations in RepositoryContract bound into command_contract_digest and accepted-target preservation",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -687,7 +641,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1782: align risk-map warning paths with supported CLI commands\n\nAlign risk-map warning guidance with supported Decapod CLI contracts per Alex's CLI architecture",
+      "intent": "Feat #1736: support reviewed per-platform executables for repo.pr-readiness.v1\n\nSupport reviewed per-platform executable and toolchain_files declarations in RepositoryContract bound into command_contract_digest and accepted-target preservation",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -695,53 +649,69 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "PR #1800 aligns risk-map warning paths and uses literal include_str! in validate_tests.rs only; no architecture changes versus v0.150.7.",
-          "reviewed_code_fingerprint": "04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951",
-          "spec_material_hash": "5d2e6751d609aaeb9afa2c54fad585ebc6f60c75516d099a28cc0a6eed7bc008"
+          "reason": "Preserved per-platform execution resolution and host selection architecture (#1736) in ARCHITECTURE.md; updated 6 upstream integration test initializers.",
+          "reviewed_code_fingerprint": "dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734",
+          "spec_material_hash": "485749bf431dc4b4aa717c250e5428a56bf618728a2e01fd01f7f155fb4e13bb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved Risk-map warning CLI contract (#1782) in INTERFACES.md alongside v0.150.7 upstream specs; updated validate_tests.rs include_str! to literal path for gatekeeper scanning.",
-          "reviewed_code_fingerprint": "04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951",
-          "spec_material_hash": "a67a65f193d9cf38634f7141d45b6abe342bc3ff50b6488a38f37f869c9b9b17"
+          "reason": "Preserved per-platform execution contract (#1736) in INTERFACES.md alongside v0.150.8 specs; initialized platforms: BTreeMap::new() in 6 upstream integration test fixtures.",
+          "reviewed_code_fingerprint": "dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734",
+          "spec_material_hash": "941a88d1fa1de50c6bec4148dcc301de28db3e5d1ecfad031a8732a632d7dc5f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "PR #1800 satisfies gatekeeper literal include_str! scanning without altering security boundaries or policy.control trust gates.",
-          "reviewed_code_fingerprint": "04433919372718290246cdf1affb76b9e70e6cbf4c0d99ad09a9772b3bfdc951",
-          "spec_material_hash": "127c65866657d2dd15434ca52f6e3a97b8f20aa4dd97f9d3190e1cd98edac3ac"
+          "reason": "Preserved Per-platform execution selection boundary (#1736) in SECURITY.md; single-platform test fixtures initialize empty platforms map.",
+          "reviewed_code_fingerprint": "dba081c4a82d40f68b8b15619d246a47289fe147cbef8b23b9621b05c31d8734",
+          "spec_material_hash": "5d5e6d393e35b9d5b1987ca692fbdd18b0b238b96d5e62181e43480d0fea8aee"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix #1782: align risk-map warning paths with supported CLI commands",
+      "title": "Feat #1736: support reviewed per-platform executables for repo.pr-readiness.v1",
       "todo_ids": [
-        "bugs_01m7qbj86wggnc9g"
+        "code_01m7qnahbqbjvd8y"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795127863Z"
+      "updated_at": "1795131986Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7e463e22554a427593049079e3d9210e55d842a65eddd9d73b813b43da10a30c",
+      "artifact_hash": "sha256:cb75cc3ecc5f70885fe570379b5bb78d9cfd0034613f65a85217cff2e3717533",
       "checks": [
+        {
+          "name": "cargo_clippy",
+          "status": "passed"
+        },
         {
           "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "cli_contract_enforcement_riskmap",
+          "name": "clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "clippy",
+          "name": "consumer_readiness",
+          "status": "passed"
+        },
+        {
+          "name": "contract_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "core_full_targets",
+          "status": "passed"
+        },
+        {
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
@@ -749,132 +719,110 @@
           "status": "passed"
         },
         {
-          "name": "fmt",
+          "name": "entrypoint_correctness",
           "status": "passed"
         },
         {
-          "name": "gatling_t070_policy",
+          "name": "repository_host_unit_tests",
           "status": "passed"
         },
         {
-          "name": "inventory_digest",
-          "status": "passed"
-        },
-        {
-          "name": "inventory_digest_v014813",
-          "status": "passed"
-        },
-        {
-          "name": "plugins_policy_tests",
-          "status": "passed"
-        },
-        {
-          "name": "project_check",
+          "name": "repository_profile_unit_tests",
           "status": "passed"
         },
         {
           "name": "targeted_tests",
           "status": "passed"
-        },
-        {
-          "name": "validate_tests",
-          "status": "passed"
-        },
-        {
-          "name": "verify_checkpoints_publication_material",
-          "status": "passed"
         }
       ],
-      "current_phase": "verify",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+            "detail": "trajectory:branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "kind": "trajectory_step_recorded",
             "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7QC4T0FX5CFADGN7WFGBTNQ": {
+          "branch_01M7QNGXVG2P2VB3JGMXQRF1NC": {
             "evidence_only": true,
-            "id": "branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
-            "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+            "id": "branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
+            "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
             "steps": [
               {
-                "action": "implement",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/cli.rs",
-                  "tests/gatling.rs",
-                  "tests/plugins/policy.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'."
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "docs/agent/repository-readiness.md",
+                  "docs/agent/config-schema.md",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_runtime/repository_host.rs",
+                  "tests/unit/core/repository_profile_tests.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/acceptance/publication_admission.rs",
+                  "docs/agent/repository-readiness.md",
+                  "docs/agent/config-schema.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "17 repository_profile unit tests passed, 6 repository_host unit tests passed, 27 consumer_readiness integration tests passed, 4 doc_alignment tests passed, 12 contract_conformance tests passed, clippy -D warnings and cargo fmt --check passed."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "repository_profile_unit_tests",
+                  "repository_host_unit_tests",
+                  "consumer_readiness",
+                  "doc_alignment",
+                  "contract_conformance"
+                ],
                 "scope": [
                   "\".decapod/managed/specs\"]",
+                  "\"docs\"",
                   "\"tests\"",
                   "paths:[\"src/decapod\""
                 ],
@@ -882,27 +830,18 @@
                 "validation_findings": []
               },
               {
-                "action": "verify",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/plugins/policy.rs",
-                  "tests/cli_contract_enforcement.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "cargo fmt --check ok; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings ok; cargo test --lib core::validate::tests (61 passed); cargo test --test plugins_policy_tests (21 passed); cargo test --test cli_contract_enforcement risk_map_warnings (1 passed); cargo test --test gatling t070_policy (1 passed)"
+                  "Post-12595 local verification passed entrypoint_correctness (42/42) and all 11 core_full test binaries (71/71); merged origin/master 2f12638a (v0.148.14) cleanly with zero source conflicts."
                 ],
                 "proof_refs": [
-                  "fmt",
-                  "clippy",
-                  "validate_tests",
-                  "plugins_policy_tests",
-                  "cli_contract_enforcement_riskmap",
-                  "gatling_t070_policy"
+                  "entrypoint_correctness",
+                  "core_full_targets"
                 ],
                 "scope": [
                   "\".decapod/managed/specs\"]",
+                  "\"docs\"",
                   "\"tests\"",
                   "paths:[\"src/decapod\""
                 ],
@@ -913,15 +852,26 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/config.toml",
-                  "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "docs/agent/config-schema.md",
+                  "docs/agent/repository-readiness.md",
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Merged origin/master d60a639c8 (v0.150.8) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed Dockerfile.decapod and .manifest.json to v0.150.8, rebuilt v0.150.8 candidate binary, verified docs build, cargo fmt, and targeted tests (17/17 repository_profile, 6/6 repository_host, 3/3 consumer_readiness per_platform)."
                 ],
                 "proof_refs": [
-                  "inventory_digest"
+                  "targeted_tests",
+                  "docs_build",
+                  "cargo_fmt"
                 ],
                 "scope": [
                   "\".decapod/managed/specs\"]",
+                  "\"docs\"",
                   "\"tests\"",
                   "paths:[\"src/decapod\""
                 ],
@@ -932,86 +882,31 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
                 "observations": [
-                  ".decapod/config.toml",
-                  ".decapod/config.toml",
-                  "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2"
+                  "tests/workunit_verified_proof_1660.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "tests/validate_ergonomics_1807_1810.rs",
+                  "tests/concurrent_worktree_integration_1469.rs",
+                  "tests/exact_candidate_governance_1052.rs",
+                  "tests/gate_skip_override_readiness_1659.rs",
+                  "tests/workunit_verified_proof_1660.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "tests/validate_ergonomics_1807_1810.rs",
+                  "tests/concurrent_worktree_integration_1469.rs",
+                  "tests/exact_candidate_governance_1052.rs",
+                  "tests/gate_skip_override_readiness_1659.rs",
+                  "Initialized platforms: BTreeMap::new() in all 6 upstream integration test files (7 RepositoryExecution struct literals) added on master after #1803; verified CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passes with 0 errors and 0 warnings."
                 ],
                 "proof_refs": [
-                  "inventory_digest_v014813"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/Dockerfile.decapod",
-                  "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace-built 0.148.13 decapod binary and recorded ARCHITECTURE.md / SECURITY.md spec reviews for publication-material."
-                ],
-                "proof_refs": [
-                  "verify_checkpoints_publication_material"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:9",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/plugins/policy.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Merged origin/master ef6c2003d (v0.150.7) cleanly with 0 code conflicts, reconciled governance via reconcile-merge, rebuilt v0.150.7 candidate binary, verified docs build (0 diff), cargo fmt, and targeted #1782 tests (validate_tests, plugins_policy_tests, cli_contract_enforcement)."
-                ],
-                "proof_refs": [
-                  "targeted_tests",
-                  "docs_build",
+                  "clippy_all_targets",
                   "cargo_fmt"
                 ],
                 "scope": [
                   "\".decapod/managed/specs\"]",
+                  "\"docs\"",
                   "\"tests\"",
                   "paths:[\"src/decapod\""
                 ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "tests/unit/core/validate_tests.rs",
-                  "src/decapod/core/gatekeeper/source_dependencies.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "Replaced non-literal include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), ...)) in tests/unit/core/validate_tests.rs:24 with literal include_str!(\"../../../src/decapod/core/validate.rs\") so gatekeeper::source_dependencies::expand verifies decapod.scope.protected_paths cleanly."
-                ],
-                "proof_refs": [
-                  "targeted_tests",
-                  "project_check"
-                ],
-                "scope": [
-                  "\".decapod/managed/specs\"]",
-                  "\"tests\"",
-                  "paths:[\"src/decapod\""
-                ],
-                "sequence": 10,
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -1021,52 +916,63 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "Merged origin/master ef6c2003d (v0.150.7) cleanly with 0 code conflicts, reconciled governance via reconcile-merge, rebuilt v0.150.7 candidate binary, verified docs build (0 diff), cargo fmt, and targeted #1782 tests (validate_tests, plugins_policy_tests, cli_contract_enforcement).",
-        "Refreshed v0.148.13 Dockerfile.decapod and .manifest.json with workspace-built 0.148.13 decapod binary and recorded ARCHITECTURE.md / SECURITY.md spec reviews for publication-material.",
-        "Replaced non-literal include_str!(concat!(env!(\"CARGO_MANIFEST_DIR\"), ...)) in tests/unit/core/validate_tests.rs:24 with literal include_str!(\"../../../src/decapod/core/validate.rs\") so gatekeeper::source_dependencies::expand verifies decapod.scope.protected_paths cleanly.",
-        "Reviewed git diff 9c7e6cff..7bd0a915 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.12) and reconciled proof.required_profile.reviewed_sources_digest to sha256:bd7eec7e7edaa9a427dea5c3d6b4de42e885b23d2b1911f3602527686e366c4e",
-        "Reviewed git diff caeeaba8..c5bafce6 (Cargo.toml, Cargo.lock, CHANGELOG.md only for v0.148.13) and reconciled proof.required_profile.reviewed_sources_digest to sha256:f2c1d189ee0c96f6afb66185229233bd0436015d0ddd21dc56deb4f58709b2b2",
-        "Verified clap mounts PolicyCli under GovernCommand::Policy (decapod govern policy riskmap init/verify), whereas validate.rs emitted unsupported 'decapod riskmap init' and policy.rs emitted unsupported 'decapod policy riskmap init'.",
-        "cargo fmt --check ok; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings ok; cargo test --lib core::validate::tests (61 passed); cargo test --test plugins_policy_tests (21 passed); cargo test --test cli_contract_enforcement risk_map_warnings (1 passed); cargo test --test gatling t070_policy (1 passed)"
+        "17 repository_profile unit tests passed, 6 repository_host unit tests passed, 27 consumer_readiness integration tests passed, 4 doc_alignment tests passed, 12 contract_conformance tests passed, clippy -D warnings and cargo fmt --check passed.",
+        "Initialized platforms: BTreeMap::new() in all 6 upstream integration test files (7 RepositoryExecution struct literals) added on master after #1803; verified CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings passes with 0 errors and 0 warnings.",
+        "Merged origin/master d60a639c8 (v0.150.8) with 0 code conflicts, reconciled governance via reconcile-merge, refreshed Dockerfile.decapod and .manifest.json to v0.150.8, rebuilt v0.150.8 candidate binary, verified docs build, cargo fmt, and targeted tests (17/17 repository_profile, 6/6 repository_host, 3/3 consumer_readiness per_platform).",
+        "Post-12595 local verification passed entrypoint_correctness (42/42) and all 11 core_full test binaries (71/71); merged origin/master 2f12638a (v0.148.14) cleanly with zero source conflicts."
       ],
       "inspected_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/gatekeeper/source_dependencies.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/gatling.rs",
-        "tests/plugins/policy.rs",
-        "tests/unit/core/validate_tests.rs"
+        "docs/agent/config-schema.md",
+        "docs/agent/repository-readiness.md",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "tests/concurrent_worktree_integration_1469.rs",
+        "tests/exact_candidate_governance_1052.rs",
+        "tests/gate_skip_override_readiness_1659.rs",
+        "tests/policy_self_authorization_1776.rs",
+        "tests/validate_ergonomics_1807_1810.rs",
+        "tests/workunit_verified_proof_1660.rs"
       ],
-      "intent_id": "intent:change_01M7QC4ST58WGCQ5JNZKJPCTF1",
+      "intent_id": "intent:change_01M7QNGXR8M0YARA25DCX9933Z",
       "modified_files": [
-        ".decapod/config.toml",
         ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/validate.rs",
-        "src/decapod/plugins/policy.rs",
-        "tests/cli_contract_enforcement.rs",
-        "tests/plugins/policy.rs",
-        "tests/unit/core/validate_tests.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/agent/config-schema.md",
+        "docs/agent/repository-readiness.md",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_runtime/repository_host.rs",
+        "tests/acceptance/publication_admission.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/concurrent_worktree_integration_1469.rs",
+        "tests/consumer_readiness.rs",
+        "tests/exact_candidate_governance_1052.rs",
+        "tests/gate_skip_override_readiness_1659.rs",
+        "tests/policy_self_authorization_1776.rs",
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/validate_ergonomics_1807_1810.rs",
+        "tests/workunit_verified_proof_1660.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "\".decapod/managed/specs\"]",
+        "\"docs\"",
         "\"tests\"",
         "paths:[\"src/decapod\""
       ],
-      "run_id": "branch_01M7QC4T0FX5CFADGN7WFGBTNQ",
+      "run_id": "branch_01M7QNGXVG2P2VB3JGMXQRF1NC",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7qbj86wggnc9g",
+      "task_id": "code_01m7qnahbqbjvd8y",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

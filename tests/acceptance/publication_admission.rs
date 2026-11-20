@@ -171,6 +171,7 @@ fn configure_accepted_fixture(root: &Path, output: &Path, repository: &str) {
                 .unwrap()
                 .into(),
         )]),
+        platforms: BTreeMap::new(),
         environment: BTreeMap::from([("LC_ALL".into(), "C".into())]),
         directory: ".".into(),
         timeout_seconds: 10,
