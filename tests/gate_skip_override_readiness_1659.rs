@@ -242,6 +242,8 @@ fn write_canonical_local_config(repo: &Path) {
         command_contract_digest(&commands, &contract).expect("compute command contract digest");
 
     let proof_cfg = ProjectProofConfig {
+        observed_path: None,
+        selected_work: None,
         ci_attested: None,
         validation_buildkite_preflights: false,
         required_profile: Some(ProfileDeclaration {

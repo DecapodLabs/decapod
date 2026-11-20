@@ -324,6 +324,8 @@ impl ConsumerRepo {
         fs::create_dir_all(&opts.evidence_parent).unwrap();
         let sources = runtime::discover_source_inventory(&opts, &Cancellation::default()).unwrap();
         let proof = ProjectProofConfig {
+            observed_path: None,
+            selected_work: None,
             validation_buildkite_preflights: false,
             required_profile: Some(ProfileDeclaration {
                 id: repository_profile::REQUIRED_PROFILE.into(),

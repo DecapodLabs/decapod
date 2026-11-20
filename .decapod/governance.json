@@ -692,6 +692,16 @@
       "id": "stack-governance-and-release-on-868f756e",
       "summary": "Preserve the original signed recovery and release histories under a common delivery. Keep accepted recorded readiness, native decisions and source projection contracts. Hosted checks and review pending.",
       "input_digest": "sha256:91cecc8ef6acca1d6c21fca5857c73bd9c5612df4b6ad153d14d281e6e8e78ba"
+    },
+    {
+      "id": "stack-v1540-and-test-fixture-parity",
+      "summary": "Carry accepted release v0.154.0 and the latest original release-verifier commit while preserving both histories. Repair test-only proof initializer defaults found by hosted Clippy. Current hosted validation pending.",
+      "input_digest": "sha256:a4685baa44fa0fe4c4bc88659b356a58ecf12855997e1286c75253097ad38d1a"
+    },
+    {
+      "id": "stack-v1540-readiness-fixtures",
+      "summary": "Retain sixteen source ancestors and the current release verifier refresh. Remove duplicate readiness test initialization, preserve exact optional proof defaults and refresh the v0.154.0 projections. Hosted execution pending.",
+      "input_digest": "sha256:b899fe450d5a605f3964932f17e1bd0785d832c03ba6da743d2177f4adac08bd"
     }
   ],
   "intents": {
@@ -738,24 +748,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate the release verifier and preserve the accepted recorded-readiness contract.",
-          "reviewed_code_fingerprint": "8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b",
+          "reason": "The fixture corrections preserve the reviewed combined architecture.",
+          "reviewed_code_fingerprint": "6ac3c34a9cdd9784e77813a3bb477a7847d863db4485045587ff7f26754dd984",
           "spec_material_hash": "75a570588e296fd096b07f174b3844f30ee5b279edae901ac905d30ab8f5e4ad"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain typed blocker and remediation fields and the versioned projections.",
-          "reviewed_code_fingerprint": "8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b",
+          "reason": "Remove a duplicate test initializer while preserving the accepted readiness interface.",
+          "reviewed_code_fingerprint": "6ac3c34a9cdd9784e77813a3bb477a7847d863db4485045587ff7f26754dd984",
           "spec_material_hash": "bffba7b7bfbecd53f1fb5451210c8cbe84f54da05ac4d209b0f9512a400393d6"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retain canonical source authority checks and the accepted observer limits.",
-          "reviewed_code_fingerprint": "8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b",
+          "reason": "Canonical source identity and repository proof requirements remain enforced.",
+          "reviewed_code_fingerprint": "6ac3c34a9cdd9784e77813a3bb477a7847d863db4485045587ff7f26754dd984",
           "spec_material_hash": "cb896215a5995942f4c9b617abf055b91af596ab245375ab3582844150477bbb"
         }
       ],
@@ -767,7 +777,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795168915Z"
+      "updated_at": "1795169899Z"
     },
     "trajectory": {
       "active_boundaries": [
@@ -775,7 +785,7 @@
         "Deliver PRs 1862 and 1865 in one protected merge, preserving fifteen existing signed commits and the original draft.",
         "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:d90b3796d8ff35a796dcd4d2414b1801c7141acef8c095f5537330607b00ab1d",
+      "artifact_hash": "sha256:d1abb46bc0ec4d0235cd41b336628cb111ddfe2f160d98a68f6ac594f850a9d6",
       "checks": [
         {
           "name": "2092274a-macos-compile",
@@ -790,7 +800,19 @@
           "status": "passed"
         },
         {
+          "name": "previous-stack-clippy",
+          "status": "failed"
+        },
+        {
+          "name": "previous-stack-supabase-compile",
+          "status": "failed"
+        },
+        {
           "name": "projection-hashes",
+          "status": "passed"
+        },
+        {
+          "name": "release-1540-projections",
           "status": "passed"
         },
         {
@@ -844,10 +866,24 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
@@ -949,6 +985,53 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Earlier exact standalone PR validation passed. Clippy job 136220526644 found missing optional fields in a legacy fixture. All remaining explicit test fixtures now set those defaults. Refreshed v0.154.0 hashes and 105 reviewed inputs verified."
+                ],
+                "proof_refs": [
+                  "previous-stack-clippy",
+                  "release-1540-projections"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "Job 136220526588 exposed duplicate readiness in a unit test initializer. The current source removes that duplicate and retains original release verifier head 6d2edebe with unchanged authored implementation."
+                ],
+                "proof_refs": [
+                  "previous-stack-supabase-compile"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -959,9 +1042,11 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "Earlier exact standalone PR validation passed. Clippy job 136220526644 found missing optional fields in a legacy fixture. All remaining explicit test fixtures now set those defaults. Refreshed v0.154.0 hashes and 105 reviewed inputs verified.",
         "Formatting is clean. All 105 reviewed input hashes match release verifier head 42e1becf and all 12 refreshed manifest entries match their files.",
         "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",
         "GitHub Actions jobs 136183707903 and 136190025843 measured E0063 on the same platform-selection fixture. Repair verified by formatting. Fresh hosted execution remains pending.",
+        "Job 136220526588 exposed duplicate readiness in a unit test initializer. The current source removes that duplicate and retains original release verifier head 6d2edebe with unchanged authored implementation.",
         "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
       ],
       "inspected_files": [],
@@ -970,6 +1055,7 @@
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
         "Run GitHub Actions for the pushed source and accepted master. Preserve any missing independent external observer evidence.",
+        "Run current-head GitHub Actions on accepted 0f44f780 and obtain the repository review or authorized exception.",
         "Verify stack checkpoints, run GitHub Actions and merge via protected master when eligible."
       ],
       "repo_scope": [

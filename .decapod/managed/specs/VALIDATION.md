@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8147d0ec0ebb276c811aaa458f38389bc307933c42c881e50de9f98b2016002b`
+- Repository signal fingerprint: `6ac3c34a9cdd9784e77813a3bb477a7847d863db4485045587ff7f26754dd984`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2555,3 +2555,7 @@ converts missing platform evidence into success.
 ## Acceptance of combined instruction contracts
 
 Use actual failing and repaired candidates for origin continuity, contradictory requests, pending spec decisions, selected roots and required behavior. Record plan, instruction, policy, candidate, target and custody identities with current observations. Verify that scope, lease or target movement invalidates the affected evidence. A green test without an accepted criterion leaves semantic alignment unresolved. The archived source and fixture receipts remain tied to their original subjects and must be refreshed for this integration.
+
+## Release and recorded instruction checks
+
+Version-only release verification checks canonical projections against the classified release head. The recorded-instruction readiness predicate continues to govern approval, execution checkpoints, validation, and publication. Each result retains its own measured evidence.
