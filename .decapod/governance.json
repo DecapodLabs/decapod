@@ -788,6 +788,11 @@
       "id": "source-version-release-projection-repair-20261120",
       "summary": "Preserve canonical committed source entrypoint versions in exact release proof; add adversarial regression and record pending Actions",
       "input_digest": "sha256:335a4053e1c26750c8a443c4b60b3bfb81a82759b936c506e2925668d2486f25"
+    },
+    {
+      "id": "release-proof-accepted1532-integration-20261120",
+      "summary": "Integrate accepted release1532 and exact reviewed inputs; preserve stale-context and transport failures",
+      "input_digest": "sha256:0e2b940e11c8aad35001999980e389b27cda4cb5b552e3b9bb3e0349a394f4eb"
     }
   ],
   "intents": {
@@ -828,22 +833,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reuse existing immutable source-template/version proof for exact release projections, retaining every classifier, inventory and manifest constraint; source execution remains pending.",
-          "reviewed_code_fingerprint": "863d70c3e734ecc9a98c27ef5b3253e691f91373f1f1f5c736f563ee2b501691",
+          "reason": "Re-reviewed source-policy reuse and exact immutable-head bytes after accepted34b integration and official1532 generation; full source graph retained.",
+          "reviewed_code_fingerprint": "1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308",
           "spec_material_hash": "1e6d58f76e6b27911507a284667c65de78cca05dba65f7775dd517090b18f4ad"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Version preservation is conditional on existing accepted source policy and exact immutable head bytes; no new RPC/profile authority or source-CI recipe.",
-          "reviewed_code_fingerprint": "863d70c3e734ecc9a98c27ef5b3253e691f91373f1f1f5c736f563ee2b501691",
+          "reason": "Current1532 projections retain conditional source version preservation and exact current immutable bytes; execution still pending Actions.",
+          "reviewed_code_fingerprint": "1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308",
           "spec_material_hash": "ab5445cf5a6f8eebfedb4108d6e048abeabb87fccbc84280fb73be17b4a79def"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed genuine source lineage fixture and header/payload/origin refusals. Config, immutable classification, staged inventory, Dockerfile/spec/manifest checks remain enforced.",
-          "reviewed_code_fingerprint": "863d70c3e734ecc9a98c27ef5b3253e691f91373f1f1f5c736f563ee2b501691",
+          "reason": "Reviewed current base, unchanged trusted-source predicate, header/payload/origin refusals and all105 inputs; required recipes unchanged.",
+          "reviewed_code_fingerprint": "1e8219de44c97c7c398cee7738a5f3ed507f55181337acab9d8e6ea8a0d52308",
           "spec_material_hash": "d013f22014a8b0d8142a917979689fca1ff96fc842d68eed5148def919084c9a"
         }
       ],
@@ -855,17 +860,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795161586Z"
+      "updated_at": "1795162688Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2916c211a2771dbd72921a3032ff7c54a9f61d1d929552634e616cb25d84cc34",
+      "artifact_hash": "sha256:c36af98b4094ded244e4f75bd991b153a155a9ace2482f71b20424e578de2c39",
       "checks": [
         {
           "name": "candidate-regression-execution",
           "status": "unavailable"
+        },
+        {
+          "name": "candidate-runtime",
+          "status": "unavailable"
+        },
+        {
+          "name": "first-actions-context",
+          "status": "failed"
         },
         {
           "name": "formatting",
@@ -897,10 +910,17 @@
             "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VYYH74AZEP39ERERBKPVWM": {
@@ -929,16 +949,37 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "Accepted target moved to34b98ab1; integrate release1532 and native projections through official1532. All105 source inputs measured; only reviewed regression fixture changes versus accepted base. Initial Actions context rejected before tests. A spec-review write returned STORAGE_OWNER_TRANSPORT_OUTCOME_UNKNOWN; native status confirmed the older review persisted and no new review was recorded, so retry is current-content-bound and idempotent. User excludes all Buildkite; Actions result remains pending.",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "/private/tmp/attack-gaps-1862-first-context-failure.log",
+                  "/private/tmp/attack-gaps-release-current-inventory-review.json"
+                ],
+                "proof_refs": [
+                  "first-actions-context",
+                  "candidate-runtime"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
+        "Accepted target moved to34b98ab1; integrate release1532 and native projections through official1532. All105 source inputs measured; only reviewed regression fixture changes versus accepted base. Initial Actions context rejected before tests. A spec-review write returned STORAGE_OWNER_TRANSPORT_OUTCOME_UNKNOWN; native status confirmed the older review persisted and no new review was recorded, so retry is current-content-bound and idempotent. User excludes all Buildkite; Actions result remains pending.",
         "Actual release1858 standalone validation191pass1fail17skip rejected FINGERPRINT_ONLY_SPECS; log SHA256924dbf78734b5049b06c61452802fa2834472e198b53d2ae70749c86efe59966. Implement reviewed source-policy reuse and negative/positive controls; no candidate runtime success claimed. Native approval initially hit database Busy and supported same-intent retry reached APPROVED. User explicitly directs publish PRs, ignore all Buildkite, verify GitHub Actions, merge and release cuts. Preserve configured policy and all failures; source-CI is not retroactive authenticated native admission."
       ],
       "destination": "pull request",
       "evidence": [
+        "/private/tmp/attack-gaps-1862-first-context-failure.log",
+        "/private/tmp/attack-gaps-release-current-inventory-review.json",
         "/private/tmp/attack-gaps-release1858-validate-failure.log"
       ],
       "inspected_files": [
