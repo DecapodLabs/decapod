@@ -836,6 +836,11 @@
       "id": "fix-strict-fixture-v1560",
       "summary": "Apply accepted v0.156.0 and refresh exact managed projections for the strict fixture repair",
       "input_digest": "sha256:1ae979f693a3b98db3f45fb22c05d3a71b8d74b4eb73fa7ba917c220e4fb9369"
+    },
+    {
+      "id": "fix-strict-fixture-v1561",
+      "summary": "Integrate accepted v0.156.1 and preserve the covered fixture repair and exact hosted evidence",
+      "input_digest": "sha256:83c6aec6d576f6edf1c56750d5f1f874d12ab229866f5d655aa26f7e8aeb76d5"
     }
   ],
   "intents": {
@@ -878,22 +883,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The scoped fixture change preserves the accepted architecture. Generated proof tracks the v0.156.0 base.",
-          "reviewed_code_fingerprint": "938a6b623ecbc27d4902cb0a721bac478df1fd478db9322ed53d04b56d46e7e4",
-          "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
+          "reason": "Preserve the accepted v0.156.1 selected-work architecture. The candidate changes a regression fixture.",
+          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The required-profile rejection and proof interfaces retain their existing behavior.",
-          "reviewed_code_fingerprint": "938a6b623ecbc27d4902cb0a721bac478df1fd478db9322ed53d04b56d46e7e4",
-          "spec_material_hash": "696b81ee20708c04db8b5405105acfbd5696ffd7b921f2549f9b948fb4c91907"
+          "reason": "The strict-profile fixture preserves the accepted downgrade proof interface and its check.",
+          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The fixture still passes an authorized approval before testing the unconditional downgrade rejection.",
-          "reviewed_code_fingerprint": "938a6b623ecbc27d4902cb0a721bac478df1fd478db9322ed53d04b56d46e7e4",
+          "reason": "The confirmed fixture test exercises the approved transition and the existing unconditional rejection.",
+          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -905,16 +910,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795213879Z"
+      "updated_at": "1795218933Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:54914d58b6ef99a86d3a1e05749d60ca88843d23cfe7c070483b21cf4f44cf49",
+      "artifact_hash": "sha256:27fd0ec988f6d0eddd601f4a69d9434db0077f937d7af3e2d44cf1eeabc6a41d",
       "checks": [
         {
+          "name": "exact-hosted-strict-profile-test",
+          "status": "passed"
+        },
+        {
           "name": "previous-cli-strict-fixture",
+          "status": "failed"
+        },
+        {
+          "name": "prior-selective-cli-target-timeout",
           "status": "failed"
         },
         {
@@ -954,10 +967,17 @@
             "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XH10N43RM1J5HAVP45NYVV": {
@@ -1000,6 +1020,24 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned."
+                ],
+                "proof_refs": [
+                  "exact-hosted-strict-profile-test",
+                  "prior-selective-cli-target-timeout"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "tests/consumer_readiness.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1009,6 +1047,7 @@
       "destination": "pull request",
       "evidence": [
         "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator.",
+        "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned.",
         "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
       ],
       "inspected_files": [],
