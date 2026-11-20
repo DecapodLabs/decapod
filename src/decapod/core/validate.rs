@@ -6739,16 +6739,9 @@ fn validate_plan_governed_execution_gate(
             pass("Plan artifact state allows governed execution", ctx);
         }
 
-        if plan.intent.trim().is_empty()
-            || !plan.unknowns.is_empty()
-            || !plan.human_questions.is_empty()
-        {
-            fail(
-                "NEEDS_HUMAN_INPUT: governed plan has unresolved intent/unknowns/questions",
-                ctx,
-            );
-        } else {
-            pass("Plan intent and unknowns are resolved", ctx);
+        match plan_governance::ensure_instruction_ready(&plan, "NEEDS_HUMAN_INPUT") {
+            Ok(()) => pass("Recorded plan instructions are resolved", ctx),
+            Err(error) => fail(&error.to_string(), ctx),
         }
     } else {
         let done_count = plan_governance::count_done_todos(&store.root)?;

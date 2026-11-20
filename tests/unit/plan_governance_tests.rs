@@ -207,9 +207,15 @@ fn actual_intent_ambiguity_still_requires_human_input_before_projection_lookup()
             human_questions: Some(vec!["Which proof is required?".to_string()]),
             ..Default::default()
         },
+        PlanPatch {
+            human_questions: Some(vec![]),
+            unresolved_contradictions: Some(vec!["Preserve and remove API v1".into()]),
+            ..Default::default()
+        },
     ] {
-        patch_plan(dir.path(), patch).unwrap();
-        approve_plan(dir.path());
+        let mut legacy_plan = patch_plan(dir.path(), patch).unwrap();
+        legacy_plan.state = PlanState::Approved;
+        save_plan(dir.path(), &legacy_plan).unwrap();
         let message = execute_check(dir.path(), &store, None)
             .unwrap_err()
             .to_string();
@@ -502,27 +508,25 @@ fn contract_edits_revoke_every_accepted_state_and_all_phase_evidence() {
     ];
     for state in [PlanState::Approved, PlanState::Executing, PlanState::Done] {
         for patch in &patches {
+            let expected = if patch.unknowns.is_some()
+                || patch.human_questions.is_some()
+                || patch.unresolved_contradictions.is_some()
+            {
+                "NEEDS_HUMAN_INPUT"
+            } else {
+                "NEEDS_PLAN_APPROVAL"
+            };
             let (dir, store) = progressed_plan(state.clone());
             let changed = patch_plan(dir.path(), patch.clone()).unwrap();
             assert_acceptance_invalidated(&changed);
-            assert!(
-                execute_check(dir.path(), &store, None)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
-            assert!(
-                enter_phase(dir.path(), &changed.phases[0].id)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
-            assert!(
-                complete_phase(dir.path(), &changed.phases[0].id)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("NEEDS_PLAN_APPROVAL")
-            );
+            for result in [
+                execute_check(dir.path(), &store, None),
+                enter_phase(dir.path(), &changed.phases[0].id),
+                complete_phase(dir.path(), &changed.phases[0].id),
+            ] {
+                let error = result.unwrap_err().to_string();
+                assert!(error.contains(expected), "{error}");
+            }
         }
     }
 }
@@ -749,4 +753,34 @@ fn contract_revision_preserves_pending_spec_decisions() {
     .unwrap();
     assert_acceptance_invalidated(&updated);
     assert_eq!(updated.spec_reviews, plan.spec_reviews);
+
+    let reinitialized = init_plan(
+        dir.path(),
+        InitPlanInput {
+            title: "Reinitialized work".into(),
+            intent: "Revised work".into(),
+            todo_ids: vec![],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec![],
+            deferred_questions: vec![],
+            constraints: ScopeConstraints::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    assert_eq!(reinitialized.spec_reviews, plan.spec_reviews);
+    let error = patch_plan(
+        dir.path(),
+        PlanPatch {
+            state: Some(PlanState::Approved),
+            ..Default::default()
+        },
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("NEEDS_HUMAN_INPUT"));
+    assert!(error.contains("resolve-spec-review"));
 }

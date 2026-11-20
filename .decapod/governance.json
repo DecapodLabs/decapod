@@ -855,6 +855,15 @@
         "docs/agent-acceptance-observer.md",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1532-instruction-readiness-06",
+      "summary": "Integrate accepted instruction-readiness gates while preserving complete checkpoint history and reviewed source inventory",
+      "input_digest": "sha256:29f3844b8238555786b6362db3378ceafdc37ad52035d537ff6696b84e06bd35",
+      "proof_refs": [
+        ".decapod/config.toml",
+        "tests/cli_contract_enforcement.rs"
+      ]
     }
   ],
   "intents": {
@@ -897,22 +906,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve the accepted acceptance-observer coverage contract and review the combined source, context and validation behavior against current master.",
-          "reviewed_code_fingerprint": "fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323",
-          "spec_material_hash": "d17e33fc3af8db00f6b87a7190e6c824464aa7a8cc17dedab23288d0f301c340"
+          "reason": "Review the combined context, outcome evidence, and validation repair with current master instruction-readiness enforcement and retained observer coverage.",
+          "reviewed_code_fingerprint": "fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58",
+          "spec_material_hash": "bffc9823a8d266cdc246fcb3b0db9585993f762eff7549ede8668b760c398c87"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve the accepted acceptance-observer coverage contract and review the combined source, context and validation behavior against current master.",
-          "reviewed_code_fingerprint": "fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323",
-          "spec_material_hash": "2f313fe9f7000881b6852e3b7f26af1e3ed53da5e29970b7f3b5d3e963fdeef5"
+          "reason": "Review the combined context, outcome evidence, and validation repair with current master instruction-readiness enforcement and retained observer coverage.",
+          "reviewed_code_fingerprint": "fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58",
+          "spec_material_hash": "02261ea23321ee5b4bc72f0fd6ef42b4c968a88189d23792cbc7bab198c364ac"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve the accepted acceptance-observer coverage contract and review the combined source, context and validation behavior against current master.",
-          "reviewed_code_fingerprint": "fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323",
+          "reason": "Review the combined context, outcome evidence, and validation repair with current master instruction-readiness enforcement and retained observer coverage.",
+          "reviewed_code_fingerprint": "fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58",
           "spec_material_hash": "3db564110df603ab756553d38babde21a6b21926c8aad3bcec2c5d6dcf16e444"
         }
       ],
@@ -924,13 +933,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795168570Z"
+      "updated_at": "1795168866Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:a41b3b76ae0af57ab82b84cc2c62a0e2b6f673c82c303431b64f4397a43f8c1b",
+      "artifact_hash": "sha256:79e7d5983a4e101b593e46511c4484da65d7a90f62620450fff74cbf94cc078c",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -958,6 +967,10 @@
         },
         {
           "name": "chronology-evidence-targets",
+          "status": "passed"
+        },
+        {
+          "name": "combined source inventory",
           "status": "passed"
         },
         {
@@ -1049,10 +1062,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1168,6 +1188,21 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7."
+                ],
+                "proof_refs": [
+                  "combined source inventory"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -1181,6 +1216,7 @@
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
+        "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
       ],
       "inspected_files": [

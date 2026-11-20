@@ -405,6 +405,13 @@ fingerprint, and verifier come from `state::canonical_snapshot`, which is the
 same revision and provenance resolver used by `state.resolve`. The judgment
 does not keep a second definition of that identity.
 
+`plan_governance::instruction_readiness` evaluates recorded instructions from
+the current governance plan. Orientation projects those same blockers and
+remediation, and approval, execution checkpoints, validation, and publication
+enforce them. Its source revision binds the recorded inputs independently of
+approval or phase progress. The existing validation epoch binds proof to the
+applicable plan after a correction.
+
 A task verification row is an index. `judge_stored_verification` re-hashes the
 bound files and checks that the proof digest matches that reconstruction under
 the canonical snapshot. A pass status or a digest written only into SQLite is
@@ -1195,7 +1202,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323`
+- Repository signal fingerprint: `fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

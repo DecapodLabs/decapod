@@ -1552,7 +1552,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323`
+- Repository signal fingerprint: `fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1583,14 +1583,19 @@ state with `PLAN_CHANGED_REQUIRES_APPROVAL`, preserving the previous document.
 Final proposed state, rather than the pre-patch phase list, determines whether
 `DONE` is structurally valid. `validate_plan_progress` enforces incomplete-phase
 and unsatisfied-completed-gate rejection for execution and publication as well.
-Spec-review decisions are preserved by these editors and retain their separate
-review and resolution rules. Explicit approval still records declared authority;
-it does not authenticate the approver or independently judge natural language.
+The `governed_plan.instruction_readiness` object in inference orientation
+reports the current plan's source revision, verdict, source pointers and
+remediation. Approval, execution checks and checkpoints, validation, and
+publication enforce the same recorded blockers for missing intent, unknowns,
+questions, contradictions, and pending spec decisions. The report describes
+recorded constraints. Explicit approval records declared authority.
+Plan initialization preserves pending spec decisions. Recording or resolving
+one of those decisions requires new plan approval.
 
 The public plan CLI regressions live in the existing branch-enforced
 `tests/cli_contract_enforcement.rs::plan_governed_execution` module. Their
-standalone predecessor was not selected by the source-PR graph; keeping all
-three cases in this executed target makes CLI routing, reapproval, and phase
+standalone predecessor was not selected by the source-PR graph. This
+executed target makes CLI routing, reapproval, blocker parity, and phase
 replay behavior part of the normal required proof without changing its adapter.
 
 ## Consumer readiness and repeatable initialization

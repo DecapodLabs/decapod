@@ -50,6 +50,8 @@ pub struct GovernedPlanContext {
     pub todo_ids: Vec<String>,
     pub proof_hooks: Vec<String>,
     pub unresolved_items: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_readiness: Option<crate::plan_governance::InstructionReadiness>,
     pub forbidden_paths: Vec<String>,
     pub file_touch_budget: Option<usize>,
     pub task_binding: String,

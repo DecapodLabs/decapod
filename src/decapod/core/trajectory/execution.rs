@@ -177,33 +177,24 @@ fn accepted_plan(
     root: &Path,
     task_id: &str,
 ) -> Result<crate::plan_governance::GovernedPlan, DecapodError> {
-    use crate::plan_governance::{self, PlanState, SpecReviewDisposition};
+    use crate::plan_governance::{self, PlanState};
     let plan = plan_governance::load_plan(root)?.ok_or_else(|| {
         blocked(
             "NEEDS_PLAN_APPROVAL",
             "execution checkpoint requires an accepted plan",
         )
     })?;
-    if !matches!(plan.state, PlanState::Approved | PlanState::Executing)
-        || !plan.todo_ids.iter().any(|id| id == task_id)
-    {
+    if !plan.todo_ids.iter().any(|id| id == task_id) {
         return Err(blocked(
             "NEEDS_PLAN_APPROVAL",
             "current task must belong to an approved or executing plan",
         ));
     }
-    if plan.intent.trim().is_empty()
-        || !plan.unknowns.is_empty()
-        || !plan.human_questions.is_empty()
-        || !plan.unresolved_contradictions.is_empty()
-        || plan
-            .spec_reviews
-            .iter()
-            .any(|review| review.disposition == SpecReviewDisposition::RequiresDecision)
-    {
+    plan_governance::ensure_instruction_ready(&plan, "EXECUTION_DECISION_REQUIRED")?;
+    if !matches!(plan.state, PlanState::Approved | PlanState::Executing) {
         return Err(blocked(
-            "EXECUTION_DECISION_REQUIRED",
-            "resolve the current plan's human decision gates before resuming",
+            "NEEDS_PLAN_APPROVAL",
+            "current task must belong to an approved or executing plan",
         ));
     }
     plan_governance::validate_plan_progress(&plan)?;
