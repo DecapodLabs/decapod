@@ -816,6 +816,11 @@
       "id": "issue-1833-sync-d96bf819",
       "summary": "Integrate accepted contract changes while preserving the CI baseline test",
       "input_digest": "sha256:c2d00a09eb47107dbfd3f8492c4692675b16123303b8ccddbe99ca6c2147dee7"
+    },
+    {
+      "id": "issue-1833-sync-ba21c8f16",
+      "summary": "Integrate the accepted v0.156.0 release metadata",
+      "input_digest": "sha256:b78f3de2ec4db5510f458d40c74a79b261496f808fa22a954bd8923dfe06c073"
     }
   ],
   "intents": {
