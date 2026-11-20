@@ -1140,6 +1140,10 @@ or masking permission/protocol failures. Empty runtime directories are reusable.
 
 ## Intent Traceability Read Model
 
+## Acceptance observer capture boundaries
+
+The read-only acceptance observer in src/decapod/core/flight_recorder/acceptance.rs correlates historical admissions and separately assesses retained capture completeness. Optional coverage binds the declared channels, operator custody, elapsed window, counts, indexes, actual agent end and process exit. Missing or incomplete coverage keeps historical observations while preventing a completed autonomous-run claim.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `core/intent_reconcile.rs` derives a read-only reconciliation view from
 `plan_governance`, `core/project_specs`, the spec manifest, and current
@@ -1185,7 +1189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4`
+- Repository signal fingerprint: `50f5304cac447c6dfcf083570e774a5b21aa45c231559ab0f49e73590224bc2c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

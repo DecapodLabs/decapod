@@ -629,6 +629,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/commit/34b98ab1fa2d731c5729fa1afbeaed13f8739655"
       ]
+    },
+    {
+      "id": "issue-1764-integrate-current-observer",
+      "summary": "Integrate accepted observer boundary fixes before final publication",
+      "input_digest": "sha256:1c9f467b5e0bd5e40b6c4949118980ff94fa23f924f22f859a8f940d94b97a4e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/commit/722515f49e6f56f76ea64bf6ba94ede252df4593"
+      ]
     }
   ],
   "intents": {
@@ -674,23 +682,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The shared recorded-plan readiness architecture remains correct after the version-only release update.",
-          "reviewed_code_fingerprint": "1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4",
-          "spec_material_hash": "2451b254bc81cd49ed11eadde7ffda6f7811755fc27b825a25a4c1c69adc5892"
+          "reason": "Retains both accepted observer architecture and this branch shared recorded-plan readiness predicate.",
+          "reviewed_code_fingerprint": "50f5304cac447c6dfcf083570e774a5b21aa45c231559ab0f49e73590224bc2c",
+          "spec_material_hash": "af272f51f14b3b5d3d329ecb3f3fa2aeff010356787663e4cb530863511e38f2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The readiness report, plan source pointers and reapproval contract still match the final source.",
-          "reviewed_code_fingerprint": "1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4",
-          "spec_material_hash": "c94d617d325a615cd8d0ffd2d74184820fbfb58a3f8d1e2152c2f8c010735489"
+          "reason": "Current interfaces preserve accepted observer boundaries and the additive instruction readiness report.",
+          "reviewed_code_fingerprint": "50f5304cac447c6dfcf083570e774a5b21aa45c231559ab0f49e73590224bc2c",
+          "spec_material_hash": "0c4a1799d4cd0e0854a8427788ed7052163b6585c696355efb8df6b0c2256b62"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The release update changes version declarations. Recorded instruction checks retain accepted custody and human decision boundaries.",
-          "reviewed_code_fingerprint": "1f7e0b121b3384fcb6e6f903ffd27059973309bdf57cf9e2645046086cfc2df4",
-          "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
+          "reason": "Preserves the newly accepted observer trust constraints and existing custody and explicit human decision authority.",
+          "reviewed_code_fingerprint": "50f5304cac447c6dfcf083570e774a5b21aa45c231559ab0f49e73590224bc2c",
+          "spec_material_hash": "62300e369dcb24d24ef0c4b25b889d100d69412810d0a4ff2133ff3c9be3a2c5"
         }
       ],
       "state": "APPROVED",
@@ -701,17 +709,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795164090Z"
+      "updated_at": "1795168286Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "One linked Git worktree. Draft #1766 is the prior multi-issue review path."
       ],
-      "artifact_hash": "sha256:e6cc18c8cbb63079b7c6f54b6e41a3b384cc05cacd3a54d95454ab7a87ddd1c9",
+      "artifact_hash": "sha256:218a35e9628852882e564d024d92089450c45ee4e336ae94666730eaba7fb913",
       "checks": [
         {
           "name": "3fe9682a GitHub library regression",
+          "status": "failed"
+        },
+        {
+          "name": "8ec21c81 GitHub core and library tests",
+          "status": "passed"
+        },
+        {
+          "name": "8ec21c81 GitHub live-base governance",
           "status": "failed"
         },
         {
@@ -807,10 +823,17 @@
             "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7Q67PFZY3BACJDTFC02YGVX",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7Q67PD7JE7XEM5PZFDFM81P",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7Q67PFZY3BACJDTFC02YGVX": {
@@ -967,6 +990,30 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "GitHub run44704625680 passed1884 library tests, core tests and the integration shards but its governance material job rejected the old base after independent observer PR1863 advanced master. Integrated accepted observer source722515f4 into the same branch. The selected instruction-readiness code is unchanged."
+                ],
+                "proof_refs": [
+                  "8ec21c81 GitHub core and library tests",
+                  "8ec21c81 GitHub live-base governance"
+                ],
+                "scope": [
+                  "\".decapod/managed/specs\"",
+                  "\"docs\"]",
+                  "\"tests\"",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs",
+                  "docs",
+                  "paths:[\"src/decapod\"",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -977,6 +1024,7 @@
       "evidence": [
         "GitHub Actions 44295371118 job 134771807179 ran 1803 library tests. The contract-edit test assumed NEEDS_PLAN_APPROVAL for all draft outcomes. The corrected test asserts NEEDS_HUMAN_INPUT for newly unresolved requirements and NEEDS_PLAN_APPROVAL for clear draft revisions, through execution and both phase transitions.",
         "GitHub Actions 44300359409 CLI and Clippy jobs succeeded on 98351b5d. Required Buildkite 12417 rejected the old Git merge-base in its fmt job after the accepted target advanced; evidence remains associated with that old candidate/base.",
+        "GitHub run44704625680 passed1884 library tests, core tests and the integration shards but its governance material job rejected the old base after independent observer PR1863 advanced master. Integrated accepted observer source722515f4 into the same branch. The selected instruction-readiness code is unchanged.",
         "Historical Buildkite 12503 failed three CI context checks after upstream movement. All five GitHub workflows for f2e59214 eventually passed. Those results remain historical.",
         "Implementation adds cross-phase tests to the required CLI and library test targets.",
         "Integrated accepted target 7bd0a915 (v0.148.12). Kept the workstream journal and re-applied its authored spec changes over accepted spec content. Reviewed 105 source definitions; c46f364d changes the version entries in Cargo.lock and Cargo.toml, and this workstream changes none of those definitions.",
