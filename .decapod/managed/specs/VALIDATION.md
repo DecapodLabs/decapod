@@ -1464,6 +1464,14 @@ required-profile review declaration is reconciled to that complete inventory;
 the finite workflow graph, adapters, provider selection and proof requirements
 remain unchanged. This review pin is configuration, not execution evidence.
 
+## Acceptance observer capture boundaries
+
+Official Decapod 0.153.1 reproduced a 175-event real capture and its truncated 173-event prefix both reporting observed_autonomous_admission=true with no findings. The added mandatory offline controls cover missing genuine closing events, legacy unknown coverage, dropped events, missing channels, index substitution, inconsistent windows, shared custody, missing agent end and failed/incomplete exit. Existing source/base drift coverage still preserves historical admission. GitHub Actions owns source verification for this delivery as requested by the maintainer. The published launch media is tabled.
+
+## Matching release projections
+
+The initial hosted standalone validation compiled the observer but rejected tracked generated drift from evaluating source version 0.153.2 with the previous 0.153.1 projection binary. The candidate now refreshes supported projections with the matching registry-installed 0.153.2 binary. The change preserves required checks and source policy.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The read-only reconciliation report must detect missing/orphaned/duplicate
 requirement references, missing proof-spec mappings, stale code fingerprints,
@@ -1532,8 +1540,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b65b39fffde84096347579b02fb974a5e5810eca472ca996a21e9eb6f423cbad`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-bin/` (10 files), `bazel-codex-host-integration-20261118-todo-01m7vz-agent-codex-host-integration-code_01m7vz6atfd1pfv5-release1531/` (562 files), `bazel-out/` (14 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
+- Repository signal fingerprint: `fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -271,6 +271,10 @@ cloud authorization or validation gate changes.
 
 ## Advisory intent reconciliation access
 
+## Acceptance observer capture boundaries
+
+The observer never authenticates a producer from an agent declaration or a JSON hash. OperatorControlled witness custody is an explicit host assertion. Shared local OS authority can forge it. Coverage is scoped to its measured channels and retained window. Truncation, missing endpoints and mismatched counts or hashes fail the completion assessment without erasing the admission history.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `intent.reconcile` is a sessionless local inspection RPC over the existing
 repository plan, canonical specs and source fingerprints. It bypasses mutation
@@ -803,8 +807,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b65b39fffde84096347579b02fb974a5e5810eca472ca996a21e9eb6f423cbad`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-bin/` (10 files), `bazel-codex-host-integration-20261118-todo-01m7vz-agent-codex-host-integration-code_01m7vz6atfd1pfv5-release1531/` (562 files), `bazel-out/` (14 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
+- Repository signal fingerprint: `fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -846,6 +846,15 @@
         "tests/spec_conformance.rs",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1532-accepted-master-05",
+      "summary": "Reconcile accepted observer changes and generated projections while preserving the active workstream and checkpoint history",
+      "input_digest": "sha256:6843dc6f7b180bf00b88a86628555b0d02dc6bf6d4b2ec79a4b41e70ce9baf8d",
+      "proof_refs": [
+        "docs/agent-acceptance-observer.md",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -888,23 +897,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the retained context and outcome contracts together with serialized capability checks and the transaction-scoped canonical event migration.",
-          "reviewed_code_fingerprint": "a28f734f7be71f715f539a04675c259321787ff138d38ae2650fdb1995ebdfbd",
-          "spec_material_hash": "62cfb1ca688fab2e91aab508c57abaecc79590008877fce1e85f7c6d4435ca10"
+          "reason": "Preserve the accepted acceptance-observer coverage contract and review the combined source, context and validation behavior against current master.",
+          "reviewed_code_fingerprint": "fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323",
+          "spec_material_hash": "d17e33fc3af8db00f6b87a7190e6c824464aa7a8cc17dedab23288d0f301c340"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the retained context and outcome contracts together with serialized capability checks and the transaction-scoped canonical event migration.",
-          "reviewed_code_fingerprint": "a28f734f7be71f715f539a04675c259321787ff138d38ae2650fdb1995ebdfbd",
-          "spec_material_hash": "9eed26965f6e922d957636c25757cba1f424375ed86934abda859d7ecbbadfe2"
+          "reason": "Preserve the accepted acceptance-observer coverage contract and review the combined source, context and validation behavior against current master.",
+          "reviewed_code_fingerprint": "fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323",
+          "spec_material_hash": "2f313fe9f7000881b6852e3b7f26af1e3ed53da5e29970b7f3b5d3e963fdeef5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the retained context and outcome contracts together with serialized capability checks and the transaction-scoped canonical event migration.",
-          "reviewed_code_fingerprint": "a28f734f7be71f715f539a04675c259321787ff138d38ae2650fdb1995ebdfbd",
-          "spec_material_hash": "17c281f9a8745b21937900b8d899047ce8fca8020392294b1fa79dc912135788"
+          "reason": "Preserve the accepted acceptance-observer coverage contract and review the combined source, context and validation behavior against current master.",
+          "reviewed_code_fingerprint": "fd0efd6a90c96b3f64ad4dd3d5b5adec0b6023a77fdc214bd4bcb93bceeb0323",
+          "spec_material_hash": "3db564110df603ab756553d38babde21a6b21926c8aad3bcec2c5d6dcf16e444"
         }
       ],
       "state": "APPROVED",
@@ -915,13 +924,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795168056Z"
+      "updated_at": "1795168570Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4e31994e9048fd310f3aa4131c09f3e9b43cb9d4eec2e68f04c2f732ca7caa8b",
+      "artifact_hash": "sha256:a41b3b76ae0af57ab82b84cc2c62a0e2b6f673c82c303431b64f4397a43f8c1b",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -933,6 +942,10 @@
         },
         {
           "name": "Bazel spec_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel validate_termination",
           "status": "passed"
         },
         {
@@ -1029,10 +1042,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1133,6 +1153,21 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "All 12 validation termination and contention cases passed locally, in addition to the nine datastore and fifteen spec conformance checks. While the previous head ran, accepted master moved to 722515f49e6f56f76ea64bf6ba94ede252df4593. The original governance jobs failed base identity or merge-base verification. This merge preserves the accepted observer source and authored spec prose, and native reconcile-merge retains the approved active journal and any accepted baseline obligations."
+                ],
+                "proof_refs": [
+                  "Bazel validate_termination"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -1141,6 +1176,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "All 12 validation termination and contention cases passed locally, in addition to the nine datastore and fifteen spec conformance checks. While the previous head ran, accepted master moved to 722515f49e6f56f76ea64bf6ba94ede252df4593. The original governance jobs failed base identity or merge-base verification. This merge preserves the accepted observer source and authored spec prose, and native reconcile-merge retains the approved active journal and any accepted baseline obligations.",
         "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim.",
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
