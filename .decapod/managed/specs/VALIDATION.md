@@ -1526,8 +1526,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
+- Repository signal fingerprint: `a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2490,3 +2490,15 @@ The current map baseline advances to human merge `7ada4f0755b7d0b63b835c25280dd3
 ## v0.147.0 map baseline
 
 The current audit baseline is accepted release master `26196764ec1dfa95ce366c08fc3e104b8a5bfec1`, authored under installed v0.147.0. Earlier baseline statements and executed observations are historical. The accepted recovery mechanism, pending canonical-local target proposal and remaining whole-mission requirements stay distinct. The release changes package identity; all 105 discovered verification inputs match this accepted target, and only the stale reviewed inventory pin is reconciled. Strict requirements and provider policy remain enabled; fresh exact-candidate GitHub proof is required. No local project tests or Buildkite collection establish publication readiness here.
+
+## Bazel dependency delivery boundary
+
+The separate archive-cache carrier in `.github/actions/source-ci-profile/action.yml`
+restores only content-addressed SHA-256 downloads. It preserves pinned versions,
+lockfiles, independently accepted executors and required checks. Cache hits are
+inputs, never proof. `tests/bazel_repository_cache_test.py` exercises real pinned
+Bazel reuse during a fixture outage and rejects corrupt entries. Hosted cache
+persistence and complete accepted-baseline execution still need independent
+evidence; controller 0.133.0 cannot admit changed carrier bytes. See
+`docs/architecture/bazel-dependency-delivery.md` for the acceptance transition.
+Laya policy and PR #1575 remain separate from this infrastructure change.

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "e9c40e929ee33aa5443c38b57276f96111db0b92",
+    "accepted_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -453,6 +453,78 @@
         "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
         "status": "open"
       },
+      "claim:vega-agent-readiness-guidance": {
+        "falsifier": "Failed or stale proof produces PR instructions, rejection or abstention produces PR instructions, disabled mode changes delivery authority, or boolean model output is presented as a textual defect explanation.",
+        "statement": "The optional Vega post-validation result instructs the agent: accepted current required proof and accepted Vega allow an already authorized PR; rejection requires requirement/evidence review and further work; abstention requires resolving the reported gap; failed or stale required proof always requires repair and revalidation. No result grants merge or release authority.",
+        "status": "open"
+      },
+      "claim:vega-current-run-scientific-collection": {
+        "falsifier": "Missing/replayed/mixed/unsafe/malformed phases, altered frozen inputs/labels, inconsistent decisions, numerical disagreement, failed adverse controls, absent positive coverage, hidden oracle mismatches or an abstaining verdict permit publication readiness.",
+        "proof_refs": [
+          "/private/tmp/vega-1191-validation-20261020T081406Z.json"
+        ],
+        "statement": "Eight reviewed Rust runs preserve three fixed numerical fixtures and six pairs of fixed production-path functional cases. The mandatory current-run aggregate rechecks identity, exports, raw response interpretation, every adverse/control result and genuine positive approval on each backend. Original oracle agreement is reported separately from delegated safe-abstention qualification; collection alone never authorizes publication.",
+        "status": "open"
+      },
+      "claim:vega-late-report-failure": {
+        "falsifier": "A late final-report filesystem error leaves ready=true, exit_code0 or create_authorized_pr instructions, overwrites existing evidence, or loses unsupported-controller recovery guidance.",
+        "statement": "Every validation execution error revokes publication readiness and PR guidance, including final verdict write or sync failure after completed proof and accepted Vega; completed proof and earlier evidence remain diagnostic only.",
+        "status": "open"
+      },
+      "claim:vega-native-acceptance": {
+        "falsifier": "Publication occurs without complete current source/native/numerical/functional proof, without positive approval on both backends, with unsafe adverse outcomes, or by presenting agent-authored functional labels as independently calibrated domain accuracy.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "Current functional delivery requires actual native Metal/CPU inference, unchanged separate Rust numerical comparisons, installation/fallback checks, meaningful model approvals and safe negative/uncertain controls. Maintainer-authorized qualification supersedes the prior research prerequisite without passing it; all old failures and domain-accuracy limits remain preserved.",
+        "status": "open"
+      },
+      "claim:vega-package-input-lock": {
+        "falsifier": "Bazel still rejects the normalized Cargo manifest input, dependencies/required checks are changed to hide the mismatch, the lock exceeds existing discovery bounds, or metadata regeneration is represented as executed tests.",
+        "proof_refs": [
+          "/private/tmp/vega-040d-buildkite-setup.log"
+        ],
+        "statement": "The reviewed crate packaging exclusion is reflected by normal Bazel module metadata regeneration; only the normalized Cargo.toml input hash changed, without dependency additions, expanded discovery limits or weakened checks.",
+        "status": "open"
+      },
+      "claim:vega-plan-obligations": {
+        "falsifier": "An explicit deferred obligation, phase acceptance gate or adverse plan fact disappears from the assessment; overflow produces a partial assessment instead of abstention; stale governance authorizes publication.",
+        "statement": "The bounded post-validation assessment preserves declared proof hooks, unresolved questions, contradictions, stop conditions and phase gates as well as intent; none is silently omitted or truncated to fit model input.",
+        "status": "open"
+      },
+      "claim:vega-positive-singleton": {
+        "falsifier": "A disabled or repinned accepted required policy, failed/stale check, adverse projection omission, changed binding, negative/ambiguous/OOD/abstaining result can establish readiness.",
+        "proof_refs": [
+          "src/decapod/core/validation_runtime.rs",
+          "src/decapod/core/vega_readiness.rs"
+        ],
+        "statement": "Required vega may permit readiness only after deterministic proof and exact freshness, accepted policy integrity and a positive singleton yes without abstention/OOD; failed, stale, uncertain or changed identities remain blocked.",
+        "status": "open"
+      },
+      "claim:vega-production-projection-evaluation": {
+        "falsifier": "Replay uses another prompt builder, drops adverse obligations, dispatches on failed/stale/missing proof, accepts malformed responses, invents executed checks, hides oracle disagreements or authorizes publication from unsigned fixture evidence.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "Live assessment and replay share validation-results.v3 projection, request/response checks and the final readiness predicate. Complete deterministic proof precedes inference. Fixed functional observations come from executed bounded candidate checks but unsigned replay never grants custody or publication. Exposed v2 and zero-unit research admission stay historical, not passing accuracy or current research prerequisites.",
+        "status": "open"
+      },
+      "claim:vega-public-review-source-audit": {
+        "falsifier": "Audit leaks selected verdict/rationale or future checks into input, labels wrong-commit/edited requirements as eligible, equates variants with independent ground truth, suppresses native checks, or claims historical statistical qualification passed.",
+        "proof_refs": [
+          "tests/fixtures/vega-public-review-sources/final-admission-review.json"
+        ],
+        "statement": "Historical public review records remain pinned/audited Rust diagnostic inputs, not a qualified readiness study. Review verdicts/rationale, future CI, conflicting identities and incomplete source histories cannot become independent readiness truth. Maintainer-authorized functional qualification does not claim that the old study or risk criterion passed.",
+        "status": "open"
+      },
+      "claim:vega1445-readiness-role-qualification": {
+        "falsifier": "Qualification passes an always-abstaining/rejecting model, lacks approval on either backend, accepts unmet obligations/manipulation, accepts malformed inference, hides an oracle mismatch, changes model/input/threshold/tolerances, or grants readiness to failed/stale/abstaining work.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "The maintainer replaced the statistical qualification with functional integration and delegated safe-abstention interpretation. Both actual backends must approve meaningful ready work; every adverse/control case and numerical comparison must pass. A ready control may validly abstain, preserving its frozen expected-accept mismatch and blocking that assessed work. Domain accuracy and old research success remain unestablished.",
+        "status": "open"
+      },
       "claim:version-storage-independence": {
         "falsifier": "Version fails on damaged or unsafe storage, writes project state, or consumes migration notice; stateful commands accept unsafe permissions",
         "proof_refs": [
@@ -536,9 +608,11 @@
       "trajectory:9941075e2bf888c0": "Use existing deterministic runtime and publisher; local-only proof cannot authorize a forge target",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
+      "trajectory:9dc5e300bb3bd67b": "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
       "trajectory:a20c20e43c7307b1": "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
+      "trajectory:acca78c440a4be4f": "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
       "trajectory:b2b784d1dd82ea8a": "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse",
@@ -574,195 +648,63 @@
     }
   },
   "change": {
-    "id": "pr1700-v1460-rebase",
-    "base_commit": "e9c40e929ee33aa5443c38b57276f96111db0b92",
+    "id": "change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
+    "base_commit": "15b69ce43fc56440d498d52d8726f89d499615fe",
     "target_base": "origin/master"
   },
   "claims": {
-    "pr1700-current-exact-source": {
-      "statement": "Current implementation preserves its stated accepted policy and boundaries on the recorded source/base; new source-CI execution is required before merge.",
-      "falsifier": "A changed source, stale accepted target, missing proof or unsupported authority can be accepted as current success.",
-      "status": "open",
+    "bazel-archive-cache": {
+      "statement": "The preparation carrier restores only SHA-256 archive bytes and writes shared entries only for accepted-master pushes; a hit never supplies proof or bypasses checks",
+      "falsifier": "Extracted repositories or proof artifacts are cached, non-master entrypoints save, corrupt archive is used, or readiness is inferred from a cache hit",
+      "status": "supported",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1700"
+        "tests/bazel_repository_cache_test.py"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "pr1700-1460-replay-01",
-      "summary": "docs: rebase PR1700 INTENT.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:7f7d156437272e39ef3feb8260927e44a967ae774b78155d1b439ee572865c21",
+      "id": "dependency-archive-cache",
+      "summary": "Separate archive-only cache carrier; pinned Bazel integrity fixture passed, hosted acceptance unavailable, PR1575 unchanged",
+      "input_digest": "sha256:9d6ac840a79ade3495f98a1c73c129946d370575df35273adf1979a1a64c2651",
       "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+        "docs/architecture/bazel-dependency-delivery.md",
+        "tests/bazel_repository_cache_test.py"
       ]
     },
     {
-      "id": "pr1700-1460-replay-02",
-      "summary": "docs: rebase PR1700 continuous-governance-implementation-map.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:e7aeb1f0717f988303c831ba5270ce46ebee62948522cc7b41f464be7fe8d52f",
+      "id": "dependency-delivery-spec-review",
+      "summary": "Complete current-content interface/security review and record passing independent carrier rejection regression; hosted readiness remains unavailable",
+      "input_digest": "sha256:9b9d75ca4e2ee095231308588c945e14d22f727e014d29355bb9809e06551e89",
       "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
+        "docs/architecture/bazel-dependency-delivery.md"
       ]
     },
     {
-      "id": "pr1700-1460-replay-03",
-      "summary": "docs: rebase PR1700 ARCHITECTURE.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:138a3b6080e014c1823a31206e537e57451098a5a02d9b405cc6f17c6d657be7",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-04",
-      "summary": "docs: rebase PR1700 INTERFACES.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:7e21af522a2d6da01178c05fa0f4992bd0b67587b8ad2c60342dcfe58dbf5689",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-05",
-      "summary": "docs: rebase PR1700 VALIDATION.md on v0.146.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:4ef2cc9fce93ebcabeb0b1d414d9defcdfa3c3ef1f391645fb50b93693263d43",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-06",
-      "summary": "docs(audit): account for accepted v0.146.0 escalation and exact proof scope; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:e93cde5e30a220194e66085605caf64518c024b58df6733b07be249f95f589e1",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-07",
-      "summary": "docs(specs): reconcile intent with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:cd9b7a14c25e6ce33af91a1cadc3499eaa544f01f7a9ed110a0acdc111652da2",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-08",
-      "summary": "docs(specs): reconcile architecture with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:1ca483df488fc49622171333cbc43a5e1191ee2249b1c7ed3431bdbfad950bf8",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-09",
-      "summary": "docs(specs): reconcile interfaces with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:77175e268d0007786cea372ab5654344b0b7229f2edd58857799b740b3c3a170",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-10",
-      "summary": "docs(specs): reconcile validation with accepted v0.146.0 scope; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:aefd18b6690962a38c9afed639876d24cbf19855be14eb1e4b7ebb6ec1c93f50",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-v1460-final-checkpoint",
-      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
-      "input_digest": "sha256:7d793f0bb672ce435abe0a31e3dfece3d8b8fa098a1886e1ca47b069ef750470",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1700"
-      ]
-    },
-    {
-      "id": "pr1700-v1460-final-e13c656aefa6",
-      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
-      "input_digest": "sha256:a708d2f8277293d36daf0c3eddef34ac70f60fdaf88fc99ce1bf9419a510d7f1",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1700"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-11",
-      "summary": "docs(audit): include accepted bounded recovery and exact integration identity; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:b838b12e5305d914dedd0ad94aa33c010a4751dfcfce1fb4f778ddc043a513dd",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-12",
-      "summary": "docs(specs): preserve scoped proof after bounded recovery acceptance; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:d871ce6fea4340c8d89b70b967ffeca314a568f8393832a4ee8c7056eff07be8",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-v1460-final-bdd32e5228a5",
-      "summary": "Finalize freshly governed v0.146.0 rebase, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
-      "input_digest": "sha256:3435597ebf6b3856c058a4b65956386f583f0d9111dec1729411f8a129695afd",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1700"
-      ]
-    },
-    {
-      "id": "pr1700-v1470-final-45fbcbd6d746",
-      "summary": "Finalize governed v0.147.0 accepted-target integration, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
-      "input_digest": "sha256:526bca7b366ec2c7dc89a93da4b87fbff8b9763526725316864cb834672782f4",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1700"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-13",
-      "summary": "docs(audit): bind current implementation map to accepted v0.147.0; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:09ba4a3a9a611ec0453c31747e8c34a8b1a7da1e1deba7804d405a14ee6cfc94",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-1460-replay-14",
-      "summary": "docs(specs): distinguish v0.147.0 audit baseline from historical proof; new tree observed during current rebase, GitHub proof pending.",
-      "input_digest": "sha256:587f1eecaa9b00157fa52957056d34d615f533112562b4bb8ab603c03a980a92",
-      "proof_refs": [
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-      ]
-    },
-    {
-      "id": "pr1700-v1470-final-b2110fa1faa0",
-      "summary": "Finalize governed v0.147.0 accepted-target integration, source-bound spec reviews and preserved required policy; exact-candidate GitHub proof pending.",
-      "input_digest": "sha256:ca482aa49de23357cb23b56e882395973de59632593ba3e04263fd9793333ab6",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1700"
-      ]
-    },
-    {
-      "id": "cp-sync-6f2ec99dc",
-      "summary": "Integrate accepted master 6f2ec99dc (v0.152.0) and refresh specs for PR #1700",
-      "input_digest": "sha256:70972214d74ae5bb0f8a35eb70c9f6c4e77562e4396d564bade92ca7ee294542"
+      "id": "cp-sync-271cfbd1d",
+      "summary": "Integrate accepted master 271cfbd1d (v0.152.0) and refresh specs for PR #1612",
+      "input_digest": "sha256:085bc2105cf388b64c9f6ac3784fee7effc01ee31fd7138d56ee0016eed0005f"
     }
   ],
   "intents": {
-    "intent:pr1700-v1460-rebase": {
+    "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "<external-path>"
+        ".github",
+        ".config",
+        "tools",
+        "docs"
       ],
       "created_sequence": 1,
-      "id": "intent:pr1700-v1460-rebase",
+      "id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "User explicitly requests enhancement, rebase on origin/master v0.146.0, GitHub-only verification and merge of PRs1697/1700/1702",
-      "refined_intent": "Deliver a current evidence-backed governance implementation map on accepted master with implemented, advisory and missing boundaries explicit",
+      "raw_intent": "Reliable pinned Bazel dependency delivery\n\nSeparate CI infrastructure change against accepted master: content-addressed repository cache or trusted mirror; preserve pins, integrity, lockfiles and source-CI custody. PR 1575 unchanged.",
+      "refined_intent": "Reliable pinned Bazel dependency delivery\n\nSeparate CI infrastructure change against accepted master: content-addressed repository cache or trusted mirror; preserve pins, integrity, lockfiles and source-CI custody. PR 1575 unchanged.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -770,581 +712,252 @@
   "sections": {
     "plan": {
       "constraints": {
-        "file_touch_budget": 23,
+        "file_touch_budget": null,
         "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver a current evidence-backed governance implementation map on accepted master with implemented, advisory and missing boundaries explicit",
+      "intent": "Separate infrastructure change: persist content-addressed archive bytes without altering source-CI executor, lockfiles, checks or PR 1575",
       "phases": [],
       "proof_hooks": [
-        "Exact-candidate required GitHub source-CI checks",
-        "Current source/base/tree/tool/policy and governed task binding"
+        "Cache integrity and accepted-baseline reuse regression"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Synced #1069/#1455 continuous-governance implementation map with accepted master 6f2ec99dc (v0.152.0).",
-          "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
-          "spec_material_hash": "c1a489ebe3ad394b5e9700cbd3b0c747c6ff6740f26173aefdc853c66d26520c"
+          "reason": "Synced Bazel dependency archive delivery architecture with accepted master 271cfbd1d (v0.152.0).",
+          "reviewed_code_fingerprint": "a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce",
+          "spec_material_hash": "8ae7db31e8d777fdcf57552c8af32c4372c62dc9eb1daa22b53212f774206bd0"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Synced #1069/#1455 audit evidence and invocation scope with accepted master 6f2ec99dc (v0.152.0).",
-          "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
+          "reason": "No CLI/RPC interface changes; CI source-ci-profile archive caching only.",
+          "reviewed_code_fingerprint": "a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce",
           "spec_material_hash": "61ce744344efe73dae2599cc14945073a0374c76e0aae69603f11f39982b6744"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Docs-only implementation map audit introduces no new security surface.",
-          "reviewed_code_fingerprint": "d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb",
+          "reason": "Archive cache remains integrity-checked by Bazel lockfile and saves only on accepted master.",
+          "reviewed_code_fingerprint": "a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce",
           "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "PR1700: current-master delivery",
+      "stop_conditions": [
+        "Unsupported importer cache service or independent source-profile acceptance required"
+      ],
+      "title": "Persist verified Bazel download cache",
       "todo_ids": [
-        "code_01m7e6518p19mwp8"
+        "cicd_01m6zp1zpvenc490"
       ],
-      "unknowns": [
-        "Buildkite collection excluded by user; no full native publication receipt is claimed"
-      ],
+      "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795154272Z"
+      "updated_at": "1795155600Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Old branch tips and receipts remain historical; fresh checkpoints bind every newly authored material tree; no local tests/builds or Buildkite collection; preserve required provider and publication gates"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8ba48b4e973bbfe6567d00b0233cebb382b81aaca4dbd843bde1b23ab43f77bb",
+      "artifact_hash": "sha256:e57a8fb6856671566c39adfb42a5adbebd29854c2e21efc1ecad20b1d2f3ff28",
+      "blockers": [
+        "Full accepted-baseline hosted proof unavailable; no cache result is publication evidence",
+        "Independent acceptance/release of changed carrier required; installed 0.133.0 cannot certify it"
+      ],
       "checks": [
         {
-          "name": "accepted-target-integration",
-          "status": "partial"
+          "name": "accepted-baseline-full-ci",
+          "status": "unavailable"
         },
         {
-          "name": "fresh-rebase-verification",
-          "status": "partial"
+          "name": "controller-carrier-rejection-regression",
+          "status": "passed"
+        },
+        {
+          "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "hosted-cache-persistence",
+          "status": "unavailable"
+        },
+        {
+          "name": "real-bazel-archive-cache",
+          "status": "passed"
+        },
+        {
+          "name": "source-ci-policy-suite",
+          "status": "failed"
+        },
+        {
+          "name": "workflow-syntax",
+          "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:pr1700-v1460-rebase",
+            "detail": "trajectory:branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
             "event_id": "event:4",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:pr1700-v1460-rebase",
+            "detail": "trajectory:branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
             "event_id": "event:5",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:pr1700-v1460-rebase",
+            "detail": "trajectory:branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
             "event_id": "event:6",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:pr1700-v1460-rebase",
+            "detail": "trajectory:branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
             "event_id": "event:7",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "trajectory_step_recorded",
             "sequence": 7
           },
           {
-            "detail": "trajectory:pr1700-v1460-rebase",
+            "detail": "trajectory:branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
             "event_id": "event:8",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "kind": "trajectory_step_recorded",
             "sequence": 8
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:9",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:10",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:11",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 11
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:12",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 12
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:13",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 13
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:14",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 14
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:15",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 15
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:16",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 16
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:17",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 17
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:18",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 18
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:19",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 19
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:20",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 20
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:21",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 21
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:22",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 22
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:23",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 23
-          },
-          {
-            "detail": "trajectory:pr1700-v1460-rebase",
-            "event_id": "event:24",
-            "intent_id": "intent:pr1700-v1460-rebase",
-            "kind": "trajectory_step_recorded",
-            "sequence": 24
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 24,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
-          "pr1700-v1460-rebase": {
+          "branch_01M6ZP2HF23PEN3F1B7SEFQRW1": {
             "evidence_only": true,
-            "id": "pr1700-v1460-rebase",
-            "intent_id": "intent:pr1700-v1460-rebase",
+            "id": "branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
+            "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
             "steps": [
               {
                 "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/managed/specs/INTENT.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                  "src/decapod/core/readiness_profile.rs",
+                  "assets/tools/source_ci_toolchain.rs",
+                  ".github/actions/source-ci-profile/action.yml",
+                  "tests/bazel_repository_cache_test.py",
+                  "docs/architecture/bazel-dependency-delivery.md"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "<external-path>"
+                  ".config",
+                  ".github",
+                  "docs",
+                  "tools"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
+                "validation_findings": []
               },
               {
-                "action": "implementation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "docs/architecture/continuous-governance-implementation-map.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
+                  "tests/bazel_repository_cache_test.py: two tests passed with pinned Bazel 9.3.0, including zero-request warm reuse during 504 and corrupt-cache failure",
+                  "Cargo.lock, MODULE.bazel.lock, Bazel module versions, project policy and accepted source helpers unchanged from 15b69ce4"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "real-bazel-archive-cache",
+                  "formatting",
+                  "workflow-syntax",
+                  "hosted-cache-persistence",
+                  "accepted-baseline-full-ci"
+                ],
                 "scope": [
-                  "<external-path>"
+                  ".config",
+                  ".github",
+                  "assets/tools,tests",
+                  "docs",
+                  "tools"
                 ],
                 "sequence": 5,
                 "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 6,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 7,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 8,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "docs/architecture/continuous-governance-implementation-map.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 9,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:10",
-                "observations": [
-                  ".decapod/managed/specs/INTENT.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 10,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:11",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 11,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:12",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 12,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:13",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 13,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:14",
-                "observations": [
-                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-                ],
-                "proof_refs": [
-                  "fresh-rebase-verification"
-                ],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 14,
-                "validation_findings": [
-                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:15",
-                "observations": [
-                  "https://github.com/DecapodLabs/decapod/commit/7ada4f0755b7d0b63b835c25280dd36f6bbfc525"
-                ],
-                "proof_refs": [
-                  "accepted-target-integration"
-                ],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 15,
-                "validation_findings": [
-                  "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:16",
-                "observations": [
-                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-                ],
-                "proof_refs": [
-                  "fresh-rebase-verification"
-                ],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 16,
-                "validation_findings": [
-                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:17",
-                "observations": [
-                  "docs/architecture/continuous-governance-implementation-map.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 17,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:18",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 18,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:19",
-                "observations": [
-                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-                ],
-                "proof_refs": [
-                  "fresh-rebase-verification"
-                ],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 19,
-                "validation_findings": [
-                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
-                ]
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:20",
-                "observations": [
-                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-                ],
-                "proof_refs": [
-                  "fresh-rebase-verification"
-                ],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 20,
-                "validation_findings": [
-                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:21",
-                "observations": [
-                  "docs/architecture/continuous-governance-implementation-map.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 21,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "implementation",
-                "custody_event_id": "event:22",
-                "observations": [
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "https://github.com/DecapodLabs/decapod/pull/1700"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 22,
-                "validation_findings": [
-                  "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection."
-                ]
-              },
-              {
-                "action": "validation",
-                "custody_event_id": "event:23",
-                "observations": [
-                  "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4"
-                ],
-                "proof_refs": [
-                  "fresh-rebase-verification"
-                ],
-                "scope": [
-                  "<external-path>"
-                ],
-                "sequence": 23,
-                "validation_findings": [
-                  "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+                  "Buildkite deployed runtime admission and provider-scoped accepted-master cache population need authentic hosted observation"
                 ]
               },
               {
                 "action": "trajectory.record",
-                "custody_event_id": "event:24",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "52 source policy tests passed; three Linux-only runner fixtures failed on macOS and reproduced unchanged in clean accepted 15b69ce4 source snapshot"
+                ],
+                "proof_refs": [
+                  "source-ci-policy-suite"
+                ],
+                "scope": [
+                  ".config",
+                  ".github",
+                  "assets/tools,tests",
+                  "docs",
+                  "tools"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Accepted 0.133.0 source regression executed: 1 passed, changed carrier remains CONTROLLER_CONTRACT_UNSUPPORTED"
+                ],
+                "proof_refs": [
+                  "controller-carrier-rejection-regression"
+                ],
+                "scope": [
+                  ".config",
+                  ".github",
+                  "assets/tools,tests",
+                  "docs",
+                  "tools"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
                 "observations": [
                   ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/INTERFACES.md",
                   ".decapod/managed/specs/VALIDATION.md",
-                  "Merged origin/master 6f2ec99dc (v0.152.0); removed obsolete .bak files and preserved docs/architecture/continuous-governance-implementation-map.md"
+                  "Merged origin/master 271cfbd1d (v0.152.0); bazel_repository_cache_test.py 2/2 passed"
                 ],
                 "proof_refs": [],
                 "scope": [
-                  "<external-path>"
+                  ".config",
+                  ".github",
+                  "assets/tools,tests",
+                  "docs",
+                  "tools"
                 ],
-                "sequence": 24,
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1352,33 +965,43 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Merged origin/master 6f2ec99dc (v0.152.0); removed obsolete .bak files and preserved docs/architecture/continuous-governance-implementation-map.md",
-        "git:archive/pr1700-before-1460-rebase-46a9750d@46a9750d2684745cc9a9f6aec2a4a3350d654aa4",
-        "https://github.com/DecapodLabs/decapod/commit/7ada4f0755b7d0b63b835c25280dd36f6bbfc525",
-        "https://github.com/DecapodLabs/decapod/pull/1700"
+        "52 source policy tests passed; three Linux-only runner fixtures failed on macOS and reproduced unchanged in clean accepted 15b69ce4 source snapshot",
+        "Accepted 0.133.0 source regression executed: 1 passed, changed carrier remains CONTROLLER_CONTRACT_UNSUPPORTED",
+        "Cargo.lock, MODULE.bazel.lock, Bazel module versions, project policy and accepted source helpers unchanged from 15b69ce4",
+        "Merged origin/master 271cfbd1d (v0.152.0); bazel_repository_cache_test.py 2/2 passed",
+        "tests/bazel_repository_cache_test.py: two tests passed with pinned Bazel 9.3.0, including zero-request warm reuse during 504 and corrupt-cache failure"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:pr1700-v1460-rebase",
+      "inspected_files": [
+        "assets/tools/source_ci_toolchain.rs",
+        "src/decapod/core/readiness_profile.rs"
+      ],
+      "intent_id": "intent:change_01M6ZP2HCEVYP42FH3XHNKEPNZ",
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
-        "docs/architecture/continuous-governance-implementation-map.md"
+        ".github/actions/source-ci-profile/action.yml",
+        "docs/architecture/bazel-dependency-delivery.md",
+        "tests/bazel_repository_cache_test.py"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "<external-path>"
+        ".config",
+        ".github",
+        "assets/tools,tests",
+        "docs",
+        "tools"
       ],
-      "run_id": "pr1700-v1460-rebase",
+      "run_id": "branch_01M6ZP2HF23PEN3F1B7SEFQRW1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7e6518p19mwp8",
+      "task_id": "cicd_01m6zp1zpvenc490",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection.",
-        "Fresh material replay on accepted0.146.0 master; old checkpoint observations remain archived on the old Git tip and do not prove this tree. Required new GitHub execution pending; no local tests/builds or Buildkite collection.",
-        "Old tip archived before authorized rebase; every replayed material tree received a new native checkpoint. Source CI for this exact head/base remains pending. No local tests/builds or Buildkite evidence collection; full native publication proof is not claimed."
+        "Buildkite deployed runtime admission and provider-scoped accepted-master cache population need authentic hosted observation"
       ]
     }
   },

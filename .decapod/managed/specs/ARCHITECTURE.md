@@ -1178,8 +1178,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d21529e6e236765e361c9cf4aa4e631530a9b4a15d74210365834babaf5918bb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (257 files)
+- Repository signal fingerprint: `a86365636a3231a2f5609ae4c7072727ec039e3bde1726f799ba19dfd63192ce`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1730,3 +1730,14 @@ satisfy an older no-SQLite-engine proposal by assertion.
 ## Accepted v0.146.0 audit reconciliation
 
 This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
+
+## Source-CI archive delivery
+
+The existing preparation carrier may restore only Bazel's content-addressed
+SHA-256 archive subtree. Accepted-master pushes populate provider-scoped entries;
+other events restore only. Extracted repositories, build outputs and evidence
+remain outside that cache. Bazel verifies bytes on reuse; a cache hit does not
+authorize a test result. Changed carrier acceptance requires an independently
+released controller, with complete baseline/provider proof still outstanding.
+This infrastructure work preserves PR #1575 and does not reconcile Laya policy
+inside a candidate-controlled validation definition.
