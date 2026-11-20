@@ -12,6 +12,14 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "claim:accepted-behavior-controls": {
+        "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
+        "status": "open"
+      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -88,6 +96,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:canonical-scope-projection": {
+        "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/scope.rs"
+        ],
+        "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
+        "status": "open"
       },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
@@ -308,6 +324,14 @@
         "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
         "status": "open"
       },
+      "claim:owned-native-path-authority": {
+        "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/path.rs"
+        ],
+        "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
+        "status": "open"
+      },
       "claim:pr1609-governed-publication": {
         "falsifier": "Any authored commit lacks a staged-material checkpoint, governance artifact, or required generated projection; exact-candidate validation fails",
         "proof_refs": [
@@ -377,6 +401,22 @@
         "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
         "status": "open"
       },
+      "claim:recorded-blocker-parity": {
+        "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
+        "proof_refs": [
+          "tests/unit/plan_governance_tests.rs"
+        ],
+        "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
+        "status": "open"
+      },
+      "claim:recorded-instruction-lineage": {
+        "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
+        "proof_refs": [
+          "tests/infer_precision.rs"
+        ],
+        "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
+        "status": "open"
+      },
       "claim:recovery-workspace-artifact-lookup": {
         "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
         "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
@@ -433,6 +473,14 @@
           "src/decapod/core/validation_runtime/snapshot/source_import.rs"
         ],
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+        "status": "open"
+      },
+      "claim:selected-root-and-relation-conservation": {
+        "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
+        "proof_refs": [
+          "src/decapod/core/intent_reconcile/selected.rs"
+        ],
+        "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
         "status": "open"
       },
       "claim:source-version-release-projections": {
@@ -830,6 +878,11 @@
       "proof_refs": [
         "GitHub Decapod Validate 44831515823 measured the required v0.156.0 Dockerfile projection"
       ]
+    },
+    {
+      "id": "sync-1873-issue-1832",
+      "summary": "Reconcile accepted master and exercise the committed platform and downgrade fixtures",
+      "input_digest": "sha256:5b0ea9f7b4729d499bce3084bd32cf230802182629558f357e4fd3fbb98f110b"
     }
   ],
   "intents": {
@@ -871,22 +924,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Carry forward the shared platform and target proof integration.",
-          "reviewed_code_fingerprint": "2e608b9736235515781f65d08ae7ad74127ac1097dc35b0d47f22603078eaeaf",
-          "spec_material_hash": "d29105edd262a9ab880ebe8b0198c4b1fd9820d7c1a147a06ffe5d70fb0a1540"
+          "reason": "Preserved the authored design and reviewed it with the current accepted architecture",
+          "reviewed_code_fingerprint": "3a14dac692c5f752cb9018ca0d0775c57b4dee78168a914720e2887aa719ad4b",
+          "spec_material_hash": "90afa10536338a20d2632bedf518a03c6d182c265acecc74bcb232ade4866e14"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Carry forward target-only diagnostics and exact transition checks.",
-          "reviewed_code_fingerprint": "2e608b9736235515781f65d08ae7ad74127ac1097dc35b0d47f22603078eaeaf",
-          "spec_material_hash": "d11ee80e0484254cb73b471275eb652b0b6588ffb9c4f3f6b6bc88009a7eb02a"
+          "reason": "Reviewed the interface contract alongside the accepted publication and policy changes",
+          "reviewed_code_fingerprint": "3a14dac692c5f752cb9018ca0d0775c57b4dee78168a914720e2887aa719ad4b",
+          "spec_material_hash": "0db3885a54f2ee77a2789b25965de465e47346df1478bf89cc859a9fcc8e64e4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Carry forward the approval requirement for accepted target-map changes.",
-          "reviewed_code_fingerprint": "2e608b9736235515781f65d08ae7ad74127ac1097dc35b0d47f22603078eaeaf",
+          "reason": "Preserved the authored security contract and reviewed it against the new accepted base",
+          "reviewed_code_fingerprint": "3a14dac692c5f752cb9018ca0d0775c57b4dee78168a914720e2887aa719ad4b",
           "spec_material_hash": "d9ade5825045e5f2e6a38950afb46665f947f1de0ede34c0df99eb82a2afb8cd"
         }
       ],
@@ -898,7 +951,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795214654Z"
+      "updated_at": "1795218078Z"
     },
     "trajectory": {
       "active_boundaries": [
