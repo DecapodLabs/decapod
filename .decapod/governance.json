@@ -798,6 +798,14 @@
       "id": "release-proof-standalone-wrapper-repair-20261120",
       "summary": "Repair observed standalone visibility failure and retain library source-lineage controls",
       "input_digest": "sha256:cd02e4a61e3ae03403f7eed7e9ba046f77a6e2eb1d92558f023813c32848eefc"
+    },
+    {
+      "id": "release1532-docker-current",
+      "summary": "Commit native v0.153.2 managed Dockerfile refresh required by actual standalone CI drift; host project preparation remains partial due to container requirement and two unrelated task proof hooks",
+      "input_digest": "sha256:b9579fc0cd27a2aad7ba0e91cbdfe409fc86143533d859cf22e41acaa3fdc568",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44702917836/job/136175392319"
+      ]
     }
   ],
   "intents": {
@@ -871,8 +879,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:89ee825cbd4eb523cc3eff4ca162f4a5958591c49486db254ee078c51b8e73aa",
+      "artifact_hash": "sha256:9ef84e6a2ddd073a761db0fd9d8cf5ef2ec02477ee45ce24af82c26b264cf0b0",
       "checks": [
+        {
+          "name": "7ec-standalone-docker-drift",
+          "status": "failed"
+        },
         {
           "name": "candidate-regression-execution",
           "status": "unavailable"
@@ -892,6 +904,10 @@
         {
           "name": "formatting",
           "status": "passed"
+        },
+        {
+          "name": "host-project-prerequisites",
+          "status": "partial"
         },
         {
           "name": "release1858-actual-before",
@@ -937,10 +953,17 @@
             "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VYYH74AZEP39ERERBKPVWM": {
@@ -1004,6 +1027,20 @@
                   "root"
                 ],
                 "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [],
+                "proof_refs": [
+                  "7ec-standalone-docker-drift",
+                  "host-project-prerequisites"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
