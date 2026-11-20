@@ -830,6 +830,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1861"
       ]
+    },
+    {
+      "id": "release-accepted-v154-0f44",
+      "summary": "Integrate accepted release0.154.0, regenerate release projections natively and independently remeasure105 reviewed inputs; preserve strict proof policy",
+      "input_digest": "sha256:ff3b910170cbb530edf2d2fe7f037e5c3cddbd8b7e2094a8f8db63b7515ec04a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1867"
+      ]
     }
   ],
   "intents": {
@@ -870,22 +878,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrate accepted recorded-instruction readiness without allowing release projection checks to substitute for instruction convergence or spec review.",
-          "reviewed_code_fingerprint": "dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c",
-          "spec_material_hash": "041a938fff83134233a98de81f4c2594e0ac97ce70d730b980390ddaed221ad6"
+          "reason": "Accepted v0.154.0 integration preserves strict release classifier and source identity; official controller regenerates exact release projections.",
+          "reviewed_code_fingerprint": "c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89",
+          "spec_material_hash": "2c2e4917aee338c684e69b94d0325cf6f096d8baaee4a34cea56dd382b2fc4bd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current shared readiness and release/source projection interfaces remain independently enforced; native-generated manifest rebuilt after accepted merge.",
-          "reviewed_code_fingerprint": "dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c",
-          "spec_material_hash": "0522cbb729837251f19e436a74bbbd47909471cff206dad7cf38429d23e68e82"
+          "reason": "Release structural checks retain exact immutable bytes and canonical source predicate across evaluating release0.154.0.",
+          "reviewed_code_fingerprint": "c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89",
+          "spec_material_hash": "226ff8ef4f09b56f9ee8341792534653ed90d5626ab533ff1147a677568cc492"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Source identity and immutable payload checks remain strict; neither generated metadata nor older headers create approval or current publication authority.",
-          "reviewed_code_fingerprint": "dc5fb273e1811d66815f90f18d2cc90d7b6f155e939964dfd51607895174202c",
+          "reason": "No producer trust, policy checks, required graph or admission authority is weakened by the release epoch refresh.",
+          "reviewed_code_fingerprint": "c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89",
           "spec_material_hash": "c6c1411b792e82814af1ba9e9d18a522d547db2fd69684938b897c1dd846f294"
         }
       ],
@@ -897,7 +905,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795169070Z"
+      "updated_at": "1795169701Z"
     },
     "trajectory": {
       "active_boundaries": [
