@@ -549,6 +549,12 @@ project overrides, orientation, and scoped context help the agent identify
 the next useful question or action. Resolved authority and context sources
 remain inspectable.
 
+Agents can draft work while a governing instruction is still unresolved.
+Approval, execution, validation, and publication require a clear recorded plan.
+When a recorded source resolves a question or contradiction, the revised plan
+requires reapproval and affected proof must be run again. Pending spec decisions
+require the explicit review-resolution transition.
+
 ### Bounded, coordinated work
 
 Tasks, claims, sessions, and isolated workspaces establish who owns the work
@@ -711,7 +717,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7314745003e2e8805e178155d82371583ac15576d395918a0855101f83437d06`
+- Repository signal fingerprint: `50f5304cac447c6dfcf083570e774a5b21aa45c231559ab0f49e73590224bc2c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
