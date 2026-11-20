@@ -677,6 +677,11 @@
       "id": "reconcile-accepted-1532-contracts",
       "summary": "Carry accepted v0.153.2 through exact governed source. Preserve canonical entrypoints and refreshed release projections. Formatting and manifest hashes verified. GitHub Actions and external observer evidence remain pending.",
       "input_digest": "sha256:0d650d2b58b5cca0879c27948df21a1d03ca0e42cce5a2d96925b0f8cb8a9fe5"
+    },
+    {
+      "id": "reconcile-shared-instruction-history",
+      "summary": "Repair the current base integration compile failure with immutable origin and append-only lineage in the governance merge reconciler. Add one-parent continuation and conflict regressions. GitHub Actions rerun pending.",
+      "input_digest": "sha256:4a1350cfaad557052f3003551cf7bf8d9e42c059fac334f936c7fbb4d3e68f43"
     }
   ],
   "intents": {
@@ -723,24 +728,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Carry the accepted v0.153.2 base through the instruction, obligation and proof architecture.",
-          "reviewed_code_fingerprint": "3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f",
+          "reason": "Use the existing custody reconciler and reject conflicting instruction history.",
+          "reviewed_code_fingerprint": "5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304",
           "spec_material_hash": "9b73adacbbb6d3c40dfda3b537ad2e72fae9ea0f26a877fc657ed031449dc793"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the integrated readiness and task scope interfaces against the accepted v0.153.2 base.",
-          "reviewed_code_fingerprint": "3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f",
-          "spec_material_hash": "7abaefd71065b1e88a0fba2df60e586969aff6f1ab7e49997f71a8f3b4a3590a"
+          "reason": "Specify preservation of the original instruction, source provenance and revision history across Git merges.",
+          "reviewed_code_fingerprint": "5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304",
+          "spec_material_hash": "3e7b2d92e3366b90b94cf6aef1c522c35ba9cb371a50972ab31c79b6bab5d4d8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retain accepted security authority and exact-head custody requirements under the v0.153.2 base.",
-          "reviewed_code_fingerprint": "3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f",
+          "reason": "Keep established authority boundaries for recorded provenance and require compatible parent histories.",
+          "reviewed_code_fingerprint": "5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304",
           "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
@@ -752,15 +757,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795162569Z"
+      "updated_at": "1795163549Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Preserve draft PR #1766 and its history. Use normal GitHub review and merge directed by the maintainer. Use GitHub Actions for this delivery. Close issues only with exact independent acceptance evidence."
       ],
-      "artifact_hash": "sha256:81feb6553358beff057080dfe99039d3aa5e6586a6044e6de3ab3b08b39bbd6d",
+      "artifact_hash": "sha256:a75fa04a98076111b648c676520d02d02befced8f8b6314d123538bd9f118b56",
       "checks": [
+        {
+          "name": "2092274a-macos-compile",
+          "status": "failed"
+        },
         {
           "name": "format",
           "status": "passed"
@@ -791,10 +800,17 @@
             "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7PQMADCS3EAWQSXB0HVXNQP",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7PQMA9DG5FG2QMC9WPR3ZCJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PQMADCS3EAWQSXB0HVXNQP": {
@@ -826,6 +842,29 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending."
+                ],
+                "proof_refs": [
+                  "2092274a-macos-compile"
+                ],
+                "scope": [
+                  "\".decapod\"",
+                  "\"AGENTS.md\"",
+                  "\"CLAUDE.md\"",
+                  "\"CODEX.md\"",
+                  "\"GEMINI.md\"]",
+                  "\"README.md\"",
+                  "\"docs\"",
+                  "\"tests\"",
+                  "paths:[\"src\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -836,6 +875,7 @@
       ],
       "destination": "pull request",
       "evidence": [
+        "GitHub Actions job 136172556557 measured E0063 at 2092274a. Preserve original instruction and history in the upstream reconciler. Regression execution on the repair remains pending.",
         "The manifest declares v0.153.2 and commits the actual hashes of all 12 files. The four entrypoints match accepted master 34b98ab1."
       ],
       "inspected_files": [],

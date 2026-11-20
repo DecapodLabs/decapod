@@ -1535,7 +1535,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3a9be33e26d89cdee7d90ddd944e0e2b45d47ce9f45bfee47063031ba2e9e22f`
+- Repository signal fingerprint: `5942076ccaf8c1945298b84e80f941620554dca2bdc09b41eed60825aa663304`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2096,7 +2096,10 @@ Same-workstream merges reconcile additive `trajectory` sets, merge `claims`,
 divergent custody events/steps and remapping `loop.custody_event_id`), clear any
 stale `validation` receipt when trajectory or validation changed, and recompute
 `proof_status`, `verdicts`, and `artifact_hash` via `with_recomputed_hash()` so
-failed or missing proof never becomes passing. Accepted-target merges
+failed or missing proof never becomes passing. For a shared intent, the
+reconciler preserves the original request, its source provenance, and the
+common instruction history. It retains a one-sided append and rejects
+conflicting revisions or a truncated history. Accepted-target merges
 (`origin/<target_base>`) retain the complete active workstream journal while
 carrying forward newly accepted baseline policy and unresolved obligations.
 `tests/merged_governance_journal_1780.rs` exercises the real binary across
