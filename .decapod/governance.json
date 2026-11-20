@@ -837,6 +837,14 @@
       "proof_refs": [
         "Portable approval unit tests and fresh-checkout transition regression passed"
       ]
+    },
+    {
+      "id": "issue-1833-v0156-container-projection",
+      "summary": "Refresh the generated Dockerfile to the accepting v0.156.0 release",
+      "input_digest": "sha256:bea1855f14a3424c20710183762b6ed5efc84596087b2a4c157f0ab55bafe53a",
+      "proof_refs": [
+        "Released v0.156.0 CLI regenerated the same image and version pin required by standalone CI"
+      ]
     }
   ],
   "intents": {
