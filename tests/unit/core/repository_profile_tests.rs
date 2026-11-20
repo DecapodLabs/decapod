@@ -64,6 +64,7 @@ fn contract(coverage: Vec<SourceCoverage>) -> RepositoryContract {
         reviewed_commands_digest: String::new(),
         source_coverage: coverage,
         executions,
+        targets: BTreeMap::new(),
     };
     contract.reviewed_commands_digest = command_contract_digest(&commands(), &contract).unwrap();
     contract
@@ -383,6 +384,559 @@ fn canonical_local_target_is_review_bound_and_cannot_replace_accepted_authority(
     preserve_accepted(&commands, Some(&local), &commands, Some(&local)).unwrap();
 }
 
+fn multi_target_commands() -> Vec<ProofDef> {
+    vec![
+        ProofDef {
+            name: "check-shared".into(),
+            command: "shellcheck".into(),
+            args: vec!["shared/check.sh".into()],
+            description: String::new(),
+            required: true,
+        },
+        ProofDef {
+            name: "check-linux".into(),
+            command: "shellcheck".into(),
+            args: vec!["linux/check.sh".into()],
+            description: String::new(),
+            required: true,
+        },
+        ProofDef {
+            name: "check-macos".into(),
+            command: "shellcheck".into(),
+            args: vec!["macos/check.sh".into()],
+            description: String::new(),
+            required: true,
+        },
+    ]
+}
+
+fn multi_target_contract() -> RepositoryContract {
+    let mut executions = BTreeMap::new();
+    for name in ["check-shared", "check-linux", "check-macos"] {
+        executions.insert(name.into(), execution());
+    }
+    let coverage = vec![
+        SourceCoverage {
+            source: LINT_WORKFLOW.into(),
+            commands: vec![
+                "check-shared".into(),
+                "check-linux".into(),
+                "check-macos".into(),
+            ],
+            ci_only: false,
+            reason: None,
+        },
+        SourceCoverage {
+            source: CI_ONLY_WORKFLOW.into(),
+            commands: vec![],
+            ci_only: true,
+            reason: Some("ci only".into()),
+        },
+    ];
+    let targets = BTreeMap::from([
+        (
+            "shared".into(),
+            DeploymentTargetContract {
+                commands: vec!["check-shared".into()],
+                depends_on: vec![],
+                shared_inputs: vec!["shared/".into()],
+                platforms: vec![],
+            },
+        ),
+        (
+            "linux".into(),
+            DeploymentTargetContract {
+                commands: vec!["check-linux".into()],
+                depends_on: vec!["shared".into()],
+                shared_inputs: vec!["deploy/linux/".into()],
+                platforms: vec!["linux-x86_64".into()],
+            },
+        ),
+        (
+            "macos".into(),
+            DeploymentTargetContract {
+                commands: vec!["check-macos".into()],
+                depends_on: vec!["shared".into()],
+                shared_inputs: vec!["deploy/macos/".into(), "**/*.nix".into()],
+                platforms: vec!["macos-aarch64".into()],
+            },
+        ),
+    ]);
+    let mut contract = RepositoryContract {
+        canonical_local_target: false,
+        reviewed_commands_digest: String::new(),
+        source_coverage: coverage,
+        executions,
+        targets,
+    };
+    contract.reviewed_commands_digest =
+        command_contract_digest(&multi_target_commands(), &contract).unwrap();
+    contract
+}
+
+#[test]
+fn empty_targets_preserve_command_contract_digest_and_nonempty_targets_bind_digest() {
+    let _commands = commands();
+    let accepted = contract(mapped_coverage());
+    let serialized = serde_json::to_value(&accepted).unwrap();
+    assert!(serialized.get("targets").is_none());
+
+    let mut target_contract = multi_target_contract();
+    let sources = inventory();
+    validate_contract(
+        &declaration(&sources),
+        &sources,
+        &multi_target_commands(),
+        &target_contract,
+    )
+    .unwrap();
+
+    target_contract
+        .targets
+        .get_mut("linux")
+        .unwrap()
+        .shared_inputs
+        .push("extra/".into());
+    let error = validate_contract(
+        &declaration(&sources),
+        &sources,
+        &multi_target_commands(),
+        &target_contract,
+    )
+    .unwrap_err();
+    assert!(
+        error.to_string().contains("STALE_COMMAND_CONTRACT"),
+        "unexpected error: {error}"
+    );
+}
+
+#[test]
+fn invalid_deployment_target_definitions_fail_closed() {
+    let sources = inventory();
+    let cmds = multi_target_commands();
+    for defect in [
+        "empty-commands",
+        "unknown-command",
+        "unknown-dep",
+        "self-dep",
+        "cycle",
+        "bad-platform",
+        "bad-glob-parent",
+        "bad-glob-abs",
+        "bad-glob-double-star",
+    ] {
+        let mut contract = multi_target_contract();
+        match defect {
+            "empty-commands" => contract.targets.get_mut("linux").unwrap().commands.clear(),
+            "unknown-command" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .commands
+                .push("nonexistent-cmd".into()),
+            "unknown-dep" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .depends_on
+                .push("missing-target".into()),
+            "self-dep" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .depends_on
+                .push("linux".into()),
+            "cycle" => {
+                contract
+                    .targets
+                    .get_mut("shared")
+                    .unwrap()
+                    .depends_on
+                    .push("macos".into());
+            }
+            "bad-platform" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .platforms
+                .push("windows-x86_64".into()),
+            "bad-glob-parent" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .shared_inputs
+                .push("../escape".into()),
+            "bad-glob-abs" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .shared_inputs
+                .push("/etc/passwd".into()),
+            "bad-glob-double-star" => contract
+                .targets
+                .get_mut("linux")
+                .unwrap()
+                .shared_inputs
+                .push("a**b".into()),
+            _ => unreachable!(),
+        }
+        contract.reviewed_commands_digest = command_contract_digest(&cmds, &contract).unwrap();
+        let error =
+            validate_contract(&declaration(&sources), &sources, &cmds, &contract).unwrap_err();
+        assert!(
+            error.to_string().contains("REPOSITORY_CONTRACT_INVALID"),
+            "{defect}: unexpected error {error}"
+        );
+    }
+}
+
+#[test]
+fn target_closure_resolves_depends_on_and_shared_inputs_and_fails_on_missing_diff() {
+    let sources = inventory();
+    let cmds = multi_target_commands();
+    let contract = multi_target_contract();
+
+    let missing_diff = resolve_target_closure(&contract, "linux", None).unwrap_err();
+    assert!(
+        missing_diff
+            .to_string()
+            .contains("MISSING_SHARED_INPUT_DIFF_CONTEXT"),
+        "{missing_diff}"
+    );
+
+    let unknown = resolve_target_closure(&contract, "unknown", Some(&BTreeSet::new())).unwrap_err();
+    assert!(
+        unknown.to_string().contains("UNKNOWN_DEPLOYMENT_TARGET"),
+        "{unknown}"
+    );
+
+    // Unrelated file change only activates `linux` + its `depends_on` (`shared`).
+    let mut facts_linux = facts();
+    facts_linux
+        .changed_paths
+        .insert("deploy/linux/app.sh".into());
+    let scope =
+        resolve_target_closure(&contract, "linux", Some(&facts_linux.changed_paths)).unwrap();
+    assert_eq!(scope.resolved_targets, vec!["linux", "shared"]);
+    assert_eq!(
+        scope.commands,
+        BTreeSet::from(["check-linux".into(), "check-shared".into()])
+    );
+
+    let catalog = required_catalog_for_target(
+        &declaration(&sources),
+        &sources,
+        &facts_linux,
+        &cmds,
+        &contract,
+        Some("linux"),
+    )
+    .unwrap();
+    let jobs: BTreeSet<_> = catalog
+        .obligations()
+        .iter()
+        .map(|o| o.key.job.as_str())
+        .collect();
+    assert_eq!(jobs, BTreeSet::from(["check-linux", "check-shared"]));
+    assert!(catalog.stage_dispositions().iter().any(|stage| {
+        stage.stage == "check-macos"
+            && stage.disposition == StageDispositionKind::NonApplicable
+            && stage.evidence_scope == "out_of_target_scope_no_assurance"
+    }));
+
+    // Shared input glob change (`**/*.nix`) expands closure to include `macos`.
+    let mut facts_nix = facts();
+    facts_nix
+        .changed_paths
+        .insert("nix/modules/base.nix".into());
+    let expanded =
+        resolve_target_closure(&contract, "linux", Some(&facts_nix.changed_paths)).unwrap();
+    assert_eq!(expanded.resolved_targets, vec!["linux", "macos", "shared"]);
+    assert!(expanded.shared_input_targets.contains("macos"));
+    assert_eq!(
+        expanded.commands,
+        BTreeSet::from([
+            "check-linux".into(),
+            "check-macos".into(),
+            "check-shared".into()
+        ])
+    );
+}
+
+#[test]
+fn preserve_accepted_rejects_candidate_target_removal_and_scope_weakening() {
+    let cmds = multi_target_commands();
+    let accepted = multi_target_contract();
+
+    for defect in [
+        "remove-target",
+        "remove-command",
+        "remove-depends-on",
+        "narrow-shared-inputs",
+        "change-platforms",
+    ] {
+        let mut candidate = accepted.clone();
+        match defect {
+            "remove-target" => {
+                candidate.targets.remove("macos");
+            }
+            "remove-command" => {
+                candidate.targets.get_mut("macos").unwrap().commands.clear();
+                candidate
+                    .targets
+                    .get_mut("macos")
+                    .unwrap()
+                    .commands
+                    .push("check-shared".into());
+            }
+            "remove-depends-on" => {
+                candidate
+                    .targets
+                    .get_mut("linux")
+                    .unwrap()
+                    .depends_on
+                    .clear();
+            }
+            "narrow-shared-inputs" => {
+                candidate
+                    .targets
+                    .get_mut("macos")
+                    .unwrap()
+                    .shared_inputs
+                    .retain(|p| p != "**/*.nix");
+            }
+            "change-platforms" => {
+                candidate
+                    .targets
+                    .get_mut("macos")
+                    .unwrap()
+                    .platforms
+                    .push("linux-x86_64".into());
+            }
+            _ => unreachable!(),
+        }
+        candidate.reviewed_commands_digest = command_contract_digest(&cmds, &candidate).unwrap();
+        let error = preserve_accepted(&cmds, Some(&candidate), &cmds, Some(&accepted)).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{defect}: unexpected error {error}"
+        );
+    }
+
+    // Additive new target or additive shared_inputs on an existing target is allowed.
+    let mut additive = accepted.clone();
+    additive
+        .targets
+        .get_mut("linux")
+        .unwrap()
+        .shared_inputs
+        .push("deploy/common/".into());
+    additive.targets.insert(
+        "edge".into(),
+        DeploymentTargetContract {
+            commands: vec!["check-shared".into()],
+            depends_on: vec![],
+            shared_inputs: vec![],
+            platforms: vec![],
+        },
+    );
+    additive.reviewed_commands_digest = command_contract_digest(&cmds, &additive).unwrap();
+    preserve_accepted(&cmds, Some(&additive), &cmds, Some(&accepted)).unwrap();
+}
+
+#[test]
+fn repo_policy_transition_id_is_deterministic_and_binds_all_inputs() {
+    let base = "a".repeat(40);
+    let head = "b".repeat(40);
+    let src_a = digest_of("src-a");
+    let src_b = digest_of("src-b");
+    let cmd_a = digest_of("cmd-a");
+    let cmd_b = digest_of("cmd-b");
+
+    let id1 = repo_policy_transition_id(&base, &head, &src_a, &src_b, &cmd_a, &cmd_b).unwrap();
+    let id2 = repo_policy_transition_id(&base, &head, &src_a, &src_b, &cmd_a, &cmd_b).unwrap();
+    assert_eq!(id1, id2);
+    assert_eq!(id1.len(), 64);
+    assert!(
+        id1.bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+    );
+
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&"c".repeat(40), &head, &src_a, &src_b, &cmd_a, &cmd_b).unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &"d".repeat(40), &src_a, &src_b, &cmd_a, &cmd_b).unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &digest_of("src-x"), &src_b, &cmd_a, &cmd_b)
+            .unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &src_a, &digest_of("src-y"), &cmd_a, &cmd_b)
+            .unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &src_a, &src_b, &digest_of("cmd-x"), &cmd_b)
+            .unwrap()
+    );
+    assert_ne!(
+        id1,
+        repo_policy_transition_id(&base, &head, &src_a, &src_b, &cmd_a, &digest_of("cmd-y"))
+            .unwrap()
+    );
+}
+
+#[test]
+fn policy_transition_approval_requires_exact_scope_actor_and_live_expiry() {
+    use clap::Parser;
+    use decapod::core::store::{Store, StoreKind};
+    use decapod::plugins::policy::{
+        PolicyCli, approve_action, approve_action_with_expiry, policy_db_path, run_policy_cli_as,
+    };
+
+    let tmp = tempfile::tempdir().unwrap();
+    let repo_root = tmp.path();
+    let run_git = |args: &[&str]| {
+        let out = std::process::Command::new("/usr/bin/git")
+            .current_dir(repo_root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(out.status.success(), "git {args:?} failed");
+    };
+    run_git(&["init", "-b", "main"]);
+    let data_root = repo_root.join(".decapod/data");
+    std::fs::create_dir_all(&data_root).unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: data_root.clone(),
+    };
+    let transition_id = repo_policy_transition_id(
+        &"1".repeat(40),
+        &"2".repeat(40),
+        &digest_of("s1"),
+        &digest_of("s2"),
+        &digest_of("c1"),
+        &digest_of("c2"),
+    )
+    .unwrap();
+
+    // Missing DB -> false (and never initializes DB during read-only check).
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+    assert!(!policy_db_path(&data_root).exists());
+
+    // Wrong scope ("global") -> false.
+    crate::core::todo::initialize_todo_db(&data_root).unwrap();
+    crate::plugins::policy::initialize_policy_db(&data_root).unwrap();
+    run_policy_cli_as(
+        &store,
+        PolicyCli::try_parse_from([
+            "policy",
+            "approve",
+            "--id",
+            &transition_id,
+            "--scope",
+            "global",
+        ])
+        .unwrap(),
+        "operator",
+    )
+    .unwrap();
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+
+    // Unbounded expiry (expires_at = None) -> false.
+    approve_action(
+        &store,
+        &transition_id,
+        None,
+        "operator",
+        POLICY_TRANSITION_SCOPE,
+    )
+    .unwrap();
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+
+    // Unknown actor -> rejected by CLI and ignored if inserted directly.
+    assert!(
+        run_policy_cli_as(
+            &store,
+            PolicyCli::try_parse_from([
+                "policy",
+                "approve",
+                "--id",
+                &transition_id,
+                "--scope",
+                POLICY_TRANSITION_SCOPE,
+                "--actor",
+                "unknown",
+            ])
+            .unwrap(),
+            "operator",
+        )
+        .is_err()
+    );
+    let future = format!(
+        "{}Z",
+        crate::core::time::now_epoch_z()
+            .trim_end_matches('Z')
+            .parse::<u64>()
+            .unwrap()
+            + 600
+    );
+    assert!(
+        approve_action_with_expiry(
+            &store,
+            &transition_id,
+            None,
+            "unknown",
+            POLICY_TRANSITION_SCOPE,
+            Some(&future),
+        )
+        .is_err()
+    );
+    // Even if an "unknown" actor row is injected directly into SQLite, the
+    // read-side check must reject it fail-closed.
+    let conn = crate::core::db::Connection::open(policy_db_path(&data_root)).unwrap();
+    conn.execute(
+        "INSERT INTO approvals(approval_id, action_fingerprint, actor, ts, scope, expires_at) VALUES(?1, ?2, ?3, ?4, ?5, ?6)",
+        crate::core::db::params![
+            crate::core::ulid::new_ulid(),
+            transition_id,
+            "unknown",
+            crate::core::time::now_epoch_z(),
+            POLICY_TRANSITION_SCOPE,
+            future
+        ],
+    )
+    .unwrap();
+    drop(conn);
+    assert!(!has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+
+    // Valid policy.control-authorized bounded approval -> true.
+    run_policy_cli_as(
+        &store,
+        PolicyCli::try_parse_from([
+            "policy",
+            "approve",
+            "--id",
+            &transition_id,
+            "--scope",
+            POLICY_TRANSITION_SCOPE,
+        ])
+        .unwrap(),
+        "operator",
+    )
+    .unwrap();
+    assert!(has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+}
+
 fn per_platform_execution() -> RepositoryExecution {
     RepositoryExecution {
         program: String::new(),
@@ -423,6 +977,7 @@ fn per_platform_contract() -> RepositoryContract {
         reviewed_commands_digest: String::new(),
         source_coverage: mapped_coverage(),
         executions,
+        targets: BTreeMap::new(),
     };
     contract.reviewed_commands_digest = command_contract_digest(&commands(), &contract).unwrap();
     contract

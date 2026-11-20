@@ -347,6 +347,14 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
     })
 }
 
+pub(crate) fn observe_pr_for_diagnostic(
+    repo: &Path,
+    slug: &str,
+    number: u64,
+) -> Result<serde_json::Value, DecapodError> {
+    publication::diagnostic_read_pr(repo, slug, number)
+}
+
 fn resolve_workspace_credentials_report(
     repo_root: &Path,
 ) -> Option<crate::core::container_signer::WorkspaceCredentialsReport> {
@@ -2345,11 +2353,25 @@ fn canonical_local_readiness_repository(
     {
         return Err(denied());
     }
-    crate::core::repository_profile::preserve_accepted(
-        &candidate.proof.commands,
-        candidate.proof.repository_contract.as_ref(),
+    let accepted_sha = read_canonical_local_git(
+        &root,
+        &git,
+        &["rev-parse", "--verify", &format!("{reference}^{{commit}}")],
+    )
+    .map_err(|_| denied())?;
+    let candidate_sha =
+        read_canonical_local_git(repo_root, &git, &["rev-parse", "--verify", "HEAD^{commit}"])
+            .map_err(|_| denied())?;
+    crate::core::repository_profile::verify_accepted_transition(
+        repo_root,
+        &accepted_sha,
+        &candidate_sha,
+        accepted.proof.required_profile.as_ref(),
+        candidate.proof.required_profile.as_ref(),
         &accepted.proof.commands,
+        &candidate.proof.commands,
         accepted.proof.repository_contract.as_ref(),
+        candidate.proof.repository_contract.as_ref(),
     )
     .map_err(|_| denied())?;
     // A location-bound local identity is intentionally nonportable. Moving the

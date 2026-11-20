@@ -67,6 +67,9 @@ pub(crate) struct ValidateCli {
     /// Human-reviewed explanation, recorded in the append-only audit stream.
     #[clap(long = "bypass-reason", requires = "bypass_validation")]
     pub bypass_reason: Option<String>,
+    /// Scope `repo.pr-readiness.v1` local proof to a reviewed deployment target slice.
+    #[clap(long, value_name = "TARGET")]
+    pub target: Option<String>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -108,6 +111,17 @@ pub(crate) enum WorkspaceCommand {
     },
     /// Show current workspace status
     Status,
+    /// Inspect effective authority and workspace prerequisites without mutation
+    Diagnose {
+        #[clap(long)]
+        json: bool,
+        #[clap(long)]
+        offline: bool,
+        #[clap(long)]
+        pr: Option<u64>,
+        #[clap(long, default_value = "workspace.publish")]
+        operation: String,
+    },
     /// Publish workspace changes as a patch/PR bundle
     Publish {
         /// Title for the change

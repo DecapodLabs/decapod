@@ -1540,8 +1540,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1c4a64454b8c7be7feda64a4c3c798da92b8a629e0928e4c08f5d7c5053666ca`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (247 files), `tests/` (265 files)
+- Repository signal fingerprint: `e1010668ccb99f16f4417c462c625daeac48e5faedf715eb9a88c89e818713e4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (248 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2557,3 +2557,23 @@ preparation, all four configured cargo-dist archives and the complete bound
 execution/collection graph remain separate obligations. No fixture, digest
 update, source-CI subset or generated checkpoint grants release authority or
 converts missing platform evidence into success.
+
+## Governed repository proof-policy migration (#1738)
+
+`tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
+cover the `repo.pr-readiness.v1` transition contract across source-inventory
+updates (`reviewed_sources_digest`) and command/execution upgrades
+(`reviewed_commands_digest` + `executions`), verifying full native execution and
+readiness receipt generation after `policy.control`-authorized approval in the
+canonical main `.decapod/data` ledger as well as fail-closed rejection for
+missing approvals (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`), unauthorized callers
+(`ordinary-agent`, `"unknown"`, and `--actor unknown`), stale approvals (moved
+base SHA, moved candidate SHA, or changed policy digest), revoked/expired
+approvals, and unconditional `REQUIRED_PROFILE_DOWNGRADE` enforcement. Local
+unit and integration tests exercise real Git targets, SQLite policy ledgers, and
+native execution; full repository readiness requires Buildkite validation on the
+committed candidate.
+
+## Target-scoped repository proof verification (#1740)
+
+Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.

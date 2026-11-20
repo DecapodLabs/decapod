@@ -98,6 +98,8 @@ impl StorageFailureKind {
 /// Canonical error type for all Decapod operations.
 #[derive(Debug)]
 pub enum DecapodError {
+    /// A read-only diagnostic already emitted its structured result.
+    DiagnosticExit(i32),
     /// Application storage error normalized by the Dactyl facade.
     StorageError(crate::core::db::Error),
     /// Dactyl physical storage error, normalized at the Decapod boundary.
@@ -131,6 +133,10 @@ pub enum DecapodError {
 impl fmt::Display for DecapodError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::DiagnosticExit(code) => write!(
+                f,
+                "Workspace diagnostic returned status {code}; see its report"
+            ),
             Self::StorageError(e) => write!(f, "storage error: {e}"),
             Self::DactylError(e) => write!(f, "Dactyl error: {e}"),
             Self::IoError(e) => {
