@@ -84,6 +84,9 @@ pub struct GovernedPlan {
     pub title: String,
     pub intent: String,
     pub state: PlanState,
+    /// Accepted semantic revision of the selected-work policy, when present.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accepted_selected_work_revision: Option<String>,
     #[serde(default)]
     pub todo_ids: Vec<String>,
     #[serde(default)]
@@ -316,6 +319,7 @@ pub fn init_plan(
             title: input.title,
             intent: input.intent,
             state: PlanState::Draft,
+            accepted_selected_work_revision: None,
             todo_ids: input.todo_ids,
             proof_hooks: input.proof_hooks,
             unknowns: input.unknowns,
@@ -394,6 +398,19 @@ pub fn patch_plan(
             }
             invalidate_plan_acceptance(&mut plan);
         }
+        if patch.state == Some(PlanState::Approved) {
+            let readiness =
+                observe_instruction_readiness(project_root, &plan, EvaluationPhase::PreExecution)?;
+            let revision = readiness
+                .global_consistency
+                .as_ref()
+                .map(|model| model.source_revision.clone());
+            ensure_instruction_report_ready(readiness, "NEEDS_HUMAN_INPUT")?;
+            if plan.accepted_selected_work_revision != revision {
+                invalidate_plan_acceptance(&mut plan);
+            }
+            plan.accepted_selected_work_revision = revision;
+        }
         if let Some(state) = patch.state {
             plan.state = state;
         }
@@ -419,6 +436,7 @@ pub fn patch_plan(
 /// previous contract. This does not authenticate the later approval's author.
 pub(crate) fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
     plan.state = PlanState::Draft;
+    plan.accepted_selected_work_revision = None;
     for phase in &mut plan.phases {
         phase.entered = false;
         phase.completed = false;
@@ -798,7 +816,51 @@ pub fn instruction_lineage_for_plan(
 pub fn instruction_readiness_at(
     root: &Path,
     plan: &GovernedPlan,
-    phase: crate::core::validation_rules::EvaluationPhase,
+    phase: EvaluationPhase,
+) -> Result<InstructionReadiness, error::DecapodError> {
+    let mut report = observe_instruction_readiness(root, plan, phase)?;
+    let current = report
+        .global_consistency
+        .as_ref()
+        .map(|model| model.source_revision.as_str());
+    if report.blockers.is_empty()
+        && matches!(
+            plan.state,
+            PlanState::Approved | PlanState::Executing | PlanState::Done
+        )
+        && plan.accepted_selected_work_revision.as_deref() != current
+    {
+        let source = format!("{PLAN_PATH}#/sections/plan/accepted_selected_work_revision");
+        let question = "Approve the plan against the current accepted selected-work revision and rerun affected proof".to_string();
+        report.blockers.push(InstructionBlocker {
+            id: format!(
+                "instruction:{:x}",
+                Sha256::digest(json!([plan.todo_ids, source, current]).to_string())
+            ),
+            source,
+            question: question.clone(),
+            authority: RuleAuthority::ProjectOverride,
+        });
+        report.questions.push(question);
+        report.verdict = RuleVerdict::Fail;
+        let mut remediation = instruction_remediation(&report.blockers, false, false);
+        remediation.error_code = "NEEDS_PLAN_APPROVAL".into();
+        remediation.violation_description =
+            "Plan approval is stale for the accepted selected-work policy".into();
+        remediation.expected_condition =
+            "Plan approval binds the current accepted selected-work revision".into();
+        remediation.required_steps = vec![
+            "Run `decapod govern plan approve` against the current accepted policy, then rerun affected proof".into(),
+        ];
+        report.remediation = Some(remediation);
+    }
+    Ok(report)
+}
+
+fn observe_instruction_readiness(
+    root: &Path,
+    plan: &GovernedPlan,
+    phase: EvaluationPhase,
 ) -> Result<InstructionReadiness, error::DecapodError> {
     let mut report = instruction_readiness_for_phase(plan, phase);
     if let Some(lineage) = instruction_lineage_for_plan(root, plan)? {
@@ -907,13 +969,26 @@ fn ensure_instruction_report_ready(
     if readiness.blockers.is_empty() {
         return Ok(());
     }
+    let stale_approval = readiness
+        .remediation
+        .as_ref()
+        .is_some_and(|remediation| remediation.error_code == "NEEDS_PLAN_APPROVAL");
+    let (marker, message) = if stale_approval {
+        (
+            "NEEDS_PLAN_APPROVAL",
+            "Plan approval is stale for the accepted selected-work policy.",
+        )
+    } else if marker == "NEEDS_HUMAN_INPUT" {
+        (marker, "Recorded instructions require resolution.")
+    } else {
+        (
+            marker,
+            "NEEDS_HUMAN_INPUT: recorded instructions require resolution.",
+        )
+    };
     Err(marker_error(
         marker,
-        if marker == "NEEDS_HUMAN_INPUT" {
-            "Recorded instructions require resolution."
-        } else {
-            "NEEDS_HUMAN_INPUT: recorded instructions require resolution."
-        },
+        message,
         Some(json!({ "questions": readiness.questions, "instruction_readiness": readiness })),
     ))
 }

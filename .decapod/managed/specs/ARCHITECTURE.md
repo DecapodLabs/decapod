@@ -404,6 +404,11 @@ enforce them. Its source revision binds the recorded inputs independently of
 approval or phase progress. The existing validation epoch binds proof to the
 applicable plan after a correction.
 
+For selected work, plan approval also binds the accepted policy's semantic
+revision. The shared readiness gate compares that revision before progress or
+publication. Refreshing a target with unchanged selected-work policy preserves
+plan approval. Reapproval after policy changes resets old phase progress.
+
 A task verification row is an index. `judge_stored_verification` re-hashes the
 bound files and checks that the proof digest matches that reconstruction under
 the canonical snapshot. A pass status or a digest written only into SQLite is
@@ -1189,7 +1194,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ccded48d3c2e07f201b03c64b5d955066d8a3478778f53051421d3f78fbb9882`
+- Repository signal fingerprint: `299d278ad1de982c8f1c5dc52d1e53186bf2f98d0872bd989b1c7285b5e31ec8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
