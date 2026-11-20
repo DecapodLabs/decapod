@@ -339,9 +339,9 @@ Repositories using `repo.pr-readiness.v1` may declare an optional reviewed map
   `macos-aarch64`, `macos-x86_64`) compatible with that target's executor
 
 `command_contract_digest` preserves pre-#1740 digests byte-for-byte when `targets` is
-empty and binds `targets` when non-empty. `repository_profile::preserve_accepted`
-rejects candidate target removal, required command removal, `depends_on` or
-`shared_inputs` narrowing, and `platforms` changes with
+empty and binds `targets` when non-empty. Adding, removing, or editing a target
+requires a policy transition approval bound to the exact candidate, accepted
+base, and reviewed command and source digests. Unapproved changes fail with
 `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
 
 Passing `--target <name>` to `decapod validate` (or `target` on RPC `validate.run`)
@@ -354,3 +354,6 @@ results carry `scope = "repository_target_readiness"` (or
 candidate SHA into `native-readiness-receipt.json` and `CompletedReadinessEvidence`,
 keep `publication_ready = false`, and are rejected by full-repository PR publication,
 workunit `VERIFIED` promotion, and unrelated target lookups.
+When the canonical journal holds only target-scoped proof for the candidate,
+failed full publication or verification reports `TARGET_SCOPED_PROOF_REJECTED`
+and directs the caller to run unscoped `decapod validate`.

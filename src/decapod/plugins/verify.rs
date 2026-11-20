@@ -1338,6 +1338,15 @@ fn run_validate_and_hash_detailed(
     let diagnostic = if !output.status.success() {
         let diag = extract_safe_validation_diagnostic(&output.stdout, &output.stderr);
         eprintln!("{}", diag.message);
+        let store = Store {
+            kind: crate::core::store::StoreKind::Repo,
+            root: store_root.to_path_buf(),
+        };
+        if let Some(diagnostic) =
+            validation_history::current_target_only_diagnostic(repo_root, &store)
+        {
+            eprintln!("{diagnostic}");
+        }
         diag
     } else {
         SafeValidationDiagnostic::empty()

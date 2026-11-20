@@ -664,7 +664,7 @@ fn target_closure_resolves_depends_on_and_shared_inputs_and_fails_on_missing_dif
 }
 
 #[test]
-fn preserve_accepted_rejects_candidate_target_removal_and_scope_weakening() {
+fn preserve_accepted_rejects_candidate_target_map_changes() {
     let cmds = multi_target_commands();
     let accepted = multi_target_contract();
 
@@ -674,6 +674,8 @@ fn preserve_accepted_rejects_candidate_target_removal_and_scope_weakening() {
         "remove-depends-on",
         "narrow-shared-inputs",
         "change-platforms",
+        "expand-shared-inputs",
+        "add-target",
     ] {
         let mut candidate = accepted.clone();
         match defect {
@@ -713,6 +715,25 @@ fn preserve_accepted_rejects_candidate_target_removal_and_scope_weakening() {
                     .platforms
                     .push("linux-x86_64".into());
             }
+            "expand-shared-inputs" => {
+                candidate
+                    .targets
+                    .get_mut("linux")
+                    .unwrap()
+                    .shared_inputs
+                    .push("deploy/common/".into());
+            }
+            "add-target" => {
+                candidate.targets.insert(
+                    "edge".into(),
+                    DeploymentTargetContract {
+                        commands: vec!["check-shared".into()],
+                        depends_on: vec![],
+                        shared_inputs: vec![],
+                        platforms: vec![],
+                    },
+                );
+            }
             _ => unreachable!(),
         }
         candidate.reviewed_commands_digest = command_contract_digest(&cmds, &candidate).unwrap();
@@ -724,26 +745,6 @@ fn preserve_accepted_rejects_candidate_target_removal_and_scope_weakening() {
             "{defect}: unexpected error {error}"
         );
     }
-
-    // Additive new target or additive shared_inputs on an existing target is allowed.
-    let mut additive = accepted.clone();
-    additive
-        .targets
-        .get_mut("linux")
-        .unwrap()
-        .shared_inputs
-        .push("deploy/common/".into());
-    additive.targets.insert(
-        "edge".into(),
-        DeploymentTargetContract {
-            commands: vec!["check-shared".into()],
-            depends_on: vec![],
-            shared_inputs: vec![],
-            platforms: vec![],
-        },
-    );
-    additive.reviewed_commands_digest = command_contract_digest(&cmds, &additive).unwrap();
-    preserve_accepted(&cmds, Some(&additive), &cmds, Some(&accepted)).unwrap();
 }
 
 #[test]

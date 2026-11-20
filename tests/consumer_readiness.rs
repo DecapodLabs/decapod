@@ -1550,8 +1550,9 @@ fn unknown_target_cycle_and_incompatible_executor_fail_closed() {
     blocked(&fixture.validate(&mut host), "INCOMPATIBLE_TARGET_EXECUTOR");
     assert_eq!(host.execution_attempts, 0);
 
-    // 4. Cyclic target dependency fails closed.
+    // 4. Even an exact approval cannot make a cyclic dependency executable.
     let (mut cycle_fixture, _, _) = setup_multi_target_fixture(false);
+    accept_current_on_main(&cycle_fixture);
     cycle_fixture
         .proof
         .repository_contract
@@ -1563,8 +1564,10 @@ fn unknown_target_cycle_and_incompatible_executor_fail_closed() {
         .depends_on
         .push("active-host".into());
     cycle_fixture.review_commands();
-    cycle_fixture.save_config();
+    save_full_config(&cycle_fixture);
     cycle_fixture.commit("introduce cyclic target dependency");
+    let id = transition_id_for_fixture(&cycle_fixture);
+    approve_transition_with_caller(&cycle_fixture.options.root, &id, "operator", 900).unwrap();
     cycle_fixture.options.target = Some("active-host".into());
     let mut host = cycle_fixture.host();
     blocked(
@@ -1955,6 +1958,106 @@ fn command_and_execution_upgrade_succeeds_after_policy_control_approval_and_full
         .map(|i| fs::read_to_string(dir.join(format!("native-{i}.stdout"))).unwrap())
         .join("\n");
     assert!(stdout.contains("upgraded-tool-execution-ran"));
+}
+
+#[test]
+fn single_platform_to_platform_map_requires_exact_approval_and_runs_host_checks() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+    let platform = convert_fixture_to_per_platform(&mut fixture);
+    save_full_config(&fixture);
+    fixture.commit("record candidate platform map in canonical config");
+
+    let id = transition_id_for_fixture(&fixture);
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.execution_attempts, 0);
+    approve_transition_with_caller(&fixture.options.root, &id, "operator", 900).unwrap();
+
+    let report = fixture.validate(&mut host);
+    assert!(report.ready && report.proof_ready, "{report:?}");
+    assert_eq!(host.execution_attempts, 1);
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert!(repository_profile::is_valid_platform_key(&platform));
+
+    fs::write(fixture.options.root.join("extra.txt"), "new head\n").unwrap();
+    fixture.commit("advance head after platform transition approval");
+    let mut host = fixture.host();
+    blocked(
+        &fixture.validate(&mut host),
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+    );
+    assert_eq!(host.execution_attempts, 0);
+}
+
+#[test]
+fn target_map_addition_and_update_require_exact_approval_and_preserve_receipt_scope() {
+    use decapod::core::native_proof::NativePlatform;
+    use decapod::core::repository_profile::DeploymentTargetContract;
+
+    let mut fixture = Fixture::new();
+    let platform = repository_profile::platform_key(NativePlatform::current().unwrap()).unwrap();
+    let first = fixture.proof.commands[0].name.clone();
+    let second = fixture.proof.commands[1].name.clone();
+    for commands in [vec![first.clone()], vec![first, second]] {
+        accept_current_on_main(&fixture);
+        fixture
+            .proof
+            .repository_contract
+            .as_mut()
+            .unwrap()
+            .targets
+            .insert(
+                "active-host".into(),
+                DeploymentTargetContract {
+                    commands: commands.clone(),
+                    depends_on: vec![],
+                    shared_inputs: vec![],
+                    platforms: vec![platform.into()],
+                },
+            );
+        fixture.review_commands();
+        save_full_config(&fixture);
+        fixture.commit("review deployment target command obligations");
+        fixture.options.target = Some("active-host".into());
+
+        let id = transition_id_for_fixture(&fixture);
+        let mut host = fixture.host();
+        blocked(
+            &fixture.validate(&mut host),
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+        );
+        assert_eq!(host.execution_attempts, 0);
+        approve_transition_with_caller(&fixture.options.root, &id, "operator", 900).unwrap();
+
+        let report = fixture.validate(&mut host);
+        assert!(report.ready && report.proof_ready, "{report:?}");
+        assert!(!report.publication_ready());
+        assert_eq!(report.target.as_deref(), Some("active-host"));
+        assert_eq!(report.resolved_targets, ["active-host"]);
+        assert_eq!(host.execution_attempts, 1);
+        let evidence = report.evidence_path.unwrap();
+        let suite: SuiteEvidence =
+            serde_json::from_slice(&fs::read(evidence.join("observations.json")).unwrap()).unwrap();
+        let executed: std::collections::BTreeSet<_> =
+            suite.results.iter().map(|result| &result.key.job).collect();
+        assert_eq!(executed, commands.iter().collect());
+        let receipt: serde_json::Value = serde_json::from_slice(
+            &fs::read(evidence.join("completion/native-readiness-receipt.json")).unwrap(),
+        )
+        .unwrap();
+        let head = git(&fixture.options.root, &["rev-parse", "HEAD"]);
+        runtime::verify_native_receipt_scope(&receipt, &head, Some("active-host")).unwrap();
+        assert!(
+            runtime::verify_native_receipt_scope(&receipt, &head, None)
+                .unwrap_err()
+                .to_string()
+                .contains("TARGET_RECEIPT_FOR_FULL_REPO")
+        );
+    }
 }
 
 #[test]

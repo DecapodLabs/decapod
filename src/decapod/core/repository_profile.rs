@@ -222,7 +222,8 @@ fn invalid(message: impl Into<String>) -> PlanningFailure {
 
 /// Candidate review digests establish internal consistency, not authority to
 /// replace requirements already accepted on the target. Additive checks are
-/// allowed; accepted execution and coverage obligations must remain intact.
+/// allowed; accepted execution, coverage and deployment target obligations
+/// must remain intact. The target map requires review even for additions.
 pub(crate) fn preserve_accepted(
     commands: &[ProofDef],
     contract: Option<&RepositoryContract>,
@@ -237,6 +238,7 @@ pub(crate) fn preserve_accepted(
     let accepted = accepted_contract.ok_or_else(changed)?;
     let candidate = contract.ok_or_else(changed)?;
     if accepted.canonical_local_target != candidate.canonical_local_target
+        || accepted.targets != candidate.targets
         || accepted_commands.is_empty()
         || command_contract_digest(accepted_commands, accepted)?
             != accepted.reviewed_commands_digest
@@ -275,25 +277,6 @@ pub(crate) fn preserve_accepted(
                 .commands
                 .iter()
                 .all(|name| current.commands.contains(name))
-        {
-            return Err(changed());
-        }
-    }
-    for (target_name, accepted_target) in &accepted.targets {
-        let candidate_target = candidate.targets.get(target_name).ok_or_else(changed)?;
-        if !accepted_target
-            .commands
-            .iter()
-            .all(|name| candidate_target.commands.contains(name))
-            || !accepted_target
-                .depends_on
-                .iter()
-                .all(|dep| candidate_target.depends_on.contains(dep))
-            || !accepted_target
-                .shared_inputs
-                .iter()
-                .all(|pattern| candidate_target.shared_inputs.contains(pattern))
-            || candidate_target.platforms != accepted_target.platforms
         {
             return Err(changed());
         }
