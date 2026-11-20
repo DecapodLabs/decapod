@@ -48,7 +48,8 @@ fn development_alignment(
 
 /// Internal currency decision; this grants no exception to body or fingerprint
 /// integrity. Every surface must satisfy the same scoped source policy.
-pub(crate) fn preserves_source_entrypoint_versions(root: &Path) -> bool {
+#[doc(hidden)]
+pub fn preserves_source_entrypoint_versions(root: &Path) -> bool {
     use std::io::Read;
     ENTRYPOINT_FILES.iter().all(|surface| {
         let path = root.join(surface);

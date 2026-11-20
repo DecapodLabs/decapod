@@ -893,6 +893,15 @@
         "tests/infer_precision.rs",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1551-accepted-master-09",
+      "summary": "Reconcile v0.155.1, preserve accepted entrypoint integrity and verify the bounded validation regression and release policy",
+      "input_digest": "sha256:f82695e581921407f1d685883360452bcc1acdf0b0fc6724f9010b21bd2e8864",
+      "proof_refs": [
+        "assets/tools/release_projection_drift_tests.rs",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -935,23 +944,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the context and outcome work with accepted proof-policy migration, target-scoped proof, workspace diagnostics and the v0.155.0 release.",
-          "reviewed_code_fingerprint": "e1010668ccb99f16f4417c462c625daeac48e5faedf715eb9a88c89e818713e4",
-          "spec_material_hash": "f8e96dba5e295e0d18e6cb87c0bb8cd0dac8b47702b70aca5b8cff81b48ae370"
+          "reason": "Review current context, provenance and validation contracts with the accepted release-entrypoint integrity changes in v0.155.1.",
+          "reviewed_code_fingerprint": "6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494",
+          "spec_material_hash": "fee854d001ed7910e4cd66dc7bde16d91c7c873358f25d0f92265edd4f36d5d8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the context and outcome work with accepted proof-policy migration, target-scoped proof, workspace diagnostics and the v0.155.0 release.",
-          "reviewed_code_fingerprint": "e1010668ccb99f16f4417c462c625daeac48e5faedf715eb9a88c89e818713e4",
-          "spec_material_hash": "4d51ed10c08147e8c131e4048ca9db0857bc57e5ac4c0d60f7d58e55506b8647"
+          "reason": "Review current context, provenance and validation contracts with the accepted release-entrypoint integrity changes in v0.155.1.",
+          "reviewed_code_fingerprint": "6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494",
+          "spec_material_hash": "f4fddc993d9b7449ee223cbe3513ed78de6eead9e3d5aefdd883f3d551ea9bcb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the context and outcome work with accepted proof-policy migration, target-scoped proof, workspace diagnostics and the v0.155.0 release.",
-          "reviewed_code_fingerprint": "e1010668ccb99f16f4417c462c625daeac48e5faedf715eb9a88c89e818713e4",
-          "spec_material_hash": "4e61020341ada86fd72f9887a9d4307237fe0b122b8cf43595ac31126873cb5c"
+          "reason": "Review current context, provenance and validation contracts with the accepted release-entrypoint integrity changes in v0.155.1.",
+          "reviewed_code_fingerprint": "6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494",
+          "spec_material_hash": "0d2676699097855bc6a017e3d7e455584ae45ddc63f8c05e966afcb6191a61c8"
         }
       ],
       "state": "APPROVED",
@@ -962,16 +971,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795207768Z"
+      "updated_at": "1795210148Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0c545b85e43a535c97052af7e4234d96aca1fa706112f4377dbd907cd8f423cf",
+      "artifact_hash": "sha256:06cdd3e72eb351c0b3d63aa6cfa6b0e25fbe608798363393b0f47551a0d086b0",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel release-projection policy",
           "status": "passed"
         },
         {
@@ -988,6 +1001,10 @@
         },
         {
           "name": "Bazel v0.155.0 bounded validate smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel v0.155.1 bounded validate smoke",
           "status": "passed"
         },
         {
@@ -1120,10 +1137,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 12
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:13",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 13
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 12,
+        "next_sequence": 13,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1284,6 +1308,22 @@
                 ],
                 "sequence": 12,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:13",
+                "observations": [
+                  "Integrated the immutable v0.155.1 target 2e206d26. Prior candidate GitHub CLI and core suites passed, while checkpoint and push context rejected the advanced target. Retained accepted release-entrypoint integrity and all prior checkpoints. Reviewed 107 source paths, with changes to the two Cargo version declarations and accepted release projection fixture. Current smoke ran in 13580ms within the unchanged 20000ms budget. All 16 release projection policy tests passed. Local project-check generated matching projections but returned a failure on the host with container custody, shared task proof and staged merge findings. No local full readiness is claimed."
+                ],
+                "proof_refs": [
+                  "Bazel v0.155.1 bounded validate smoke",
+                  "Bazel release-projection policy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 13,
+                "validation_findings": []
               }
             ]
           }
@@ -1298,6 +1338,7 @@
         "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
+        "Integrated the immutable v0.155.1 target 2e206d26. Prior candidate GitHub CLI and core suites passed, while checkpoint and push context rejected the advanced target. Retained accepted release-entrypoint integrity and all prior checkpoints. Reviewed 107 source paths, with changes to the two Cargo version declarations and accepted release projection fixture. Current smoke ran in 13580ms within the unchanged 20000ms budget. All 16 release projection policy tests passed. Local project-check generated matching projections but returned a failure on the host with container custody, shared task proof and staged merge findings. No local full readiness is claimed.",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
