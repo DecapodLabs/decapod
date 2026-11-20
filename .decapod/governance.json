@@ -903,6 +903,11 @@
       "id": "stack-v1550-fix-actions-checks",
       "summary": "Preserve both branch histories on accepted v0.155.0 and repair legacy scope fixture initialization for required Actions",
       "input_digest": "sha256:24bfbe2419b863c7da0d3909bc581cddb4ff524dd49a12b787dba8a4555d0ea3"
+    },
+    {
+      "id": "stack-after-1862-accepted",
+      "summary": "Carry the completed release-verifier merge into the accepted base while preserving the checked integration tree and both source histories",
+      "input_digest": "sha256:24bfbe2419b863c7da0d3909bc581cddb4ff524dd49a12b787dba8a4555d0ea3"
     }
   ],
   "intents": {
