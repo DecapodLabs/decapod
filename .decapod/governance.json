@@ -821,6 +821,14 @@
       "id": "issue-1834-sync-ba21c8f16",
       "summary": "Sync accepted v0.156.0 release for PR metadata",
       "input_digest": "sha256:73f04e6e682c05fb67a6e720dce0d87d29e2537afb623be9e0e6c6c9a7f27571"
+    },
+    {
+      "id": "issue-1834-accepted-release-inventory",
+      "summary": "Refresh the reviewed inventory for the accepted version-only release delta",
+      "input_digest": "sha256:c7a761a2293b7e93a8de97d37eab36c988eaad60a98f49c289c4d5e09c0517e1",
+      "proof_refs": [
+        "Compare released scanner inventories on d96bf819a, ba21c8f16, and the candidate"
+      ]
     }
   ],
   "intents": {
@@ -896,8 +904,12 @@
         "All changes are local. Configured Buildkite validation may push and is outside this start-work request.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:df1ec479aa3949d1727476db9e3cce2fd0c1a986319e66e217092562e496ef5c",
+      "artifact_hash": "sha256:45ca31c4958ea87b776648c7f2316cba2b308eed01ad90d92b19f8ea6683a708",
       "checks": [
+        {
+          "name": "accepted_release_inventory_comparison",
+          "status": "passed"
+        },
         {
           "name": "git_diff_check",
           "status": "passed"
@@ -935,10 +947,17 @@
             "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XDZTSZ9NGN9242JXXJ2HKK": {
@@ -979,6 +998,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock."
+                ],
+                "proof_refs": [
+                  "accepted_release_inventory_comparison"
+                ],
+                "scope": [
+                  "src/decapod/core/workspace_publication.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -988,7 +1022,8 @@
       "destination": "pull request",
       "evidence": [
         "41 tests passed in the final publication suite with a canonical macOS temporary directory.",
-        "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback."
+        "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback.",
+        "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock."
       ],
       "inspected_files": [
         "src/decapod/core/workspace_publication.rs"
