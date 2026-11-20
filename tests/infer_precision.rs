@@ -192,6 +192,7 @@ fn test_orientation_and_mentor_share_the_reflection_continuation() {
     );
     assert!(rpc.status.success());
     let rpc = extract_json(&rpc);
+    assert_eq!(rpc["success"], true, "{rpc}");
     assert_eq!(rpc["result"]["reflection"]["disposition"], "proceed");
     assert_eq!(rpc["result"]["reflection"]["completion_proven"], false);
     assert_eq!(rpc["result"]["reflection"]["round"], 2);
@@ -289,7 +290,9 @@ fn deterministic_escalation_harness_investigates_before_asking_and_preserves_pub
         ],
     );
     assert!(retry.status.success());
-    assert_eq!(extract_json(&retry)["result"]["reflection"], first);
+    let retry = extract_json(&retry);
+    assert_eq!(retry["success"], true, "{retry}");
+    assert_eq!(retry["result"]["reflection"], first);
     // The deterministic mock agent actually inspects the repository source.
     let source = fs::read_to_string(root.join("README.md")).unwrap();
     assert!(source.contains("fresh reads"));

@@ -8530,6 +8530,8 @@ fn rpc_op_requires_constitutional_awareness(op: &str) -> bool {
 }
 
 fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
+    // Mentor queries run before source authoring. Reflection submissions still
+    // verify workspace and task custody in the reflection engine.
     matches!(
         op,
         "agent.init"
@@ -8543,6 +8545,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "schema.get"
             | "intent.reconcile"
             | "specs.refresh"
+            | "mentor.obligations"
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
@@ -13773,8 +13776,10 @@ fn bootstrap_rpc_does_not_require_the_workspace_it_is_discovering_or_creating() 
     for op in ["workspace.publish", "scaffold.apply_answer"] {
         assert!(rpc_op_requires_worktree(op));
     }
+    assert!(!rpc_op_requires_worktree("mentor.obligations"));
+    assert!(!rpc_op_bypasses_session("mentor.obligations"));
+    assert!(rpc_op_skips_mandate_enforcement("mentor.obligations"));
     for op in [
-        "mentor.obligations",
         "store.query",
         "standards.resolve",
         "store.upsert",
