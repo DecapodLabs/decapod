@@ -25,7 +25,7 @@ Perform methodology compliance checks.
 
 ### `init` (alias: `i`)
 Bootstrap or manage the Decapod lifecycle.
-- `--backend local|cloud`: Select the logical backend. Cloud starts or resumes
+- `--backend local|cloud`: Select the logical backend: `local` (**Decapod Local**, default, free and offline) or `cloud` (**Decapod Cloud**, account required). Cloud starts or resumes
   managed sign-in through Dactyl and reports pending/account-action/denied
   outcomes as non-success. Setup readiness requires current server authorization.
 - `--restart-cloud-signin`: Explicitly start a new flow after an interrupted
@@ -38,12 +38,38 @@ Bootstrap or manage the Decapod lifecycle.
   refresh non-destructive. In non-interactive environments it preserves the
   current configuration without prompting.
 
+### `integration`
+Preview, reversibly remove, or restore Decapod's repository integration without
+deleting project state:
+
+```text
+decapod integration preview [--dir <path>] [--format text|json]
+decapod integration remove --authorize [--dir <path>] [--format text|json]
+decapod integration restore [--dir <path>] [--manifest <path>] [--format text|json]
+```
+
+- `preview`: Read-only inspection that performs zero filesystem, Git, SQLite,
+  session, or network mutations and reports `generated`, `edited`, `authored`,
+  `unknown`, and `active` resources separately.
+- `remove`: Requires explicit `--authorize`. Removes only positively owned,
+  unchanged generated integration (entrypoints, hooks installed by Decapod,
+  `.gitignore` rules, untouched scaffolds) while preserving edited/shared/unknown
+  entries, authored instructions/overrides/specs, `.decapod/data/`,
+  `.decapod/governance.json`, `*.bak` backups, global config, and credentials.
+  Refuses uncertain ownership, symlink replacement, and active-custody conflicts.
+  Records `.decapod/integration-restore-manifest.json` atomically before removal.
+  Permanent state deletion (`--purge-state`) and protected governance removal
+  (`--remove-protected-governance`) remain separate explicit authority boundaries.
+- `restore`: Losslessly restores removed generated files and `.gitignore` rules
+  from `.decapod/integration-restore-manifest.json` while refusing to overwrite
+  symlinks or conflicting newly authored files.
+
 ### `capabilities`
 Discover the features supported by the current Decapod binary.
 
 ### `cloud`
-Optional cloud credential operations. These commands do not enable cloud
-storage or change the local SQLite default.
+Optional **Decapod Cloud** credential and project operations. These commands do
+not enable cloud storage or change the **Decapod Local** (`local`) SQLite default.
 
 - `cloud login`: the agent starts or resumes the repository's saved sign-in
   flow and checks current repository access. The human runs init once.
@@ -52,7 +78,7 @@ storage or change the local SQLite default.
   and its operation ID. An uncertain exchange is never replayed.
 - `cloud status`: inspect private phase, credential presence, and expiry without
   network I/O or printing a token. `server_readiness` remains `not_checked`.
-  See [Cloud sign-in and task access](propodus.md) for live confirmation.
+  See [Decapod Cloud sign-in and task access](propodus.md) for live confirmation.
 
 ### Local database maintenance
 
@@ -152,6 +178,9 @@ checkpoints. Record meaningful boundaries throughout the work, not only at compl
 - `status`: read current normalized state without creating runtime state.
 - `verify-checkpoints --base-branch <ref> [--head-ref HEAD]`: read-only verification
   of exact-material checkpoints across the full commit graph.
+- `reconcile-merge`: reconcile a Git-merged `.decapod/governance.json` journal from
+  immutable commit ancestry (`HEAD`, `MERGE_HEAD`, `merge-base --all`) without
+  turning failed or missing proof into a passing result.
 - `inventory [--base-branch <branch>]`: inspect logical sections, semantic
   currency, and PR participation. `--repair` initializes absent empty claims;
   `--claims-note <text>` records a current-PR checkpoint; `--compact` preserves

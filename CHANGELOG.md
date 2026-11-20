@@ -7,6 +7,278 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.153.1](https://github.com/DecapodLabs/decapod/compare/v0.153.0...v0.153.1) - 2026-11-20
+
+### Other
+
+- *(govern)* sync accepted master 271cfbd1d (v0.152.0, #1612)
+- record complete cache boundary spec reviews
+- persist verified Bazel dependency archives separately from build outputs
+
+## [0.153.0](https://github.com/DecapodLabs/decapod/compare/v0.152.0...v0.153.0) - 2026-11-20
+
+### Added
+
+- *(observer)* reauthor evidence correlation with explicit history custody
+
+### Fixed
+
+- *(broker)* establish writer incarnation provenance for orphan recovery ([#1783](https://github.com/DecapodLabs/decapod/pull/1783))
+- *(custody)* reject unknown actor on claim and workspace ensure ([#1737](https://github.com/DecapodLabs/decapod/pull/1737))
+- *(storage)* align v2 storage compatibility floor with _ce_v1 codec
+
+### Other
+
+- *(govern)* sync accepted master 6f2ec99dc (v0.152.0, #1455)
+- *(govern)* sync accepted master c6439c7df (v0.152.0, #1757)
+- *(govern)* sync accepted master bc6475824 (v0.152.0, #1737)
+- *(govern)* sync accepted master 9fff41ffc (v0.152.0, #1783)
+- *(govern)* refresh managed Dockerfile pin to v0.152.0 ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(govern)* sync accepted master 5cc32689e (v0.152.0, #1739)
+- *(govern)* sync accepted master 363d6e3ec (v0.151.0, #1739)
+- Merge commit '755bbac6e0af03c5dde4bd555cd749c426ae6472' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge commit '84f9673824ba0b60ee0e87449f2cbb23387f5717' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(governance)* integrate origin/master 89906b666 (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(governance)* integrate origin/master 845ff9799 (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(merge)* reconcile origin/master 845ff9799 (v0.149.3, PR #1818) and refresh specs for #1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge commit 'cfe2565daab82c3c7829cf9b83d5121e37dd5e8e' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* reconcile origin/master cfe2565da (v0.149.3, PR #1816) and refresh specs for #1783
+- *(governance)* integrate origin/master cfe2565da (v0.149.3) ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(govern)* refresh v0.149.3 Dockerfile.decapod pin ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- *(governance)* integrate origin/master v0.149.3 ([#1739](https://github.com/DecapodLabs/decapod/pull/1739))
+- Merge commit '102d6eb22046032e7214ee821ab166f06271585c' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* reconcile origin/master 102d6eb22 (v0.149.3) and refresh specs for #1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1783/bugs_01m7r13b7j70bp8x-issue-1783
+- *(merge)* reconcile origin/master 205d4e8d (v0.149.1) and refresh specs for #1739
+- Merge commit '205d4e8dad2e7690100eb401e12ea6d6f8e23665' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1783/bugs_01m7r13b7j70bp8x-issue-1783
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- Merge remote-tracking branch 'origin/master' into agent/wog-issue-1737/code_01m7qxkv3kc826jx-issue-1737
+- *(merge)* sync origin/master a5a1edad (v0.149.0) and reconcile proof ([#1783](https://github.com/DecapodLabs/decapod/pull/1783))
+- *(govern)* checkpoint updated v0.149.0 spec reviews for #1739
+- *(merge)* reconcile origin/master v0.149.0 and refresh governance/specs for #1739
+- *(merge)* sync origin/master 2f12638a (v0.148.14) and reconcile proof
+- *(specs)* refresh manifest config_input_hash after config.toml update
+- *(proof)* update reviewed_sources_digest to v0.148.13
+- *(proof)* reconcile reviewed_sources_digest for v0.148.13
+- *(governance)* align release11 pin and release history
+- Merge accepted conformance fixes and release0.148.11
+- *(governance)* refresh native release-bound projections
+- *(validation)* reconcile accepted release source inventory
+- Merge accepted release metadata into observer delivery
+- Merge accepted policy boundaries into observer delivery
+- *(observer)* record current recovery disposition
+- *(governance)* integrate current master for PR1700 with Decapod v0.147.0
+- *(specs)* distinguish v0.147.0 audit baseline from historical proof
+- *(audit)* bind current implementation map to accepted v0.147.0
+- *(governance)* integrate current master for PR1700 with Decapod v0.147.0
+- *(governance)* finalize PR1700 on Decapod v0.146.0 (bdd32e5228a5)
+- *(specs)* preserve scoped proof after bounded recovery acceptance
+- *(audit)* include accepted bounded recovery and exact integration identity
+- *(governance)* finalize PR1700 on Decapod v0.146.0 (e13c656aefa6)
+- *(governance)* finalize PR1700 on Decapod v0.146.0
+- *(specs)* reconcile validation with accepted v0.146.0 scope
+- *(specs)* reconcile interfaces with accepted v0.146.0 scope
+- *(specs)* reconcile architecture with accepted v0.146.0 scope
+- *(specs)* reconcile intent with accepted v0.146.0 scope
+- *(audit)* account for accepted v0.146.0 escalation and exact proof scope
+- rebase PR1700 VALIDATION.md on v0.146.0
+- rebase PR1700 INTERFACES.md on v0.146.0
+- rebase PR1700 ARCHITECTURE.md on v0.146.0
+- rebase PR1700 continuous-governance-implementation-map.md on v0.146.0
+- rebase PR1700 INTENT.md on v0.146.0
+
+## [0.152.0](https://github.com/DecapodLabs/decapod/compare/v0.151.0...v0.152.0) - 2026-11-20
+
+### Fixed
+
+- integrate accepted release12 reporting contract
+- *(reporting)* expose caller provenance for pure projections
+- *(reporting)* keep supplied reports outside canonical proof authority
+
+### Other
+
+- *(govern)* sync accepted master v0.151.0 ([#1793](https://github.com/DecapodLabs/decapod/pull/1793))
+
+## [0.151.0](https://github.com/DecapodLabs/decapod/compare/v0.150.8...v0.151.0) - 2026-11-20
+
+### Added
+
+- *(readiness)* support reviewed per-platform executables for repo.pr-readiness.v1
+
+### Fixed
+
+- *(test)* initialize RepositoryExecution platforms field in upstream integration tests ([#1736](https://github.com/DecapodLabs/decapod/pull/1736))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.8 ([#1736](https://github.com/DecapodLabs/decapod/pull/1736))
+- *(merge)* sync origin/master v0.148.14 and align release projections
+- *(specs)* align config digest, Dockerfile, and manifest with v0.148.13
+
+## [0.150.8](https://github.com/DecapodLabs/decapod/compare/v0.150.7...v0.150.8) - 2026-11-19
+
+### Fixed
+
+- *(test)* use literal include_str path in validate_tests for gatekeeper scanning ([#1782](https://github.com/DecapodLabs/decapod/pull/1782))
+- *(risk)* align risk-map warning paths with supported CLI commands
+
+### Other
+
+- *(govern)* sync accepted master v0.150.7 ([#1782](https://github.com/DecapodLabs/decapod/pull/1782))
+- *(proof)* refresh v0.148.13 projections and complete spec reviews
+- *(merge)* sync origin/master c5bafce6 (v0.148.13) and reconcile proof
+- *(merge)* sync origin/master caeeaba8 ([#1792](https://github.com/DecapodLabs/decapod/pull/1792))
+- *(proof)* reconcile reviewed source inventory for v0.148.12
+- *(merge)* sync origin/master v0.148.12
+
+## [0.150.7](https://github.com/DecapodLabs/decapod/compare/v0.150.6...v0.150.7) - 2026-11-19
+
+### Added
+
+- *(projection)* enforce measured-baseline performance budgets, degraded mode, and retention-stable receipts ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+
+### Other
+
+- *(projection)* sync accepted master d0ca8eb36 (v0.150.6) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+- *(projection)* integrate accepted master 1332f4ecd (v0.150.0) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+- *(governance)* record content-bound spec reviews for #1734
+- *(projection)* integrate accepted master 45369197e (v0.149.3) ([#1734](https://github.com/DecapodLabs/decapod/pull/1734))
+
+## [0.150.6](https://github.com/DecapodLabs/decapod/compare/v0.150.5...v0.150.6) - 2026-11-19
+
+### Added
+
+- *(integration)* add reversible repository integration removal ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.5 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(govern)* sync accepted master v0.150.4 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(govern)* sync accepted master v0.150.3 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(integration)* integrate accepted master v0.150.0 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+- *(integration)* integrate accepted master v0.149.3 ([#1704](https://github.com/DecapodLabs/decapod/pull/1704))
+
+## [0.150.5](https://github.com/DecapodLabs/decapod/compare/v0.150.4...v0.150.5) - 2026-11-19
+
+### Other
+
+- *(govern)* align living specs and governance continuation ([#1849](https://github.com/DecapodLabs/decapod/pull/1849))
+- remove duplicate Welcome header and give every page breathing room
+
+## [0.150.4](https://github.com/DecapodLabs/decapod/compare/v0.150.3...v0.150.4) - 2026-11-19
+
+### Other
+
+- *(govern)* sync accepted master v0.150.3 and align living specs ([#1847](https://github.com/DecapodLabs/decapod/pull/1847))
+- clarify agent-invoked Decapod application in docs/book/src/mental-model.md
+- clarify agent-invoked Decapod application in docs/book/src/introduction.md
+- clarify Decapod's agent-invoked application model in docs/book/src/index.md
+
+## [0.150.3](https://github.com/DecapodLabs/decapod/compare/v0.150.2...v0.150.3) - 2026-11-19
+
+### Added
+
+- *(lifecycle)* instruct agents to clean todo-scoped /tmp paths on PR creation ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.2 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.150.0 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* pre-sync accepted master e63599e3c ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(govern)* bind trajectory task id for publication material ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+- *(lifecycle)* integrate accepted master v0.149.3 ([#1798](https://github.com/DecapodLabs/decapod/pull/1798))
+
+## [0.150.2](https://github.com/DecapodLabs/decapod/compare/v0.150.1...v0.150.2) - 2026-11-19
+
+### Fixed
+
+- *(govern)* support integrity-preserving merged journal reconciliation ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.1 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* pass explicit git identity in reconcile-merge unit tests ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master v0.150.0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master e63599e3c ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master c845ae1d0 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* sync accepted master 1b3ca1b89 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+- *(govern)* integrate accepted master v0.149.3 ([#1780](https://github.com/DecapodLabs/decapod/pull/1780))
+
+## [0.150.1](https://github.com/DecapodLabs/decapod/compare/v0.150.0...v0.150.1) - 2026-11-19
+
+### Other
+
+- *(docs)* integrate accepted master v0.150.0 ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.1 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* integrate accepted master v0.149.1 ([#1052](https://github.com/DecapodLabs/decapod/pull/1052)) ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(docs)* refresh v0.149.0 projections ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+- *(book)* center BYOA and metacognitive kernel architecture ([#1789](https://github.com/DecapodLabs/decapod/pull/1789))
+
+## [0.150.0](https://github.com/DecapodLabs/decapod/compare/v0.149.3...v0.150.0) - 2026-11-19
+
+### Added
+
+- *(cloud)* adopt dactyl-db 0.18.0, cloud custody ([#1809](https://github.com/DecapodLabs/decapod/pull/1809)), and Local/Cloud branding (#1808, #1769)
+- *(workspace)* prove concurrent isolated authoring and combined candidate admission ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(concurrency)* harden and prove shared-state transition semantics ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+
+### Fixed
+
+- *(cloud)* align OWNER_REPAIR_V1_SQL wire marker and scrub private references
+- *(cloud)* gate KEYSTORE_SERVICE constant to macOS target
+- *(workunit)* isolate non-verified split-store writes while blocking VERIFIED promotion ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- *(container)* support delegated cgroup parent and cgroup permission diagnostics ([#1820](https://github.com/DecapodLabs/decapod/pull/1820))
+- *(concurrency)* keep Dactyl atomic_mutation event SQL static for sql_context gate ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+- *(validate)* make pre-capture lease TTL guard read-only by default ([#1810](https://github.com/DecapodLabs/decapod/pull/1810))
+- *(workunit)* converge split-store audit and prove #1660 VERIFIED transitions
+- *(validation)* private-repo verification, broker decoupling, and ergonomics (#1807, #1810)
+- *(scope)* preserve explicit path scopes across orientation and trajectory ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(security)* harden cross-surface accepted-policy resolution ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+
+### Other
+
+- *(merge)* integrate origin/master c845ae1d0 (v0.149.3, #1831) into #1820 branch
+- *(merge)* integrate origin/master 1b3ca1b89 (v0.149.3, #1760) into #1820 branch
+- *(validate)* integrate accepted master 1b3ca1b89 (v0.149.3)
+- *(specs)* record Buildkite 13224 transient ETXTBSY flake for fresh retry
+- *(merge)* integrate origin/master 755bbac6e (v0.149.3, #1828) into #1820 branch
+- *(scope)* integrate accepted master 755bbac6 ([#1828](https://github.com/DecapodLabs/decapod/pull/1828)) and refresh v0.149.3 projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(scope)* integrate accepted master 84f96738 ([#1660](https://github.com/DecapodLabs/decapod/pull/1660)) and refresh v0.149.3 projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(validate)* integrate accepted master 84f967382 (v0.149.3)
+- *(merge)* integrate origin/master 84f967382 (v0.149.3) into #1820 branch
+- *(specs)* refresh spec reviews after macOS cfg clippy fix
+- *(scope)* integrate accepted master 45369197 ([#1825](https://github.com/DecapodLabs/decapod/pull/1825)) and refresh v0.149.3 projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(specs)* record unchanged-with-reason reviews against 45369197e ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- reconcile PR #1823 ([#1660](https://github.com/DecapodLabs/decapod/pull/1660)) with origin/master 45369197e ([#1825](https://github.com/DecapodLabs/decapod/pull/1825))
+- *(specs)* refresh spec reviews for split-store isolation fix ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- *(validate)* integrate accepted master 89906b666 (v0.149.3)
+- *(scope)* integrate accepted master 89906b66 (v0.149.3) and refresh projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(workunit)* integrate accepted master 89906b666 ([#1660](https://github.com/DecapodLabs/decapod/pull/1660))
+- *(cloud)* align supabase batch event SQL assertion with #1247 post-condition guard
+- *(validate)* integrate accepted master 845ff9799 (v0.149.3)
+- *(concurrency)* integrate accepted master 845ff9799 ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+- *(concurrency)* integrate accepted master cfe2565da ([#1247](https://github.com/DecapodLabs/decapod/pull/1247))
+- *(workspace)* integrate accepted master cfe2565d ([#1776](https://github.com/DecapodLabs/decapod/pull/1776)) and refresh v0.149.3 projections ([#1469](https://github.com/DecapodLabs/decapod/pull/1469))
+- *(validate)* integrate accepted master cfe2565da (v0.149.3)
+- *(release)* pin managed Dockerfile.decapod to v0.149.3
+- *(release)* commit 0.149.3 Dockerfile and spec header refresh
+- *(validate)* reconcile v0.149.3 reviewed_sources_digest
+- *(security)* integrate accepted master v0.149.3 ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(validate)* set exact v0.149.3 reviewed_sources_digest
+- *(validate)* reconcile v0.149.3 Dockerfile pin and reviewed source digest
+- *(release)* refresh managed projections for 0.149.3
+- *(security)* integrate accepted master v0.149.2 ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(scope)* record v0.149.1 SECURITY.md spec review ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- Merge remote-tracking branch 'origin/master' into agent/swarm-scope-1760/bugs_01m7r50vhcx7h3pw-explicit-scope
+- *(scope)* reconcile worktree trajectory scope projections ([#1760](https://github.com/DecapodLabs/decapod/pull/1760))
+- *(security)* integrate accepted master 0b6ce0a8 ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(policy)* record SECURITY.md spec review ([#1776](https://github.com/DecapodLabs/decapod/pull/1776))
+- *(policy)* integrate accepted release 0.148.13
+
 ## [0.149.3](https://github.com/DecapodLabs/decapod/compare/v0.149.2...v0.149.3) - 2026-11-19
 
 ### Fixed

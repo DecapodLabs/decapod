@@ -49,6 +49,7 @@ fn execution() -> RepositoryExecution {
     RepositoryExecution {
         program: "/usr/bin/shellcheck".into(),
         toolchain_files,
+        platforms: BTreeMap::new(),
         environment: BTreeMap::new(),
         directory: ".".into(),
         timeout_seconds: 60,
@@ -571,4 +572,474 @@ fn policy_transition_approval_requires_exact_scope_actor_and_live_expiry() {
     )
     .unwrap();
     assert!(has_active_policy_transition_approval(repo_root, &transition_id).unwrap());
+}
+
+fn per_platform_execution() -> RepositoryExecution {
+    RepositoryExecution {
+        program: String::new(),
+        toolchain_files: BTreeMap::new(),
+        platforms: BTreeMap::from([
+            (
+                "linux-x86_64".into(),
+                PlatformExecution {
+                    program: "/nix/store/aaaa-shellcheck-linux/bin/shellcheck".into(),
+                    toolchain_files: BTreeMap::from([(
+                        "shellcheck".into(),
+                        "/nix/store/aaaa-shellcheck-linux/bin/shellcheck".into(),
+                    )]),
+                },
+            ),
+            (
+                "macos-aarch64".into(),
+                PlatformExecution {
+                    program: "/nix/store/bbbb-shellcheck-darwin/bin/shellcheck".into(),
+                    toolchain_files: BTreeMap::from([(
+                        "shellcheck".into(),
+                        "/nix/store/bbbb-shellcheck-darwin/bin/shellcheck".into(),
+                    )]),
+                },
+            ),
+        ]),
+        environment: BTreeMap::new(),
+        directory: ".".into(),
+        timeout_seconds: 60,
+    }
+}
+
+fn per_platform_contract() -> RepositoryContract {
+    let mut executions = BTreeMap::new();
+    executions.insert("lint".to_string(), per_platform_execution());
+    let mut contract = RepositoryContract {
+        canonical_local_target: false,
+        reviewed_commands_digest: String::new(),
+        source_coverage: mapped_coverage(),
+        executions,
+    };
+    contract.reviewed_commands_digest = command_contract_digest(&commands(), &contract).unwrap();
+    contract
+}
+
+#[test]
+fn legacy_single_platform_execution_preserves_json_and_digest() {
+    let legacy_json = r#"{"program":"/usr/bin/shellcheck","toolchain_files":{"shellcheck":"/usr/bin/shellcheck"},"environment":{},"directory":".","timeout_seconds":60}"#;
+    let parsed: RepositoryExecution = serde_json::from_str(legacy_json).unwrap();
+    assert_eq!(parsed, execution());
+    assert_eq!(serde_json::to_string(&parsed).unwrap(), legacy_json);
+
+    let sources = inventory();
+    let contract = contract(mapped_coverage());
+    let expected = crate::core::readiness_evidence::digest(&(
+        REQUIRED_PROFILE,
+        &commands(),
+        &contract.source_coverage,
+        &contract.executions,
+    ))
+    .unwrap();
+    assert_eq!(contract.reviewed_commands_digest, expected);
+    validate_contract(&declaration(&sources), &sources, &commands(), &contract).unwrap();
+}
+
+#[test]
+fn per_platform_execution_parses_from_toml_validates_and_pins_all_platforms_in_digest() {
+    #[derive(serde::Deserialize)]
+    struct ConfigDoc {
+        executions: BTreeMap<String, RepositoryExecution>,
+    }
+    let doc: ConfigDoc = toml::from_str(
+        r#"
+[executions.lint]
+directory = "."
+timeout_seconds = 60
+
+[executions.lint.platforms.linux-x86_64]
+program = "/nix/store/aaaa-shellcheck-linux/bin/shellcheck"
+toolchain_files = { shellcheck = "/nix/store/aaaa-shellcheck-linux/bin/shellcheck" }
+
+[executions.lint.platforms.macos-aarch64]
+program = "/nix/store/bbbb-shellcheck-darwin/bin/shellcheck"
+toolchain_files = { shellcheck = "/nix/store/bbbb-shellcheck-darwin/bin/shellcheck" }
+"#,
+    )
+    .unwrap();
+    let contract = per_platform_contract();
+    assert_eq!(doc.executions, contract.executions);
+
+    let sources = inventory();
+    validate_contract(&declaration(&sources), &sources, &commands(), &contract).unwrap();
+    let catalog = required_catalog(
+        &declaration(&sources),
+        &sources,
+        &facts(),
+        &commands(),
+        &contract,
+    )
+    .unwrap();
+    assert_eq!(catalog.obligations().len(), 1);
+
+    // Deterministic across repeated invocations.
+    assert_eq!(
+        command_contract_digest(&commands(), &contract).unwrap(),
+        contract.reviewed_commands_digest
+    );
+
+    // Mutating any platform entry (program, toolchain_files, or adding/removing a platform)
+    // invalidates the reviewed digest.
+    for mutation in ["program", "toolchain", "add-platform", "remove-platform"] {
+        let mut mutated = contract.clone();
+        let platforms = &mut mutated.executions.get_mut("lint").unwrap().platforms;
+        match mutation {
+            "program" => {
+                platforms.get_mut("linux-x86_64").unwrap().program =
+                    "/nix/store/cccc-shellcheck-linux/bin/shellcheck".into();
+            }
+            "toolchain" => {
+                platforms
+                    .get_mut("macos-aarch64")
+                    .unwrap()
+                    .toolchain_files
+                    .insert(
+                        "libc".into(),
+                        "/nix/store/dddd/lib/libSystem.B.dylib".into(),
+                    );
+            }
+            "add-platform" => {
+                platforms.insert(
+                    "linux-aarch64".into(),
+                    PlatformExecution {
+                        program: "/nix/store/eeee-shellcheck-arm64/bin/shellcheck".into(),
+                        toolchain_files: BTreeMap::from([(
+                            "shellcheck".into(),
+                            "/nix/store/eeee-shellcheck-arm64/bin/shellcheck".into(),
+                        )]),
+                    },
+                );
+            }
+            "remove-platform" => {
+                platforms.remove("macos-aarch64");
+            }
+            _ => unreachable!(),
+        }
+        assert_ne!(
+            command_contract_digest(&commands(), &mutated).unwrap(),
+            contract.reviewed_commands_digest,
+            "{mutation} must change command_contract_digest"
+        );
+        let error =
+            validate_contract(&declaration(&sources), &sources, &commands(), &mutated).unwrap_err();
+        assert!(
+            error.to_string().contains("STALE_COMMAND_CONTRACT"),
+            "{mutation}: unexpected error: {error}"
+        );
+    }
+}
+
+#[test]
+fn per_platform_schema_rejects_unknown_fields_and_duplicate_keys_in_toml() {
+    let unknown_field = toml::from_str::<RepositoryExecution>(
+        r#"
+directory = "."
+timeout_seconds = 60
+
+[platforms.linux-x86_64]
+program = "/nix/store/aaaa/bin/shellcheck"
+toolchain_files = { shellcheck = "/nix/store/aaaa/bin/shellcheck" }
+extra = "forbidden"
+"#,
+    );
+    assert!(unknown_field.is_err());
+
+    let duplicate_key = toml::from_str::<RepositoryExecution>(
+        r#"
+directory = "."
+timeout_seconds = 60
+
+[platforms.linux-x86_64]
+program = "/nix/store/aaaa/bin/shellcheck"
+toolchain_files = { shellcheck = "/nix/store/aaaa/bin/shellcheck" }
+
+[platforms.linux-x86_64]
+program = "/nix/store/bbbb/bin/shellcheck"
+toolchain_files = { shellcheck = "/nix/store/bbbb/bin/shellcheck" }
+"#,
+    );
+    assert!(duplicate_key.is_err());
+}
+
+#[test]
+fn per_platform_validation_rejects_invalid_keys_mixed_fields_relative_paths_and_substitution() {
+    let sources = inventory();
+    for bad_key in [
+        "",
+        "linux",
+        "darwin-arm64",
+        "linux-x86_64 ",
+        "Linux-X86_64",
+        "windows-x86_64",
+        "x86_64-unknown-linux-gnu",
+    ] {
+        let mut contract = per_platform_contract();
+        let entry = contract
+            .executions
+            .get_mut("lint")
+            .unwrap()
+            .platforms
+            .remove("linux-x86_64")
+            .unwrap();
+        contract
+            .executions
+            .get_mut("lint")
+            .unwrap()
+            .platforms
+            .insert(bad_key.into(), entry);
+        contract.reviewed_commands_digest =
+            command_contract_digest(&commands(), &contract).unwrap();
+        let err = validate_contract(&declaration(&sources), &sources, &commands(), &contract)
+            .unwrap_err();
+        assert!(
+            err.to_string().contains("unsupported platform key"),
+            "{bad_key:?}: {err}"
+        );
+    }
+
+    // Mixing top-level program/toolchain_files with platforms is forbidden.
+    for mix in ["program", "toolchain_files"] {
+        let mut contract = per_platform_contract();
+        let exec = contract.executions.get_mut("lint").unwrap();
+        match mix {
+            "program" => exec.program = "/usr/bin/shellcheck".into(),
+            "toolchain_files" => {
+                exec.toolchain_files
+                    .insert("extra".into(), "/usr/bin/shellcheck".into());
+            }
+            _ => unreachable!(),
+        }
+        contract.reviewed_commands_digest =
+            command_contract_digest(&commands(), &contract).unwrap();
+        let err = validate_contract(&declaration(&sources), &sources, &commands(), &contract)
+            .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("cannot mix top-level program/toolchain_files with platforms"),
+            "{mix}: {err}"
+        );
+    }
+
+    // Empty platforms with omitted program/toolchain_files is forbidden.
+    let mut empty_platforms = per_platform_contract();
+    empty_platforms
+        .executions
+        .get_mut("lint")
+        .unwrap()
+        .platforms
+        .clear();
+    empty_platforms.reviewed_commands_digest =
+        command_contract_digest(&commands(), &empty_platforms).unwrap();
+    assert!(
+        validate_contract(
+            &declaration(&sources),
+            &sources,
+            &commands(),
+            &empty_platforms
+        )
+        .is_err()
+    );
+
+    // Relative paths, empty toolchain_files, reserved label, and executable substitution fail closed.
+    for defect in [
+        "rel-program",
+        "rel-toolchain",
+        "empty-toolchain",
+        "program-label",
+        "substituted-binary",
+    ] {
+        let mut contract = per_platform_contract();
+        let entry = contract
+            .executions
+            .get_mut("lint")
+            .unwrap()
+            .platforms
+            .get_mut("macos-aarch64")
+            .unwrap();
+        match defect {
+            "rel-program" => entry.program = "bin/shellcheck".into(),
+            "rel-toolchain" => {
+                entry
+                    .toolchain_files
+                    .insert("runtime".into(), "lib/runtime.so".into());
+            }
+            "empty-toolchain" => entry.toolchain_files.clear(),
+            "program-label" => {
+                entry
+                    .toolchain_files
+                    .insert("program".into(), "/usr/bin/shellcheck".into());
+            }
+            "substituted-binary" => {
+                entry.program = "/nix/store/bbbb-bash/bin/sh".into();
+            }
+            _ => unreachable!(),
+        }
+        contract.reviewed_commands_digest =
+            command_contract_digest(&commands(), &contract).unwrap();
+        assert!(
+            validate_contract(&declaration(&sources), &sources, &commands(), &contract).is_err(),
+            "{defect} should fail validation"
+        );
+    }
+}
+
+#[test]
+fn preserve_accepted_rejects_candidate_platform_add_remove_or_modify_and_allows_additive_check() {
+    let accepted_commands = commands();
+    let accepted = per_platform_contract();
+    preserve_accepted(
+        &accepted_commands,
+        Some(&accepted),
+        &accepted_commands,
+        Some(&accepted),
+    )
+    .unwrap();
+
+    for change in [
+        "add-platform",
+        "remove-platform",
+        "modify-program",
+        "modify-toolchain",
+        "switch-to-single",
+    ] {
+        let mut candidate = accepted.clone();
+        let exec = candidate.executions.get_mut("lint").unwrap();
+        match change {
+            "add-platform" => {
+                exec.platforms.insert(
+                    "macos-x86_64".into(),
+                    PlatformExecution {
+                        program: "/nix/store/cccc-shellcheck/bin/shellcheck".into(),
+                        toolchain_files: BTreeMap::from([(
+                            "shellcheck".into(),
+                            "/nix/store/cccc-shellcheck/bin/shellcheck".into(),
+                        )]),
+                    },
+                );
+            }
+            "remove-platform" => {
+                exec.platforms.remove("linux-x86_64");
+            }
+            "modify-program" => {
+                exec.platforms.get_mut("linux-x86_64").unwrap().program =
+                    "/nix/store/evil-shellcheck/bin/shellcheck".into();
+            }
+            "modify-toolchain" => {
+                exec.platforms
+                    .get_mut("macos-aarch64")
+                    .unwrap()
+                    .toolchain_files
+                    .insert("extra".into(), "/nix/store/evil/lib/x".into());
+            }
+            "switch-to-single" => {
+                exec.platforms.clear();
+                exec.program = "/usr/bin/shellcheck".into();
+                exec.toolchain_files
+                    .insert("shellcheck".into(), "/usr/bin/shellcheck".into());
+            }
+            _ => unreachable!(),
+        }
+        candidate.reviewed_commands_digest =
+            command_contract_digest(&accepted_commands, &candidate).unwrap();
+        let err = preserve_accepted(
+            &accepted_commands,
+            Some(&candidate),
+            &accepted_commands,
+            Some(&accepted),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{change}: {err}"
+        );
+    }
+
+    // Switching an accepted single-platform contract to per-platform also fails closed.
+    let accepted_single = contract(mapped_coverage());
+    let err = preserve_accepted(
+        &accepted_commands,
+        Some(&accepted),
+        &accepted_commands,
+        Some(&accepted_single),
+    )
+    .unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED")
+    );
+
+    // Additive new required check with per-platform declarations preserves accepted checks.
+    let mut additive_commands = accepted_commands.clone();
+    additive_commands.push(ProofDef {
+        name: "lint-extra".into(),
+        command: "shellcheck".into(),
+        args: vec!["scripts/extra.sh".into()],
+        description: String::new(),
+        required: true,
+    });
+    let mut additive_contract = accepted.clone();
+    additive_contract
+        .executions
+        .insert("lint-extra".into(), per_platform_execution());
+    additive_contract.source_coverage[0]
+        .commands
+        .push("lint-extra".into());
+    additive_contract.reviewed_commands_digest =
+        command_contract_digest(&additive_commands, &additive_contract).unwrap();
+    preserve_accepted(
+        &additive_commands,
+        Some(&additive_contract),
+        &accepted_commands,
+        Some(&accepted),
+    )
+    .unwrap();
+}
+
+#[test]
+fn resolve_for_platform_selects_only_matching_host_and_fails_closed_otherwise() {
+    use crate::core::native_proof::NativePlatform;
+
+    let exec = per_platform_execution();
+    let (linux_prog, linux_tc) = exec
+        .resolve_for_platform(NativePlatform::LinuxX86_64)
+        .unwrap();
+    assert_eq!(
+        linux_prog,
+        "/nix/store/aaaa-shellcheck-linux/bin/shellcheck"
+    );
+    assert_eq!(
+        linux_tc["shellcheck"],
+        "/nix/store/aaaa-shellcheck-linux/bin/shellcheck"
+    );
+
+    let (macos_prog, macos_tc) = exec
+        .resolve_for_platform(NativePlatform::MacosAarch64)
+        .unwrap();
+    assert_eq!(
+        macos_prog,
+        "/nix/store/bbbb-shellcheck-darwin/bin/shellcheck"
+    );
+    assert_eq!(
+        macos_tc["shellcheck"],
+        "/nix/store/bbbb-shellcheck-darwin/bin/shellcheck"
+    );
+
+    let missing_err = exec
+        .resolve_for_platform(NativePlatform::LinuxAarch64)
+        .unwrap_err();
+    assert!(
+        missing_err
+            .to_string()
+            .contains("MISSING_PLATFORM_EXECUTION")
+    );
+
+    let unsupported_err = exec
+        .resolve_for_platform(NativePlatform::WindowsX86_64)
+        .unwrap_err();
+    assert!(unsupported_err.to_string().contains("UNSUPPORTED_PLATFORM"));
 }

@@ -424,9 +424,30 @@ fn challenges(
     Ok(result)
 }
 
+#[cfg(test)]
+std::thread_local! {
+    static TEST_ACTOR_OVERRIDE: std::cell::RefCell<Option<String>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+fn resolve_reflection_actor() -> Result<String, DecapodError> {
+    #[cfg(test)]
+    if let Some(actor) = TEST_ACTOR_OVERRIDE.with(|cell| cell.borrow().clone()) {
+        if todo::is_missing_or_unknown_actor(&actor) {
+            return Err(todo::authoring_actor_required_error());
+        }
+        return Ok(actor);
+    }
+    let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_default();
+    if todo::is_missing_or_unknown_actor(&actor) {
+        return Err(todo::authoring_actor_required_error());
+    }
+    Ok(actor)
+}
+
 fn custody(root: &Path, task_id: &str) -> Result<String, DecapodError> {
     let store = find_governance_root(root).join(".decapod/data");
-    let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".into());
+    let actor = resolve_reflection_actor()?;
     digest(&todo::capture_execution_custody(&store, task_id, &actor)?)
 }
 

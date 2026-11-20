@@ -279,18 +279,60 @@ fn cloud_datastore_selection_defaults_to_supabase_and_preserves_explicit_neon() 
 }
 
 #[test]
-fn supabase_requires_explicit_service_endpoint_and_never_uses_neon_default() {
-    let config = crate::cli::CloudRuntimeConfig {
+fn unconfigured_cloud_datastores_fail_closed_and_allow_explicit_opt_in() {
+    let empty_supabase = crate::cli::CloudRuntimeConfig {
         provider: "vercel".to_string(),
-        api_url: crate::cli::PROPODUS_VERCEL_NEON_ENTRYPOINT.to_string(),
+        api_url: String::new(),
         datastore: "supabase".to_string(),
     };
-    assert!(config.validate_datastore().is_err());
-    let config = crate::cli::CloudRuntimeConfig {
+    let supabase_err = empty_supabase.validate_datastore().unwrap_err();
+    assert!(supabase_err.to_string().contains("DECAPOD_CLOUD_API_URL"));
+
+    let empty_neon = crate::cli::CloudRuntimeConfig {
         datastore: "neon".to_string(),
-        ..config
+        ..empty_supabase
     };
-    assert!(config.validate_datastore().is_ok());
+    let neon_err = empty_neon.validate_datastore().unwrap_err();
+    assert!(neon_err.to_string().contains("DECAPOD_CLOUD_API_URL"));
+
+    let explicit_neon = crate::cli::CloudRuntimeConfig {
+        provider: "vercel".to_string(),
+        api_url: "https://cloud.example.test".to_string(),
+        datastore: "neon".to_string(),
+    };
+    assert!(explicit_neon.validate_datastore().is_ok());
+}
+
+#[test]
+fn canonical_cloud_env_vars_precede_legacy_aliases_with_deprecation_notice() {
+    let (resolved, notice) = crate::cli::resolve_cloud_env_var_with(
+        crate::cli::CLOUD_API_URL_ENV,
+        crate::cli::LEGACY_PROPODUS_API_URL_ENV,
+        |key| match key {
+            "DECAPOD_CLOUD_API_URL" => Some("https://canonical.example.test".to_string()),
+            "DECAPOD_PROPODUS_API_URL" => Some("https://legacy.example.test".to_string()),
+            _ => None,
+        },
+    );
+    assert_eq!(resolved.as_deref(), Some("https://canonical.example.test"));
+    assert!(notice.is_none());
+
+    let (legacy_resolved, legacy_notice) = crate::cli::resolve_cloud_env_var_with(
+        crate::cli::CLOUD_API_URL_ENV,
+        crate::cli::LEGACY_PROPODUS_API_URL_ENV,
+        |key| match key {
+            "DECAPOD_PROPODUS_API_URL" => Some("https://legacy.example.test".to_string()),
+            _ => None,
+        },
+    );
+    assert_eq!(
+        legacy_resolved.as_deref(),
+        Some("https://legacy.example.test")
+    );
+    let legacy_notice = legacy_notice.expect("legacy alias must emit structured deprecation");
+    assert_eq!(legacy_notice.code, "DEPRECATED_ENV_VAR");
+    assert_eq!(legacy_notice.deprecated, "DECAPOD_PROPODUS_API_URL");
+    assert_eq!(legacy_notice.replacement, "DECAPOD_CLOUD_API_URL");
 }
 
 #[cfg(feature = "supabase-cloud")]

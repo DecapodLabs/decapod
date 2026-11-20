@@ -170,6 +170,34 @@ pub fn db_connect_read_pooled(
     )
 }
 
+/// Establish a strictly read-only, fail-fast bounded connection for observer
+/// projections (#1734).
+///
+/// Unlike writer or pooled retry loops, this performs a single bounded open
+/// attempt within `timeout` using `StorageLockMode::Shared` and
+/// `AccessMode::ReadOnly` so projection readers never pile up behind or
+/// disrupt governed writers; contention surfaces cleanly for degraded-mode
+/// reporting.
+pub fn db_connect_readonly_bounded(
+    db_path: &str,
+    timeout: Duration,
+) -> Result<Connection, error::DecapodError> {
+    let db_path = Path::new(db_path);
+    let bounded = timeout.max(Duration::from_millis(1));
+    if let Some(conn) = owner_connection(db_path, dactyl_db::AccessMode::ReadOnly, bounded)? {
+        return Ok(conn);
+    }
+    storage_preflight_for_db(db_path, false)?;
+    let storage_lock = StorageLock::acquire(db_path, StorageLockMode::Shared, bounded)?;
+    Connection::open_with_options_and_storage_lock(
+        db_path,
+        dactyl_db::AccessMode::ReadOnly,
+        bounded,
+        Some(storage_lock),
+    )
+    .map_err(error::DecapodError::StorageError)
+}
+
 /// Discover live foreground ownership before taking any physical datastore lock.
 /// Transport errors never fall through to another local execution attempt.
 fn owner_connection(

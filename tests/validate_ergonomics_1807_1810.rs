@@ -95,6 +95,7 @@ fn apply_proof_profile(main_repo: &Path, config: &mut toml::Value) {
         RepositoryExecution {
             program: test_str,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::new(),
             directory: ".".to_string(),
             timeout_seconds: 30,

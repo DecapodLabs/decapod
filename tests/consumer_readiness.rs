@@ -1797,3 +1797,276 @@ fn decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_ap
     blocked(&fixture.validate(&mut host), "REQUIRED_PROFILE_DOWNGRADE");
     assert_eq!(host.selections, 0);
 }
+
+fn convert_fixture_to_per_platform(fixture: &mut Fixture) -> String {
+    use decapod::core::native_proof::NativePlatform;
+    use decapod::core::repository_profile::{CANONICAL_PLATFORM_KEYS, PlatformExecution};
+    use std::collections::BTreeMap;
+    use std::path::Path;
+
+    let current_key = repository_profile::platform_key(NativePlatform::current().unwrap())
+        .unwrap()
+        .to_string();
+    let sample_exec = fixture
+        .proof
+        .repository_contract
+        .as_ref()
+        .unwrap()
+        .executions
+        .values()
+        .next()
+        .unwrap()
+        .clone();
+    let bin_name = Path::new(&sample_exec.program)
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned();
+    for command in &mut fixture.proof.commands {
+        command.command = bin_name.clone();
+    }
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    for execution in contract.executions.values_mut() {
+        let host_entry = PlatformExecution {
+            program: std::mem::take(&mut execution.program),
+            toolchain_files: std::mem::take(&mut execution.toolchain_files),
+        };
+        let mut platforms = BTreeMap::new();
+        for key in CANONICAL_PLATFORM_KEYS {
+            if key == current_key {
+                platforms.insert(key.to_string(), host_entry.clone());
+            } else {
+                platforms.insert(
+                    key.to_string(),
+                    PlatformExecution {
+                        program: format!("/nix/store/nonexistent-{key}/bin/{bin_name}"),
+                        toolchain_files: BTreeMap::from([(
+                            "runtime".into(),
+                            format!("/nix/store/nonexistent-{key}/lib/runtime"),
+                        )]),
+                    },
+                );
+            }
+        }
+        execution.platforms = platforms;
+    }
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("configure reviewed per-platform executables");
+    current_key
+}
+
+#[test]
+fn per_platform_contract_selects_and_executes_current_host_native_executable() {
+    let mut fixture = Fixture::new();
+    let current_key = convert_fixture_to_per_platform(&mut fixture);
+    // Also attach an owned runtime closure file to the current host platform entry
+    // so before/after measurement covers both the native binary and declared closure.
+    let owned_closure = fixture._storage.path().join("owned-host-closure.txt");
+    fs::write(&owned_closure, b"reviewed host closure\n").unwrap();
+    for execution in fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .values_mut()
+    {
+        execution
+            .platforms
+            .get_mut(&current_key)
+            .unwrap()
+            .toolchain_files
+            .insert(
+                "owned-host-closure".into(),
+                owned_closure
+                    .canonicalize()
+                    .unwrap()
+                    .to_string_lossy()
+                    .into(),
+            );
+    }
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("add owned host closure to per-platform entry");
+
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(report.exit_code(), 0);
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+    let directory = report.evidence_path.unwrap();
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(directory.join("observations.json")).unwrap()).unwrap();
+    assert_eq!(evidence.results.len(), 2);
+    assert!(evidence.results.iter().all(|result| matches!(
+        result.observation,
+        Observation::Executed {
+            conclusion: Conclusion::Success,
+            exit_code: Some(0),
+            ..
+        }
+    )));
+    assert!(
+        directory
+            .join("completion/native-readiness-receipt.json")
+            .is_file()
+    );
+}
+
+#[test]
+fn per_platform_contract_rejects_missing_host_platform_and_incompatible_native_format() {
+    // 1. Missing current host platform fails closed before execution.
+    let mut missing_fixture = Fixture::new();
+    let current_key = convert_fixture_to_per_platform(&mut missing_fixture);
+    for execution in missing_fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .values_mut()
+    {
+        execution.platforms.remove(&current_key);
+    }
+    missing_fixture.review_commands();
+    missing_fixture.save_config();
+    missing_fixture.commit("omit current host platform");
+    let mut missing_host = missing_fixture.host();
+    let missing_report = missing_fixture.validate(&mut missing_host);
+    blocked(&missing_report, "MISSING_PLATFORM_EXECUTION");
+    assert_eq!(missing_host.execution_attempts, 0);
+
+    // 2. Host platform pointing to a foreign-architecture binary fails closed at native execution.
+    let mut wrong_fmt_fixture = Fixture::new();
+    let current_key = convert_fixture_to_per_platform(&mut wrong_fmt_fixture);
+    let foreign_dir = wrong_fmt_fixture._storage.path().join("foreign-bin");
+    fs::create_dir(&foreign_dir).unwrap();
+    let bin_name = wrong_fmt_fixture.proof.commands[0].command.clone();
+    let foreign_bin = foreign_dir.join(&bin_name);
+    // Minimal 64-byte foreign header: ELF x86_64 on macOS, Mach-O arm64 on Linux.
+    let mut header = vec![0u8; 64];
+    let (expected_detected, expected_host_phrase) = if cfg!(target_os = "macos") {
+        header[0..4].copy_from_slice(b"\x7fELF");
+        header[4] = 2; // 64-bit
+        header[5] = 1; // little-endian
+        header[18..20].copy_from_slice(&0x3Eu16.to_le_bytes()); // x86_64
+        ("ELF x86_64", "native macOS validation requires Mach-O")
+    } else {
+        header[0..4].copy_from_slice(&[0xcf, 0xfa, 0xed, 0xfe]); // MH_MAGIC_64 little-endian
+        header[4..8].copy_from_slice(&0x0100_000Cu32.to_le_bytes()); // arm64
+        ("Mach-O arm64", "native Linux validation requires ELF")
+    };
+    fs::write(&foreign_bin, &header).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&foreign_bin, fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    let foreign_bin = foreign_bin.canonicalize().unwrap();
+    let foreign_path = foreign_bin.to_string_lossy().into_owned();
+    for execution in wrong_fmt_fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .executions
+        .values_mut()
+    {
+        let entry = execution.platforms.get_mut(&current_key).unwrap();
+        entry.program = foreign_path.clone();
+        entry.toolchain_files.clear();
+        entry
+            .toolchain_files
+            .insert("tool".into(), foreign_path.clone());
+    }
+    wrong_fmt_fixture.review_commands();
+    wrong_fmt_fixture.save_config();
+    wrong_fmt_fixture.commit("point host platform at foreign executable");
+    let mut wrong_host = wrong_fmt_fixture.host();
+    let wrong_report = wrong_fmt_fixture.validate(&mut wrong_host);
+    assert!(!wrong_report.ready, "{wrong_report:?}");
+    assert!(!wrong_report.proof_ready);
+    assert_eq!(wrong_host.execution_attempts, 1);
+    blocked(&wrong_report, &foreign_path);
+    blocked(&wrong_report, expected_detected);
+    blocked(&wrong_report, expected_host_phrase);
+    if let Some(evidence_dir) = wrong_report.evidence_path.as_ref() {
+        assert!(
+            !evidence_dir
+                .join("completion/native-readiness-receipt.json")
+                .exists()
+        );
+    }
+}
+
+#[test]
+fn per_platform_accepted_contract_rejects_candidate_platform_changes() {
+    use decapod::core::native_proof::NativePlatform;
+
+    let current_key = repository_profile::platform_key(NativePlatform::current().unwrap()).unwrap();
+    let non_host_key = if current_key == "linux-x86_64" {
+        "macos-aarch64"
+    } else {
+        "linux-x86_64"
+    };
+
+    for mutation in [
+        "modify-non-host-program",
+        "modify-non-host-toolchain",
+        "remove-non-host-platform",
+        "switch-to-single",
+    ] {
+        let mut fixture = Fixture::new();
+        convert_fixture_to_per_platform(&mut fixture);
+        // Accept the multi-platform contract on main before the candidate modifies it.
+        git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+        git(&fixture.options.root, &["fetch", "origin", "main"]);
+
+        let execution = fixture
+            .proof
+            .repository_contract
+            .as_mut()
+            .unwrap()
+            .executions
+            .get_mut("inspect-second")
+            .unwrap();
+        match mutation {
+            "modify-non-host-program" => {
+                let bin_name = fixture.proof.commands[0].command.clone();
+                execution.platforms.get_mut(non_host_key).unwrap().program =
+                    format!("/nix/store/evil-{non_host_key}/bin/{bin_name}");
+            }
+            "modify-non-host-toolchain" => {
+                execution
+                    .platforms
+                    .get_mut(non_host_key)
+                    .unwrap()
+                    .toolchain_files
+                    .insert("injected".into(), "/nix/store/evil/lib/x".into());
+            }
+            "remove-non-host-platform" => {
+                execution.platforms.remove(non_host_key);
+            }
+            "switch-to-single" => {
+                let host_entry = execution.platforms.remove(current_key).unwrap();
+                execution.platforms.clear();
+                execution.program = host_entry.program;
+                execution.toolchain_files = host_entry.toolchain_files;
+            }
+            _ => unreachable!(),
+        }
+        fixture.review_commands();
+        fixture.save_config();
+        fixture.commit("repin candidate change to accepted per-platform contract");
+        let mut host = fixture.host();
+        blocked(
+            &fixture.validate(&mut host),
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+        );
+        assert_eq!(host.selections, 0, "{mutation}");
+        assert_eq!(host.execution_attempts, 0, "{mutation}");
+    }
+}

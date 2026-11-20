@@ -464,6 +464,7 @@ impl TestRepo {
                 RepositoryExecution {
                     program,
                     toolchain_files,
+                    platforms: BTreeMap::new(),
                     environment: BTreeMap::new(),
                     directory: ".".into(),
                     timeout_seconds: 15,
@@ -786,6 +787,7 @@ fn candidate_base_branch_self_selection_cannot_bypass_accepted_gates_or_proof() 
             RepositoryExecution {
                 program,
                 toolchain_files,
+                platforms: BTreeMap::new(),
                 environment: BTreeMap::new(),
                 directory: ".".into(),
                 timeout_seconds: 15,
