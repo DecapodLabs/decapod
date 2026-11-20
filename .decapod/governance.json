@@ -989,6 +989,16 @@
         "tests/cli_contract_enforcement.rs",
         "tests/consumer_readiness.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1561-release-alignment-14",
+      "summary": "Preserve the tested CLI repair and align its publication material with v0.156.1",
+      "input_digest": "sha256:ecc0059ad50a26b38b46cdb2e935ffac4e6323f425395ce90f32c5e4d5c234ca",
+      "proof_refs": [
+        "CHANGELOG.md",
+        "assets/tools/release_projection_drift_tests.rs",
+        "tests/consumer_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -1029,24 +1039,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Integrated the accepted selected-work revision binding into the existing plan and readiness architecture.",
-          "reviewed_code_fingerprint": "6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481",
+          "reason": "The accepted patch release advances the package version and its generated projections. The selected-work approval architecture remains present in this candidate.",
+          "reviewed_code_fingerprint": "ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved the accepted revision field and typed plan reapproval diagnostic.",
-          "reviewed_code_fingerprint": "6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481",
+          "reason": "The accepted release advances the displayed version. The integrated selected-work readiness and context interfaces preserve their contracts.",
+          "reviewed_code_fingerprint": "ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd",
           "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved the strict-profile downgrade fixture and verified its runtime refusal after explicit approval.",
-          "reviewed_code_fingerprint": "6f97cf2cb02b619f99c1edd83524033ba54dbb9daf9a9839d285f8c521d8e481",
+          "reason": "The patch release carries the previously reviewed approval gate and the repaired downgrade control. The reviewed inventory delta contains only the two Cargo version files.",
+          "reviewed_code_fingerprint": "ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd",
           "spec_material_hash": "43b6c979dc3a9a9b5df4b6f2f5c4f38b4dd6408c760af9ee3c41b37b9f12fb0c"
         }
       ],
@@ -1058,13 +1068,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218177Z"
+      "updated_at": "1795218559Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:13071995f01c2dcf8ed2a61e6002cadbe24e9ffb8e700a3d4685a4d8aee03f2c",
+      "artifact_hash": "sha256:4a81c676b6396714d1842eae54eba6b54640511cc89be40f27900e2fdac8191d",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -1139,6 +1149,18 @@
           "status": "failed"
         },
         {
+          "name": "Local project prerequisites after projection refresh",
+          "status": "partial"
+        },
+        {
+          "name": "Old PR publication material after accepted base movement",
+          "status": "failed"
+        },
+        {
+          "name": "Reviewed all 107 verification source paths; Cargo version changes only",
+          "status": "passed"
+        },
+        {
           "name": "Rust formatting and diff whitespace",
           "status": "passed"
         },
@@ -1188,6 +1210,14 @@
         },
         {
           "name": "reflection-suite",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.1 exact CLI downgrade control",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.1 release-projection tests (16 cases)",
           "status": "passed"
         },
         {
@@ -1314,10 +1344,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 18
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:19",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 19
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 18,
+        "next_sequence": 19,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1584,6 +1621,30 @@
                 ],
                 "sequence": 18,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:19",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136636021953",
+                  "https://github.com/DecapodLabs/decapod/pull/1875",
+                  "Local project check reported VALIDATE_TIMEOUT_OR_LOCK after generating updated projections",
+                  "Exact CLI test log sha256:2b98ebaea4a91b7c33486e840c01365ad0cbade6402b8290114a4d9b7121dd63",
+                  "Release policy test log sha256:ed98aa1d684b9135cb94a14291382629c40992396ec5163bbe1ca60bfe71b3e8",
+                  "Reviewed inventory sha256:e5586821ec8549128d7965f2a6ed24496d7aaa0961916a7a5cbc7578d7f81910"
+                ],
+                "proof_refs": [
+                  "Old PR publication material after accepted base movement",
+                  "Reviewed all 107 verification source paths; Cargo version changes only",
+                  "v0.156.1 release-projection tests (16 cases)",
+                  "v0.156.1 exact CLI downgrade control",
+                  "Local project prerequisites after projection refresh"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 19,
+                "validation_findings": []
               }
             ]
           }
@@ -1598,20 +1659,26 @@
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
         "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
+        "Exact CLI test log sha256:2b98ebaea4a91b7c33486e840c01365ad0cbade6402b8290114a4d9b7121dd63",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
         "Integrated focused test log sha256:7cb2c5c5c3fe453f8caaa811d5a97ca0e7a7d6b9f05cbe5077a647941ef00a49",
         "Integrated the immutable v0.155.1 target 2e206d26. Prior candidate GitHub CLI and core suites passed, while checkpoint and push context rejected the advanced target. Retained accepted release-entrypoint integrity and all prior checkpoints. Reviewed 107 source paths, with changes to the two Cargo version declarations and accepted release projection fixture. Current smoke ran in 13580ms within the unchanged 20000ms budget. All 16 release projection policy tests passed. Local project-check generated matching projections but returned a failure on the host with container custody, shared task proof and staged merge findings. No local full readiness is claimed.",
         "Local before log sha256:0437e9da54f92c4e1a293d40d16bca66c52ac297923b629e6069d4beaea72857",
         "Local fixed test log sha256:10e22ff5c4d2dd7584e5a145d6c48f13ab19b831f302e16cc5064304ac8412ac",
         "Local full CLI log sha256:4090048134d59e64a2c92791f1e001badd9dee043562360f88438a01830d260e",
+        "Local project check reported VALIDATE_TIMEOUT_OR_LOCK after generating updated projections",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified.",
+        "Release policy test log sha256:ed98aa1d684b9135cb94a14291382629c40992396ec5163bbe1ca60bfe71b3e8",
+        "Reviewed inventory sha256:e5586821ec8549128d7965f2a6ed24496d7aaa0961916a7a5cbc7578d7f81910",
         "The maintainer merged release cut #1870 to ba21c8f1 while source checks were running. The accepted delta contained only Cargo package metadata and release notes. Retained unreleased work, current v0.156.0 projections and all ten checkpoints. The unchanged validation bound passed in 10536ms across three runs; 16 release policy cases passed. The host-local project check generated the expected projections then returned VALIDATE_TIMEOUT_OR_LOCK for shared storage contention. No local full readiness claim. GitHub requires independent approval from a collaborator on #1864.",
         "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte.",
         "https://github.com/DecapodLabs/decapod/actions/runs/44829768980/job/136613811669",
         "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841",
-        "https://github.com/DecapodLabs/decapod/pull/1873"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136636021953",
+        "https://github.com/DecapodLabs/decapod/pull/1873",
+        "https://github.com/DecapodLabs/decapod/pull/1875"
       ],
       "inspected_files": [
         "assets/tools/source_ci/standalone-validation.sh",
@@ -1633,6 +1700,7 @@
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
         "publish-ci-repair",
+        "push-current-candidate",
         "reconcile-accepted-release"
       ],
       "repo_scope": [

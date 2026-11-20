@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repetition-biased advisory selection, arbitrary no-match context, expired knowledge projection and non-atomic supersession.
 - Complete context-envelope budgeting and stale knowledge/plan checks on continuation bundles.
 
+## [0.156.1](https://github.com/DecapodLabs/decapod/compare/v0.156.0...v0.156.1) - 2026-11-20
+
+### Fixed
+
+- *(governance)* bind approval to selected-work revisions
+
+### Other
+
+- *(governance)* refresh v0.156.0 projections
+
 ## [0.156.0](https://github.com/DecapodLabs/decapod/compare/v0.155.1...v0.156.0) - 2026-11-20
 
 ### Added
