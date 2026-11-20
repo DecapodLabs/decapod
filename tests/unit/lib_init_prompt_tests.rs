@@ -1,6 +1,34 @@
 // Moved from src/decapod/lib.rs
 use super::*;
 
+#[test]
+fn hidden_source_development_policy_is_preserved_without_generated_advertising() {
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::create_dir(directory.path().join(".decapod")).unwrap();
+    let config = DecapodProjectConfig::default();
+    let mut authored = toml::Value::try_from(&config).unwrap();
+    authored
+        .get_mut("repo")
+        .unwrap()
+        .as_table_mut()
+        .unwrap()
+        .insert("_allow_entrypoint_version_drift".into(), true.into());
+    let path = directory.path().join(".decapod/config.toml");
+    std::fs::write(&path, toml::to_string_pretty(&authored).unwrap()).unwrap();
+    write_project_config(directory.path(), &config, false).unwrap();
+    let preserved: toml::Value = toml::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    assert_eq!(
+        preserved["repo"]["_allow_entrypoint_version_drift"].as_bool(),
+        Some(true)
+    );
+    assert!(
+        !serde_json::to_string(&config)
+            .unwrap()
+            .contains("_allow_entrypoint_version_drift")
+    );
+    assert!(!directory.path().join("AGENTS.md").exists());
+}
+
 fn selector_result_for_input(options: &[&str], default: &[String], input: &[u8]) -> String {
     let mut selected = default
         .first()
@@ -388,6 +416,7 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
         reviewed_sources_digest: format!("sha256:{}", "0".repeat(64)),
     });
     config.proof.repository_contract = Some(core::repository_profile::RepositoryContract {
+        canonical_local_target: false,
         reviewed_commands_digest: format!("sha256:{}", "1".repeat(64)),
         source_coverage: vec![core::repository_profile::SourceCoverage {
             source: ".github/workflows/consumer.yml".into(),

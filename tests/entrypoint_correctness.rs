@@ -746,14 +746,23 @@ fn test_generated_agents_contract_stays_within_validation_line_budget() {
 }
 
 #[test]
-fn test_root_entrypoints_match_scaffold_generators() {
+fn test_root_entrypoints_match_scaffold_bodies_and_versioned_fingerprints() {
     let repo_root = resolve_repo_root();
     for file in ["AGENTS.md", "CLAUDE.md", "GEMINI.md", "CODEX.md"] {
         let root_path = repo_root.join(file);
         let root_content =
             fs::read_to_string(&root_path).unwrap_or_else(|_| panic!("Failed to read {file}"));
-        let template_content =
-            assets::get_template(file).unwrap_or_else(|| panic!("Missing generated {file}"));
+        // This target also runs from Bazel runfiles without immutable Git
+        // history. Check exact canonical payload/fingerprint here; the real
+        // project-check and history gates enforce repository version policy.
+        let release = root_content
+            .lines()
+            .next()
+            .and_then(|line| line.strip_prefix("<!-- decapod-release: "))
+            .and_then(|line| line.strip_suffix(" -->"))
+            .expect("root entrypoint has a release header");
+        let template_content = entrypoint_integrity::render_entrypoint_for_release(file, release)
+            .unwrap_or_else(|| panic!("Missing generated {file}"));
 
         assert_eq!(
             root_content, template_content,
@@ -1447,3 +1456,19 @@ mod fresh_docs_readiness;
 fn fresh_docs_cli_admission_then_complete_runtime_proves_current_source() {
     fresh_docs_readiness::fresh_governed_docs_cli_admission_then_runtime_executes_first_proof();
 }
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn canonical_local_target_cli_readiness_is_source_bound() {
+    fresh_docs_readiness::canonical_local_cli_proves_and_rejects_stale_authority();
+}
+
+#[test]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn canonical_workunit_withdraws_superseded_proof_and_recovers_after_lease_renewal() {
+    fresh_docs_readiness::canonical_local_workunit_rejects_superseded_proof_and_recovers();
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+#[path = "acceptance/publication_admission.rs"]
+mod publication_admission;

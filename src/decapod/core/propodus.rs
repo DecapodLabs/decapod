@@ -1,8 +1,8 @@
-//! Typed, optional client boundary for the external Propodus todo service.
+//! Typed, optional client boundary for the Decapod Cloud todo service.
 //!
-//! Propodus is a remote HTTP contract, not a Decapod compile-time dependency.
+//! Decapod Cloud is a remote HTTP contract, not a Decapod compile-time dependency.
 //! The transport is injectable so default tests remain local and the storage
-//! boundary can be exercised without Vercel, Neon, or hosted credentials.
+//! boundary can be exercised without hosted credentials.
 
 use crate::cli::CloudRuntimeConfig;
 use crate::core::auth;
@@ -15,16 +15,27 @@ use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus};
 use crate::core::repo_identity::RepositoryIdentity;
 use crate::core::storage::{Task as StorageTask, TodoStore};
 use async_trait::async_trait;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::io::IsTerminal;
 use std::process::Command;
 use std::thread;
 use std::time::{Duration, Instant};
+use time::OffsetDateTime;
 
+pub const CLOUD_STORE_CONTRACT_ID: &str = "decapod.cloud.store";
+pub const CLOUD_STORE_CONTRACT_VERSION: &str = "v1";
 pub const PROPODUS_CONTRACT_ID: &str = "decapod.propodus.todo";
 pub const PROPODUS_CONTRACT_VERSION: &str = "v1";
+pub const CLOUD_HEADER_CONTRACT: &str = "Decapod-Cloud-Contract";
+pub const CLOUD_HEADER_CONTRACT_VERSION: &str = "Decapod-Cloud-Contract-Version";
+pub const CLOUD_HEADER_DEPRECATION: &str = "Decapod-Cloud-Deprecation";
+pub const CLOUD_HEADER_SUNSET: &str = "Decapod-Cloud-Sunset";
+pub const CLOUD_HEADER_REQUEST_ID: &str = "Decapod-Cloud-Request-Id";
+pub const CLOUD_HEADER_TRACE_ID: &str = "Decapod-Cloud-Trace-Id";
+pub const CLOUD_HEADER_STATUS: &str = "Decapod-Cloud-Status";
+const MAX_DIAGNOSTIC_HEADER_BYTES: usize = 256;
+const MAX_CURSOR_PAGES: usize = 64;
 pub const PROPODUS_HEALTH_ROUTE: &str = "/api/health";
 pub const PROPODUS_TODOS_ROUTE: &str = "/api/todos";
 pub const PROPODUS_STATUS_IN_PROGRESS: &str = "in_progress";
@@ -108,8 +119,153 @@ pub struct PropodusError {
     pub message: String,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct CloudDiagnosticHeaders {
+    pub contract: Option<String>,
+    pub contract_version: Option<String>,
+    pub deprecation: Option<String>,
+    pub sunset: Option<String>,
+    pub request_id: Option<String>,
+    pub trace_id: Option<String>,
+    pub status: Option<String>,
+}
+
+fn sanitize_diagnostic_header_value(raw: &str) -> Option<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || trimmed.chars().any(char::is_control) {
+        return None;
+    }
+    let lower = trimmed.to_ascii_lowercase();
+    if lower.contains("bearer ")
+        || lower.contains("token=")
+        || lower.contains("secret=")
+        || lower.contains("password=")
+    {
+        return Some("[REDACTED]".to_string());
+    }
+    let bounded: String = trimmed.chars().take(MAX_DIAGNOSTIC_HEADER_BYTES).collect();
+    Some(bounded)
+}
+
+/// Parse bounded `Decapod-Cloud-*` diagnostic and transition headers from an
+/// HTTP header block or `(name, value)` pairs without retaining secrets.
+pub fn parse_cloud_diagnostic_headers<'a, I>(headers: I) -> CloudDiagnosticHeaders
+where
+    I: IntoIterator<Item = (&'a str, &'a str)>,
+{
+    let mut parsed = CloudDiagnosticHeaders::default();
+    for (name, value) in headers {
+        let Some(clean) = sanitize_diagnostic_header_value(value) else {
+            continue;
+        };
+        match name.trim().to_ascii_lowercase().as_str() {
+            "decapod-cloud-contract" => parsed.contract = Some(clean),
+            "decapod-cloud-contract-version" => parsed.contract_version = Some(clean),
+            "decapod-cloud-deprecation" => parsed.deprecation = Some(clean),
+            "deprecation" if parsed.deprecation.is_none() => parsed.deprecation = Some(clean),
+            "decapod-cloud-sunset" => parsed.sunset = Some(clean),
+            "sunset" if parsed.sunset.is_none() => parsed.sunset = Some(clean),
+            "decapod-cloud-request-id" => parsed.request_id = Some(clean),
+            "decapod-cloud-trace-id" => parsed.trace_id = Some(clean),
+            "decapod-cloud-status" => parsed.status = Some(clean),
+            _ => {}
+        }
+    }
+    parsed
+}
+
+pub fn parse_cloud_diagnostic_header_block(raw_headers: &str) -> CloudDiagnosticHeaders {
+    let mut current = CloudDiagnosticHeaders::default();
+    for line in raw_headers.lines() {
+        let trimmed = line.trim_end_matches('\r');
+        if trimmed.starts_with("HTTP/") {
+            // Retain only the final HTTP response's headers across redirect/100-continue hops.
+            current = CloudDiagnosticHeaders::default();
+            continue;
+        }
+        let Some((name, value)) = trimmed.split_once(':') else {
+            continue;
+        };
+        let next = parse_cloud_diagnostic_headers([(name, value)]);
+        if next.contract.is_some() {
+            current.contract = next.contract;
+        }
+        if next.contract_version.is_some() {
+            current.contract_version = next.contract_version;
+        }
+        if next.deprecation.is_some() {
+            current.deprecation = next.deprecation;
+        }
+        if next.sunset.is_some() {
+            current.sunset = next.sunset;
+        }
+        if next.request_id.is_some() {
+            current.request_id = next.request_id;
+        }
+        if next.trace_id.is_some() {
+            current.trace_id = next.trace_id;
+        }
+        if next.status.is_some() {
+            current.status = next.status;
+        }
+    }
+    current
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CloudStoreTodoPage {
+    pub contract: String,
+    pub contract_version: String,
+    pub todos: Vec<PropodusTodo>,
+    pub cursor: Option<String>,
+    pub next_cursor: Option<String>,
+    pub has_more: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct CloudStoreListEnvelope {
+    #[serde(default, alias = "contract_id", alias = "schema_version")]
+    contract: Option<String>,
+    #[serde(default, alias = "contract_version")]
+    version: Option<String>,
+    #[serde(default)]
+    ok: Option<bool>,
+    #[serde(default)]
+    todos: Option<Vec<PropodusTodo>>,
+    #[serde(default)]
+    items: Option<Vec<PropodusTodo>>,
+    #[serde(default)]
+    cursor: Option<String>,
+    #[serde(default)]
+    next_cursor: Option<String>,
+    #[serde(default)]
+    has_more: Option<bool>,
+    #[serde(default)]
+    error: Option<PropodusError>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct CloudStoreMutationEnvelope {
+    #[serde(default, alias = "contract_id", alias = "schema_version")]
+    contract: Option<String>,
+    #[serde(default, alias = "contract_version")]
+    version: Option<String>,
+    #[serde(default)]
+    ok: Option<bool>,
+    #[serde(default)]
+    todo: Option<PropodusTodo>,
+    #[serde(default)]
+    item: Option<PropodusTodo>,
+    #[serde(default)]
+    error: Option<PropodusError>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 struct PropodusErrorEnvelope {
+    #[serde(default, alias = "contract_id", alias = "schema_version")]
+    contract: Option<String>,
+    #[serde(default, alias = "contract_version")]
+    version: Option<String>,
     #[serde(default)]
     error: Option<PropodusError>,
     #[serde(default)]
@@ -132,6 +288,19 @@ pub trait PropodusTransport: Send + Sync + Clone + 'static {
         bearer: &str,
         body: Option<&[u8]>,
     ) -> Result<PropodusHttpResponse, PropodusClientError>;
+
+    fn request_with_diagnostics(
+        &self,
+        method: &str,
+        url: &str,
+        bearer: &str,
+        body: Option<&[u8]>,
+    ) -> Result<(PropodusHttpResponse, CloudDiagnosticHeaders), PropodusClientError> {
+        Ok((
+            self.request(method, url, bearer, body)?,
+            CloudDiagnosticHeaders::default(),
+        ))
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -236,6 +405,20 @@ impl PropodusTransport for CurlTransport {
         bearer: &str,
         body: Option<&[u8]>,
     ) -> Result<PropodusHttpResponse, PropodusClientError> {
+        self.request_with_diagnostics(method, url, bearer, body)
+            .map(|(response, _)| response)
+    }
+
+    fn request_with_diagnostics(
+        &self,
+        method: &str,
+        url: &str,
+        bearer: &str,
+        body: Option<&[u8]>,
+    ) -> Result<(PropodusHttpResponse, CloudDiagnosticHeaders), PropodusClientError> {
+        let header_file = tempfile::NamedTempFile::new().map_err(|error| {
+            PropodusClientError::Transport(format!("could not allocate header buffer: {error}"))
+        })?;
         let mut command = Command::new("curl");
         if self.private_stdin {
             // Must be the first argument: ignore ambient curlrc directives,
@@ -256,10 +439,10 @@ impl PropodusTransport for CurlTransport {
             &self.connect_timeout_seconds.to_string(),
             "--max-time",
             &self.max_time_seconds.to_string(),
-            "--write-out",
-            "\n%{http_code}",
-            url,
+            "--dump-header",
         ]);
+        command.arg(header_file.path());
+        command.args(["--write-out", "\n%{http_code}", url]);
         if self.follow_redirects {
             command.arg("--location");
         }
@@ -313,6 +496,8 @@ impl PropodusTransport for CurlTransport {
                 output.status.code().unwrap_or(-1)
             )));
         }
+        let raw_headers = std::fs::read_to_string(header_file.path()).unwrap_or_default();
+        let headers = parse_cloud_diagnostic_header_block(&raw_headers);
         let stdout = String::from_utf8(output.stdout)
             .map_err(|_| PropodusClientError::Transport("response was not UTF-8".to_string()))?;
         let (body, status) = stdout.rsplit_once('\n').ok_or_else(|| {
@@ -323,14 +508,17 @@ impl PropodusTransport for CurlTransport {
         let status = status.parse::<u16>().map_err(|_| {
             PropodusClientError::Transport("curl returned an invalid HTTP status".to_string())
         })?;
-        Ok(PropodusHttpResponse {
-            status,
-            body: if self.private_stdin && !(200..300).contains(&status) {
-                safe_auth_error_body(body.as_bytes(), status)
-            } else {
-                body.as_bytes().to_vec()
+        Ok((
+            PropodusHttpResponse {
+                status,
+                body: if self.private_stdin && !(200..300).contains(&status) {
+                    safe_auth_error_body(body.as_bytes(), status)
+                } else {
+                    body.as_bytes().to_vec()
+                },
             },
-        })
+            headers,
+        ))
     }
 }
 
@@ -353,24 +541,29 @@ pub enum PropodusClientError {
 impl fmt::Display for PropodusClientError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Configuration(message) => write!(f, "Propodus configuration error: {message}"),
+            Self::Configuration(message) => {
+                write!(f, "Decapod Cloud configuration error: {message}")
+            }
             Self::Authentication(diagnostic) => write!(
                 f,
-                "Propodus authentication error ({:?}): {}",
+                "Decapod Cloud authentication error ({:?}): {}",
                 diagnostic.status, diagnostic.message
             ),
-            Self::Transport(message) => write!(f, "Propodus transport error: {message}"),
-            Self::Decode(message) => write!(f, "Propodus response decode error: {message}"),
-            Self::Validation(message) => write!(f, "Propodus validation error: {message}"),
+            Self::Transport(message) => write!(f, "Decapod Cloud transport error: {message}"),
+            Self::Decode(message) => write!(f, "Decapod Cloud response decode error: {message}"),
+            Self::Validation(message) => write!(f, "Decapod Cloud validation error: {message}"),
             Self::Service {
                 status,
                 code,
                 message,
             } => {
-                write!(f, "Propodus service error ({status}, {code}): {message}")
+                write!(
+                    f,
+                    "Decapod Cloud service error ({status}, {code}): {message}"
+                )
             }
-            Self::NotFound(message) => write!(f, "Propodus not found: {message}"),
-            Self::Conflict(message) => write!(f, "Propodus conflict: {message}"),
+            Self::NotFound(message) => write!(f, "Decapod Cloud not found: {message}"),
+            Self::Conflict(message) => write!(f, "Decapod Cloud conflict: {message}"),
         }
     }
 }
@@ -943,7 +1136,7 @@ impl<T: PropodusTransport> PropodusClient<T> {
         }
         if config.repo_id.trim().is_empty() {
             return Err(PropodusClientError::Configuration(
-                "repository identity is required for Propodus todo operations".to_string(),
+                "repository identity is required for Decapod Cloud todo operations".to_string(),
             ));
         }
         if credential.trim().is_empty() {
@@ -967,30 +1160,44 @@ impl<T: PropodusTransport> PropodusClient<T> {
         &self.repo_id
     }
 
-    /// Verify that the configured Propodus endpoint is reachable and returns
+    /// Verify that the configured Decapod Cloud endpoint is reachable and returns
     /// a successful health response. The endpoint owns the response schema;
     /// the Decapod boundary only requires a successful HTTP status.
     pub fn health_check(&self) -> Result<(), PropodusClientError> {
         let url = format!("{}{}", self.api_url, PROPODUS_HEALTH_ROUTE);
-        let response = self.send("GET", &url, None)?;
+        let (response, _) = self.send_with_diagnostics("GET", &url, None)?;
         if response.body.is_empty() {
             return Err(PropodusClientError::Decode(
-                "Propodus health response was empty".to_string(),
+                "Decapod Cloud health response was empty".to_string(),
             ));
         }
         Ok(())
     }
 
-    pub fn list_todos(&self) -> Result<Vec<PropodusTodo>, PropodusClientError> {
-        let url = format!(
+    pub fn list_todos_page(
+        &self,
+        cursor: Option<&str>,
+    ) -> Result<CloudStoreTodoPage, PropodusClientError> {
+        let mut url = format!(
             "{}{}?repo_id={}",
             self.api_url,
             PROPODUS_TODOS_ROUTE,
             percent_encode(&self.repo_id)
         );
-        let response = self.send("GET", &url, None)?;
-        let payload: PropodusListResponse = decode_json(&response.body)?;
-        if !payload.ok {
+        if let Some(cursor) = cursor.map(str::trim).filter(|c| !c.is_empty()) {
+            url.push_str("&cursor=");
+            url.push_str(&percent_encode(cursor));
+        }
+        let (response, headers) = self.send_with_diagnostics("GET", &url, None)?;
+        let payload: CloudStoreListEnvelope = decode_json(&response.body)?;
+        let (contract, contract_version) = validate_contract_envelope(
+            payload.contract.as_deref().or(headers.contract.as_deref()),
+            payload
+                .version
+                .as_deref()
+                .or(headers.contract_version.as_deref()),
+        )?;
+        if payload.ok == Some(false) {
             return Err(payload
                 .error
                 .map(|error| PropodusClientError::Validation(error.message))
@@ -998,7 +1205,56 @@ impl<T: PropodusTransport> PropodusClient<T> {
                     PropodusClientError::Validation("list request failed".to_string())
                 }));
         }
-        Ok(payload.todos)
+        let todos = match (payload.items, payload.todos) {
+            (Some(items), _) => items,
+            (None, Some(todos)) => todos,
+            (None, None) => {
+                if payload.ok.is_none() {
+                    return Err(PropodusClientError::Decode(
+                        "response did not match the expected JSON contract".to_string(),
+                    ));
+                }
+                Vec::new()
+            }
+        };
+        let next_cursor = payload
+            .next_cursor
+            .map(|c| c.trim().to_string())
+            .filter(|c| !c.is_empty());
+        let has_more = payload.has_more.unwrap_or(next_cursor.is_some());
+        Ok(CloudStoreTodoPage {
+            contract,
+            contract_version,
+            todos,
+            cursor: payload.cursor,
+            next_cursor,
+            has_more,
+        })
+    }
+
+    pub fn list_todos(&self) -> Result<Vec<PropodusTodo>, PropodusClientError> {
+        let mut all = Vec::new();
+        let mut seen_cursors = std::collections::BTreeSet::new();
+        let mut cursor: Option<String> = None;
+        for _ in 0..MAX_CURSOR_PAGES {
+            let page = self.list_todos_page(cursor.as_deref())?;
+            all.extend(page.todos);
+            let Some(next) = page.next_cursor else {
+                return Ok(all);
+            };
+            if !page.has_more {
+                return Ok(all);
+            }
+            if !seen_cursors.insert(next.clone()) {
+                return Err(PropodusClientError::Decode(
+                    "Decapod Cloud pagination cursor repeated".to_string(),
+                ));
+            }
+            cursor = Some(next);
+        }
+        Err(PropodusClientError::Validation(
+            "Decapod Cloud pagination exceeded bounded page limit".to_string(),
+        ))
     }
 
     pub fn create_todo(
@@ -1021,9 +1277,16 @@ impl<T: PropodusTransport> PropodusClient<T> {
         let body = serde_json::to_vec(&request)
             .map_err(|error| PropodusClientError::Decode(error.to_string()))?;
         let url = format!("{}{}", self.api_url, PROPODUS_TODOS_ROUTE);
-        let response = self.send("POST", &url, Some(&body))?;
-        let payload: PropodusMutationResponse = decode_json(&response.body)?;
-        if !payload.ok {
+        let (response, headers) = self.send_with_diagnostics("POST", &url, Some(&body))?;
+        let payload: CloudStoreMutationEnvelope = decode_json(&response.body)?;
+        validate_contract_envelope(
+            payload.contract.as_deref().or(headers.contract.as_deref()),
+            payload
+                .version
+                .as_deref()
+                .or(headers.contract_version.as_deref()),
+        )?;
+        if payload.ok == Some(false) {
             return Err(payload
                 .error
                 .map(|error| PropodusClientError::Validation(error.message))
@@ -1031,7 +1294,7 @@ impl<T: PropodusTransport> PropodusClient<T> {
                     PropodusClientError::Validation("create request failed".to_string())
                 }));
         }
-        payload.todo.ok_or_else(|| {
+        payload.item.or(payload.todo).ok_or_else(|| {
             PropodusClientError::Decode("successful create response omitted todo".to_string())
         })
     }
@@ -1071,10 +1334,17 @@ impl<T: PropodusTransport> PropodusClient<T> {
             PROPODUS_TODOS_ROUTE,
             percent_encode(id)
         );
-        let response = self.send("PATCH", &url, Some(&body))?;
-        let payload: PropodusMutationResponse = decode_json(&response.body)?;
-        if payload.ok {
-            payload.todo.ok_or_else(|| {
+        let (response, headers) = self.send_with_diagnostics("PATCH", &url, Some(&body))?;
+        let payload: CloudStoreMutationEnvelope = decode_json(&response.body)?;
+        validate_contract_envelope(
+            payload.contract.as_deref().or(headers.contract.as_deref()),
+            payload
+                .version
+                .as_deref()
+                .or(headers.contract_version.as_deref()),
+        )?;
+        if payload.ok != Some(false) {
+            payload.item.or(payload.todo).ok_or_else(|| {
                 PropodusClientError::Decode("successful update response omitted todo".to_string())
             })
         } else {
@@ -1087,19 +1357,19 @@ impl<T: PropodusTransport> PropodusClient<T> {
         }
     }
 
-    fn send(
+    fn send_with_diagnostics(
         &self,
         method: &str,
         url: &str,
         body: Option<&[u8]>,
-    ) -> Result<PropodusHttpResponse, PropodusClientError> {
-        let response = self
-            .transport
-            .request(method, url, &self.credential, body)?;
+    ) -> Result<(PropodusHttpResponse, CloudDiagnosticHeaders), PropodusClientError> {
+        let (response, headers) =
+            self.transport
+                .request_with_diagnostics(method, url, &self.credential, body)?;
         if (200..300).contains(&response.status) {
-            return Ok(response);
+            return Ok((response, headers));
         }
-        Err(map_http_error(response))
+        Err(map_http_error_with_headers(response, &headers))
     }
 }
 
@@ -1158,7 +1428,7 @@ impl<T: PropodusTransport> TodoStore for PropodusTodoStore<T> {
 }
 
 fn to_storage_task(todo: PropodusTodo) -> StorageTask {
-    let now = Utc::now();
+    let now = OffsetDateTime::now_utc();
     StorageTask {
         id: todo.id.clone(),
         repo_id: todo.repo_id,
@@ -1170,7 +1440,7 @@ fn to_storage_task(todo: PropodusTodo) -> StorageTask {
         scope: "repo".to_string(),
         dir_path: String::new(),
         priority: "normal".to_string(),
-        category: "propodus".to_string(),
+        category: "cloud".to_string(),
         tags: Vec::new(),
         created_at: parse_timestamp(todo.created_at.as_deref()).unwrap_or(now),
         updated_at: parse_timestamp(todo.updated_at.as_deref()).unwrap_or(now),
@@ -1178,10 +1448,37 @@ fn to_storage_task(todo: PropodusTodo) -> StorageTask {
     }
 }
 
-fn parse_timestamp(value: Option<&str>) -> Option<DateTime<Utc>> {
-    value
-        .and_then(|value| DateTime::parse_from_rfc3339(value).ok())
-        .map(|value| value.with_timezone(&Utc))
+fn parse_timestamp(value: Option<&str>) -> Option<OffsetDateTime> {
+    value.and_then(|value| crate::core::time::parse_rfc3339(value).ok())
+}
+
+fn validate_contract_envelope(
+    contract: Option<&str>,
+    version: Option<&str>,
+) -> Result<(String, String), PropodusClientError> {
+    let resolved_contract = match contract.map(str::trim).filter(|s| !s.is_empty()) {
+        None => PROPODUS_CONTRACT_ID.to_string(),
+        Some("decapod.cloud.store") | Some("decapod.cloud.store.v1") => {
+            CLOUD_STORE_CONTRACT_ID.to_string()
+        }
+        Some("decapod.propodus.todo") | Some("decapod.propodus.todo.v1") => {
+            PROPODUS_CONTRACT_ID.to_string()
+        }
+        Some(other) => {
+            return Err(PropodusClientError::Decode(format!(
+                "unsupported Decapod Cloud contract envelope: {other}"
+            )));
+        }
+    };
+    let resolved_version = match version.map(str::trim).filter(|s| !s.is_empty()) {
+        None | Some("v1") => CLOUD_STORE_CONTRACT_VERSION.to_string(),
+        Some(other) => {
+            return Err(PropodusClientError::Decode(format!(
+                "unsupported Decapod Cloud contract version: {other}"
+            )));
+        }
+    };
+    Ok((resolved_contract, resolved_version))
 }
 
 fn decode_json<T: for<'de> Deserialize<'de>>(body: &[u8]) -> Result<T, PropodusClientError> {
@@ -1193,8 +1490,15 @@ fn decode_json<T: for<'de> Deserialize<'de>>(body: &[u8]) -> Result<T, PropodusC
 }
 
 fn map_http_error(response: PropodusHttpResponse) -> PropodusClientError {
+    map_http_error_with_headers(response, &CloudDiagnosticHeaders::default())
+}
+
+fn map_http_error_with_headers(
+    response: PropodusHttpResponse,
+    headers: &CloudDiagnosticHeaders,
+) -> PropodusClientError {
     let envelope = serde_json::from_slice::<PropodusErrorEnvelope>(&response.body).ok();
-    let (code, message) = envelope
+    let (code, mut message) = envelope
         .and_then(|envelope| {
             envelope
                 .error
@@ -1204,9 +1508,14 @@ fn map_http_error(response: PropodusHttpResponse) -> PropodusClientError {
         .unwrap_or_else(|| {
             (
                 "http_error".to_string(),
-                "Propodus request failed".to_string(),
+                "Decapod Cloud request failed".to_string(),
             )
         });
+    if let Some(request_id) = headers.request_id.as_deref()
+        && !message.contains(request_id)
+    {
+        message = format!("{message} [request_id={request_id}]");
+    }
     match response.status {
         401 => {
             let status = match code.as_str() {

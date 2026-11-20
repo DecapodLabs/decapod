@@ -25,10 +25,20 @@ nonempty set of unique `proof.commands` with `required = true`, and an explicit
   passed or skipped check. When every discovered workflow is `ci_only`, the
   required local commands still execute normally as the repository's local
   build/test contract.
-- `executions`: a table keyed by each required command name, containing `program`
-  (absolute canonical installed executable), `toolchain_files` (nonempty map of
-  labels to absolute canonical tool/runtime files), `environment` (explicit map),
-  `directory` (repository-relative, default `.`), and `timeout_seconds` (1–7200)
+- `executions`: a table keyed by each required command name, containing either
+  single-platform `program` (absolute canonical installed executable) and
+  `toolchain_files` (nonempty map of labels to absolute canonical tool/runtime
+  files), or a per-platform `platforms` table keyed by explicit canonical
+  platform keys (`linux-x86_64`, `linux-aarch64`, `macos-x86_64`,
+  `macos-aarch64`) where each platform entry provides its own `program` and
+  nonempty `toolchain_files` (mutually exclusive with top-level `program` and
+  `toolchain_files`), together with `environment` (explicit map), `directory`
+  (repository-relative, default `.`), and `timeout_seconds` (1–7200). Every
+  declared platform alternative is pinned by `reviewed_commands_digest` and
+  preserved across accepted targets (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`); at
+  execution time the host selects and byte-measures only the current host's
+  reviewed platform entry, failing closed if that platform is missing or
+  unsupported.
 
 `proof.required_profile.reviewed_sources_digest` separately pins the full
 workflow/action/helper/build inventory. `init` and `rpc --op agent.init` report
@@ -216,3 +226,66 @@ inventoried check files require the same separate policy transition. First
 adoption remains supported. Normal subject changes still receive fresh checks
 and exact source bindings. Discovery and declared tool closure do not infer the
 semantic or transitive completeness of arbitrary verification commands.
+
+## Offline canonical local Git targets
+
+For a solo local repository, an operator may explicitly accept
+`proof.repository_contract.canonical_local_target = true` together with
+`repo.backend = "local"`, an explicit `repo.base_branch`, the existing
+`repo.pr-readiness.v1` profile and `validation_buildkite_preflights = false`.
+Review the complete commands, execution closure and source coverage first;
+`agent.init` reports the new command-contract digest without accepting it.
+The target choice is part of that digest. Commit this reviewed contract on the
+canonical repository's accepted branch **before** creating the worker. A
+candidate-only flag, repinned digest or changed branch cannot authorize it.
+Absence/false retains the existing GitHub target transport and prior digests.
+
+Create/claim the task and use `workspace ensure` normally. From its clean,
+checkpointed, committed candidate, the runtime contract is the ordinary command:
+
+```console
+decapod validate --format json
+decapod qa verify commit <exact-candidate-sha>
+```
+
+The first command runs the real declared checks through the existing sealed
+snapshot runner; the second independently inspects durable canonical history.
+No hosted CI invocation, forge API, model prompt instruction, transport override
+or replacement verifier is needed for this target. The JSON readiness result
+uses `scope=repository_local_git_readiness`, with `ready=true` only when the
+required local proof passes, and outer `publication_ready=false`. The separate
+`workspace publish` boundary rejects this authority before remote mutation.
+Local readiness does not authenticate a forge target or grant a merge right.
+
+The identity is bound to the canonical local repository location and Git metadata,
+not a user-authored repository label. The kernel reads that repository's exact
+`refs/heads/<accepted-branch>` with installed Git and disabled ambient redirects,
+replacement objects, transport and hooks. It checks authority and target before
+and after proof, alongside the existing candidate, computed integration,
+requirements, tools and custody bindings. Changing source, accepted target,
+authority or required policy makes old proof inapplicable; historical success is
+preserved. Refresh the workspace's accepted base through governed synchronization
+and revalidate the resulting candidate. A fake success report cannot supply
+missing current canonical proof.
+
+This first adapter supports a canonical non-bare local checkout and its governed
+Git worktrees/local-clone workspaces. Arbitrary bare upstreams, portable identities
+across moved repositories, isolated execution and authenticated cloud/forge
+acceptance remain unsupported. Local policy, verifier, task state and source
+share the OS user's trust domain: protect the canonical checkout and toolchain;
+hashes/session files are not an independent security boundary. Cloud selection
+never falls back to local proof. An accepted strict source-PR or external proof
+requirement remains required. A reviewed `ci_only` limitation is not execution
+of the external job or equivalent assurance.
+
+`tests/entrypoint_correctness.rs::canonical_local_target_cli_readiness_is_source_bound`
+reproduces operator-reviewed acceptance, task claim, governed workspace, actual
+CLI proof, history inspection, unchanged revalidation, and stale/forged-source,
+target-movement, revocation and publication refusals. It uses the actual binary
+without a replacement `Host` or fake command output. Required GitHub execution
+supplies regression evidence; the fixture's own acceptance path invokes no
+hosted provider. Test workers are deterministic, not LLM integration proof.
+The test emits bounded timing and retained-evidence-size observations. No new
+journal/table or duplicate source snapshot store is introduced; existing evidence
+retention and validation history apply. Full ten-worker A–H proof and independent
+remote publication remain separate unresolved requirements.

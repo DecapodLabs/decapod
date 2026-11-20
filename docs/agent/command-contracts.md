@@ -18,7 +18,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Session token management (required for agent operation)
 
 ## `decapod cloud`
-- **Intent:** Optional cloud credential and Propodus integration commands
+- **Intent:** Optional Decapod Cloud credential and project commands
 
 ## `decapod constitution`
 - **Intent:** Embedded Constitution Graph queries and lookups
@@ -69,10 +69,11 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Publication loop:** Work branch pushes and iteration are allowed before preflight. Hold PR creation (including a draft) until intent is converged, the branch is mergeable into the accepted target, and full validation succeeds against the exact current candidate and accepted target. Follow the validation report's actionable instructions, repair reported root causes on the work branch, and rerun exact-candidate validation until it succeeds; never bypass a reported gate or fabricate evidence. `workspace publish` combines branch push and PR creation, so it remains held at this readiness boundary; earlier standalone branch pushes are allowed. RPC `validate.run` enforces the same validation contract.
 - **CI context:** Inside GitHub Actions (`GITHUB_ACTIONS=true`) or Buildkite (`BUILDKITE=true`), public CLI/alias/RPC validation executes the real bounded local gates and ignores remote preflight configuration. It reports `scope=ci_local` and `publication_ready=false`, never writes a full-readiness receipt or waits for its own suite, and rejects snapshot transport arguments. Provider environment flags alone cannot authorize publication: the publisher independently invokes the complete workbranch readiness boundary.
 - **Prerequisites:** Once source and required governance material are ready, checkpoint and commit the candidate, then run plain `decapod validate`. Validation owns configured build prerequisites and tests; do not run a separate manual build or shadow preflight. `decapod govern project-check` runs bounded project/governance prerequisites for bootstrap and finite native/CI recipe execution. Its partial success never grants publication readiness. Complete workbranch validation runs outside CI and aggregates actual source checks without recursion.
-- **Providers:** `proof.validation_buildkite_preflights = false` selects native execution; true selects remote execution on the current Decapod workspace branch. The `decapod.pr-readiness.v1` profile retains the complete finite source-CI contract on either route. Consumer `repo.pr-readiness.v1` instead proves explicitly reviewed required local commands with `scope=repository_local_readiness`; it cannot select Buildkite or attest hosted CI, release or deployment execution. Missing capabilities and unknown or unreconciled contracts fail explicitly.
+- **Providers:** `proof.validation_buildkite_preflights = false` selects native execution; true selects remote execution on the current Decapod workspace branch. The `decapod.pr-readiness.v1` profile retains the complete finite source-CI contract on either route. Consumer `repo.pr-readiness.v1` instead proves explicitly reviewed required local commands with `scope=repository_local_readiness`; it cannot select Buildkite or attest hosted CI, release or deployment execution. Explicitly accepted `canonical_local_target = true` on the canonical local branch selects `scope=repository_local_git_readiness` with forge `publication_ready=false`; candidate-only activation and cloud/strict-profile fallback are rejected. Missing capabilities and unknown or unreconciled contracts fail explicitly.
 - **Automatic provider execution:** With Buildkite validation enabled outside CI, `validate` pushes or reuses the exact current workspace branch commit, waits for every required imported Buildkite workflow, collects authenticated execution artifacts once, and rechecks the candidate, accepted target and provider attempt identities before returning success. The required project checks execute on Buildkite; this route neither runs a duplicate local prerequisite suite nor requires a fresh local validation receipt before submission. It uses already configured official Git access, repository check URLs only to locate Buildkite runs, and the reviewed Buildkite reader; missing tools, access denial, timeout, cancellation, failed jobs or incomplete custody return nonzero. It never installs credentials or falls back after an authorization failure.
 - **Host handoff:** `validate --snapshot-prepare` prepares private metadata for the existing workspace branch and returns nonzero while proof is pending. An authorized host may push only the same exact candidate commit to that branch. `validate --snapshot-resume <HANDOFF> --snapshot-adopt <H>` independently verifies the unchanged source/tree/target and the exact remote branch tip; it cannot accept a different commit or a temporary branch. If a host object API changes commit identity, first checkpoint and review that real source identity before preparing a new handoff. Never edit a handoff to assert success. `validate --snapshot-resume <HANDOFF>` independently verifies Buildkite identities, raw artifact digests and execution evidence. No per-run branch or synthetic commit is created, and validation cleanup never deletes the workspace branch. Existing GitHub workflows may run independently; their results and artifacts neither satisfy nor block this Buildkite profile. This is not a compatibility claim for a separate `bk preflight` command.
 - **Boundaries:** Validation may perform the authorized non-forced push of its existing workspace branch. It does not open a PR, create a release/tag, upload a package/image or deploy. Remote CI submission needs existing authorized access and remains subject to external-action policy. The core source-PR profile requires actual compile, test and build execution. Release-only packaging is outside this profile and has no packaging-assurance claim; publish/deploy dispositions describe simulation only, never actual delivery.
+- **Todo-scoped `/tmp` cleanup:** Once validation passes and PR creation completes (`decapod workspace publish` or post-validation PR creation), flush ONLY the current todo's `/tmp` build and scratch directories (such as `/tmp/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). Never perform wildcard or root-level deletion of `/tmp`, never delete another concurrent agent's or sibling todo's `/tmp` path, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories.
 - **Recovery:** Do not ask again before an already-authorized configured validation push or a supported, safely replayable retry to the same repository and workspace branch. Recheck the exact source and accepted target; stop on explicit cancellation, access or authorization denial, or a change that requires new authority. Follow the validation report's actionable recovery instructions, preserve blockers requiring human input, repair root causes or missing proof, and rerun against the exact candidate. For supported remote source-CI contracts, validation uses the accepted target’s independently verified executor to build and test the candidate, even when candidate helper bytes change. The controller keeps the required graph and final verdict; candidate output cannot authorize itself. `CONTROLLER_CONTRACT_UNSUPPORTED` identifies an unsupported carrier, protocol or accepted executor. Rerunning the same controller, repinning configuration or running a manual build cannot resolve that blocker; use an independently supported controller for this exact contract, and preserve the blocker if none is available. No automatic controller replacement is performed. Do not mark unexecuted checks green, weaken the required profile to pass, or replace unavailable provider evidence with a local receipt.
 
 ## Living-spec refresh surfaces
@@ -156,8 +157,21 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
 - **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`).
 
+### Broker Audit Verification & Orphan Recovery (`decapod data broker ...`)
+
+- **Writer incarnation provenance:** New `pending` broker audit events record optional OS writer provenance (`writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and Linux `writer_pid_ns`).
+- **Liveness classification:** `decapod data broker verify` and `decapod data broker repair` establish `writer_liveness = "stopped"` only when provenance proves either (a) same host/boot/PID-namespace with an absent PID or a different observed `writer_start_id` (PID reuse), or (b) a different prior boot on the same verified host. Event age alone and bare PID checks without start-identity/boot correlation never establish writer termination.
+- **Fail-closed unknown handling:** Active writers (`writer_liveness = "active"`) are always refused. Legacy provenance-free, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` (`human_review_required = true`) in `verify` and `repair` preview, and `decapod data broker repair --apply` refuses unless `--acknowledge-unknown-writer` is explicitly provided after human review.
+
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
+
+### `decapod auto container run`
+
+- **Delegated cgroup parent (`#1820`):** Accepts an optional `--cgroup-parent <path-or-slice>` flag (or `DECAPOD_CONTAINER_CGROUP_PARENT` environment variable; CLI flag takes precedence) and passes `--cgroup-parent` to the container runtime while keeping `--cpus`, `--memory`, and `--pids-limit` enforced. Cgroups are never disabled.
+- **Fail-closed validation:** Only canonical absolute cgroup hierarchy paths (e.g. `/delegated/decapod`, without the `/sys/fs/cgroup` mount prefix, trailing slashes, empty segments, `.` or `..` traversal, whitespace, control characters, or metacharacters) and systemd slice names (`*.slice`) are accepted. Invalid values fail closed with `container_invalid_cgroup_parent` before touching the container runtime.
+- **Rootless Podman `cgroupfs` auto-detection:** When neither `--cgroup-parent` nor `DECAPOD_CONTAINER_CGROUP_PARENT` is set and local `podman info` reports rootless `cgroupfs` on cgroup v2 (`serviceIsRemote: false`), Decapod inspects `/proc/self/cgroup` and selects the deepest non-root writable ancestor under `/sys/fs/cgroup` whose `cgroup.subtree_control` enables `cpu`, `memory`, and `pids` without traversing symlinks.
+- **Diagnostics:** OCI/cgroupfs permission errors (`crun`/`runc` `cannot set limits without cgroups`, `/sys/fs/cgroup` permission denied) return `container_cgroup_permission_denied` with delegated cgroup parent remediation, distinct from `container_workspace_permission_denied`.
 
 ## `decapod qa`
 - **Intent:** Quality assurance: verification and checks
@@ -170,6 +184,7 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Preconditions:** Task must be claimed.
 - **State Transition:** Creates git worktrees/containers.
 - **Publication:** Publication is a governed transition and remains blocked while required validation or evidence is unsatisfied.
+- **Scratch cleanup:** When PR creation succeeds (`workspace publish`), flush ONLY that todo's `/tmp` build and scratch directories (such as `/tmp/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). Never perform wildcard or root-level deletion of `/tmp`, never delete another concurrent agent's or sibling todo's `/tmp` path, and never remove shared `/tmp/decapod` controller sockets/state or active sibling directories.
 
 ## `decapod rpc`
 - **Intent:** Decapod-specific structured RPC interface for agents
@@ -187,10 +202,25 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Intent:** Local trace management
 
 ## `decapod system`
-- **Intent:** System: capabilities, version, doctor
+- **Intent:** System: capabilities, version, doctor, migrations
+
+### Read-Only System & Migration Inspection (`decapod system ...`)
+
+- **Non-initializing diagnostics (`decapod system migrations`, `decapod system doctor check`, `decapod system version`, `decapod system capabilities`):** Run without requiring `DECAPOD_SESSION_PASSWORD`, without creating `.decapod/data/`, without modifying `version_counter.json`, `applied.json`, or `catalog.json`, and without consuming a pending migration notice.
+- **Migration inspection (`decapod system migrations --format {json,text}`):** Resolves `workspace_root`, `governance_root`, and `decapod_root` (following the main repository `.decapod` from governed worktrees) and exposes `version_counter`, `applied`, compiled/on-disk `catalog`, `pending_migrations`, `action_required`, `reason_codes`, and actionable `instructions`.
 
 ## `decapod context`
 - **Intent:** Context: infer, lcm, internalize, preflight, impact
+
+## `decapod integration`
+- **Intent:** Preview, reversibly remove, or restore repository integration without deleting project state
+
+### Reversible Repository Integration Removal (`decapod integration ...`)
+
+- **Read-only preview (`decapod integration preview`):** Makes zero filesystem, Git, SQLite, session, or network mutations. Classifies `generated`, `edited`, `authored`, `unknown`, and `active` resources separately using ownership and digest evidence. A file is never classified as `generated` solely by filename.
+- **Bounded apply (`decapod integration remove --authorize`):** Requires explicit `--authorize`. Removes only positively owned, unchanged generated entrypoints, hooks, CI workflows, `.gitignore` rules, and untouched scaffolds while preserving edited/shared/unknown entries, authored instructions/overrides/specs, `.decapod/data/`, `.decapod/governance.json`, `*.bak` backups, global config, and credentials. Refuses uncertain ownership, symlink replacement, and active-custody conflicts (active todo leases, authoring bindings, registered/dirty worktrees, storage locks) with non-zero exit. Writes `.decapod/integration-restore-manifest.json` atomically before removal so interrupted or repeated invocations remain idempotent.
+- **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
+- **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries.
 
 # RPC Operations (Auto-generated)
 
@@ -261,12 +291,18 @@ missing or partial policy store fails before any workunit journal append.
   sealing is local cooperative enforcement, not global exclusivity across clones.
 - `decapod govern workunit checkpoint --task-id <id> --operation-id <id>`
   records a checkpoint, with optional `--expected-generation <n>`
-- `decapod govern workunit journal-status --task-id <id>` inspects the journal
-  and JSON projection; `recover --task-id <id>` restores the exact recorded
-  manifest without refreshing verification
+- `decapod govern workunit journal-status --task-id <id>` inspects the journal,
+  JSON projection, `proof_status` (`proven`, `not_proven`, `stale`, `absent`),
+  and split-store audit records; `recover --task-id <id>` restores the exact
+  recorded manifest without refreshing verification
 - `decapod govern workunit resume --task-id <id> --operation-id <id>` checks
   current execution authority before continuing, with the same optional
   generation precondition
+- `decapod govern workunit converge [--task-id <id>] [--dry-run]` inspects or
+  archives a separately initialized workspace-local datastore as `not_proven`
+  audit history (`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`) without promoting
+  split-store records to `VERIFIED`, converging the workspace onto the canonical
+  atomic store
 
 - `decapod govern trajectory checkpoint --run-id <id> --checkpoint-id <id>`
   records bounded source, intent, plan, trajectory, task custody, and policy
@@ -341,6 +377,13 @@ reauthor selected source, review specs, checkpoint and commit the observation.
 Only after that archive exists may `resolve-obligation` record the current
 recovery disposition with evidence references. Preserve the old unproven
 history; never fabricate its checkpoints or treat a decision label as authority.
+When a Git merge (`MERGE_HEAD` present) leaves `.decapod/governance.json`
+conflicted or with a trajectory/custody hash mismatch, run
+`decapod govern artifacts reconcile-merge` before committing the merge. It
+reads immutable commit states (`HEAD`, `MERGE_HEAD`, `merge-base --all`),
+refuses non-merge states or conflicting unaccepted PR authority, preserves
+complete active journal history and failed/missing proof states, and recomputes
+canonical trajectory hashes without fabricating passing proof.
 `inventory --claims-note "..."` records a current-PR checkpoint, not a fake claim
 or a policy-history append. `inventory --compact` performs lossless legacy
 normalization. Neither surface repairs malformed evidence by overwriting it.
@@ -443,6 +486,16 @@ paths; they exclude conflicting resource claims (`predicate=resource_reservation
 and gate shared mutations (`release lineage-sync` on `resource:release`; `workspace publish`
 on `resource:integration` / `resource:integration:<base_branch>`) with `SHARED_RESOURCE_OCCUPIED`
 while leaving isolated worktree authoring and local validation unblocked.
+
+`infer orientation`, branch governance seeding (`trajectory.repo_scope` and custody
+`intent.constraints`), and `govern trajectory {init,record}` parse explicit `paths:[...]`
+JSON arrays through `fleet_coord::declared_paths` rather than splitting on commas.
+Already-generated fragmented projections in `.decapod/governance.json` can be repaired
+with `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`,
+which requires the prior journal to be archived in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED`),
+rejects ambiguous task or scope matches (`SCOPE_RECONCILIATION_AMBIGUOUS`), preserves
+original intent, custody events, checks, and checkpoints, resets plan approval to `DRAFT`,
+and is idempotent once canonical.
 
 ## `decapod todo journal reconcile-legacy`
 

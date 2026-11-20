@@ -64,6 +64,7 @@ fn docker_spec_contains_safety_flags_and_sdlc_steps() {
         "master",
         "2g",
         "2.0",
+        None,
         Some("R_123"),
         false,
         false,
@@ -119,6 +120,7 @@ fn docker_spec_local_only_avoids_remote_git_operations() {
         "master",
         "2g",
         "2.0",
+        None,
         Some("R_123"),
         false,
         true,
@@ -150,6 +152,7 @@ fn podman_spec_does_not_force_host_uid_mapping() {
         "master",
         "2g",
         "2.0",
+        None,
         Some("R_123"),
         false,
         true,
@@ -877,6 +880,7 @@ pub(crate) fn assert_actual_docker_governance_mount_isolation() {
         "128m",
         "1",
         None,
+        None,
         false,
         true,
     )
@@ -1057,6 +1061,7 @@ fn container_spec_prepares_owned_nested_mount_targets() {
             "128m",
             "1",
             None,
+            None,
             false,
             true,
         )
@@ -1165,6 +1170,7 @@ fn container_spec_preserves_host_policy_read_only_and_branch_files_local() {
         "master",
         "128m",
         "1",
+        None,
         None,
         false,
         true,
@@ -1958,4 +1964,296 @@ exit 0
             assert_eq!(fs::read(&path).ok(), before);
         }
     }
+}
+
+#[test]
+fn validate_cgroup_parent_accepts_delegated_paths_and_systemd_slices() {
+    for valid in [
+        "/decapod",
+        "/delegated/decapod",
+        "/user.slice/user-1000.slice/session-1.scope",
+        "/user.slice/user-1000.slice/user@1000.service/app.slice",
+        "/work_01/podman-containers",
+        "decapod.slice",
+        "user-1000.slice",
+    ] {
+        assert_eq!(
+            validate_cgroup_parent(valid).expect(valid),
+            valid,
+            "expected valid cgroup parent: {valid}"
+        );
+    }
+}
+
+#[test]
+fn validate_cgroup_parent_rejects_traversal_metacharacters_and_unsafe_values() {
+    let oversized = format!("/{}", "a".repeat(MAX_CGROUP_PARENT_LEN));
+    for invalid in [
+        "",
+        " ",
+        "/",
+        "/delegated/",
+        "/delegated//child",
+        "/delegated/./child",
+        "/delegated/../escape",
+        "../escape",
+        "delegated/relative",
+        "/sys/fs/cgroup",
+        "/sys/fs/cgroup/delegated",
+        "--privileged",
+        "-e",
+        "/delegated\0evil",
+        "/delegated\nevil",
+        "/delegated evil",
+        "/delegated;id",
+        "/delegated|cat",
+        "/delegated$(id)",
+        "/delegated:split",
+        "/delegated\\escape",
+        "/.hidden",
+        "/-flag",
+        ".slice",
+        "..slice",
+        "bad..name.slice",
+        oversized.as_str(),
+    ] {
+        let err = validate_cgroup_parent(invalid)
+            .expect_err(&format!("expected invalid cgroup parent: {invalid:?}"));
+        assert!(
+            err.to_string().contains("container_invalid_cgroup_parent"),
+            "unexpected error for {invalid:?}: {err}"
+        );
+    }
+}
+
+#[test]
+fn podman_spec_passes_validated_cgroup_parent_while_preserving_resource_limits() {
+    let temp = tempdir().expect("tempdir");
+    let repo = temp.path();
+    let workspace = repo.join(".decapod/workspaces/w1");
+    let spec = build_docker_spec(
+        "podman",
+        repo,
+        &workspace,
+        "rust:1.96.1",
+        "agent-a",
+        "true",
+        "agent/a/task",
+        "master",
+        "2g",
+        "2.0",
+        Some("/delegated/decapod"),
+        Some("bugs_1820"),
+        false,
+        true,
+    )
+    .expect("spec");
+
+    let cgroup_idx = spec
+        .args
+        .iter()
+        .position(|arg| arg == "--cgroup-parent")
+        .expect("--cgroup-parent present");
+    assert_eq!(spec.args[cgroup_idx + 1], "/delegated/decapod");
+    let pids_idx = spec
+        .args
+        .iter()
+        .position(|arg| arg == "--pids-limit")
+        .expect("--pids-limit preserved");
+    assert_eq!(spec.args[pids_idx + 1], "512");
+    let mem_idx = spec
+        .args
+        .iter()
+        .position(|arg| arg == "--memory")
+        .expect("--memory preserved");
+    assert_eq!(spec.args[mem_idx + 1], "2g");
+    let cpus_idx = spec
+        .args
+        .iter()
+        .position(|arg| arg == "--cpus")
+        .expect("--cpus preserved");
+    assert_eq!(spec.args[cpus_idx + 1], "2.0");
+    assert!(
+        !spec.args.iter().any(|arg| arg.starts_with("--cgroups")),
+        "launcher must never disable cgroups"
+    );
+}
+
+#[test]
+fn build_docker_spec_fails_closed_on_invalid_cgroup_parent() {
+    let temp = tempdir().expect("tempdir");
+    let repo = temp.path();
+    let workspace = repo.join(".decapod/workspaces/w1");
+    let err = build_docker_spec(
+        "podman",
+        repo,
+        &workspace,
+        "rust:1.96.1",
+        "agent-a",
+        "true",
+        "agent/a/task",
+        "master",
+        "2g",
+        "2.0",
+        Some("/delegated/../escape"),
+        Some("bugs_1820"),
+        false,
+        true,
+    )
+    .expect_err("traversal cgroup parent must fail closed");
+    assert!(err.to_string().contains("container_invalid_cgroup_parent"));
+}
+
+#[test]
+fn parse_podman_info_identifies_local_rootless_cgroupfs_v2() {
+    let local_rootless_cgroupfs = r#"
+host:
+  cgroupManager: cgroupfs
+  cgroupVersion: v2
+  serviceIsRemote: false
+  security:
+    rootless: true
+"#;
+    assert!(parse_podman_info(local_rootless_cgroupfs).is_local_rootless_cgroupfs_v2());
+
+    let systemd_manager = r#"
+host:
+  cgroupManager: systemd
+  cgroupVersion: v2
+  serviceIsRemote: false
+  security:
+    rootless: true
+"#;
+    assert!(!parse_podman_info(systemd_manager).is_local_rootless_cgroupfs_v2());
+
+    let remote_service = r#"
+host:
+  cgroupManager: cgroupfs
+  cgroupVersion: v2
+  serviceIsRemote: true
+  security:
+    rootless: true
+"#;
+    assert!(!parse_podman_info(remote_service).is_local_rootless_cgroupfs_v2());
+
+    let rootful = r#"
+host:
+  cgroupManager: cgroupfs
+  cgroupVersion: v2
+  serviceIsRemote: false
+  security:
+    rootless: false
+"#;
+    assert!(!parse_podman_info(rootful).is_local_rootless_cgroupfs_v2());
+
+    let cgroup_v1 = r#"
+host:
+  cgroupManager: cgroupfs
+  cgroupVersion: v1
+  serviceIsRemote: false
+  security:
+    rootless: true
+"#;
+    assert!(!parse_podman_info(cgroup_v1).is_local_rootless_cgroupfs_v2());
+}
+
+#[cfg(unix)]
+#[test]
+fn detect_delegated_cgroup_v2_parent_honors_writable_ancestor_with_required_controllers() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let temp = tempdir().expect("tempdir");
+    let cgroup_root = temp.path().join("cgroup");
+    let delegated = cgroup_root.join("delegated/decapod");
+    let leaf = delegated.join("caller");
+    fs::create_dir_all(&leaf).expect("mkdir delegated leaf");
+    fs::write(
+        delegated.join("cgroup.subtree_control"),
+        "cpu io memory pids\n",
+    )
+    .expect("write subtree_control");
+    fs::write(leaf.join("cgroup.subtree_control"), "").expect("write empty leaf subtree_control");
+    let proc_cgroup = temp.path().join("proc-self-cgroup");
+    fs::write(&proc_cgroup, "0::/delegated/decapod/caller\n").expect("write proc cgroup");
+
+    assert_eq!(
+        detect_delegated_cgroup_v2_parent_from(&proc_cgroup, &cgroup_root).as_deref(),
+        Some("/delegated/decapod")
+    );
+
+    // Missing pids controller -> fail closed (None).
+    fs::write(delegated.join("cgroup.subtree_control"), "cpu memory\n").unwrap();
+    assert_eq!(
+        detect_delegated_cgroup_v2_parent_from(&proc_cgroup, &cgroup_root),
+        None
+    );
+
+    // Restore controllers, then make delegated dir read-only -> fail closed (None).
+    fs::write(
+        delegated.join("cgroup.subtree_control"),
+        "cpu memory pids\n",
+    )
+    .unwrap();
+    fs::set_permissions(&delegated, fs::Permissions::from_mode(0o555)).unwrap();
+    assert_eq!(
+        detect_delegated_cgroup_v2_parent_from(&proc_cgroup, &cgroup_root),
+        None
+    );
+    fs::set_permissions(&delegated, fs::Permissions::from_mode(0o755)).unwrap();
+
+    // Root cgroup `/` -> None.
+    fs::write(&proc_cgroup, "0::/\n").unwrap();
+    assert_eq!(
+        detect_delegated_cgroup_v2_parent_from(&proc_cgroup, &cgroup_root),
+        None
+    );
+
+    // Traversal in /proc/self/cgroup -> None.
+    fs::write(&proc_cgroup, "0::/delegated/../escape\n").unwrap();
+    assert_eq!(
+        detect_delegated_cgroup_v2_parent_from(&proc_cgroup, &cgroup_root),
+        None
+    );
+
+    // Symlink inside cgroup_root -> rejected (None).
+    let outside = temp.path().join("outside");
+    fs::create_dir_all(&outside).unwrap();
+    fs::write(outside.join("cgroup.subtree_control"), "cpu memory pids\n").unwrap();
+    std::os::unix::fs::symlink(&outside, cgroup_root.join("link")).unwrap();
+    fs::write(&proc_cgroup, "0::/link\n").unwrap();
+    assert_eq!(
+        detect_delegated_cgroup_v2_parent_from(&proc_cgroup, &cgroup_root),
+        None
+    );
+}
+
+#[test]
+fn classify_container_failure_distinguishes_cgroup_from_workspace_permissions() {
+    let (code, action) = classify_container_failure(
+        "",
+        "crun: cannot set limits without cgroups: create /sys/fs/cgroup/libpod-1234: Permission denied",
+    );
+    assert_eq!(code, "container_cgroup_permission_denied");
+    assert!(action.contains("--cgroup-parent"));
+    assert!(action.contains("DECAPOD_CONTAINER_CGROUP_PARENT"));
+
+    let (code, _) = classify_container_failure(
+        "",
+        "Error: OCI runtime error: runc create failed: openat2 /sys/fs/cgroup/foo/pids.max: permission denied",
+    );
+    assert_eq!(code, "container_cgroup_permission_denied");
+
+    let (code, _) =
+        classify_container_failure("", "Error: crun: cannot set limits without cgroups");
+    assert_eq!(code, "container_cgroup_permission_denied");
+
+    let (code, _) =
+        classify_container_failure("", "fatal: unable to create index.lock: Permission denied");
+    assert_eq!(code, "container_workspace_permission_denied");
+
+    let (code, _) = classify_container_failure(
+        "",
+        "sh: 1: cannot create /workspace/src/cgroup_notes.rs: Permission denied",
+    );
+    assert_eq!(code, "container_workspace_permission_denied");
 }

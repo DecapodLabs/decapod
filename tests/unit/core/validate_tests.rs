@@ -21,10 +21,7 @@ use tempfile::tempdir;
 fn branch_file_validation_dispatch_uses_working_root() {
     // Check the dispatcher as well as each gate's behavior below: a gate can
     // work correctly in isolation while its caller supplies the host store root.
-    let source = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/decapod/core/validate.rs"
-    ));
+    let source = include_str!("../../../src/decapod/core/validate.rs");
     let dispatch = source.split("pub fn run_validation(").nth(1).unwrap();
     for call in [
         "validate_docs_templates_bucket(ctx, working_root)",
@@ -817,6 +814,189 @@ fn publication_bundle_currency_fails_when_release_advanced_without_refresh() {
     assert!(
         ctx.fail_count.load(Ordering::Relaxed) >= 1,
         "release advance without refreshing release-bound paths must fail"
+    );
+}
+
+#[test]
+fn scoped_source_currency_preserves_headers_without_waiving_other_bundle_checks() {
+    for defect in [
+        "none",
+        "missing_config",
+        "disabled",
+        "fork",
+        "multiple_pushes",
+        "tamper",
+        "missing_docker",
+        "missing_manifest",
+        "invalid_base_manifest",
+    ] {
+        let fixture = crate::core::entrypoint_integrity::development_source_fixture();
+        let dir = fixture.path();
+        seed_publication_bundle(dir);
+        for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+            fs::write(
+                dir.join(surface),
+                crate::core::entrypoint_integrity::render_entrypoint_for_release(
+                    surface, "0.107.4",
+                )
+                .unwrap(),
+            )
+            .unwrap();
+        }
+        let manifest = dir.join(".decapod/managed/specs/.manifest.json");
+        fs::write(
+            &manifest,
+            serde_json::json!({"decapod_release": env!("CARGO_PKG_VERSION")}).to_string(),
+        )
+        .unwrap();
+        match defect {
+            "missing_config" => fs::remove_file(dir.join(".decapod/config.toml")).unwrap(),
+            "disabled" => fs::write(
+                dir.join(".decapod/config.toml"),
+                "[repo]\n_allow_entrypoint_version_drift = false\n",
+            )
+            .unwrap(),
+            "fork" => git(
+                dir,
+                &[
+                    "remote",
+                    "set-url",
+                    "origin",
+                    "https://github.com/elsewhere/decapod.git",
+                ],
+            ),
+            "multiple_pushes" => {
+                git(
+                    dir,
+                    &[
+                        "remote",
+                        "set-url",
+                        "--add",
+                        "--push",
+                        "origin",
+                        "https://github.com/DecapodLabs/decapod.git",
+                    ],
+                );
+                git(
+                    dir,
+                    &[
+                        "remote",
+                        "set-url",
+                        "--add",
+                        "--push",
+                        "origin",
+                        "https://github.com/elsewhere/decapod.git",
+                    ],
+                );
+            }
+            "tamper" => fs::write(dir.join("CODEX.md"), "changed contract\n").unwrap(),
+            "invalid_base_manifest" => fs::write(&manifest, "not json").unwrap(),
+            _ => {}
+        }
+        git(dir, &["add", "-A"]);
+        git(dir, &["commit", "-qm", "accepted source bundle"]);
+        git(dir, &["branch", "master"]);
+        let before = fs::read(dir.join("AGENTS.md")).unwrap();
+        fs::write(dir.join("feature.txt"), "source work\n").unwrap();
+        fs::write(
+            dir.join(".decapod/managed/specs/INTENT.md"),
+            "# Intent\n\nReviewed source work.\n",
+        )
+        .unwrap();
+        if defect == "missing_docker" {
+            fs::remove_file(dir.join(".decapod/managed/Dockerfile.decapod")).unwrap();
+        } else if defect == "missing_manifest" {
+            fs::remove_file(&manifest).unwrap();
+        }
+        git(dir, &["add", "-A"]);
+        git(dir, &["commit", "-qm", "current source work"]);
+        let ctx = ValidationContext::new();
+        validate_publication_bundle_currency(&ctx, dir).unwrap();
+        let failures = ctx.fails.lock().unwrap();
+        if defect == "none" {
+            assert!(failures.is_empty(), "{failures:?}");
+            assert!(ctx.pass_count.load(Ordering::Relaxed) > 0);
+        } else {
+            assert!(!failures.is_empty(), "{defect} must fail closed");
+            let detail = failures.join("\n");
+            let expected = match defect {
+                "missing_docker" => "missing .decapod/managed/Dockerfile.decapod",
+                "missing_manifest" => "missing .decapod/managed/specs/.manifest.json",
+                "invalid_base_manifest" => "specs manifest",
+                _ => "AGENTS.md",
+            };
+            assert!(detail.contains(expected), "{defect}: {detail}");
+        }
+        assert_eq!(fs::read(dir.join("AGENTS.md")).unwrap(), before);
+    }
+}
+
+#[test]
+fn source_currency_refreshes_only_generated_pins_when_evaluating_release_changes() {
+    let fixture = crate::core::entrypoint_integrity::development_source_fixture();
+    let dir = fixture.path();
+    seed_publication_bundle(dir);
+    for surface in crate::core::entrypoint_integrity::ENTRYPOINT_FILES {
+        fs::write(
+            dir.join(surface),
+            crate::core::entrypoint_integrity::render_entrypoint_for_release(surface, "0.107.4")
+                .unwrap(),
+        )
+        .unwrap();
+    }
+    let manifest = dir.join(".decapod/managed/specs/.manifest.json");
+    let docker = dir.join(".decapod/managed/Dockerfile.decapod");
+    fs::write(&manifest, "{\"decapod_release\":\"0.0.0\"}").unwrap();
+    fs::write(&docker, "ARG DECAPOD_VERSION=0.0.0\n").unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-qm", "previous evaluating release"]);
+    git(dir, &["branch", "master"]);
+    fs::write(dir.join("feature.txt"), "new source work\n").unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-qm", "source without projection refresh"]);
+    let stale = ValidationContext::new();
+    validate_publication_bundle_currency(&stale, dir).unwrap();
+    let failures = stale.fails.lock().unwrap().join("\n");
+    assert!(
+        failures.contains("Dockerfile.decapod") && failures.contains("specs/.manifest.json"),
+        "{failures}"
+    );
+    assert!(
+        !failures.contains("missing from base...HEAD: AGENTS.md"),
+        "{failures}"
+    );
+
+    fs::write(
+        &manifest,
+        serde_json::json!({"decapod_release":env!("CARGO_PKG_VERSION")}).to_string(),
+    )
+    .unwrap();
+    fs::write(
+        &docker,
+        format!("ARG DECAPOD_VERSION={}\n", env!("CARGO_PKG_VERSION")),
+    )
+    .unwrap();
+    git(dir, &["add", "-A"]);
+    git(dir, &["commit", "-qm", "refresh generated evaluating pins"]);
+    let current = ValidationContext::new();
+    validate_publication_bundle_currency(&current, dir).unwrap();
+    assert_eq!(
+        current.fail_count.load(Ordering::Relaxed),
+        0,
+        "{:?}",
+        current.fails.lock().unwrap()
+    );
+    let diff = std::process::Command::new("git")
+        .current_dir(dir)
+        .args(["diff", "--name-only", "master...HEAD"])
+        .output()
+        .unwrap();
+    let names = String::from_utf8(diff.stdout).unwrap();
+    assert!(
+        !names
+            .lines()
+            .any(|name| crate::core::entrypoint_integrity::ENTRYPOINT_FILES.contains(&name)),
+        "{names}"
     );
 }
 
@@ -1732,4 +1912,64 @@ fn evidence_collector_preserves_integrity_valid_compact_preparation_receipt() {
     stored["sections"]["validation"]["receipt_hash"] = serde_json::json!("sha256:forged");
     fs::write(path, serde_json::to_vec(&stored).unwrap()).unwrap();
     assert!(super::collect_evidence_artifacts(root).is_err());
+}
+
+#[test]
+fn risk_map_warning_recommends_supported_cli_command_and_clears_when_present() {
+    use crate::cli::{Cli, Command, GovernCli, GovernCommand};
+    use crate::plugins::policy::{PolicyCli, PolicyCommand, RiskmapSubcommand};
+    use clap::Parser;
+
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+
+    let missing_ctx = ValidationContext::new();
+    super::validate_risk_map(&store, &missing_ctx).unwrap();
+    assert_eq!(missing_ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(missing_ctx.pass_count.load(Ordering::Relaxed), 0);
+    assert_eq!(missing_ctx.warn_count.load(Ordering::Relaxed), 1);
+
+    let warns = missing_ctx.warns.lock().unwrap();
+    assert_eq!(warns.len(), 1);
+    let warning = &warns[0];
+    assert!(
+        !warning.contains("decapod riskmap init"),
+        "unsupported command leaked into warning: {warning}"
+    );
+    assert!(
+        !warning.contains("decapod policy riskmap init"),
+        "unsupported command leaked into warning: {warning}"
+    );
+
+    let recommended = warning
+        .split('`')
+        .nth(1)
+        .expect("risk-map warning should contain a backticked command");
+    assert_eq!(recommended, "decapod govern policy riskmap init");
+
+    let args: Vec<&str> = recommended.split_whitespace().collect();
+    let parsed = Cli::try_parse_from(args).expect("recommended command must parse");
+    assert!(matches!(
+        parsed.command,
+        Command::Govern(GovernCli {
+            command: GovernCommand::Policy(PolicyCli {
+                command: PolicyCommand::Riskmap {
+                    command: RiskmapSubcommand::Init
+                }
+            })
+        })
+    ));
+    assert!(Cli::try_parse_from(["decapod", "riskmap", "init"]).is_err());
+    assert!(Cli::try_parse_from(["decapod", "policy", "riskmap", "init"]).is_err());
+
+    fs::write(store.root.join("RISKMAP.json"), "{\"zones\":[]}\n").unwrap();
+    let present_ctx = ValidationContext::new();
+    super::validate_risk_map(&store, &present_ctx).unwrap();
+    assert_eq!(present_ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(present_ctx.warn_count.load(Ordering::Relaxed), 0);
+    assert_eq!(present_ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert!(present_ctx.warns.lock().unwrap().is_empty());
 }

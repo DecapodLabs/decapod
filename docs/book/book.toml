@@ -3,9 +3,11 @@ authors = ["Decapod Contributors"]
 language = "en"
 multilingual = false
 src = "src"
-title = "Decapod Book"
+title = "Decapod — Documentation"
 
 [output.html]
 git-repository-url = "https://github.com/DecapodLabs/decapod"
 additional-css = ["src/custom.css"]
 edit-url-template = "https://github.com/DecapodLabs/decapod/edit/master/docs/book/{path}"
+default-theme = "light"
+preferred-dark-theme = "navy"

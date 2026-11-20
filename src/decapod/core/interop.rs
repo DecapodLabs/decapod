@@ -4,8 +4,9 @@
 //! operations an external harness can actually use, plus a deterministic,
 //! fail-closed compatibility negotiation. It is *descriptive only*: a
 //! capability declaration is a claim, never an authorization. Verification
-//! states refer to real conformance evidence (see `KNOWN_CONFORMANCE_TESTS`);
-//! an entry can never self-certify.
+//! states must distinguish source coverage from observed execution. This
+//! manifest has no authenticated execution-receipt input: source test names
+//! never establish `verified` or `failed` conformance.
 
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
@@ -22,62 +23,10 @@ pub const SUPPORTED_PROFILE_VERSIONS: &[&str] = &["v1"];
 pub const SUPPORTED_EXTENSIONS: &[&str] =
     &["receipts", "interlocks", "projections", "context-capsule"];
 
-/// Registered RPC operation names.
-///
-/// This list is the canonical registry for the dispatch-derived manifest
-/// entries. The dispatcher still matches op names with its own table, so this
-/// is not a generated single source of truth; instead the black-box conformance
-/// harness (`tests/interop_conformance.rs`) drift-checks the two, proving every
-/// entry is actually accepted by the real dispatcher (an advertised op that
-/// the dispatch rejects as `unknown_op` fails the suite). Harness detection of
-/// drift is proof of synchronization between registry and dispatcher.
-pub const RPC_OPS: &[&str] = &[
-    "agent.init",
-    "workspace.status",
-    "workspace.ensure",
-    "workspace.publish",
-    "context.resolve",
-    "context.scope",
-    "context.capsule.query",
-    "context.bundle.export",
-    "context.bundle.import",
-    "context.bindings",
-    "constitution.get",
-    "constitution.links.query",
-    "constitution.links.navigate",
-    "constitution.migrate",
-    "agent.registry.query",
-    "specs.refresh",
-    "schema.get",
-    "data.database.inspect",
-    "data.database.capabilities",
-    "data.database.maintain.inspect",
-    "data.database.verify",
-    "data.database.backup",
-    "data.database.recover",
-    "data.database.lock.diagnose",
-    "data.database.lock.retry",
-    "data.database.lock.release_own",
-    "data.database.audit",
-    "store.upsert",
-    "store.query",
-    "validate.run",
-    "scaffold.next_question",
-    "scaffold.apply_answer",
-    "scaffold.generate_artifacts",
-    "standards.resolve",
-    "mentor.obligations",
-    "assurance.evaluate",
-    "interop.manifest",
-    "interop.negotiate",
-    "interop.project",
-];
-
 /// Conformance test identifiers known to the black-box harness.
 ///
-/// A manifest entry may only claim `verified`/`failed` against one of these
-/// ids; `validate_manifest` rejects any other reference, so an authored
-/// manifest cannot invent admissible evidence.
+/// These identify source coverage only. Registration is not evidence that a
+/// test executed, passed, or applies to the current binary.
 pub const KNOWN_CONFORMANCE_TESTS: &[&str] = &[
     "interop_conformance::discovery_and_negotiation",
     "interop_conformance::authorized_mutation",
@@ -137,12 +86,12 @@ impl VerificationState {
 /// Evidence attached to a capability entry.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CapabilityEvidence {
-    /// Conformance test identifier (must be in [`KNOWN_CONFORMANCE_TESTS`] when
-    /// the state is `verified` or `failed`).
+    /// Source coverage identifier, not proof of execution.
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub conformance_test: String,
     pub state: VerificationState,
-    /// Reference to the evidence (e.g. `tests/interop_conformance.rs::<case>`).
+    /// Source coverage location (e.g. `tests/interop_conformance.rs::<case>`).
+    /// A caller-controlled reference never authenticates a producer or result.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub evidence_ref: Option<String>,
 }
@@ -202,7 +151,27 @@ struct OpMeta {
     description: &'static str,
 }
 
-const OP_META: &[OpMeta] = &[
+// Keep routing registration and manifest metadata in the existing catalog.
+// Registration permits routing only; the operation's own authority gates apply.
+macro_rules! rpc_catalog {
+    ($(OpMeta {
+        op: $op:literal,
+        read_only: $read_only:literal,
+        session_required: $session_required:literal,
+        description: $description:literal,
+    }),* $(,)?) => {
+        /// Registered RPC names, derived from the manifest's operation metadata.
+        pub const RPC_OPS: &[&str] = &[$($op),*];
+        const OP_META: &[OpMeta] = &[$(OpMeta {
+            op: $op,
+            read_only: $read_only,
+            session_required: $session_required,
+            description: $description,
+        }),*];
+    };
+}
+
+rpc_catalog![
     OpMeta {
         op: "agent.init",
         read_only: true,
@@ -248,13 +217,13 @@ const OP_META: &[OpMeta] = &[
     OpMeta {
         op: "context.bundle.export",
         read_only: true,
-        session_required: false,
+        session_required: true,
         description: "Export portable context bundle",
     },
     OpMeta {
         op: "context.bundle.import",
         read_only: false,
-        session_required: false,
+        session_required: true,
         description: "Import context bundle (stale bundles refused)",
     },
     OpMeta {
@@ -298,6 +267,12 @@ const OP_META: &[OpMeta] = &[
         read_only: false,
         session_required: true,
         description: "Refresh governed spec fingerprints/manifests",
+    },
+    OpMeta {
+        op: "intent.reconcile",
+        read_only: true,
+        session_required: false,
+        description: "Inspect recorded intent, living-spec references and advisory change impact",
     },
     OpMeta {
         op: "schema.get",
@@ -410,13 +385,13 @@ const OP_META: &[OpMeta] = &[
     OpMeta {
         op: "mentor.obligations",
         read_only: true,
-        session_required: false,
+        session_required: true,
         description: "Query mentor obligations",
     },
     OpMeta {
         op: "assurance.evaluate",
         read_only: true,
-        session_required: false,
+        session_required: true,
         description: "Evaluate assurance harness",
     },
     OpMeta {
@@ -437,11 +412,22 @@ const OP_META: &[OpMeta] = &[
         session_required: false,
         description: "Structured projection of a captured outcome (derived, non-authoritative)",
     },
+    OpMeta {
+        op: "state.resolve",
+        read_only: true,
+        session_required: true,
+        description: "Resolve current governed state and evidence applicability",
+    },
+    OpMeta {
+        op: "state.diff",
+        read_only: true,
+        session_required: true,
+        description: "Compare governed state projections",
+    },
 ];
 
-/// Ops exercised end-to-end by the black-box conformance suite; these are the
-/// only entries allowed to claim `verified`.
-const VERIFIED_BY_DISCOVERY: &[&str] = &[
+/// Source coverage in the black-box suite, independent of whether it ran.
+const COVERED_BY_DISCOVERY: &[&str] = &[
     "agent.init",
     "context.resolve",
     "schema.get",
@@ -449,19 +435,19 @@ const VERIFIED_BY_DISCOVERY: &[&str] = &[
     "interop.negotiate",
     "interop.project",
 ];
-const VERIFIED_BY_MUTATION: &[&str] = &["store.upsert", "store.query"];
-const VERIFIED_BY_CONTINUITY: &[&str] = &[
+const COVERED_BY_MUTATION: &[&str] = &["store.upsert", "store.query"];
+const COVERED_BY_CONTINUITY: &[&str] = &[
     "workspace.status",
     "context.bundle.export",
     "context.bundle.import",
 ];
 
 fn evidence_for(op: &str) -> CapabilityEvidence {
-    let test = if VERIFIED_BY_DISCOVERY.contains(&op) {
+    let test = if COVERED_BY_DISCOVERY.contains(&op) {
         "interop_conformance::discovery_and_negotiation"
-    } else if VERIFIED_BY_MUTATION.contains(&op) {
+    } else if COVERED_BY_MUTATION.contains(&op) {
         "interop_conformance::authorized_mutation"
-    } else if VERIFIED_BY_CONTINUITY.contains(&op) {
+    } else if COVERED_BY_CONTINUITY.contains(&op) {
         "interop_conformance::session_task_continuity"
     } else {
         return CapabilityEvidence {
@@ -472,7 +458,7 @@ fn evidence_for(op: &str) -> CapabilityEvidence {
     };
     CapabilityEvidence {
         conformance_test: test.to_string(),
-        state: VerificationState::Verified,
+        state: VerificationState::NotRun,
         evidence_ref: Some(format!("tests/interop_conformance.rs::{test}")),
     }
 }
@@ -513,7 +499,7 @@ pub fn builtin_manifest() -> InteropManifest {
         }),
         evidence: CapabilityEvidence {
             conformance_test: "interop_conformance::cli_rpc_parity".to_string(),
-            state: VerificationState::Verified,
+            state: VerificationState::NotRun,
             evidence_ref: Some("tests/interop_conformance.rs::cli_rpc_parity".to_string()),
         },
         description: "Full clap CLI surface mirroring the governed operations".to_string(),
@@ -579,9 +565,10 @@ fn valid_version(v: &str) -> bool {
             .all(|p| !p.is_empty() && p.bytes().all(|b| b.is_ascii_digit()))
 }
 
-/// Validate a manifest. Enforces the declaration/evidence boundary: a
-/// `verified`/`failed` claim requires an admissible, known conformance test
-/// and an evidence reference; an `implemented` entry requires an
+/// Validate declarations without promoting them to observed execution.
+/// This surface has no authenticated conformance receipt reader, so even a
+/// known test plus a credible reference cannot establish `verified`/`failed`.
+/// An `implemented` entry requires an
 /// implementation mapping whose op is registered; duplicates and malformed
 /// declarations are rejected.
 pub fn validate_manifest(m: &InteropManifest) -> Result<(), Vec<ManifestViolation>> {
@@ -648,6 +635,11 @@ pub fn validate_manifest(m: &InteropManifest) -> Result<(), Vec<ManifestViolatio
         }
         match cap.evidence.state {
             VerificationState::Verified | VerificationState::Failed => {
+                violations.push(violation(
+                    "unobserved_conformance",
+                    &cap.id,
+                    "manifest declarations cannot authenticate executed conformance; retain source coverage as not_run and obtain independently observed current proof",
+                ));
                 if !KNOWN_CONFORMANCE_TESTS.contains(&cap.evidence.conformance_test.as_str()) {
                     violations.push(violation(
                         "verification_without_admissible_evidence",

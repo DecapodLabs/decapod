@@ -12,6 +12,76 @@ const ASSETS: &str = "src/decapod/core/assets.rs";
 const MAX_BLOB: usize = 1024 * 1024;
 const CONTROL_TIMEOUT: Duration = Duration::from_secs(15);
 const HISTORY_TIMEOUT: Duration = Duration::from_secs(120);
+const DEVELOPMENT_VERSION_KEY: &str = "_allow_entrypoint_version_drift";
+
+fn development_scope(repo: &Path, run_git: &mut GitRunner<'_>) -> Result<bool, String> {
+    use std::io::Read;
+    let path = repo.join(".decapod/config.toml");
+    let metadata = match std::fs::symlink_metadata(&path) {
+        Ok(metadata)
+            if metadata.is_file()
+                && !metadata.file_type().is_symlink()
+                && metadata.len() <= MAX_BLOB as u64 =>
+        {
+            metadata
+        }
+        _ => return Ok(false),
+    };
+    let mut bytes = String::with_capacity(metadata.len() as usize);
+    std::fs::File::open(path)
+        .map_err(|_| "development config unavailable")?
+        .take(MAX_BLOB as u64 + 1)
+        .read_to_string(&mut bytes)
+        .map_err(|_| "development config unreadable")?;
+    if bytes.len() > MAX_BLOB {
+        return Err("development config exceeds bound".into());
+    }
+    let value: toml::Value = match toml::from_str(&bytes) {
+        Ok(value) => value,
+        Err(_) => return Ok(false),
+    };
+    if value
+        .get("repo")
+        .and_then(|repo| repo.get(DEVELOPMENT_VERSION_KEY))
+        .and_then(toml::Value::as_bool)
+        != Some(true)
+    {
+        return Ok(false);
+    }
+    let origin = run_git(&["remote", "get-url", "--push", "--all", "origin"])?;
+    let urls = String::from_utf8_lossy(&origin.stdout);
+    let mut urls = urls.lines();
+    if !origin.status.success()
+        || crate::core::repo_identity::parse_github_repository(urls.next().unwrap_or_default())
+            .as_deref()
+            != Some("DecapodLabs/decapod")
+        || urls.next().is_some()
+    {
+        return Ok(false);
+    }
+    ensure_ungrafted_with(repo, run_git)?;
+    let Some(root) = oid_with(SOURCE_ROOT, run_git)? else {
+        return Ok(false);
+    };
+    let Some(head) = oid_with("HEAD", run_git)? else {
+        return Ok(false);
+    };
+    if !ancestor_with(&root, &head, run_git)? {
+        return Ok(false);
+    }
+    version(&source_blob_with(&head, "Cargo.toml", run_git)?)?;
+    Ok(true)
+}
+
+pub(super) fn development_template(repo: &Path, surface: &str) -> Result<Option<String>, String> {
+    let mut run_git =
+        |args: &[&str]| git(repo, args).ok_or_else(|| "development source read unavailable".into());
+    if !development_scope(repo, &mut run_git)? {
+        return Ok(None);
+    }
+    let head = oid_with("HEAD", &mut run_git)?.ok_or("development HEAD unavailable")?;
+    payload(&source_blob_with(&head, ASSETS, &mut run_git)?, surface).map(Some)
+}
 const NAMED: &str = r##"fn template_named_agent(file_stem: &str) -> String {
     format!("# {}.md - Agent Entrypoint\n\n{}", file_stem, agent_entrypoint_body())
 }"##;
@@ -293,6 +363,7 @@ fn normalize(content: &str) -> String {
     format!("{}\n", content.trim_end_matches(['\r', '\n']))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn commit_path_violation_at(
     repo: &Path,
     accepted_base: &str,
@@ -300,6 +371,7 @@ fn commit_path_violation_at(
     status: char,
     surface: &str,
     head: &str,
+    development: bool,
     run_git: &mut GitRunner<'_>,
 ) -> Result<Option<String>, String> {
     if !super::ENTRYPOINT_FILES.contains(&surface) {
@@ -320,6 +392,18 @@ fn commit_path_violation_at(
         return Ok(Some(format!(
             "{commit}: non-content touch of entrypoint {surface} (mode/metadata-only changes are forbidden; leave Decapod-owned entrypoints alone)"
         )));
+    }
+    if development {
+        // Only version alignment changes: source identity, immutable per-commit
+        // template bytes and the version-bound fingerprint remain mandatory.
+        if !ancestor_with(SOURCE_ROOT, &commit, run_git)? {
+            return Err("development commit outside source lineage".into());
+        }
+        version(&source_blob_with(&commit, "Cargo.toml", run_git)?)?;
+        let body = payload(&source_blob_with(&commit, ASSETS, run_git)?, surface)?;
+        if super::valid_versioned_source_entrypoint(surface, &content, &body) {
+            return Ok(None);
+        }
     }
     let historical = historical_at(repo, &commit, surface, head, run_git).map_err(|error| {
         format!("{commit}: cannot verify historical entrypoint {surface}: {error}")
@@ -449,6 +533,7 @@ fn committed_history(
     run_git: &mut GitRunner<'_>,
 ) -> Result<usize, String> {
     ensure_ungrafted_with(repo, run_git)?;
+    let development = development_scope(repo, run_git)?;
     let base = oid_with(accepted_base, run_git)?.ok_or("cannot resolve accepted base commit")?;
     let head = oid_with(candidate_head, run_git)?.ok_or("cannot resolve candidate commit")?;
     if !ancestor_with(&base, &head, run_git)? {
@@ -521,6 +606,7 @@ fn committed_history(
                 status.as_bytes()[0] as char,
                 surface,
                 &head,
+                development,
                 run_git,
             )? {
                 failures.push(error);
@@ -533,6 +619,12 @@ fn committed_history(
     if oid_with(SOURCE_ROOT, run_git)?.is_some() && ancestor_with(SOURCE_ROOT, &head, run_git)? {
         for surface in super::ENTRYPOINT_FILES {
             let committed = blob_with(&head, surface, run_git)?;
+            if development {
+                let body = payload(&source_blob_with(&head, ASSETS, run_git)?, surface)?;
+                if super::valid_versioned_source_entrypoint(surface, &committed, &body) {
+                    continue;
+                }
+            }
             let canonical =
                 super::render_entrypoint(surface).ok_or("missing candidate template")?;
             if normalize(&committed) != normalize(&canonical) {
@@ -572,15 +664,24 @@ fn commit_path_violation(repo: &Path, commit: &str, status: char, surface: &str)
         return Some("cannot resolve current commit".into());
     };
     let base = oid(repo, "HEAD^").unwrap_or_else(|| head.clone());
-    commit_path_violation_at(repo, &base, commit, status, surface, &head, &mut |args| {
-        git(repo, args).ok_or_else(|| "Git read failed".into())
-    })
+    commit_path_violation_at(
+        repo,
+        &base,
+        commit,
+        status,
+        surface,
+        &head,
+        false,
+        &mut |args| git(repo, args).ok_or_else(|| "Git read failed".into()),
+    )
     .unwrap_or_else(Some)
 }
 
 #[cfg(test)]
 #[path = "history/tests.rs"]
 mod tests;
+#[cfg(test)]
+pub(crate) use tests::development_source_fixture;
 
 #[cfg(test)]
 mod safety_transition_tests {

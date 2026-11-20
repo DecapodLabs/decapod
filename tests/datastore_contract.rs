@@ -453,3 +453,154 @@ fn authority_convergence_contract_preserves_unresolved_dependencies_and_detects_
     assert!(!drifted.is_converged());
     assert_eq!(drifted.tag_set_divergences, vec![dep_id]);
 }
+
+#[test]
+fn events_read_and_write_paths_enforce_storage_format_compatibility_boundaries() {
+    use decapod::core::{events, storage_compaction};
+    use serde_json::json;
+
+    let scratch = tempfile::tempdir().unwrap();
+    let data = scratch.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+
+    let added = todo::add_task(
+        &data,
+        &todo::TodoCommand::Add {
+            title: "Compatibility contract task".into(),
+            description: "Verifies storage format floor on event boundary".into(),
+            priority: "medium".into(),
+            tags: "compat".into(),
+            owner: String::new(),
+            due: None,
+            r#ref: String::new(),
+            scope: "root".into(),
+            dir: Some(scratch.path().to_string_lossy().into_owned()),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        },
+    )
+    .unwrap();
+    let task_id = added["id"].as_str().unwrap().to_owned();
+
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let subject_event = json!({
+        "event_id": "compat-subject-1",
+        "event_type": "workunit.checkpoint",
+        "task_id": task_id,
+        "ts": "2026-11-18T00:00:00Z",
+        "actor": "tester",
+        "payload": {"step": 1}
+    });
+    events::append_on_conn(&conn, events::WORKUNIT, &subject_event).unwrap();
+
+    // Confirm advertised compatibility floor is 0.144.2 (rejecting 0.141.0 and 0.144.1).
+    assert!(
+        storage_compaction::check_storage_format_compatibility_for_version(&conn, "0.144.1", false)
+            .is_err()
+    );
+    storage_compaction::check_storage_format_compatibility_for_version(&conn, "0.144.2", true)
+        .unwrap();
+
+    // Higher min_writer_version allows reads while blocking event writes & capacity reservations.
+    conn.execute(
+        "UPDATE meta SET value = '99.0.0' WHERE namespace = 'storage' AND key = 'min_writer_version'",
+        [],
+    )
+    .unwrap();
+    assert!(!events::query(&data, events::TODO, 10).unwrap().is_empty());
+    assert!(
+        !events::query_all_on_conn(&conn, events::TODO)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        events::query_subject_on_conn(&conn, events::WORKUNIT, "task", &task_id, 10)
+            .unwrap()
+            .len(),
+        1
+    );
+    assert!(
+        events::query_subject_event_on_conn(
+            &conn,
+            events::WORKUNIT,
+            "task",
+            &task_id,
+            "compat-subject-1"
+        )
+        .unwrap()
+        .is_some()
+    );
+
+    let next_event = json!({
+        "event_id": "compat-subject-2",
+        "event_type": "workunit.checkpoint",
+        "task_id": task_id,
+        "ts": "2026-11-18T00:01:00Z",
+        "actor": "tester",
+        "payload": {"step": 2}
+    });
+    assert!(
+        events::append_on_conn(&conn, events::WORKUNIT, &next_event)
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+    conn.execute_batch("BEGIN IMMEDIATE").unwrap();
+    let cap_err = events::check_subject_append_capacity(
+        &conn,
+        events::WORKUNIT,
+        "task",
+        &task_id,
+        &next_event,
+        10,
+    )
+    .unwrap_err()
+    .to_string();
+    conn.execute_batch("ROLLBACK").unwrap();
+    assert!(cap_err.contains("STORAGE_FORMAT_INCOMPATIBLE"));
+    assert!(
+        events::ensure_tables(&conn)
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+
+    // Higher min_reader_version blocks both reads and writes fail-closed.
+    conn.execute(
+        "UPDATE meta SET value = '99.0.0' WHERE namespace = 'storage' AND key = 'min_reader_version'",
+        [],
+    )
+    .unwrap();
+    assert!(
+        events::query(&data, events::TODO, 10)
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+    assert!(
+        events::query_all_on_conn(&conn, events::TODO)
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+    assert!(
+        events::query_subject_on_conn(&conn, events::WORKUNIT, "task", &task_id, 10)
+            .unwrap_err()
+            .to_string()
+            .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+    assert!(
+        events::query_subject_event_on_conn(
+            &conn,
+            events::WORKUNIT,
+            "task",
+            &task_id,
+            "compat-subject-1"
+        )
+        .unwrap_err()
+        .to_string()
+        .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+}

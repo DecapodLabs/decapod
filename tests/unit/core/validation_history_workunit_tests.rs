@@ -7,9 +7,7 @@ use crate::core::{context_capsule, trajectory, workunit};
 use crate::plan_governance::{self, InitPlanInput, PlanPatch, PlanState, ScopeConstraints};
 use std::fs;
 
-#[allow(dead_code)]
-#[path = "../../common/consumer_readiness_fixture.rs"]
-mod consumer;
+use crate::consumer_readiness_fixture as consumer;
 
 const TASK: &str = "code_observed_workunit";
 const INTENT: &str = "intent:observed-workunit";
@@ -302,6 +300,46 @@ fn changed_workunit_during_actual_execution_cannot_publish_a_canonical_success()
     assert_eq!(
         workunit::load_workunit(root, TASK).unwrap().status,
         workunit::WorkUnitStatus::Claimed
+    );
+}
+
+#[test]
+fn full_not_ready_judgment_withdraws_current_proof_but_partial_scope_does_not() {
+    let (fixture, store) = prepared();
+    let root = &fixture.options.root;
+    observe(&fixture, &store);
+    let original =
+        workunit::transition_status(root, TASK, workunit::WorkUnitStatus::Verified).unwrap();
+    let reference = original.validation_record.unwrap();
+    let binding = capture_task_binding(&store, root).unwrap().unwrap();
+    let generation = before_generation(root);
+    // This unit models the final readiness judgment, not a failed execution.
+    // The CLI regression separately requires a real failing native step.
+    let mut judgment = fixture.validate(&mut fixture.host());
+    let full_scope = judgment.scope;
+    judgment.ready = false;
+    judgment.scope = "ci_local";
+    finish_archive(&store, root, &binding, &judgment).unwrap();
+    assert_eq!(before_generation(root), generation);
+    judgment.scope = full_scope;
+    finish_archive(&store, root, &binding, &judgment).unwrap();
+    let claimed = workunit::load_workunit(root, TASK).unwrap();
+    assert_eq!(claimed.status, workunit::WorkUnitStatus::Claimed);
+    assert!(claimed.validation_record.is_none());
+    assert!(claimed.validation_epoch.is_none());
+    assert!(claimed.proof_results.is_empty());
+    assert_eq!(before_generation(root), generation + 1);
+    assert!(
+        workunit::transition_status(root, TASK, workunit::WorkUnitStatus::Verified)
+            .unwrap_err()
+            .to_string()
+            .contains("WORKUNIT_PROOF_STALE")
+    );
+    assert_eq!(
+        lookup_record(root, &store, &reference.candidate_sha, &reference.record_id)
+            .unwrap()
+            .record_digest(),
+        reference.record_digest
     );
 }
 

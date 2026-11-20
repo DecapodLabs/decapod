@@ -684,3 +684,366 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
         "workspace container proof should pass local binary fallback build args, got: {runtime_args}"
     );
 }
+
+#[test]
+fn test_issue_1737_unknown_claim_rejected_and_legacy_unknown_recovery_preserves_custody() {
+    let tmp = TempDir::new().expect("tempdir");
+    let dir = tmp.path().join("repo");
+    let home = tmp.path().join("home");
+    let xdg_cfg = tmp.path().join("xdg-config");
+    let xdg_data = tmp.path().join("xdg-data");
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::create_dir_all(&home).unwrap();
+    std::fs::create_dir_all(&xdg_cfg).unwrap();
+    std::fs::create_dir_all(&xdg_data).unwrap();
+
+    let git = |cwd: &Path, args: &[&str]| {
+        let out = Command::new("git")
+            .args(args)
+            .current_dir(cwd)
+            .env("HOME", &home)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .output()
+            .expect("git");
+        assert!(
+            out.status.success(),
+            "git {args:?} failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+
+    git(&dir, &["init", "-q", "-b", "main"]);
+    git(&dir, &["config", "user.name", "Fixture"]);
+    git(&dir, &["config", "user.email", "fixture@example.invalid"]);
+    git(&dir, &["commit", "--allow-empty", "-m", "Fixture baseline"]);
+
+    fn copy_dir_recursive(src: &Path, dst: &Path) {
+        std::fs::create_dir_all(dst).unwrap();
+        for entry in std::fs::read_dir(src).unwrap() {
+            let entry = entry.unwrap();
+            let ty = entry.file_type().unwrap();
+            let target = dst.join(entry.file_name());
+            if ty.is_dir() {
+                copy_dir_recursive(&entry.path(), &target);
+            } else {
+                std::fs::copy(entry.path(), target).unwrap();
+            }
+        }
+    }
+
+    let run_isolated =
+        |cwd: &Path, args: &[&str], agent: Option<&str>, stdin_data: Option<&str>| {
+            let mut cmd = Command::new(resolve_decapod_bin());
+            cmd.current_dir(cwd)
+                .args(args)
+                .env("HOME", &home)
+                .env("XDG_CONFIG_HOME", &xdg_cfg)
+                .env("XDG_DATA_HOME", &xdg_data)
+                .env("DECAPOD_CLAIM_AUTORUN", "0")
+                .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
+                .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
+                .env_remove("DECAPOD_AGENT_ID")
+                .env_remove("DECAPOD_SESSION_PASSWORD")
+                .env_remove("DECAPOD_TASK_ID")
+                .env_remove("DECAPOD_EXTERNAL_TASK_ID")
+                .env_remove("BD_TASK_ID")
+                .env_remove("BEADS_TASK_ID");
+            if let Some(a) = agent {
+                cmd.env("DECAPOD_AGENT_ID", a);
+            }
+            if let Some(input) = stdin_data {
+                cmd.stdin(Stdio::piped());
+                cmd.stdout(Stdio::piped());
+                cmd.stderr(Stdio::piped());
+                let mut child = cmd.spawn().expect("spawn decapod");
+                child
+                    .stdin
+                    .take()
+                    .unwrap()
+                    .write_all(input.as_bytes())
+                    .unwrap();
+                child.wait_with_output().unwrap()
+            } else {
+                cmd.stdin(Stdio::null()).output().unwrap()
+            }
+        };
+
+    // Eval, init --proof --no-ci --isolation-mode worktree, and docs ingest succeed without DECAPOD_AGENT_ID.
+    let eval_out = run_isolated(
+        &dir,
+        &["eval", "--stdin", "--format", "json"],
+        None,
+        Some("Reproduce missing authoring identity"),
+    );
+    assert!(
+        eval_out.status.success(),
+        "eval failed: {}",
+        String::from_utf8_lossy(&eval_out.stderr)
+    );
+    let init_out = run_isolated(
+        &dir,
+        &["init", "--proof", "--no-ci", "--isolation-mode", "worktree"],
+        None,
+        None,
+    );
+    assert!(
+        init_out.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init_out.stderr)
+    );
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-m", "Accept Decapod init baseline"]);
+    let docs_out = run_isolated(&dir, &["docs", "ingest"], None, None);
+    assert!(
+        docs_out.status.success(),
+        "docs ingest failed: {}",
+        String::from_utf8_lossy(&docs_out.stderr)
+    );
+    let list_out = run_isolated(&dir, &["todo", "list", "--format", "json"], None, None);
+    assert!(list_out.status.success());
+
+    // Clone the initialized pre-journal baseline before `todo add` so legacy
+    // 'unknown' recovery checks do not pay for a second `decapod init --proof`.
+    let legacy_tmp = tempfile::tempdir().unwrap();
+    let legacy_dir = legacy_tmp.path().to_path_buf();
+    copy_dir_recursive(&dir, &legacy_dir);
+
+    // todo add works when DECAPOD_AGENT_ID is unset, as do read-only todo list/get.
+    let add_out = run_isolated(
+        &dir,
+        &["todo", "add", "--format", "json", "Reproduce #1737"],
+        None,
+        None,
+    );
+    assert!(
+        add_out.status.success(),
+        "todo add failed: {}",
+        String::from_utf8_lossy(&add_out.stderr)
+    );
+    let add_json: Value = serde_json::from_slice(&add_out.stdout).expect("parse todo add");
+    let task_id = add_json["id"].as_str().expect("task id").to_string();
+
+    // Claiming as unset / "--agent unknown" must fail closed with AUTHORING_ACTOR_REQUIRED.
+    for (args, agent_env) in [
+        (
+            vec!["todo", "claim", "--id", &task_id, "--format", "json"],
+            None,
+        ),
+        (
+            vec![
+                "todo", "claim", "--id", &task_id, "--agent", "unknown", "--format", "json",
+            ],
+            Some("actor-a"),
+        ),
+    ] {
+        let out = run_isolated(&dir, &args, agent_env, None);
+        assert!(
+            !out.status.success(),
+            "todo claim must fail closed for {args:?} env={agent_env:?}: stdout={} stderr={}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let combined = format!(
+            "{}{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(
+            combined.contains("AUTHORING_ACTOR_REQUIRED")
+                && combined.contains("DECAPOD_AGENT_ID=<actor>"),
+            "expected actionable AUTHORING_ACTOR_REQUIRED error, got: {combined}"
+        );
+    }
+
+    let get_after_denied: Value = serde_json::from_slice(
+        &run_isolated(
+            &dir,
+            &["todo", "get", "--id", &task_id, "--format", "json"],
+            None,
+            None,
+        )
+        .stdout,
+    )
+    .unwrap();
+    assert_eq!(get_after_denied["item"]["assigned_to"], "");
+
+    // Branching/workspace flows (CLI and RPC) must also fail closed without mutating todo/worktree state.
+    let unknown_branch = format!("agent/unknown/{task_id}");
+    for (args, agent_env, stdin_payload) in [
+        (
+            vec!["workspace", "ensure", "--branch", &unknown_branch],
+            None,
+            None,
+        ),
+        (
+            vec!["rpc", "--stdin"],
+            None,
+            Some(format!(
+                r#"{{"op":"workspace.ensure","params":{{"branch":"{unknown_branch}"}}}}"#
+            )),
+        ),
+    ] {
+        let out = run_isolated(&dir, &args, agent_env, stdin_payload.as_deref());
+        assert!(
+            !out.status.success(),
+            "workspace ensure must fail closed for {args:?} env={agent_env:?}"
+        );
+        let combined = format!(
+            "{}{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(
+            combined.contains("AUTHORING_ACTOR_REQUIRED")
+                && combined.contains("DECAPOD_AGENT_ID=<actor>"),
+            "expected AUTHORING_ACTOR_REQUIRED on workspace ensure, got: {combined}"
+        );
+    }
+
+    let list_after_ws: Value = serde_json::from_slice(
+        &run_isolated(&dir, &["todo", "list", "--format", "json"], None, None).stdout,
+    )
+    .unwrap();
+    assert_eq!(
+        list_after_ws["items"].as_array().unwrap().len(),
+        1,
+        "rejected workspace ensure must not create coordination todos"
+    );
+    assert!(
+        !dir.join(".decapod/workspaces").exists()
+            || std::fs::read_dir(dir.join(".decapod/workspaces"))
+                .unwrap()
+                .next()
+                .is_none(),
+        "rejected workspace ensure must not create worktrees"
+    );
+
+    // Seed pre-existing 'unknown' claims into the cloned pre-journal workspace
+    // (simulating tasks created by older binaries) and verify narrow, fail-closed
+    // recovery by a real actor, custody preservation when real authoring_bindings
+    // exist, and real-actor cross-owner isolation.
+    let legacy_task1 = "code_legacy_unknown_1";
+    let legacy_bound = "code_legacy_unknown_bound";
+    {
+        let db = decapod::core::db::Connection::open(legacy_dir.join(".decapod/data/decapod.db"))
+            .expect("open legacy decapod.db");
+        for (id, title) in [
+            (legacy_task1, "Legacy unknown task 1"),
+            (legacy_bound, "Legacy unknown with real binding"),
+        ] {
+            db.execute(
+                "INSERT INTO tasks(
+                    id, hash, title, status, priority, category, dir_path, scope, assigned_to,
+                    assigned_at, lease_expires_at, lease_generation, lease_lifecycle,
+                    owner, revision, created_at, updated_at
+                 ) VALUES(
+                    ?1, ?2, ?3, 'open', 'medium', 'code', ?4, 'core', 'unknown',
+                    '100Z', '4102444800Z', 1, 'claimed', 'unknown', 1, '100Z', '100Z'
+                 )",
+                decapod::core::db::params![
+                    id,
+                    format!("hash_{id}"),
+                    title,
+                    legacy_dir.to_string_lossy().to_string()
+                ],
+            )
+            .unwrap();
+            db.execute(
+                "INSERT INTO task_owners(id, task_id, agent_id, claimed_at, claim_type)
+                 VALUES(?1, ?2, 'unknown', '100Z', 'primary')",
+                decapod::core::db::params![format!("own_{id}"), id],
+            )
+            .unwrap();
+        }
+        db.execute(
+            "INSERT INTO authoring_bindings(
+                worktree_id, task_id, agent_id, lease_generation, branch, repository_id, updated_at
+             ) VALUES(
+                'wt_real_1', ?1, 'other-real-actor', 1,
+                'agent/other-real-actor/legacy_bound', 'repo-legacy', '100Z'
+             )",
+            [legacy_bound],
+        )
+        .unwrap();
+    }
+    let ckpt_out = run_isolated(
+        &legacy_dir,
+        &["todo", "journal", "checkpoint"],
+        Some("actor-a"),
+        None,
+    );
+    assert!(
+        ckpt_out.status.success(),
+        "todo journal checkpoint failed: {}",
+        String::from_utf8_lossy(&ckpt_out.stderr)
+    );
+
+    // Real actor-a recovers legacy_task1 via todo claim, then obtains an authoring workspace.
+    let adopt_claim = run_isolated(
+        &legacy_dir,
+        &["todo", "claim", "--id", legacy_task1, "--format", "json"],
+        Some("actor-a"),
+        None,
+    );
+    assert!(
+        adopt_claim.status.success(),
+        "actor-a recovery claim failed: {}",
+        String::from_utf8_lossy(&adopt_claim.stderr)
+    );
+    let adopt_json: Value = serde_json::from_slice(&adopt_claim.stdout).unwrap();
+    assert_eq!(adopt_json["status"], "ok");
+    assert_eq!(adopt_json["result"]["assigned_to"], "actor-a");
+    assert_eq!(adopt_json["result"]["reclaimed_from"], "unknown");
+
+    let branch_a = format!("agent/actor-a/{legacy_task1}");
+    let ws_a = run_isolated(
+        &legacy_dir,
+        &["workspace", "ensure", "--branch", &branch_a],
+        Some("actor-a"),
+        None,
+    );
+    assert!(
+        ws_a.status.success(),
+        "actor-a workspace ensure failed: {}",
+        String::from_utf8_lossy(&ws_a.stderr)
+    );
+    let ws_a_json: Value = serde_json::from_slice(&ws_a.stdout).unwrap();
+    assert_eq!(ws_a_json["can_work"], true);
+
+    // Real actor-b is STILL blocked from claiming or branching actor-a's task.
+    let claim_b = run_isolated(
+        &legacy_dir,
+        &["todo", "claim", "--id", legacy_task1, "--format", "json"],
+        Some("actor-b"),
+        None,
+    );
+    assert!(claim_b.status.success());
+    let claim_b_json: Value = serde_json::from_slice(&claim_b.stdout).unwrap();
+    assert_eq!(claim_b_json["status"], "conflict");
+    assert_eq!(claim_b_json["result"]["assigned_to"], "actor-a");
+
+    let branch_b = format!("agent/actor-b/{legacy_task1}");
+    let ws_b = run_isolated(
+        &legacy_dir,
+        &["workspace", "ensure", "--branch", &branch_b],
+        Some("actor-b"),
+        None,
+    );
+    assert!(
+        !ws_b.status.success(),
+        "actor-b workspace ensure on actor-a task must fail closed"
+    );
+    assert!(String::from_utf8_lossy(&ws_b.stderr).contains("WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT"));
+
+    // Pre-existing 'unknown' task WITH active real-actor authoring custody stays blocked.
+    let bound_claim = run_isolated(
+        &legacy_dir,
+        &["todo", "claim", "--id", legacy_bound, "--format", "json"],
+        Some("actor-a"),
+        None,
+    );
+    assert!(bound_claim.status.success());
+    let bound_json: Value = serde_json::from_slice(&bound_claim.stdout).unwrap();
+    assert_eq!(bound_json["status"], "conflict");
+}

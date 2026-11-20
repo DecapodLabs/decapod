@@ -676,7 +676,7 @@ fn local_native_managed_project_contract() {
             decapod::core::cloud_session::Session {
                 access_token: fixture.allowed_tokens[index].clone(),
                 refresh_token: None,
-                expires_at: chrono::Utc::now().timestamp() + 900,
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
             },
         );
         let unbound = managed_client(&fixture, index, &["todo", "list", "--format", "json"]);

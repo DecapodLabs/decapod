@@ -93,9 +93,7 @@ fn load_project_config_if_present(
         return Ok(None);
     }
     let raw = fs::read_to_string(&config_path).map_err(error::DecapodError::IoError)?;
-    let cfg: DecapodProjectConfig = toml::from_str(&raw).map_err(|e| {
-        error::DecapodError::ValidationError(format!("AUTOREMEDIABLE_VALIDATION_ERROR code=INVALID_CONFIG_SCHEMA severity=transient auto_remediable=true audience=agent agent_action=\"fix the .decapod/config.toml schema to be valid TOML\" user_note=\"Configuration file schema is invalid; the agent should correct the file or report the issue.\"\nInvalid .decapod/config.toml schema: {e}"))
-    })?;
+    let cfg = DecapodProjectConfig::parse(&raw)?;
     Ok(Some(cfg))
 }
 
@@ -356,6 +354,41 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 "{}",
                 serde_json::to_string_pretty(&status).map_err(std::io::Error::other)?
             );
+            Ok(())
+        }
+        CloudCommand::Logout => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report = core::cloud_client::logout(&project_root, &identity)?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Cleared saved cloud session for {} (device key preserved).",
+                    identity.canonical_name
+                );
+            }
+            Ok(())
+        }
+        CloudCommand::Revoke { all, device_id } => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report =
+                core::cloud_client::revoke(&project_root, &identity, all, device_id.as_deref())?;
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                println!(
+                    "Revoked device key and cleared saved cloud credentials for {}.",
+                    identity.canonical_name
+                );
+            }
             Ok(())
         }
     }
@@ -1875,7 +1908,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
         },
-
+        workspace: crate::cli::WorkspaceConfigSection::default(),
         laya: init.existing_laya.clone(),
     }
 }
@@ -2014,9 +2047,9 @@ fn setup_review_rows(repo: &RepoContext, init: &InitWithCli) -> Vec<(&'static st
         (
             "Storage",
             if init.backend.is_cloud() {
-                "Decapod Cloud · experimental · account required".into()
+                "Decapod Cloud (cloud) · experimental · account required".into()
             } else {
-                "Local · no account needed".into()
+                "Decapod Local (local) · free · no account needed".into()
             },
         ),
     ];
@@ -2141,15 +2174,15 @@ fn customize_setup(
             "Connections" => {
                 let storage = prompt_setup_choice(
                     "Where should work state live?",
-                    &["Local", "Decapod Cloud"],
+                    &["Decapod Local", "Decapod Cloud"],
                     &[
-                        "On this machine. No account needed.",
+                        "On this machine. Free, offline, no account needed.",
                         "Repository tasks in the cloud. Account and authorized access required.",
                     ],
                     if init.backend.is_cloud() {
                         "Decapod Cloud"
                     } else {
-                        "Local"
+                        "Decapod Local"
                     },
                 )?;
                 init.backend = if storage == "Decapod Cloud" {
@@ -2458,7 +2491,7 @@ fn run_init_apply(
     // scaffold layer preserves authored material using manifest provenance.
     let generate_specs = init_with.specs
         && (!target_dir
-            .join(core::project_specs::LOCAL_PROJECT_SPECS_DIR)
+            .join(core::project_specs::LOCAL_PROJECT_SPECS_MANIFEST)
             .exists()
             || init_with.force);
     let scaffold_summary = scaffold::scaffold_project_entrypoints(&scaffold::ScaffoldOptions {
@@ -2688,6 +2721,9 @@ pub fn run() -> Result<(), error::DecapodError> {
     // Keep them out of the migration/session path so a missing or damaged
     // local store cannot prevent bootstrap diagnostics from running.
     let command = match command {
+        Command::Data(DataCli {
+            command: DataCommand::Schema(schema_cli),
+        }) => return run_schema_command(schema_cli),
         Command::Capabilities(cap_cli) => return run_capabilities_command(cap_cli),
         Command::Constitution(constitution_cli) => {
             return crate::core::constitution_cli::run_constitution_cli(constitution_cli);
@@ -2709,6 +2745,24 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::System(SystemCli {
             command: SystemCommand::Capabilities(cap_cli),
         }) => return run_capabilities_command(cap_cli),
+        Command::System(SystemCli {
+            command: SystemCommand::Migrations(mig_cli),
+        }) => return run_system_migrations_command(&std::env::current_dir()?, mig_cli),
+        Command::System(SystemCli {
+            command: SystemCommand::Doctor(doctor_cli),
+        }) => {
+            let current_dir = std::env::current_dir()?;
+            let workspace_root = find_decapod_project_root(&current_dir).unwrap_or(current_dir);
+            let governance_root = find_governance_root(&workspace_root);
+            let project_store = Store {
+                kind: StoreKind::Repo,
+                root: governance_root.join(".decapod").join("data"),
+            };
+            return doctor::run_doctor_cli(&project_store, &workspace_root, doctor_cli);
+        }
+        Command::Integration(integration_cli) => {
+            return run_integration_command(integration_cli);
+        }
         command => command,
     };
 
@@ -2786,6 +2840,48 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Rpc(cli) if !cli.http_server => Some(parse_rpc_request(cli)?),
         _ => None,
     };
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && !core::interop::RPC_OPS.contains(&request.op.as_str())
+    {
+        // A handler cannot become a callable, undiscoverable operation. This
+        // registration check grants no session, custody or policy authority.
+        let response = core::rpc::error_response(
+            request.id.clone(),
+            request.op.clone(),
+            request.params.clone(),
+            "unknown_op".to_string(),
+            format!("Unknown operation: {}", request.op),
+            None,
+            vec![],
+        );
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return rpc_validation_exit_status(&request.op, response.success);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && request.op == "schema.get"
+    {
+        // Pure embedded reference: no config, session, migrations, mandate
+        // resolution or workspace preparation can be needed to repair config.
+        let root = std::env::current_dir()?;
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: root.join(".decapod/data"),
+        };
+        let response = rpc_handlers::handle_schema_get(&RpcCtx {
+            project_root: &root,
+            store: &store,
+            request,
+            mandates: vec![],
+        })?;
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&response).map_err(io::Error::other)?
+        );
+        return Ok(());
+    }
     if let Some(request) = predecoded_rpc_request.as_ref()
         && request.op == "data.database.inspect"
     {
@@ -2960,6 +3056,21 @@ pub fn run() -> Result<(), error::DecapodError> {
             if is_interactive {
                 prepare_init_directory_and_git(&init_target, &init_with)?;
             }
+            let gitignore_existed_before_init = init_target.join(".gitignore").exists();
+            let mut pre_existing_for_ownership = Vec::new();
+            if init_target
+                .join(".github/workflows/decapod-validate.yml")
+                .exists()
+            {
+                pre_existing_for_ownership
+                    .push(".github/workflows/decapod-validate.yml".to_string());
+            }
+            if init_target.join(".decapod/OVERRIDE.md").exists() {
+                pre_existing_for_ownership.push(".decapod/OVERRIDE.md".to_string());
+            }
+            if existing_config.is_some() {
+                pre_existing_for_ownership.push(".decapod/config.toml".to_string());
+            }
             let target_dir = run_init_apply(&init_with, &current_dir, &repo_ctx, is_interactive)?;
             let mut config = config_from_init_with(&init_with, repo_ctx);
             if let Some(existing) = existing_config.as_ref() {
@@ -2992,6 +3103,52 @@ pub fn run() -> Result<(), error::DecapodError> {
                 )?;
             }
             seed_init_generated_state(&target_dir, init_with.dry_run, is_interactive)?;
+            if !init_with.dry_run {
+                let created_gitignore =
+                    !gitignore_existed_before_init && target_dir.join(".gitignore").exists();
+                let generated_entrypoints = if init_with.all {
+                    vec![
+                        "AGENTS.md".to_string(),
+                        "CLAUDE.md".to_string(),
+                        "GEMINI.md".to_string(),
+                        "CODEX.md".to_string(),
+                    ]
+                } else {
+                    let mut eps = Vec::new();
+                    if init_with.claude {
+                        eps.push("CLAUDE.md".to_string());
+                    }
+                    if init_with.gemini {
+                        eps.push("GEMINI.md".to_string());
+                    }
+                    if init_with.cdx_ep {
+                        eps.push("CODEX.md".to_string());
+                    }
+                    if init_with.agents {
+                        eps.push("AGENTS.md".to_string());
+                    }
+                    if eps.is_empty() {
+                        vec![
+                            "AGENTS.md".to_string(),
+                            "CLAUDE.md".to_string(),
+                            "GEMINI.md".to_string(),
+                            "CODEX.md".to_string(),
+                        ]
+                    } else {
+                        if !eps.iter().any(|e| e == "AGENTS.md") {
+                            eps.push("AGENTS.md".to_string());
+                        }
+                        eps
+                    }
+                };
+                core::integration_removal::record_init_ownership(
+                    &target_dir,
+                    &generated_entrypoints,
+                    init_with.ci,
+                    created_gitignore,
+                    &pre_existing_for_ownership,
+                )?;
+            }
             let reconciliation = core::init_reconciliation::inspect(
                 &target_dir,
                 &config.proof,
@@ -3157,9 +3314,17 @@ pub fn run() -> Result<(), error::DecapodError> {
             // For other commands, ensure .decapod exists in the GOVERNANCE root
             let decapod_root_path = governance_root.join(".decapod");
             store_root = decapod_root_path.join("data");
-            let configured_backend = load_project_config_if_present(&workspace_root)?
-                .map(|config| config.repo.effective_backend())
-                .unwrap_or_default();
+            let accepted_cloud =
+                core::db_maintenance::resolve_accepted_project_config(&workspace_root)
+                    .ok()
+                    .is_some_and(|(_main, cfg, _)| cfg.repo.effective_backend().is_cloud());
+            let configured_backend = if accepted_cloud {
+                cli::BackendType::Cloud
+            } else {
+                load_project_config_if_present(&workspace_root)?
+                    .map(|config| config.repo.effective_backend())
+                    .unwrap_or_default()
+            };
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             if configured_backend.is_cloud()
                 && !cloud_todo_command
@@ -3204,6 +3369,66 @@ pub fn run() -> Result<(), error::DecapodError> {
             }
 
             if local_storage_startup && should_route_via_group_broker(&cli.command, &argv) {
+                struct PreparedDoneGuard {
+                    store_root: PathBuf,
+                    request_id: String,
+                    previous_env: Option<std::ffi::OsString>,
+                    active: bool,
+                }
+                impl Drop for PreparedDoneGuard {
+                    fn drop(&mut self) {
+                        if self.active {
+                            plugins::verify::remove_prepared_done_handoff(
+                                &self.store_root,
+                                &self.request_id,
+                            );
+                            unsafe {
+                                if let Some(prev) = &self.previous_env {
+                                    std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", prev);
+                                } else {
+                                    std::env::remove_var("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                                }
+                            }
+                        }
+                    }
+                }
+                let mut _prepared_done_guard = PreparedDoneGuard {
+                    store_root: store_root.clone(),
+                    request_id: String::new(),
+                    previous_env: None,
+                    active: false,
+                };
+                if !core::group_broker::is_internal_invocation()
+                    && !core::group_broker::is_disabled()
+                    && let Command::Todo(todo_cli) = &cli.command
+                    && todo::is_validated_completion(todo_cli)
+                {
+                    let previous_env = std::env::var_os("DECAPOD_GROUP_BROKER_REQUEST_ID");
+                    let request_id = previous_env
+                        .as_ref()
+                        .and_then(|v| v.to_str())
+                        .filter(|v| !v.is_empty())
+                        .map(str::to_owned)
+                        .unwrap_or_else(core::ulid::new_ulid);
+                    if !core::group_broker::has_dedupe_record(&store_root, &request_id)
+                        && todo::prepare_validated_done_handoff(
+                            &project_store,
+                            todo_cli,
+                            &request_id,
+                        )?
+                        .is_some()
+                    {
+                        unsafe {
+                            std::env::set_var("DECAPOD_GROUP_BROKER_REQUEST_ID", &request_id);
+                        }
+                        _prepared_done_guard = PreparedDoneGuard {
+                            store_root: store_root.clone(),
+                            request_id,
+                            previous_env,
+                            active: true,
+                        };
+                    }
+                }
                 let mut finish = |stdout: &str, request_id: &str| match &cli.command {
                     Command::Todo(todo_cli) => todo::finish_broker_claim_response(
                         &project_store,
@@ -3303,7 +3528,9 @@ pub fn run() -> Result<(), error::DecapodError> {
                         mark_core_constitution_ingested(&governance_root, "docs.ingest")?;
                     }
                 }
-                Command::Todo(todo_cli) => todo::run_todo_cli(&project_store, todo_cli)?,
+                Command::Todo(todo_cli) => {
+                    todo::run_todo_cli_in_workspace(&project_store, &workspace_root, todo_cli)?
+                }
                 Command::Obligation(obligation_cli) => {
                     obligation::run_obligation_cli(&project_store, obligation_cli)?
                 }
@@ -3480,6 +3707,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Constitution(_)
         | Command::Docs(_) => true,
+        Command::Workspace(ws_cli) => matches!(ws_cli.command, WorkspaceCommand::Status),
         Command::Rpc(rpc_cli) => matches!(
             rpc_cli.op.as_deref(),
             Some("specs.refresh" | "intent.reconcile")
@@ -3541,6 +3769,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Release(_)
         | Command::Todo(_)
         | Command::System(_)
+        | Command::Integration(_)
         | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
@@ -3794,7 +4023,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Capabilities(_)
         | Command::Release(_)
         | Command::Trace(_)
-        | Command::System(_) => false,
+        | Command::System(_)
+        | Command::Integration(_) => false,
         Command::Context(ContextGroupCli {
             command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
         }) => false,
@@ -3811,6 +4041,26 @@ fn requires_session_token(command: &Command) -> bool {
             }
         }
         _ => true,
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn advertised_rpc_sessions_match_the_actual_entry_guards() {
+    for capability in core::interop::builtin_manifest().capabilities {
+        if capability.surface != "rpc" {
+            continue;
+        }
+        let mapping = capability.implementation.expect("RPC implementation");
+        // Inspection returns before generic startup and has its own bounded,
+        // read-only route. Maintenance operations enforce their own session.
+        let required =
+            mapping.op != "data.database.inspect" && !rpc_op_bypasses_session(&mapping.op);
+        assert_eq!(
+            mapping.session_required, required,
+            "session descriptor differs from entry enforcement for {}",
+            mapping.op
+        );
     }
 }
 
@@ -3880,6 +4130,10 @@ fn session_token_matches_backend(token: &str, backend: BackendType) -> bool {
 }
 
 fn current_agent_id() -> String {
+    #[cfg(test)]
+    if let Some(override_id) = crate::core::todo::test_current_agent_id_override() {
+        return override_id;
+    }
     std::env::var("DECAPOD_AGENT_ID")
         .ok()
         .map(|v| v.trim().to_string())
@@ -6697,17 +6951,21 @@ fn run_validate_command_remote(
     invocation.validate()?;
     reject_remote_arguments_in_partial_scope(scope, &invocation)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, &invocation);
+    let tmp_cleanup_guidance = readiness
+        .ready
+        .then(|| core::validate::todo_tmp_cleanup_instruction(workspace_root));
     if cli.format == "json" {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": if readiness.ready { "pass" } else { "fail" },
                 "scope": scope.label(),
-                "publication_ready": readiness.ready,
+                "publication_ready": readiness.publication_ready(),
                 "local_project_checks": "not_run_provider_owned",
                 "report": serde_json::Value::Null,
                 "self_heal": [],
                 "readiness": readiness,
+                "tmp_cleanup_guidance": tmp_cleanup_guidance,
             }))
             .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
         );
@@ -6717,6 +6975,9 @@ fn run_validate_command_remote(
         if readiness.ready {
             println!("Complete current-candidate Buildkite proof passed.");
             println!("{}", readiness.agent_guidance.instruction);
+            if let Some(cleanup) = &tmp_cleanup_guidance {
+                println!("{cleanup}");
+            }
         } else {
             for blocker in &readiness.blockers {
                 eprintln!("{}: {}", blocker.code, blocker.detail);
@@ -6917,15 +7178,19 @@ fn run_validate_command_local(
         .as_ref()
         .map(|result| &result.agent_guidance)
         .unwrap_or(&fallback_guidance);
+    let tmp_cleanup_guidance = (scope.requires_publication_proof()
+        && readiness.as_ref().is_some_and(|r| r.ready))
+    .then(|| core::validate::todo_tmp_cleanup_instruction(workspace_root));
     if validate_cli.format == "json" {
         println!(
             "{}",
             serde_json::to_string_pretty(&serde_json::json!({
                 "status": report.status,
                 "scope": scope.label(),
-                "publication_ready": readiness.as_ref().is_some_and(|r| r.ready),
+                "publication_ready": readiness.as_ref().is_some_and(|r| r.publication_ready()),
                 "agent_guidance": scope.requires_publication_proof().then_some(guidance),
                 "readiness": readiness,
+                "tmp_cleanup_guidance": tmp_cleanup_guidance,
                 "self_heal": heal_actions,
                 "report": report,
             }))
@@ -6943,6 +7208,9 @@ fn run_validate_command_local(
         if scope.requires_publication_proof() {
             println!("{}", guidance.execution);
             println!("{}", guidance.instruction);
+            if let Some(cleanup) = &tmp_cleanup_guidance {
+                println!("{cleanup}");
+            }
             if !readiness.as_ref().is_some_and(|r| r.ready) {
                 println!("{}", guidance.human_input_when);
             }
@@ -7021,7 +7289,7 @@ fn readiness_environment(
 ) -> Result<
     (
         core::validation_runtime::Options,
-        core::repo_identity::RepositoryIdentity,
+        core::workspace::ReadinessRepository,
     ),
     error::DecapodError,
 > {
@@ -7220,10 +7488,13 @@ fn run_current_workbranch_readiness_with(
             kind: StoreKind::Repo,
             root: store_root.clone(),
         };
-        // Capture task custody before the potentially long proof run. A later
-        // task edit or ownership transition must not inherit its successful result.
-        let history_binding =
-            core::validation_history::capture_task_binding(&history_store, workspace_root)?;
+        // Guard against mid-validation lease expiry, then capture task custody
+        // before the potentially long proof run.
+        let history_binding = core::validation_history::capture_task_binding_with_budget(
+            &history_store,
+            workspace_root,
+            options.timeout,
+        )?;
         let authorize = |action: runtime::NativeAction<'_>| -> std::io::Result<()> {
             use core::external_action::{self, ExternalCapability};
             let result = match action {
@@ -7367,12 +7638,21 @@ fn run_current_workbranch_readiness_with(
             .as_ref()
             .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
         {
-            let mut host = runtime::repository_host::RepositoryHost::new(
-                options.clone(),
-                repository.remote_url,
-                prerequisite,
-                authorize,
-            )?;
+            let mut host = if let Some(root) = repository.local_target_root {
+                runtime::repository_host::RepositoryHost::canonical_local(
+                    options.clone(),
+                    root,
+                    prerequisite,
+                    authorize,
+                )?
+            } else {
+                runtime::repository_host::RepositoryHost::new(
+                    options.clone(),
+                    repository.remote_url,
+                    prerequisite,
+                    authorize,
+                )?
+            };
             let mut report = runtime::validate(&options, &mut host, &cancellation);
             signal_guard.restore()?;
             archive_workbranch_readiness(
@@ -7466,7 +7746,7 @@ fn archive_workbranch_readiness(
 pub(crate) fn enforce_workbranch_readiness_before_push(
     workspace_root: &Path,
     invocation: &ReadinessInvocation,
-) -> Result<Option<std::path::PathBuf>, error::DecapodError> {
+) -> Result<core::validation_history::PublicationReadiness, error::DecapodError> {
     invocation.validate()?;
     if invocation.snapshot_prepare || invocation.snapshot_adopt.is_some() {
         return Err(error::DecapodError::ValidationError(
@@ -7496,18 +7776,31 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
             return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
         }
     }
+    if core::workspace::resolve_readiness_repository(workspace_root)?
+        .local_target_root
+        .is_some()
+    {
+        return Err(error::DecapodError::ValidationError(
+            "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: local merge readiness does not prove the forge target; establish independently verified target equivalence and publication authority".into(),
+        ));
+    }
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: find_governance_root(workspace_root).join(".decapod/data"),
+    };
+    let binding = core::validation_history::capture_task_binding(&store, workspace_root)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
-    if !readiness.ready {
+    if !readiness.publication_ready() {
         return Err(error::DecapodError::ValidationError(format!(
             "PUBLICATION_NOT_READY: {}",
             serde_json::to_string(&readiness)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
         )));
     }
-    Ok(readiness
-        .evidence_path
-        .map(|path| path.join("snapshot-handoff.json"))
-        .filter(|path| path.is_file()))
+    let readiness =
+        core::validation_history::PublicationReadiness::from_report(readiness, binding)?;
+    readiness.verify_current(workspace_root)?;
+    Ok(readiness)
 }
 
 /// Called only after source publication and PR identity have been verified.
@@ -7822,6 +8115,7 @@ fn run_validation_in_child_process(
         "DECAPOD_VALIDATE_PROGRESS_PATH",
         progress_path.to_string_lossy().as_ref(),
     );
+    core::bounded_process::configure_child_nofile_limit(&mut command);
     let child = command.spawn().map_err(error::DecapodError::IoError)?;
     match supervise_piped_child(child, timeout)? {
         PipedChildOutput::Exited { stdout, stderr } => {
@@ -8603,6 +8897,14 @@ fn run_govern_command(
                         .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
                 );
             }
+            ArtifactsCommand::ReconcileMerge => {
+                let document = core::governance_document::reconcile_merge(workspace_root)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&document)
+                        .map_err(|error| error::DecapodError::ValidationError(error.to_string()))?
+                );
+            }
             ArtifactsCommand::Status => {
                 let document = core::governance_document::load(workspace_root)?;
                 println!(
@@ -8781,6 +9083,7 @@ fn run_workunit_command(
         WorkunitCommand::Status { task_id } => {
             let manifest = core::workunit::load_workunit(project_root, &task_id)?;
             let path = core::workunit::workunit_path(project_root, &task_id)?;
+            let journal = core::workunit::workunit_journal_status(project_root, &task_id)?;
             let hash = manifest.canonical_hash_hex().map_err(|e| {
                 error::DecapodError::ValidationError(format!(
                     "failed to compute workunit hash: {e}"
@@ -8792,6 +9095,9 @@ fn run_workunit_command(
                     "status": "ok",
                     "task_id": manifest.task_id,
                     "workunit_status": manifest.status,
+                    "proof_status": journal.proof_status,
+                    "split_store": journal.split_store,
+                    "atomic_domain_supported": journal.atomic_domain_supported,
                     "manifest_hash": hash,
                     "path": path,
                 }))
@@ -8828,6 +9134,14 @@ fn run_workunit_command(
         WorkunitCommand::Transition { task_id, to } => {
             let manifest = core::workunit::transition_status(project_root, &task_id, to.into())?;
             println!("{}", serde_json::to_string_pretty(&manifest).unwrap());
+        }
+        WorkunitCommand::Converge { task_id, dry_run } => {
+            let report = core::workunit::converge_split_workunit_store(
+                project_root,
+                task_id.as_deref(),
+                dry_run,
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
 
@@ -8983,6 +9297,18 @@ fn run_trajectory_command(
                 }))
                 .unwrap()
             );
+        }
+        TrajectoryCommand::ReconcileScope { task_id, run_id } => {
+            let store_root = core::store::find_governance_root(workspace_root)
+                .join(".decapod")
+                .join("data");
+            let report = core::governance_document::reconcile_scope_projections(
+                workspace_root,
+                &store_root,
+                task_id.as_deref(),
+                run_id.as_deref(),
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
         }
     }
     Ok(())
@@ -9447,37 +9773,7 @@ fn run_data_command(
                 }
             }
         }
-        DataCommand::Schema(schema_cli) => {
-            let schemas = schema_catalog();
-
-            let output = if let Some(sub) = schema_cli.subsystem {
-                schemas
-                    .get(sub.as_str())
-                    .cloned()
-                    .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
-            } else {
-                let mut envelope = deterministic_schema_envelope();
-                if !schema_cli.deterministic {
-                    envelope.as_object_mut().unwrap().insert(
-                        "generated_at".to_string(),
-                        serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
-                    );
-                }
-                envelope
-            };
-
-            match schema_cli.format.as_str() {
-                "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
-                "md" => {
-                    println!("{}", schema_to_markdown(&output));
-                }
-                other => {
-                    return Err(error::DecapodError::ValidationError(format!(
-                        "Unsupported schema format '{other}'. Use 'json' or 'md'."
-                    )));
-                }
-            }
-        }
+        DataCommand::Schema(schema_cli) => run_schema_command(schema_cli)?,
         DataCommand::Repo(repo_cli) => match repo_cli.command {
             RepoCommand::Map => {
                 let map = repomap::generate_map(workspace_root);
@@ -9503,9 +9799,16 @@ fn run_data_command(
                 let report = broker.verify_replay()?;
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
                 if !report.divergences.is_empty() {
+                    let unknown_note = if report.divergences.iter().any(|d| d.human_review_required)
+                    {
+                        " Divergences with writer_liveness=\"unknown\" require human review and `--acknowledge-unknown-writer` on `--apply`."
+                    } else {
+                        ""
+                    };
                     return Err(error::DecapodError::ValidationError(format!(
-                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`. For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
-                        report.divergences.len()
+                        "Audit log integrity check failed: {} divergence(s) detected. Inspect the original writer, then preview `decapod data broker repair --event-id <id> --reason <reason>`.{} For database corruption or unsupported recovery, stop and escalate to a human/maintainer; raw sqlite3, REINDEX, and direct database access are never authorized.",
+                        report.divergences.len(),
+                        unknown_note
                     )));
                 }
             }
@@ -9513,10 +9816,17 @@ fn run_data_command(
                 event_id,
                 reason,
                 apply,
+                acknowledge_unknown_writer,
             } => {
                 let broker = core::broker::DbBroker::new(store_root);
                 let actor = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "cli".into());
-                let report = broker.repair(&event_id, &reason, apply, &actor)?;
+                let report = broker.repair_with_options(
+                    &event_id,
+                    &reason,
+                    apply,
+                    acknowledge_unknown_writer,
+                    &actor,
+                )?;
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
             }
         },
@@ -9997,7 +10307,7 @@ fn run_governed_database_cli(
                 |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
             )?,
             DatabaseMaintainCommand::Recover {
-                preserve_original_at: _,
+                preserve_original_at,
                 operation_id,
                 expected_policy_sha256,
                 actor,
@@ -10009,12 +10319,12 @@ fn run_governed_database_cli(
                 expected_policy_sha256.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
-                |_, _| {
-                    Err((
-                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                        "db.recover requires explicit repository owner repair authority (#1590)"
-                            .to_string(),
-                    ))
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(preserve_original_at.as_path()),
+                    )
                 },
             )?,
         },
@@ -10050,7 +10360,7 @@ fn run_governed_database_cli(
             |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
         )?,
         DatabaseCommand::Recover {
-            preserve_original_at: _,
+            preserve_original_at,
             operation_id,
             expected_policy_sha256,
             actor,
@@ -10063,12 +10373,12 @@ fn run_governed_database_cli(
             expected_policy_sha256.as_deref(),
             &verify_strict_local_agent_session,
             vec!["tier=owner".to_string()],
-            |_, _| {
-                Err((
-                    "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                    "db.recover requires explicit repository owner repair authority (#1590)"
-                        .to_string(),
-                ))
+            |policy, verified_actor| {
+                db_maintenance::run_maintain_recover(
+                    policy,
+                    verified_actor,
+                    Some(preserve_original_at.as_path()),
+                )
             },
         )?,
     };
@@ -10225,7 +10535,6 @@ fn run_governed_database_rpc(
         "data.database.recover" => {
             let params: DatabaseRecoverParams =
                 parse_required_governed_rpc_params(&request.params)?;
-            let _ = &params.preserve_original_at;
             db_maintenance::execute_governed_capability(
                 invocation_dir,
                 "db.recover",
@@ -10234,12 +10543,12 @@ fn run_governed_database_rpc(
                 params.expected_policy_sha256.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
-                |_, _| {
-                    Err((
-                        "OWNER_REPAIR_AUTHORITY_REQUIRED",
-                        "db.recover requires explicit repository owner repair authority (#1590)"
-                            .to_string(),
-                    ))
+                |policy, verified_actor| {
+                    db_maintenance::run_maintain_recover(
+                        policy,
+                        verified_actor,
+                        Some(params.preserve_original_at.as_path()),
+                    )
                 },
             )
         }
@@ -10639,6 +10948,39 @@ pub(crate) fn deterministic_schema_envelope() -> serde_json::Value {
     })
 }
 
+fn run_schema_command(schema_cli: SchemaCli) -> Result<(), error::DecapodError> {
+    let schemas = schema_catalog();
+
+    let output = if let Some(sub) = schema_cli.subsystem {
+        schemas
+            .get(sub.as_str())
+            .cloned()
+            .unwrap_or(serde_json::json!({ "error": "subsystem not found" }))
+    } else {
+        let mut envelope = deterministic_schema_envelope();
+        if !schema_cli.deterministic {
+            envelope.as_object_mut().unwrap().insert(
+                "generated_at".to_string(),
+                serde_json::json!(format!("{:?}", std::time::SystemTime::now())),
+            );
+        }
+        envelope
+    };
+
+    match schema_cli.format.as_str() {
+        "json" => println!("{}", serde_json::to_string_pretty(&output).unwrap()),
+        "md" => {
+            println!("{}", schema_to_markdown(&output));
+        }
+        other => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Unsupported schema format '{other}'. Use 'json' or 'md'."
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn schema_catalog() -> std::collections::BTreeMap<&'static str, serde_json::Value> {
     let mut schemas = std::collections::BTreeMap::new();
     schemas.insert("todo", todo::schema());
@@ -10833,6 +11175,94 @@ fn run_qa_command(
     Ok(())
 }
 
+fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodError> {
+    match cli.command {
+        IntegrationCommand::Preview { dir, format } => {
+            let report = core::integration_removal::preview_integration(dir)?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!(
+                        "{}",
+                        core::integration_removal::format_preview_text(&report)
+                    );
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+        IntegrationCommand::Remove {
+            dir,
+            authorize,
+            dry_run,
+            format,
+            purge_state,
+            remove_protected_governance,
+        } => {
+            let report = core::integration_removal::remove_integration(
+                dir,
+                authorize,
+                dry_run,
+                purge_state,
+                remove_protected_governance,
+            )?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!("{}", core::integration_removal::format_apply_text(&report));
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+        IntegrationCommand::Restore {
+            dir,
+            manifest,
+            format,
+        } => {
+            let report = core::integration_removal::restore_integration(dir, manifest)?;
+            match format.as_str() {
+                "json" => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+                    );
+                }
+                "text" => {
+                    print!(
+                        "{}",
+                        core::integration_removal::format_restore_text(&report)
+                    );
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported --format '{other}'; expected 'text' or 'json'"
+                    )));
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
 fn run_hook_install(
     commit_msg: bool,
     pre_commit: bool,
@@ -10854,6 +11284,13 @@ fn run_hook_install(
         .to_string();
     let hooks_dir = PathBuf::from(git_dir).join("hooks");
     fs::create_dir_all(&hooks_dir).map_err(error::DecapodError::IoError)?;
+    let repo_root = std::process::Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| PathBuf::from(String::from_utf8_lossy(&o.stdout).trim()))
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")));
 
     if uninstall {
         let commit_msg_path = hooks_dir.join("commit-msg");
@@ -10862,11 +11299,23 @@ fn run_hook_install(
 
         if commit_msg_path.exists() {
             fs::remove_file(&commit_msg_path).map_err(error::DecapodError::IoError)?;
+            let _ = core::integration_removal::record_hook_ownership(
+                &repo_root,
+                "commit-msg",
+                &commit_msg_path,
+                false,
+            );
             println!("✓ Removed commit-msg hook");
             removed_any = true;
         }
         if pre_commit_path.exists() {
             fs::remove_file(&pre_commit_path).map_err(error::DecapodError::IoError)?;
+            let _ = core::integration_removal::record_hook_ownership(
+                &repo_root,
+                "pre-commit",
+                &pre_commit_path,
+                false,
+            );
             println!("✓ Removed pre-commit hook");
             removed_any = true;
         }
@@ -10891,6 +11340,12 @@ fn run_hook_install(
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
+        let _ = core::integration_removal::record_hook_ownership(
+            &repo_root,
+            "commit-msg",
+            &hook_path,
+            true,
+        );
         println!("✓ Installed commit-msg hook for conventional commits");
     }
 
@@ -10913,6 +11368,12 @@ cargo clippy --all-targets --all-features -- -D warnings
             perms.set_mode(0o755);
             fs::set_permissions(&hook_path, perms).map_err(error::DecapodError::IoError)?;
         }
+        let _ = core::integration_removal::record_hook_ownership(
+            &repo_root,
+            "pre-commit",
+            &hook_path,
+            true,
+        );
         println!("✓ Installed pre-commit hook (fmt + clippy)");
     }
 
@@ -11095,6 +11556,7 @@ fn run_workspace_command(
             snapshot_resume,
             provider_artifacts,
         } => {
+            core::validation_runtime::require_full_readiness_environment()?;
             let workspace_root = project_root;
             if !crate::cli::DecapodProjectConfig::load(workspace_root)?
                 .proof
@@ -12297,14 +12759,18 @@ mod rpc_handlers {
         invocation.validate()?;
         ensure_session_valid()?;
         let readiness = super::run_current_workbranch_readiness_with(ctx.project_root, &invocation);
+        let tmp_cleanup_guidance = readiness
+            .ready
+            .then(|| core::validate::todo_tmp_cleanup_instruction(ctx.project_root));
         let payload = serde_json::json!({
             "success": readiness.ready,
             "report": if readiness.ready { "Complete Buildkite source proof passed" } else { "Buildkite source proof is not ready" },
             "scope": super::ValidationScope::PublicationReadiness.label(),
-            "publication_ready": readiness.ready,
+            "publication_ready": readiness.publication_ready(),
             "local_project_checks": "not_run_provider_owned",
             "checks": serde_json::Value::Null,
             "readiness": readiness,
+            "tmp_cleanup_guidance": tmp_cleanup_guidance,
         });
         let mut response = if readiness.ready {
             success_response(
@@ -12440,7 +12906,7 @@ mod rpc_handlers {
                     success: true,
                     report: "All validation gates passed".to_string(),
                     scope: scope.label().into(),
-                    publication_ready: true,
+                    publication_ready: readiness.publication_ready(),
                 };
                 Ok(success_response(
                     ctx.request.id.clone(),
@@ -13143,7 +13609,14 @@ mod rpc_handlers {
             ctx.request.id.clone(),
             ctx.request.op.clone(),
             ctx.request.params.clone(),
-            Some(serde_json::to_value(InteropProjectResult { projection }).unwrap()),
+            Some(
+                serde_json::to_value(InteropProjectResult {
+                    projection,
+                    input_origin: Some("caller_supplied".to_string()),
+                    canonical_state_verified: Some(false),
+                })
+                .unwrap(),
+            ),
             vec![],
             None,
             vec![],
@@ -13286,7 +13759,8 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         if buffer.len() > MAX_REQUEST_BYTES {
             return Err(budget_error());
         }
-        serde_json::from_str(&buffer)
+        core::json::unique_value(buffer.as_bytes())
+            .and_then(serde_json::from_value)
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid JSON: {e}")))
     } else {
         if cli
@@ -13303,7 +13777,7 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         let params = if op == "data.database.inspect" {
             cli.params
                 .as_ref()
-                .map(|params| serde_json::from_str(params))
+                .map(|params| core::json::unique_value(params.as_bytes()))
                 .transpose()
                 .map_err(|_| {
                     error::DecapodError::ValidationError("Invalid inventory parameters".into())
@@ -13312,7 +13786,7 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         } else if is_governed_db_maintenance_rpc_op(&op) {
             cli.params
                 .as_ref()
-                .map(|params| serde_json::from_str(params))
+                .map(|params| core::json::unique_value(params.as_bytes()))
                 .transpose()
                 .map_err(|_| {
                     error::DecapodError::ValidationError(
@@ -13323,7 +13797,11 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
         } else {
             cli.params
                 .as_ref()
-                .and_then(|p| serde_json::from_str(p).ok())
+                .map(|params| core::json::unique_value(params.as_bytes()))
+                .transpose()
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid JSON parameters: {e}"))
+                })?
                 .unwrap_or(serde_json::json!({}))
         };
         Ok(RpcRequest {
@@ -13568,6 +14046,18 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
             println!("Decapod {}", report.version);
             println!("==================\n");
 
+            if !report.backends.is_empty() {
+                println!("Backends:");
+                for backend in &report.backends {
+                    let default_tag = if backend.default { ", default" } else { "" };
+                    println!(
+                        "  {} ({}{}) - {}",
+                        backend.name, backend.id, default_tag, backend.description
+                    );
+                }
+                println!();
+            }
+
             println!("Capabilities:");
             for cap in &report.capabilities {
                 println!("  {} [{}] - {}", cap.name, cap.stability, cap.description);
@@ -13641,6 +14131,31 @@ fn run_trace_command(
     Ok(())
 }
 
+fn run_system_migrations_command(
+    current_dir: &Path,
+    cli: MigrationsCli,
+) -> Result<(), error::DecapodError> {
+    let workspace_root = find_decapod_project_root(current_dir)?;
+    let report = migration::inspect_migration_state(&workspace_root)?;
+    match cli.format.as_str() {
+        "json" => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+            );
+        }
+        "text" => {
+            println!("{}", migration::render_migration_inspection_text(&report));
+        }
+        other => {
+            return Err(error::DecapodError::ValidationError(format!(
+                "Unsupported format '{other}'. Expected 'json' or 'text'."
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn run_system_command(
     cli: SystemCli,
     project_store: &Store,
@@ -13652,6 +14167,7 @@ fn run_system_command(
             doctor::run_doctor_cli(project_store, project_root, doctor_cli)
         }
         SystemCommand::Capabilities(cap_cli) => run_capabilities_command(cap_cli),
+        SystemCommand::Migrations(mig_cli) => run_system_migrations_command(project_root, mig_cli),
     }
 }
 
@@ -14060,12 +14576,9 @@ fn run_infer_orientation(
                     .known_unknowns
                     .push(format!("Task detail: {}", task.description));
             }
-            if !task.scope.is_empty() {
-                packet.allowed_scope = task
-                    .scope
-                    .split(',')
-                    .map(|s| s.trim().to_string())
-                    .collect();
+            if !task.scope.trim().is_empty() {
+                packet.allowed_scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+                    .map_err(error::DecapodError::ValidationError)?;
             }
         }
     }
@@ -14423,6 +14936,11 @@ fn run_demo_command(cli: DemoCli, project_root: &Path) -> Result<(), error::Deca
 #[cfg(test)]
 #[path = "../../tests/unit/lib_init_prompt_tests.rs"]
 mod init_prompt_tests;
+
+#[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
+#[allow(dead_code)]
+#[path = "../../tests/common/consumer_readiness_fixture.rs"]
+mod consumer_readiness_fixture;
 
 #[cfg(test)]
 #[path = "../../tests/unit/lib_ci_scope_tests.rs"]

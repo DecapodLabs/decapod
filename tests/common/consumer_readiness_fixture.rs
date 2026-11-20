@@ -177,6 +177,7 @@ impl Fixture {
         let execution = RepositoryExecution {
             program,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::from([(
                 "FIXTURE_WORKTREE".into(),
                 options.root.to_string_lossy().into_owned(),
@@ -185,6 +186,7 @@ impl Fixture {
             timeout_seconds: 10,
         };
         let mut contract = RepositoryContract {
+            canonical_local_target: false,
             reviewed_commands_digest: String::new(),
             source_coverage: vec![SourceCoverage {
                 source: WORKFLOW.into(),

@@ -1060,8 +1060,8 @@ fn resolve_decisions(
                     state_or_revision: doc.baseline.accepted_commit.clone(),
                     scope: claim.proof_refs.clone(),
                     supersedes: None,
-                    created_at: chrono::Utc::now().to_rfc3339(), // Placeholder
-                    updated_at: chrono::Utc::now().to_rfc3339(),
+                    created_at: crate::core::time::now_rfc3339(), // Placeholder
+                    updated_at: crate::core::time::now_rfc3339(),
                     knowledge: None,
                 });
             }
@@ -1108,8 +1108,8 @@ fn resolve_decisions(
                         .get("supersedes")
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string()),
-                    created_at: chrono::Utc::now().to_rfc3339(),
-                    updated_at: chrono::Utc::now().to_rfc3339(),
+                    created_at: crate::core::time::now_rfc3339(),
+                    updated_at: crate::core::time::now_rfc3339(),
                     knowledge: None,
                 });
             }
@@ -1201,7 +1201,7 @@ fn resolve_failed_paths(
                     id: format!("failed:{}", loop_rec.loop_id),
                     hypothesis_or_approach: loop_rec.observations.join("; "),
                     scope: trajectory_artifact.repo_scope.clone(),
-                    attempted_at: chrono::Utc::now().to_rfc3339(),
+                    attempted_at: crate::core::time::now_rfc3339(),
                     rejection_reason: loop_rec.feedback.clone(),
                     evidence: loop_rec.proof_refs.clone(),
                     superseded: false,
@@ -1220,7 +1220,7 @@ fn resolve_failed_paths(
                     id: format!("failed:proof:{}", proof_result.gate),
                     hypothesis_or_approach: format!("Proof gate '{}' failed", proof_result.gate),
                     scope: vec![proof_result.gate.clone()],
-                    attempted_at: chrono::Utc::now().to_rfc3339(),
+                    attempted_at: crate::core::time::now_rfc3339(),
                     rejection_reason: format!("Gate '{}' failed", proof_result.gate),
                     evidence: proof_result
                         .artifact_ref
@@ -1241,7 +1241,7 @@ fn resolve_failed_paths(
                     id: candidate.id.clone(),
                     hypothesis_or_approach: candidate.lesson.clone(),
                     scope: vec![],
-                    attempted_at: chrono::Utc::now().to_rfc3339(),
+                    attempted_at: crate::core::time::now_rfc3339(),
                     rejection_reason: "Knowledge candidate rejected".to_string(),
                     evidence: candidate.evidence_refs.clone(),
                     superseded: false,
@@ -1272,7 +1272,7 @@ fn resolve_blockers(
                 kind,
                 description: blocker.clone(),
                 evidence: Vec::new(),
-                declared_at: chrono::Utc::now().to_rfc3339(),
+                declared_at: crate::core::time::now_rfc3339(),
                 resolved_at: None,
             });
         }
@@ -1295,7 +1295,7 @@ fn resolve_blockers(
                     kind: BlockerKind::ProofUnavailable,
                     description: format!("Required proof gate '{}' not satisfied", gate),
                     evidence: Vec::new(),
-                    declared_at: chrono::Utc::now().to_rfc3339(),
+                    declared_at: crate::core::time::now_rfc3339(),
                     resolved_at: None,
                 });
             }
@@ -1331,7 +1331,7 @@ fn resolve_blockers(
                         kind,
                         description: error.clone(),
                         evidence: Vec::new(),
-                        declared_at: chrono::Utc::now().to_rfc3339(),
+                        declared_at: crate::core::time::now_rfc3339(),
                         resolved_at: None,
                     });
                 }
@@ -1353,7 +1353,7 @@ fn resolve_blockers(
                         artifact.role, artifact.remediation
                     ),
                     evidence: artifact.freshness_reasons.clone(),
-                    declared_at: chrono::Utc::now().to_rfc3339(),
+                    declared_at: crate::core::time::now_rfc3339(),
                     resolved_at: None,
                 });
             }
@@ -2178,7 +2178,7 @@ fn resolve_provenance(
         trajectory_artifact_hash,
         workunit_manifest_hash,
         validation_receipt_hash,
-        resolved_at: chrono::Utc::now().to_rfc3339(),
+        resolved_at: crate::core::time::now_rfc3339(),
         decapod_version: env!("CARGO_PKG_VERSION").to_string(),
     })
 }

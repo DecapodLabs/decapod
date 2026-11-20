@@ -143,7 +143,7 @@ impl ValidationGuidance {
                 "repair_and_revalidate"
             },
             instruction: if ready {
-                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements."
+                "Review the exact candidate evidence against human intent and delivery constraints. Success establishes only the reported readiness scope; delivery actions remain subject to existing authorization and review requirements. Once PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as /tmp/decapod_validate/<task-id> and any todo-scoped CARGO_TARGET_DIR under /tmp); never perform wildcard or root-level deletion of /tmp or delete another concurrent agent's /tmp path, shared `/tmp/decapod` controller state, or active sibling directories."
             } else {
                 "Agent: inspect the blockers and evidence, configure or repair the project's actual build, test and CI contract within the governed scope, checkpoint the repaired source, then rerun decapod validate. Preserve required checks and artifact custody; unsupported adapters remain blockers."
             },
@@ -151,7 +151,7 @@ impl ValidationGuidance {
         }
     }
 
-    fn for_readiness_outcome(
+    pub fn for_readiness_outcome(
         proof_ready: bool,
         mode: super::readiness_assessment::Mode,
         decision: super::readiness_assessment::Decision,
@@ -166,7 +166,7 @@ impl ValidationGuidance {
         let (next_action, instruction) = match (mode, decision) {
             (Mode::Required, Decision::Accept) => (
                 "create_authorized_pr",
-                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. This result does not authorize merge or release; preserve human review and existing delivery authority.",
+                "Required validation passed and Laya accepted post-validation readiness. Agent: create the PR on this validated workspace branch when already authorized, after confirming the candidate and accepted target are still current. Include the validation and Laya evidence. Once PR creation completes, flush ONLY this todo's /tmp build and scratch directories (such as /tmp/decapod_validate/<task-id> and any todo-scoped CARGO_TARGET_DIR under /tmp); never perform wildcard or root-level deletion of /tmp or delete another concurrent agent's /tmp path, shared `/tmp/decapod` controller state, or active sibling directories. This result does not authorize merge or release; preserve human review and existing delivery authority.",
             ),
             (Mode::Required, Decision::Reject) => (
                 "address_readiness_gaps_and_revalidate",
@@ -212,6 +212,11 @@ pub struct ValidationReport {
     pub(crate) completed_evidence: Option<super::validation_history::CompletedReadinessEvidence>,
 }
 impl ValidationReport {
+    /// Local Git proof has no independently established forge-target identity.
+    pub fn publication_ready(&self) -> bool {
+        self.ready && self.scope != super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+    }
+
     pub fn exit_code(&self) -> i32 {
         if self.ready { 0 } else { 1 }
     }
@@ -1072,7 +1077,16 @@ fn run(
         .as_ref()
         .is_some_and(|p| p.id == super::repository_profile::REQUIRED_PROFILE)
     {
-        report.scope = super::repository_profile::READINESS_SCOPE;
+        report.scope = if project
+            .configuration
+            .repository_contract
+            .as_ref()
+            .is_some_and(|contract| contract.canonical_local_target)
+        {
+            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+        } else {
+            super::repository_profile::READINESS_SCOPE
+        };
     }
     report.stage_dispositions = project.catalog.stage_dispositions().to_vec();
     if let Some(configuration) = &project.configuration.rust_workers {
@@ -1374,6 +1388,10 @@ fn run(
         decision.mode,
         decision.decision,
     );
+    if report.ready && report.scope == super::repository_profile::LOCAL_GIT_READINESS_SCOPE {
+        report.agent_guidance.next_action = "inspect_local_merge_readiness";
+        report.agent_guidance.instruction = "The reviewed local contract passed for this exact candidate and canonical local target. Inspect its native proof and retain human integration authority. Forge publication remains unsupported until target equivalence and independent publication authority are established.";
+    }
     report.laya_readiness = Some(decision);
     if let Err(error) = final_proof {
         return Err(invalid(format!(

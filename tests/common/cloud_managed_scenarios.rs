@@ -5,7 +5,6 @@
 
 use super::managed;
 
-use chrono::{Duration as ChronoDuration, SecondsFormat, Utc};
 use decapod::core::cloud_session::Session;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -19,16 +18,17 @@ use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use tempfile::TempDir;
+use time::{OffsetDateTime, SignedDuration, format_description::well_known::Rfc3339};
 
-const CONFIG: &str = "/functions/v1/propodus-onboarding/config";
-const START: &str = "/functions/v1/propodus-onboarding/start";
-const STATUS: &str = "/functions/v1/propodus-onboarding/status";
-const EXCHANGE: &str = "/functions/v1/propodus-onboarding/exchange";
-const COMPLETE: &str = "/functions/v1/propodus-onboarding/complete";
+const CONFIG: &str = "/functions/v1/decapod-onboarding/config";
+const START: &str = "/functions/v1/decapod-onboarding/start";
+const STATUS: &str = "/functions/v1/decapod-onboarding/status";
+const EXCHANGE: &str = "/functions/v1/decapod-onboarding/exchange";
+const COMPLETE: &str = "/functions/v1/decapod-onboarding/complete";
 const TOKEN: &str = "/auth/v1/token?grant_type=pkce";
 const REFRESH: &str = "/auth/v1/token?grant_type=refresh_token";
-const ACCOUNT_STATUS: &str = "/functions/v1/propodus-onboarding/account-status";
-const ACCOUNT_REGISTER: &str = "/functions/v1/propodus-onboarding/account-register";
+const ACCOUNT_STATUS: &str = "/functions/v1/decapod-onboarding/account-status";
+const ACCOUNT_REGISTER: &str = "/functions/v1/decapod-onboarding/account-register";
 const ACCOUNT: &str = "00000000-0000-0000-0000-000000000404";
 const PROJECT: &str = "workspace-reference/project-reference";
 const QUERY: &str = "/rest/v1/rpc/dactyl_query_v1";
@@ -141,7 +141,7 @@ impl Service {
                 self.repository = request.body["repository"].as_str().unwrap().to_owned();
                 assert_eq!(request.body["pkce_challenge"].as_str().unwrap().len(), 43);
                 assert_eq!(request.body["poll_challenge"].as_str().unwrap().len(), 43);
-                json!({"flow_id":FLOW,"browser_url":format!("{origin}/functions/v1/propodus-onboarding/begin?flow_id={FLOW}&ticket={}", "A".repeat(43)),"expires_at":self.expiry})
+                json!({"flow_id":FLOW,"browser_url":format!("{origin}/functions/v1/decapod-onboarding/begin?flow_id={FLOW}&ticket={}", "A".repeat(43)),"expires_at":self.expiry})
             }
             STATUS => {
                 json!({"status":self.authentication_status,"repository":self.repository,"expires_at":self.expiry})
@@ -250,8 +250,11 @@ impl Fixture {
         let requests = Arc::new(Mutex::new(Vec::new()));
         let service = Arc::new(Mutex::new(Service {
             repository: repository.to_owned(),
-            expiry: (Utc::now() + ChronoDuration::minutes(10))
-                .to_rfc3339_opts(SecondsFormat::Secs, true),
+            expiry: (OffsetDateTime::now_utc() + SignedDuration::minutes(10))
+                .replace_nanosecond(0)
+                .unwrap()
+                .format(&Rfc3339)
+                .unwrap(),
             authentication_status: "ready",
             lose_response: None,
             complete_error: None,
@@ -355,7 +358,8 @@ impl Fixture {
             Session {
                 access_token: managed::ACCESS.into(),
                 refresh_token: Some(managed::REFRESH.into()),
-                expires_at: Utc::now().timestamp() + if expired { -10 } else { 900 },
+                expires_at: OffsetDateTime::now_utc().unix_timestamp()
+                    + if expired { -10 } else { 900 },
             },
         );
     }
@@ -932,9 +936,65 @@ fn fixture_origin_requires_explicit_test_mode_and_literal_loopback() {
 fn unsupported_cloud_startup_cannot_create_a_local_database_and_activate_is_file_only() {
     let fixture = Fixture::new("example/managed-proof");
     fixture.proof();
-    // Schema reaches normal startup without first requiring an authoring
-    // worktree or session; the cloud guard itself must stop local startup.
-    let unsupported = fixture.run(&["data", "schema"]);
+    fn files(root: &Path) -> BTreeMap<std::path::PathBuf, Option<Vec<u8>>> {
+        fn visit(
+            root: &Path,
+            path: &Path,
+            out: &mut BTreeMap<std::path::PathBuf, Option<Vec<u8>>>,
+        ) {
+            for entry in std::fs::read_dir(path).unwrap() {
+                let entry = entry.unwrap();
+                if entry.file_name() == ".git" {
+                    continue;
+                }
+                let path = entry.path();
+                let key = path.strip_prefix(root).unwrap().to_path_buf();
+                if entry.file_type().unwrap().is_dir() {
+                    out.insert(key, None);
+                    visit(root, &path, out);
+                } else {
+                    out.insert(key, Some(std::fs::read(path).unwrap()));
+                }
+            }
+        }
+        let mut out = BTreeMap::new();
+        visit(root, root, &mut out);
+        out
+    }
+    let project_before = files(fixture.project.path());
+    let machine_before = files(fixture.machine.path());
+    // Embedded schema repair references bypass operational startup for every
+    // backend. Success must not create sessions, credentials or local storage.
+    for args in [
+        vec!["data", "schema", "--deterministic"],
+        vec![
+            "rpc",
+            "--op",
+            "schema.get",
+            "--params",
+            r#"{"entity":"todo"}"#,
+        ],
+    ] {
+        let schema = fixture.run(&args);
+        assert!(schema.status.success(), "{}", output(&schema));
+        let value: Value = serde_json::from_slice(&schema.stdout).unwrap();
+        assert!(value.is_object());
+        if args[0] == "rpc" {
+            assert_eq!(value["success"], true);
+        }
+        assert_eq!(files(fixture.project.path()), project_before);
+        assert_eq!(files(fixture.machine.path()), machine_before);
+        assert!(fixture.requests.lock().unwrap().is_empty());
+    }
+    // Exercise unsupported operational startup through a sessionless RPC
+    // carrier, rather than relying on schema lookup to touch the datastore.
+    let unsupported = fixture.run(&[
+        "rpc",
+        "--op",
+        "store.query",
+        "--params",
+        r#"{"entity":"knowledge"}"#,
+    ]);
     assert!(!unsupported.status.success());
     assert!(
         output(&unsupported).contains("cloud mode never falls back to local SQLite"),

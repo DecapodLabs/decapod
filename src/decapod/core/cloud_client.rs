@@ -71,6 +71,26 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
     use dactyl_db::AdapterErrorKind;
     let code = error.adapter_code();
     let (status, message, action) = match code {
+        Some("mfa_step_up_required") => (
+            CloudAuthStatus::MfaRequired,
+            "Account-level AAL2 MFA step-up is required before device enrollment or privileged custody.",
+            "Complete account MFA verification in the browser, then retry the command.",
+        ),
+        Some("payment_pending") => (
+            CloudAuthStatus::PaymentPending,
+            "Payment confirmation is still pending for this repository entitlement.",
+            "Wait for billing settlement or ask the account owner to complete payment, then retry.",
+        ),
+        Some("entitlement_denied") => (
+            CloudAuthStatus::EntitlementDenied,
+            "The service denied repository entitlement for this account.",
+            "Ask the account owner to assign or restore a seat for this repository, then retry.",
+        ),
+        Some("device_revoked") => (
+            CloudAuthStatus::DeviceRevoked,
+            "This enrolled device key has been revoked on the cloud service.",
+            "Run `decapod cloud revoke` to clear local device state, then `decapod cloud login --restart` to enroll a fresh device key.",
+        ),
         Some(
             "entitlement_required"
             | "organization_seat_required"
@@ -79,8 +99,7 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
             | "account_setup_required"
             | "identity_link_required"
             | "quote_confirmation_required"
-            | "billing_binding_required"
-            | "payment_pending",
+            | "billing_binding_required",
         ) => (
             CloudAuthStatus::ActionRequired,
             "The service has not confirmed the repository account entitlement.",
@@ -96,6 +115,11 @@ pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
             CloudAuthStatus::Expired,
             "The pending sign-in can no longer be completed.",
             RESTART,
+        ),
+        Some("invalid_dpop_proof" | "dpop_replay") => (
+            CloudAuthStatus::AuthRequired,
+            "The service rejected the request DPoP proof or replay nonce.",
+            "Retry the command with a fresh proof; if the device key was rotated or revoked, run `decapod cloud login --restart`.",
         ),
         Some(
             "invalid_token"
@@ -176,7 +200,7 @@ fn one_time_error(error: dactyl_db::DactylError) -> DecapodError {
 
 #[cfg(feature = "supabase-cloud")]
 fn now() -> i64 {
-    chrono::Utc::now().timestamp()
+    time::OffsetDateTime::now_utc().unix_timestamp()
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -204,7 +228,7 @@ fn managed_session(session: dactyl_db::UserSession) -> Result<Session, DecapodEr
 
 #[cfg(feature = "supabase-cloud")]
 fn handoff_expiry(value: &str) -> Result<i64, DecapodError> {
-    let expiry = chrono::DateTime::parse_from_rfc3339(value)
+    let expiry = crate::core::time::parse_rfc3339(value)
         .map_err(|_| {
             diagnostic(
                 CloudAuthStatus::ProviderUnavailable,
@@ -212,7 +236,7 @@ fn handoff_expiry(value: &str) -> Result<i64, DecapodError> {
                 RESTART,
             )
         })?
-        .timestamp();
+        .unix_timestamp();
     if expiry <= now() || expiry > now().saturating_add(30 * 60) {
         return Err(diagnostic(
             CloudAuthStatus::Expired,
@@ -308,7 +332,14 @@ fn acquire(
     restart: bool,
 ) -> Result<(dactyl_db::CloudConnector, SessionGuard), DecapodError> {
     let selected = selected_origin()?;
-    let connector = dactyl_db::CloudConnector::discover(&selected).map_err(transport_error)?;
+    let mut connector = dactyl_db::CloudConnector::discover(&selected).map_err(transport_error)?;
+    if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
+        connector.origin(),
+        &identity.canonical_name,
+        project_root,
+    ) {
+        connector = connector.with_proof_signer(signer);
+    }
     let store =
         SessionStore::for_project(connector.origin(), &identity.canonical_name, project_root)?;
     let mut guard = store.lock(LOCK_TIMEOUT)?;
@@ -609,12 +640,210 @@ pub fn status(
     let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
     let guard = store.lock(LOCK_TIMEOUT)?;
     let state = guard.state();
+    let device_key = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        &origin,
+        &identity.canonical_name,
+        project_root,
+    )
+    .ok()
+    .and_then(|ks| ks.load().ok().flatten());
     Ok(serde_json::json!({
         "schema_version": "decapod.cloud.session.v1",
         "repository": identity.canonical_name,
         "phase": state.phase,
         "credential_present": state.session.is_some(),
         "expires_at": state.session.as_ref().map(|session| session.expires_at),
+        "device_key_present": device_key.is_some(),
+        "device_jkt": device_key.as_ref().map(|k| k.jkt.clone()),
+        "device_keystore": device_key.as_ref().map(|k| k.backend.as_str()),
         "server_readiness": "not_checked",
+    }))
+}
+
+pub fn logout(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    let origin = selected_origin()?;
+    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
+    let mut guard = store.lock(LOCK_TIMEOUT)?;
+    let had_session = guard.state().session.is_some();
+    guard.clear_for_restart()?;
+    Ok(serde_json::json!({
+        "schema_version": "decapod.cloud.logout.v1",
+        "repository": identity.canonical_name,
+        "session_cleared": had_session,
+        "status": "logged_out",
+    }))
+}
+
+/// Acquire an authenticated `CloudConnector`, routed repository identity, and
+/// current bearer token for control-plane RPC calls (`propodus_repository_access_v1`,
+/// `propodus_proof_acceptance_v1`, `propodus_proof_acceptance_get_v1`).
+#[cfg(feature = "supabase-cloud")]
+pub fn connect_control(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+) -> Result<(dactyl_db::CloudConnector, RepositoryIdentity, String), DecapodError> {
+    let (connector, mut guard) = acquire(project_root, identity, false)?;
+    let state = guard.state().clone();
+    let session = state.session.as_ref().ok_or_else(restart_required)?;
+    let result =
+        crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity);
+    let routed = account_result(&mut guard, result)?;
+    Ok((connector, routed, session.access_token.clone()))
+}
+
+/// Perform challenge-response Ed25519 device key enrollment via `dactyl-db 0.18.0`
+/// `AccountOperation::{DeviceChallenge, DeviceEnroll}` (`#1778`).
+#[cfg(feature = "supabase-cloud")]
+pub fn enroll_device_with_connector(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    label: &str,
+) -> Result<serde_json::Value, DecapodError> {
+    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        connector.origin(),
+        &identity.canonical_name,
+        project_root,
+    )?;
+    let key = key_store.load_or_create()?;
+    let challenge = connector
+        .account_request(
+            dactyl_db::AccountOperation::DeviceChallenge,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+            }),
+            bearer,
+            None,
+        )
+        .map_err(transport_error)?;
+    let nonce = challenge
+        .get("nonce")
+        .and_then(|v| v.as_str())
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::ProviderUnavailable,
+                "Device enrollment challenge response omitted required nonce.",
+                "Retry device enrollment after the service is healthy.",
+            )
+        })?;
+    let audience = challenge
+        .get("audience")
+        .and_then(|v| v.as_str())
+        .unwrap_or_else(|| connector.origin());
+    let enroll_url = format!(
+        "{}/functions/v1/decapod-onboarding/device-enroll",
+        connector.origin().trim_end_matches('/')
+    );
+    let dpop_proof = key.sign_dpop_proof(
+        "POST",
+        &enroll_url,
+        Some(bearer),
+        Some(nonce),
+        Some(audience),
+        None,
+    )?;
+    connector
+        .account_request(
+            dactyl_db::AccountOperation::DeviceEnroll,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+                "public_jwk": key.public_jwk,
+                "jwk_thumbprint": key.jkt,
+                "algorithm": "EdDSA",
+                "label": label,
+                "nonce": nonce,
+                "dpop_proof": dpop_proof,
+            }),
+            bearer,
+            None,
+        )
+        .map_err(transport_error)
+}
+
+/// Request an account-level AAL2 MFA step-up challenge via `dactyl-db 0.18.0`
+/// `AccountOperation::DeviceStepUp` (`#1778`).
+#[cfg(feature = "supabase-cloud")]
+pub fn request_mfa_step_up(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    let _ = project_root;
+    connector
+        .account_request(
+            dactyl_db::AccountOperation::DeviceStepUp,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+            }),
+            bearer,
+            None,
+        )
+        .map_err(transport_error)
+}
+
+pub fn revoke(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    all: bool,
+    device_id: Option<&str>,
+) -> Result<serde_json::Value, DecapodError> {
+    let origin = selected_origin()?;
+    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        &origin,
+        &identity.canonical_name,
+        project_root,
+    )?;
+    let existing_jkt = key_store.load()?.map(|k| k.jkt.clone());
+    if let (Some(target), Some(current_jkt)) = (device_id, existing_jkt.as_deref())
+        && target.trim() != current_jkt
+    {
+        return Err(DecapodError::ValidationError(format!(
+            "DEVICE_KEY_NOT_FOUND: requested device key '{}' does not match enrolled device '{}'",
+            target.trim(),
+            current_jkt
+        )));
+    }
+    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
+    let mut guard = store.lock(LOCK_TIMEOUT)?;
+    let mut remote_revoked = false;
+    #[cfg(feature = "supabase-cloud")]
+    if let Some(session) = guard.state().session.as_ref()
+        && let Ok(connector) = dactyl_db::CloudConnector::discover(&origin)
+    {
+        let payload = serde_json::json!({
+            "version": 1,
+            "project_id": identity.canonical_name,
+            "revoke_all": all,
+            "jwk_thumbprint": existing_jkt,
+        });
+        if connector
+            .account_request(
+                dactyl_db::AccountOperation::DeviceRevoke,
+                &payload,
+                &session.access_token,
+                None,
+            )
+            .is_ok()
+        {
+            remote_revoked = true;
+        }
+    }
+    key_store.delete()?;
+    guard.clear_for_restart()?;
+    Ok(serde_json::json!({
+        "schema_version": "decapod.cloud.revoke.v1",
+        "repository": identity.canonical_name,
+        "all_scopes": all,
+        "revoked_device_jkt": existing_jkt,
+        "remote_revoked": remote_revoked,
+        "status": "revoked",
     }))
 }

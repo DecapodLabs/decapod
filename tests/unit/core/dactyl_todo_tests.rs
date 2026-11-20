@@ -4,6 +4,34 @@ use crate::core::dactyl::DactylBridge;
 
 const EVENTS_TABLE_SQL: &str = "CREATE TABLE events (event_id TEXT PRIMARY KEY, ts TEXT NOT NULL, seq INTEGER NOT NULL, stream TEXT NOT NULL, subject_kind TEXT, subject_id TEXT, event_type TEXT NOT NULL DEFAULT '', payload TEXT NOT NULL, actor TEXT NOT NULL DEFAULT 'decapod')";
 
+#[test]
+fn task_timestamp_accepts_rfc3339_and_legacy_sql_utc() {
+    for (input, expected) in [
+        ("2026-11-17T03:04:05+02:00", "2026-11-17T01:04:05Z"),
+        ("2026-11-17 01:04:05", "2026-11-17T01:04:05Z"),
+        (
+            "2026-11-17 01:04:05.123456789",
+            "2026-11-17T01:04:05.123456789Z",
+        ),
+    ] {
+        assert_eq!(
+            parse_timestamp(Some(input)).unwrap(),
+            crate::core::time::parse_rfc3339(expected).unwrap()
+        );
+    }
+    for invalid in [None, Some("invalid"), Some("2026-02-30 01:04:05")] {
+        assert!(parse_timestamp(invalid).is_none());
+    }
+    let mut task = task("wire timestamp");
+    task.created_at = parse_timestamp(Some("2026-11-17 01:04:05.12")).unwrap();
+    let wire = serde_json::to_value(&task).unwrap();
+    assert_eq!(wire["created_at"], "2026-11-17T01:04:05.120Z");
+    assert_eq!(
+        serde_json::from_value::<Task>(wire).unwrap().created_at,
+        task.created_at
+    );
+}
+
 fn local_store() -> Option<(DactylTodoStore, tempfile::TempDir)> {
     let tempdir = tempfile::tempdir().expect("Dactyl tempdir");
     let path = tempdir.path().join("tasks.db");
@@ -41,7 +69,7 @@ fn local_store() -> Option<(DactylTodoStore, tempfile::TempDir)> {
 }
 
 fn task(title: &str) -> Task {
-    let now = Utc::now();
+    let now = OffsetDateTime::now_utc();
     Task {
         id: String::new(),
         repo_id: "DecapodLabs/decapod".to_string(),

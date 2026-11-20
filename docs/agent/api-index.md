@@ -6,6 +6,10 @@ This is the primary orientation surface for AI agents. Before performing impleme
 
 ## When to Call Decapod
 
+Decapod supports two logical repository backends in `.decapod/config.toml` (`repo.backend`):
+- **Decapod Local (`local`, default):** Free, offline, local-first SQLite and Git governance runtime with no account required.
+- **Decapod Cloud (`cloud`):** Optional hosted repository-bound task and coordination backend via Dactyl (`decapod init --backend cloud`, `decapod cloud ...`).
+
 Call Decapod at **Inference Pressure Points**. Each call should move transient agent activity into governed project state: intent, context, custody, boundaries, validation, or completion.
 
 One agent task may span many Decapod invocations. Every CLI or RPC process is

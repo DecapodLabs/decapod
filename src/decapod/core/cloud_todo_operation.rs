@@ -202,7 +202,7 @@ impl OperationRecord {
             task_id,
             status: Outcome::Prepared,
             failure_kind: None,
-            updated_at: chrono::Utc::now().timestamp(),
+            updated_at: time::OffsetDateTime::now_utc().unix_timestamp(),
         })
     }
 
@@ -222,10 +222,14 @@ pub fn failure_kind(error: &DecapodError) -> FailureKind {
             CloudAuthStatus::Unauthorized
             | CloudAuthStatus::UnauthorizedIdentity
             | CloudAuthStatus::RepositoryDenied
+            | CloudAuthStatus::EntitlementDenied
+            | CloudAuthStatus::PaymentPending
             | CloudAuthStatus::ActionRequired => FailureKind::Authorization,
-            CloudAuthStatus::Revoked | CloudAuthStatus::RestartRequired => {
-                FailureKind::Authentication
-            }
+            CloudAuthStatus::Revoked
+            | CloudAuthStatus::DeviceRevoked
+            | CloudAuthStatus::KeyLost
+            | CloudAuthStatus::MfaRequired
+            | CloudAuthStatus::RestartRequired => FailureKind::Authentication,
             CloudAuthStatus::Offline => FailureKind::Offline,
             CloudAuthStatus::ProviderUnavailable => FailureKind::Unavailable,
             _ => FailureKind::Authentication,
@@ -344,7 +348,7 @@ impl Journal {
                 if existing.request_fingerprint != record.request_fingerprint || existing.task_id != record.task_id { return Err(invalid_token()); }
                 return Ok(existing.clone());
             }
-            let cutoff = chrono::Utc::now().timestamp() - COMPLETED_RETENTION_SECONDS;
+            let cutoff = time::OffsetDateTime::now_utc().unix_timestamp() - COMPLETED_RETENTION_SECONDS;
             records.retain(|existing| existing.status != Outcome::Succeeded || existing.updated_at >= cutoff);
             if records.len() >= MAX_RECORDS
                 && let Some(oldest) = records.iter().enumerate()
@@ -411,7 +415,7 @@ impl Journal {
                 if existing.status != Outcome::OutcomeUnknown || status == Outcome::Succeeded {
                     existing.status = status;
                 }
-                existing.failure_kind = kind; existing.updated_at = chrono::Utc::now().timestamp();
+                existing.failure_kind = kind; existing.updated_at = time::OffsetDateTime::now_utc().unix_timestamp();
             }
             Ok(())
         })
