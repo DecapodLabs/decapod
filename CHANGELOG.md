@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.151.0](https://github.com/DecapodLabs/decapod/compare/v0.150.8...v0.151.0) - 2026-11-20
+
+### Added
+
+- *(readiness)* support reviewed per-platform executables for repo.pr-readiness.v1
+
+### Fixed
+
+- *(test)* initialize RepositoryExecution platforms field in upstream integration tests ([#1736](https://github.com/DecapodLabs/decapod/pull/1736))
+
+### Other
+
+- *(govern)* sync accepted master v0.150.8 ([#1736](https://github.com/DecapodLabs/decapod/pull/1736))
+- *(merge)* sync origin/master v0.148.14 and align release projections
+- *(specs)* align config digest, Dockerfile, and manifest with v0.148.13
+
 ## [0.150.8](https://github.com/DecapodLabs/decapod/compare/v0.150.7...v0.150.8) - 2026-11-19
 
 ### Fixed
