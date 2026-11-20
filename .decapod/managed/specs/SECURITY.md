@@ -1,5 +1,54 @@
 # Security
 
+## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
+
+- **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
+  that resolves inside the repository checkout (including through non-existent
+  path tails on macOS `/var` -> `/private/var`), rejects symlinks, enforces
+  mode `0600` (`O_NOFOLLOW`), and zeroizes PKCS#8 key material on drop. DPoP
+  verifiers reject private JWK parameters (`d`, `p`, `q`, `dp`, `dq`, `qi`,
+  `oth`, `k`) and bind `htm`, canonical `htu`, `iat`, `ath`, `nonce`, and `aud`.
+- **Container isolation**: `filter_container_environment` strips raw tokens,
+  service-role keys, refresh secrets, and `SSH_AUTH_SOCK` before container
+  launch. `HostContainerSignerServer` mounts only a mode-0600 Unix socket and
+  denies wrong repository, mismatched agent ID, foreign origin, non-allowlisted
+  operations (including `device-enroll`, `device-revoke`, billing, and owner
+  tier mutations), cross-capability misuse, expired sessions, and revoked keys.
+- **No silent local fallback or unmerged privilege escalation**: Cloud auth,
+  entitlement (`403`), payload bound (`413`), quota (`429`), or owner-repair
+  denials never create, read, or mutate `.decapod/data/decapod.db`. Unconfigured
+  explicit `neon`/`supabase` datastores fail closed without falling back to the
+  retired legacy preview endpoint. Unmerged worktree config never enables
+  `owner` repair locally or remotely, and `#1776` accepted-cloud enforcement
+  continues to block unaccepted local downgrades.
+- **Public repository hygiene**: All code, tests, fixtures, docs, and specs in
+  this wave use synthetic `example.invalid` / loopback fixtures and public
+  registered wire markers (`OWNER_REPAIR_V1_SQL = "SELECT propodus.owner_repair_v1($1, ..., $11)"`)
+  only — zero live hostnames, merchant identifiers, private repository source
+  filenames, private database schemas/CTE expansions, or raw secrets.
+
+## Ambiguous RPC JSON
+
+Duplicate decoded keys are invalid at every nesting level, including Unicode
+escapes that spell an existing key. A later field cannot erase an unsupported
+required extension before negotiation. Recursive uniqueness uses the existing
+release-manifest decoder through a shared internal utility, preserving caller
+size bounds and specialized redaction. This controls interpretation at the
+CLI RPC boundary only; it does not authenticate an imported proof or establish
+host-wide observation. Same-host Python differential parsing is distinct from
+independent trusted execution.
+
+## Withdrawal and fresh custody
+
+A full validator not-ready judgment only narrows current workunit authority;
+it never creates a successful observation or relabels unexecuted checks as
+failed. Withdrawal checks the captured workunit generation and task custody
+atomically in the existing canonical database. A concurrent journal or lease
+change refuses the append. Historical successful records retain their original
+identity. Renewal does not transfer their authority: promotion requires fresh
+matching current proof, including the existing tool/input/source and epoch
+checks. Split-store atomicity remains unsupported and fails explicitly.
+
 ## Configuration validity and accepted privilege proposals (#1771, #1776)
 
 `cli::DecapodProjectConfig` rejects unsupported schema versions during typed
@@ -23,86 +72,60 @@ access. Public-command regression controls cover denial, corrected ordinary
 operations, independently accepted bounded grants and revocation. Candidate
 test execution and exact-head full validation remain required before delivery.
 
-## Bounded task-scope recovery
+### Cross-surface effective-authority enforcement and #1776 repairs
 
-The scope reconciler receives task data from claimed-workbranch preparation and rechecks canonical task scope and revision around its prepared write. It only replaces exact known legacy fragments; it does not infer which independent constraints to discard. The complete predecessor must already be recoverable in Git. Original request, source revisions, prior custody events and failed checks remain intact. Plan acceptance is revoked, and changed governance/trajectory bindings invalidate old proof. The SQLite and Git/document observations are guarded reads, not a claimed cross-store atomic transaction or filesystem authorization boundary.
+Cross-surface red-team verification against the compiled `decapod` binary (`0.148.11`)
+reproduced four candidate / unaccepted-branch self-authorization vectors and verified
+canonical enforcement across the remaining privilege and schema surfaces:
 
-## Readback does not grant continuation authority
+1. **Base branch self-selection (`workspace::resolve_base_branch`, `validate::validate_project_config_toml`)**:
+   Candidate worktrees and unaccepted branches could previously set `repo.base_branch`
+   to their own branch, collapsing diff comparisons and target-policy baselines to self
+   under `govern project-check` and `validate`. `workspace::resolve_base_branch` now
+   prefers `core::db_maintenance::resolve_accepted_project_config` (falling back to
+   `detect_base_branch(&main_root)` for worktrees rather than candidate TOML), and
+   `validate_project_config_toml` explicitly rejects candidate/unmerged divergence from
+   the accepted base branch (`BASE_BRANCH_SELF_AUTHORIZATION_DENIED`) as well as
+   candidate weakening of `[laya] mode = "required"` (`LAYA_POLICY_DOWNGRADE`),
+   `proof.required_profile = "decapod.pr-readiness.v1"` (`REQUIRED_PROFILE_DOWNGRADE`),
+   and `repo.backend = "cloud"` (`BACKEND_POLICY_DOWNGRADE`). `lib.rs` likewise
+   preserves canonical `BackendType::Cloud` before entering local storage startup.
+2. **Protected paths erasure (`core::gatekeeper::GatekeeperConfig::from_repo_config`, `validate_gatekeeper_gate`)**:
+   Removing `governance.protected_paths` entries in a candidate worktree previously
+   bypassed `govern gatekeeper check` and `decapod.scope.protected_paths` rule evaluation.
+   `GatekeeperConfig::from_repo_config` now computes the deduplicated union of canonical
+   accepted `protected_paths` and task-local paths, preserving stricter task-local guards
+   while forbidding candidate removal of accepted protections. `validate_gatekeeper_gate`
+   also reports `ViolationKind::ProtectedPath` counts cleanly.
+3. **Container custody & isolation downgrade (`validate::is_container_workspaces_disabled`, `validate_git_workspace_context`)**:
+   Raw substring scanning (`.contains("container_workspaces = false")`) allowed comments
+   and unaccepted main-root checkouts to bypass container isolation, and candidate
+   worktrees could downgrade `repo.container_workspaces` or `custody.isolation` to
+   `"worktree"`. `is_container_workspaces_disabled` now evaluates parsed canonical
+   accepted config via `resolve_accepted_project_config` (refusing unmerged branches and
+   comment strings), and `validate_git_workspace_context` rejects candidate or unmerged
+   downgrades (`CUSTODY_ISOLATION_DOWNGRADE`).
+4. **`.decapod/OVERRIDE.md` rule and HITL boundaries (`core::db_maintenance::resolve_repository_override`, `core::validation_rules`, `plugins::policy::is_hitl_disabled_by_override`)**:
+   `resolve_repository_override` binds `OVERRIDE.md` resolution to the accepted base
+   commit (`:accepted-ref` SHA blob) whenever `main_root` is off a protected branch—even
+   if `.decapod/config.toml` itself was not modified—closing `HITL_DISABLE` bypasses on
+   unaccepted root checkouts as well as candidate worktrees. `validate_validation_rules`
+   loads accepted rules via `resolve_repository_override` while separately validating any
+   candidate/unmerged `OVERRIDE.md` against `RuleRegistry::load_project_rules_from_content`.
+   `apply_rule_override`, `build_and_cache_rules`, and `extend_requirements` enforce
+   `OverrideEligibility::NonOverridable` rejection across all fields (`OVERRIDE_NOT_PERMITTED`)
+   and forbid `TightenOnly` / `ConfigurableOnly` rules (`decapod.evidence.required_and_fresh`)
+   from lowering `severity` or relaxing (increasing) `evidence_max_age_seconds`.
 
-An ignored `EXTERNAL_ACTIONS.json` change cannot reuse the old execution authority. The canonical bounded policy inventory hashes that file, and retained native-path consumers resample current authority before using successful historical execution. Policy denial remains owned by the actual native authorizer; measuring a fresh policy binding does not grant the denied proof command.
-
-A second agent may inspect canonical state without impersonating the task owner. Only the two state read RPCs receive that classification; authoring and publication still evaluate current custody and their existing gates. An actual CLI trace on source d0ebc2c8 accepted a pinned public GitHub comment but rejected independent reader B with AUTHORING_CUSTODY_STALE. The read-dispatch correction addresses that observed handoff failure; it is not authenticated human approval or a waiver of mutation authority.
-
-## Observed native path and truthful coverage
-
-Only actual native adapter authorization and terminal runner results construct
-owned path evidence. An agent cannot upgrade a reported loop, proof-ref string,
-JSON judgment, claimed signer or source digest into that capability. Required
-scope is taken from independently accepted target policy. A fresh runtime nonce,
-original task/run and instruction revision, current plan/policy, actor/lease and
-head/base prevent old or cross-scope observations from establishing currentness.
-Failed and unknown outcomes remain separate; ordered hash checks alone are only
-structural integrity. Existing validation/workunit journals retain actual history.
-
-This trust boundary is the existing compiled kernel/native-runner process, not
-cryptographic attestation of a hostile same-user machine or independent full-host
-observation. Unrestricted shell/forge effects and unobserved source-edit paths stay
-unproven. Unsupported required scopes refuse rather than claiming host parity;
-optional unknown coverage does not block ordinary accepted checks. Required-path
-admission and real external-agent applicability still require executed acceptance
-evidence before #1767 can close.
-
-## Instruction source integrity and trust classes
-
-Recorded origin and ordered revisions are immutable through governed writers.
-Native validation also checks retained source history, so an out-of-kernel edit
-and rehash cannot change the same lineage's origin or remove an accepted recorded
-prefix. Historical source rewrites remain inspectable when a corrected current
-candidate earns fresh proof. Neither the source guard nor a custody hash claims
-to observe or intercept arbitrary shell/forge actions.
-
-The ordinary clarification API accepts reported source/principal claims only; it has
-no caller-settable authenticated flag. Readback classifies these as agent-reported
-and independently unverifiable. Missing legacy origin provenance remains unknown.
-No test or CLI plan approval authenticates a human principal. The separate GitHub
-comment ingress constructs an owned observation only after a bounded sealed GET
-through the existing official-client or preselected anonymous-HTTPS authority, checks exact repository,
-object/account and expected body identity, and retains historical provider evidence.
-It exposes no caller-settable trust switch and no response-file importer. Account
-observation is not human authentication, authorization, policy acceptance or proof
-that mutable remote content is still current. Same-user filesystem compromise is
-outside this local trust boundary. Policy-required witnessed process conformance
-still needs its independent observer/controller contract.
-
-## Selected requirement trust boundary
-
-Only independently captured accepted-target policy governs the selected native
-requirement model. Candidate deletion, replacement or self-repinning is refused.
-Neither a declared source label, a mapping nor a satisfiable relation graph
-authenticates a principal or proves application behavior. A read-only requested
-Git revision is labelled requested, not accepted. The native before/after
-identity binds the selected SQLite join and plan context in addition to existing
-source/base/policy/toolchain identity. Changed assignments and duplicate mappings
-cannot reuse current readiness. Canonical DB snapshots and Git pins provide
-freshness checks, not atomic distributed transactions or host-wide observation.
-
-This initial extension supports local canonical DB reads and existing native
-repository commands only. It refuses unsupported hosted/cloud joins and arbitrary
-relation semantics. It adds no `covers` dependency edges, implicit natural-language
-solver, universal semantic judge or witness-import authority. Observer custody
-and authenticated instruction ingress remain separate dependencies.
-
-## Recorded blockers and evidence limits (#1764)
-
-Instruction readiness hashes identify recorded plan content and source locations.
-They do not authenticate a human, independently accept a behavioral oracle, or
-observe an external shell action. Pending human spec decisions remain blocking
-at preparation and checkpoint boundaries even for a legacy approved plan. A
-deferred future question alone does not create a current authority requirement.
-The existing external validation and publication owners still require current
-candidate, accepted target, policy and custody evidence. Unimplemented instruction
-provenance, root coverage, typed relation consistency and witnessed-path contracts
-remain separate open obligations under #1761, #1768, #1770 and #1767.
+Already-enforced controls covered by actual-binary regression in `tests/policy_self_authorization_1776.rs`
+include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, `main_merge`
+unknown-field `INVALID_CONFIG_SCHEMA`, `[governance].allow_basic_shared_claims`,
+`POLICY_SNAPSHOT_STALE` TOCTOU rejection across base-policy rotation, stale-target/proof
+invalidation on `validate` + `todo done --validated`, bounded accepted rotation and
+revocation with intact `data db audit` history, and pre-config read-only repair via
+`decapod docs show` and `decapod data schema --deterministic`. Cooperative host-local
+root/Git admin access and remote forge/Buildkite acceptance remain external trust
+boundaries and are never fabricated by local kernel checks.
 
 ## Scoped currency authorization (#1753)
 
@@ -214,6 +237,15 @@ task lineage. Reassignment, renewed custody, intent edits later reverted,
 missing history and concurrent task mutations cannot inherit an older pass.
 It does not trust commit messages, branch names, a provider badge, or the legacy
 tracked prerequisite receipt as proof of integration and successful execution.
+When unauthenticated public HTTPS branch-tip inspection is rejected for a private
+repository, `src/decapod/core/validation_history.rs::accepted_target_for_repository`
+may fall back to reviewed host-user authenticated read-only transport — first via
+`snapshot_provider::OfficialCli` (`gh api` GET `repos/{owner}/{repo}/git/ref/heads/...`
+authorized through `external_action::authorize_official_github_read`), and then via
+an isolated host-user `git ls-remote` in an empty scratch directory with
+`GIT_TERMINAL_PROMPT=0` and disabled redirects. No credentials or raw transport
+diagnostics are persisted in `.decapod/`, logs, or worktrees, and local no-graft /
+no-alternate ancestry verification (`reject_history_overrides`) remains mandatory.
 Historical authority is limited to completing its original task; new publication
 still requires current full validation. These local records retain Decapod's
 cooperative same-user trust model: hashes detect inconsistent evidence but do
@@ -765,8 +797,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (236 files)
+- Repository signal fingerprint: `246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1245,3 +1277,70 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
+
+## Merge reconciliation fail-closed proof boundary (#1780)
+
+`core::governance_document::reconcile_merge` enforces three invariants to prevent
+Git merge reconciliation from laundering invalid or partial proof:
+1. **Immutable parent authority**: Inputs come exclusively from `HEAD`,
+   `MERGE_HEAD`, and `merge-base --all` blobs with graft and replace-object
+   protections; corrupted or tampered working-tree `.decapod/governance.json`
+   files outside an active Git merge (`MERGE_HEAD` absent) are rejected with
+   `GOVERNANCE_MERGE_NOT_IN_PROGRESS`.
+2. **Non-promotion of proof**: Merging a branch with failed or missing checks
+   retains every failed check and missing proof hook, forces `proof_status` and
+   `verdicts` recomputation via `TrajectoryArtifact::with_recomputed_hash()`, and
+   strips stale `validation` receipts whenever trajectory or validation state
+   changes. Contradictory statuses for the same named check fail closed with
+   `GOVERNANCE_MERGE_PROOF_CONFLICT`.
+3. **Authority disambiguation**: Unaccepted distinct workstreams (`change.id`
+   mismatch where `MERGE_HEAD` is not an ancestor of the accepted `target_base`
+   ref), conflicting `target_base` or `base_commit` values, or conflicting
+   non-additive edits fail closed with `GOVERNANCE_MERGE_AUTHORITY_CONFLICT`.
+   Full merge-commit checkpoint verification (`verify-checkpoints`) remains
+   independently enforced after committing the merge.
+
+## Per-platform execution selection boundary (#1736)
+
+`repo.pr-readiness.v1` per-platform execution entries (`RepositoryExecution::platforms` / `PlatformExecution`) preserve fail-closed `#[serde(deny_unknown_fields)]` schema strictness, reject ambient `PATH` resolution, relative paths, mixed top-level/per-platform declarations, and uncanonical or unsupported platform keys, and bind every declared platform alternative into `command_contract_digest` and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Candidate additions, removals, or edits to any platform table—including non-host platforms—cannot self-approve and remain rejected until independently accepted on the target (tracked separately from policy migration in #1738). At host selection and execution time (`RepositoryExecution::resolve_for_platform`, `repository_host::select_commands_for_platform`, `native_proof::validate_invocation`), only the current host platform's reviewed executable and `toolchain_files` are selected, checked for canonical host binary format, and byte-measured before and after execution; missing or unsupported host platforms fail closed without fallback.
+
+## Compact storage v2 downgrade boundary (#1739)
+
+Compatibility-aware evaluators below `0.144.2` (`0.141.0`, `0.143.2`, `0.144.1`) fail closed with `STORAGE_FORMAT_INCOMPATIBLE` against both newly initialized and restamped v2 datastores, and `core::events` read/write paths enforce `check_read_compatibility` / `check_storage_format_compatibility` before accessing event rows. Already-released `0.141.0..0.144.1` binaries shipped prior to PR #1663 without `meta.storage.*` compatibility checks and share `TODO_SCHEMA_VERSION = 18` and `events` SQLite DDL with `0.144.2..0.148.13`; metadata checks alone cannot force those historical binaries to reject a v2 store without breaking `>= 0.144.2` compatibility. Deterministic offline tests in `tests/datastore_relational_compaction.rs` and `tests/datastore_contract.rs` verify version floors, restamping, and lossless `_ce_v1` reconstruction without network or external binary execution.
+
+## Fail-closed broker orphan acknowledgment (#1783)
+
+`prepare_repair_with_probe` and `assess_writer_liveness` (`src/decapod/core/broker.rs`) enforce fail-closed orphan repair boundaries against reused PIDs, cross-host shared storage, and historical provenance-free audit entries. Confirmed active writers (matching boot/host/PID-namespace, live PID, and matching `writer_start_id`) are unconditionally refused in both preview and `--apply`, even when `--acknowledge-unknown-writer` is supplied.
+
+Legacy provenance-free `pending` events, partial provenance lacking `writer_start_id` or `writer_boot_id`, cross-host boot mismatches, mismatched Linux PID namespaces, and uninspectable processes (`ProcessProbe::Unverifiable`) resolve to `WriterLiveness::Unknown` with `human_review_required = true`. Silent `broker repair --apply` is refused for all `Unknown` cases; applying requires explicit human review via `--acknowledge-unknown-writer`, records `writer_liveness`, `human_review_required`, and `acknowledge_unknown_writer` on the `"abandoned"` audit entry, preserves `original_outcome = "unknown"`, and remains gated by `control.mutate` policy and session checks.
+
+## Actor custody enforcement and unknown-claim recovery (#1737)
+
+`core::authoring::is_missing_or_unknown_actor` and
+`core::authoring::authoring_actor_required_error` close the `"unknown"` / empty
+actor bypass across task claiming, lease lifecycle (`renew`, `yield`), explicit
+owner assignment, mentor reflection custody (`core::mentor::reflection::custody`),
+and workspace provisioning (`workspace::ensure_workspace` for both CLI and RPC).
+Failing closed at entry prevents `"unknown"` locks and unowned `agent/unknown/*`
+coordination todos or worktrees from being created.
+
+Recovery of legacy `assigned_to == "unknown"` claims is narrowly bounded:
+`claim_task_with_lease` and `claim_branch_scoped_open_tasks` allow an explicit
+real `DECAPOD_AGENT_ID` to adopt an `"unknown"` task only when
+`core::authoring::has_real_actor_checkout_custody` and
+`has_other_real_primary_owner` are both false. Tasks bound in `authoring_bindings`
+to a real actor, holding another real primary owner, or actively claimed by a
+real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT`).
+
+## Acceptance presentation boundary (#1757)
+The read-only flight-recorder acceptance exporter neither executes agent work
+nor modifies kernel verdicts. It rejects sibling-file escapes, symlinks, altered
+digests and unsafe public text. Raw tool arguments, reasoning, local paths,
+credentials and environment stay private. Only reviewed objective text and
+allowlisted facts are emitted. Host source labels are assertions, not producer
+authentication; uncaptured unrestricted shell/forge activity remains unknown.
+Wrong subjects, incomplete checks, missing custody, controller-only repair,
+interventions and created-but-not-admitted PRs cannot become autonomous success.
+
+## Fail-closed host attribution
+Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.

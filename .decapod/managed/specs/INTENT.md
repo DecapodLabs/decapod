@@ -1,57 +1,210 @@
 # Intent
 
-## Preserve pending decisions through plan lifecycle (#1764)
+## Reporting claims and current proof (#1726, #1735)
 
-An actual 38b37c90 CLI fixture first refused a required spec decision, then
-demonstrated that same-task plan initialization erased it and allowed approval
-and execution without a supplied decision. Its eighteen operations remain
-counterexample evidence; the green source CI did not prove this missing case.
-The combined repair reuses the pending-review continuity and acceptance
-invalidation from concurrent owner commit ffbb3375, retaining this workstream's
-existing canonical readiness, instruction lineage and accepted relation policy.
-Pending decisions survive initialization in the same governance journal.
-Introducing or resolving a required review revokes old acceptance and phase
-evidence; explicit reacceptance and current proof remain necessary. Decision
-references are declared provenance, never authenticated human identity. This
-source change requires fresh exact-candidate validation; prior 38b evidence is
-historical and does not prove the repair.
+Decapod remains the repo-native governance kernel; consumers must distinguish
+reported outcomes from its canonical current validation and admission decisions.
+Official0.148.11 reproduced a reporting false accept: `interop.project` returned
+`proven` and publication-ready from fabricated pass/head/digest fields, even when
+the caller supplied its own matching verifier and rule labels. No validation or
+actual publication occurred. Pure report projection must instead retain the
+reported status while refusing current proof, explain the missing canonical
+authority, preserve negative/stale diagnostics, and permit ordinary operation.
+This correction adds no validator, report generator or receipt store.
 
-## Accepted target integration (0.148.11)
+A second actual control showed approval formatting claiming that policy had
+recorded a caller-supplied boolean despite no policy operation. All pure
+projection inputs must be explicitly caller-owned and not canonically verified.
+Reported approval/operation statuses remain display data; their formatting
+cannot authenticate a principal, grant or observed effect.
 
-The combined candidate incorporates accepted target 352d8929, including truthful
-interop discovery, strict malformed RPC parameter rejection and the 0.148.11
-release metadata. Static conformance labels remain not_run. The state.resolve
-and state.diff catalog entries match this workstream's existing cold-reader
-startup bypass and cannot confer mutation authority. Complete active governance
-history is retained; the accepted journal remains in the merge parent. Earlier
-a62d6eb5 proof against 34f837d4 is historical after this target change and cannot
-establish current publication readiness. Required validation must measure the
-new exact source and independently captured accepted target.
-The native discovery owner reports inventory 2acf1af7 across 105 sources.
-Independent comparison with the previously reviewed candidate found only the
-root package version changes in Cargo.toml and Cargo.lock, 0.148.10 to 0.148.11.
-All other 103 build, workflow, toolchain and helper inputs are unchanged; the
-required graph and command coverage remain intact. The explicitly reviewed
-source digest acknowledges those release bytes and is not execution evidence.
+## Single-header docs book layout and viewport page spacing (#1849)
 
-## Preserve recorded authority and prove current combined work (#1761–#1770)
+The public documentation book (`docs/book/src/index.md` and `docs/book/src/custom.css`) maintains the shared mdBook navigation bar as the single site header across all pages and viewports:
 
-This continuation preserves draft PR1766 and its source ancestry while completing
-the explicitly requested instruction, blocker, selected-root, typed-consistency,
-behavioral-proof and observed-path contracts. Original requests, agent
-interpretations, source-account observations and actual grants remain separate.
-Accepted roots cannot disappear before DB mapping; explicit equality/inequality
-relations must be jointly consistent; real accepted negative and integration checks
-must execute on the combined source. Canonical blockers persist across consequential
-phases. Current source/base/policy/task/lease and owned native observations govern
-applicable proof, while unobserved host activity and unexpressed meaning stay unknown.
+- Removes the duplicate Welcome-page `.decapod-docs-brand` header strip and its theme-specific `.decapod-docs-brand` CSS overrides so navigation remains unified in the shared `#menu-bar`.
+- Increases top content spacing (`#content main`) and aligns the right reading rail (`.decapod-reading-rail`) padding (`clamp(44px, 4.8vw, 80px)` on desktop, `47px` on tablet, `37px` on mobile) for balanced layout breathing room across viewports.
+- This layout fix modifies human-facing mdBook content and stylesheet rules only; it introduces no runtime, CLI, RPC, schema, or security-boundary changes.
 
-Ordinary unambiguous work remains autonomous under its accepted gates. Required
-evidence cannot be replaced by a reported pass, byte hash, draft PR or partial
-suite. No new grant service, transcript database or universal shell interceptor
-is introduced. Full required validation and independently reviewable negative,
-repair and current-subject evidence must precede any issue closure. The user did
-not authorize merging, force pushes, protected-main changes or gate waivers.
+## Agent-agnostic, daemonless kernel application positioning in the docs book (#1847)
+
+The public documentation book (`docs/book/src/index.md`, `docs/book/src/introduction.md`, and `docs/book/src/mental-model.md`) explicitly frames Decapod as an **agent-agnostic, daemonless metacognitive governance kernel application** rather than an agent harness, prompt framework, or background daemon:
+
+- Coding agents across harnesses (Codex, Claude Code, Cursor, Antigravity, and other compatible tools) invoke Decapod on demand through its CLI and structured RPC (`decapod rpc`) interface whenever work crosses an orientation, task-custody, workspace-isolation, boundary, or exact-commit validation gate.
+- Each invocation terminates cleanly without leaving a resident background daemon (`INV-DAEMONLESS`), while the repository (`.decapod/` and Git history) preserves durable governance state, intent, constraints, and proof across agents, models, processes, and sessions.
+- This clarification updates human-facing documentation prose only; it introduces no runtime, CLI, RPC, schema, or security-boundary changes.
+
+## Cloud control-plane, Dactyl 0.18.0 adoption, and Decapod Local/Cloud unification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1033, #1034, #1038, #1040, #1066, #1158, #1369, #1376, #1377, #1380)
+
+Decapod adopts published registry crate `dactyl-db = "=0.18.0"` (SHA-256
+`6c26eaf28272a50517d7fe300b56940ac03627477b48579293b231c33de905b4`, preserving
+`quinn-proto >= 0.11.19` and synchronized `Cargo.lock` + Bazel `MODULE.bazel.lock`)
+without path or Git overrides, and unifies all user- and agent-facing CLI,
+capabilities, embedded docs, and human book documentation around **Decapod Local**
+(`local`, free, offline, no account required) and **Decapod Cloud** (`cloud`,
+account required):
+
+- **Decapod Local/Cloud branding & docs (#1808, #1769)**: Retires the legacy
+  Vercel preview URL default so unconfigured explicit `neon`/`supabase`
+  datastores fail closed with `DECAPOD_CLOUD_API_URL` guidance. Introduces
+  canonical `DECAPOD_CLOUD_*` env vars while retaining `DECAPOD_PROPODUS_API_URL`
+  as a backwards-compatible alias emitting structured `decapod.deprecation.v1`
+  notices, recognizes `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*`
+  diagnostic headers, and adds a responsive **Decapod Local** vs **Decapod Cloud**
+  offerings section on `docs/book/src/index.md` linking to
+  `https://decapodlabs.github.io/offerings.html` without public pricing or
+  checkout routes.
+- **Mixed-worktree routing & inline cloud parity (#1777, #1034, #1158)**: CLI
+  and inline todo helpers resolve backend selection (`local` vs `cloud`) and
+  canonical repository identity strictly from the invoking worktree rather than
+  falling back to the root checkout's SQLite store in either direction
+  (local-root/cloud-worktree or cloud-root/local-worktree), while honoring
+  `#1776` accepted-cloud fail-closed enforcement against unaccepted local downgrades.
+- **Device-bound DPoP custody & container signer broker (#1778, #1033, #1040, #1066)**:
+  Dedicated per-origin/per-repository Ed25519 device keys are persisted outside
+  Git (OS Keychain where available, otherwise mode-0600 `O_NOFOLLOW` external
+  private file), wired into `dactyl-db 0.18.0` `RequestProofSigner` (RFC 9449
+  `DPoP`) and `AccountOperation::{DeviceChallenge, DeviceEnroll, DeviceStepUp, DeviceRevoke}`,
+  plus `decapod cloud logout|revoke` and a bounded host-side Unix-socket
+  container request-signer broker (`[workspace.credentials]`) so container
+  workspaces never receive private keys or raw bearer/refresh secrets.
+- **Repository access tiers & owner repair (#1590)**: Local `db.recover`
+  requires merged canonical `owner_repair_enabled = true` and RBAC `owner`
+  authority; cloud repair queries `propodus_repository_access_v1` (`Read` +
+  audited `Write`) via `CloudConnector::control_request` and executes
+  `owner_repair_v1` atomically via `DactylBridge::atomic` with zero local
+  SQLite fallback.
+- **Hosted lease fencing & 5-state proof acceptance (#1809, #1038)**: Removes
+  the `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED` placeholder in favor of hosted
+  exclusive lease fencing/renewal/release and wires `propodus_proof_acceptance_v1`
+  / `propodus_proof_acceptance_get_v1` (`captured -> independently_verified ->
+  currently_admissible -> published -> historically_accepted`) with safe
+  `outcome_unknown` reconciliation and distinct `403`/`413`/`429` error types.
+  Offline/loopback and local PG17 + PostgREST runs prove client wire and native
+  database contracts without claiming hosted production acceptance or unrun Nix
+  builds on hosts where `nix` is absent.
+
+## Accepted release12 continuity
+
+The accepted target advanced again to `7bd0a915` (0.148.12), which changes only the root package versions and changelog after9c. The prior9c merge remains a real parent with its own checkpoint; this release integration gets a new native checkpoint. All105 verification-source inputs were independently remeasured: Cargo.toml/Cargo.lock version bytes changed and103 remained identical. Required helpers, graph, commands and toolchain remain unchanged. Official session acquire installed a private0.148.12 controller (SHA256 `1fb9e592076c937f0be049f2329b287e22f2e6a346b8f351ec863bfc92a6d7d3`) and restored the temporary config opt-in; old/shared binaries remain intact. Native projection refresh does not transfer earlier Actions success or establish current admission.
+
+## Current accepted-target integration
+
+The active currentness task integrates accepted master `9c7e6cff` through a real two-parent merge after the external acceptance of PR1791. Its strict JSON source, test compile inputs and authored contracts are retained alongside this task's current proof obligations. Earlier352-based source results remain historical; the combined candidate requires new execution against9c. The native active journal stays with this task; Git preserves both parents and all accepted history. No merge admission is inferred from the external ref update.
+
+## Accepted interoperability workstream context
+
+## Unambiguous client requirements
+
+Interop discovery must not silently erase a caller's required semantics.
+Malformed JSON and duplicate decoded keys are refused before RPC startup on
+both stdin and flag-parameter routes. Ordinary unique-key requests continue.
+The existing unique-key decoder is reused from release-manifest validation;
+focused cross-language parsing controls make no new conformance-receipt,
+independent-executor, authority or publication claim.
+
+This follow-up starts from accepted release `352d8929` (0.148.11), after
+PR #1787 was merged by another actor while the parser extension was prepared.
+The earlier unaccepted source and checkpoints remain in their original Git
+history. This new governed task reauthors only the reviewed duplicate-key
+correction. All 105 verification-source inputs were independently measured;
+only root package versions in Cargo.toml/Cargo.lock changed from 0.148.10.
+The remaining 103, workflow graph and declared toolchain are unchanged.
+Source-inventory reconciliation is not execution or publication proof.
+
+The first Actions evaluation built the candidate as 0.148.11 and passed its
+191 project checks, then correctly refused release-projection drift: the
+managed Docker header and manifest still described controller 0.148.10.
+The official session updater installed a private 0.148.11 controller; native
+refresh/project-check now owns those regenerated release surfaces. The
+configured proof graph is unchanged. Host-only container and shared-task
+proof blockers remain separate from portable source-CI execution and prevent
+any claim of native admission. Metadata repair is not a passing runtime test.
+
+## Checkpoint history recovery
+
+This fresh governed workstream preserves PR #1788 and immutable source
+`d53835ad2ee573996edcc31ef1ce2ef577a9a7cc`. Exact native inspection relative
+to current accepted `352d8929` found one missing checkpoint, after the agent
+committed a release merge before its asynchronous checkpoint completed. Eight
+earlier authored commits passed that same inspection. The native assessment
+of the older original baseline is retained separately with its complete
+findings. Neither assessment is relabelled as a passing history.
+
+After the present-time recovery archive was committed, the native resolver
+accepted only its current archive/reauthoring disposition. The original gap
+remains historical and unproven. Official 0.148.11 refreshes the current managed
+Docker pin and manifest release metadata; its installation used the supported
+session updater in a private location. Shared-host prerequisites are not
+publication proof, and fresh applicable Actions execution is still required.
+
+The source branch and failures remain preserved. This task reauthors only
+reviewed workunit code, meaningful execution tests, source inventory and
+semantic prose from the accepted target, with a present-time native history
+recovery observation. It imports no prior governance, custody, success or
+publication authority. A late checkpoint cannot repair the old commit; fresh
+current checkpoints and independent execution must establish this candidate.
+
+## Accepted release source review
+
+This currentness workstream starts from accepted `352d8929` (0.148.11).
+The preserved original branch integrated that release through a real
+two-parent merge. All 105 verification-source inputs were
+independently measured, including declared symlink target bytes and their
+separately inventoried regular target. Only the root package versions in
+Cargo.toml/Cargo.lock changed from 0.148.10; the remaining 103, required
+workflow/executor graph and declared toolchain are unchanged. Reconciliation
+retains the full configured proof policy and does not establish execution.
+
+## Observed proof remains current only within its execution contract
+
+A genuine prior success must remain inspectable as history while a newer full
+not-ready judgment withdraws current workunit verification. Safe repair must
+remain available: fresh complete proof for the exact current task and renewed
+custody can restore VERIFIED. This correction uses the existing validation
+history and workunit journal; it adds no alternative proof producer. The CLI
+regression executes real required Python checks and an explicitly declared
+external failure control. It proves bounded currentness and recovery, without
+claiming complete external-input closure, forge publication admission, or an
+independent agent/host.
+
+## Actual-boundary workunit proof controls (#1660, #1735)
+
+The combined candidate incorporates accepted release `34f837d4` (0.148.10).
+All 105 verification-source inputs were independently remeasured: only the
+root package versions in Cargo.toml and Cargo.lock changed from 0.148.9;
+the remaining 103 inputs, workflows, required graph and toolchain are intact.
+The reviewed inventory is reconciled accordingly. A scoped 0.148.10 controller,
+installed through the official session updater, owns current projection refresh
+and validation. Its actual binary digest is retained separately from candidate
+evidence. Controller installation and release integration are not test proof.
+
+The ordinary recovery path must retain the workunit's genuine task-bound
+context capsule and policy lineage. The source-file counterexample prepares
+that capsule through the public query and attach-state commands before
+requesting proof, so missing context cannot substitute for the producer test.
+Full validation uses its current runtime observation while the workunit is
+CLAIMED; it does not require a prior VERIFIED projection. A generic terminal
+rule refusal is not evidence of a circular proof dependency.
+
+An agent-declared passing result and a real source file's digest must remain
+diagnostic declarations. The existing canonical full-validation producer owns
+VERIFIED admission. The campaign's actual-binary control reaches an admitted
+task worktree and current execution checkpoint without gate-skip variables;
+recording a source-file pass succeeds, while VERIFIED is refused without the
+canonical producer record. The journal retains the declaration and CLAIMED
+status. This confirms the bounded guard, not the issue's entire proof matrix.
+Fresh trusted proof, split-store recovery, replay and publication remain
+separate acceptance obligations.
+
+## Autonomous safe config recovery and privilege custody (#1771, #1776)
+
+The cloud boundary suite treats embedded schema discovery as file-only recovery,
+including CLI and RPC reads. `tests/common/cloud_managed_scenarios.rs` compares
+the complete project and private machine file inventories before and after each
+read, and requires zero HTTP requests. Unsupported operational `store.query`
+still exercises the cloud startup guard and must refuse local SQLite fallback;
+schema availability does not authorize operational persistence.
 
 First adoption on a verified accepted Git tree that predates repository policy
 uses the compiled global approval defaults for ordinary operations. The resolver
@@ -142,7 +295,7 @@ The implementation was accepted externally in merge 41e7e152 with the exact
 c35eb608 Git tree, then released as 0.148.7 at 9d1aed27. That forge transition
 does not turn the stale prior native validation into admission. The current
 proposal must validate its own head against the newly accepted base;
-that earlier runtime follow-up was limited to the scoped currency correction; required
+runtime changes are limited to the scoped currency correction above; required
 checks remain enforced. Strict live
 acceptance 07 additionally repeats the complete sequence on evaluating release
 0.148.7; its receipts retain their own exact controller and fixture subjects. The release-only Cargo.toml/Cargo.lock version changes require a
@@ -558,8 +711,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (236 files)
+- Repository signal fingerprint: `246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -992,104 +1145,57 @@ The report's manifest and managed Docker pin must be generated by the actual
 not full readiness. Only supported CLI regeneration repairs that metadata;
 the current candidate still requires complete fresh proof before publication.
 
-## Closed-loop metacognitive governance in public documentation (November 2026)
+## First-class BYOA and agent-invoked metacognition documentation (#1789)
 
-The public README must make Decapod immediately comprehensible and usable:
-preserve the official mascot and product film, link prominently to the Decapod
-Labs homepage, and place the local install command before explanatory detail.
-The README is a concise adoption surface; the website and technical manual
-carry the deeper explanation. Keep agent and human documentation separate.
+Make the public mdBook and README landing experience accurately express how
+engineers and coding agents use Decapod in practice: humans prompt their chosen
+coding agents (Codex, Claude Code, Cursor, Antigravity, or custom harnesses);
+coding agents invoke Decapod at decision, custody, workspace, and validation
+boundaries; parallel work coordinates claims, leases, and worktrees while
+preserving Git/review/CI conflict boundaries; the embedded Constitution acts as a
+subordinate reference canon inside the governed loop; and both `backend = "local"`
+and `backend = "cloud"` keep governance state repo-native.
 
-Explain two separate but coupled mechanisms without exaggerating the kernel's
-authority. Within a closed-loop metacognitive execution cycle, coding agents
-preserve the original prompt and accepted subsequent instructions, interpret
-intent, implement changes, react to Decapod's actionable governance feedback,
-and correct their trajectory. As a governed part of fulfilling that intent,
-the agent designs falsifiable proof obligations under the project's explicit
-expectations. The validation layer executes required gates against the actual
-artifact and retains the exact candidate's evidence; it is separate from the
-agent's self-assessment. Failure returns to iteration without constituting
-acceptance. No marketing prose may claim that Decapod inspects every internal
-model reasoning step, perfectly judges semantic intent, or admits a change
-without the configured proofs.
+Three concrete reader journeys (switching agents mid-repo, two engineers working
+with different agents in parallel, and recovering from failed validation on an
+exact revised commit) plus explicit negative cases (conflicting claims, expired
+leases, unregistered/malformed RPC, stale proof, and Cloud denial) are grounded
+in the `0.148.14` binary CLI/RPC help and existing integration tests.
 
-Technical content must preserve the accepted mdBook shell, current links,
-accessible responsive layout, Rust-first source ownership, and existing
-Constitution/tasks/workspace/proof explanations. Acceptance requires a
-rendered documentation build, navigable convergence reference, preserved
-README install path, and observed proof from the source-validation gates.
+## Independently observed autonomous engineering (#1757, #1758)
+An external coding agent's statement of completion does not prove its actions.
+The existing flight recorder gains a read-only, digest-bound acceptance export
+over actual host, kernel, Git and forge observations. The objective is a real
+unattended failure, kernel rejection, agent diagnosis/correction, fresh required
+proof and exact-subject publication. Scripted coverage, kernel authority,
+cooperative observation and independent GitHub policy remain distinct. Safe
+exports can drive website-owned launch media; the kernel never renders video,
+authenticates arbitrary capture labels or imports publication authority.
 
-## Recorded intent authority and bounded assurance (issues #1761–#1764)
+## Real-agent acceptance and release-bound projections
+The issue1758 Pi experiment is actual inference, not a deterministic repair imitation. The read-only observer must preserve its real required-check failure, new model-requested repair after returned feedback, fresh exact-subject native proof and independent GitHub readback. Subsequent source/base controls retain historical admission while clearing current applicability. Operator probes, PR creation, observed admission and merge authorization remain distinct. Source implementation readiness is separately required; a successful fixture export cannot excuse a stale managed container pin or failed source CI. Regenerate release-bound surfaces through native Decapod, checkpoint and rerun full configured validation after release movement.
 
-Human input supplies the requested outcome, and the agent records an interpretation
-in a plan and living specs. The current repo state proves the recorded interpretation,
-not independent human-authenticated authorship or complete understanding. A plan
-state of APPROVED is a separate, caller-driven governed transition. Neither the
-plan nor a green check may be represented as independently human-approved meaning.
+## Current continuous-governance audit (#1069)
 
-For the bounded first hardening slice, treat nonempty governed plan
-unresolved_contradictions as an execution blocker across the CLI execution gate
-and source validation path. This must reject an auto-approved conflicting plan
-before accidentally reporting a missing task projection as the root failure.
-Correcting the contradiction revokes prior plan acceptance, and a new plan
-transition is required; it cannot make earlier proof or acceptance current.
+Refresh the existing implementation map against accepted Decapod0.145.6 master
+without changing the kernel, validation policy or publication authority. Separate
+accepted code from pending PRs, and source-bound executed observations from
+unexecuted requirements. Cover exact proof, observed workunit acceptance,
+diagnostic overrides, workspace/custody, local readiness and cloud independence.
 
-Follow-on acceptance belongs to #1761 (human request provenance and changes),
-#1762 (independent semantic falsifiers), and #1763 (host versus kernel
-enforcement and approval authority). Never claim that code/spec hashes, the
-Constitution, agent-authored tests, or an existing PR independently prove the
-human's unexpressed wants. This docs/source change is a bounded consistency
-repair, not fulfillment of the larger semantic-intent authority programme.
+Keep missing native runtime integration, complete ten-worker A-H proof,
+independent exception/cloud authority, unsupported workspace-store convergence
+and five-minute sharding explicit. A green source-CI record does not become a
+full native publication receipt. Preserve the existing architecture and SQLite
+foundation; do not implement a competing engine to satisfy an older ticket.
+Documentation-only changes use hosted verification and no local tests or
+Buildkite evidence collection. Previously merged fixes need accurate tracking,
+not duplicate implementation or unsupported issue closure.
 
-## Canonical intent custody and lifecycle gate parity (November 17, 2026)
+## Accepted v0.146.0 audit reconciliation
 
-Reuse the already tracked `.decapod/governance.json` top-level intents,
-plan, trajectory, claims, validation and checkpoint records. Do not add a
-parallel prompt ledger. The original `raw_intent` and its agent-derived
-`refined_intent` are distinct. `state.resolve` must preserve this
-distinction and may never copy a refinement into the origin field. Reusing
-the same intent identifier with different recorded original text must
-fail without altering governance state; a distinct later instruction
-has its own identity and Git-preserved provenance.
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
 
-Use a shared instruction-obligation function for preparation, plan
-acceptance, execution, checkpoint, validation and publication. Drafts may
-record ambiguity; an approved or executing plan must resolve recorded
-unknowns, human questions, contradictions, missing intent and pending
-human spec review before proceeding. A later plan revision invalidates
-acceptance and applicable proof.
+## Recorded instructions and independently accepted requirements
 
-Continue using existing `validation_rules` authority/phase/severity/verdict
-taxonomies. Avoid any new prompt runtime, duplicate state database or
-claim of authenticated human identity from agent-entered text. Validation
-is broader than test completion, and semantic coverage remains bounded
-by accepted requirements and observed evidence.
-
-## Durable execution context and corrective feedback documentation (November 17, 2026)
-
-Keep the marketing/docs split coherent. Public copy emphasizes the useful
-capability: durable governing context across agent sessions, source-backed
-corrective feedback at supported Decapod-mediated boundaries, and independent
-proof adjudication on the exact candidate. Do not collapse memory into proof
-or equate failed validation with an automatically completed repair.
-
-The documentation can use the user intent "Continue PR #1234" as a
-falsifiable **target** for cold-context handoff, not a universally shipped
-API command. Real validation requires a fresh agent with no old transcript,
-current repo and Git/forge state, previous failed/attempted corrective work,
-a new source change, current proof and an independently verified update of
-the *same* PR. See #1367 and #1758, and reuse #1083/#1084. No new runtime,
-generic summarizer, secondary ledger, or false claim of hidden-model access.
-
-The docs landing page mirrors the three-part homepage model, remains
-responsive and accessible under mdBook, and retains the approved branding,
-film, mascot, working links, and original install command. README stays
-concise and unchanged by this deeper technical explanation.
-
-## Current issue-contract recovery workstream
-
-The authorized request remains issues #1761, #1762, #1763, #1764, #1767, #1768 and #1770, with the existing PR #1766 retained as the review record. Native history assessment of immutable source `1d5b9e59` reports twenty original base/identity history findings after accepted target `34f837d4` changed governance identity. This fresh claimed workstream reauthors the inspected implementation and documentation through the supported recovery path. The original branch, source commits, journal and failures remain in Git; a native present-time recovery observation grants neither historical proof nor an exception. The new source must earn its own complete current validation and accepted behavioral/path evidence. No replacement PR, protected-main edit, force push, gate waiver or merge is authorized.
-
-## Accepted upstream continuity
-
-The combined issue-contract implementation incorporates the accepted strict-JSON interoperability repair from PR #1791 and release v0.148.12 at 7bd0a915. Required decisions survive same-task plan initialization and remain blockers until the supported resolution transition; resolution invalidates acceptance and phase evidence rather than authenticating human identity. Earlier failed validation and original PR #1766 history remain auditable. Exact-source native validation and required CI must be repeated after this accepted-target change.
+Keep the original request and ordered clarification history available across a cold handoff. A recorded revision identifies its observed or declared source. A provider account observation supports provenance without authenticating human approval. Pending decisions remain visible after reinitializing the same plan. Resolving a decision requires a fresh plan acceptance before the existing execution evidence can be used.

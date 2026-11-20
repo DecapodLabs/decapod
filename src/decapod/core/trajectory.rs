@@ -405,6 +405,25 @@ pub struct TrajectoryInit {
     pub blockers: Vec<String>,
 }
 
+fn expand_repo_scope_inputs(inputs: &[String]) -> Result<Vec<String>, error::DecapodError> {
+    let mut out = Vec::with_capacity(inputs.len());
+    for item in inputs {
+        let trimmed = item.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if trimmed.starts_with("paths:") {
+            let paths = crate::core::fleet_coord::declared_paths(trimmed)
+                .map_err(error::DecapodError::ValidationError)?
+                .unwrap_or_default();
+            out.extend(paths);
+        } else {
+            out.push(trimmed.to_string());
+        }
+    }
+    Ok(out)
+}
+
 /// Construct an unproven trajectory without writing any governance state.
 /// Branch initialization uses this to seed plan and trajectory in one transaction.
 pub(crate) fn fresh_trajectory(
@@ -436,7 +455,8 @@ pub(crate) fn fresh_trajectory(
         .iter()
         .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
         .collect::<Vec<_>>();
-    let durable_repo_scope = repo_scope
+    let expanded_repo_scope = expand_repo_scope_inputs(&repo_scope)?;
+    let durable_repo_scope = expanded_repo_scope
         .iter()
         .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
         .collect::<Vec<_>>();
@@ -647,8 +667,8 @@ pub fn record_trajectory(
             .iter()
             .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
             .collect::<Vec<_>>();
-        let normalized_update_repo_scope = update
-            .repo_scope
+        let expanded_update_repo_scope = expand_repo_scope_inputs(&update.repo_scope)?;
+        let normalized_update_repo_scope = expanded_update_repo_scope
             .iter()
             .map(|path| crate::core::path_policy::normalize_persisted_path(project_root, path))
             .collect::<Vec<_>>();

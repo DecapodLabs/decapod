@@ -314,3 +314,137 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
         );
     }
 }
+
+#[test]
+fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit() {
+    let _agent_guard = crate::core::todo::test_current_agent_id_guard("archive-boundary-agent");
+    let (_temp, repo, store, _base) = fixture();
+    let now_secs = crate::core::time::now_epoch_z()
+        .trim_end_matches('Z')
+        .parse::<u64>()
+        .unwrap();
+    let agent_id = crate::current_agent_id();
+    let shortened = todo::renew_claim_lease(&store.root, TASK, &agent_id, Some(60)).unwrap();
+    assert_eq!(shortened.get("status").and_then(|v| v.as_str()), Some("ok"));
+    let shortened = todo::capture_validation_binding(&store.root, TASK).unwrap();
+
+    // Mode parsing: unknown/absent values never mutate custody.
+    assert_eq!(
+        todo::ValidationLeaseTtlMode::from_env_value(None),
+        todo::ValidationLeaseTtlMode::Warn
+    );
+    assert_eq!(
+        todo::ValidationLeaseTtlMode::from_env_value(Some("bogus")),
+        todo::ValidationLeaseTtlMode::Warn
+    );
+    assert_eq!(
+        todo::ValidationLeaseTtlMode::from_env_value(Some(" STRICT ")),
+        todo::ValidationLeaseTtlMode::Strict
+    );
+    assert_eq!(
+        todo::ValidationLeaseTtlMode::from_env_value(Some("renew")),
+        todo::ValidationLeaseTtlMode::Renew
+    );
+
+    // Default (warn): a 60s lease against a 1800s budget yields a read-only
+    // advisory and leaves revision and lease_generation untouched, so workunit
+    // execution checkpoints stay valid (no EXECUTION_STATE_CHANGED).
+    match todo::ensure_validation_lease_ttl(
+        &store.root,
+        TASK,
+        1800,
+        todo::ValidationLeaseTtlMode::Warn,
+    )
+    .unwrap()
+    {
+        todo::ValidationLeaseTtl::Low {
+            remaining_secs,
+            required_secs,
+            advisory,
+        } => {
+            assert!(remaining_secs <= 60);
+            assert_eq!(required_secs, 1800);
+            assert!(advisory.contains("VALIDATION_LEASE_TTL_LOW"), "{advisory}");
+            assert!(advisory.contains("decapod todo renew"), "{advisory}");
+        }
+        other => panic!("expected low-lease advisory, got {other:?}"),
+    }
+    assert_eq!(
+        todo::capture_validation_binding(&store.root, TASK).unwrap(),
+        shortened
+    );
+    let binding = capture_task_binding_with_budget(&store, &repo, Duration::from_secs(1800))
+        .unwrap()
+        .unwrap();
+    assert_eq!(binding.task, shortened);
+
+    // Strict: fail fast without mutating custody.
+    let err = todo::ensure_validation_lease_ttl(
+        &store.root,
+        TASK,
+        1800,
+        todo::ValidationLeaseTtlMode::Strict,
+    )
+    .unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("VALIDATION_LEASE_TTL_INSUFFICIENT")
+    );
+    assert_eq!(
+        todo::capture_validation_binding(&store.root, TASK).unwrap(),
+        shortened
+    );
+
+    // Sufficient budget is a no-op in every mode.
+    assert!(matches!(
+        todo::ensure_validation_lease_ttl(
+            &store.root,
+            TASK,
+            1,
+            todo::ValidationLeaseTtlMode::Renew
+        )
+        .unwrap(),
+        todo::ValidationLeaseTtl::Sufficient { .. }
+    ));
+    assert_eq!(
+        todo::capture_validation_binding(&store.root, TASK).unwrap(),
+        shortened
+    );
+
+    // Explicit renew: the operator opts into rotating custody.
+    assert!(matches!(
+        todo::ensure_validation_lease_ttl(
+            &store.root,
+            TASK,
+            1800,
+            todo::ValidationLeaseTtlMode::Renew
+        )
+        .unwrap(),
+        todo::ValidationLeaseTtl::Renewed { lease_secs: 1800 }
+    ));
+    let renewed = todo::capture_validation_binding(&store.root, TASK).unwrap();
+    assert!(renewed.lease_generation > shortened.lease_generation);
+    let refreshed_exp_raw: Option<String> = DbBroker::new(&store.root)
+        .with_conn(
+            &todo::todo_db_path(&store.root),
+            "test",
+            None,
+            "test.validation_history.read_lease",
+            |conn| {
+                conn.query_row(
+                    "SELECT lease_expires_at FROM tasks WHERE id = ?1",
+                    db::params![TASK],
+                    |row| row.get(0),
+                )
+                .map_err(crate::core::error::DecapodError::from)
+            },
+        )
+        .unwrap();
+    let refreshed_exp = refreshed_exp_raw
+        .as_deref()
+        .unwrap()
+        .trim_end_matches('Z')
+        .parse::<u64>()
+        .unwrap();
+    assert!(refreshed_exp >= now_secs + 1800);
+}

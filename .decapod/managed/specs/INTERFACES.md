@@ -1,16 +1,211 @@
 # Interfaces
 
-## Pending decision recovery
+## Caller-supplied validation report projections (#1726)
 
-`govern plan init` keeps pending required spec decisions in the current journal.
-Approval and execution continue to return `NEEDS_HUMAN_INPUT` after such a reset.
-The canonical remediation names `decapod govern plan resolve-spec-review` and
-retains the existing command authority checks and current-content binding.
-Introducing or resolving a required review resets acceptance and phase progress.
-After a legitimate decision, separately approve the revised plan and rerun
-affected proof; a decision reference neither authenticates a human nor restores
-old execution evidence. Ordinary reviews without a pending decision remain
-available under their existing rules.
+Every `interop.project` result adds optional `input_origin=caller_supplied` and
+`canonical_state_verified=false`. These describe the operation/approval/report
+input, not the receipt proving that the transformation itself ran. Caller input
+cannot override these output fields. The original per-kind `source` remains an
+input-type label, not authenticated producer provenance. Reported approval and
+denial statuses remain display data; their remediation no longer claims that
+the corresponding canonical policy operation occurred. Only the existing
+policy owner can establish a real grant or denial.
+
+`interop.project` with `kind=validation_report` remains a successful read-only
+transformation; outer RPC success does not verify its input. The reported
+`status`, candidate, epoch and identifiers remain visible. `proof_judgment` for
+a well-formed reported PASS is `not_proven` and `publication_ready` is false,
+including plausible receipt digests and caller-matched verifier/rule identities.
+Reported failed, stale and unknown inputs retain their existing classifications.
+The optional additive `proof_reason` explains that these are caller-supplied
+reports and directs the reader to canonical validation for the exact candidate
+and accepted base. A copied genuine report also cannot prove present currency
+through a pure transformation. Current proof must come from the canonical owner.
+Existing actual-binary controls execute counterfeit, negative/stale and ordinary
+negotiation recovery without provider, custody or gate-skip overrides.
+
+## Reversible repository integration removal (#1704)
+
+`decapod integration {preview, remove, restore}` exposes a repository-level
+removal lifecycle grounded in `src/decapod/core/integration_removal.rs` and
+dispatched before session/migration startup in `src/decapod/lib.rs`:
+
+- **Read-only preview (`decapod integration preview [--dir <path>] [--format text|json]`):**
+  Performs zero filesystem, Git, SQLite, session, or network mutations. Returns
+  `IntegrationPreviewReport` listing `generated`, `edited`, `authored`,
+  `unknown`, and `active` resources separately, plus actionable `blockers` and
+  `authority_boundaries`.
+- **Bounded removal (`decapod integration remove --authorize [--dir <path>] [--format text|json]`):**
+  Requires explicit `--authorize` (and refuses `--dry-run` with guidance to use
+  `preview`). Fails closed (`exit != 0`) on symlink replacement
+  (`INTEGRATION_SYMLINK_REFUSED`), active custody (`INTEGRATION_ACTIVE_CUSTODY`:
+  todo leases, `authoring_bindings`, registered/non-empty `.decapod/workspaces/`,
+  held workspace/storage locks), or uncertain ownership
+  (`INTEGRATION_UNCERTAIN_OWNERSHIP`). Removes only positively owned,
+  unchanged generated files (via `.decapod/managed/integration_ownership.json`
+  or verified release/fingerprint markers on legacy repos) and owned
+  `DECAPOD_GITIGNORE_RULES` lines in `.gitignore`. Preserves edited/authored/unknown
+  files, `*.bak` backups, `.decapod/data/`, `.decapod/governance.json`, global
+  config, and credentials. Writes `.decapod/integration-restore-manifest.json`
+  atomically (`status = "in_progress"` -> `"applied"`) before deleting files so
+  interrupted or repeated removals remain idempotent.
+- **Restore (`decapod integration restore [--dir <path>] [--manifest <path>] [--format text|json]`):**
+  Losslessly restores captured files (including Unix file modes) and
+  `.gitignore` entries from `.decapod/integration-restore-manifest.json`, while
+  failing closed if the manifest is missing/unsupported or if a destination
+  became a symlink or holds conflicting authored content.
+- **Separate authority boundaries:** `--purge-state`
+  (`PERMANENT_STATE_DELETION_BOUNDARY`) and `--remove-protected-governance`
+  (`PROTECTED_GOVERNANCE_REMOVAL_BLOCKED`) are refused by integration removal.
+
+## Delegated cgroup parent selection and cgroup diagnostics (#1820)
+
+`decapod auto container run` (`src/decapod/plugins/container.rs::ContainerCommand::Run`)
+accepts an optional `--cgroup-parent <path-or-slice>` flag and honors the
+`DECAPOD_CONTAINER_CGROUP_PARENT` environment variable (CLI flag takes precedence;
+`container::schema()` exposes both `"cgroup_parent"` and `"cgroup_parent_env"`).
+All explicit and detected values pass `validate_cgroup_parent` fail-closed before
+any runtime probe or workspace clone: only canonical absolute cgroup hierarchy
+paths (`/delegated/parent`, without `/sys/fs/cgroup` mount prefixes, root `/`,
+trailing slashes, empty segments, `.` or `..` traversal, whitespace, control
+characters, leading `-`, or metacharacters) and systemd slice names (`*.slice`)
+are accepted; invalid values fail with `container_invalid_cgroup_parent`.
+
+When no explicit parent is supplied and local `podman info` reports rootless
+`cgroupfs` on cgroup v2 (`serviceIsRemote: false`), `detect_delegated_cgroup_v2_parent_from`
+reads `/proc/self/cgroup` (`0::<path>`) and walks upward from the caller's cgroup
+to the deepest non-root ancestor under `/sys/fs/cgroup` that is a real directory
+(no symlink traversal), writable by the current user, and enables `cpu`, `memory`,
+and `pids` in `cgroup.subtree_control`. `build_docker_spec` injects
+`--cgroup-parent <validated-parent>` while preserving `--pids-limit 512`,
+`--memory`, and `--cpus` unchanged; cgroups are never disabled.
+
+`classify_container_failure` distinguishes OCI/cgroupfs permission errors
+(`crun`/`runc` `cannot set limits without cgroups`, `/sys/fs/cgroup` permission
+denied, `unable to apply cgroup configuration`, `cgroup.subtree_control`/`cgroup.procs`
+errors) as `container_cgroup_permission_denied` with delegated cgroup parent
+remediation, leaving actual workspace ownership and Git lockfile failures under
+`container_workspace_permission_denied`. `RunSummary` exposes the resolved
+`cgroup_parent` field for observability.
+
+## Explicit path scope preservation and reconciliation (#1760)
+
+Explicit task path declarations (`--scope 'paths:[...]'`) are parsed once via
+`core::fleet_coord::parse_scope_entries` (delegating `paths:` prefixes to
+`core::fleet_coord::declared_paths`) rather than naive comma splitting. That
+single bounded JSON-array parser preserves both JSON array separators and commas
+embedded inside literal relative paths (such as `docs/a,b.md`) across
+`infer orientation` (`allowed_scope`), `workspace::initialize_workbranch_governance_at`
+(`BranchWorkContext.scope`), `trajectory::fresh_trajectory` / `record_trajectory`
+(`repo_scope`), and `custody::bootstrap_intent` (`intent.constraints`), keeping
+`todo get`, `infer orientation`, `govern trajectory get`, and `govern state resolve`
+consistent without weakening `declared_paths` validation or modifying legacy
+comma-separated scopes.
+
+Already-generated fragmented scope projections in `.decapod/governance.json`
+are repaired through `decapod govern trajectory reconcile-scope [--task-id <id>] [--run-id <id>]`
+(`core::governance_document::reconcile_scope_projections`). Before mutating any
+projection, reconciliation resolves a single unambiguous task binding
+(`SCOPE_RECONCILIATION_AMBIGUOUS_TASK` / `SCOPE_RECONCILIATION_TASK_REQUIRED`),
+verifies that existing fragments match the task's legacy comma-split projection
+(`SCOPE_RECONCILIATION_AMBIGUOUS`), and requires the prior governance document to
+be committed in Git (`SCOPE_RECONCILIATION_ARCHIVE_REQUIRED` via `recoverable_in_git`).
+Repair restores canonical sorted paths in both `sections.trajectory.repo_scope`
+and `intents.<id>.constraints`, recomputes `trajectory.artifact_hash`, invalidates
+`sections.plan.state` back to `DRAFT` when changes occur, preserves original
+recorded intent, prior custody events, checks, loops, and checkpoints, and is
+idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
+
+## Unified Local/Cloud CLI, auth, container credentials, repository tiers, and proof acceptance (#1809, #1808, #1769, #1778, #1590, #1033, #1040, #1066)
+
+- **Unified Local/Cloud CLI, env, and store envelopes (#1808, #1769)**:
+  `src/decapod/cli.rs` exposes `DECAPOD_CLOUD_API_URL`, `DECAPOD_CLOUD_PROVIDER`,
+  `DECAPOD_CLOUD_DATASTORE`, and legacy `DECAPOD_PROPODUS_API_URL` (emitting
+  structured `decapod.deprecation.v1` notices on stderr). `CapabilitiesReport`
+  exposes `backends` (`local` / `Decapod Local`, `cloud` / `Decapod Cloud`),
+  `backend.local`/`backend.cloud`, and the `cloud` subsystem. `propodus.rs`
+  accepts `decapod.cloud.store` (`v1`) envelopes and `Decapod-Cloud-*` headers
+  alongside legacy compatibility envelopes. `docs/book/src/index.md` and
+  `docs/book/src/custom.css` present **Decapod Local** vs **Decapod Cloud**
+  linking to `https://decapodlabs.github.io/offerings.html` without public
+  prices or checkout routes.
+- **CLI `decapod cloud`**: Adds `logout` (clears session state while preserving
+  the enrolled device key) and `revoke [--all] [--device-id <jkt>]` (calls
+  `AccountOperation::DeviceRevoke` when an active session is present and wipes
+  local device key + session). `decapod cloud status` reports
+  `device_key_present`, `device_jkt`, and `device_keystore` without exposing
+  private key bytes or tokens. `CloudAuthStatus` adds `DeviceRevoked`,
+  `KeyLost`, `MfaRequired`, `PaymentPending`, and `EntitlementDenied`.
+- **Container credential config (`[workspace.credentials]`)**: Adds optional
+  `git_transport`, `github_api`, and `propodus_cloud` fields on
+  `DecapodProjectConfig`. `decapod workspace status` works under `backend = "cloud"`
+  and emits redacted `credentials` capability readiness (`available`,
+  `unconfigured`, `absent`, `expired`, `unauthorized`) without touching SQLite.
+- **Database maintenance & owner repair (`[governance.db_maintenance]`)**:
+  Adds optional `owner_repair_enabled` (default `false`) and `required_tier`
+  (`read` | `write` | `owner`). `db.recover` requires merged canonical policy
+  and `owner` authority on local stores (dump/reload via Dactyl on Linux,
+  explicit typed `Capability` refusal on non-Linux hosts) and
+  `propodus_repository_access_v1` + `owner_repair_v1` on cloud stores, where
+  `OWNER_REPAIR_V1_SQL` transmits strictly the registered wire marker
+  `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+  inside `DactylBridge::atomic` (never server-internal SQL expansion).
+- **Cloud todo & proof capture**: `todo claim`, `todo renew`, `todo yield`, and
+  `todo done --validated` route through Dactyl without `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED`.
+  `todo done --validated` fails closed locally with `"proof-capture"` when
+  candidate commit/evidence bounds are absent; when valid evidence is supplied,
+  it submits `propodus_proof_acceptance_v1` `capture` (`status = "captured"`,
+  `acceptance_supported = false`) and reconciles `outcome_unknown` through
+  read-only `propodus_proof_acceptance_get_v1` `get_operation` rather than
+  auto-replaying mutations. Typed HTTP/control denials surface distinct
+  `CLOUD_ENTITLEMENT_DENIED` (`403`), `CLOUD_PAYLOAD_BOUND_EXCEEDED` (`413`),
+  `CLOUD_QUOTA_EXCEEDED` (`429`), and `CLOUD_OUTCOME_UNKNOWN`.
+
+## Workunit proof and continuity semantics (#1660)
+
+Before full proof, use `govern capsule query --task-id <id> --workunit-id <id>
+--scope interfaces --topic <topic> --write`, then attach its emitted task
+capsule path using `workunit attach-state`. Creating a capsule does not itself
+prove execution. A fresh workunit checkpoint binds the resulting context;
+full validation and the canonical VERIFIED transition remain separate steps.
+
+`record-proof --status pass` may retain an agent declaration about an existing
+artifact. Success does not authorize `transition --to verified`; that operation
+requires a current canonical full-validation record. Readback preserves the
+unproven declaration without a validation epoch or producer reference.
+After relevant trajectory changes, resume refuses the old execution binding.
+Discarding obsolete passing declarations allows a fresh checkpoint and resume;
+the explicit diagnostic fail marker used to discard a claim is not an
+independently executed failed test. Historical journal entries remain intact.
+
+A completed task-bound full validation with a not-ready judgment withdraws
+current workunit verification through the existing journal. It clears the
+current proof results, validation epoch and producer selector, downgrades
+VERIFIED to CLAIMED, and advances the journal even if promotion had not yet
+occurred. The event is `validation_not_ready`: it does not assert that every
+check executed or failed. The journal reader recognizes this event kind while
+retaining the same identity, manifest hash, record hash and predecessor checks;
+the resulting CLAIMED snapshot must remain readable for repair. Partial CI-local
+and preparation scopes do not have this authority. Earlier successful
+observations remain historical records.
+
+The executable negative control selects the native capture by its full check
+identity (`inspect-source`), then requires an exited process with code 1 and the
+expected assertion diagnostic. Canonical ordering places the independent
+`inspect-second` check first; its successful result cannot substitute for the
+required failure or be mistaken for evidence that the control failed to execute.
+
+Fresh full proof under a renewed lease can restore VERIFIED. The implicit
+workunit selector chooses the newest canonical success for the exact current
+task contract and custody; every epoch, source, execution, input and workunit
+subject check still applies. Generic `qa verify commit` inspection retains its
+mixed-custody ambiguity error and requires explicit historical selection.
+
+The split-store refusal now gives a bounded recovery path: preserve both stores,
+claim a fresh task from the repository root, use a managed workspace sharing
+the canonical runtime, reauthor its obligations and obtain new full proof.
+This is not in-place store convergence or historical-proof authentication;
+that migration remains unsupported.
 
 ## Config repair and accepted authority (#1771, #1776)
 
@@ -23,106 +218,6 @@ Ordinary mutations resume after a valid correction. Valid syntax alone never
 grants exceptional permission. RBAC bypass keeps `proof_ready=false` and
 `publication_ready=false`; unaccepted root policy proposals return
 `RBAC_PERMISSION_DENIED`, and unresolved accepted sources fail closed.
-
-## Explicit path scope and supported legacy recovery
-
-An explicit paths:[...] task scope produces the same decoded literal path set in orientation, trajectory repo_scope and custody constraints. Non-path logical scopes retain their existing comma-separated representation. Invalid explicit declarations fail without falling back to a broader scope.
-
-For an old journal containing the exact former split projection, checkpoint and commit the complete current journal, then rerun workspace ensure or agent.init. Preparation reads the canonical task, corrects only proven generated fragments, appends custody evidence and resets plan acceptance and phase progress. Reaccept the plan and obtain fresh proof. Independently changed or terminal constraints are preserved and ambiguous mixed repairs are refused; this operation cannot edit Task.scope or remove unrelated modified-file observations.
-
-## Independent state readers
-
-`state.resolve` and `state.diff` expose recorded governance to a cold reader without requiring the writer's authoring claim, worktree custody or local agent session. They do not run migration, presence or worktree-pruning startup hooks. Reading does not acquire a lease, approve a plan, satisfy a recorded blocker or grant publication authority. Unsupported backend paths retain their explicit failure; this read classification does not grant cloud access.
-
-## Native-path policy and result
-
-`proof.observed_path` takes `schema_version="1.0.0"`,
-`scope="native_proof_calls"` and `required`. The declaration must match the
-independently captured accepted target; candidate repinning returns
-`OBSERVED_PATH_POLICY_NOT_ACCEPTED`. Init preserves it without authorizing it.
-Full validation reports versioned `observed_path` alongside artifact readiness,
-using current rule authority/severity/phase/remediation. Missing coverage is
-`unverifiable`, actual failure is `fail`, and relevant binding movement is `stale`.
-Required non-pass blocks readiness; optional unknown remains nonblocking. The
-observer authority is kernel-mediated native execution. Full-host coverage stays
-unverifiable.
-
-Private `observed-path.json` retains ordered event IDs and references to actual
-native suite rows, binding runtime invocation, task/run, instruction/proof-plan
-revision, actor/lease and subject/head/base/policy. The live result has no
-Deserialize or public constructor; serialized judgments are readback, not import
-capabilities. Existing current-proof and custody owners still control publication.
-
-## Recorded clarification and lineage readback
-
-`decapod govern trajectory clarify` appends a revision to the current run/intent
-with `--revision-id`, `--expected-revision`, bounded `--instruction`, and a
-credential-free `--source-ref`. `--principal-claim`, `--kind` (clarification,
-contradiction, supersession), `--supersedes` and `--derived-intent` record explicit
-claims. They grant no human authority or automatic precedence. Secret-pattern
-redaction applies before persistence. Distinct conflicting principals remain
-distinct reported claims; a later supersession claim does not silently clear
-earlier plan contradictions or constitute an authenticated authority decision.
-
-`govern trajectory clarify-github-comment` instead reads one exact comment using
-the installed official GitHub client, or explicitly selected `--public` anonymous
-HTTPS adapter, through existing sealed GET/external-action authority. An auth
-failure never selects another transport. It takes repository/comment identity and
-an expected original body SHA256,
-alongside the same revision/CAS/kind parameters. It refuses source identity/content
-movement before mutation. The journal retains provider-observed numeric account,
-object, issue, source-update and body identities, with bounded/redacted text.
-This is historical account observation, not proof the account is human, a grant,
-or a current remote recheck. Public JSON cannot construct the owned observation;
-offline readback preserves its declared trust limit and never authenticates local
-bytes. Normal `clarify` still reports caller provenance as unverified.
-
-`state.resolve` and preparation expose the same selected `instruction_lineage`:
-original request/source confidence, preceding and current interpretation, ordered
-revisions, current revision digest and independently unverified authority. They
-do not inherit another task's trajectory boundaries, blockers or instruction
-revision. The state schema advances to 1.1.0. Recorded readiness includes the
-current instruction revision and, when selected, a separate global-consistency
-judgment whose `source_authority=cached_target_ref` distinguishes offline planning
-from full validation's independently captured accepted target. CLI stderr remains
-diagnostic text, not a stable structured transport schema.
-
-## Explicit selected-work policy and readback
-
-`proof.selected_work` schema 1.0.0 names an ID, intent ID, recorded instruction
-revision, explicit roots with
-existing required command names, and optional typed relations (`eq`/`ne`, ID,
-participating root, left and right terms). It becomes governing policy only
-through separate acceptance on the canonical Git target. Init preserves it;
-candidate review digests cannot approve it. Current native support is limited
-to `repo.pr-readiness.v1` with the local DB broker.
-
-`intent.reconcile` with an immutable `base_commit` returns the selected-work
-read model when that requested revision declares it (report schema 1.2.0).
-Its `source_authority=requested_immutable_revision` explicitly does not establish
-independent acceptance or admission. Full validation independently captures its
-accepted target and enforces `SELECTED_POLICY_NOT_ACCEPTED`, selected intent,
-mandatory check coverage, root coverage and typed consistency. The report keeps
-coverage, consistency and behavior-proof verdicts separate, gives source/revision
-and exact conflicting relation IDs, and supplies legal recovery instructions.
-
-For a retained integration obligation, use `decapod obligation add --intent`
-with the returned `obligation_ref`, and `--proofs` with its accepted check names.
-A declaration cannot mark behavior proven. An older local DB can initialize the
-lookup index through `decapod obligation list`; reads do not silently migrate it.
-Existing checkpoint, lease and publication requirements continue to apply.
-
-## Recorded instruction readiness (#1764)
-
-Preparation's `governed_plan.unresolved_items` uses the same recorded blockers as
-plan acceptance, execution, checkpoint/resume, validation and publication. Empty
-intent and pending spec decisions are included; deferred questions alone do not
-block current work. `plan_governance::InstructionReadiness` exposes rule authority,
-phase, verdict, source revision, source-linked blocker IDs and a common remedy in
-existing decision-marker payloads. Existing operation-specific checkpoint and
-publication markers remain. CLI stderr is a diagnostic, not an RPC wire schema.
-Approval state and timestamps cannot change blocker identity. This projection
-does not authenticate the author of an instruction or establish human consent.
 
 ## Conformance evidence boundary (#871)
 
@@ -143,10 +238,21 @@ retain their existing meaning. Valid requests requiring an unsupported extension
 retain the `negotiation_refused` envelope; successful compatibility discovery
 still grants no mutation, completion or publication permission.
 
+Both RPC stdin framing and flag parameters reject duplicate decoded object
+keys at every nesting level before startup. Escaped spellings of the same key
+are duplicates; later fields cannot erase an earlier required extension.
+Existing 32 MiB framing bounds and redacted inventory/maintenance diagnostics
+remain. JSON syntax acceptance does not waive the strict negotiation schema:
+unknown fields still return `invalid_params`. Supported optional operation and
+extension fields can carry unknown identifiers; negotiation reports them as
+omitted, preserving decoded Unicode identifiers. A focused
+Python stdlib decoder and the actual Rust CLI execute the same malformed and
+ordinary inputs; this is same-host differential parsing, not independent
+producer trust or full foreign-client governance conformance.
+
 The v1 manifest adds the existing reconciliation and state-read operations.
-Reconciliation remains advisory and session-free. In this integrated workstream,
-state reads are cold, read-only projections and advertise session_required=false,
-matching their startup bypass; they grant no authoring custody or publication. Unknown RPC names now receive the existing
+Reconciliation remains advisory and session-free; state reads retain their
+existing session/workspace gates. Unknown RPC names now receive the existing
 `unknown_op` envelope before startup, including in an uninitialized Git project.
 Both stdin RPC and the HTTP adapter use that same local entry boundary. No
 negotiation result or catalog entry supplies mutation permission.
@@ -335,13 +441,33 @@ show client composition only; local mode never falls back from a failed cloud
 authorization. Merge readiness remains governed by the independently
 configured publication and proof gates.
 
-## Version reporting
+## Version reporting and migration inspection
 
 `decapod system version` reports the installed binary version and existing
 update guidance without reading configuration, acquiring a session, initializing
 a datastore or migrating project state. It works in uninitialized, damaged and
 unsafe-permission checkouts. Stateful commands retain storage permission
 rejection and the first normal command still reports a pending migration.
+
+`decapod system migrations --format {json,text}` (dispatched early in
+`src/decapod/lib.rs::run_system_migrations_command` via `SystemCommand::Migrations`
+in `src/decapod/cli.rs`) provides read-only, non-initializing, session-free
+inspection backed by `src/decapod/core/migration.rs::inspect_migration_state` and
+`MigrationInspectionReport`. It resolves `workspace_root`, `governance_root`, and
+the active `decapod_root` (following the main repository `.decapod` from linked
+worktrees via `find_governance_root`) and exposes `version_counter.json`,
+`applied.json`, the compiled and on-disk `catalog.json`, `pending_migrations`,
+`pending_legacy_databases`, `action_required`, `reason_codes`, and
+`instructions` without creating `.decapod/data/`, mutating storage permissions,
+opening SQLite locks, or consuming pending migration notices.
+
+`MigrationReport::agent_instruction` in `src/decapod/core/migration.rs` carries the
+resolved `decapod_root`, directs agents to `decapod system migrations --format json`
+instead of raw disk reads, and prints resolved `applied.json` and `catalog.json`
+paths so notices stay accurate inside governed worktrees. `decapod system doctor
+check` in `src/decapod/plugins/doctor.rs` (`check_decapod_dir_for_store`,
+`check_migrations`) likewise executes in non-initializing mode across worktrees
+and reports pending or corrupt migration artifacts.
 
 ## Publication projection
 
@@ -454,7 +580,15 @@ other gates. This option does not apply to cloud-backed claims.
 The internal Unix-socket broker request in
 `src/decapod/core/group_broker.rs` uses protocol version 3. Alongside
 request ID, arguments and an absolute queue/execution deadline, each request carries a canonical absolute working
-directory and an explicitly allowlisted caller context. Agent identity, session,
+directory and an explicitly allowlisted caller context. The broker leader honors
+the caller's bounded `request.deadline_ms` (capped by `BUILD_TIMEOUT`) instead of
+clamping `todo claim` or `workspace status|prune` control mutations to 15s
+`CONTROL_TIMEOUT`. For `todo done --validated`, slow historical/QA verification
+executes outside the exclusive group-broker lock via
+`todo::prepare_validated_done_handoff` before broker dispatch, handing off a
+mode-`0600` request-bound token that the brokered worker re-verifies against
+canonical storage (`verify::consume_prepared_done_handoff`) before the short
+transactional status commit. Agent identity, session,
 task, correlation, causation, idempotency and claim-autorun inputs replace—not
 merge with—the elected leader's corresponding environment. The child executable
 is resolved independently of either working directory.
@@ -931,15 +1065,31 @@ checksum, not this interface or its evidence-admission obligations.
 Recovery guidance is an agent/harness error contract, not a human command
 checklist. Epoch drift and aggregate missing-proof errors direct the agent to
 non-reopening batch recovery with explicitly selected task-bound current files.
-A failed scoped child validation emits `VALIDATION_CHILD_FAILED` with only a
-fixed allowlist of blocker labels from at most 1 MiB per output stream, including
-`NEEDS_PLAN_APPROVAL`; this retains the actual unrelated blocker even when a
-separate ordinary validation encounters aggregate missing proof first.
-Unknown failures provide the supported `decapod validate --format json`
-diagnostic and original-command retry route. Raw child messages, paths, URLs,
-environment values and credentials are never forwarded by this diagnostic.
-Labels are diagnostic observations, never acceptance or proof. Initial/final
-recovery failures preserve historical/unverified or pending states respectively.
+A failed scoped child validation emits `VALIDATION_CHILD_FAILED` via
+`src/decapod/plugins/verify.rs` (`extract_safe_validation_diagnostic` and
+`SafeValidationDiagnostic`). Rather than relying solely on a 1 MiB raw-byte
+substring scan, `extract_from_validation_json` inspects structured JSON child
+reports up to 16 MiB (`gate`, `readiness`, `report`, and `scope`) to surface
+bounded canonical `stage` and `scope` fields plus compile-time allowlisted
+labels from `SAFE_BLOCKER_LABELS`, unwrapping nested `READINESS_BLOCKED` /
+`Cannot publish:` / `AUTOREMEDIABLE_VALIDATION_ERROR` / `Rule` wrappers via
+`extract_labels_from_structured_text` while prioritizing specific blocker codes
+over generic `READINESS_BLOCKED` within the `< 1024`-byte ceiling. Unstructured
+output and `stderr` fall back to token-boundary matching capped at 1 MiB per
+stream so prefix collisions (such as `LAYA_READINESS_BLOCKED`) and untrusted
+`notes` or arbitrary message suffixes never emit spurious labels. When `--json`
+is passed to `qa verify recover` (`run_recover_cli`) or `qa verify regen`
+(`VerifyCommand::Regen`), `emit_recovery_failure_json` prints the structured
+error payload (`phase`, `stage`, `scope`, `labels`, `output_hash`, and bounded
+`diagnostic`) before returning the existing fail-closed error, noting that
+unscoped `decapod validate --format json` may stop earlier at
+`PROOF_HOOK_FAILED`. Unknown failures retain the supported
+`decapod validate --format json` diagnostic and original-command retry route. Raw
+child messages, paths, URLs, environment values, task titles and credentials are
+never forwarded by this diagnostic. Labels and JSON error fields are diagnostic
+observations only, never acceptance, approval, or proof. Initial/final recovery
+and `regen` failures preserve historical/unverified or pending states without
+writing `task_verification` passes or altering task revisions.
 Humans may initialize Decapod; execution and recovery instructions target agents.
 
 ## Sessions, tasks, and workspaces
@@ -967,9 +1117,16 @@ Proof references remain historical references rather than renewed permission.
 is global and applies to every `qa verify` subcommand, including
 `qa verify recover --stale`: it lists stale done tasks (with
 `last_verified_at` and `verification_policy_days`) and returns without
-running any child validation (#1527). Explicit recapture
-runs real validation before binding new evidence. Batch recovery first leaves
-its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
+running any child validation (#1527). Closing a task via `todo done` without
+`--validated` records `verification_status: "CLAIMED"` and actionable `remediation`
+pointing to `todo done <id> --validated --commit <sha>` (when a recorded candidate
+exists via `validation_history::latest_candidate_for_task`), `qa verify regen <id>`,
+or `qa verify recover --artifact <id>=<file>`. `PROOF_HOOK_FAILED` and
+`verify_target` surface the same self-service recovery paths, and `qa verify regen <id>`
+enters `VerifyingTodosGuard` around its baseline capture so regenerating proof for
+an unverified `done` task cannot self-deadlock on its own `CLAIMED` entry. Explicit
+recapture runs real validation before binding new evidence. Batch recovery first
+leaves its refreshed evidence `CLAIMED` and requires per-task and aggregate proof.
 
 `STALE_TASK_VERIFICATION` reports a task or verification baseline changed while
 verification was running. The stale result is discarded without replacing the
@@ -1378,8 +1535,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (241 files), `tests/` (236 files)
+- Repository signal fingerprint: `246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (249 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1426,9 +1583,17 @@ profile. `proof.repository_contract` declares a reviewed command digest,
 `source_coverage` rows and per-command `executions`. Every discovered workflow has
 exactly one explicit mapping to real required commands; all configured commands
 execute. Absolute installed programs, declared runtime/tool files, exact environment,
-working directory and timeout are configuration-bound. Unknown IDs, stale pins,
-empty/optional commands and missing or duplicate coverage fail closed. Init exposes
-both discovered digests for review without updating them or implying proof success.
+working directory and timeout are configuration-bound. Each execution entry declares
+either single-platform top-level `program` + `toolchain_files` or a mutually
+exclusive `platforms` map (`PlatformExecution`) keyed by canonical host platform
+(`linux-x86_64`, `linux-aarch64`, `macos-x86_64`, `macos-aarch64`), preserving
+byte-identical `command_contract_digest` values for single-platform declarations
+while binding every declared platform alternative into `reviewed_commands_digest`
+and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Unknown IDs,
+invalid/unknown/mixed platform declarations, stale pins, empty/optional commands,
+silent binary substitutions and missing or duplicate coverage fail closed. Init
+exposes both discovered digests for review without updating them or implying proof
+success.
 
 A `source_coverage` row may instead declare a reviewed CI-only limitation (#1531):
 `{ source = ".github/workflows/ci-only.yml", ci_only = true, reason = "..." }` (`commands`
@@ -1829,15 +1994,25 @@ these declarations are not a successful validation observation.
 
 ## Canonical workunit validation contract (#1660)
 
-Existing workunit CLI operations remain the request surface. `record-proof`
-records a declaration; requesting VERIFIED requires a current canonical full
-observation for exactly one supported `validate_passes`/`validated_commit`
-obligation. The kernel derives the result, epoch and optional validation-record
-selector. Caller-supplied selectors cannot import producer success. File artifact
-paths retain byte-integrity semantics. Historical JSON omits the optional field;
-Rust manifest literals add `validation_record: None`, and verification consumers
-pass repository context to `validate_verified_manifest(root, manifest)`.
-Publication and human merge authorization remain independent operations.
+Existing workunit CLI operations remain the request surface, extended with
+`decapod govern workunit converge [--task-id <id>] [--dry-run]` and typed
+`proof_status` (`proven` | `not_proven` | `stale` | `absent`), `split_store`,
+`atomic_domain_supported`, `audit_records`, and `convergence_hint` fields on
+`WorkUnitJournalStatus` (and `proof_status`/`split_store`/`atomic_domain_supported`
+on `govern workunit status`). `record-proof` records a declaration; requesting
+VERIFIED requires a current canonical full observation for exactly one supported
+`validate_passes`/`validated_commit` obligation. The kernel derives the result,
+epoch and optional validation-record selector. Caller-supplied selectors cannot
+import producer success. File artifact paths retain byte-integrity semantics.
+Separately initialized workspace-local datastores return
+`WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED`; explicit `converge` archives
+workspace-local records into `.decapod/data/split-store-audit/` as `not_proven`
+audit history without promoting split records to `VERIFIED`, restoring atomic
+canonical-store execution for fresh validation. Historical JSON omits the
+optional field; Rust manifest literals add `validation_record: None`, and
+verification consumers pass repository context to
+`validate_verified_manifest(root, manifest)`. Publication and human merge
+authorization remain independent operations.
 
 ## Scoped container-runtime recovery during prerequisites
 
@@ -1903,8 +2078,109 @@ manual or imported/self-hosted execution cannot grant Cachix publication.
 
 An accepted `proof.repository_contract.canonical_local_target = true` uses ordinary CLI/RPC validation against the canonical local branch. `readiness.ready` refers to that exact local subject with `scope=repository_local_git_readiness`; `publication_ready` stays false. `qa verify commit` inspects canonical historical proof. `workspace publish` and the independent final PR gate reject local-only target authority before remote publication. Omitted/false mode retains existing digests and GitHub behavior. Candidate-only mode, changed branch, strict profile and cloud selection cannot activate the local host.
 
-Revoked-custody acceptance exposed a diagnostic mismatch: validation denied a registered managed checkout but called it external. `validate_git_workspace_context` now preserves the workspace owner's exact blocker and recovery instruction for canonical paths. External worktrees retain their distinct context diagnostic. Both routes remain refused; no authoring or publication authority is added.
+## Merged governance journal reconciliation (#1780)
 
-## Accepted interoperability refinement
+`decapod govern artifacts reconcile-merge` provides a supported recovery path
+when a Git 3-way merge (`MERGE_HEAD` present, e.g. `git merge --no-commit -X
+ours`) leaves `.decapod/governance.json` conflicted or failing with
+`Trajectory artifact hash mismatch`. The command requires an active merge
+(`GOVERNANCE_MERGE_NOT_IN_PROGRESS` otherwise), reads only immutable Git commit
+objects (`HEAD`, `MERGE_HEAD`, and `merge-base --all`) rather than trusting
+corrupted working-tree bytes, and fails closed on conflicting unaccepted PR
+authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`), ambiguous merge bases
+(`GOVERNANCE_MERGE_AMBIGUOUS_BASE`), or contradictory check proof statuses
+(`GOVERNANCE_MERGE_PROOF_CONFLICT`).
 
-Both RPC transports reject malformed JSON, duplicate keys including escaped-equivalent names, and nested duplicates before invoking operation semantics. Valid JSON remains subject to each operation schema; ordinary supported negotiation still succeeds. `tests/interop_conformance.rs` and `tests/fixtures/interop_strict_json.py` exercise refusal and normal recovery through the actual binary. The Bazel integration target includes that fixture. This upstream contract changes the reviewed source inventory, which requires explicit review and fresh native proof; neither matching digests nor the separate 7b48 pending-decision guard capture establishes current admission.
+Same-workstream merges reconcile additive `trajectory` sets, merge `claims`,
+`resolutions`, `checkpoints`, `plan`, and `custody` state (re-sequencing
+divergent custody events/steps and remapping `loop.custody_event_id`), clear any
+stale `validation` receipt when trajectory or validation changed, and recompute
+`proof_status`, `verdicts`, and `artifact_hash` via `with_recomputed_hash()` so
+failed or missing proof never becomes passing. Accepted-target merges
+(`origin/<target_base>`) retain the complete active workstream journal while
+carrying forward newly accepted baseline policy and unresolved obligations.
+`tests/merged_governance_journal_1780.rs` exercises the real binary across
+`git merge --no-commit -X ours` recovery, checkpointed merge commit
+verification (`verify-checkpoints --publication-material`), and negative proof
+and authority controls.
+
+## Todo-scoped /tmp cleanup guidance (#1798)
+
+`src/decapod/core/validate.rs` exposes `resolve_validation_task_id`, `validation_temp_root`, `todo_tmp_cleanup_instruction_for_task`, and `todo_tmp_cleanup_instruction`, resolving the active todo scope (`DECAPOD_TASK_ID` or branch-encoded task ID) to `<temp_dir>/decapod_validate/<task-id>` without modifying internal `create_validation_temp_path` or `cleanup_validation_temp_paths` ownership semantics.
+
+When validation succeeds (`ValidationGuidance::for_outcome(true)`, `ValidationGuidance::for_readiness_outcome(true, Mode::Required, Decision::Accept)`, `decapod validate`, and `validate.run` remote readiness payloads) and when PR creation completes (`workspace::publish_workspace_with_readiness` warnings via `workspace::pr_admission_warnings` and `decapod qa diagnose` `cleanup_guidance` when `next_command == "decapod workspace publish"`), Decapod instructs the agent to flush ONLY that todo's `/tmp` build and scratch directories (such as `<temp_dir>/decapod_validate/<task-id>` and any todo-scoped `CARGO_TARGET_DIR` under `/tmp`). The instruction explicitly forbids wildcard or root-level deletion of `/tmp`, deleting another concurrent agent's or sibling todo's `/tmp` path, and touching shared `/tmp/decapod` controller sockets/state or active sibling directories. The existing `PublishResult`, `WorkspacePublishResult`, and `ValidationGuidance` wire shapes remain unchanged. `docs/agent/command-contracts.md` (`docs_cli::readiness_contract` and the `decapod workspace` contract) and `docs/agent/state-model.md` document the same todo-scoped `/tmp` cleanup rule, verified by `tests/tmp_build_cleanup_guidance_1798.rs` and `tests/unit/plugins/verify_tests.rs`.
+
+## Read-only budgeted projection and retention contract (#1734)
+
+- **Schema & Authority Boundary (`decapod.projection-budget.v1`):** `core/projection_budget.rs` (re-exported through `core/projection.rs`) defines strictly read-only, non-authoritative projection envelopes (`EventProjectionPage`, `WorktreeProjectionPage`) carrying `read_only = true`, `authoritative = false`, `status` (`complete` | `partial_has_more` | `degraded`), `degraded_reasons`, `metrics`, `budget`, and deterministic SHA-256 receipts (`content_sha256`, `window_receipt_sha256`, `continuity_receipt_sha256`, `receipt_sha256`). Independent observability clients (such as Darkmatter) consume these contracts without embedding visualization state machines or UI dependencies into Decapod.
+- **Event Cursor & Retention Interface:** `EventProjectionQuery { stream, after_seq, subject_kind, subject_id, event_type, budget }` executes via `project_events_read_only` (using `core/db.rs::db_connect_readonly_bounded`) or `project_events_on_conn`. `EventProjectionCursor` exposes `after_seq`, `next_seq`, `last_event_id`, `retention_floor_seq`, `retention_anchor_sha256`, `disposition` (`continuous` | `starts_at_retention_floor` | `behind_retention_floor`), and `has_more`. `apply_bounded_event_retention` and `read_retention_anchor` manage `decapod.event-retention-anchor.v1` watermarks in `meta(namespace='event_retention')`.
+- **Worktree Inventory Interface:** `WorktreeProjectionQuery { after_worktree_path, include_dirty_summary, budget }` executes via `project_worktrees_read_only` using `GIT_OPTIONAL_LOCKS=0`, returning deterministically sorted `WorktreeProjectionEntry` items with bounded `dirty_file_count`, `dirty_truncated`, `sample_dirty_paths`, and `next_cursor` pagination.
+
+## Risk-map warning CLI contract (#1782)
+
+`src/decapod/cli.rs` mounts `PolicyCli` (`src/decapod/plugins/policy.rs`) exclusively under `Command::Govern(GovernCommand::Policy)`, exposing risk-map initialization and verification at `decapod govern policy riskmap init` and `decapod govern policy riskmap verify`. Both missing-map diagnostics—`src/decapod/core/validate.rs::validate_risk_map` and `RiskmapSubcommand::Verify` in `src/decapod/plugins/policy.rs`—derive their warning guidance from `plugins::policy::missing_riskmap_warning` and `plugins::policy::RISKMAP_INIT_COMMAND` (`decapod govern policy riskmap init`), removing the previously emitted unsupported `decapod riskmap init` and `decapod policy riskmap init` paths. Read-only `RiskmapSubcommand::Verify` remains unauthenticated by `policy.control`, while `RiskmapSubcommand::Init` retains its existing `enforce_broker_mutation_policy(..., "policy.control")` (`core` trust) gate.
+
+Scoped regression coverage in `tests/unit/core/validate_tests.rs::risk_map_warning_recommends_supported_cli_command_and_clears_when_present`, `tests/plugins/policy.rs::riskmap_verify_recommends_supported_cli_command_when_missing`, and `tests/cli_contract_enforcement.rs::documented_bootstrap::risk_map_warnings_recommend_supported_cli_command_paths` checks `Cli::try_parse_from` and real CLI binary execution across missing-map warning emission, `--help` resolution, unsupported-path rejection, `core`-trust enforcement, and warning clearance once `RISKMAP.json` exists; complete exact-candidate validation remains required before PR publication.
+
+## Compact storage v2 compatibility floor (#1739)
+
+`core::schemas::STORAGE_MIN_READER_VERSION` and `core::schemas::STORAGE_MIN_WRITER_VERSION` are `"0.144.2"`, and `core::migration::all_migrations()` sets `min_version = "0.144.2"` and `target_version = "0.144.2"` on `sqlite.compact_lossless_storage.v002` (`sequence: 1200`), matching the first release that implements `_ce_v1` envelope reconstruction (`core::events::reconstruct_stored_payload`) and component-backed journals. `core::events::{query,query_all_on_conn,query_subject_on_conn,query_subject_event_on_conn}` enforce `check_read_compatibility`, and `core::events::{ensure_tables,append_on_conn,check_subject_append_capacity}` enforce `check_storage_format_compatibility` (`STORAGE_FORMAT_INCOMPATIBLE`). Existing v2 datastores stamped `0.141.0` prior to #1739 are restamped to `0.144.2` on `activate`/migration and write-side table initialization (`reconcile_v2_storage_format_metadata`) without mutating event/task rows, downgrading higher valid floors, touching unmigrated v1 stores, or writing on read-only connections.
+
+## Verifiable broker writer incarnation and orphan recovery (#1783)
+
+`BrokerEvent` in `src/decapod/core/broker.rs` extends new `pending` audit events with backward-compatible optional fields `writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns` populated by `WriterIncarnation::current()`, while terminal and acknowledgment events omit them when unset. `DbBroker::verify_replay` and `decapod data broker verify` populate each `Divergence` with `writer_liveness` (`active` | `stopped` | `unknown`), `human_review_required`, `liveness_detail`, and any captured `writer_*` provenance fields.
+
+`BrokerCommand::Repair` (`src/decapod/cli.rs`, routed to `DbBroker::repair_with_options` in `src/decapod/lib.rs`) adds `--acknowledge-unknown-writer` and reports `writer_liveness`, `human_review_required`, `liveness_detail`, `acknowledgment_required`, and `acknowledged_unknown_writer` in `RepairReport`. Active writers (`writer_liveness = "active"`) are unconditionally refused in both preview and `--apply`. Proven stopped writers (`writer_liveness = "stopped"`) repair directly with `--apply` without waiting on age thresholds or requiring overrides. Legacy provenance-free, partial, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` and `human_review_required = true` in `verify` and `repair` preview, and refuse silent `--apply` unless `--acknowledge-unknown-writer` is explicitly provided after human review. See `docs/agent/error-recovery.md` and `docs/agent/command-contracts.md`.
+
+## Explicit actor identity on claim and workspace boundaries (#1737)
+
+`todo::claim_task_with_lease` (covering CLI `decapod todo claim`, cloud
+`TodoCommand::Claim`, `todo renew`, `todo yield`, `todo heartbeat --autoclaim`,
+`todo worker-run`, `todo add-owner`, and explicit `--owner` on `todo add` /
+`todo edit`), `workspace::ensure_workspace` (CLI `decapod workspace ensure`
+and RPC `workspace.ensure`), and `core::mentor::reflection::custody` reject
+missing, whitespace-only, or `"unknown"` actors via
+`core::authoring::is_missing_or_unknown_actor` before mutating task custody or
+creating a branch/worktree, failing closed with `AUTHORING_ACTOR_REQUIRED` and
+explicit `DECAPOD_AGENT_ID=<actor>` guidance.
+
+Read-only inspection and intake surfaces (`todo list`, `todo get`, `todo show`,
+`workspace status`, `docs ingest`, `eval`) and ownerless `todo add` remain
+usable when `DECAPOD_AGENT_ID` is unset. For pre-existing tasks whose
+`assigned_to` is `"unknown"`, an explicit non-`"unknown"` actor can adopt the
+task via exclusive `todo claim` or `workspace ensure --branch` when
+`authoring_bindings` holds no real-actor checkout custody and `task_owners` holds
+no other real primary owner; adoption emits `task.release` with reason
+`unknown_actor_adopted` and advances `lease_generation` (`lease_lifecycle = "reclaimed"`).
+
+## Acceptance observation export (#1757)
+`decapod trace flight-recorder acceptance --capture <private-index>` reads
+`decapod.agent-acceptance.v1` capture data and prints a redacted, versioned event
+manifest. It reports observed autonomous admission, historical PR identity,
+current applicability, interventions, source classes and unresolved findings.
+Both publication_ready and merge_authorized are always false. Captured original
+objective identity, executable/repository binding and evidence hashes are
+mandatory; agent declarations cannot stand in for tool/kernel observations.
+Consumers must preserve private-capture and cooperative-host assurance limits.
+
+## Audit evidence and invocation scope (#1069)
+
+The refreshed implementation map changes no CLI/RPC interface. Existing native
+context, scope/admission, observed state, validation and publication surfaces
+remain the integration contract. A runtime must invoke them; instruction files
+and hooks cannot intercept arbitrary conversation or shell mutation.
+
+The map distinguishes actual CLI prerequisite admission from complete runtime
+proof in a fixture transport, source-CI execution from a full native receipt,
+physical recovery from task completion and publication eligibility from merge
+authority. It preserves the pending native reference integration and independent
+service/forge enforcement boundaries. Source-bound diagnostic links do not waive
+any required command, provider, custody or current-target requirement.
+
+## Accepted v0.146.0 audit reconciliation
+
+This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
+
+## Readiness and evidence scope
+
+Cold state readers expose instruction identity and revision. Preparation, approval, execution checkpointing, validation and publication apply the same recorded blocker and remediation. An actual native-call observation binds its terminal result to the current candidate, accepted base and policy, instructions, task custody and measured producer. Retained denial evidence remains available after a legitimate repair. Publication verifies final head and live target independently. Hosted or unobserved effects retain unresolved coverage.

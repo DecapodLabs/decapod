@@ -14,6 +14,8 @@ fn run_cmd(repo_root: &Path, args: &[&str]) -> Output {
     let output = Command::new(exe)
         .current_dir(repo_root)
         .args(args)
+        .env("DECAPOD_AGENT_ID", "infer-precision-agent")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
         .env("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1")
         .output()
         .unwrap_or_else(|e| panic!("failed to run decapod {args:?}: {e}"));

@@ -2,18 +2,18 @@
 use super::*;
 
 #[test]
-fn scope_projection_preserves_json_paths_and_legacy_logical_scopes() {
+fn canonical_scope_entries_preserve_json_paths_and_legacy_logical_scopes() {
     let raw = r#"paths:["src/a,b.rs","tests/x.rs",".decapod/managed/specs"]"#;
     assert_eq!(
-        scope_projection(raw).unwrap(),
+        parse_scope_entries(raw).unwrap(),
         declared_paths(raw).unwrap().unwrap()
     );
     assert_eq!(
-        scope_projection("repo, component").unwrap(),
+        parse_scope_entries("repo, component").unwrap(),
         ["repo", "component"]
     );
-    assert!(scope_projection(r#"paths:["../outside"]"#).is_err());
-    assert!(scope_projection("paths:[not-json]").is_err());
+    assert!(parse_scope_entries(r#"paths:["../outside"]"#).is_err());
+    assert!(parse_scope_entries("paths:[not-json]").is_err());
 }
 
 fn claim(
@@ -422,6 +422,17 @@ fn explicit_paths_preserve_other_claim_gates_and_reject_aliases() {
         declared_paths(r#"paths:["b","a","a"]"#).unwrap().unwrap(),
         vec!["a", "b"]
     );
+    assert_eq!(
+        parse_scope_entries(r#"paths:["src","docs/a,b.md",".decapod/managed/specs"]"#).unwrap(),
+        vec![".decapod/managed/specs", "docs/a,b.md", "src"]
+    );
+    assert_eq!(
+        parse_scope_entries("src, tests").unwrap(),
+        vec!["src", "tests"]
+    );
+    assert!(parse_scope_entries("").unwrap().is_empty());
+    assert!(parse_scope_entries("paths:invalid").is_err());
+    assert!(declared_resources(r#"paths:["src","docs/a,b.md"]"#).is_empty());
 }
 
 #[test]

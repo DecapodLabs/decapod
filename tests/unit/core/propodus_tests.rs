@@ -600,3 +600,160 @@ fn malformed_successful_authentication_responses_have_safe_decode_diagnostics() 
         assert!(!format!("{error:?}").contains("synthetic-private-response"));
     }
 }
+
+#[derive(Clone, Default)]
+struct PaginatedCloudStoreTransport {
+    calls: Arc<Mutex<Vec<(String, String)>>>,
+}
+
+impl PropodusTransport for PaginatedCloudStoreTransport {
+    fn request(
+        &self,
+        _method: &str,
+        _url: &str,
+        _bearer: &str,
+        _body: Option<&[u8]>,
+    ) -> Result<PropodusHttpResponse, PropodusClientError> {
+        unreachable!("uses request_with_diagnostics")
+    }
+
+    fn request_with_diagnostics(
+        &self,
+        method: &str,
+        url: &str,
+        _bearer: &str,
+        _body: Option<&[u8]>,
+    ) -> Result<(PropodusHttpResponse, CloudDiagnosticHeaders), PropodusClientError> {
+        self.calls
+            .lock()
+            .unwrap()
+            .push((method.to_string(), url.to_string()));
+        if method == "GET" && url.contains("/api/todos") {
+            let body = if url.contains("cursor=page-2") {
+                serde_json::json!({
+                    "contract": "decapod.cloud.store",
+                    "version": "v1",
+                    "ok": true,
+                    "items": [{
+                        "id": "cloud-2",
+                        "repo_id": "DecapodLabs/decapod",
+                        "title": "Second page item",
+                        "status": "completed"
+                    }],
+                    "cursor": "page-2",
+                    "has_more": false
+                })
+            } else {
+                serde_json::json!({
+                    "contract": "decapod.cloud.store",
+                    "version": "v1",
+                    "ok": true,
+                    "items": [{
+                        "id": "cloud-1",
+                        "repo_id": "DecapodLabs/decapod",
+                        "title": "First page item",
+                        "status": "open"
+                    }],
+                    "next_cursor": "page-2",
+                    "has_more": true
+                })
+            };
+            return Ok((
+                PropodusHttpResponse {
+                    status: 200,
+                    body: serde_json::to_vec(&body).unwrap(),
+                },
+                CloudDiagnosticHeaders {
+                    contract: Some("decapod.cloud.store".to_string()),
+                    contract_version: Some("v1".to_string()),
+                    request_id: Some("req-page".to_string()),
+                    ..Default::default()
+                },
+            ));
+        }
+        if method == "POST" && url.ends_with("/api/todos") {
+            let body = serde_json::json!({
+                "contract": "decapod.cloud.store",
+                "version": "v1",
+                "ok": true,
+                "item": {
+                    "id": "cloud-3",
+                    "repo_id": "DecapodLabs/decapod",
+                    "title": "Created item",
+                    "status": "open"
+                }
+            });
+            return Ok((
+                PropodusHttpResponse {
+                    status: 201,
+                    body: serde_json::to_vec(&body).unwrap(),
+                },
+                CloudDiagnosticHeaders::default(),
+            ));
+        }
+        Err(PropodusClientError::Validation(
+            "unexpected request".to_string(),
+        ))
+    }
+}
+
+#[test]
+fn cloud_store_v1_cursor_and_contract_envelopes_are_supported() {
+    let config = PropodusConfig {
+        api_url: "https://cloud.example.test".to_string(),
+        repo_id: "DecapodLabs/decapod".to_string(),
+    };
+    let transport = PaginatedCloudStoreTransport::default();
+    let client = PropodusClient::with_transport(&config, "opaque-bearer", transport.clone())
+        .expect("client");
+
+    let page1 = client.list_todos_page(None).expect("page 1");
+    assert_eq!(page1.contract, CLOUD_STORE_CONTRACT_ID);
+    assert_eq!(page1.contract_version, CLOUD_STORE_CONTRACT_VERSION);
+    assert_eq!(page1.next_cursor.as_deref(), Some("page-2"));
+    assert!(page1.has_more);
+    assert_eq!(page1.todos.len(), 1);
+
+    let all = client.list_todos().expect("paginated list");
+    assert_eq!(all.len(), 2);
+    assert_eq!(all[0].id, "cloud-1");
+    assert_eq!(all[1].id, "cloud-2");
+
+    let created = client
+        .create_todo("Created item", None, Some("agy-decapod-brand"))
+        .expect("create item envelope");
+    assert_eq!(created.id, "cloud-3");
+    let task = to_storage_task(created);
+    assert_eq!(task.category, "cloud");
+}
+
+#[test]
+fn decapod_cloud_diagnostic_headers_are_parsed_bounded_and_redacted() {
+    let long_req_id = "r".repeat(400);
+    let raw = format!(
+        "HTTP/1.1 307 Redirect\r\nDecapod-Cloud-Request-Id: stale-hop\r\n\r\nHTTP/1.1 200 OK\r\nDecapod-Cloud-Contract: decapod.cloud.store\r\nDecapod-Cloud-Contract-Version: v1\r\nDecapod-Cloud-Deprecation: legacy-route\r\nDecapod-Cloud-Sunset: 2027-01-01T00:00:00Z\r\nDecapod-Cloud-Request-Id: {long_req_id}\r\nDecapod-Cloud-Trace-Id: Bearer should-not-appear\r\nDecapod-Cloud-Status: ok\r\n\r\n"
+    );
+    let parsed = parse_cloud_diagnostic_header_block(&raw);
+    assert_eq!(parsed.contract.as_deref(), Some("decapod.cloud.store"));
+    assert_eq!(parsed.contract_version.as_deref(), Some("v1"));
+    assert_eq!(parsed.deprecation.as_deref(), Some("legacy-route"));
+    assert_eq!(parsed.sunset.as_deref(), Some("2027-01-01T00:00:00Z"));
+    assert_eq!(parsed.status.as_deref(), Some("ok"));
+    assert_eq!(parsed.request_id.as_ref().map(String::len), Some(256));
+    assert_eq!(parsed.trace_id.as_deref(), Some("[REDACTED]"));
+
+    let err = map_http_error_with_headers(
+        PropodusHttpResponse {
+            status: 403,
+            body: br#"{"contract":"decapod.cloud.store","version":"v1","error":{"code":"forbidden","message":"access denied"}}"#.to_vec(),
+        },
+        &CloudDiagnosticHeaders {
+            request_id: Some("req-403".to_string()),
+            ..Default::default()
+        },
+    );
+    let rendered = err.to_string();
+    assert!(rendered.starts_with("Decapod Cloud service error"));
+    assert!(rendered.contains("req-403"));
+    assert!(!rendered.contains("Propodus"));
+}

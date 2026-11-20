@@ -103,3 +103,72 @@ fn arguments_are_not_interpreted_as_shell_commands() {
         .unwrap();
     assert_eq!(output.stdout, argument.as_bytes());
 }
+
+#[cfg(unix)]
+#[test]
+fn target_nofile_soft_limit_respects_hard_and_infinity_ceilings() {
+    assert_eq!(
+        target_nofile_soft_limit(
+            NofileLimits {
+                soft: 256,
+                hard: Some(8192),
+            },
+            RECOMMENDED_NOFILE_CEILING,
+        ),
+        Some(8192)
+    );
+    assert_eq!(
+        target_nofile_soft_limit(
+            NofileLimits {
+                soft: 256,
+                hard: Some(131_072),
+            },
+            RECOMMENDED_NOFILE_CEILING,
+        ),
+        Some(RECOMMENDED_NOFILE_CEILING)
+    );
+    assert_eq!(
+        target_nofile_soft_limit(
+            NofileLimits {
+                soft: 256,
+                hard: None,
+            },
+            RECOMMENDED_NOFILE_CEILING,
+        ),
+        Some(RECOMMENDED_NOFILE_CEILING)
+    );
+    assert_eq!(
+        target_nofile_soft_limit(
+            NofileLimits {
+                soft: 65_536,
+                hard: Some(65_536),
+            },
+            RECOMMENDED_NOFILE_CEILING,
+        ),
+        None
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn bounded_output_elevates_child_nofile_limit_at_least_to_floor() {
+    let limits = current_nofile_limits().unwrap();
+    let output = Command::new("sh")
+        .args(["-c", "ulimit -Sn"])
+        .bounded_output(Duration::from_secs(2))
+        .unwrap();
+    assert!(output.status.success());
+    let observed = String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .parse::<u64>()
+        .unwrap();
+    let expected_min = limits
+        .hard
+        .map(|h| h.min(4096))
+        .unwrap_or(4096)
+        .max(limits.soft.min(RECOMMENDED_NOFILE_CEILING));
+    assert!(
+        observed >= expected_min,
+        "expected child soft RLIMIT_NOFILE >= {expected_min}, got {observed} (parent={limits:?})"
+    );
+}

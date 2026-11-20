@@ -628,6 +628,12 @@ pub type InteropProjectParams = crate::core::projection::ProjectRequest;
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct InteropProjectResult {
     pub projection: serde_json::Value,
+    /// Origin of the data being transformed, not the projection's RPC receipt.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_origin: Option<String>,
+    /// Pure projection does not authenticate the supplied operation or policy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub canonical_state_verified: Option<bool>,
 }
 
 // State Subsystem
@@ -797,6 +803,9 @@ pub struct RpcError {
 pub struct CapabilitiesReport {
     /// Decapod version
     pub version: String,
+    /// Supported repository storage backends
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub backends: Vec<BackendCapability>,
     /// Capabilities offered
     pub capabilities: Vec<Capability>,
     /// Subsystems available
@@ -839,6 +848,21 @@ pub(crate) fn compute_is_latest(
     current_version: &str,
 ) -> bool {
     version_check == VersionCheckStatus::Ok && latest_version == Some(current_version)
+}
+
+/// Supported repository storage backend descriptor
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
+pub struct BackendCapability {
+    /// Canonical config selector (`local` or `cloud`)
+    pub id: String,
+    /// Product name (`Decapod Local` or `Decapod Cloud`)
+    pub name: String,
+    /// Summary of the backend's operating model
+    pub description: String,
+    /// Whether this backend is the default
+    pub default: bool,
+    /// Whether an authenticated account is required
+    pub account_required: bool,
 }
 
 /// Individual capability
@@ -976,7 +1000,35 @@ pub fn generate_capabilities() -> CapabilitiesReport {
 
     CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
+        backends: vec![
+            BackendCapability {
+                id: "local".to_string(),
+                name: "Decapod Local".to_string(),
+                description: "Local-first SQLite and Git governance runtime with no account required".to_string(),
+                default: true,
+                account_required: false,
+            },
+            BackendCapability {
+                id: "cloud".to_string(),
+                name: "Decapod Cloud".to_string(),
+                description: "Hosted repository-bound task and coordination service via Dactyl".to_string(),
+                default: false,
+                account_required: true,
+            },
+        ],
         capabilities: vec![
+            Capability {
+                name: "backend.local".to_string(),
+                description: "Decapod Local (local): default local-first SQLite and Git runtime with no account required".to_string(),
+                stability: "stable".to_string(),
+                cost: "none".to_string(),
+            },
+            Capability {
+                name: "backend.cloud".to_string(),
+                description: "Decapod Cloud (cloud): optional hosted repository-bound backend via Dactyl (account required)".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
             Capability {
                 name: "daemonless".to_string(),
                 description: "Decapod never runs in the background; it is invoked by agents"
@@ -1319,6 +1371,17 @@ pub fn generate_capabilities() -> CapabilitiesReport {
                 name: "state".to_string(),
                 status: "active".to_string(),
                 ops: vec!["resolve".to_string(), "diff".to_string()],
+            },
+            SubsystemInfo {
+                name: "cloud".to_string(),
+                status: "active".to_string(),
+                ops: vec![
+                    "login".to_string(),
+                    "status".to_string(),
+                    "projects".to_string(),
+                    "project.use".to_string(),
+                    "project.create".to_string(),
+                ],
             },
             SubsystemInfo {
                 name: "interop".to_string(),

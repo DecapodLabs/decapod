@@ -667,6 +667,11 @@
       "id": "integrate-accepted-strict-json-release12",
       "summary": "Integrate accepted1791 and release7bd0a915 v0.148.12; retain active journal whole and accepted Git merge parent; independent official registry12 projections/spec reviews and105-source review. Only Bazel fixture inclusion and Cargo versions change proof inventory. Preserve actual38b decision counterexample and7b48 guard-held run;7b48 full validation failed on target ancestry. New exact candidate full native/required CI remain necessary; original PR1766 history not waived, no human authentication or merge grant.",
       "input_digest": "sha256:795da27039b93570134555db017ba07063b616ddc6571c94f1b9b9814fca5be7"
+    },
+    {
+      "id": "reconcile-accepted-1531-contracts",
+      "summary": "Integrate accepted d41056ce with existing instruction, selected work, and observed path contracts. Reuse upstream task-scope parser, retain legacy repair and preserve original history. Official 0.153.1 projections and all living-spec reviews refreshed. GitHub proof will be collected on current candidate and target.",
+      "input_digest": "sha256:1360c7dd4c38d0a2f521bbb102ad161596a8c5333e9cdc80c67145c115d2b5d9"
     }
   ],
   "intents": {
@@ -715,23 +720,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted upstream1791 strict JSON and release12 integrated with active journal preserved whole; pending decisions retained; inventory review changes only fixture inclusion and versions; new full proof still required",
-          "reviewed_code_fingerprint": "7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952",
-          "spec_material_hash": "f189ef532c63d3e6841d64bb9f6ede85d61852f80cbac3d471fb19dc32d028dc"
+          "reason": "Reconcile current upstream with the preserved contracts, retain accepted authority and regenerate official release projections",
+          "reviewed_code_fingerprint": "246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4",
+          "spec_material_hash": "9b73adacbbb6d3c40dfda3b537ad2e72fae9ea0f26a877fc657ed031449dc793"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Accepted upstream1791 strict JSON and release12 integrated with active journal preserved whole; pending decisions retained; inventory review changes only fixture inclusion and versions; new full proof still required",
-          "reviewed_code_fingerprint": "7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952",
-          "spec_material_hash": "e893d7589b008d14fc94c624deee3f0094c05ce105d6fac0ff2ef62e42cdb54c"
+          "reason": "Reconcile current upstream with the preserved contracts, retain accepted authority and regenerate official release projections",
+          "reviewed_code_fingerprint": "246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4",
+          "spec_material_hash": "7abaefd71065b1e88a0fba2df60e586969aff6f1ab7e49997f71a8f3b4a3590a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Accepted upstream1791 strict JSON and release12 integrated with active journal preserved whole; pending decisions retained; inventory review changes only fixture inclusion and versions; new full proof still required",
-          "reviewed_code_fingerprint": "7c2aa1c1818ef0a68ee4c404bcb92f0cb047946bdf4a0ff7a813018a2a2b6952",
-          "spec_material_hash": "0f80a7bae9c396f6ef79bcb1674252d853c5fe192cb7baba382a05919875407b"
+          "reason": "Reconcile current upstream with the preserved contracts, retain accepted authority and regenerate official release projections",
+          "reviewed_code_fingerprint": "246fd854f9983df97ce24dacecc2ebc8036f26282ec7f0333d2cbe4e3aac0ad4",
+          "spec_material_hash": "3d3861ffd59d9e65966771b5db4107b999a733ec7ad029f02a6c1cb2696ec964"
         }
       ],
       "state": "APPROVED",
@@ -742,7 +747,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795009609Z"
+      "updated_at": "1795161686Z"
     },
     "trajectory": {
       "active_boundaries": [

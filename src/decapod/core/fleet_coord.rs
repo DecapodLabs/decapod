@@ -549,24 +549,31 @@ pub fn declared_paths(scope: &str) -> Result<Option<Vec<String>>, String> {
     Ok(Some(paths))
 }
 
-/// Project the existing authoritative scope grammar without splitting JSON
-/// strings or introducing a second path parser. Non-path logical scopes retain
-/// their historical comma-separated representation.
-pub fn scope_projection(scope: &str) -> Result<Vec<String>, String> {
-    if let Some(paths) = declared_paths(scope)? {
+/// Parse a task scope string into canonical scope entries.
+/// Explicit `paths:[...]` declarations use [`declared_paths`] so JSON commas
+/// and commas inside literal paths are preserved rather than fragmented.
+pub fn parse_scope_entries(scope: &str) -> Result<Vec<String>, String> {
+    let trimmed = scope.trim();
+    if trimmed.is_empty() {
+        return Ok(Vec::new());
+    }
+    if let Some(paths) = declared_paths(trimmed)? {
         return Ok(paths);
     }
-    Ok(scope
+    Ok(trimmed
         .split(',')
         .map(str::trim)
         .filter(|s| !s.is_empty())
-        .map(str::to_owned)
+        .map(str::to_string)
         .collect())
 }
 
 /// Extract canonical `resource:<name>` reservations from a task scope.
 /// Empty or malformed `resource:` prefixes never invent a resource identifier.
 pub fn declared_resources(scope: &str) -> Vec<String> {
+    if scope.trim().starts_with("paths:") {
+        return Vec::new();
+    }
     let mut resources = Vec::new();
     for token in scope.split(',') {
         let trimmed = token.trim();

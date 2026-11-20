@@ -639,3 +639,91 @@ fn read_only_diagnostic_has_no_mutation_requirements_or_database_side_effects() 
         .collect();
     assert_eq!(entries, vec![std::ffi::OsString::from("config.toml")]);
 }
+
+#[test]
+fn riskmap_verify_recommends_supported_cli_command_when_missing() {
+    use decapod::plugins::policy::{RISKMAP_INIT_COMMAND, missing_riskmap_warning};
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
+
+    assert_eq!(RISKMAP_INIT_COMMAND, "decapod govern policy riskmap init");
+    assert_eq!(
+        missing_riskmap_warning(),
+        "Risk map missing (run `decapod govern policy riskmap init`)"
+    );
+
+    let bin = {
+        let cargo_bin = env!("CARGO_BIN_EXE_decapod");
+        if let Ok(path) = Path::new(cargo_bin).canonicalize() {
+            path
+        } else if let Ok(runfiles_dir) = std::env::var("RUNFILES_DIR") {
+            let path = Path::new(&runfiles_dir).join("_main").join("decapod");
+            if path.exists() {
+                path
+            } else {
+                PathBuf::from(cargo_bin)
+            }
+        } else {
+            PathBuf::from(cargo_bin)
+        }
+    };
+
+    let tmp = tempdir().unwrap();
+    let root = tmp.path();
+    let home = root.join(".home");
+    fs::create_dir_all(&home).unwrap();
+
+    let run = |args: &[&str]| {
+        let mut cmd = Command::new(&bin);
+        cmd.current_dir(root);
+        for (k, _) in std::env::vars_os() {
+            let name = k.to_string_lossy();
+            if name.starts_with("DECAPOD_") || name.starts_with("GIT_") {
+                cmd.env_remove(k);
+            }
+        }
+        cmd.env("HOME", &home)
+            .env("XDG_CONFIG_HOME", home.join("config"))
+            .env("XDG_DATA_HOME", home.join("data"))
+            .env("DECAPOD_AGENT_ID", "policy-test")
+            .args(args)
+            .output()
+            .expect("execute decapod")
+    };
+
+    let init = run(&["init", "--no-git", "--no-ci", "--no-container-workspaces"]);
+    assert!(
+        init.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+
+    let verify = run(&["govern", "policy", "riskmap", "verify"]);
+    assert!(
+        verify.status.success(),
+        "riskmap verify failed: {}",
+        String::from_utf8_lossy(&verify.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&verify.stdout);
+    assert!(
+        stdout.contains("Risk map missing (run `decapod govern policy riskmap init`)."),
+        "unexpected verify output: {stdout}"
+    );
+    assert!(
+        !stdout.contains("decapod policy riskmap init"),
+        "unsupported command path in verify output: {stdout}"
+    );
+
+    let recommended = stdout
+        .split('`')
+        .nth(1)
+        .expect("missing backticked command in verify output");
+    let mut help_args: Vec<&str> = recommended.split_whitespace().skip(1).collect();
+    help_args.push("--help");
+    let help = run(&help_args);
+    assert!(
+        help.status.success(),
+        "recommended command help failed for {recommended}: {}",
+        String::from_utf8_lossy(&help.stderr)
+    );
+}

@@ -81,7 +81,7 @@ button,input,a{font-family:inherit}
 .decapod-sidebar-bottom a{font-weight:800;font-size:12px;color:var(--links);text-decoration:none;margin-top:9px}
 #sidebar-resize-handle{opacity:0!important;pointer-events:none}
 #content.content{grid-row:3;min-width:0;padding:0 0 18px}
-#content main{width:min(100%,1000px);max-width:none;min-height:calc(100vh - 290px);padding:clamp(28px,3.7vw,64px) clamp(23px,4vw,68px) 60px;margin:0 auto;line-height:1.76;font-size:15px}
+#content main{width:min(100%,1000px);max-width:none;min-height:calc(100vh - 290px);padding:clamp(44px,4.8vw,80px) clamp(23px,4vw,68px) 60px;margin:0 auto;line-height:1.76;font-size:15px}
 #content main>h1:first-child{font-size:clamp(35px,4vw,54px);margin:0 0 25px}
 #content main h1,#content main h2,#content main h3,#content main h4{font-family:'Outfit',system-ui,sans-serif;color:var(--shell-strong);letter-spacing:-.043em;font-weight:800;line-height:1.16}
 #content main h2{margin-top:2.1em;font-size:clamp(26px,2.6vw,34px)}
@@ -114,9 +114,6 @@ button,input,a{font-family:inherit}
 .nav-wide-wrapper{display:none!important}
 .nav-wrapper{max-width:900px;margin:auto;padding:0 15px}
 .nav-wrapper a{background:var(--shell-soft);border:1px solid var(--shell-stroke);border-radius:13px}
-.decapod-docs-brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:14px}
-.decapod-docs-brand .decapod-docs-wordmark{width:175px;height:auto}
-.decapod-docs-label{font-weight:900;font-size:10px;letter-spacing:.15em;color:var(--links);padding:8px 12px;border-radius:999px;background:var(--shell-soft)}
 .decapod-docs-hero{display:grid;grid-template-columns:1.12fr .88fr;gap:25px;align-items:center;padding:clamp(27px,4vw,55px);border-radius:35px;background:radial-gradient(circle at 83% 10%,#ffd6a6 0%,transparent 53%),linear-gradient(145deg,#fff2df,#ffe9ce);box-shadow:0 17px 0 #f1cdb666,0 28px 45px #c66b4230;min-height:370px;color:#281c29}
 .decapod-docs-kicker{font-weight:900;letter-spacing:.13em;color:#a13d2c;font-size:10px}
 #content main .decapod-docs-hero h1{font-family:'Outfit',system-ui,sans-serif;font-weight:900;font-size:clamp(46px,5.5vw,75px);letter-spacing:-.085em;line-height:.96;white-space:normal;color:#291b28;margin:22px 0}
@@ -139,12 +136,35 @@ button,input,a{font-family:inherit}
 .decapod-docs-tile .tile-mark{font-size:27px;line-height:1}
 .decapod-docs-tile strong{font-family:'Outfit',system-ui,sans-serif;font-size:19px;letter-spacing:-.04em}
 .decapod-docs-tile span:last-child{font-size:12px;line-height:1.5}
+.decapod-docs-offerings{margin:0 0 42px;padding:clamp(22px,3vw,32px);border-radius:28px;background:var(--shell-card);border:1px solid var(--shell-stroke);box-shadow:var(--shell-shadow)}
+.decapod-offerings-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.decapod-offerings-kicker{font-weight:900;letter-spacing:.13em;color:var(--links);font-size:10px}
+#content main .decapod-offerings-head h2{margin:6px 0 0;font-size:clamp(22px,2.4vw,30px);line-height:1.12}
+.decapod-offerings-compare{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;background:var(--shell-soft);border:1px solid var(--shell-stroke);font-size:12px;font-weight:800;text-decoration:none!important;color:var(--links)!important;transition:transform .18s,background .18s}
+.decapod-offerings-compare:hover{transform:translateY(-1px);background:#f19c7640}
+.decapod-offerings-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.decapod-offering-card{display:flex;flex-direction:column;gap:12px;padding:22px;border-radius:20px;border:1px solid var(--shell-stroke);background:var(--bg)}
+.decapod-offering-card.offering-local{background:linear-gradient(155deg,var(--shell-soft) 0%,var(--bg) 72%)}
+.decapod-offering-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#content main .decapod-offering-card h3{margin:0;font-size:20px;line-height:1.2}
+.decapod-offering-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em}
+.decapod-offering-badge.badge-free{background:#271c2c;color:#fff8ef}
+.navy .decapod-offering-badge.badge-free,.coal .decapod-offering-badge.badge-free,.ayu .decapod-offering-badge.badge-free{background:#ffad86;color:#231a25}
+.decapod-offering-badge.badge-soon{background:var(--shell-soft);border:1px solid var(--shell-stroke);color:var(--links)}
+#content main .decapod-offering-card p{margin:0;font-size:13.5px;line-height:1.6;color:var(--shell-muted)}
+#content main .decapod-offering-points{margin:0;padding-inline-start:1.25em;font-size:12.5px;line-height:1.55;color:var(--fg)}
+#content main .decapod-offering-points li{margin-block:.28rem}
+.decapod-offering-action{margin-top:auto;display:inline-flex;align-items:center;justify-content:space-between;gap:10px;align-self:flex-start;padding:10px 14px;border-radius:12px;background:#271c2c;color:#fff!important;font-size:12px;font-weight:800;text-decoration:none!important;transition:transform .18s,background .18s}
+.decapod-offering-action:hover{transform:translateY(-1px)}
+.navy .decapod-offering-action,.coal .decapod-offering-action,.ayu .decapod-offering-action{background:#ffad86;color:#231a25!important}
+.decapod-offering-action.secondary{background:var(--shell-card);border:1.5px solid var(--shell-stroke);color:var(--shell-strong)!important}
+@media(max-width:760px){.decapod-offerings-grid{grid-template-columns:1fr}}
 @media(min-width:1450px){
  #page-wrapper>.page{grid-template-columns:minmax(0,1fr) 243px;column-gap:0}
  #menu-bar{grid-column:1/-1}
  #search-wrapper{grid-column:1/-1}
  #content.content{grid-column:1;grid-row:3}
- .decapod-reading-rail{display:block;grid-column:2;grid-row:3;padding:64px 20px 24px 0;align-self:start;position:sticky;top:95px}
+ .decapod-reading-rail{display:block;grid-column:2;grid-row:3;padding:clamp(44px,4.8vw,80px) 20px 24px 0;align-self:start;position:sticky;top:95px}
  .decapod-reading-rail-card{background:var(--shell-card);border:1px solid var(--shell-stroke);border-radius:26px;padding:24px 20px;box-shadow:var(--shell-shadow);display:flex;align-items:flex-start;flex-direction:column}
  .decapod-reading-rail-card img{align-self:center;filter:drop-shadow(0 12px 12px #f05b3730);max-width:114px}
  .decapod-rail-label{color:var(--links);font-size:9px;letter-spacing:.13em;font-weight:900}
@@ -163,7 +183,7 @@ button,input,a{font-family:inherit}
  #menu-bar,.menu-bar.sticky{min-height:72px;padding:10px 18px!important}
  #sidebar.sidebar{box-shadow:11px 0 35px #1d172422}
  #page-wrapper>.page{display:block}
- #content main{padding:35px clamp(20px,5vw,52px) 48px}
+ #content main{padding:47px clamp(20px,5vw,52px) 48px}
  .decapod-reading-rail{display:none}
 }
 @media(max-width:650px){
@@ -172,7 +192,7 @@ button,input,a{font-family:inherit}
  #menu-bar .icon-button,#menu-bar .right-buttons>a{width:33px;height:35px}
  .decapod-header-brand img.decapod-wordmark{width:123px}
  .decapod-docs-chip{display:none}
- #content main{padding:25px 17px 38px;font-size:14px}
+ #content main{padding:37px 17px 38px;font-size:14px}
  #content main>h1:first-child{font-size:35px}
  .decapod-docs-hero{grid-template-columns:1fr;padding:26px 22px;border-radius:26px;min-height:0}
  #content main .decapod-docs-hero h1{font-size:clamp(45px,12vw,64px)}
@@ -186,24 +206,3 @@ button,input,a{font-family:inherit}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 @media print{#sidebar,#menu-bar,.decapod-reading-rail,.decapod-sidebar-head,.decapod-page-footer{display:none!important}#page-wrapper,.page-wrapper{margin:0!important;transform:none!important}#content main{width:100%;max-width:none;padding:0}body{background:#fff}}
 
-/* Theme-aware landing identity, no browser JavaScript required. */
-.decapod-docs-brand .logo-c{display:none}
-.navy .decapod-docs-brand .logo-a,.coal .decapod-docs-brand .logo-a,.ayu .decapod-docs-brand .logo-a{display:none}
-.navy .decapod-docs-brand .logo-c,.coal .decapod-docs-brand .logo-c,.ayu .decapod-docs-brand .logo-c{display:block}
-
-/* Closed-loop governance landing model: conceptual loop and separate proof boundary. */
-.decapod-docs-loop{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:30px 0 18px;min-width:0}
-.decapod-docs-loop-stage{display:flex;flex-direction:column;gap:12px;min-width:0;border:1px solid var(--shell-stroke);border-radius:24px;padding:24px 25px;background:var(--shell-card);box-shadow:var(--shell-shadow)}
-.decapod-docs-loop-stage.decapod-docs-loop-verify{background:var(--shell-soft);border-color:var(--decapod-coral)}
-.decapod-docs-loop-label{font-size:10px;font-weight:900;letter-spacing:.12em;color:var(--links)}
-.decapod-docs-loop-stage strong{font-family:'Outfit',system-ui,sans-serif;font-size:clamp(20px,2.5vw,27px);line-height:1.1;letter-spacing:-.045em;color:var(--shell-strong)}
-.decapod-docs-loop-stage p{font-size:14px;line-height:1.58;color:var(--shell-muted);margin:0}
-@media(max-width:740px){.decapod-docs-loop{grid-template-columns:1fr}.decapod-docs-loop-stage{padding:21px}}
-
-/* Three-part metacognitive model: retained state, correction, validation. */
-.decapod-docs-loop{grid-template-columns:repeat(3,minmax(0,1fr))}
-.decapod-docs-loop-stage{padding:22px 20px}
-.decapod-docs-loop-stage.decapod-docs-loop-feedback{background:var(--shell-soft)}
-.decapod-docs-loop-stage strong{font-size:clamp(19px,2.1vw,25px)}
-@media(max-width:1050px){.decapod-docs-loop{grid-template-columns:1fr}.decapod-docs-loop-stage{min-height:0;padding:23px}}
-@media(max-width:650px){.decapod-docs-loop-stage{padding:19px}.decapod-docs-loop-stage strong{font-size:22px}}
