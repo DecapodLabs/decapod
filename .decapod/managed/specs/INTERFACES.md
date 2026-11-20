@@ -1539,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865`
+- Repository signal fingerprint: `8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2242,3 +2242,9 @@ digests before revalidation; no override or second policy store is added.
 `--offline` reports remote dimensions unavailable without contacting the
 forge. The default publication diagnosis lists blockers and sends agents
 to the live publisher for exact validation and readback.
+
+## Exact release projection interpretation
+
+The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.
+
+Accepted v0.154.0 (`0f44f780`) advances package metadata without changing the release-only classifier or source-identity authority. The official released controller regenerates entrypoints, Docker pin and spec attestations for that evaluation epoch; the byte-for-byte release-head comparison still distinguishes permitted historical source headers from changed payloads. Retained failure receipts remain historical and are not reused as current readiness.

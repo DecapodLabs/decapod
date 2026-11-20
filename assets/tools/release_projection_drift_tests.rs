@@ -11,9 +11,20 @@ pub(crate) struct Fixture {
 
 impl Fixture {
     pub(crate) fn new() -> Self {
-        let root = tempfile::tempdir().unwrap();
+        Self::with_root(None)
+    }
+
+    pub(crate) fn with_source_versions(root: tempfile::TempDir) -> Self {
+        Self::with_root(Some(root))
+    }
+
+    fn with_root(root: Option<tempfile::TempDir>) -> Self {
+        let preserve = root.is_some();
+        let root = root.unwrap_or_else(|| tempfile::tempdir().unwrap());
         let repo = root.path();
-        git(repo, &["init", "-q", "-b", "master"]).unwrap();
+        if !preserve {
+            git(repo, &["init", "-q", "-b", "master"]).unwrap();
+        }
         git(repo, &["config", "user.name", "Projection Test"]).unwrap();
         git(
             repo,
@@ -21,17 +32,25 @@ impl Fixture {
         )
         .unwrap();
         fs::create_dir_all(repo.join(specs::LOCAL_PROJECT_SPECS_DIR)).unwrap();
-        fs::create_dir(repo.join("src")).unwrap();
+        fs::create_dir_all(repo.join("src")).unwrap();
         fs::write(repo.join("src/lib.rs"), "pub fn unchanged() {}\n").unwrap();
         fs::write(
             repo.join(".decapod/config.toml"),
-            "[repo]\nproduct_name = \"fixture\"\n",
+            if preserve {
+                "[repo]\nproduct_name = \"fixture\"\n_allow_entrypoint_version_drift = true\n"
+            } else {
+                "[repo]\nproduct_name = \"fixture\"\n"
+            },
         )
         .unwrap();
         for path in entrypoints::ENTRYPOINT_FILES {
             fs::write(
                 repo.join(path),
-                entrypoints::render_entrypoint_for_release(path, OLD).unwrap(),
+                entrypoints::render_entrypoint_for_release(
+                    path,
+                    if preserve { "0.0.0" } else { OLD },
+                )
+                .unwrap(),
             )
             .unwrap();
         }
@@ -45,7 +64,7 @@ impl Fixture {
             fs::write(repo.join(spec.path), format!("# Fixture\n\nAuthored obligation stays byte-identical.\n\n{ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{}`\n- Significant implementation surfaces: `src/` (1 files)\n- Refreshed from the current codebase by `decapod rpc --op specs.refresh`\n{ATTESTATION_END}\n", "0".repeat(64))).unwrap();
         }
         fs::write(repo.join("CHANGELOG.md"), "# Changelog\n").unwrap();
-        Self::version(repo, OLD);
+        Self::version(repo, OLD, preserve);
         let manifest = specs::refresh_specs_manifest(repo, &[]).unwrap();
         let mut manifest = serde_json::to_value(manifest).unwrap();
         manifest["decapod_release"] = OLD.into();
@@ -64,7 +83,7 @@ impl Fixture {
             .unwrap()
             .trim()
             .to_string();
-        Self::version(repo, entrypoints::RELEASE_VERSION);
+        Self::version(repo, entrypoints::RELEASE_VERSION, preserve);
         git(repo, &["add", "Cargo.toml", "Cargo.lock"]).unwrap();
         git(repo, &["commit", "-qm", "version-only release"]).unwrap();
         let head = git(repo, &["rev-parse", "HEAD"])
@@ -76,10 +95,15 @@ impl Fixture {
         fixture
     }
 
-    fn version(repo: &Path, version: &str) {
+    fn version(repo: &Path, version: &str, preserve_source_identity: bool) {
+        let repository = if preserve_source_identity {
+            "repository = \"https://github.com/DecapodLabs/decapod\"\n"
+        } else {
+            ""
+        };
         fs::write(
             repo.join("Cargo.toml"),
-            format!("[package]\nname = \"decapod\"\nversion = \"{version}\"\nedition = \"2024\"\n"),
+            format!("[package]\nname = \"decapod\"\nversion = \"{version}\"\nedition = \"2024\"\n{repository}"),
         )
         .unwrap();
         fs::write(

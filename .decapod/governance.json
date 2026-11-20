@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
+    "accepted_commit": "d41056ce3aae2be6ceab261beb938313beef9502",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -119,6 +119,14 @@
           ".decapod/managed/specs/VALIDATION.md"
         ],
         "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
+        "status": "open"
+      },
+      "claim:claim:recovery-release-proof": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
         "status": "open"
       },
       "claim:committed-scope-enforcement": {
@@ -774,53 +782,81 @@
     }
   },
   "change": {
-    "id": "change_01M7PNTY1326215RVKP88VR4NJ",
-    "base_commit": "34f837d4dbb2a611c0d68a2cf14845cbe6823367",
+    "id": "change_01M7VYYH3BHSTVTA25RZ50HRF9",
+    "base_commit": "d41056ce3aae2be6ceab261beb938313beef9502",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:release-v0-155-0-projections": {
-      "statement": "Release v0.155.0 aligns Cargo.toml, Cargo.lock, managed Dockerfile pin, and specs manifest release metadata.",
-      "falsifier": "Managed Dockerfile or specs manifest release metadata diverges from Cargo.toml 0.155.0.",
-      "status": "supported",
-      "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json"
-      ]
-    },
-    "diagnostic-read-only-authority": {
-      "statement": "Workspace diagnosis keeps accepted policy separate from proposed config and override content, and it cannot grant publication.",
-      "falsifier": "A candidate proposal or historical receipt makes publication ready, or diagnosis changes observed fixture state.",
+    "source-version-release-projections": {
+      "statement": "A classified version-only Decapod release preserves exactly its committed canonical source entrypoint versions under the existing verified source policy, while replacement headers, payloads, foreign origin and non-projection drift are refused.",
+      "falsifier": "A genuine preserved-source release is rejected, or a differently versioned/fingerprinted header, altered payload, foreign origin, changed source/configuration/manifest or staged edit gains release-only proof.",
       "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "diagnostic-1071-candidate",
-      "summary": "Checkpoint the live diagnostic delta, read-only projection refinements, native regressions and current contract. Both targeted native regressions passed.",
-      "input_digest": "sha256:1bc242fe285815c039d085aa876e2679e62e3edfaef596c60c27cee1f8627a27"
+      "id": "source-version-release-projection-repair-20261120",
+      "summary": "Preserve canonical committed source entrypoint versions in exact release proof; add adversarial regression and record pending Actions",
+      "input_digest": "sha256:335a4053e1c26750c8a443c4b60b3bfb81a82759b936c506e2925668d2486f25"
     },
     {
-      "id": "diagnostic-1071-ci-repair",
-      "summary": "Repair Clippy formatting, generate the workspace diagnostic contract from the source-built CLI, refresh v0.148.10 projection metadata, and rerun both native regressions.",
-      "input_digest": "sha256:f72cf282a41c8ba63646ab50d1e3a536cb3703fcaf847ffb7537b6877ebffabf"
+      "id": "release-proof-accepted1532-integration-20261120",
+      "summary": "Integrate accepted release1532 and exact reviewed inputs; preserve stale-context and transport failures",
+      "input_digest": "sha256:0e2b940e11c8aad35001999980e389b27cda4cb5b552e3b9bb3e0349a394f4eb"
     },
     {
-      "id": "cp-sync-495808c0f",
-      "summary": "Merge accepted master 495808c0f (v0.154.0), rebuild agent docs, and verify workspace diagnose (#1071)",
-      "input_digest": "sha256:56a4b64f5783eeeba6ddedfc22e5dda7bc73f86405626a55bc90df0cba42398a"
+      "id": "release-proof-standalone-wrapper-repair-20261120",
+      "summary": "Repair observed standalone visibility failure and retain library source-lineage controls",
+      "input_digest": "sha256:cd02e4a61e3ae03403f7eed7e9ba046f77a6e2eb1d92558f023813c32848eefc"
     },
     {
-      "id": "ckpt-release-v0-155-0",
-      "summary": "Refresh v0.155.0 release projections and governance",
-      "input_digest": "sha256:195840d5297fdb13111bd49afdae07d05f374adfd6ddedc16b837674e8a4725b",
+      "id": "release1532-docker-current",
+      "summary": "Commit native v0.153.2 managed Dockerfile refresh required by actual standalone CI drift; host project preparation remains partial due to container requirement and two unrelated task proof hooks",
+      "input_digest": "sha256:b9579fc0cd27a2aad7ba0e91cbdfe409fc86143533d859cf22e41acaa3fdc568",
       "proof_refs": [
-        ".decapod/managed/specs/.manifest.json"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44702917836/job/136175392319"
       ]
+    },
+    {
+      "id": "release-source-fixture-identity",
+      "summary": "Preserve canonical Cargo repository metadata in the source-lineage fixture after actual full library refusal; no production check changes",
+      "input_digest": "sha256:b2b05c16df11fad4559bdeefc943331dff16c777f6cf8464453c016b73651f23",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
+      ]
+    },
+    {
+      "id": "release-accepted-observer-7225",
+      "summary": "Integrate accepted observer722515f4 via native merge reconciliation and generated manifest recovery; preserve all authored product prose and exact proof policy",
+      "input_digest": "sha256:64584e514fed5b58ab076b50ac91d12a9ec27bdb71d8e90151b65bf38dd6a635",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1863"
+      ]
+    },
+    {
+      "id": "release-accepted-instruction-868f",
+      "summary": "Integrate accepted instruction-readiness868f756e; resolve only reviewed source digest config conflict, preserve authored specs and exact required proof policy",
+      "input_digest": "sha256:e9b7364ec5b9f8d4c051862242aca99ec49e295a431c915fffa3016b38e0284e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1861"
+      ]
+    },
+    {
+      "id": "release-accepted-v154-0f44",
+      "summary": "Integrate accepted release0.154.0, regenerate release projections natively and independently remeasure105 reviewed inputs; preserve strict proof policy",
+      "input_digest": "sha256:ff3b910170cbb530edf2d2fe7f037e5c3cddbd8b7e2094a8f8db63b7515ec04a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1867"
+      ]
+    },
+    {
+      "id": "cp-sync-fff1f478d",
+      "summary": "Sync accepted master fff1f478d (v0.155.0) and verify canonical source entrypoint version preservation (#1862)",
+      "input_digest": "sha256:786df026cdddb0a0d02c6b27da1aca1e3ba8e356b1b1f227d4940c33daf9eaec"
     }
   ],
   "intents": {
-    "intent:change_01M7PNTY1326215RVKP88VR4NJ": {
+    "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -830,11 +866,11 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+      "id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Finish workspace diagnostics for GitHub #1071\n\nCarry only the live diagnostic delta onto accepted master. Preserve original worktree and use shared policy, artifact, custody and proof readers.",
-      "refined_intent": "Finish workspace diagnostics for GitHub #1071\n\nCarry only the live diagnostic delta onto accepted master. Preserve original worktree and use shared policy, artifact, custody and proof readers.",
+      "raw_intent": "Fix release-only proof for preserved canonical source entrypoint versions #1397\n\nBlocking actual release1858 failure: immutable3-file version/root-lock/changelog change is refused FINGERPRINT_ONLY_SPECS. Audit existing release classifier/projection verifier and accepted source development version-preservation policy; reproduce adversarial control, correct exact projection verification without weakening source/config/history checks, obtain current checks and admitted PR before release merges.",
+      "refined_intent": "Fix release-only proof for preserved canonical source entrypoint versions #1397\n\nBlocking actual release1858 failure: immutable3-file version/root-lock/changelog change is refused FINGERPRINT_ONLY_SPECS. Audit existing release classifier/projection verifier and accepted source development version-preservation policy; reproduce adversarial control, correct exact projection verification without weakening source/config/history checks, obtain current checks and admitted PR before release merges.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -847,68 +883,98 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Refresh release-bound Dockerfile and specs manifest projections for v0.155.0 on PR #1868",
+      "intent": "Repair actual version-only release1858 refusal using existing authenticated source-development entrypoint policy. Keep immutable release classification and exact payload/config/source/header checks. Preserve actual failing release CI, add positive and adversarial regression controls, implement the smallest correction, publish PR and execute required GitHub Actions. User explicitly directs ignore all Buildkite, make Actions green, merge and release cuts, then repeat until campaign completion. Do not fabricate proof or import historical custody.",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "GitHub Actions complete exact-head CI"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "v0.155.0 version-only release cut does not alter system architecture",
-          "reviewed_code_fingerprint": "67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865",
-          "spec_material_hash": "2bf5dc2558f400b41e0e6dea2f73451f13dc052c21faadc5e25723fef40d0914"
+          "reason": "Synced canonical source entrypoint release projection preservation (#1862) with accepted master fff1f478d (v0.155.0).",
+          "reviewed_code_fingerprint": "8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525",
+          "spec_material_hash": "16bc73fa00c32665fbf8add1cc12c811ddb513546f8dd18bbecc52898fabd89b"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "v0.155.0 version-only release cut does not alter CLI or RPC interfaces",
-          "reviewed_code_fingerprint": "67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865",
-          "spec_material_hash": "c0eaabcc443302ee7708c0a8d4f74e07b9aa21313af81104ba62252e6b961225"
+          "reason": "Synced entrypoint integrity & release projection drift interfaces (#1862) with accepted master fff1f478d (v0.155.0).",
+          "reviewed_code_fingerprint": "8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525",
+          "spec_material_hash": "31f0ad6076927108824b5dad18e270fcc076f0c2e348ff85884d6ad20784362d"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "v0.155.0 version-only release cut does not alter security boundaries",
-          "reviewed_code_fingerprint": "67b81c8463e34649489edfe3e7479c458141ccc4eb56a0bdce76dcbddeb79865",
-          "spec_material_hash": "d3fed735402f3756448338e5abf7b4b8ad082f068312fcd0a1a3aea70ef7937f"
+          "reason": "Synced fail-closed entrypoint version preservation security invariants (#1862) with accepted master fff1f478d (v0.155.0).",
+          "reviewed_code_fingerprint": "8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525",
+          "spec_material_hash": "9e339b89e8e6fee3b7ffb5a302984f70a3d5145e30c617dac94bc1f0b57d8d12"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Align release v0.155.0 projections and governance (#1868)",
+      "title": "Fix release-only proof for preserved canonical source entrypoint versions #1397",
       "todo_ids": [
-        "code_01m7srddt2dc4pyp"
+        "bugs_01m7vywgahvgjx7c"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795204574Z"
+      "updated_at": "1795206484Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c64ded903694dbc6c18b63370d632d7028d3bfb7c08663591a6acd4382ca3dad",
+      "artifact_hash": "sha256:fb8e34587ff22efd598c7de5b6eff207c9f35a2707fc9966b103f9e6725bbaaf",
       "checks": [
         {
-          "name": "initial_draft_ci",
+          "name": "7ec-standalone-docker-drift",
           "status": "failed"
         },
         {
-          "name": "live_handoff_delta_96d5ac16",
+          "name": "accepted-observer-integration",
           "status": "passed"
         },
         {
-          "name": "native_workspace_diagnostics_2_of_2",
+          "name": "candidate-regression-execution",
+          "status": "unavailable"
+        },
+        {
+          "name": "candidate-runtime",
+          "status": "unavailable"
+        },
+        {
+          "name": "current-base-standalone-compile",
+          "status": "failed"
+        },
+        {
+          "name": "eee-full-supabase-library",
+          "status": "failed"
+        },
+        {
+          "name": "first-actions-context",
+          "status": "failed"
+        },
+        {
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "project_check_0_155_0",
+          "name": "host-project-prerequisites",
+          "status": "partial"
+        },
+        {
+          "name": "native-merge-generated-manifest-recovery",
           "status": "passed"
         },
         {
-          "name": "repaired_native_diagnostics_2_of_2",
-          "status": "passed"
+          "name": "release1858-actual-before",
+          "status": "failed"
+        },
+        {
+          "name": "wrapper-runtime",
+          "status": "unavailable"
         }
       ],
       "current_phase": "intent",
@@ -916,64 +982,90 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
             "event_id": "event:6",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 6
           },
           {
-            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
             "event_id": "event:7",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7PNTY4AR0ZXQ0RQS74779N8": {
+          "branch_01M7VYYH74AZEP39ERERBKPVWM": {
             "evidence_only": true,
-            "id": "branch_01M7PNTY4AR0ZXQ0RQS74779N8",
-            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "id": "branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "steps": [
               {
                 "action": "trajectory.record",
+                "command": "Actual release1858 standalone validation191pass1fail17skip rejected FINGERPRINT_ONLY_SPECS; log SHA256924dbf78734b5049b06c61452802fa2834472e198b53d2ae70749c86efe59966. Implement reviewed source-policy reuse and negative/positive controls; no candidate runtime success claimed. Native approval initially hit database Busy and supported same-intent retry reached APPROVED. User explicitly directs publish PRs, ignore all Buildkite, verify GitHub Actions, merge and release cuts. Preserve configured policy and all failures; source-CI is not retroactive authenticated native admission.",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/workspace_publication.rs"
+                  "src/decapod/core/entrypoint_integrity.rs",
+                  "src/decapod/core/entrypoint_integrity/history.rs",
+                  "src/decapod/core/release_projection_drift.rs",
+                  "assets/tools/release_projection_drift_tests.rs",
+                  "/private/tmp/attack-gaps-release1858-validate-failure.log"
                 ],
                 "proof_refs": [
-                  "live_handoff_delta_96d5ac16",
-                  "native_workspace_diagnostics_2_of_2"
+                  "release1858-actual-before",
+                  "formatting",
+                  "candidate-regression-execution"
                 ],
                 "scope": [
                   "root"
@@ -983,14 +1075,15 @@
               },
               {
                 "action": "trajectory.record",
+                "command": "Accepted target moved to34b98ab1; integrate release1532 and native projections through official1532. All105 source inputs measured; only reviewed regression fixture changes versus accepted base. Initial Actions context rejected before tests. A spec-review write returned STORAGE_OWNER_TRANSPORT_OUTCOME_UNKNOWN; native status confirmed the older review persisted and no new review was recorded, so retry is current-content-bound and idempotent. User excludes all Buildkite; Actions result remains pending.",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/core/workspace_diagnostic.rs",
-                  "src/decapod/core/docs_cli.rs"
+                  "/private/tmp/attack-gaps-1862-first-context-failure.log",
+                  "/private/tmp/attack-gaps-release-current-inventory-review.json"
                 ],
                 "proof_refs": [
-                  "initial_draft_ci",
-                  "repaired_native_diagnostics_2_of_2"
+                  "first-actions-context",
+                  "candidate-runtime"
                 ],
                 "scope": [
                   "root"
@@ -1000,14 +1093,16 @@
               },
               {
                 "action": "trajectory.record",
+                "command": "Actions job136170941138 caught E0603: standalone wrapper could not access crate-private existing reader; log SHA256c2cd3c095d2f64e05d86e58b9412088ea993666be3a9e89876694bbe8a558120. Export read-only helper hidden, keep existing shared wrapper regression suite intact, and move new source-lineage controls to existing library-only source fixture harness. All105 inputs remeasured, only reviewed assets test fixture differs from accepted base. No runtime pass claimed or required graph changed.",
                 "custody_event_id": "event:6",
                 "observations": [
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/workspace.rs",
-                  "docs/agent/command-contracts.md",
-                  "Merged origin/master 495808c0f (v0.154.0); ran candidate docs build, cargo fmt, clippy --all-targets --all-features -D warnings, workspace_diagnostic, cli_contracts diagnose, and doc_alignment tests"
+                  "/private/tmp/attack-gaps-1862-73b-validate-failure.log",
+                  "/private/tmp/attack-gaps-release-wrapper-inventory-review.json"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "current-base-standalone-compile",
+                  "wrapper-runtime"
+                ],
                 "scope": [
                   "root"
                 ],
@@ -1017,44 +1112,98 @@
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/.manifest.json",
-                  ".decapod/managed/specs/.manifest.json"
-                ],
+                "observations": [],
                 "proof_refs": [
-                  "project_check_0_155_0"
+                  "7ec-standalone-docker-drift",
+                  "host-project-prerequisites"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "assets/tools/release_projection_drift_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
+                ],
+                "proof_refs": [
+                  "eee-full-supabase-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1863"
+                ],
+                "proof_refs": [
+                  "accepted-observer-integration",
+                  "native-merge-generated-manifest-recovery"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 9,
+                "validation_findings": [
+                  "Supported native init recovery rebuilt the conflicted generated manifest; all8 authored specs and exact proof configuration were independently checked unchanged; native-created entrypoint backups preserved privately."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Merged origin/master fff1f478d (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, entrypoint_integrity, and release_projection_drift unit tests"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "Accepted target moved to34b98ab1; integrate release1532 and native projections through official1532. All105 source inputs measured; only reviewed regression fixture changes versus accepted base. Initial Actions context rejected before tests. A spec-review write returned STORAGE_OWNER_TRANSPORT_OUTCOME_UNKNOWN; native status confirmed the older review persisted and no new review was recorded, so retry is current-content-bound and idempotent. User excludes all Buildkite; Actions result remains pending.",
+        "Actions job136170941138 caught E0603: standalone wrapper could not access crate-private existing reader; log SHA256c2cd3c095d2f64e05d86e58b9412088ea993666be3a9e89876694bbe8a558120. Export read-only helper hidden, keep existing shared wrapper regression suite intact, and move new source-lineage controls to existing library-only source fixture harness. All105 inputs remeasured, only reviewed assets test fixture differs from accepted base. No runtime pass claimed or required graph changed.",
+        "Actual release1858 standalone validation191pass1fail17skip rejected FINGERPRINT_ONLY_SPECS; log SHA256924dbf78734b5049b06c61452802fa2834472e198b53d2ae70749c86efe59966. Implement reviewed source-policy reuse and negative/positive controls; no candidate runtime success claimed. Native approval initially hit database Busy and supported same-intent retry reached APPROVED. User explicitly directs publish PRs, ignore all Buildkite, verify GitHub Actions, merge and release cuts. Preserve configured policy and all failures; source-CI is not retroactive authenticated native admission."
+      ],
       "destination": "pull request",
       "evidence": [
-        ".decapod/managed/specs/.manifest.json",
-        "Merged origin/master 495808c0f (v0.154.0); ran candidate docs build, cargo fmt, clippy --all-targets --all-features -D warnings, workspace_diagnostic, cli_contracts diagnose, and doc_alignment tests"
+        "/private/tmp/attack-gaps-1862-73b-validate-failure.log",
+        "/private/tmp/attack-gaps-1862-first-context-failure.log",
+        "/private/tmp/attack-gaps-release-current-inventory-review.json",
+        "/private/tmp/attack-gaps-release-wrapper-inventory-review.json",
+        "/private/tmp/attack-gaps-release1858-validate-failure.log",
+        "Merged origin/master fff1f478d (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, entrypoint_integrity, and release_projection_drift unit tests",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538",
+        "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/workspace_publication.rs"
+        "src/decapod/core/entrypoint_integrity.rs",
+        "src/decapod/core/entrypoint_integrity/history.rs"
       ],
-      "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+      "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
       "modified_files": [
         ".decapod/managed/Dockerfile.decapod",
         ".decapod/managed/specs/.manifest.json",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "docs/agent/command-contracts.md",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_diagnostic.rs"
+        "assets/tools/release_projection_drift_tests.rs",
+        "src/decapod/core/release_projection_drift.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1062,12 +1211,15 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+      "run_id": "branch_01M7VYYH74AZEP39ERERBKPVWM",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7srddt2dc4pyp",
+      "task_id": "bugs_01m7vywgahvgjx7c",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks.",
+        "Supported native init recovery rebuilt the conflicted generated manifest; all8 authored specs and exact proof configuration were independently checked unchanged; native-created entrypoint backups preserved privately."
+      ]
     }
   },
   "legacy_digests": {
