@@ -73,6 +73,39 @@ not a guarantee that an arbitrary free-text secret can be detected automatically
 
 ## Verification and actual-run status
 
+### Retained capture coverage
+
+A correlated admission is historical evidence. A complete autonomous-run result
+also requires a retained capture boundary. The optional `coverage` input records
+the run identity, observing host's witness custody, measured start/end in elapsed
+milliseconds, observed channels, dropped-event count, retained-event count,
+SHA-256 digests of the serialized event and artifact indexes, and the sequence
+of the actual terminal process observation.
+Index digests use compact UTF-8 JSON with sorted object keys and no whitespace.
+
+The event index must retain contiguous sequence numbers. The observed channels
+must include host, kernel, Git, and GitHub. The host must retain an actual
+`agent_end` event followed by a `process_exit` observation with
+`agent_ended=true` and `exit_code=0`. Independent Git/forge readback can follow
+that terminal observation. Further model/tool activity cannot. The coverage
+window must contain every retained event, and the reported dropped-event count
+must be zero.
+
+`capture_coverage.state` is `complete`, `incomplete`, or `unknown`.
+Missing coverage in an older capture yields `unknown`. A missing tail, changed
+index, incomplete channels, shared/unknown witness custody, or inconsistent
+terminal observation yields `incomplete`. Both retain `admission_observed`
+and the recorded history while clearing `observed_autonomous_admission` and
+`current_admission_applicable`. The export always grants no publication or
+merge authority.
+
+The capturing operator retains the closing counts and index digests before
+replaying or distributing a capture. Recomputing a checkpoint from an already
+truncated bundle cannot establish its original completeness. Operator-controlled
+custody remains a trusted-host assertion. An unrestricted OS user with access
+to that host can forge it. Complete declared-channel coverage does not establish
+visibility into unrelated host activity.
+
 Offline adversarial controls live in
 `tests/unit/core/acceptance_observer_tests.rs`, included by the core library and
 therefore the existing mandatory full-library CI owner. They use deterministic

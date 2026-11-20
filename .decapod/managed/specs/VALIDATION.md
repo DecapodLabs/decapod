@@ -1458,6 +1458,14 @@ required-profile review declaration is reconciled to that complete inventory;
 the finite workflow graph, adapters, provider selection and proof requirements
 remain unchanged. This review pin is configuration, not execution evidence.
 
+## Acceptance observer capture boundaries
+
+Official Decapod 0.153.1 reproduced a 175-event real capture and its truncated 173-event prefix both reporting observed_autonomous_admission=true with no findings. The added mandatory offline controls cover missing genuine closing events, legacy unknown coverage, dropped events, missing channels, index substitution, inconsistent windows, shared custody, missing agent end and failed/incomplete exit. Existing source/base drift coverage still preserves historical admission. GitHub Actions owns source verification for this delivery as requested by the maintainer. The published launch media is tabled.
+
+## Matching release projections
+
+The initial hosted standalone validation compiled the observer but rejected tracked generated drift from evaluating source version 0.153.2 with the previous 0.153.1 projection binary. The candidate now refreshes supported projections with the matching registry-installed 0.153.2 binary. The change preserves required checks and source policy.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 The read-only reconciliation report must detect missing/orphaned/duplicate
 requirement references, missing proof-spec mappings, stale code fingerprints,
@@ -1526,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46`
+- Repository signal fingerprint: `a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

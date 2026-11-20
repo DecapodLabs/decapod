@@ -792,6 +792,14 @@
       "proof_refs": [
         "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
       ]
+    },
+    {
+      "id": "encoding-accepted-observer-7225",
+      "summary": "Integrate accepted observer722515f4 with native journal reconciliation and generated manifest recovery; preserve encoding versus run-coverage distinction",
+      "input_digest": "sha256:cfc0ffd55b783506683a3ad49628b8b5b1d4beef899e2dd67d669638a8f15872",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1863"
+      ]
     }
   ],
   "intents": {
@@ -835,23 +843,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current exact22-vector encoding correction; trim only accidental trailing blank lines in new fixture/schema/specification. Required recipes unchanged.",
-          "reviewed_code_fingerprint": "41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46",
-          "spec_material_hash": "30deaaab6d59d74106d055938be3b5aa5f3c890431c48b42fb594cfbbc58035e"
+          "reason": "Current accepted observer scopes remain independent from the22-vector raw encoding profile; native-generated merge recovery preserves authored product prose.",
+          "reviewed_code_fingerprint": "a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc",
+          "spec_material_hash": "d346f7af9787ea82b8769be80058a85110ad7959a258ed86e41696708542e723"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Versioned raw encoding profile only; imported authority and complete external profile remain unproven.",
-          "reviewed_code_fingerprint": "41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46",
-          "spec_material_hash": "b027da8e764cbca6330eeb92c1052238d636668801f9d84405a41c136b3afade"
+          "reason": "Encoding reasons grant no canonical proof or missing tool/run coverage; generated native headers and manifest reconcile accepted target.",
+          "reviewed_code_fingerprint": "a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc",
+          "spec_material_hash": "77547096f7b5179da5f9b2cfaa6a78b67afed0f6db0a36d83f684ae57dfe27d3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Negative parser reasons and lawful positive twins remain unchanged; native refusal not weakened.",
-          "reviewed_code_fingerprint": "41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46",
-          "spec_material_hash": "bd1088bdb66ac10f3416b8e4c76c707589c714039558fcb66132b90530de988a"
+          "reason": "Native parser remains strict; positive twins avoid denial of valid reads; incomplete observer coverage remains unknown.",
+          "reviewed_code_fingerprint": "a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc",
+          "spec_material_hash": "e1bc7ebbad47d45428c9d426c0c274bcee7e944d49515753c423beae513294f2"
         }
       ],
       "state": "APPROVED",
@@ -862,14 +870,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795165906Z"
+      "updated_at": "1795168865Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:387608b99f4d456ffa05980e94e0eb2f8e915ae628847f77896b94e346fe0ffc",
+      "artifact_hash": "sha256:4adcbecf31dd0952c3ac4821a8ddde438540542a15df26aba958ee89c028c4a1",
       "checks": [
+        {
+          "name": "accepted-observer-integration",
+          "status": "passed"
+        },
+        {
+          "name": "native-generated-manifest-recovery",
+          "status": "passed"
+        },
         {
           "name": "released-nesting-boundary",
           "status": "passed"
@@ -900,10 +916,17 @@
             "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
@@ -941,6 +964,27 @@
                 "validation_findings": [
                   "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/pull/1863"
+                ],
+                "proof_refs": [
+                  "accepted-observer-integration",
+                  "native-generated-manifest-recovery"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": [
+                  "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage."
+                ]
               }
             ]
           }
@@ -950,7 +994,8 @@
       "destination": "pull request",
       "evidence": [
         "/private/tmp/attack-gaps-interop-depth-before.json",
-        "/private/tmp/attack-gaps-interop-surrogate-before.json"
+        "/private/tmp/attack-gaps-interop-surrogate-before.json",
+        "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
@@ -981,6 +1026,7 @@
       "task_id": "test_01m7w2bfayzzk8vm",
       "tool_calls": [],
       "unresolved_assumptions": [
+        "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
         "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
       ]
     }

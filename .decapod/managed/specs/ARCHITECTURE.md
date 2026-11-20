@@ -1133,6 +1133,10 @@ or masking permission/protocol failures. Empty runtime directories are reusable.
 
 ## Intent Traceability Read Model
 
+## Acceptance observer capture boundaries
+
+The read-only acceptance observer in src/decapod/core/flight_recorder/acceptance.rs correlates historical admissions and separately assesses retained capture completeness. Optional coverage binds the declared channels, operator custody, elapsed window, counts, indexes, actual agent end and process exit. Missing or incomplete coverage keeps historical observations while preventing a completed autonomous-run claim.
+
 <!-- decapod:requirement REQ-INTENT-TRACEABILITY -->
 `core/intent_reconcile.rs` derives a read-only reconciliation view from
 `plan_governance`, `core/project_specs`, the spec manifest, and current
@@ -1178,7 +1182,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `41741e17c8ef1d755fd5562e5102030cc92ace79e337517a0a64639a66e73d46`
+- Repository signal fingerprint: `a68c663fd675fa14a9b1d972d3bb3ab6f76cb318cb13165f97dc842a48d49fcc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1745,3 +1749,5 @@ inside a candidate-controlled validation definition.
 ## Independent raw-input decoding boundary
 
 `tests/fixtures/interop_strict_json.py` remains an independent, same-host Python decoder with no Decapod import or storage access. It now checks Unicode scalar strings/keys, finite integer overflow and the native 127-container depth limit after unique-key parsing. `tests/fixtures/interop_json_vectors.v1.json` preserves raw parameter strings; the existing unfiltered `tests/interop_conformance.rs` target compares actual native rejection reasons and legitimate projection execution. The existing Bazel target declares both compile-time data inputs explicitly. No production parser, policy engine, proof producer, workflow or required test recipe is replaced.
+
+The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
