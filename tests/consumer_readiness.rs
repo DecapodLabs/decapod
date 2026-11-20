@@ -1314,6 +1314,375 @@ fn two_isolated_worktrees_require_combined_candidate_validation_and_target_fresh
     assert!(refreshed_report.ready, "{refreshed_report:?}");
 }
 
+fn setup_multi_target_fixture(
+    unrelated_missing_executable: bool,
+) -> (Fixture, &'static str, &'static str) {
+    use decapod::core::native_proof::NativePlatform;
+    use decapod::core::proof::ProofDef;
+    use decapod::core::repository_profile::{DeploymentTargetContract, RepositoryExecution};
+    use std::collections::BTreeMap;
+
+    let mut fixture = Fixture::new();
+    let current_platform =
+        repository_profile::platform_key(NativePlatform::current().unwrap()).unwrap();
+    let other_platform = if current_platform.starts_with("linux") {
+        "macos-aarch64"
+    } else {
+        "linux-x86_64"
+    };
+    let real_exec = fixture
+        .proof
+        .repository_contract
+        .as_ref()
+        .unwrap()
+        .executions["inspect-source"]
+        .clone();
+    let unrelated_exec = if unrelated_missing_executable {
+        RepositoryExecution {
+            program: "/nonexistent/foreign-host-only-tool".into(),
+            toolchain_files: BTreeMap::from([(
+                "foreign-runtime".into(),
+                "/nonexistent/foreign-runtime".into(),
+            )]),
+            platforms: BTreeMap::new(),
+            environment: BTreeMap::new(),
+            directory: ".".into(),
+            timeout_seconds: 10,
+        }
+    } else {
+        real_exec.clone()
+    };
+    let unrelated_cmd = if unrelated_missing_executable {
+        "/nonexistent/foreign-host-only-tool".to_string()
+    } else {
+        real_exec.program.clone()
+    };
+
+    fixture.proof.commands = vec![
+        ProofDef {
+            name: "check-active".into(),
+            command: real_exec.program.clone(),
+            args: ["-I", "-S", "-B", "-c", "print('active-target-ok')"]
+                .map(str::to_owned)
+                .into(),
+            description: "Active target check".into(),
+            required: true,
+        },
+        ProofDef {
+            name: "check-shared".into(),
+            command: real_exec.program.clone(),
+            args: ["-I", "-S", "-B", "-c", "print('shared-target-ok')"]
+                .map(str::to_owned)
+                .into(),
+            description: "Shared dependency check".into(),
+            required: true,
+        },
+        ProofDef {
+            name: "check-unrelated".into(),
+            command: unrelated_cmd,
+            args: ["-I", "-S", "-B", "-c", "print('unrelated-target-ok')"]
+                .map(str::to_owned)
+                .into(),
+            description: "Unrelated platform target check".into(),
+            required: true,
+        },
+    ];
+    let contract = fixture.proof.repository_contract.as_mut().unwrap();
+    contract.executions = BTreeMap::from([
+        ("check-active".into(), real_exec.clone()),
+        ("check-shared".into(), real_exec),
+        ("check-unrelated".into(), unrelated_exec),
+    ]);
+    contract.source_coverage[0].commands = vec![
+        "check-active".into(),
+        "check-shared".into(),
+        "check-unrelated".into(),
+    ];
+    contract.targets = BTreeMap::from([
+        (
+            "shared".into(),
+            DeploymentTargetContract {
+                commands: vec!["check-shared".into()],
+                depends_on: vec![],
+                shared_inputs: vec!["shared/".into()],
+                platforms: vec![],
+            },
+        ),
+        (
+            "active-host".into(),
+            DeploymentTargetContract {
+                commands: vec!["check-active".into()],
+                depends_on: vec!["shared".into()],
+                shared_inputs: vec!["deploy/active/".into()],
+                platforms: vec![current_platform.into()],
+            },
+        ),
+        (
+            "unrelated-host".into(),
+            DeploymentTargetContract {
+                commands: vec!["check-unrelated".into()],
+                depends_on: vec!["shared".into()],
+                shared_inputs: vec!["deploy/unrelated/".into(), "common/shared.txt".into()],
+                platforms: vec![other_platform.into()],
+            },
+        ),
+    ]);
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("configure multi-target deployment contract");
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+    (fixture, current_platform, other_platform)
+}
+
+#[test]
+fn selected_target_succeeds_without_unrelated_host_executable_while_full_repo_blocks() {
+    let (mut fixture, _, _) = setup_multi_target_fixture(true);
+    fs::create_dir_all(fixture.options.root.join("deploy/active")).unwrap();
+    fs::write(fixture.options.root.join("deploy/active/app.txt"), "v1\n").unwrap();
+    fixture.commit("modify active target only");
+
+    // Full-repository validation (target = None) fails because `check-unrelated`'s
+    // foreign-host executable is absent on this machine.
+    let mut full_host = fixture.host();
+    let full_report = fixture.validate(&mut full_host);
+    blocked(&full_report, "MISSING_REQUIRED_PROOF_ADAPTER");
+    assert_eq!(full_host.execution_attempts, 0);
+
+    // Target-scoped validation for `active-host` succeeds without needing
+    // `unrelated-host`'s absent executable, running only `active-host` + `shared`.
+    fixture.options.target = Some("active-host".into());
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert!(report.proof_ready);
+    assert!(!report.publication_ready());
+    assert_eq!(report.scope, repository_profile::TARGET_READINESS_SCOPE);
+    assert_eq!(report.target.as_deref(), Some("active-host"));
+    assert_eq!(report.resolved_targets, vec!["active-host", "shared"]);
+    assert_eq!(host.execution_attempts, 1);
+
+    let directory = report.evidence_path.unwrap();
+    let evidence: SuiteEvidence =
+        serde_json::from_slice(&fs::read(directory.join("observations.json")).unwrap()).unwrap();
+    let executed_jobs: std::collections::BTreeSet<_> = evidence
+        .results
+        .iter()
+        .map(|r| r.key.job.as_str())
+        .collect();
+    assert_eq!(
+        executed_jobs,
+        std::collections::BTreeSet::from(["check-active", "check-shared"])
+    );
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(directory.join("completion/native-readiness-receipt.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(receipt["scope"], repository_profile::TARGET_READINESS_SCOPE);
+    assert_eq!(receipt["target"], "active-host");
+    assert_eq!(
+        receipt["resolved_targets"],
+        serde_json::json!(["active-host", "shared"])
+    );
+}
+
+#[test]
+fn shared_input_change_expands_affected_target_checks() {
+    let (mut fixture, current_platform, _) = setup_multi_target_fixture(false);
+    // Allow `unrelated-host` to run on the current platform so we can observe
+    // its check executing when its `shared_inputs` path changes.
+    fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .targets
+        .get_mut("unrelated-host")
+        .unwrap()
+        .platforms = vec![current_platform.into()];
+    fixture.review_commands();
+    fixture.save_config();
+    fixture.commit("enable sibling target on current executor");
+    git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
+    git(&fixture.options.root, &["fetch", "origin", "main"]);
+
+    fs::create_dir_all(fixture.options.root.join("common")).unwrap();
+    fs::write(fixture.options.root.join("common/shared.txt"), "changed\n").unwrap();
+    fixture.commit("modify shared input impacting sibling target");
+
+    fixture.options.target = Some("active-host".into());
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert_eq!(
+        report.resolved_targets,
+        vec!["active-host", "shared", "unrelated-host"]
+    );
+    let evidence: SuiteEvidence = serde_json::from_slice(
+        &fs::read(report.evidence_path.unwrap().join("observations.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(evidence.results.len(), 3);
+}
+
+#[test]
+fn unknown_target_cycle_and_incompatible_executor_fail_closed() {
+    // 1. Unknown target fails closed before selection/execution.
+    let (mut fixture, _, _) = setup_multi_target_fixture(false);
+    fixture.options.target = Some("nonexistent-target".into());
+    let mut host = fixture.host();
+    blocked(&fixture.validate(&mut host), "UNKNOWN_DEPLOYMENT_TARGET");
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+
+    // 2. Incompatible platform executor for the selected target fails closed.
+    fixture.options.target = Some("unrelated-host".into());
+    let mut host = fixture.host();
+    blocked(&fixture.validate(&mut host), "INCOMPATIBLE_TARGET_EXECUTOR");
+    assert_eq!(host.execution_attempts, 0);
+
+    // 3. Shared input expanding into an incompatible target fails closed.
+    fs::create_dir_all(fixture.options.root.join("common")).unwrap();
+    fs::write(fixture.options.root.join("common/shared.txt"), "changed\n").unwrap();
+    fixture.commit("touch shared input owned by incompatible host target");
+    fixture.options.target = Some("active-host".into());
+    let mut host = fixture.host();
+    blocked(&fixture.validate(&mut host), "INCOMPATIBLE_TARGET_EXECUTOR");
+    assert_eq!(host.execution_attempts, 0);
+
+    // 4. Cyclic target dependency fails closed.
+    let (mut cycle_fixture, _, _) = setup_multi_target_fixture(false);
+    cycle_fixture
+        .proof
+        .repository_contract
+        .as_mut()
+        .unwrap()
+        .targets
+        .get_mut("shared")
+        .unwrap()
+        .depends_on
+        .push("active-host".into());
+    cycle_fixture.review_commands();
+    cycle_fixture.save_config();
+    cycle_fixture.commit("introduce cyclic target dependency");
+    cycle_fixture.options.target = Some("active-host".into());
+    let mut host = cycle_fixture.host();
+    blocked(
+        &cycle_fixture.validate(&mut host),
+        "DEPLOYMENT_TARGET_CYCLE",
+    );
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
+}
+
+#[test]
+fn target_scoped_receipt_is_rejected_for_full_repo_mismatched_target_and_stale_sha() {
+    let (mut fixture, _, _) = setup_multi_target_fixture(true);
+    fixture.options.target = Some("active-host".into());
+    let head = git(&fixture.options.root, &["rev-parse", "HEAD"]);
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready, "{report:?}");
+    assert!(!report.publication_ready());
+    let directory = report.evidence_path.unwrap();
+    let receipt: serde_json::Value = serde_json::from_slice(
+        &fs::read(directory.join("completion/native-readiness-receipt.json")).unwrap(),
+    )
+    .unwrap();
+
+    // Valid for the exact candidate SHA and selected target.
+    runtime::verify_native_receipt_scope(&receipt, &head, Some("active-host")).unwrap();
+
+    // Rejected for full-repository PR readiness.
+    let err = runtime::verify_native_receipt_scope(&receipt, &head, None).unwrap_err();
+    assert!(
+        err.to_string().contains("TARGET_RECEIPT_FOR_FULL_REPO"),
+        "{err}"
+    );
+
+    // Rejected for an unrelated target.
+    let err =
+        runtime::verify_native_receipt_scope(&receipt, &head, Some("unrelated-host")).unwrap_err();
+    assert!(err.to_string().contains("TARGET_RECEIPT_MISMATCH"), "{err}");
+
+    // Rejected for a different candidate SHA.
+    let err = runtime::verify_native_receipt_scope(&receipt, &"0".repeat(40), Some("active-host"))
+        .unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("NATIVE_RECEIPT_CANDIDATE_MISMATCH"),
+        "{err}"
+    );
+}
+
+#[test]
+fn candidate_cannot_weaken_or_remove_accepted_deployment_targets() {
+    for defect in [
+        "remove-target",
+        "remove-command",
+        "remove-depends-on",
+        "narrow-shared-inputs",
+        "change-platforms",
+    ] {
+        let (mut fixture, current_platform, _) = setup_multi_target_fixture(false);
+        let contract = fixture.proof.repository_contract.as_mut().unwrap();
+        match defect {
+            "remove-target" => {
+                contract.targets.remove("unrelated-host");
+            }
+            "remove-command" => {
+                contract
+                    .targets
+                    .get_mut("active-host")
+                    .unwrap()
+                    .commands
+                    .clear();
+                contract
+                    .targets
+                    .get_mut("active-host")
+                    .unwrap()
+                    .commands
+                    .push("check-shared".into());
+            }
+            "remove-depends-on" => {
+                contract
+                    .targets
+                    .get_mut("active-host")
+                    .unwrap()
+                    .depends_on
+                    .clear();
+            }
+            "narrow-shared-inputs" => {
+                contract
+                    .targets
+                    .get_mut("unrelated-host")
+                    .unwrap()
+                    .shared_inputs
+                    .retain(|p| p != "common/shared.txt");
+            }
+            "change-platforms" => {
+                contract
+                    .targets
+                    .get_mut("unrelated-host")
+                    .unwrap()
+                    .platforms = vec![current_platform.into()];
+            }
+            _ => unreachable!(),
+        }
+        fixture.review_commands();
+        fixture.save_config();
+        fixture.commit("weaken accepted deployment target contract");
+        fixture.options.target = Some("active-host".into());
+        let mut host = fixture.host();
+        blocked(
+            &fixture.validate(&mut host),
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED",
+        );
+        assert_eq!(host.selections, 0, "{defect}");
+        assert_eq!(host.execution_attempts, 0, "{defect}");
+    }
+}
+
 fn save_full_config(fixture: &Fixture) {
     let config = toml::Value::try_from(serde_json::json!({
         "schema_version": "1.0.0",

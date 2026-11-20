@@ -1539,7 +1539,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d6b99ec84a98fb3c7966af2ed110d991b56738235b9ea274f8edb36d4b7ebc58`
+- Repository signal fingerprint: `34b39fe29bf53c47f680c8f07d85b83ef0e022e8ae2a656a6de788df228c0f5d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2227,3 +2227,9 @@ cannot self-authorize changed inventoried check scripts, build/dependency
 definitions, or provider inputs. Retain the accepted inventory or obtain a
 `policy.control` transition approval bound to the exact base, head, and source/command
 digests before revalidation; no override or second policy store is added.
+
+## Target-scoped repository proof (#1740)
+
+- `ValidateCli` (`src/decapod/cli.rs`) accepts `--target <TARGET>` and `ValidateRunParams` (`src/decapod/core/rpc.rs`) accepts optional `target: Option<String>` for `repo.pr-readiness.v1` (`validation_buildkite_preflights = false`). `--target` is rejected for `govern project-check`, `--bypass-validation`, Buildkite snapshot handoff flags, and `decapod.pr-readiness.v1` (`TARGET_SCOPE_UNSUPPORTED` / `READINESS_INVOCATION_INVALID` / `PROJECT_CHECK_SCOPE`).
+- `RepositoryContract.targets` (`BTreeMap<String, DeploymentTargetContract>` in `src/decapod/core/repository_profile.rs`) declares reviewed `commands`, `depends_on`, `shared_inputs`, and optional `platforms` (`CANONICAL_PLATFORM_KEYS`). Empty `targets` preserves pre-#1740 `command_contract_digest` values byte-for-byte; non-empty `targets` is included in `command_contract_digest`.
+- `ValidationReport` (`src/decapod/core/validation_runtime.rs`) exposes `target: Option<String>` and `resolved_targets: Vec<String>`, emits `scope = "repository_target_readiness"` (or `"repository_local_git_target_readiness"`), and forces `publication_ready() == false` whenever target-scoped. `completion/native-readiness-receipt.json` binds `"scope"`, `"target"`, `"resolved_targets"`, and `material.head_revision` inside `"receipt_hash"`.

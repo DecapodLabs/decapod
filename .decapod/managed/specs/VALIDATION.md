@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d6b99ec84a98fb3c7966af2ed110d991b56738235b9ea274f8edb36d4b7ebc58`
+- Repository signal fingerprint: `34b39fe29bf53c47f680c8f07d85b83ef0e022e8ae2a656a6de788df228c0f5d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2567,3 +2567,7 @@ approvals, and unconditional `REQUIRED_PROFILE_DOWNGRADE` enforcement. Local
 unit and integration tests exercise real Git targets, SQLite policy ledgers, and
 native execution; full repository readiness requires Buildkite validation on the
 committed candidate.
+
+## Target-scoped repository proof verification (#1740)
+
+Unit tests in `tests/unit/core/repository_profile_tests.rs` and `src/decapod/core/validation_history.rs` verify `command_contract_digest` compatibility, invalid/cyclic `DeploymentTargetContract` rejection, `resolve_target_closure` dependency and `shared_inputs` expansion, `preserve_accepted` scope-weakening rejection, and `CompletedReadinessEvidence` target-scope isolation. Integration tests in `tests/consumer_readiness.rs` verify selected-target execution without unrelated host executables, shared-input fanout, unknown/cyclic/incompatible-executor fail-closed guards, `verify_native_receipt_scope` rejections for full-repo/mismatched-target/stale-SHA receipts, and candidate target weakening refusal.
