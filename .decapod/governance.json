@@ -854,6 +854,15 @@
         "local:rustfmt-and-whitespace",
         "release-source:b533261ebbc860e8edf82eea57cac55b583699a2"
       ]
+    },
+    {
+      "id": "v156-projection-refresh",
+      "summary": "Refresh Docker and living-spec projections to the verified v0.156.0 release and preserve the earlier failed hosted validation",
+      "input_digest": "sha256:522b3f39348d48d6a7847ec5eae0e3e1b79b4a9b1b9b1f652ef9646d939c740f",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44830202264/job/136612907388",
+        "release-source:b533261ebbc860e8edf82eea57cac55b583699a2"
+      ]
     }
   ],
   "intents": {
