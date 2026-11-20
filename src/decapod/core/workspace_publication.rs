@@ -553,8 +553,8 @@ pub(super) fn ensure_and_verify_pr(
     base: &str,
     proof: &RemoteProof,
     readiness: &crate::core::validation_history::PublicationReadiness,
-    title: &str,
-    description: &str,
+    title: Option<&str>,
+    description: Option<&str>,
 ) -> Result<String, DecapodError> {
     let result = ensure_and_verify_pr_with(
         &mut |args| gh(repo, args),
@@ -568,13 +568,94 @@ pub(super) fn ensure_and_verify_pr(
             verify_committed_bundle(repo, &proof.head)?;
             verify_remote_unchanged(repo, target, branch, base, proof)
         },
-        title,
-        description,
+        || metadata_for_create(repo, proof, title, description),
     );
     result.map_err(|error| match readiness.record_publication_rejection(&error.to_string()) {
         Ok(path) => failure(format!("{error}\nRejection evidence: {}", path.display())),
         Err(record_error) => failure(format!("{error}\nPUBLICATION_REJECTION_RECORD_FAILED: {record_error}; admission remains rejected")),
     })
+}
+
+fn metadata_for_create(
+    repo: &Path,
+    proof: &RemoteProof,
+    title: Option<&str>,
+    description: Option<&str>,
+) -> Result<(String, String), DecapodError> {
+    if let (Some(title), Some(description)) = (title, description) {
+        return Ok((title.into(), description.into()));
+    }
+
+    let range = format!("{}..{}", proof.base, proof.head);
+    let output = Command::new("git")
+        .current_dir(repo)
+        .args([
+            "--no-replace-objects",
+            "log",
+            "--no-merges",
+            "--reverse",
+            "-z",
+            "--format=%s%x00%b",
+            &range,
+            "--",
+        ])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(|_| failure("PR_METADATA_UNAVAILABLE: could not read verified commit history; pass --title and --description"))?;
+    if !output.status.success() {
+        return Err(failure(
+            "PR_METADATA_UNAVAILABLE: could not read verified commit history; pass --title and --description",
+        ));
+    }
+    let history = String::from_utf8(output.stdout).map_err(|_| {
+        failure("PR_METADATA_UNAVAILABLE: commit messages are not UTF-8; pass --title and --description")
+    })?;
+    let fields: Vec<_> = history.split_terminator('\0').collect();
+    let commits = fields.chunks_exact(2);
+    if !commits.remainder().is_empty() {
+        return Err(failure(
+            "PR_METADATA_UNAVAILABLE: could not parse verified commit history; pass --title and --description",
+        ));
+    }
+    static CONVENTIONAL_SUBJECT: std::sync::LazyLock<Regex> = std::sync::LazyLock::new(|| {
+        Regex::new(
+            r"^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\([^)]+\))?!?: \S",
+        )
+        .expect("valid Conventional Commit subject pattern")
+    });
+    let mut conventional = commits
+        .clone()
+        .filter(|commit| CONVENTIONAL_SUBJECT.is_match(commit[0]).unwrap_or(false));
+    let primary = conventional
+        .next()
+        .filter(|_| conventional.next().is_none());
+    let title = title.or_else(|| primary.map(|commit| commit[0])).ok_or_else(|| {
+        failure(
+            "PR_TITLE_REQUIRED: expected one Conventional Commit subject in the branch-only non-merge history; pass --title \"<type>(<scope>): <summary>\"",
+        )
+    })?;
+    let description = match description {
+        Some(description) => description.to_owned(),
+        None => {
+            let body = primary.map(|commit| commit[1].trim()).unwrap_or_default();
+            if body.is_empty() {
+                let summary = commits
+                    .map(|commit| commit[0].trim())
+                    .filter(|subject| !subject.is_empty())
+                    .map(|subject| format!("- {subject}"))
+                    .collect::<Vec<_>>()
+                    .join("\n");
+                if summary.is_empty() {
+                    return Err(failure(
+                        "PR_DESCRIPTION_REQUIRED: no branch-only commit summary is available; pass --description",
+                    ));
+                }
+                summary
+            } else {
+                body.to_owned()
+            }
+        }
+    };
+    Ok((title.to_owned(), description))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -585,13 +666,13 @@ fn ensure_and_verify_pr_with(
     base: &str,
     proof: &RemoteProof,
     admission: &mut impl FnMut() -> Result<(), DecapodError>,
-    title: &str,
-    description: &str,
+    metadata: impl FnOnce() -> Result<(String, String), DecapodError>,
 ) -> Result<String, DecapodError> {
     admission()?;
     let number = match find_pr(call, slug, branch)? {
         Some(number) => number,
         None => {
+            let (title, description) = metadata()?;
             admission()?;
             // Retry a failed create only by readback: GitHub may have accepted
             // the request before the connection failed. Never create duplicates.
@@ -606,9 +687,9 @@ fn ensure_and_verify_pr_with(
                 "--base",
                 base,
                 "--title",
-                title,
+                &title,
                 "--body",
-                description,
+                &description,
             ]);
             match find_pr(call, slug, branch)? {
                 Some(number) => number,

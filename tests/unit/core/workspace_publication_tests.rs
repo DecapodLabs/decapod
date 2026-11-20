@@ -203,8 +203,7 @@ mod live_admission {
             "main",
             proof,
             &mut || check(fixture, &readiness, proof),
-            "repair",
-            "real source proof",
+            || Ok(("repair".into(), "real source proof".into())),
         )
     }
 
@@ -680,8 +679,7 @@ fn existing_pr_is_reused_and_full_remote_diff_checked() {
         "master",
         &p,
         &mut || Ok(()),
-        "title",
-        "body",
+        || panic!("reusing a PR must not derive creation metadata"),
     )
     .unwrap();
     assert_eq!(result, "https://github.com/owner/repo/pull/7");
@@ -692,7 +690,22 @@ fn existing_pr_is_reused_and_full_remote_diff_checked() {
 
 #[test]
 fn new_pr_created_as_draft_and_read_back_after_create() {
-    let p = proof();
+    let repo = repo();
+    let root = repo.path();
+    git(
+        root,
+        &[
+            "commit",
+            "--allow-empty",
+            "-m",
+            "fix(workspace): derive PR metadata",
+            "-m",
+            "Use the branch's authored commit.\n\nPreserve its second paragraph.",
+        ],
+    );
+    let mut p = proof();
+    p.head = git(root, &["rev-parse", "HEAD"]);
+    p.base = git(root, &["rev-parse", "master"]);
     let mut calls = Vec::new();
     let mut replies = vec![
         bytes(serde_json::json!([[]])),
@@ -713,14 +726,97 @@ fn new_pr_created_as_draft_and_read_back_after_create() {
         "master",
         &p,
         &mut || Ok(()),
-        "title",
-        "body",
+        || metadata_for_create(root, &p, None, None),
     )
     .unwrap();
     assert!(
         calls
             .iter()
-            .any(|call| call.starts_with("pr create --draft --repo owner/repo"))
+            .any(|call| call.starts_with("pr create --draft --repo owner/repo")
+                && call.ends_with("--title fix(workspace): derive PR metadata --body Use the branch's authored commit.\n\nPreserve its second paragraph."))
+    );
+}
+
+#[test]
+fn default_metadata_ignores_accepted_commits_and_reconciliation_merges() {
+    let repo = repo();
+    let root = repo.path();
+    git(
+        root,
+        &["commit", "--allow-empty", "-m", "fix!: repair proof"],
+    );
+    git(root, &["checkout", "master"]);
+    git(
+        root,
+        &["commit", "--allow-empty", "-m", "feat: accepted change"],
+    );
+    git(root, &["checkout", "feature"]);
+    git(
+        root,
+        &[
+            "merge",
+            "--no-ff",
+            "-m",
+            "chore: reconcile master",
+            "master",
+        ],
+    );
+    let mut p = proof();
+    p.head = git(root, &["rev-parse", "HEAD"]);
+    p.base = git(root, &["rev-parse", "master"]);
+    assert_eq!(
+        metadata_for_create(root, &p, None, None).unwrap(),
+        ("fix!: repair proof".into(), "- fix!: repair proof".into())
+    );
+    assert_eq!(
+        metadata_for_create(root, &p, Some("Manual title"), None).unwrap(),
+        ("Manual title".into(), "- fix!: repair proof".into())
+    );
+    assert_eq!(
+        metadata_for_create(root, &p, None, Some("Manual description")).unwrap(),
+        ("fix!: repair proof".into(), "Manual description".into())
+    );
+}
+
+#[test]
+fn missing_or_ambiguous_default_title_blocks_pr_creation() {
+    let repo = repo();
+    let root = repo.path();
+    git(
+        root,
+        &["commit", "--allow-empty", "-m", "Unstructured subject"],
+    );
+    let mut p = proof();
+    p.base = git(root, &["rev-parse", "master"]);
+    p.head = git(root, &["rev-parse", "HEAD"]);
+    assert!(
+        metadata_for_create(root, &p, None, None)
+            .unwrap_err()
+            .to_string()
+            .contains("PR_TITLE_REQUIRED")
+    );
+    for subject in ["fix: first change", "feat: second change"] {
+        git(root, &["commit", "--allow-empty", "-m", subject]);
+    }
+    p.head = git(root, &["rev-parse", "HEAD"]);
+    let error = ensure_and_verify_pr_with(
+        &mut |args| {
+            assert!(!args.starts_with(&["pr", "create"]));
+            Ok(bytes(serde_json::json!([[]])))
+        },
+        "owner/repo",
+        "feature",
+        "master",
+        &p,
+        &mut || Ok(()),
+        || metadata_for_create(root, &p, None, None),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("PR_TITLE_REQUIRED") && error.contains("--title"));
+    assert_eq!(
+        metadata_for_create(root, &p, Some("fix: explicit title"), Some("")).unwrap(),
+        ("fix: explicit title".into(), String::new())
     );
 }
 
@@ -742,8 +838,7 @@ fn pr_create_failure_is_actionable_partial_publication() {
         "master",
         &p,
         &mut || Ok(()),
-        "title",
-        "body",
+        || Ok(("title".into(), "body".into())),
     )
     .unwrap_err();
     let error = after_push(error).to_string();
@@ -771,8 +866,7 @@ fn lost_create_response_is_recovered_by_exact_pr_readback() {
         "master",
         &p,
         &mut || Ok(()),
-        "title",
-        "body",
+        || Ok(("title".into(), "body".into())),
     )
     .unwrap();
 }
@@ -821,8 +915,7 @@ fn missing_remote_artifact_and_truncated_pr_diff_fail() {
         "master",
         &p,
         &mut || Ok(()),
-        "title",
-        "body",
+        || Ok(("title".into(), "body".into())),
     )
     .unwrap_err();
     assert!(error.to_string().contains("PR_DIFF_MISMATCH"));
@@ -850,8 +943,7 @@ fn pr_race_after_diff_readback_fails() {
             "master",
             &p,
             &mut || Ok(()),
-            "title",
-            "body"
+            || Ok(("title".into(), "body".into()))
         )
         .is_err()
     );
