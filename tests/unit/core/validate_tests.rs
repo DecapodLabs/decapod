@@ -18,13 +18,53 @@ use std::sync::atomic::Ordering;
 use tempfile::tempdir;
 
 #[test]
+fn validation_reports_current_recorded_instruction_for_legacy_approval() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: root.join(".decapod/data"),
+    };
+    let mut plan = plan_governance::init_plan(
+        root,
+        plan_governance::InitPlanInput {
+            title: "Compatibility".into(),
+            intent: "Preserve API v1".into(),
+            todo_ids: vec!["missing-task".into()],
+            proof_hooks: vec![],
+            unknowns: vec![],
+            human_questions: vec![],
+            stop_conditions: vec![],
+            unresolved_contradictions: vec!["Later request removes API v1".into()],
+            deferred_questions: vec![],
+            constraints: ScopeConstraints::default(),
+            phases: vec![],
+        },
+    )
+    .unwrap();
+    plan.state = PlanState::Approved;
+    plan_governance::save_plan(root, &plan).unwrap();
+
+    let context = ValidationContext::new();
+    super::validate_plan_governed_execution_gate(&store, &context, root).unwrap();
+    let failures = context.fails.lock().unwrap();
+    let failure = failures
+        .iter()
+        .find(|failure| failure.contains("NEEDS_HUMAN_INPUT"))
+        .unwrap_or_else(|| panic!("missing recorded contradiction in {failures:?}"));
+    let payload: serde_json::Value =
+        serde_json::from_str(failure.split_once("payload=").unwrap().1).unwrap();
+    assert_eq!(
+        payload["instruction_readiness"],
+        serde_json::to_value(plan_governance::instruction_readiness(&plan)).unwrap()
+    );
+}
+
+#[test]
 fn branch_file_validation_dispatch_uses_working_root() {
     // Check the dispatcher as well as each gate's behavior below: a gate can
     // work correctly in isolation while its caller supplies the host store root.
-    let source = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/src/decapod/core/validate.rs"
-    ));
+    let source = include_str!("../../../src/decapod/core/validate.rs");
     let dispatch = source.split("pub fn run_validation(").nth(1).unwrap();
     for call in [
         "validate_docs_templates_bucket(ctx, working_root)",
@@ -1915,4 +1955,64 @@ fn evidence_collector_preserves_integrity_valid_compact_preparation_receipt() {
     stored["sections"]["validation"]["receipt_hash"] = serde_json::json!("sha256:forged");
     fs::write(path, serde_json::to_vec(&stored).unwrap()).unwrap();
     assert!(super::collect_evidence_artifacts(root).is_err());
+}
+
+#[test]
+fn risk_map_warning_recommends_supported_cli_command_and_clears_when_present() {
+    use crate::cli::{Cli, Command, GovernCli, GovernCommand};
+    use crate::plugins::policy::{PolicyCli, PolicyCommand, RiskmapSubcommand};
+    use clap::Parser;
+
+    let tmp = tempdir().unwrap();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: tmp.path().to_path_buf(),
+    };
+
+    let missing_ctx = ValidationContext::new();
+    super::validate_risk_map(&store, &missing_ctx).unwrap();
+    assert_eq!(missing_ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(missing_ctx.pass_count.load(Ordering::Relaxed), 0);
+    assert_eq!(missing_ctx.warn_count.load(Ordering::Relaxed), 1);
+
+    let warns = missing_ctx.warns.lock().unwrap();
+    assert_eq!(warns.len(), 1);
+    let warning = &warns[0];
+    assert!(
+        !warning.contains("decapod riskmap init"),
+        "unsupported command leaked into warning: {warning}"
+    );
+    assert!(
+        !warning.contains("decapod policy riskmap init"),
+        "unsupported command leaked into warning: {warning}"
+    );
+
+    let recommended = warning
+        .split('`')
+        .nth(1)
+        .expect("risk-map warning should contain a backticked command");
+    assert_eq!(recommended, "decapod govern policy riskmap init");
+
+    let args: Vec<&str> = recommended.split_whitespace().collect();
+    let parsed = Cli::try_parse_from(args).expect("recommended command must parse");
+    assert!(matches!(
+        parsed.command,
+        Command::Govern(GovernCli {
+            command: GovernCommand::Policy(PolicyCli {
+                command: PolicyCommand::Riskmap {
+                    command: RiskmapSubcommand::Init
+                }
+            })
+        })
+    ));
+    assert!(Cli::try_parse_from(["decapod", "riskmap", "init"]).is_err());
+    assert!(Cli::try_parse_from(["decapod", "policy", "riskmap", "init"]).is_err());
+
+    fs::write(store.root.join("RISKMAP.json"), "{\"zones\":[]}\n").unwrap();
+    let present_ctx = ValidationContext::new();
+    super::validate_risk_map(&store, &present_ctx).unwrap();
+    assert_eq!(present_ctx.fail_count.load(Ordering::Relaxed), 0);
+    assert_eq!(present_ctx.warn_count.load(Ordering::Relaxed), 0);
+    assert_eq!(present_ctx.pass_count.load(Ordering::Relaxed), 1);
+    assert!(present_ctx.warns.lock().unwrap().is_empty());
 }

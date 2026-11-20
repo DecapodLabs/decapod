@@ -15,8 +15,32 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path};
 
 pub const REQUIRED_PROFILE: &str = "repo.pr-readiness.v1";
+pub const POLICY_TRANSITION_SCOPE: &str = REQUIRED_PROFILE;
 pub const READINESS_SCOPE: &str = "repository_local_readiness";
 pub const LOCAL_GIT_READINESS_SCOPE: &str = "repository_local_git_readiness";
+pub const TARGET_READINESS_SCOPE: &str = "repository_target_readiness";
+pub const LOCAL_GIT_TARGET_READINESS_SCOPE: &str = "repository_local_git_target_readiness";
+
+pub const CANONICAL_PLATFORM_KEYS: [&str; 4] = [
+    "linux-aarch64",
+    "linux-x86_64",
+    "macos-aarch64",
+    "macos-x86_64",
+];
+
+pub fn platform_key(platform: super::native_proof::NativePlatform) -> Option<&'static str> {
+    match platform {
+        super::native_proof::NativePlatform::LinuxX86_64 => Some("linux-x86_64"),
+        super::native_proof::NativePlatform::LinuxAarch64 => Some("linux-aarch64"),
+        super::native_proof::NativePlatform::MacosX86_64 => Some("macos-x86_64"),
+        super::native_proof::NativePlatform::MacosAarch64 => Some("macos-aarch64"),
+        super::native_proof::NativePlatform::WindowsX86_64 => None,
+    }
+}
+
+pub fn is_valid_platform_key(key: &str) -> bool {
+    CANONICAL_PLATFORM_KEYS.contains(&key)
+}
 
 fn is_false(value: &bool) -> bool {
     !*value
@@ -46,19 +70,107 @@ pub struct SourceCoverage {
 fn root_directory() -> String {
     ".".into()
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PlatformExecution {
+    /// Installed canonical executable for this platform, never a candidate-produced executable.
+    pub program: String,
+    /// Reviewed transitive tool/runtime files for this platform. Completeness is
+    /// authored, while every declared byte and the direct executable are measured
+    /// by the runner.
+    pub toolchain_files: BTreeMap<String, String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct RepositoryExecution {
     /// Installed canonical executable, never a candidate-produced executable.
+    /// Required for single-platform declarations (`platforms` empty) and must
+    /// be omitted when `platforms` is non-empty.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
     pub program: String,
     /// Reviewed transitive tool/runtime files. Completeness is authored, while
     /// every declared byte and the direct executable are measured by the runner.
+    /// Required for single-platform declarations (`platforms` empty) and must
+    /// be omitted when `platforms` is non-empty.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub toolchain_files: BTreeMap<String, String>,
+    /// Reviewed per-platform `program` + `toolchain_files` declarations keyed
+    /// by canonical platform key (`linux-x86_64`, `linux-aarch64`,
+    /// `macos-x86_64`, `macos-aarch64`). Empty for single-platform declarations
+    /// so legacy `command_contract_digest` values remain byte-identical.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub platforms: BTreeMap<String, PlatformExecution>,
     #[serde(default)]
     pub environment: BTreeMap<String, String>,
     #[serde(default = "root_directory")]
     pub directory: String,
     pub timeout_seconds: u64,
+}
+
+impl RepositoryExecution {
+    /// Resolve the reviewed executable path and toolchain closure for `platform`.
+    /// Single-platform declarations (`platforms` empty) return their sole
+    /// executable; per-platform declarations select only the exact matching
+    /// canonical platform key and fail closed if missing or unsupported.
+    pub fn resolve_for_platform(
+        &self,
+        platform: super::native_proof::NativePlatform,
+    ) -> Result<(&str, &BTreeMap<String, String>), PlanningFailure> {
+        if self.platforms.is_empty() {
+            if self.program.is_empty() || self.toolchain_files.is_empty() {
+                return Err(invalid(
+                    "missing single-platform execution program or toolchain_files",
+                ));
+            }
+            return Ok((self.program.as_str(), &self.toolchain_files));
+        }
+        if !self.program.is_empty() || !self.toolchain_files.is_empty() {
+            return Err(invalid(
+                "mixed top-level program/toolchain_files and per-platform declarations are unsupported",
+            ));
+        }
+        let key = platform_key(platform).ok_or_else(|| {
+            invalid(
+                "UNSUPPORTED_PLATFORM: current host platform has no canonical per-platform execution key",
+            )
+        })?;
+        let selected = self.platforms.get(key).ok_or_else(|| {
+            invalid(format!(
+                "MISSING_PLATFORM_EXECUTION: no reviewed execution entry for host platform {key}"
+            ))
+        })?;
+        Ok((selected.program.as_str(), &selected.toolchain_files))
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct DeploymentTargetContract {
+    /// Required local proof command names executed for this deployment target slice.
+    #[serde(default)]
+    pub commands: Vec<String>,
+    /// Reviewed target names that this target depends on transitively.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub depends_on: Vec<String>,
+    /// Repository-relative path prefixes or globs whose modifications expand
+    /// target-scoped proof to include this target and its dependencies.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub shared_inputs: Vec<String>,
+    /// Optional canonical host platform keys compatible with this target's
+    /// proof execution. Empty allows any supported native executor.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub platforms: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ResolvedTargetScope {
+    pub target: String,
+    pub resolved_targets: Vec<String>,
+    pub commands: BTreeSet<String>,
+    pub shared_input_targets: BTreeSet<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -71,6 +183,11 @@ pub struct RepositoryContract {
     pub reviewed_commands_digest: String,
     pub source_coverage: Vec<SourceCoverage>,
     pub executions: BTreeMap<String, RepositoryExecution>,
+    /// Optional reviewed map of deployment targets/slices to their required
+    /// command names, dependencies, shared inputs, and compatible platforms.
+    /// Empty preserves pre-#1740 `command_contract_digest` values byte for byte.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub targets: BTreeMap<String, DeploymentTargetContract>,
 }
 
 /// Read-only review aid; never writes or approves the declaration. Includes the
@@ -85,11 +202,16 @@ pub fn command_contract_digest(
         &contract.source_coverage,
         &contract.executions,
     );
-    // Preserve all pre-local-target review digests byte for byte.
-    if contract.canonical_local_target {
-        super::readiness_evidence::digest(&(original, "canonical_local_git.v1"))
-    } else {
-        super::readiness_evidence::digest(&original)
+    // Preserve all pre-local-target and pre-deployment-target review digests byte for byte.
+    match (contract.canonical_local_target, contract.targets.is_empty()) {
+        (false, true) => super::readiness_evidence::digest(&original),
+        (true, true) => super::readiness_evidence::digest(&(original, "canonical_local_git.v1")),
+        (false, false) => super::readiness_evidence::digest(&(original, &contract.targets)),
+        (true, false) => super::readiness_evidence::digest(&(
+            original,
+            "canonical_local_git.v1",
+            &contract.targets,
+        )),
     }
     .map_err(|_| PlanningFailure::Serialization)
 }
@@ -157,7 +279,166 @@ pub(crate) fn preserve_accepted(
             return Err(changed());
         }
     }
+    for (target_name, accepted_target) in &accepted.targets {
+        let candidate_target = candidate.targets.get(target_name).ok_or_else(changed)?;
+        if !accepted_target
+            .commands
+            .iter()
+            .all(|name| candidate_target.commands.contains(name))
+            || !accepted_target
+                .depends_on
+                .iter()
+                .all(|dep| candidate_target.depends_on.contains(dep))
+            || !accepted_target
+                .shared_inputs
+                .iter()
+                .all(|pattern| candidate_target.shared_inputs.contains(pattern))
+            || candidate_target.platforms != accepted_target.platforms
+        {
+            return Err(changed());
+        }
+    }
     Ok(())
+}
+
+/// Canonical deterministic policy-transition approval identifier bound to the
+/// exact accepted base, candidate head, source-inventory digests, and
+/// command-contract digests under scope `"repo.pr-readiness.v1"`.
+pub fn repo_policy_transition_id(
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+    accepted_sources_digest: &str,
+    candidate_sources_digest: &str,
+    accepted_commands_digest: &str,
+    candidate_commands_digest: &str,
+) -> Result<String, PlanningFailure> {
+    let raw = super::readiness_evidence::digest(&(
+        "repo.pr-readiness.policy-transition.v1",
+        POLICY_TRANSITION_SCOPE,
+        accepted_base_sha,
+        candidate_head_sha,
+        accepted_sources_digest,
+        candidate_sources_digest,
+        accepted_commands_digest,
+        candidate_commands_digest,
+    ))
+    .map_err(|_| PlanningFailure::Serialization)?;
+    Ok(raw.strip_prefix("sha256:").unwrap_or(&raw).to_string())
+}
+
+pub(crate) fn has_active_policy_transition_approval(
+    checkout_root: &Path,
+    transition_id: &str,
+) -> Result<bool, PlanningFailure> {
+    let Ok(main_root) = super::workspace::get_main_repo_root(checkout_root) else {
+        return Ok(false);
+    };
+    let data_root = main_root.join(".decapod").join("data");
+    let db_path = crate::plugins::policy::policy_db_path(&data_root);
+    match std::fs::symlink_metadata(&db_path) {
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(false),
+        Err(_) => return Ok(false),
+        Ok(meta) if meta.file_type().is_symlink() || !meta.is_file() => {
+            return Err(invalid(
+                "POLICY_STORE_UNSAFE: canonical policy datastore must be a regular file",
+            ));
+        }
+        Ok(_) => {}
+    }
+    let Some(db_str) = db_path.to_str() else {
+        return Err(invalid(
+            "POLICY_STORE_UNSAFE: canonical policy datastore path is not valid UTF-8",
+        ));
+    };
+    let conn = super::db::db_connect_for_validate(db_str)
+        .map_err(|e| invalid(format!("POLICY_STORE_UNAVAILABLE: {e}")))?;
+    crate::plugins::policy::has_live_scoped_approval_on_conn(
+        &conn,
+        transition_id,
+        POLICY_TRANSITION_SCOPE,
+    )
+    .map_err(|e| invalid(format!("POLICY_APPROVAL_CHECK_FAILED: {e}")))
+}
+
+/// Enforce accepted `repo.pr-readiness.v1` preservation unless the repository's
+/// canonical main `.decapod/data` policy ledger holds an active, bounded,
+/// `policy.control`-authorized approval for this exact base, head, source, and
+/// command-contract transition.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn verify_accepted_transition(
+    checkout_root: &Path,
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+    accepted_profile: Option<&ProfileDeclaration>,
+    candidate_profile: Option<&ProfileDeclaration>,
+    accepted_commands: &[ProofDef],
+    candidate_commands: &[ProofDef],
+    accepted_contract: Option<&RepositoryContract>,
+    candidate_contract: Option<&RepositoryContract>,
+) -> Result<(), PlanningFailure> {
+    let Some(accepted_decl) = accepted_profile.filter(|p| p.id == REQUIRED_PROFILE) else {
+        return Ok(());
+    };
+    let Some(candidate_decl) = candidate_profile.filter(|p| p.id == REQUIRED_PROFILE) else {
+        return Err(invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: another profile cannot replace accepted repository-local checks",
+        ));
+    };
+    let accepted = accepted_contract.ok_or_else(|| {
+        invalid("ACCEPTED_REPOSITORY_CONTRACT_CHANGED: accepted repository contract is missing")
+    })?;
+    let candidate = candidate_contract.ok_or_else(|| {
+        invalid("ACCEPTED_REPOSITORY_CONTRACT_CHANGED: preserve the accepted local checks, execution declarations and coverage; candidate repository_contract is missing")
+    })?;
+    if accepted.canonical_local_target != candidate.canonical_local_target {
+        return Err(invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: canonical_local_target cannot change through a candidate policy transition",
+        ));
+    }
+    if accepted_commands.is_empty()
+        || command_contract_digest(accepted_commands, accepted)?
+            != accepted.reviewed_commands_digest
+    {
+        return Err(invalid(
+            "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: accepted repository contract digest is invalid",
+        ));
+    }
+    let sources_unchanged =
+        candidate_decl.reviewed_sources_digest == accepted_decl.reviewed_sources_digest;
+    let commands_preserved = preserve_accepted(
+        candidate_commands,
+        Some(candidate),
+        accepted_commands,
+        Some(accepted),
+    )
+    .is_ok();
+    if sources_unchanged && commands_preserved {
+        return Ok(());
+    }
+    if command_contract_digest(candidate_commands, candidate)? != candidate.reviewed_commands_digest
+    {
+        return Err(invalid(
+            "STALE_COMMAND_CONTRACT: review commands, execution inputs and source coverage before updating the digest",
+        ));
+    }
+    let transition_id = repo_policy_transition_id(
+        accepted_base_sha,
+        candidate_head_sha,
+        &accepted_decl.reviewed_sources_digest,
+        &candidate_decl.reviewed_sources_digest,
+        &accepted.reviewed_commands_digest,
+        &candidate.reviewed_commands_digest,
+    )?;
+    if has_active_policy_transition_approval(checkout_root, &transition_id)? {
+        return Ok(());
+    }
+    Err(invalid(format!(
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or source inventory changed without an active policy.control transition approval (base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}). Review the diff and run `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}` as a policy.control-authorized maintainer before revalidation",
+        accepted_decl.reviewed_sources_digest,
+        candidate_decl.reviewed_sources_digest,
+        accepted.reviewed_commands_digest,
+        candidate.reviewed_commands_digest,
+    )))
 }
 fn relative(path: &str) -> bool {
     !path.is_empty()
@@ -165,6 +446,42 @@ fn relative(path: &str) -> bool {
         && Path::new(path)
             .components()
             .all(|part| matches!(part, Component::Normal(_)))
+}
+
+fn validate_execution_target(
+    command: &ProofDef,
+    program: &str,
+    toolchain_files: &BTreeMap<String, String>,
+) -> Result<(), PlanningFailure> {
+    if !Path::new(program).is_absolute()
+        || program.contains('\0')
+        || toolchain_files.is_empty()
+        || toolchain_files.iter().any(|(name, path)| {
+            name.trim().is_empty()
+                || name == "program"
+                || !Path::new(path).is_absolute()
+                || path.contains('\0')
+        })
+    {
+        return Err(invalid(format!(
+            "invalid explicit execution/toolchain/budget: {}",
+            command.name
+        )));
+    }
+    // A reviewed canonical program may resolve a named installed command;
+    // absolute proof commands must match it exactly. No silent substitution.
+    let declared = Path::new(&command.command);
+    if (declared.is_absolute() && command.command != program)
+        || (!declared.is_absolute()
+            && (declared.components().count() != 1
+                || declared.file_name() != Path::new(program).file_name()))
+    {
+        return Err(invalid(format!(
+            "execution program differs from proof command: {}",
+            command.name
+        )));
+    }
+    Ok(())
 }
 
 pub fn validate_contract(
@@ -214,13 +531,7 @@ pub fn validate_contract(
             .executions
             .get(&command.name)
             .ok_or_else(|| invalid(format!("missing execution declaration: {}", command.name)))?;
-        if !Path::new(&execution.program).is_absolute()
-            || execution.program.contains('\0')
-            || execution.toolchain_files.is_empty()
-            || execution.toolchain_files.iter().any(|(name, path)| {
-                name.is_empty() || !Path::new(path).is_absolute() || path.contains('\0')
-            })
-            || (execution.directory != "." && !relative(&execution.directory))
+        if (execution.directory != "." && !relative(&execution.directory))
             || execution.timeout_seconds == 0
             || execution.timeout_seconds > 7200
         {
@@ -229,18 +540,28 @@ pub fn validate_contract(
                 command.name
             )));
         }
-        // A reviewed canonical program may resolve a named installed command;
-        // absolute proof commands must match it exactly. No silent substitution.
-        let declared = Path::new(&command.command);
-        if (declared.is_absolute() && command.command != execution.program)
-            || (!declared.is_absolute()
-                && (declared.components().count() != 1
-                    || declared.file_name() != Path::new(&execution.program).file_name()))
-        {
-            return Err(invalid(format!(
-                "execution program differs from proof command: {}",
-                command.name
-            )));
+        if execution.platforms.is_empty() {
+            validate_execution_target(command, &execution.program, &execution.toolchain_files)?;
+        } else {
+            if !execution.program.is_empty() || !execution.toolchain_files.is_empty() {
+                return Err(invalid(format!(
+                    "execution {} cannot mix top-level program/toolchain_files with platforms",
+                    command.name
+                )));
+            }
+            for (platform_key, platform_exec) in &execution.platforms {
+                if !is_valid_platform_key(platform_key) {
+                    return Err(invalid(format!(
+                        "unsupported platform key {platform_key:?} in execution {}",
+                        command.name
+                    )));
+                }
+                validate_execution_target(
+                    command,
+                    &platform_exec.program,
+                    &platform_exec.toolchain_files,
+                )?;
+            }
         }
     }
     if contract.executions.keys().cloned().collect::<BTreeSet<_>>() != names {
@@ -316,7 +637,282 @@ pub fn validate_contract(
             "every required command must appear in the reviewed workflow coverage",
         ));
     }
+    validate_targets(contract, &names)?;
     Ok(())
+}
+
+fn valid_target_name(name: &str) -> bool {
+    !name.is_empty()
+        && name == name.trim()
+        && name.len() <= 128
+        && !name.chars().any(|ch| ch.is_control() || ch.is_whitespace())
+}
+
+fn valid_shared_input_pattern(pattern: &str) -> bool {
+    if pattern.is_empty()
+        || pattern != pattern.trim()
+        || pattern.len() > 512
+        || pattern.starts_with('/')
+        || pattern.contains(['\\', '\0', '\n', '\r', '?'])
+        || pattern.contains("***")
+    {
+        return false;
+    }
+    let trimmed = pattern.strip_suffix('/').unwrap_or(pattern);
+    if trimmed.is_empty() || trimmed.contains("//") {
+        return false;
+    }
+    let segments: Vec<&str> = trimmed.split('/').collect();
+    if segments.len() > 64 {
+        return false;
+    }
+    !segments.iter().any(|seg| {
+        seg.is_empty() || *seg == "." || *seg == ".." || (seg.contains("**") && *seg != "**")
+    })
+}
+
+fn segment_glob_match(pattern: &str, text: &str) -> bool {
+    let p = pattern.as_bytes();
+    let t = text.as_bytes();
+    let (mut pi, mut ti) = (0usize, 0usize);
+    let (mut star_p, mut star_t) = (None, 0usize);
+    while ti < t.len() {
+        if pi < p.len() && p[pi] == t[ti] {
+            pi += 1;
+            ti += 1;
+        } else if pi < p.len() && p[pi] == b'*' {
+            star_p = Some(pi);
+            star_t = ti;
+            pi += 1;
+        } else if let Some(sp) = star_p {
+            pi = sp + 1;
+            star_t += 1;
+            ti = star_t;
+        } else {
+            return false;
+        }
+    }
+    while pi < p.len() && p[pi] == b'*' {
+        pi += 1;
+    }
+    pi == p.len()
+}
+
+pub fn matches_shared_input(pattern: &str, path: &str) -> bool {
+    if !valid_shared_input_pattern(pattern) || !relative(path) {
+        return false;
+    }
+    if pattern.ends_with('/') {
+        return path.starts_with(pattern);
+    }
+    if !pattern.contains('*') {
+        return path == pattern || path.starts_with(&format!("{pattern}/"));
+    }
+    let pat_segs: Vec<&str> = pattern.split('/').collect();
+    let path_segs: Vec<&str> = path.split('/').collect();
+    if pat_segs.len() > 64 || path_segs.len() > 64 {
+        return false;
+    }
+    let m = pat_segs.len();
+    let n = path_segs.len();
+    let mut dp = vec![vec![false; n + 1]; m + 1];
+    dp[0][0] = true;
+    for i in 1..=m {
+        if pat_segs[i - 1] == "**" {
+            dp[i][0] = dp[i - 1][0];
+        }
+        for j in 1..=n {
+            if pat_segs[i - 1] == "**" {
+                dp[i][j] = dp[i - 1][j] || dp[i][j - 1];
+            } else if dp[i - 1][j - 1] && segment_glob_match(pat_segs[i - 1], path_segs[j - 1]) {
+                dp[i][j] = true;
+            }
+        }
+    }
+    dp[m][n]
+}
+
+fn check_target_cycles(contract: &RepositoryContract) -> Result<(), PlanningFailure> {
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    enum Mark {
+        Visiting,
+        Visited,
+    }
+    fn visit<'a>(
+        name: &'a str,
+        contract: &'a RepositoryContract,
+        marks: &mut BTreeMap<&'a str, Mark>,
+    ) -> Result<(), PlanningFailure> {
+        match marks.get(name).copied() {
+            Some(Mark::Visited) => return Ok(()),
+            Some(Mark::Visiting) => {
+                return Err(invalid(format!(
+                    "DEPLOYMENT_TARGET_CYCLE: cyclic depends_on involving target {name:?}"
+                )));
+            }
+            None => {}
+        }
+        marks.insert(name, Mark::Visiting);
+        let def = contract.targets.get(name).ok_or_else(|| {
+            invalid(format!(
+                "deployment target dependency {name:?} is not declared"
+            ))
+        })?;
+        for dep in &def.depends_on {
+            if dep == name {
+                return Err(invalid(format!(
+                    "DEPLOYMENT_TARGET_CYCLE: target {name:?} cannot depend on itself"
+                )));
+            }
+            visit(dep, contract, marks)?;
+        }
+        marks.insert(name, Mark::Visited);
+        Ok(())
+    }
+    let mut marks = BTreeMap::new();
+    for name in contract.targets.keys() {
+        visit(name, contract, &mut marks)?;
+    }
+    Ok(())
+}
+
+fn validate_targets(
+    contract: &RepositoryContract,
+    known_commands: &BTreeSet<String>,
+) -> Result<(), PlanningFailure> {
+    if contract.targets.len() > 256 {
+        return Err(invalid("deployment targets exceed bounded count (256)"));
+    }
+    for (name, target) in &contract.targets {
+        if !valid_target_name(name) {
+            return Err(invalid(format!("invalid deployment target name {name:?}")));
+        }
+        if target.commands.is_empty() || target.commands.len() > 256 {
+            return Err(invalid(format!(
+                "deployment target {name:?} must declare a bounded nonempty command list"
+            )));
+        }
+        let mut seen_commands = BTreeSet::new();
+        for cmd in &target.commands {
+            if !known_commands.contains(cmd) || !seen_commands.insert(cmd) {
+                return Err(invalid(format!(
+                    "deployment target {name:?} references unknown or duplicate command {cmd:?}"
+                )));
+            }
+        }
+        if target.depends_on.len() > 256 {
+            return Err(invalid(format!(
+                "deployment target {name:?} depends_on exceeds bounded count (256)"
+            )));
+        }
+        let mut seen_deps = BTreeSet::new();
+        for dep in &target.depends_on {
+            if dep == name || !contract.targets.contains_key(dep) || !seen_deps.insert(dep) {
+                return Err(invalid(format!(
+                    "deployment target {name:?} has unknown, cyclic or duplicate depends_on {dep:?}"
+                )));
+            }
+        }
+        if target.shared_inputs.len() > 256 {
+            return Err(invalid(format!(
+                "deployment target {name:?} shared_inputs exceed bounded count (256)"
+            )));
+        }
+        let mut seen_inputs = BTreeSet::new();
+        for pattern in &target.shared_inputs {
+            if !valid_shared_input_pattern(pattern) || !seen_inputs.insert(pattern) {
+                return Err(invalid(format!(
+                    "deployment target {name:?} has invalid or duplicate shared_inputs pattern {pattern:?}"
+                )));
+            }
+        }
+        if target.platforms.len() > 16 {
+            return Err(invalid(format!(
+                "deployment target {name:?} platforms exceed bounded count (16)"
+            )));
+        }
+        let mut seen_platforms = BTreeSet::new();
+        for platform in &target.platforms {
+            if !is_valid_platform_key(platform) || !seen_platforms.insert(platform) {
+                return Err(invalid(format!(
+                    "deployment target {name:?} has unsupported or duplicate platform key {platform:?}"
+                )));
+            }
+        }
+    }
+    check_target_cycles(contract)
+}
+
+/// Resolve the transitive `depends_on` closure for `target`, expanded with any
+/// additional targets whose `shared_inputs` intersect `changed_paths` (and
+/// their transitive dependencies). Fails closed if diff context is missing,
+/// `target` is unknown, or the target dependency graph is invalid/cyclic.
+pub fn resolve_target_closure(
+    contract: &RepositoryContract,
+    target: &str,
+    changed_paths: Option<&BTreeSet<String>>,
+) -> Result<ResolvedTargetScope, PlanningFailure> {
+    let changed_paths = changed_paths.ok_or_else(|| {
+        invalid(
+            "MISSING_SHARED_INPUT_DIFF_CONTEXT: changed paths between accepted base and candidate are required to resolve deployment target closure",
+        )
+    })?;
+    if changed_paths.iter().any(|path| !relative(path)) {
+        return Err(PlanningFailure::InvalidFacts);
+    }
+    if !valid_target_name(target) || !contract.targets.contains_key(target) {
+        return Err(invalid(format!(
+            "UNKNOWN_DEPLOYMENT_TARGET: deployment target {target:?} is not declared in proof.repository_contract.targets"
+        )));
+    }
+    let known_commands: BTreeSet<String> = contract.executions.keys().cloned().collect();
+    validate_targets(contract, &known_commands)?;
+
+    let mut shared_input_targets = BTreeSet::new();
+    let mut resolved_set = BTreeSet::new();
+    let mut stack = vec![target.to_string()];
+    for (candidate_name, candidate_def) in &contract.targets {
+        if candidate_def.shared_inputs.iter().any(|pattern| {
+            changed_paths
+                .iter()
+                .any(|changed| matches_shared_input(pattern, changed))
+        }) {
+            shared_input_targets.insert(candidate_name.clone());
+            stack.push(candidate_name.clone());
+        }
+    }
+    while let Some(current) = stack.pop() {
+        if !resolved_set.insert(current.clone()) {
+            continue;
+        }
+        let def = contract.targets.get(&current).ok_or_else(|| {
+            invalid(format!(
+                "UNKNOWN_DEPLOYMENT_TARGET: dependency {current:?} missing"
+            ))
+        })?;
+        for dep in &def.depends_on {
+            if !resolved_set.contains(dep) {
+                stack.push(dep.clone());
+            }
+        }
+    }
+    let mut commands = BTreeSet::new();
+    let resolved_targets: Vec<String> = resolved_set.into_iter().collect();
+    for name in &resolved_targets {
+        let def = &contract.targets[name];
+        commands.extend(def.commands.iter().cloned());
+    }
+    if commands.is_empty() {
+        return Err(invalid(format!(
+            "deployment target {target:?} resolved to an empty command closure"
+        )));
+    }
+    Ok(ResolvedTargetScope {
+        target: target.to_string(),
+        resolved_targets,
+        commands,
+        shared_input_targets,
+    })
 }
 
 pub fn required_catalog(
@@ -326,13 +922,60 @@ pub fn required_catalog(
     commands: &[ProofDef],
     contract: &RepositoryContract,
 ) -> Result<RequiredCatalog, PlanningFailure> {
+    required_catalog_for_target(declaration, sources, facts, commands, contract, None)
+}
+
+pub fn required_catalog_for_target(
+    declaration: &ProfileDeclaration,
+    sources: &SourceInventory,
+    facts: &ApplicabilityFacts,
+    commands: &[ProofDef],
+    contract: &RepositoryContract,
+    target: Option<&str>,
+) -> Result<RequiredCatalog, PlanningFailure> {
     validate_contract(declaration, sources, commands, contract)?;
     if facts.event != "pull_request" || facts.target_branch.trim().is_empty() {
         return Err(PlanningFailure::InvalidFacts);
     }
+    let target_scope = match target {
+        Some(target_name) => Some(resolve_target_closure(
+            contract,
+            target_name,
+            Some(&facts.changed_paths),
+        )?),
+        None => None,
+    };
     let source_inventory_digest = sources.digest()?;
+    let catalog_inventory_digest = match &target_scope {
+        Some(scope) => super::readiness_evidence::digest(&(&source_inventory_digest, scope))
+            .map_err(|_| PlanningFailure::Serialization)?,
+        None => source_inventory_digest.clone(),
+    };
+    let evidence_scope = if target_scope.is_some() {
+        TARGET_READINESS_SCOPE
+    } else {
+        READINESS_SCOPE
+    };
     let mut obligations = Vec::new();
+    let mut out_of_scope_stages = Vec::new();
     for command in commands {
+        if let Some(scope) = &target_scope
+            && !scope.commands.contains(&command.name)
+        {
+            out_of_scope_stages.push(StageDisposition {
+                stage: command.name.clone(),
+                key: None,
+                disposition: StageDispositionKind::NonApplicable,
+                policy: REQUIRED_PROFILE.into(),
+                reason: format!(
+                    "Command excluded by reviewed deployment target scope {:?} (resolved closure: {}); provides no full-repository or unrelated-target assurance",
+                    scope.target,
+                    scope.resolved_targets.join(", ")
+                ),
+                evidence_scope: "out_of_target_scope_no_assurance".into(),
+            });
+            continue;
+        }
         let key = CheckKey {
             provider: Provider::Native,
             workflow: ".decapod/config.toml".into(),
@@ -340,12 +983,21 @@ pub fn required_catalog(
             matrix: BTreeMap::new(),
             profile: REQUIRED_PROFILE.into(),
         };
-        let definition_digest = super::readiness_evidence::digest(&(
-            &source_inventory_digest,
-            &contract.reviewed_commands_digest,
-            command,
-            &contract.executions[&command.name],
-        ))
+        let definition_digest = match &target_scope {
+            Some(scope) => super::readiness_evidence::digest(&(
+                &source_inventory_digest,
+                &contract.reviewed_commands_digest,
+                command,
+                &contract.executions[&command.name],
+                scope,
+            )),
+            None => super::readiness_evidence::digest(&(
+                &source_inventory_digest,
+                &contract.reviewed_commands_digest,
+                command,
+                &contract.executions[&command.name],
+            )),
+        }
         .map_err(|_| PlanningFailure::Serialization)?;
         obligations.push(Obligation {
             key,
@@ -364,9 +1016,10 @@ pub fn required_catalog(
             reason:
                 "Required repository-declared local command; actual bounded execution is mandatory"
                     .into(),
-            evidence_scope: READINESS_SCOPE.into(),
+            evidence_scope: evidence_scope.into(),
         })
         .collect();
+    stages.extend(out_of_scope_stages);
     // #1531: a ci_only row is reported as an explicit reviewed limitation, so
     // validation-results.v3 shows it as NonApplicable and never counts it as a
     // passed check.
@@ -381,7 +1034,7 @@ pub fn required_catalog(
                     "Reviewed CI-only limitation: no local proof mapping for this workflow; never counted as a passed check. Reason: {}",
                     row.reason.clone().unwrap_or_default()
                 ),
-                evidence_scope: READINESS_SCOPE.into(),
+                evidence_scope: evidence_scope.into(),
             });
         }
     }
@@ -393,7 +1046,7 @@ pub fn required_catalog(
         obligations,
         stages,
         facts.clone(),
-        source_inventory_digest,
+        catalog_inventory_digest,
     ))
 }
 

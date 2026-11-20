@@ -28,6 +28,7 @@ pub struct AuthorizedRepositoryProof {
     source_inventory_digest: String,
     source_root: PathBuf,
     repository: String,
+    target: Option<String>,
     deadline: Instant,
     cancel: Cancellation,
 }
@@ -68,16 +69,20 @@ impl AuthorizedRepositoryProof {
             .repository_contract
             .as_ref()
             .ok_or_else(|| invalid("repository proof contract missing"))?;
-        repository_profile::validate_contract(
+        let catalog = repository_profile::required_catalog_for_target(
             declaration,
             &project.sources,
+            &project.facts,
             &project.configuration.commands,
             contract,
+            self.target.as_deref(),
         )
         .map_err(io::Error::other)?;
         if project.configuration.validation_buildkite_preflights
             || project.identity_inputs.root != self.source_root
             || project.identity_inputs.repository != self.repository
+            || project.target_scope.as_ref().map(|s| s.target.as_str()) != self.target.as_deref()
+            || catalog.obligations() != project.catalog.obligations()
             || project.sources.digest().map_err(io::Error::other)? != self.source_inventory_digest
             || contract.reviewed_commands_digest != self.command_contract_digest
         {
@@ -278,6 +283,7 @@ impl Host for RepositoryHost<'_> {
                     source_inventory_digest: sources.clone(),
                     source_root: project.identity_inputs.root.clone(),
                     repository: project.identity_inputs.repository.clone(),
+                    target: project.target_scope.as_ref().map(|s| s.target.clone()),
                     deadline: budget.deadline,
                     cancel: budget.cancel.clone(),
                 },
@@ -419,16 +425,36 @@ fn verify_invocation_path(
     }
 }
 
+#[cfg(test)]
 fn command_invocation(
     command: &ProofDef,
     execution: &repository_profile::RepositoryExecution,
     root: &Path,
     budget: &RuntimeBudget<'_>,
 ) -> io::Result<Invocation> {
+    command_invocation_for_platform(
+        command,
+        execution,
+        root,
+        budget,
+        native_proof::NativePlatform::current()?,
+    )
+}
+
+fn command_invocation_for_platform(
+    command: &ProofDef,
+    execution: &repository_profile::RepositoryExecution,
+    root: &Path,
+    budget: &RuntimeBudget<'_>,
+    platform: native_proof::NativePlatform,
+) -> io::Result<Invocation> {
     budget.remaining()?;
-    let program = installed_file(&execution.program, root)?;
+    let (declared_program, declared_toolchain) = execution
+        .resolve_for_platform(platform)
+        .map_err(io::Error::other)?;
+    let program = installed_file(declared_program, root)?;
     let mut toolchain_files = BTreeMap::new();
-    for (name, path) in &execution.toolchain_files {
+    for (name, path) in declared_toolchain {
         budget.remaining()?;
         if name.trim().is_empty() || name == "program" {
             return Err(invalid("invalid declared toolchain label"));
@@ -466,7 +492,7 @@ fn command_invocation(
         .entry("PATH".into())
         .or_insert_with(|| native_proof::Value::Literal(String::new()));
     Ok(Invocation {
-        platform: native_proof::NativePlatform::current()?,
+        platform,
         program,
         toolchain_files,
         arguments: command
@@ -493,6 +519,20 @@ pub fn select_commands(
     project: &CurrentProject,
     budget: &RuntimeBudget<'_>,
 ) -> Result<ExecutionSelection, Vec<Blocker>> {
+    let platform = native_proof::NativePlatform::current().map_err(|error| {
+        vec![Blocker::new(
+            "REPOSITORY_COMMAND_PLATFORM",
+            error.to_string(),
+        )]
+    })?;
+    select_commands_for_platform(project, budget, platform)
+}
+
+fn select_commands_for_platform(
+    project: &CurrentProject,
+    budget: &RuntimeBudget<'_>,
+    platform: native_proof::NativePlatform,
+) -> Result<ExecutionSelection, Vec<Blocker>> {
     let contract = (|| -> io::Result<_> {
         budget.remaining()?;
         if project.configuration.validation_buildkite_preflights {
@@ -510,18 +550,49 @@ pub fn select_commands(
             .repository_contract
             .as_ref()
             .ok_or_else(|| invalid("repository command contract is missing"))?;
-        let catalog = repository_profile::required_catalog(
+        let catalog = repository_profile::required_catalog_for_target(
             declaration,
             &project.sources,
             &project.facts,
             &project.configuration.commands,
             contract,
+            project.target_scope.as_ref().map(|s| s.target.as_str()),
         )
         .map_err(io::Error::other)?;
         if catalog.obligations() != project.catalog.obligations() {
             return Err(invalid(
                 "repository command catalog differs from the reviewed contract",
             ));
+        }
+        if let Some(scope) = &project.target_scope {
+            let expected_scope = repository_profile::resolve_target_closure(
+                contract,
+                &scope.target,
+                Some(&project.facts.changed_paths),
+            )
+            .map_err(io::Error::other)?;
+            if &expected_scope != scope {
+                return Err(invalid(
+                    "repository deployment target closure differs from the reviewed contract",
+                ));
+            }
+            let current_platform = native_proof::NativePlatform::current()
+                .ok()
+                .and_then(repository_profile::platform_key);
+            for target_name in &scope.resolved_targets {
+                let target_def = contract.targets.get(target_name).ok_or_else(|| {
+                    invalid(format!("UNKNOWN_DEPLOYMENT_TARGET: {target_name:?}"))
+                })?;
+                if !target_def.platforms.is_empty()
+                    && !current_platform
+                        .is_some_and(|key| target_def.platforms.iter().any(|p| p == key))
+                {
+                    return Err(invalid(format!(
+                        "INCOMPATIBLE_TARGET_EXECUTOR: deployment target {target_name:?} requires platform {:?}, current host executor is {:?}",
+                        target_def.platforms, current_platform
+                    )));
+                }
+            }
         }
         Ok(contract)
     })()
@@ -548,8 +619,13 @@ pub fn select_commands(
                 .executions
                 .get(&command.name)
                 .ok_or_else(|| invalid("required execution declaration missing"))?;
-            let invocation =
-                command_invocation(command, execution, &project.identity_inputs.root, budget)?;
+            let invocation = command_invocation_for_platform(
+                command,
+                execution,
+                &project.identity_inputs.root,
+                budget,
+                platform,
+            )?;
             let invocation_digest = invocation.digest()?;
             let toolchain_digest = native_proof::toolchain_digest_bounded(
                 &invocation,
@@ -611,6 +687,7 @@ mod tests {
             max_input_bytes: 1024,
             max_files: 100,
             max_output_bytes: 1024,
+            target: None,
         }
     }
 
@@ -709,6 +786,7 @@ mod tests {
         let mut execution = repository_profile::RepositoryExecution {
             program: program.to_string_lossy().into(),
             toolchain_files: BTreeMap::from([("runtime".into(), runtime.to_string_lossy().into())]),
+            platforms: BTreeMap::new(),
             environment: BTreeMap::from([("LANG".into(), "C".into())]),
             directory: ".".into(),
             timeout_seconds: 5,
@@ -814,11 +892,13 @@ mod tests {
                         "runtime".into(),
                         runtime.to_string_lossy().into(),
                     )]),
+                    platforms: BTreeMap::new(),
                     environment: BTreeMap::new(),
                     directory: ".".into(),
                     timeout_seconds: 5,
                 },
             )]),
+            targets: BTreeMap::new(),
         };
         contract.reviewed_commands_digest =
             repository_profile::command_contract_digest(&commands, &contract).unwrap();
@@ -856,6 +936,7 @@ mod tests {
             facts,
             release: None,
             catalog,
+            target_scope: None,
             identity_inputs: IdentityInputs {
                 root: source.clone(),
                 git_program: root.join("unused-git"),
@@ -935,5 +1016,240 @@ mod tests {
             .unwrap()
             .reviewed_sources_digest = project.sources.digest().unwrap();
         assert!(seal.verify_context(&project).is_err());
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[test]
+    fn select_commands_for_platform_picks_only_host_entry_and_fails_closed_when_missing() {
+        let storage = tempfile::tempdir().unwrap();
+        let root = storage.path().canonicalize().unwrap();
+        let source = root.join("source");
+        fs::create_dir(&source).unwrap();
+
+        let linux_dir = root.join("nix-linux");
+        let macos_dir = root.join("nix-macos");
+        fs::create_dir(&linux_dir).unwrap();
+        fs::create_dir(&macos_dir).unwrap();
+        let linux_prog = linux_dir.join("proof-tool");
+        let linux_rt = linux_dir.join("linux-rt");
+        let macos_prog = macos_dir.join("proof-tool");
+        let macos_rt = macos_dir.join("macos-rt");
+        fs::write(&linux_prog, b"linux tool bytes").unwrap();
+        fs::write(&linux_rt, b"linux runtime bytes").unwrap();
+        fs::write(&macos_prog, b"macos tool bytes").unwrap();
+        fs::write(&macos_rt, b"macos runtime bytes").unwrap();
+
+        let commands = vec![ProofDef {
+            name: "inspect".into(),
+            command: "proof-tool".into(),
+            args: vec!["--check".into()],
+            description: String::new(),
+            required: true,
+        }];
+        let mut contract = repository_profile::RepositoryContract {
+            canonical_local_target: false,
+            reviewed_commands_digest: String::new(),
+            source_coverage: Vec::new(),
+            executions: BTreeMap::from([(
+                "inspect".into(),
+                repository_profile::RepositoryExecution {
+                    program: String::new(),
+                    toolchain_files: BTreeMap::new(),
+                    platforms: BTreeMap::from([
+                        (
+                            "linux-x86_64".into(),
+                            repository_profile::PlatformExecution {
+                                program: linux_prog.to_string_lossy().into(),
+                                toolchain_files: BTreeMap::from([(
+                                    "runtime".into(),
+                                    linux_rt.to_string_lossy().into(),
+                                )]),
+                            },
+                        ),
+                        (
+                            "macos-aarch64".into(),
+                            repository_profile::PlatformExecution {
+                                program: macos_prog.to_string_lossy().into(),
+                                toolchain_files: BTreeMap::from([(
+                                    "runtime".into(),
+                                    macos_rt.to_string_lossy().into(),
+                                )]),
+                            },
+                        ),
+                        // Non-existent path on a third platform must not break selection for linux-x86_64 or macos-aarch64.
+                        (
+                            "macos-x86_64".into(),
+                            repository_profile::PlatformExecution {
+                                program: "/nonexistent-nix/bin/proof-tool".into(),
+                                toolchain_files: BTreeMap::from([(
+                                    "runtime".into(),
+                                    "/nonexistent-nix/lib/runtime".into(),
+                                )]),
+                            },
+                        ),
+                    ]),
+                    environment: BTreeMap::new(),
+                    directory: ".".into(),
+                    timeout_seconds: 5,
+                },
+            )]),
+            targets: BTreeMap::new(),
+        };
+        contract.reviewed_commands_digest =
+            repository_profile::command_contract_digest(&commands, &contract).unwrap();
+        let sources = SourceInventory {
+            files: BTreeMap::from([("tool.conf".into(), hash(b"reviewed source"))]),
+        };
+        let declaration = ProfileDeclaration {
+            id: repository_profile::REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: sources.digest().unwrap(),
+        };
+        let facts = ApplicabilityFacts {
+            event: "pull_request".into(),
+            target_branch: "main".into(),
+            changed_paths: BTreeSet::new(),
+        };
+        let catalog = repository_profile::required_catalog(
+            &declaration,
+            &sources,
+            &facts,
+            &commands,
+            &contract,
+        )
+        .unwrap();
+        let project = CurrentProject {
+            configuration: ProofConfiguration {
+                validation_buildkite_preflights: false,
+                required_profile: Some(declaration),
+                commands,
+                repository_contract: Some(contract),
+                ci_attested: None,
+                rust_workers: None,
+            },
+            sources,
+            executor: None,
+            facts,
+            release: None,
+            catalog,
+            identity_inputs: IdentityInputs {
+                root: source,
+                git_program: root.join("unused-git"),
+                repository: "consumer/project".into(),
+                base_branch: "main".into(),
+                accepted_base_ref: "refs/remotes/origin/main".into(),
+                declared_untracked: BTreeSet::new(),
+                configuration: BTreeSet::new(),
+                workflows: BTreeSet::new(),
+                candidate_inputs: BTreeSet::new(),
+            },
+            target_scope: None,
+        };
+        let cancel = Cancellation::default();
+        let budget = RuntimeBudget {
+            deadline: Instant::now() + Duration::from_secs(5),
+            cancel: &cancel,
+            max_output_bytes: 1024,
+            bytes_left: 1024,
+        };
+
+        let linux_sel = select_commands_for_platform(
+            &project,
+            &budget,
+            native_proof::NativePlatform::LinuxX86_64,
+        )
+        .unwrap();
+        let (_, linux_inv) = linux_sel.native_invocations.first_key_value().unwrap();
+        assert_eq!(
+            linux_inv.platform,
+            native_proof::NativePlatform::LinuxX86_64
+        );
+        assert_eq!(linux_inv.program, linux_prog);
+        assert_eq!(linux_inv.toolchain_files["runtime"], linux_rt);
+
+        let macos_sel = select_commands_for_platform(
+            &project,
+            &budget,
+            native_proof::NativePlatform::MacosAarch64,
+        )
+        .unwrap();
+        let (_, macos_inv) = macos_sel.native_invocations.first_key_value().unwrap();
+        assert_eq!(
+            macos_inv.platform,
+            native_proof::NativePlatform::MacosAarch64
+        );
+        assert_eq!(macos_inv.program, macos_prog);
+        assert_eq!(macos_inv.toolchain_files["runtime"], macos_rt);
+
+        // Selected platform binaries/closures produce distinct measured toolchain digests.
+        let (k, linux_binding) = linux_sel.bindings.first_key_value().unwrap();
+        let macos_binding = &macos_sel.bindings[k];
+        assert_ne!(
+            linux_binding.toolchain_digest,
+            macos_binding.toolchain_digest
+        );
+        assert_eq!(
+            linux_binding.definition_digest,
+            macos_binding.definition_digest
+        );
+
+        // Missing platform entry fails closed without falling back to another platform.
+        let Err(missing_err) = select_commands_for_platform(
+            &project,
+            &budget,
+            native_proof::NativePlatform::LinuxAarch64,
+        ) else {
+            panic!("expected missing platform failure");
+        };
+        assert!(
+            missing_err
+                .iter()
+                .any(|b| b.detail.contains("MISSING_PLATFORM_EXECUTION")),
+            "{missing_err:?}"
+        );
+
+        // Unsupported host platform fails closed.
+        let Err(unsupported_err) = select_commands_for_platform(
+            &project,
+            &budget,
+            native_proof::NativePlatform::WindowsX86_64,
+        ) else {
+            panic!("expected unsupported platform failure");
+        };
+        assert!(
+            unsupported_err
+                .iter()
+                .any(|b| b.detail.contains("UNSUPPORTED_PLATFORM")),
+            "{unsupported_err:?}"
+        );
+
+        // Seal measures the selected host platform's executable + toolchain_files
+        // and rejects tampering on the selected host while ignoring non-host entries.
+        let current = native_proof::NativePlatform::current().unwrap();
+        if matches!(
+            current,
+            native_proof::NativePlatform::LinuxX86_64 | native_proof::NativePlatform::MacosAarch64
+        ) {
+            let mut host = RepositoryHost::new(
+                options(&project.identity_inputs.root),
+                "https://github.com/consumer/project.git".into(),
+                |_| Ok(ProjectPrerequisites::Passed),
+                |_| Ok(()),
+            )
+            .unwrap();
+            let selection = host.select(&project, &budget).unwrap();
+            let (key, invocation) = selection.native_invocations.first_key_value().unwrap();
+            let seal = &host.authorized_commands[key];
+            seal.verify(invocation).unwrap();
+
+            let (host_rt, other_rt) = if current == native_proof::NativePlatform::LinuxX86_64 {
+                (&linux_rt, &macos_rt)
+            } else {
+                (&macos_rt, &linux_rt)
+            };
+            fs::write(other_rt, b"non-host runtime changed").unwrap();
+            seal.verify(invocation).unwrap();
+            fs::write(host_rt, b"tampered host runtime").unwrap();
+            assert!(seal.verify(invocation).is_err());
+        }
     }
 }

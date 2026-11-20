@@ -373,6 +373,7 @@ fn dockerfile_orientation_separates_workspace_and_application_containers() {
             todo_ids: vec![],
             proof_hooks: vec![],
             unresolved_items: vec![],
+            instruction_readiness: None,
             forbidden_paths: vec![],
             file_touch_budget: None,
             task_binding: "not_available".to_string(),
@@ -425,6 +426,7 @@ fn structured_init_proof_config() -> DecapodProjectConfig {
             reason: None,
         }],
         executions: BTreeMap::new(),
+        targets: BTreeMap::new(),
     });
     config.proof.commands = vec![
         proof::ProofDef {

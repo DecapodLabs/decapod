@@ -33,7 +33,7 @@
           },
           "evidence": {
             "conformance_test": "interop_conformance::discovery_and_negotiation",
-            "state": "verified",
+            "state": "not_run",
             "evidence_ref": "tests/interop_conformance.rs::discovery_and_negotiation"
           },
           "description": "Agent bootstrap and source-inventory reconciliation"

@@ -152,6 +152,7 @@ impl Fixture {
             max_input_bytes: 64 * 1024 * 1024,
             max_files: 10_000,
             max_output_bytes: 1024 * 1024,
+            target: None,
         };
         let (program, toolchain_files) = python_runtime();
         let mut commands = vec![
@@ -177,6 +178,7 @@ impl Fixture {
         let execution = RepositoryExecution {
             program,
             toolchain_files,
+            platforms: BTreeMap::new(),
             environment: BTreeMap::from([(
                 "FIXTURE_WORKTREE".into(),
                 options.root.to_string_lossy().into_owned(),
@@ -200,6 +202,7 @@ impl Fixture {
                 .iter()
                 .map(|command| (command.name.clone(), execution.clone()))
                 .collect(),
+            targets: BTreeMap::new(),
         };
         contract.reviewed_commands_digest =
             repository_profile::command_contract_digest(&commands, &contract).unwrap();

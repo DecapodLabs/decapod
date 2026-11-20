@@ -186,6 +186,11 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
@@ -456,6 +461,78 @@
         "statement": "Configured validation can create, fast-forward or reuse its exact governed workspace branch without asking the human for a separate local policy receipt; unrelated writes, altered requests and provider/executable denials remain blocked.",
         "status": "open"
       },
+      "claim:vega-agent-readiness-guidance": {
+        "falsifier": "Failed or stale proof produces PR instructions, rejection or abstention produces PR instructions, disabled mode changes delivery authority, or boolean model output is presented as a textual defect explanation.",
+        "statement": "The optional Vega post-validation result instructs the agent: accepted current required proof and accepted Vega allow an already authorized PR; rejection requires requirement/evidence review and further work; abstention requires resolving the reported gap; failed or stale required proof always requires repair and revalidation. No result grants merge or release authority.",
+        "status": "open"
+      },
+      "claim:vega-current-run-scientific-collection": {
+        "falsifier": "Missing/replayed/mixed/unsafe/malformed phases, altered frozen inputs/labels, inconsistent decisions, numerical disagreement, failed adverse controls, absent positive coverage, hidden oracle mismatches or an abstaining verdict permit publication readiness.",
+        "proof_refs": [
+          "/private/tmp/vega-1191-validation-20261020T081406Z.json"
+        ],
+        "statement": "Eight reviewed Rust runs preserve three fixed numerical fixtures and six pairs of fixed production-path functional cases. The mandatory current-run aggregate rechecks identity, exports, raw response interpretation, every adverse/control result and genuine positive approval on each backend. Original oracle agreement is reported separately from delegated safe-abstention qualification; collection alone never authorizes publication.",
+        "status": "open"
+      },
+      "claim:vega-late-report-failure": {
+        "falsifier": "A late final-report filesystem error leaves ready=true, exit_code0 or create_authorized_pr instructions, overwrites existing evidence, or loses unsupported-controller recovery guidance.",
+        "statement": "Every validation execution error revokes publication readiness and PR guidance, including final verdict write or sync failure after completed proof and accepted Vega; completed proof and earlier evidence remain diagnostic only.",
+        "status": "open"
+      },
+      "claim:vega-native-acceptance": {
+        "falsifier": "Publication occurs without complete current source/native/numerical/functional proof, without positive approval on both backends, with unsafe adverse outcomes, or by presenting agent-authored functional labels as independently calibrated domain accuracy.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "Current functional delivery requires actual native Metal/CPU inference, unchanged separate Rust numerical comparisons, installation/fallback checks, meaningful model approvals and safe negative/uncertain controls. Maintainer-authorized qualification supersedes the prior research prerequisite without passing it; all old failures and domain-accuracy limits remain preserved.",
+        "status": "open"
+      },
+      "claim:vega-package-input-lock": {
+        "falsifier": "Bazel still rejects the normalized Cargo manifest input, dependencies/required checks are changed to hide the mismatch, the lock exceeds existing discovery bounds, or metadata regeneration is represented as executed tests.",
+        "proof_refs": [
+          "/private/tmp/vega-040d-buildkite-setup.log"
+        ],
+        "statement": "The reviewed crate packaging exclusion is reflected by normal Bazel module metadata regeneration; only the normalized Cargo.toml input hash changed, without dependency additions, expanded discovery limits or weakened checks.",
+        "status": "open"
+      },
+      "claim:vega-plan-obligations": {
+        "falsifier": "An explicit deferred obligation, phase acceptance gate or adverse plan fact disappears from the assessment; overflow produces a partial assessment instead of abstention; stale governance authorizes publication.",
+        "statement": "The bounded post-validation assessment preserves declared proof hooks, unresolved questions, contradictions, stop conditions and phase gates as well as intent; none is silently omitted or truncated to fit model input.",
+        "status": "open"
+      },
+      "claim:vega-positive-singleton": {
+        "falsifier": "A disabled or repinned accepted required policy, failed/stale check, adverse projection omission, changed binding, negative/ambiguous/OOD/abstaining result can establish readiness.",
+        "proof_refs": [
+          "src/decapod/core/validation_runtime.rs",
+          "src/decapod/core/vega_readiness.rs"
+        ],
+        "statement": "Required vega may permit readiness only after deterministic proof and exact freshness, accepted policy integrity and a positive singleton yes without abstention/OOD; failed, stale, uncertain or changed identities remain blocked.",
+        "status": "open"
+      },
+      "claim:vega-production-projection-evaluation": {
+        "falsifier": "Replay uses another prompt builder, drops adverse obligations, dispatches on failed/stale/missing proof, accepts malformed responses, invents executed checks, hides oracle disagreements or authorizes publication from unsigned fixture evidence.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "Live assessment and replay share validation-results.v3 projection, request/response checks and the final readiness predicate. Complete deterministic proof precedes inference. Fixed functional observations come from executed bounded candidate checks but unsigned replay never grants custody or publication. Exposed v2 and zero-unit research admission stay historical, not passing accuracy or current research prerequisites.",
+        "status": "open"
+      },
+      "claim:vega-public-review-source-audit": {
+        "falsifier": "Audit leaks selected verdict/rationale or future checks into input, labels wrong-commit/edited requirements as eligible, equates variants with independent ground truth, suppresses native checks, or claims historical statistical qualification passed.",
+        "proof_refs": [
+          "tests/fixtures/vega-public-review-sources/final-admission-review.json"
+        ],
+        "statement": "Historical public review records remain pinned/audited Rust diagnostic inputs, not a qualified readiness study. Review verdicts/rationale, future CI, conflicting identities and incomplete source histories cannot become independent readiness truth. Maintainer-authorized functional qualification does not claim that the old study or risk criterion passed.",
+        "status": "open"
+      },
+      "claim:vega1445-readiness-role-qualification": {
+        "falsifier": "Qualification passes an always-abstaining/rejecting model, lacks approval on either backend, accepts unmet obligations/manipulation, accepts malformed inference, hides an oracle mismatch, changes model/input/threshold/tolerances, or grants readiness to failed/stale/abstaining work.",
+        "proof_refs": [
+          "https://github.com/DecapodLabs/decapod/issues/1445"
+        ],
+        "statement": "The maintainer replaced the statistical qualification with functional integration and delegated safe-abstention interpretation. Both actual backends must approve meaningful ready work; every adverse/control case and numerical comparison must pass. A ready control may validly abstain, preserving its frozen expected-accept mismatch and blocking that assessed work. Domain accuracy and old research success remain unestablished.",
+        "status": "open"
+      },
       "claim:version-storage-independence": {
         "falsifier": "Version fails on damaged or unsafe storage, writes project state, or consumes migration notice; stateful commands accept unsafe permissions",
         "proof_refs": [
@@ -474,6 +551,122 @@
         "statement": "Workunit generation-fenced mutations have durable event snapshots before JSON publication; interrupted projection publication is explicitly recoverable without inventing current proof.",
         "status": "open"
       },
+      "history-recovery:f475d0788e48185022b51c6f0db7fd2fd090430b": {
+        "actor": "chatgpt-ci-source-release-proof",
+        "assessment": {
+          "base_commit": "b6c74f32f8025b7888d636f7d8b4080d734c4cdd",
+          "disposition": "invalid_history",
+          "findings": [
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "d05c43746830c4829f54f23c339ebcdce40a68fb",
+              "detail": "GOVERNANCE_PR_BASE_MISMATCH: base identity changed inside the PR",
+              "disposition": "invalid_history",
+              "obligation": "accepted_base",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "9bafb057739069ecc2339cd5084fde8081f96df6"
+            },
+            {
+              "code": "GOVERNANCE_HISTORY_INVALID",
+              "commit": "0be7e45665d58969d3f328268ab6b84c6fcc9905",
+              "detail": "GOVERNANCE_PR_IDENTITY_CONFLICT: commit 0be7e45665d58969d3f328268ab6b84c6fcc9905 changed identity inside an unaccepted lineage",
+              "disposition": "invalid_history",
+              "obligation": "workstream_identity",
+              "prior_event_can_be_regenerated": false,
+              "recovery": "Preserve the invalid commit and genuine prior evidence. Do not overwrite checkpoints or relabel provenance; inspect the affected obligation and reauthor in a fresh governed workspace if authentic historical evidence is unavailable.",
+              "tree": "a8ddaea3dd64292e3f8b1e3c0d9cf171ddc1eb3b"
+            }
+          ],
+          "head_commit": "f475d0788e48185022b51c6f0db7fd2fd090430b",
+          "history_proven": false,
+          "inspection_complete": true,
+          "publication_ready": false,
+          "schema": "decapod.checkpoint-history.v1",
+          "scope": "checkpoint_history",
+          "verified_commits": [
+            "3928d40412f410d013341b0e303721c4c363683a",
+            "1f91ada70228f95c4a8cec28ec00988eb08292d2",
+            "a4bf3d036fdf1bcaa95b5805a7f8b1ec7bc23a2e",
+            "949b3431fd604ce76b4822130090cc4846cc77cc",
+            "571022a03cb16e4842cd394de119f3f5603068ec",
+            "8ee6d32c58b93773e94a2ee9a8d953d853634c8b",
+            "bc63ee76a7302d7ba0a04f491395f5c18f8c75bf",
+            "67543f6bc8327feb31e57d5eac90fae144a51680",
+            "f93ad18a2a0b907a284e0a3c514481eed7e6a760",
+            "ff5a813bb5b0dcae90250399b84522524a8f0988",
+            "43d0ec7104e0f4ab5161884dad7e5dfcb2f88739",
+            "48a742acbb7392982b8d5f927544955fc0e2a1cf",
+            "4e3c540dda6af9cf7be0ffe3f40a3bfd758f4a91",
+            "458e8dcce567f3455d206bb62ac11ec11bf2acf5",
+            "256e818ff928143f7a8b62adcdd6eb41b8dd5cc9",
+            "7d3f8698646ec15c56c7821aca5c6067b31fe850",
+            "75405f5bbaad3d3d8b14af284a058d2c6e8deeca",
+            "3dad7b91f4f704329e56c61f8dc67a6557ab0012",
+            "ce1c152068b3b61aee1681ac38ebbab2db11d070",
+            "17b2c52f76c0f20f38cbfe193289b95046860ab3",
+            "c61b3a90a454b1462556cb701cb9bd2c2c56e1d2",
+            "2e0b03e0a14e9b5a3f50685658c192e984f89253",
+            "25c3d135e7fa8c090f7b3d84ecc9e4f7a8c0027c",
+            "8c24fed84a09e3f1a0bd5c36818032a733a89eff",
+            "2695bdec9987df7f424f7eab3285230670481954",
+            "1ea813253479e99370eceecae6f5e97fd42b4d4a",
+            "79e68ecad164f9bbd5f2dbfdca398605430686ec",
+            "ce406afc87d24f49247def028f0e4a1a4ff077d1",
+            "8120184801633d4cede06f1efafbe6730f1ca9bf",
+            "ed403a04f4ba80ad021d8352a3f1f05bfa746d9f",
+            "0e85b4077c0227975176f227a7a04e6384b94a55",
+            "16b8a32e6e7b42ac6f31c10e2ad4d59abbd65968",
+            "299e1fd0a50df139d8d57a9108f9deb429a75a76",
+            "8d167c1fc3715ea625f0c5f110423f009c23d8d2",
+            "f832a38a49923587d0d553bbbe8e4ebf988f5ce5",
+            "218914650d49c2dd32079985e952213b7c2206b3",
+            "8d8ae8b12cbb0504256511c2ce4009295dc94abb",
+            "d0ee5449aa14dcd65c4c52c6fbce25c104b47dca",
+            "420620ce02e7c5c95da76787716625e58dbf086e",
+            "a4f66307cd59ad6d753315237858e3a659ce9204",
+            "6b991888a5af1450e6e55734da700824a3dbbb0a",
+            "3db42b05d692b4b11abff605a67ded9c41d2cac3",
+            "b4cf56f82d84c0946cf05705f7f28dc930e536fb",
+            "7a2172c923a82d2664d6cefb377df55aeb2294e9",
+            "209bda9145716b67b301a25727982327f6c62fb6",
+            "1581a5f5b5f48104b5092ec5e5b90621373be4d4",
+            "fc5142ef576ea11062efd9d6e518c2316e81e546",
+            "d9361e8a51d4b554c9670a3d40a3c7bedac53294",
+            "34926edf9cca2dc54e159f557c389dfabfef0d8c",
+            "8a11aa0c6a2ad3b53767d9c9940eeaba75b0b6a5",
+            "c5013508e14c61ff8e8a245f4a17efb5e193df50",
+            "0c8c19d6272742591c9fc107fe1680d01b141c54",
+            "a1a9c11ab11d743914b05eac808723d8e4208e71",
+            "cab7c617c9952eb54eb66848b196e3a565d68e2b",
+            "c78d256628243bc4cb5aa08ff2c8165c1b728e03",
+            "1430ae55da8b1548351fe506e5f575834e42e06e",
+            "7d6e4baa25249374abfa074708b9de45f1175e85",
+            "fc0fc06aa3345fe959a893be909f46c6ec477f27",
+            "256b3adecfb76dcd4956dc766603910b5f8aa7d5",
+            "3ec0831e5f525a228a53e6778e8cc8b69b20f627",
+            "c83dceb609fe781bf4c9ac19044d22da09e4fa98",
+            "8ed3d90635e40ff62e194b8ac41c1e350edf2247",
+            "78854e63dca2e16080e60cdd3b99b3e5537bb7c7",
+            "8c0ee5f3943d404769206e721b467f905571209a",
+            "8b4d0d32f6dfb183d48e5a09bb52b3e9c928f1d6",
+            "6d68b0a6f584978d30e6e332e174db1392a50084",
+            "0fc258e43ab937eb35b8e2154f165a496fe4fd59",
+            "f475d0788e48185022b51c6f0db7fd2fd090430b"
+          ]
+        },
+        "authority": "current_task_custody_only",
+        "destination_base": "91b1293cacf7161f6cb0cf54197e2ae97c1c2d5d",
+        "destination_change": "change_01M74ZXHG6GAEPNMZAXMGJYGH8",
+        "exception_authorized": false,
+        "historical_proof": "not_proven",
+        "reason": "Preserve this original source and any observed historical checkpoint gap. Reauthor only the reviewed residual patch in current task custody; no retrospective proof or full-readiness claim.",
+        "recovery": "reauthor_and_obtain_fresh_proof",
+        "schema": "decapod.history-recovery.v1",
+        "source_commit": "f475d0788e48185022b51c6f0db7fd2fd090430b",
+        "source_governance_blob": "21cb3b39c0f9cdb9ede48f65fbdecbc202d5619d",
+        "source_tree": "a835843400b483a9f276490307d7a5a32b716030"
+      },
       "plan:3109ff52b1ce422e": "Determine the smallest existing-provider execution boundary that keeps candidate build/test code from modifying trusted measurement or final-verdict authority.",
       "plan:5dbe0918f5d72eb4": "Buildkite collection excluded by user; no full native publication receipt is claimed",
       "plan:7f9060fac006b60a": "An already shipped controller cannot retroactively implement this code; distinguish one-time controller rollout from future older-catalog compatibility proof.",
@@ -486,6 +679,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -539,9 +733,11 @@
       "trajectory:9941075e2bf888c0": "Use existing deterministic runtime and publisher; local-only proof cannot authorize a forge target",
       "trajectory:9cae7985f5372144": "50dfe init/cli_contracts target passed217.4s, but sibling enforcement timed out300s at real validate; same enforcement succeeded standalone247.6s. Isolate enforcement from sibling Bazel tests without changing commands/coverage/budgets; reviewed inventory781faa8360d5ca7701b61a3941ae6994681c7e98b229289a90bcb740e3236f97. New shared model pin/local runtime registration, native format/hash checks, bounded private records, frozen custody before proof and stale binding/model/runtime rejection before acceptance are authored not executed. Explicit registration does not run worker or certify provenance. Current worker still Metal-only; CPU/CUDA/fallback and genuine native/reference/holdout evidence remain mandatory gaps.",
       "trajectory:9ccc878a4150c313": "Native snapshot now succeeds, but dependency compilation failed before any worker tests or model/probe/reference/evaluation. Repair is compatible upstream runtime pin update on same feature branch; all new actual execution still pending.",
+      "trajectory:9dc5e300bb3bd67b": "User explicitly requires team-configurable Vega selected during init, Metal preference on macOS, supported GPU elsewhere and safe CPU fallback. Updated plan separately approved and oriented. Added both init flags, interactive selection, preservation of omitted settings/pins and authored regression for enable/disable/dry-run/no runtime setup. These newer changes have not executed. Current Mac-only worker and absolute installation policy must be extended; pinned attention dependency rejects neither-backend builds and has GPU-only GDN kernels. No CPU support claimed. Corrected previous candidate bad94 complete source CI passed; full readiness remains blocked.",
       "trajectory:9ec958ffca8a0a63": "Independent scalar reference repair only; own block19 floor-bucket accumulation and analytic anchors do not call candidate pooling. New tests and nonempty chunk comparisons unexecuted until next fullvalidate. Model/runtime/calibration/holdout/tolerances fixed; partial model-judgment failures and long-reference/productionfallback/independentlabel gaps still block publication.",
       "trajectory:a20c20e43c7307b1": "Neighboring session/onboarding owners confirmed project binding is outside their scopes. Full source validation owns build/tests; no separate manual test was run. Real native service evidence remains separate from modeled HTTP.",
       "trajectory:ac23859f7db4e13e": "Preserve explicit cancellation and all remote sourcepass evidence. Late final report failure must dominate earlier readiness; this repair changes no scientific threshold or model result. Sourcepass is not nativeverification. Continue official validate exactnewcandidate on originalbranch; no new ownership, manual tests, forcepush, PR while acceptance fails, merge or release.",
+      "trajectory:acca78c440a4be4f": "User requests continued execution, not stopping at a temporary quota blocker. Preserve denied public API403 and wait until reset before supported validate. Use wait for measured fail-fast repair: final reducer must not access assets after knownfailed required numeric collection, while keeping every earlier independent collection and bound diagnostics. Production failed required proof already skipsVega. No gate waiver, holdout tuning or new ownership.",
       "trajectory:ad78b8b133b57577": "Only released119 snapshot blocker retired: merged fix is officially published1191. Native/parity/calibration acceptance remains unverified and required recipe remains nonaccepting until actual evidence; authored inputs and frozen criteria unchanged.",
       "trajectory:afd7f835abf45cbd": "Native full graph still requires actual platform capabilities; current Mac does not by itself establish Linux or four-archive release execution",
       "trajectory:b2b784d1dd82ea8a": "Mac-only offline metadata does not prove cached dependency resolution on every platform; normalized lock references are not version-only proof reuse",
@@ -599,6 +795,11 @@
       "id": "diagnostic-1071-ci-repair",
       "summary": "Repair Clippy formatting, generate the workspace diagnostic contract from the source-built CLI, refresh v0.148.10 projection metadata, and rerun both native regressions.",
       "input_digest": "sha256:f72cf282a41c8ba63646ab50d1e3a536cb3703fcaf847ffb7537b6877ebffabf"
+    },
+    {
+      "id": "cp-sync-495808c0f",
+      "summary": "Merge accepted master 495808c0f (v0.154.0), rebuild agent docs, and verify workspace diagnose (#1071)",
+      "input_digest": "sha256:56a4b64f5783eeeba6ddedfc22e5dda7bc73f86405626a55bc90df0cba42398a"
     }
   ],
   "intents": {
@@ -640,23 +841,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-record the reviewed workspace diagnostic spec against the regenerated v0.148.10 release metadata.",
-          "reviewed_code_fingerprint": "f1347054eecc8a087a5e4cafe758d49fb4614c1c2a3fa95901e054c109d97e07",
-          "spec_material_hash": "d00d282949873448b71dd0351a29d10342d24087557b5f823dfba50a40e99584"
+          "reason": "Synced #1071 workspace diagnosis read-only architecture with accepted master 495808c0f (v0.154.0).",
+          "reviewed_code_fingerprint": "a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9",
+          "spec_material_hash": "2bf5dc2558f400b41e0e6dea2f73451f13dc052c21faadc5e25723fef40d0914"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-record the reviewed workspace diagnostic spec against the regenerated v0.148.10 release metadata.",
-          "reviewed_code_fingerprint": "f1347054eecc8a087a5e4cafe758d49fb4614c1c2a3fa95901e054c109d97e07",
-          "spec_material_hash": "60d591f05d28dacfaa402db9a6375e7cbbc661d3be41557baf6890f44cf160b1"
+          "reason": "Synced #1071 decapod workspace diagnose CLI & JSON contract with accepted master 495808c0f (v0.154.0).",
+          "reviewed_code_fingerprint": "a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9",
+          "spec_material_hash": "c0eaabcc443302ee7708c0a8d4f74e07b9aa21313af81104ba62252e6b961225"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-record the reviewed workspace diagnostic spec against the regenerated v0.148.10 release metadata.",
-          "reviewed_code_fingerprint": "f1347054eecc8a087a5e4cafe758d49fb4614c1c2a3fa95901e054c109d97e07",
-          "spec_material_hash": "8bdf28312ba04404ece615740e572ffcd11b416fd94547fe8340774feae99cb4"
+          "reason": "Synced #1071 read-only diagnostic non-mutation and credential redaction guarantees with accepted master 495808c0f (v0.154.0).",
+          "reviewed_code_fingerprint": "a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9",
+          "spec_material_hash": "d3fed735402f3756448338e5abf7b4b8ad082f068312fcd0a1a3aea70ef7937f"
         }
       ],
       "state": "APPROVED",
@@ -667,13 +868,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1794986317Z"
+      "updated_at": "1795193194Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:94333faf14f50cc96879119ea44eab3607db24294683a749d64635e5c47845bd",
+      "artifact_hash": "sha256:45c9a68b583ecbbdc32b8c66d828d4795d094a791f2acafbbedabd6eb3b2fa59",
       "checks": [
         {
           "name": "initial_draft_ci",
@@ -720,10 +921,17 @@
             "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7PNTY4AR0ZXQ0RQS74779N8",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7PNTY4AR0ZXQ0RQS74779N8": {
@@ -764,6 +972,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/workspace.rs",
+                  "docs/agent/command-contracts.md",
+                  "Merged origin/master 495808c0f (v0.154.0); ran candidate docs build, cargo fmt, clippy --all-targets --all-features -D warnings, workspace_diagnostic, cli_contracts diagnose, and doc_alignment tests"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -771,14 +995,18 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "Merged origin/master 495808c0f (v0.154.0); ran candidate docs build, cargo fmt, clippy --all-targets --all-features -D warnings, workspace_diagnostic, cli_contracts diagnose, and doc_alignment tests"
+      ],
       "inspected_files": [
         "src/decapod/core/db_maintenance.rs",
         "src/decapod/core/workspace_publication.rs"
       ],
       "intent_id": "intent:change_01M7PNTY1326215RVKP88VR4NJ",
       "modified_files": [
+        "docs/agent/command-contracts.md",
         "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/core/workspace_diagnostic.rs"
       ],
       "next_transitions": [

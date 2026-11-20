@@ -18,6 +18,32 @@ use std::sync::{
 };
 use std::time::{Duration, Instant};
 
+#[test]
+#[ignore = "requires an explicit private capture from an actual externally observed agent run"]
+fn export_observed_agent_acceptance() {
+    let capture =
+        std::env::var_os("DECAPOD_AGENT_ACCEPTANCE_CAPTURE").expect("explicit private capture");
+    let output =
+        std::env::var_os("DECAPOD_AGENT_ACCEPTANCE_MANIFEST").expect("new public-safe output");
+    let output = PathBuf::from(output);
+    assert!(!output.exists(), "preserve previous presentation evidence");
+    let binary = super::resolve_decapod_bin();
+    let result = Command::new(binary)
+        .args(["trace", "flight-recorder", "acceptance", "--capture"])
+        .arg(capture)
+        .bounded_output(Duration::from_secs(60))
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    let manifest: Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert_eq!(manifest["publication_ready"], false);
+    assert_eq!(manifest["merge_authorized"], false);
+    fs::write(output, &result.stdout).unwrap();
+}
+
 struct Demo {
     binary: PathBuf,
     directory: PathBuf,
@@ -171,6 +197,7 @@ fn configure_accepted_fixture(root: &Path, output: &Path, repository: &str) {
                 .unwrap()
                 .into(),
         )]),
+        platforms: BTreeMap::new(),
         environment: BTreeMap::from([("LC_ALL".into(), "C".into())]),
         directory: ".".into(),
         timeout_seconds: 10,
@@ -197,6 +224,7 @@ fn configure_accepted_fixture(root: &Path, output: &Path, repository: &str) {
             .iter()
             .map(|command| (command.name.clone(), execution.clone()))
             .collect(),
+        targets: BTreeMap::new(),
     };
     contract.reviewed_commands_digest =
         repository_profile::command_contract_digest(&commands, &contract).unwrap();
@@ -211,6 +239,7 @@ fn configure_accepted_fixture(root: &Path, output: &Path, repository: &str) {
         max_input_bytes: 64 * 1024 * 1024,
         max_files: 10_000,
         max_output_bytes: 1024 * 1024,
+        target: None,
     };
     let sources =
         validation_runtime::discover_source_inventory(&options, &Default::default()).unwrap();

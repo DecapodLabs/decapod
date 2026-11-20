@@ -108,6 +108,12 @@ claims or replace plan, trajectory, or validation work.
 
 `inventory --claims-note "..."` records a current-PR checkpoint without inventing
 a research claim. `inventory --compact` performs lossless legacy normalization.
+When a Git merge (`MERGE_HEAD` present) leaves `.decapod/governance.json` with a
+merge conflict or `Trajectory artifact hash mismatch`, run
+`decapod govern artifacts reconcile-merge` before committing the merge; it
+reconciles from immutable commit ancestry (`HEAD`, `MERGE_HEAD`,
+`merge-base --all`), rejects conflicting unaccepted PR authority or check-status
+contradictions, and preserves failed or missing proof verbatim.
 Successful validation writes the logical validation section without a
 self-referential hash cycle. Do not use `DECAPOD_VALIDATE_SKIP_GIT_GATES` as an
 agent publication shortcut. Stage and checkpoint the final material before committing.
@@ -151,6 +157,13 @@ reference preserves provenance and is not cryptographic human authentication.
 The original question remains in the review record. A decision about stale code
 or stale spec content is rejected. Never invent a decision reference or infer
 approval. Existing 1.0 plans remain readable; recording reviews writes plan 1.1.
+
+Inference orientation exposes `governed_plan.instruction_readiness` for the
+current plan. Each recorded blocker names its source in the plan and the
+report gives the supported correction. Draft planning can retain open items.
+Approval, execution checkpoints, validation, and publication require them to
+be resolved. After a correction, approve the revised plan and rerun affected
+proof. Starting a new plan preserves a pending spec decision.
 
 After review, refresh supported projections and run validation. The validation
 epoch binds the plan (including review evidence), claims, authored and generated

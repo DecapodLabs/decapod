@@ -890,6 +890,41 @@ impl RuleRegistry {
                 decapod_version: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
             },
         });
+
+        self.register_rule(ValidationRule {
+            id: RuleId::new("decapod.policy.accepted_repository_contract"),
+            description: "Accepted repository proof policies and reviewed source inventories cannot be weakened or replaced without policy.control transition approval"
+                .to_string(),
+            authority: RuleAuthority::KernelInvariant,
+            applicability: RuleApplicability::default(),
+            evaluation_phase: EvaluationPhase::PreExecution,
+            evaluator: "decapod.policy.transition".to_string(),
+            requirements: RuleRequirements::default(),
+            severity: RuleSeverity::Critical,
+            remediation: RuleRemediation {
+                error_code: "ACCEPTED_REPOSITORY_CONTRACT_CHANGED".to_string(),
+                violation_description: "Candidate altered accepted repo.pr-readiness.v1 source inventory, commands, executions, or coverage without an active policy.control transition approval".to_string(),
+                expected_condition: "Accepted repository-local proof policy is preserved, or an active non-expired non-revoked policy.control approval matches the exact base, head, and digest transition under scope repo.pr-readiness.v1".to_string(),
+                observed_condition: "Candidate modified accepted repository proof declarations without a matching policy.control approval".to_string(),
+                affected_paths: vec![".decapod/config.toml".to_string()],
+                required_steps: vec![
+                    "Preserve the accepted repo.pr-readiness.v1 commands, executions, coverage, and reviewed_sources_digest, OR".to_string(),
+                    "Review the exact diff and run `decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1` as a policy.control-authorized maintainer".to_string(),
+                ],
+                autonomous_remediation_permitted: false,
+                human_authorization_required: true,
+                evidence_for_revalidation: vec!["policy_transition_approval".to_string()],
+                related_rules: vec![RuleId::new("decapod.publication.fresh_proof")],
+            },
+            override_eligibility: OverrideEligibility::NonOverridable,
+            provenance: RuleProvenance {
+                source: "embedded/constitution.json".to_string(),
+                source_hash: String::new(),
+                body_hash: String::new(),
+                registered_at: crate::core::time::now_epoch_z(),
+                decapod_version: crate::core::entrypoint_integrity::RELEASE_VERSION.to_string(),
+            },
+        });
     }
 
     /// Register a built-in rule.
@@ -899,17 +934,35 @@ impl RuleRegistry {
 
     /// Load project-specific rules from OVERRIDE.md.
     pub fn load_project_rules(&mut self, repo_root: &Path) -> Result<(), error::DecapodError> {
-        let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
-        if !override_path.exists() {
-            return Ok(());
-        }
-
         let override_content =
-            std::fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?;
+            match crate::core::db_maintenance::resolve_repository_override(repo_root) {
+                Ok(Some(content)) => content,
+                Ok(None) => return Ok(()),
+                Err(("CANONICAL_GIT_BOUNDARY_REQUIRED", _)) => {
+                    let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
+                    if !override_path.exists() {
+                        return Ok(());
+                    }
+                    std::fs::read_to_string(&override_path).map_err(error::DecapodError::IoError)?
+                }
+                Err((code, msg)) => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "{code}: {msg}"
+                    )));
+                }
+            };
 
+        self.load_project_rules_from_content(&override_content)
+    }
+
+    /// Parse and register project rule overrides from raw OVERRIDE.md content.
+    pub fn load_project_rules_from_content(
+        &mut self,
+        override_content: &str,
+    ) -> Result<(), error::DecapodError> {
         // Parse validation-rules section from OVERRIDE.md
-        if let Some(rules_section) = self.extract_validation_rules_section(&override_content) {
-            self.parse_project_rules(&rules_section, &override_content)?;
+        if let Some(rules_section) = self.extract_validation_rules_section(override_content) {
+            self.parse_project_rules(&rules_section, override_content)?;
         }
 
         Ok(())
@@ -1020,13 +1073,18 @@ impl RuleRegistry {
                         full_id
                     )));
                 }
-                OverrideEligibility::TightenOnly => {
-                    // Only allow increasing severity
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
+                    if severity < base_rule.severity {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "OVERRIDE_NOT_PERMITTED: Rule '{}' severity cannot be lowered below {:?}",
+                            full_id, base_rule.severity
+                        )));
+                    }
                     if severity > base_rule.severity {
                         base_rule.severity = severity;
                     }
                 }
-                _ => {
+                OverrideEligibility::FullyOverridable => {
                     base_rule.severity = severity;
                 }
             }
@@ -1036,9 +1094,12 @@ impl RuleRegistry {
         if let Some(applicability) = override_values.applicability {
             match base_rule.override_eligibility {
                 OverrideEligibility::NonOverridable => {
-                    // Non-overridable rules cannot have applicability changed
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "OVERRIDE_NOT_PERMITTED: Rule '{}' applicability cannot be overridden (kernel invariant)",
+                        full_id
+                    )));
                 }
-                OverrideEligibility::TightenOnly => {
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
                     // Only allow adding constraints
                     base_rule
                         .applicability
@@ -1052,7 +1113,7 @@ impl RuleRegistry {
                         base_rule.applicability.task_types = applicability.task_types;
                     }
                 }
-                _ => {
+                OverrideEligibility::FullyOverridable => {
                     base_rule.applicability = applicability;
                 }
             }
@@ -1061,24 +1122,26 @@ impl RuleRegistry {
         // Apply requirements override if present
         if let Some(requirements) = override_values.requirements {
             match base_rule.override_eligibility {
-                OverrideEligibility::NonOverridable => {}
-                OverrideEligibility::TightenOnly => {
-                    base_rule
-                        .requirements
-                        .required_evidence
-                        .extend(requirements.required_evidence);
-                    base_rule
-                        .requirements
-                        .required_evaluators
-                        .extend(requirements.required_evaluators);
-                    if requirements.evidence_max_age_seconds
-                        > base_rule.requirements.evidence_max_age_seconds
-                    {
-                        base_rule.requirements.evidence_max_age_seconds =
-                            requirements.evidence_max_age_seconds;
-                    }
+                OverrideEligibility::NonOverridable => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "OVERRIDE_NOT_PERMITTED: Rule '{}' requirements cannot be overridden (kernel invariant)",
+                        full_id
+                    )));
                 }
-                _ => {
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
+                    if requirements.evidence_max_age_seconds > 0
+                        && base_rule.requirements.evidence_max_age_seconds > 0
+                        && requirements.evidence_max_age_seconds
+                            > base_rule.requirements.evidence_max_age_seconds
+                    {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "OVERRIDE_NOT_PERMITTED: Rule '{}' cannot relax evidence_max_age_seconds beyond {}",
+                            full_id, base_rule.requirements.evidence_max_age_seconds
+                        )));
+                    }
+                    extend_requirements(&mut base_rule.requirements, &requirements);
+                }
+                OverrideEligibility::FullyOverridable => {
                     base_rule.requirements = requirements;
                 }
             }
@@ -1087,15 +1150,20 @@ impl RuleRegistry {
         // Apply remediation override if present
         if let Some(remediation) = override_values.remediation {
             match base_rule.override_eligibility {
-                OverrideEligibility::NonOverridable => {}
-                OverrideEligibility::TightenOnly => {
+                OverrideEligibility::NonOverridable => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "OVERRIDE_NOT_PERMITTED: Rule '{}' remediation cannot be overridden (kernel invariant)",
+                        full_id
+                    )));
+                }
+                OverrideEligibility::TightenOnly | OverrideEligibility::ConfigurableOnly => {
                     // Only allow tightening remediation (more specific steps)
                     base_rule
                         .remediation
                         .required_steps
                         .extend(remediation.required_steps);
                 }
-                _ => {
+                OverrideEligibility::FullyOverridable => {
                     base_rule.remediation = remediation;
                 }
             };
@@ -1294,12 +1362,16 @@ impl RuleRegistry {
                         });
                     }
                     OverrideEligibility::ConfigurableOnly => {
-                        existing.effective_severity = project_rule.severity.clone();
-                        existing.rule.severity = project_rule.severity.clone();
-                        existing.rule.requirements = project_rule.requirements.clone();
+                        if project_rule.severity > existing.rule.severity {
+                            existing.effective_severity = project_rule.severity.clone();
+                        }
+                        extend_requirements(
+                            &mut existing.rule.requirements,
+                            &project_rule.requirements,
+                        );
                         existing.override_values = Some(RuleOverrideValues {
-                            severity: Some(project_rule.severity.clone()),
-                            requirements: Some(project_rule.requirements.clone()),
+                            severity: Some(existing.effective_severity.clone()),
+                            requirements: Some(existing.rule.requirements.clone()),
                             ..Default::default()
                         });
                     }
@@ -1426,7 +1498,10 @@ fn extend_requirements(target: &mut RuleRequirements, extra: &RuleRequirements) 
         .extend(extra.required_evaluators.clone());
     target.required_evaluators.sort();
     target.required_evaluators.dedup();
-    if extra.evidence_max_age_seconds > target.evidence_max_age_seconds {
+    if extra.evidence_max_age_seconds > 0
+        && (target.evidence_max_age_seconds == 0
+            || extra.evidence_max_age_seconds < target.evidence_max_age_seconds)
+    {
         target.evidence_max_age_seconds = extra.evidence_max_age_seconds;
     }
 }
@@ -1477,6 +1552,7 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
             "decapod.evidence.validator" => evaluate_evidence_rule(rule, context),
             "decapod.workunit" => evaluate_workunit_rule(rule, context),
             "decapod.publication" => evaluate_publication_rule(context),
+            "decapod.policy.transition" => evaluate_policy_transition_rule(context),
             _ => RuleVerdict::Unverifiable,
         }
     };
@@ -1851,6 +1927,72 @@ fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
     match &context.terminal_evidence {
         Some(terminal) if terminal.proof.verify().is_ok() => RuleVerdict::Pass,
         _ => RuleVerdict::Unverifiable,
+    }
+}
+
+fn evaluate_policy_transition_rule(context: &RuleEvaluationContext) -> RuleVerdict {
+    let Some(root) = context.repo_root.as_deref() else {
+        return RuleVerdict::Pass;
+    };
+    if !root.join(".git").exists() || !root.join(".decapod/config.toml").is_file() {
+        return RuleVerdict::Pass;
+    }
+    let Ok(candidate_bytes) = std::fs::read(root.join(".decapod/config.toml")) else {
+        return RuleVerdict::Fail;
+    };
+    let Ok(candidate) = crate::core::validation_runtime::proof_configuration(&candidate_bytes)
+    else {
+        return RuleVerdict::Fail;
+    };
+    let base_branch = crate::core::workspace::resolve_base_branch(root, None);
+    let Some(base_ref) = crate::core::workspace::base_ref_for_branch(root, &base_branch) else {
+        return RuleVerdict::Pass;
+    };
+    let git = |args: &[&str]| -> Option<String> {
+        let out = std::process::Command::new("git")
+            .current_dir(root)
+            .args(args)
+            .output()
+            .ok()?;
+        if !out.status.success() {
+            return None;
+        }
+        Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+    };
+    let Some(base_sha) = git(&["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")]) else {
+        return RuleVerdict::Pass;
+    };
+    let Some(head_sha) = git(&["rev-parse", "--verify", "HEAD^{commit}"]) else {
+        return RuleVerdict::Pass;
+    };
+    let Some(accepted_toml) = git(&["show", &format!("{base_sha}:.decapod/config.toml")]) else {
+        return RuleVerdict::Pass;
+    };
+    let Ok(accepted) =
+        crate::core::validation_runtime::proof_configuration(accepted_toml.as_bytes())
+    else {
+        return RuleVerdict::Fail;
+    };
+    if accepted
+        .required_profile
+        .as_ref()
+        .is_none_or(|p| p.id != crate::core::repository_profile::REQUIRED_PROFILE)
+    {
+        return RuleVerdict::Pass;
+    }
+    match crate::core::repository_profile::verify_accepted_transition(
+        root,
+        &base_sha,
+        &head_sha,
+        accepted.required_profile.as_ref(),
+        candidate.required_profile.as_ref(),
+        &accepted.commands,
+        &candidate.commands,
+        accepted.repository_contract.as_ref(),
+        candidate.repository_contract.as_ref(),
+    ) {
+        Ok(()) => RuleVerdict::Pass,
+        Err(_) => RuleVerdict::Fail,
     }
 }
 

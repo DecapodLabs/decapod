@@ -1,7 +1,11 @@
 use crate::core::db::OptionalExtension;
 use crate::core::error;
+use crate::core::validation_rules::{
+    RuleAuthority, RuleId, RuleRemediation, RuleSeverity, RuleVerdict,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -163,6 +167,7 @@ pub fn review_spec(
         {
             return Err(error::DecapodError::ValidationError("SPEC_REVIEW_DECISION_REQUIRED: this contract still requires human judgment. Preserve the decision request; do not replace it with agent self-approval. After obtaining the human decision, use `decapod govern plan resolve-spec-review --path <path> --decision-ref <human decision reference> --reason <accepted rationale>`; ordinary review cannot grant approval.".into()));
         }
+        let requires_decision = disposition == SpecReviewDisposition::RequiresDecision;
         plan.spec_reviews.retain(|review| review.path != path);
         plan.spec_reviews.push(SpecReview {
             path: path.to_string(),
@@ -173,6 +178,9 @@ pub fn review_spec(
             decision_ref: None,
         });
         plan.spec_reviews.sort_by(|a, b| a.path.cmp(&b.path));
+        if requires_decision {
+            invalidate_plan_acceptance(&mut plan);
+        }
         plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -223,6 +231,7 @@ pub fn resolve_spec_review(
             reason.trim()
         );
         review.decision_ref = Some(decision_ref.trim().to_string());
+        invalidate_plan_acceptance(&mut plan);
         plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -293,7 +302,15 @@ pub fn init_plan(
 ) -> Result<GovernedPlan, error::DecapodError> {
     crate::core::governance_document::with_lock(project_root, || {
         // Reinitializing a plan must not erase a live or exhausted budget.
-        let reflection = load_plan(project_root)?.and_then(|plan| plan.reflection);
+        let previous = load_plan(project_root)?;
+        let spec_reviews = previous
+            .as_ref()
+            .into_iter()
+            .flat_map(|plan| &plan.spec_reviews)
+            .filter(|review| review.disposition == SpecReviewDisposition::RequiresDecision)
+            .cloned()
+            .collect();
+        let reflection = previous.and_then(|plan| plan.reflection);
         let plan = GovernedPlan {
             schema_version: PLAN_SCHEMA_VERSION.to_string(),
             title: input.title,
@@ -308,7 +325,7 @@ pub fn init_plan(
             deferred_questions: input.deferred_questions,
             constraints: input.constraints,
             phases: input.phases,
-            spec_reviews: Vec::new(),
+            spec_reviews,
             reflection,
             updated_at: crate::core::time::now_epoch_z(),
         };
@@ -380,6 +397,12 @@ pub fn patch_plan(
         if let Some(state) = patch.state {
             plan.state = state;
         }
+        if matches!(
+            plan.state,
+            PlanState::Approved | PlanState::Executing | PlanState::Done
+        ) {
+            ensure_instruction_ready(&plan, "NEEDS_HUMAN_INPUT")?;
+        }
         validate_plan_progress(&plan)?;
         plan.updated_at = crate::core::time::now_epoch_z();
         save_plan(project_root, &plan)?;
@@ -404,6 +427,7 @@ pub(crate) fn invalidate_plan_acceptance(plan: &mut GovernedPlan) {
 }
 
 fn require_phase_acceptance(plan: &GovernedPlan) -> Result<(), error::DecapodError> {
+    ensure_instruction_ready(plan, "NEEDS_HUMAN_INPUT")?;
     if !matches!(plan.state, PlanState::Approved | PlanState::Executing) {
         return Err(marker_error(
             "NEEDS_PLAN_APPROVAL",
@@ -574,6 +598,135 @@ pub fn update_gate(
     })
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InstructionBlocker {
+    pub id: String,
+    pub source: String,
+    pub question: String,
+}
+
+/// Readiness of the recorded plan inputs, independent of its approval or execution state.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct InstructionReadiness {
+    pub rule_id: RuleId,
+    pub authority: RuleAuthority,
+    pub severity: RuleSeverity,
+    pub verdict: RuleVerdict,
+    pub source_revision: String,
+    pub blockers: Vec<InstructionBlocker>,
+    pub remediation: Option<RuleRemediation>,
+}
+
+pub fn instruction_readiness(plan: &GovernedPlan) -> InstructionReadiness {
+    let mut blockers = Vec::new();
+    let mut add_blocker = |field: &str, question: String| {
+        let source = format!("{PLAN_PATH}#/sections/plan/{field}");
+        let identity = json!([plan.todo_ids, source, question]);
+        blockers.push(InstructionBlocker {
+            id: format!("instruction:{:x}", Sha256::digest(identity.to_string())),
+            source,
+            question,
+        });
+    };
+    if plan.intent.trim().is_empty() {
+        add_blocker(
+            "intent",
+            "What is the single-sentence intent for this change?".into(),
+        );
+    }
+    for (index, question) in plan.human_questions.iter().enumerate() {
+        add_blocker(&format!("human_questions/{index}"), question.clone());
+    }
+    for (index, unknown) in plan.unknowns.iter().enumerate() {
+        add_blocker(
+            &format!("unknowns/{index}"),
+            format!("Resolve unknown before execution: {unknown}"),
+        );
+    }
+    for (index, contradiction) in plan.unresolved_contradictions.iter().enumerate() {
+        add_blocker(
+            &format!("unresolved_contradictions/{index}"),
+            format!("Resolve conflicting requests before execution: {contradiction}"),
+        );
+    }
+    let mut pending_spec_review = false;
+    for (index, review) in plan.spec_reviews.iter().enumerate() {
+        if review.disposition == SpecReviewDisposition::RequiresDecision {
+            pending_spec_review = true;
+            add_blocker(
+                &format!("spec_reviews/{index}"),
+                format!(
+                    "Resolve pending human spec review for {}: {}",
+                    review.path, review.reason
+                ),
+            );
+        }
+    }
+    let source = json!({
+        "intent": plan.intent,
+        "todo_ids": plan.todo_ids,
+        "unknowns": plan.unknowns,
+        "human_questions": plan.human_questions,
+        "unresolved_contradictions": plan.unresolved_contradictions,
+        "spec_reviews": plan.spec_reviews,
+    });
+    let remediation = (!blockers.is_empty()).then(|| {
+        let human_required = pending_spec_review || !plan.human_questions.is_empty();
+        let mut required_steps = vec![
+            "Resolve the recorded plan items using the governing sources and `decapod govern plan update`.".into(),
+        ];
+        if pending_spec_review {
+            required_steps.push("Obtain the human spec decision and record it with `decapod govern plan resolve-spec-review`.".into());
+        }
+        required_steps.push("Reapprove the revised plan and rerun affected proof.".into());
+        RuleRemediation {
+            error_code: "NEEDS_HUMAN_INPUT".into(),
+            violation_description: "Recorded instructions require resolution".into(),
+            expected_condition: "No unresolved recorded instruction items".into(),
+            observed_condition: format!("{} recorded blockers", blockers.len()),
+            affected_paths: blockers.iter().map(|blocker| blocker.source.clone()).collect(),
+            required_steps,
+            autonomous_remediation_permitted: !human_required,
+            human_authorization_required: human_required,
+            evidence_for_revalidation: vec!["Current plan and fresh applicable proof".into()],
+            related_rules: vec![],
+        }
+    });
+    InstructionReadiness {
+        rule_id: RuleId::new("recorded_instruction_readiness"),
+        authority: RuleAuthority::TaskConstraints,
+        severity: RuleSeverity::Error,
+        verdict: if blockers.is_empty() {
+            RuleVerdict::Pass
+        } else {
+            RuleVerdict::Fail
+        },
+        source_revision: format!("sha256:{:x}", Sha256::digest(source.to_string())),
+        blockers,
+        remediation,
+    }
+}
+
+pub(crate) fn ensure_instruction_ready(
+    plan: &GovernedPlan,
+    marker: &str,
+) -> Result<(), error::DecapodError> {
+    let readiness = instruction_readiness(plan);
+    if readiness.blockers.is_empty() {
+        return Ok(());
+    }
+    let questions: Vec<_> = readiness
+        .blockers
+        .iter()
+        .map(|blocker| &blocker.question)
+        .collect();
+    Err(marker_error(
+        marker,
+        "Recorded instructions require resolution.",
+        Some(json!({ "questions": questions, "instruction_readiness": readiness })),
+    ))
+}
+
 pub fn ensure_execute_ready(
     input: ExecuteCheckInput<'_>,
 ) -> Result<GovernedPlan, error::DecapodError> {
@@ -585,6 +738,7 @@ pub fn ensure_execute_ready(
         )
     })?;
 
+    ensure_instruction_ready(&plan, "NEEDS_HUMAN_INPUT")?;
     if plan.state != PlanState::Approved
         && plan.state != PlanState::Executing
         && plan.state != PlanState::Done
@@ -593,25 +747,6 @@ pub fn ensure_execute_ready(
             "NEEDS_PLAN_APPROVAL",
             "Execution blocked: plan state must be APPROVED.",
             Some(json!({ "current_state": format!("{:?}", plan.state).to_uppercase() })),
-        ));
-    }
-
-    if plan.intent.trim().is_empty()
-        || !plan.unknowns.is_empty()
-        || !plan.human_questions.is_empty()
-    {
-        let mut questions = Vec::new();
-        if plan.intent.trim().is_empty() {
-            questions.push("What is the single-sentence intent for this change?".to_string());
-        }
-        questions.extend(plan.human_questions.clone());
-        for unknown in &plan.unknowns {
-            questions.push(format!("Resolve unknown before execution: {unknown}"));
-        }
-        return Err(marker_error(
-            "NEEDS_HUMAN_INPUT",
-            "Execution blocked: unresolved intent or unknowns.",
-            Some(json!({ "questions": questions })),
         ));
     }
 

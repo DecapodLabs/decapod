@@ -313,6 +313,11 @@ impl PublicationReadiness {
         let proof = report.completed_evidence.take().ok_or_else(|| {
             invalid("PUBLICATION_PROOF_MISSING: a receipt or successful report alone cannot authorize a PR")
         })?;
+        if proof.target_scope.is_some() || report.target.is_some() {
+            return Err(invalid(
+                "PUBLICATION_NOT_READY: target-scoped validation cannot authorize full-repository PR publication",
+            ));
+        }
         proof.verify()?;
         if proof.scope != report.scope
             || digest(&report.laya_readiness)? != digest(&Some(&proof.laya))?
@@ -473,6 +478,34 @@ pub(crate) fn capture_task_binding(
 ) -> Result<Option<ValidationBinding>, DecapodError> {
     capture_task_binding_inner(store, root, true)
 }
+
+pub(crate) fn capture_task_binding_with_budget(
+    store: &Store,
+    root: &Path,
+    validation_budget: Duration,
+) -> Result<Option<ValidationBinding>, DecapodError> {
+    if history_is_cloud(store, root)? {
+        return Ok(None);
+    }
+    let (_, _, trajectory) = governance(root)?;
+    let task_id = trajectory
+        .get("task_id")
+        .and_then(Value::as_str)
+        .filter(|id| !id.is_empty())
+        .ok_or_else(|| invalid("full validation requires a task-bound trajectory"))?;
+    // Never rotate custody implicitly: renewing bumps `lease_generation`, which
+    // invalidates workunit execution checkpoints. Default is a read-only advisory.
+    let mode = todo::ValidationLeaseTtlMode::from_env_value(
+        std::env::var("DECAPOD_VALIDATE_LEASE_TTL").ok().as_deref(),
+    );
+    let min_ttl_secs = validation_budget.as_secs().saturating_add(300);
+    if let todo::ValidationLeaseTtl::Low { advisory, .. } =
+        todo::ensure_validation_lease_ttl(&store.root, task_id, min_ttl_secs, mode)?
+    {
+        eprintln!("{advisory}");
+    }
+    capture_task_binding_inner(store, root, true)
+}
 fn capture_task_binding_inner(
     store: &Store,
     root: &Path,
@@ -517,6 +550,13 @@ fn capture_task_binding_inner(
     }))
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct TargetProofScope {
+    pub(crate) target: String,
+    pub(crate) resolved_targets: Vec<String>,
+}
+
 /// Owned by ValidationReport and skipped in its public JSON. The constructor is
 /// private to the runtime's successful proof path; deserialization alone is not
 /// a way to mint a report or append a canonical completion record.
@@ -527,6 +567,8 @@ pub(crate) struct CompletedReadinessEvidence {
     decapod_version: String,
     invocation_id: String,
     scope: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    target_scope: Option<TargetProofScope>,
     material: MaterialIdentity,
     governance_digest: String,
     trajectory_digest: String,
@@ -542,6 +584,7 @@ impl CompletedReadinessEvidence {
     pub(super) fn from_runtime(
         invocation_id: &str,
         scope: &str,
+        target_scope: Option<TargetProofScope>,
         material: &MaterialIdentity,
         governance_digest: &str,
         trajectory_digest: &str,
@@ -555,6 +598,7 @@ impl CompletedReadinessEvidence {
             decapod_version: env!("CARGO_PKG_VERSION").into(),
             invocation_id: invocation_id.into(),
             scope: scope.into(),
+            target_scope,
             material: material.clone(),
             governance_digest: governance_digest.into(),
             trajectory_digest: trajectory_digest.into(),
@@ -568,6 +612,10 @@ impl CompletedReadinessEvidence {
     }
     pub(crate) fn changed_paths(&self) -> &std::collections::BTreeSet<String> {
         &self.suite.facts.changed_paths
+    }
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn target_scope(&self) -> Option<&TargetProofScope> {
+        self.target_scope.as_ref()
     }
     pub(crate) fn verify_current(
         &self,
@@ -592,12 +640,36 @@ impl CompletedReadinessEvidence {
             .checks
             .iter()
             .any(|check| check.kind == evidence::CheckKind::RepositoryLocal);
-        let scope = if local && self.material.repository.starts_with("local-git:sha256:") {
-            super::repository_profile::LOCAL_GIT_READINESS_SCOPE
-        } else if local {
-            super::repository_profile::READINESS_SCOPE
-        } else {
-            validation_runtime::READINESS_SCOPE
+        let is_local_git = self.material.repository.starts_with("local-git:sha256:");
+        let scope = match (&self.target_scope, local, is_local_git) {
+            (Some(target_scope), true, true) => {
+                if target_scope.target.trim().is_empty()
+                    || !target_scope.resolved_targets.contains(&target_scope.target)
+                {
+                    return Err(invalid(
+                        "target-scoped readiness lacks valid target closure",
+                    ));
+                }
+                super::repository_profile::LOCAL_GIT_TARGET_READINESS_SCOPE
+            }
+            (Some(target_scope), true, false) => {
+                if target_scope.target.trim().is_empty()
+                    || !target_scope.resolved_targets.contains(&target_scope.target)
+                {
+                    return Err(invalid(
+                        "target-scoped readiness lacks valid target closure",
+                    ));
+                }
+                super::repository_profile::TARGET_READINESS_SCOPE
+            }
+            (Some(_), false, _) => {
+                return Err(invalid(
+                    "target-scoped readiness requires repository-local checks",
+                ));
+            }
+            (None, true, true) => super::repository_profile::LOCAL_GIT_READINESS_SCOPE,
+            (None, true, false) => super::repository_profile::READINESS_SCOPE,
+            (None, false, _) => validation_runtime::READINESS_SCOPE,
         };
         if self.schema != SCHEMA
             || self.decapod_version.is_empty()
@@ -787,8 +859,10 @@ fn history_is_cloud(store: &Store, root: &Path) -> Result<bool, DecapodError> {
     let selected = crate::cli::DecapodProjectConfig::load(root)?
         .repo
         .effective_backend();
-    let store_project =
-        super::store::find_decapod_project_root(&store.root).unwrap_or_else(|_| root.into());
+    let store_project = super::store::find_decapod_project_root(&store.root)
+        .ok()
+        .filter(|found| store.root.starts_with(found.join(".decapod")))
+        .unwrap_or_else(|| root.into());
     let routed = crate::cli::DecapodProjectConfig::load(&store_project)?
         .repo
         .effective_backend();
@@ -817,6 +891,25 @@ pub(crate) fn finish_archive(
     report: &ValidationReport,
 ) -> Result<(), DecapodError> {
     if !report.ready {
+        if let Some(subject) = &binding.workunit_subject
+            && matches!(
+                report.scope,
+                validation_runtime::READINESS_SCOPE
+                    | super::repository_profile::READINESS_SCOPE
+                    | super::repository_profile::LOCAL_GIT_READINESS_SCOPE
+            )
+        {
+            let current = capture_task_binding_inner(store, root, false)?
+                .ok_or_else(|| invalid("current task authority is unavailable"))?;
+            let mut original = binding.clone();
+            original.workunit_subject = None;
+            if current != original {
+                return Err(invalid(
+                    "task, custody or validation context changed during validation",
+                ));
+            }
+            super::workunit::invalidate_current_validation(root, &binding.task, subject)?;
+        }
         return Ok(());
     }
     require_local(store, root)?;
@@ -990,6 +1083,10 @@ impl HistoricalValidationProof {
     pub(crate) fn validation_epoch(&self) -> &ValidationEpochMetadata {
         &self.record.validation_epoch
     }
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn target_scope(&self) -> Option<&TargetProofScope> {
+        self.record.proof.target_scope()
+    }
     pub(crate) fn check_integration_witness(
         &self,
         root: &Path,
@@ -1040,6 +1137,15 @@ fn decode(event: &events::StoredEvent) -> Result<CompletionRecord, DecapodError>
     Ok(record)
 }
 
+fn is_target_scoped_record(record: &CompletionRecord) -> bool {
+    record.proof.target_scope.is_some()
+        || matches!(
+            record.proof.scope.as_str(),
+            super::repository_profile::TARGET_READINESS_SCOPE
+                | super::repository_profile::LOCAL_GIT_TARGET_READINESS_SCOPE
+        )
+}
+
 fn lookup_inner(
     root: &Path,
     store: &Store,
@@ -1056,27 +1162,53 @@ fn lookup_inner(
     }
     let repository = repository_identity(root)?.canonical_name;
     let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
-    let event = if let Some(id) = id {
-        events::query_subject_event_on_conn(&conn, events::VERIFICATION, "commit", sha, id)?
+    let record = if let Some(id) = id {
+        let event =
+            events::query_subject_event_on_conn(&conn, events::VERIFICATION, "commit", sha, id)?
+                .ok_or_else(|| {
+                    invalid("no canonical full validation proof was recorded for this commit")
+                })?;
+        let record = decode(&event)?;
+        if is_target_scoped_record(&record) {
+            return Err(invalid(
+                "TARGET_SCOPED_PROOF_REJECTED: target-scoped validation record cannot satisfy full-repository readiness",
+            ));
+        }
+        record
     } else {
-        let history = events::query_subject_on_conn(&conn, events::VERIFICATION, "commit", sha, MAX_RECORDS)?;
+        let history =
+            events::query_subject_on_conn(&conn, events::VERIFICATION, "commit", sha, MAX_RECORDS)?;
         let mut binding: Option<HistoricalTaskBinding> = None;
+        let mut selected = None;
         for event in &history {
             let record = decode(event)?;
             if record.candidate_sha != sha || record.proof.material.repository != repository {
-                return Err(invalid("subject journal contains another commit or repository"));
+                return Err(invalid(
+                    "subject journal contains another commit or repository",
+                ));
+            }
+            if is_target_scoped_record(&record) {
+                continue;
             }
             if let Some(previous) = &binding {
                 let next = &record.task_binding;
-                if previous.task_id != next.task_id || previous.contract_digest != next.contract_digest
-                    || previous.assignee != next.assignee || previous.lease_generation != next.lease_generation
-                { return Err(invalid("commit has successful records for different task contracts or custody; select the original record explicitly")); }
+                if previous.task_id != next.task_id
+                    || previous.contract_digest != next.contract_digest
+                    || previous.assignee != next.assignee
+                    || previous.lease_generation != next.lease_generation
+                {
+                    return Err(invalid(
+                        "commit has successful records for different task contracts or custody; select the original record explicitly",
+                    ));
+                }
             }
-            binding = Some(record.task_binding);
+            binding = Some(record.task_binding.clone());
+            selected = Some(record);
         }
-        history.into_iter().last()
-    }.ok_or_else(|| invalid("no canonical full validation proof was recorded for this commit"))?;
-    let record = decode(&event)?;
+        selected.ok_or_else(|| {
+            invalid("no canonical full validation proof was recorded for this commit")
+        })?
+    };
     if record.candidate_sha != sha || record.proof.material.repository != repository {
         return Err(invalid(
             "historical proof belongs to a different commit or repository",
@@ -1103,6 +1235,138 @@ pub(crate) fn lookup_record(
     lookup_inner(root, store, sha, Some(record_id))
 }
 
+/// Look up historical proof for an exact candidate SHA and deployment target.
+/// Full-repository records or records for other deployment targets are rejected.
+#[cfg_attr(not(test), allow(dead_code))]
+pub(crate) fn lookup_for_target(
+    root: &Path,
+    store: &Store,
+    sha: &str,
+    target: &str,
+) -> Result<HistoricalValidationProof, DecapodError> {
+    require_sha(sha)?;
+    require_local(store, root)?;
+    let path = events::canonical_db_path(&store.root);
+    if !path.is_file() {
+        return Err(invalid(
+            "TARGET_SCOPED_PROOF_MISSING: no canonical validation proof was recorded for this commit",
+        ));
+    }
+    let repository = repository_identity(root)?.canonical_name;
+    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    let history =
+        events::query_subject_on_conn(&conn, events::VERIFICATION, "commit", sha, MAX_RECORDS)?;
+    let mut selected = None;
+    for event in &history {
+        let record = decode(event)?;
+        if record.candidate_sha != sha || record.proof.material.repository != repository {
+            return Err(invalid(
+                "subject journal contains another commit or repository",
+            ));
+        }
+        if record
+            .proof
+            .target_scope
+            .as_ref()
+            .is_some_and(|scope| scope.target == target)
+        {
+            selected = Some(record);
+        }
+    }
+    Ok(HistoricalValidationProof {
+        record: selected.ok_or_else(|| {
+            invalid(format!(
+                "TARGET_SCOPED_PROOF_MISSING: no validation record for candidate {sha} and deployment target {target:?}"
+            ))
+        })?,
+        store_root: store.root.clone(),
+    })
+}
+
+/// Advisory read-only lookup of the latest recorded candidate SHA for `task_id`
+/// in the verification event stream, used solely to enrich recovery guidance.
+pub(crate) fn latest_candidate_for_task(store: &Store, task_id: &str) -> Option<String> {
+    let path = events::canonical_db_path(&store.root);
+    if !path.is_file() {
+        return None;
+    }
+    let history = DbBroker::new(&store.root)
+        .with_conn(
+            &path,
+            "decapod",
+            None,
+            "verify.history.candidate_hint",
+            |conn| events::query_all_on_conn(conn, events::VERIFICATION),
+        )
+        .ok()?;
+    for event in history.iter().rev().take(256) {
+        if event
+            .payload
+            .pointer("/task_binding/task_id")
+            .and_then(Value::as_str)
+            == Some(task_id)
+            && let Some(sha) = event.payload.get("candidate_sha").and_then(Value::as_str)
+            && full_sha(sha)
+        {
+            return Some(sha.to_owned());
+        }
+    }
+    None
+}
+
+/// Current custody is an exact selector, never permission to borrow a prior
+/// owner's result. Generic historical lookup deliberately remains ambiguous.
+fn lookup_current_workunit(
+    root: &Path,
+    store: &Store,
+    binding: &ValidationBinding,
+) -> Result<HistoricalValidationProof, DecapodError> {
+    require_sha(&binding.candidate_sha)?;
+    require_local(store, root)?;
+    let path = events::canonical_db_path(&store.root);
+    if !path.is_file() {
+        return Err(invalid(
+            "no canonical full validation proof was recorded for this commit",
+        ));
+    }
+    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
+    let history = events::query_subject_on_conn(
+        &conn,
+        events::VERIFICATION,
+        "commit",
+        &binding.candidate_sha,
+        MAX_RECORDS,
+    )?;
+    if history.is_empty() {
+        return Err(invalid(
+            "no canonical full validation proof was recorded for this commit",
+        ));
+    }
+    let mut selected = None;
+    for event in &history {
+        let record = decode(event)?;
+        if record.candidate_sha != binding.candidate_sha
+            || record.proof.material.repository != binding.repository
+        {
+            return Err(invalid(
+                "subject journal contains another commit or repository",
+            ));
+        }
+        if is_target_scoped_record(&record) {
+            continue;
+        }
+        if record.task_binding == binding.task {
+            selected = Some(record);
+        }
+    }
+    Ok(HistoricalValidationProof {
+        record: selected.ok_or_else(|| invalid(
+            "WORKUNIT_PROOF_STALE: no successful full validation for current task and custody; obtain fresh full validation"
+        ))?,
+        store_root: store.root.clone(),
+    })
+}
+
 /// Fence the canonical task/custody and producer reference in the same
 /// transaction that accepts a VERIFIED workunit. No second connection, command
 /// execution or agent-supplied success is trusted at this commit boundary.
@@ -1124,7 +1388,8 @@ pub(crate) fn check_workunit_append_on_conn(
     )?
     .ok_or_else(|| invalid("WORKUNIT_PROOF_UNVERIFIABLE: canonical record is missing"))?;
     let record = decode(&event)?;
-    if record.record_digest != reference.record_digest
+    if is_target_scoped_record(&record)
+        || record.record_digest != reference.record_digest
         || record.candidate_sha != reference.candidate_sha
         || record.task_binding.task_id != manifest.task_id
         || record.actor != crate::current_agent_id()
@@ -1175,7 +1440,7 @@ pub(crate) fn current_workunit_proof(
         }
         lookup_record(root, &store, candidate, record)?
     } else {
-        lookup(root, &store, &binding.candidate_sha)?
+        lookup_current_workunit(root, &store, &binding)?
     };
     let record = &proof.record;
     if record.task_binding != binding.task
@@ -1265,15 +1530,21 @@ impl HistoricalValidationProof {
             "validation.history.integration",
             &program.to_string_lossy(),
         )?;
-        let remote = if let Some(root) = repository.local_target_root {
+        let remote = if let Some(local_root) = &repository.local_target_root {
             let oid = workspace::read_canonical_local_git(
-                &root,
+                local_root,
                 &program,
                 &["rev-parse", "--verify", &format!("{branch_ref}^{{commit}}")],
             )?;
             format!("{oid}\t{branch_ref}")
         } else {
-            accepted_target(&program, &repository.remote_url, &branch_ref)?
+            accepted_target_for_repository(
+                root,
+                &self.store_root,
+                &program,
+                &repository,
+                &branch_ref,
+            )?
         };
         let lines: Vec<_> = remote.lines().collect();
         let (accepted_sha, returned_ref) = lines
@@ -1521,6 +1792,208 @@ fn accepted_target(program: &Path, remote: &str, branch_ref: &str) -> Result<Str
         .trim()
         .to_owned())
 }
+
+#[derive(Deserialize)]
+struct GithubGitRefResponse {
+    #[serde(rename = "ref")]
+    ref_name: String,
+    object: GithubGitRefObject,
+}
+
+#[derive(Deserialize)]
+struct GithubGitRefObject {
+    sha: String,
+    #[serde(rename = "type")]
+    object_type: String,
+}
+
+fn github_ref_api_endpoint(
+    owner: &str,
+    repository: &str,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    let repo = super::snapshot_provider::Repository::new(owner, repository).map_err(invalid)?;
+    let suffix = branch_ref
+        .strip_prefix("refs/")
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| invalid("accepted branch must start with refs/"))?;
+    let encoded_segments: Vec<String> = suffix
+        .split('/')
+        .map(super::snapshot_provider::encode_path)
+        .collect();
+    Ok(format!(
+        "{}/git/ref/{}",
+        repo.api(),
+        encoded_segments.join("/")
+    ))
+}
+
+fn accepted_target_via_gh_runner(
+    runner: &mut impl super::snapshot_provider::Runner,
+    root: &Path,
+    owner: &str,
+    repository: &str,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    let endpoint = github_ref_api_endpoint(owner, repository, branch_ref)?;
+    let spec = super::snapshot_provider::CommandSpec {
+        program: super::snapshot_provider::Program::Github,
+        args: vec![
+            "api".into(),
+            "--hostname".into(),
+            "github.com".into(),
+            "--method".into(),
+            "GET".into(),
+            "--header".into(),
+            "Accept: application/vnd.github+json".into(),
+            endpoint.clone(),
+        ],
+        cwd: root.to_path_buf(),
+        organization: None,
+        provider_request: Some(super::snapshot_provider::ProviderRequest::GithubGet {
+            path: endpoint,
+        }),
+    };
+    let cancel = Cancellation::default();
+    let budget = super::snapshot_provider::Budget::new(Duration::from_secs(30), 64 * 1024, &cancel)
+        .map_err(invalid)?;
+    let reply = runner
+        .execute(&spec, &budget)
+        .map_err(|_| invalid("authenticated GitHub CLI accepted target read did not complete"))?;
+    if reply.exit_code != 0 {
+        return Err(invalid(
+            "authenticated GitHub CLI accepted target read failed",
+        ));
+    }
+    let parsed: GithubGitRefResponse = serde_json::from_slice(&reply.stdout)
+        .map_err(|_| invalid("authenticated GitHub CLI returned invalid branch ref payload"))?;
+    if parsed.ref_name != branch_ref || parsed.object.object_type != "commit" {
+        return Err(invalid(
+            "authenticated GitHub CLI returned an unexpected ref or non-commit object",
+        ));
+    }
+    require_sha(&parsed.object.sha)?;
+    Ok(format!("{}\t{branch_ref}", parsed.object.sha))
+}
+
+fn accepted_target_authenticated_git(
+    program: &Path,
+    remote: &str,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    // Isolate from checkout .git/config and hooks, but retain host-user
+    // credential helper / environment lookups over strict non-redirect HTTPS.
+    let scratch = tempfile::tempdir()?;
+    let mut command = Command::new(program);
+    command
+        .current_dir(scratch.path())
+        .env_clear()
+        .env("GIT_CONFIG_NOSYSTEM", "1")
+        .env("GIT_TERMINAL_PROMPT", "0")
+        .env("GIT_NO_LAZY_FETCH", "1")
+        .env("GIT_NO_REPLACE_OBJECTS", "1")
+        .env("GIT_GRAFT_FILE", "/dev/null")
+        .env("GIT_CEILING_DIRECTORIES", scratch.path())
+        .args([
+            "-c",
+            "protocol.allow=never",
+            "-c",
+            "protocol.https.allow=always",
+            "-c",
+            "http.followRedirects=false",
+            "ls-remote",
+            "--refs",
+            "--exit-code",
+            remote,
+            branch_ref,
+        ]);
+    for name in [
+        "PATH",
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "TMPDIR",
+        "XDG_CONFIG_HOME",
+        "XDG_DATA_HOME",
+        "GIT_ASKPASS",
+        "GH_TOKEN",
+        "GITHUB_TOKEN",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "HTTPS_PROXY",
+        "HTTP_PROXY",
+        "ALL_PROXY",
+        "NO_PROXY",
+        "https_proxy",
+        "http_proxy",
+        "all_proxy",
+        "no_proxy",
+    ] {
+        if let Some(value) = std::env::var_os(name) {
+            command.env(name, value);
+        }
+    }
+    let capture = command.bounded_capture(
+        ProcessLimits {
+            timeout: Duration::from_secs(30),
+            max_output_bytes: 4096,
+        },
+        &Cancellation::default(),
+    )?;
+    if capture.termination != Termination::Exited || !capture.output.status.success() {
+        return Err(invalid(
+            "isolated host-user authenticated Git accepted target read failed",
+        ));
+    }
+    Ok(String::from_utf8(capture.output.stdout)
+        .map_err(invalid)?
+        .trim()
+        .to_owned())
+}
+
+fn accepted_target_for_repository(
+    root: &Path,
+    store_root: &Path,
+    program: &Path,
+    repository: &workspace::ReadinessRepository,
+    branch_ref: &str,
+) -> Result<String, DecapodError> {
+    if let Ok(public) = accepted_target(program, &repository.remote_url, branch_ref) {
+        return Ok(public);
+    }
+    if !repository.owner.is_empty()
+        && !repository.repository.is_empty()
+        && let Ok(gh_path) = crate::readiness_installed_tool(root, "gh")
+    {
+        let auth_store = store_root.to_path_buf();
+        if let Ok(mut runner) = super::snapshot_provider::OfficialCli::new(
+            program.to_path_buf(),
+            gh_path,
+            None,
+            move |spec, executable| {
+                let request = spec.authorize_provider_read()?;
+                external_action::authorize_official_github_read(&auth_store, executable, &request)
+                    .map_err(std::io::Error::other)
+            },
+        ) && let Ok(authenticated) = accepted_target_via_gh_runner(
+            &mut runner,
+            root,
+            &repository.owner,
+            &repository.repository,
+            branch_ref,
+        ) {
+            return Ok(authenticated);
+        }
+    }
+    if let Ok(authenticated) =
+        accepted_target_authenticated_git(program, &repository.remote_url, branch_ref)
+    {
+        return Ok(authenticated);
+    }
+    Err(invalid(
+        "accepted target is unavailable through reviewed public HTTPS and isolated host-user authenticated transport; check host GitHub CLI (`gh auth status`) or Git credentials and repository access (raw transport diagnostics are withheld to protect credentials)",
+    ))
+}
 fn reject_history_overrides(root: &Path) -> Result<(), DecapodError> {
     // Git ancestry must describe object parents, never a mutable graft file.
     // Alternates can disappear after the transaction and cannot own this proof.
@@ -1740,6 +2213,7 @@ pub(crate) mod test_fixture {
         let proof = CompletedReadinessEvidence::from_runtime(
             "runtime-invocation",
             validation_runtime::READINESS_SCOPE,
+            None,
             &material,
             &hash("governance"),
             &hash("trajectory"),
@@ -2122,6 +2596,8 @@ mod tests {
             proof_ready: true,
             laya_readiness: Some(record.proof.laya.clone()),
             scope: validation_runtime::READINESS_SCOPE,
+            target: None,
+            resolved_targets: vec![],
             agent_guidance: validation_runtime::ValidationGuidance::for_outcome(true),
             stage_dispositions: vec![],
             blockers: vec![],
@@ -2143,6 +2619,179 @@ mod tests {
                 .any(|blocker| blocker.code == "VALIDATION_HISTORY_PERSIST_FAILED")
         );
         assert!(!store.root.exists());
+    }
+
+    #[test]
+    fn target_scoped_completed_evidence_cannot_authorize_full_repo_or_other_target() {
+        let mut base = record();
+        let mut plan = base.proof.expected_plan.clone();
+        plan.checks.truncate(1);
+        plan.checks[0].kind = evidence::CheckKind::RepositoryLocal;
+        plan.checks[0].executor = evidence::Provider::Native;
+        plan.checks[0].key = evidence::CheckKey {
+            provider: evidence::Provider::Native,
+            workflow: ".decapod/config.toml".into(),
+            job: "check-linux".into(),
+            matrix: BTreeMap::new(),
+            profile: super::super::repository_profile::REQUIRED_PROFILE.into(),
+        };
+        let mut result = base.proof.suite.results[0].clone();
+        result.key = plan.checks[0].key.clone();
+        if let evidence::Observation::Executed {
+            artifact_digest, ..
+        } = &mut result.observation
+        {
+            *artifact_digest = None;
+        }
+        let suite = evidence::SuiteEvidence {
+            expected_plan_digest: plan.digest().unwrap(),
+            results: vec![result],
+            ..base.proof.suite.clone()
+        };
+        let mut laya = base.proof.laya.clone();
+        laya.binding.proof_plan_digest = plan.digest().unwrap();
+        laya.binding.evidence_digest = evidence::digest(&suite).unwrap();
+        laya.request_id = evidence::digest(&laya.binding).unwrap();
+
+        let target_scope = Some(TargetProofScope {
+            target: "linux".into(),
+            resolved_targets: vec!["linux".into(), "shared".into()],
+        });
+
+        // Claiming full-repo scope with target_scope present fails verification.
+        assert!(
+            CompletedReadinessEvidence::from_runtime(
+                "target-inv",
+                super::super::repository_profile::READINESS_SCOPE,
+                target_scope.clone(),
+                &base.proof.material,
+                &base.proof.governance_digest,
+                &base.proof.trajectory_digest,
+                &plan,
+                &suite,
+                &laya,
+                None,
+            )
+            .is_err()
+        );
+
+        let completed = CompletedReadinessEvidence::from_runtime(
+            "target-inv",
+            super::super::repository_profile::TARGET_READINESS_SCOPE,
+            target_scope.clone(),
+            &base.proof.material,
+            &base.proof.governance_digest,
+            &base.proof.trajectory_digest,
+            &plan,
+            &suite,
+            &laya,
+            None,
+        )
+        .unwrap();
+        assert_eq!(completed.target_scope(), target_scope.as_ref());
+
+        let dir = tempfile::tempdir().unwrap();
+        let repo = dir.path().join("repo");
+        std::fs::create_dir_all(repo.join(".decapod/data")).unwrap();
+        std::fs::write(
+            repo.join(".decapod/config.toml"),
+            toml::to_string(&crate::cli::DecapodProjectConfig::default()).unwrap(),
+        )
+        .unwrap();
+        let git_bin = crate::readiness_installed_tool(&repo, "git").unwrap();
+        let run_git = |args: &[&str]| {
+            let out = Command::new(&git_bin)
+                .current_dir(&repo)
+                .args(args)
+                .env("GIT_CONFIG_NOSYSTEM", "1")
+                .env("GIT_CONFIG_GLOBAL", "/dev/null")
+                .env("GIT_AUTHOR_NAME", "History Test")
+                .env("GIT_COMMITTER_NAME", "History Test")
+                .env("GIT_AUTHOR_EMAIL", "history@example.invalid")
+                .env("GIT_COMMITTER_EMAIL", "history@example.invalid")
+                .output()
+                .unwrap();
+            assert!(out.status.success(), "{args:?}: {out:?}");
+            String::from_utf8(out.stdout).unwrap().trim().to_string()
+        };
+        run_git(&["init", "-b", "master"]);
+        run_git(&[
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/DecapodLabs/decapod.git",
+        ]);
+        run_git(&["add", "."]);
+        run_git(&["commit", "-m", "init"]);
+        let head = run_git(&["rev-parse", "HEAD"]);
+
+        let mut material = base.proof.material.clone();
+        material.head_revision = head.clone();
+        let mut suite = suite;
+        suite.before = material.clone();
+        suite.after = material.clone();
+        suite.results[0].identity = material.clone();
+        laya.binding.material = material.clone();
+        laya.binding.evidence_digest = evidence::digest(&suite).unwrap();
+        laya.request_id = evidence::digest(&laya.binding).unwrap();
+
+        let completed = CompletedReadinessEvidence::from_runtime(
+            "target-inv",
+            super::super::repository_profile::TARGET_READINESS_SCOPE,
+            target_scope,
+            &material,
+            &base.proof.governance_digest,
+            &base.proof.trajectory_digest,
+            &plan,
+            &suite,
+            &laya,
+            None,
+        )
+        .unwrap();
+        base.candidate_sha = head.clone();
+        base.proof = completed.clone();
+        base.event_id = "target-inv".into();
+        base.record_digest = base.calculated_digest().unwrap();
+        base.verify().unwrap();
+
+        let evidence_dir = tempfile::tempdir().unwrap();
+        let report = ValidationReport {
+            ready: true,
+            proof_ready: true,
+            laya_readiness: Some(completed.laya.clone()),
+            scope: super::super::repository_profile::TARGET_READINESS_SCOPE,
+            target: Some("linux".into()),
+            resolved_targets: vec!["linux".into(), "shared".into()],
+            agent_guidance: validation_runtime::ValidationGuidance::for_outcome(true),
+            stage_dispositions: vec![],
+            blockers: vec![],
+            evidence_path: Some(evidence_dir.path().to_path_buf()),
+            completed_evidence: Some(completed),
+        };
+        assert!(!report.publication_ready());
+        assert!(PublicationReadiness::from_report(report, None).is_err());
+
+        // Write target-scoped record into canonical events DB and verify lookup isolation.
+        let store = Store {
+            kind: super::super::store::StoreKind::Repo,
+            root: repo.join(".decapod/data"),
+        };
+        crate::subsystems::initialize_all_dbs(&store.root).unwrap();
+        let event = serde_json::to_value(&base).unwrap();
+        let conn =
+            db::db_connect(&events::canonical_db_path(&store.root).to_string_lossy()).unwrap();
+        events::ensure_tables(&conn).unwrap();
+        events::append_on_conn(&conn, events::VERIFICATION, &event).unwrap();
+
+        assert!(is_target_scoped_record(&base));
+        // Full-repo lookup and explicit record lookup must reject target-scoped records.
+        assert!(lookup(&repo, &store, &head).is_err());
+        assert!(lookup_record(&repo, &store, &head, "target-inv").is_err());
+        // Target-scoped lookup succeeds only for the exact target and SHA.
+        let found = lookup_for_target(&repo, &store, &head, "linux").unwrap();
+        assert_eq!(found.target_scope().unwrap().target, "linux");
+        assert!(lookup_for_target(&repo, &store, &head, "macos").is_err());
+        assert!(lookup_for_target(&repo, &store, &"f".repeat(40), "linux").is_err());
     }
 }
 
