@@ -902,6 +902,16 @@
         "assets/tools/release_projection_drift_tests.rs",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-accepted-instruction-lineage-10",
+      "summary": "Reconcile accepted instruction lineage and preserve state and mentor RPC regressions",
+      "input_digest": "sha256:91943385d0c1d28eb5beba7609fdeb673c315cadf87af53ba3e855bcb722f120",
+      "proof_refs": [
+        "src/decapod/lib.rs",
+        "tests/infer_precision.rs",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -944,23 +954,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review current context, provenance and validation contracts with the accepted release-entrypoint integrity changes in v0.155.1.",
-          "reviewed_code_fingerprint": "6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494",
-          "spec_material_hash": "fee854d001ed7910e4cd66dc7bde16d91c7c873358f25d0f92265edd4f36d5d8"
+          "reason": "Review the integrated context, proof and validation contracts with accepted typed instruction lineage and custody-free state readback.",
+          "reviewed_code_fingerprint": "a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c",
+          "spec_material_hash": "e2d896e3d877cd3dea01906f29818bcac78d0569ddfe110993ec4ef076021465"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review current context, provenance and validation contracts with the accepted release-entrypoint integrity changes in v0.155.1.",
-          "reviewed_code_fingerprint": "6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494",
-          "spec_material_hash": "f4fddc993d9b7449ee223cbe3513ed78de6eead9e3d5aefdd883f3d551ea9bcb"
+          "reason": "Review the integrated context, proof and validation contracts with accepted typed instruction lineage and custody-free state readback.",
+          "reviewed_code_fingerprint": "a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c",
+          "spec_material_hash": "9f674b51305fcb6387a39f0e3da98b93025ee55d912a5668d29d2c78000d67e1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review current context, provenance and validation contracts with the accepted release-entrypoint integrity changes in v0.155.1.",
-          "reviewed_code_fingerprint": "6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494",
-          "spec_material_hash": "0d2676699097855bc6a017e3d7e455584ae45ddc63f8c05e966afcb6191a61c8"
+          "reason": "Review the integrated context, proof and validation contracts with accepted typed instruction lineage and custody-free state readback.",
+          "reviewed_code_fingerprint": "a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c",
+          "spec_material_hash": "7fad05c85152e38e4d1748874e8c96a7e3126c07559e234ae86d6f420898f448"
         }
       ],
       "state": "APPROVED",
@@ -971,16 +981,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795210148Z"
+      "updated_at": "1795212664Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:06cdd3e72eb351c0b3d63aa6cfa6b0e25fbe608798363393b0f47551a0d086b0",
+      "artifact_hash": "sha256:3904fcaaefe146983db4e6e6c9fdc8273537d7d5f17fb688ae6949088e13f9c2",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel merged bounded validation smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel merged inference, reflection and scope cases",
           "status": "passed"
         },
         {
@@ -1144,10 +1162,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1324,6 +1349,22 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:14",
+                "observations": [
+                  "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte."
+                ],
+                "proof_refs": [
+                  "Bazel merged inference, reflection and scope cases",
+                  "Bazel merged bounded validation smoke"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -1341,7 +1382,8 @@
         "Integrated the immutable v0.155.1 target 2e206d26. Prior candidate GitHub CLI and core suites passed, while checkpoint and push context rejected the advanced target. Retained accepted release-entrypoint integrity and all prior checkpoints. Reviewed 107 source paths, with changes to the two Cargo version declarations and accepted release projection fixture. Current smoke ran in 13580ms within the unchanged 20000ms budget. All 16 release projection policy tests passed. Local project-check generated matching projections but returned a failure on the host with container custody, shared task proof and staged merge findings. No local full readiness is claimed.",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
-        "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
+        "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified.",
+        "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte."
       ],
       "inspected_files": [
         "assets/tools/source_ci/standalone-validation.sh",

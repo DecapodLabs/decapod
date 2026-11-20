@@ -50,6 +50,155 @@ fn extract_json(output: &Output) -> Value {
 }
 
 #[test]
+fn explicit_task_paths_survive_claim_workspace_orientation_and_repeat_preparation() {
+    let repo = tempdir().unwrap();
+    let machine = tempdir().unwrap();
+    let root = repo.path();
+    init_git_repo(root);
+    assert!(
+        Command::new("git")
+            .current_dir(root)
+            .args(["symbolic-ref", "HEAD", "refs/heads/main"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let binary = Path::new(env!("CARGO_BIN_EXE_decapod"))
+        .canonicalize()
+        .unwrap();
+    let call = |cwd: &Path, args: &[&str]| {
+        let output = Command::new(&binary)
+            .current_dir(cwd)
+            .args(args)
+            .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+            .env_remove("DECAPOD_SESSION_PASSWORD")
+            .env_remove("GITHUB_ACTIONS")
+            .env_remove("BUILDKITE")
+            .env("DECAPOD_AGENT_ID", "scope-projection-cli")
+            .env("DECAPOD_CLAIM_AUTORUN", "0")
+            .env("DECAPOD_GROUP_BROKER_IDLE_SECS", "1")
+            .env("XDG_CONFIG_HOME", machine.path())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "scope CLI operation failed: {:?}: {}",
+            args.first(),
+            String::from_utf8_lossy(&output.stderr)
+        );
+        output
+    };
+    call(
+        root,
+        &[
+            "eval",
+            "--prompt",
+            "Preserve exact declared task paths in an isolated acceptance fixture",
+            "--format",
+            "json",
+        ],
+    );
+    call(
+        root,
+        &[
+            "init",
+            "--no-ci",
+            "--no-specs",
+            "--no-container-workspaces",
+            "--product-name",
+            "Scope fixture",
+            "--product-summary",
+            "Preserve explicit task paths",
+            "--product-type",
+            "service_or_library",
+            "--architecture-direction",
+            "cli",
+            "--done-criteria",
+            "The same literal paths survive every generated projection",
+            "--primary-language",
+            "text",
+        ],
+    );
+    call(root, &["docs", "ingest"]);
+    call(root, &["session", "acquire"]);
+    for args in [
+        vec!["add", "."],
+        vec![
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "-m",
+            "accept fixture source",
+        ],
+    ] {
+        let output = Command::new("git")
+            .current_dir(root)
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+    }
+    let raw = r#"paths:["src/a,b.rs","tests/x.rs",".decapod/managed/specs"]"#;
+    let added = call(
+        root,
+        &[
+            "todo",
+            "add",
+            "Preserve explicit task path scope",
+            "--scope",
+            raw,
+            "--format",
+            "json",
+        ],
+    );
+    let task = extract_json(&added)["id"].as_str().unwrap().to_owned();
+    call(
+        root,
+        &["todo", "claim", "--id", &task, "--lease-seconds", "3600"],
+    );
+    let branch = format!("agent/scope-projection-cli/{task}-scope");
+    let created = call(root, &["workspace", "ensure", "--branch", &branch]);
+    let created = extract_json(&created);
+    assert_eq!(created["can_work"], true);
+    let work = Path::new(created["worktree_path"].as_str().unwrap());
+    let expected = serde_json::json!([".decapod/managed/specs", "src/a,b.rs", "tests/x.rs"]);
+    let packet = extract_json(&call(
+        work,
+        &[
+            "infer",
+            "orientation",
+            "--task-id",
+            &task,
+            "--format",
+            "json",
+        ],
+    ));
+    assert_eq!(packet["allowed_scope"], expected);
+    let path = work.join(".decapod/governance.json");
+    let before = fs::read(&path).unwrap();
+    let document: Value = serde_json::from_slice(&before).unwrap();
+    let trajectory = &document["sections"]["trajectory"];
+    assert_eq!(trajectory["repo_scope"], expected);
+    let intent = trajectory["intent_id"].as_str().unwrap();
+    assert_eq!(document["intents"][intent]["constraints"], expected);
+    assert_eq!(
+        document["sections"]["plan"]["todo_ids"],
+        serde_json::json!([task.clone()])
+    );
+    assert_eq!(
+        extract_json(&call(root, &["todo", "get", "--id", &task]))["item"]["scope"],
+        raw
+    );
+    call(root, &["workspace", "ensure", "--branch", &branch]);
+    assert_eq!(
+        before,
+        fs::read(path).unwrap(),
+        "repeat preparation must retain the active journal"
+    );
+}
+
+#[test]
 fn test_infer_orientation_simple_task() {
     let dir = tempdir().unwrap();
     let root = dir.path();
@@ -87,6 +236,377 @@ fn test_infer_orientation_simple_task() {
         json.get("reflection").is_none(),
         "legacy orientation stays stateless"
     );
+}
+
+#[test]
+fn preparation_reports_pending_spec_decisions_and_empty_intent_without_blocking_deferrals() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    init_git_repo(root);
+    assert!(run_cmd(root, &["init", "--force"]).status.success());
+    assert!(run_cmd(root, &["session", "acquire"]).status.success());
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Readiness parity",
+                "--intent",
+                "Preserve compatibility"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "update",
+                "--deferred-question",
+                "Unrelated future feature"
+            ],
+        )
+        .status
+        .success()
+    );
+    let inspect = || {
+        let output = run_cmd(
+            root,
+            &[
+                "infer",
+                "orientation",
+                "--intent",
+                "Inspect current recorded instructions",
+                "--format",
+                "json",
+            ],
+        );
+        assert!(output.status.success());
+        let plan = extract_json(&output)["governed_plan"].clone();
+        let mut visible = plan["instruction_readiness"]["questions"]
+            .as_array()
+            .unwrap()
+            .clone();
+        visible.push("deferred_question: Unrelated future feature".into());
+        assert_eq!(plan["unresolved_items"], serde_json::Value::Array(visible));
+        assert_eq!(
+            plan["instruction_readiness"]["rule_id"],
+            "recorded_instruction_readiness"
+        );
+        assert!(
+            plan["instruction_readiness"]["source_revision"]
+                .as_str()
+                .unwrap()
+                .starts_with("sha256:")
+        );
+        plan
+    };
+    assert_eq!(
+        inspect()["instruction_readiness"]["questions"],
+        serde_json::json!([])
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "review-spec",
+                "--path",
+                ".decapod/managed/specs/INTERFACES.md",
+                "--disposition",
+                "requires-decision",
+                "--reason",
+                "Choose accepted compatibility policy"
+            ],
+        )
+        .status
+        .success()
+    );
+    let pending = inspect();
+    assert!(
+        pending["unresolved_items"][0]
+            .as_str()
+            .unwrap()
+            .contains("pending human spec review"),
+        "{pending}"
+    );
+    assert!(
+        run_cmd(root, &["govern", "plan", "update", "--intent", ""],)
+            .status
+            .success()
+    );
+    let empty = inspect();
+    assert_eq!(
+        empty["instruction_readiness"]["questions"]
+            .as_array()
+            .unwrap()
+            .len(),
+        2
+    );
+    assert_ne!(
+        empty["instruction_readiness"]["source_revision"],
+        pending["instruction_readiness"]["source_revision"]
+    );
+    assert_eq!(
+        empty["instruction_readiness"]["blockers"][1]["id"],
+        pending["instruction_readiness"]["blockers"][0]["id"]
+    );
+    assert!(
+        empty["unresolved_items"][0]
+            .as_str()
+            .unwrap()
+            .contains("single-sentence intent")
+    );
+}
+
+#[test]
+fn fresh_process_reconstructs_same_lineage_and_does_not_authenticate_reported_sources() {
+    let dir = tempdir().unwrap();
+    let root = dir.path();
+    init_git_repo(root);
+    assert!(
+        Command::new("git")
+            .current_dir(root)
+            .args([
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--allow-empty",
+                "-m",
+                "fixture ancestry for independent state readback"
+            ])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    assert!(run_cmd(root, &["init", "--force"]).status.success());
+    assert!(run_cmd(root, &["session", "acquire"]).status.success());
+    let added = run_cmd(root, &["todo", "add", "Preserve the recorded v1 contract"]);
+    assert!(added.status.success());
+    let task = extract_json(&added)["id"].as_str().unwrap().to_owned();
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "init",
+                "--title",
+                "Lineage",
+                "--intent",
+                "Preserve v1",
+                "--todo-id",
+                &task
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "trajectory",
+                "init",
+                "--run-id",
+                "lineage-run",
+                "--task-id",
+                &task,
+                "--intent-id",
+                "intent:lineage",
+                "--original-intent",
+                "A: preserve v1",
+                "--derived-intent",
+                "B: replace v1 with v2"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(root, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    // A different cold reader needs neither the writer's claim nor a Git-gate
+    // escape hatch. This was rejected as AUTHORING_CUSTODY_STALE in the actual
+    // governed-worktree CLI acceptance even though the RPC only reads state.
+    let reader_home = tempdir().unwrap();
+    let read = || {
+        let before = fs::read(root.join(".decapod/governance.json")).unwrap();
+        let output = Command::new(
+            Path::new(env!("CARGO_BIN_EXE_decapod"))
+                .canonicalize()
+                .unwrap(),
+        )
+        .current_dir(root)
+        .env_remove("DECAPOD_VALIDATE_SKIP_GIT_GATES")
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .env("DECAPOD_AGENT_ID", "independent-lineage-reader")
+        .env("XDG_CONFIG_HOME", reader_home.path())
+        .args([
+            "rpc",
+            "--op",
+            "state.resolve",
+            "--params",
+            "{\"intent_id\":\"intent:lineage\"}",
+        ])
+        .output()
+        .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        assert_eq!(
+            before,
+            fs::read(root.join(".decapod/governance.json")).unwrap()
+        );
+        extract_json(&output)["result"]["resolution"].clone()
+    };
+    let state = read();
+    let original_revision = state["instruction_lineage"]["revision"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let args = [
+        "govern",
+        "trajectory",
+        "clarify",
+        "--run-id",
+        "lineage-run",
+        "--revision-id",
+        "clarification-C",
+        "--expected-revision",
+        &original_revision,
+        "--instruction",
+        "C: keep v1 compatibility",
+        "--source-ref",
+        "fixture:principal-C-message",
+        "--principal-claim",
+        "principal-C",
+        "--derived-intent",
+        "Preserve v1 compatibility",
+    ];
+    let appended = run_cmd(root, &args);
+    assert!(appended.status.success());
+    let current = read();
+    let lineage = &current["instruction_lineage"];
+    assert_eq!(lineage["original_intent"], "A: preserve v1");
+    assert_eq!(
+        lineage["revisions"][0]["preceding_refinement"],
+        "B: replace v1 with v2"
+    );
+    assert_eq!(
+        lineage["revisions"][0]["instruction"],
+        "C: keep v1 compatibility"
+    );
+    assert_eq!(lineage["revision_source_confidence"], "agent_reported");
+    assert_eq!(lineage["independent_authority"], "unverifiable");
+    let mut counterfeit = args.to_vec();
+    counterfeit.extend(["--authenticated", "true"]);
+    assert!(!run_cmd(root, &counterfeit).status.success());
+    assert_eq!(read()["instruction_lineage"], *lineage);
+    assert_ne!(lineage["revision"], original_revision);
+    assert_eq!(
+        current["instruction_readiness"]["instruction_revision"],
+        lineage["revision"]
+    );
+    assert_eq!(current["publication"]["eligible"], false);
+    assert!(
+        current["blockers"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|blocker| blocker["id"] == current["instruction_readiness"]["blockers"][0]["id"])
+    );
+    assert!(
+        current["admissible_actions"]["forbidden"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|action| action["action"] == "execute governed plan")
+    );
+    let prepared = run_cmd(
+        root,
+        &[
+            "infer",
+            "orientation",
+            "--task-id",
+            &task,
+            "--intent",
+            "Continue the existing lineage",
+            "--format",
+            "json",
+        ],
+    );
+    assert!(prepared.status.success());
+    let prepared = extract_json(&prepared);
+    assert_eq!(prepared["governed_plan"]["instruction_lineage"], *lineage);
+    assert_eq!(
+        prepared["governed_plan"]["instruction_readiness"],
+        current["instruction_readiness"]
+    );
+    let rejected = run_cmd(root, &["govern", "plan", "approve"]);
+    assert!(!rejected.status.success());
+    assert!(String::from_utf8_lossy(&rejected.stderr).contains("NEEDS_HUMAN_INPUT"));
+    let duplicate = run_cmd(root, &args);
+    assert!(duplicate.status.success());
+    assert_eq!(
+        extract_json(&duplicate)["custody"]["events"],
+        extract_json(&appended)["custody"]["events"]
+    );
+    assert!(
+        run_cmd(
+            root,
+            &[
+                "govern",
+                "plan",
+                "update",
+                "--intent",
+                "Preserve v1 compatibility",
+                "--clear-unknowns"
+            ]
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_cmd(root, &["govern", "plan", "approve"])
+            .status
+            .success()
+    );
+    let retry = run_cmd(root, &args);
+    assert!(retry.status.success());
+    let plan = run_cmd(root, &["govern", "plan", "status"]);
+    assert!(plan.status.success());
+    assert_eq!(extract_json(&plan)["plan"]["state"], "APPROVED");
+    let mut forged = args;
+    forged[10] = "reused ID with different instruction";
+    let denied = run_cmd(root, &forged);
+    assert!(!denied.status.success());
+    let unknown = run_cmd(
+        root,
+        &[
+            "rpc",
+            "--op",
+            "state.resolve",
+            "--params",
+            "{\"intent_id\":\"intent:unrelated\"}",
+        ],
+    );
+    assert!(unknown.status.success());
+    let unknown = extract_json(&unknown);
+    assert!(unknown["result"]["resolution"]["instruction_lineage"].is_null());
 }
 
 #[test]

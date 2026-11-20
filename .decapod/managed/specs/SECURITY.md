@@ -807,8 +807,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6d4ca3e697d90ca8d45693b1357960d02fbee59701284b0c125ee10521473494`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (248 files), `tests/` (265 files)
+- Repository signal fingerprint: `a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1416,5 +1416,3 @@ Preserving canonical source entrypoint metadata is conditional on the existing r
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
 
 Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
-
-Release-only structural projection checks remain separate from the accepted shared recorded-instruction readiness predicate in `src/decapod/plan_governance.rs`. Preserving canonical source versions cannot converge an unresolved instruction, waive current-content spec review, or establish publication readiness. Existing orientation, approval, checkpoint and publication consumers retain their own enforcement.

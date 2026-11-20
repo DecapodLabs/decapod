@@ -16,13 +16,12 @@ use crate::core::trajectory;
 use crate::core::validate;
 use crate::core::validation_epoch;
 use crate::core::workunit;
-use crate::plan_governance;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::path::Path;
 
-pub const STATE_SCHEMA_VERSION: &str = "1.0.0";
+pub const STATE_SCHEMA_VERSION: &str = "1.1.0";
 
 // ============================================================================
 // Core Types for State Resolution
@@ -403,6 +402,10 @@ pub struct StateResolution {
     pub publication: PublicationEligibility,
     pub admissible_actions: AdmissibleActions,
     pub provenance: ProvenanceInfo,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_lineage: Option<crate::core::custody::InstructionLineage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_readiness: Option<crate::plan_governance::InstructionReadiness>,
 }
 
 // ============================================================================
@@ -556,6 +559,13 @@ pub fn resolve_state(
     project_root: &Path,
     params: &StateResolveParams,
 ) -> Result<StateResolution, error::DecapodError> {
+    let source_before = governance_document::load(project_root)?
+        .map(|doc| {
+            serde_json::to_vec(&doc)
+                .map(|bytes| format!("sha256:{:x}", Sha256::digest(bytes)))
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()?;
     let store_root = project_root.join(".decapod").join("data");
     let store = Store {
         kind: StoreKind::Repo,
@@ -573,13 +583,67 @@ pub fn resolve_state(
     let custody = resolve_custody(project_root, &identity)?;
     let decisions = resolve_decisions(project_root, &identity)?;
     let failed_paths = resolve_failed_paths(project_root, &identity)?;
-    let blockers = resolve_blockers(project_root, &identity)?;
+    let mut blockers = resolve_blockers(project_root, &identity)?;
     let dependencies = resolve_dependencies(project_root, &identity)?;
     let changed_surfaces = resolve_changed_surfaces(project_root, &identity)?;
     let (validation, proof) = resolve_validation_proof(project_root, &identity, params)?;
     let unresolved_obligations = resolve_unresolved_obligations(project_root, &identity, params)?;
-    let publication = resolve_publication(project_root, &identity, &validation)?;
-    let admissible_actions = resolve_admissible_actions(
+    let mut publication = resolve_publication(project_root, &identity, &validation)?;
+    let provenance = resolve_provenance(project_root, &identity)?;
+    let instruction_lineage = resolve_instruction_lineage(project_root, &identity)?;
+    let instruction_readiness = if let Some(plan) = crate::plan_governance::load_plan(project_root)?
+    {
+        let selected = crate::plan_governance::instruction_lineage_for_plan(project_root, &plan)?;
+        if selected.as_ref().is_some_and(|lineage| {
+            instruction_lineage
+                .as_ref()
+                .is_some_and(|requested| requested.intent_id == lineage.intent_id)
+        }) {
+            Some(crate::plan_governance::instruction_readiness_at(
+                project_root,
+                &plan,
+                crate::core::validation_rules::EvaluationPhase::PreExecution,
+            )?)
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+    if let Some(readiness) = &instruction_readiness {
+        let declared_at = crate::plan_governance::load_plan(project_root)?
+            .map(|plan| plan.updated_at)
+            .unwrap_or_default();
+        for blocker in &readiness.blockers {
+            blockers.push(BlockerInfo {
+                id: blocker.id.clone(),
+                kind: if readiness
+                    .remediation
+                    .as_ref()
+                    .is_some_and(|remediation| remediation.human_authorization_required)
+                {
+                    BlockerKind::HumanDecision
+                } else {
+                    BlockerKind::DependencyUnresolved
+                },
+                description: blocker.question.clone(),
+                evidence: vec![
+                    format!("recorded_source:{}", blocker.source),
+                    format!("recorded_readiness_revision:{}", readiness.source_revision),
+                ],
+                declared_at: declared_at.clone(),
+                resolved_at: None,
+            });
+        }
+        if !readiness.blockers.is_empty() {
+            publication.eligible = false;
+            publication
+                .blocking_factors
+                .extend(readiness.questions.clone());
+            publication.reason = publication.blocking_factors.join("; ");
+        }
+    }
+    let mut admissible_actions = resolve_admissible_actions(
         project_root,
         &identity,
         &validation,
@@ -587,7 +651,38 @@ pub fn resolve_state(
         &blockers,
         &unresolved_obligations,
     )?;
-    let provenance = resolve_provenance(project_root, &identity)?;
+    if instruction_readiness
+        .as_ref()
+        .is_some_and(|report| !report.blockers.is_empty())
+    {
+        admissible_actions
+            .allowed
+            .retain(|action| action.action != "modify within scope");
+        admissible_actions.allowed.push(AllowedAction { action: "resolve recorded instructions".into(), reason: "Use supported plan/source operations before governed implementation; a plan approval does not authenticate human consent".into(), scope_constraints: vec![crate::plan_governance::PLAN_PATH.into()] });
+        admissible_actions.forbidden.push(ForbiddenAction {
+            action: "execute governed plan".into(),
+            reason: "Current recorded instruction obligations remain unresolved".into(),
+            blocker: Some("recorded_instruction_readiness".into()),
+        });
+    }
+    let source_after = governance_document::load(project_root)?
+        .map(|doc| {
+            serde_json::to_vec(&doc)
+                .map(|bytes| format!("sha256:{:x}", Sha256::digest(bytes)))
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()?;
+    if source_before != source_after
+        || instruction_readiness
+            .as_ref()
+            .and_then(|report| report.instruction_revision.as_deref())
+            != instruction_lineage
+                .as_ref()
+                .filter(|_| instruction_readiness.is_some())
+                .map(|lineage| lineage.revision.as_str())
+    {
+        return Err(error::DecapodError::ValidationError("STATE_SOURCE_CHANGED: recorded instructions changed during resolution; retry a fresh read before acting".into()));
+    }
 
     Ok(StateResolution {
         identity,
@@ -608,6 +703,8 @@ pub fn resolve_state(
         publication,
         admissible_actions,
         provenance,
+        instruction_lineage,
+        instruction_readiness,
     })
 }
 
@@ -840,56 +937,82 @@ fn resolve_objective(
     project_root: &Path,
     identity: &StateIdentity,
 ) -> Result<ObjectiveInfo, error::DecapodError> {
-    let mut acceptance_criteria = Vec::new();
-    let mut derived_intent = None;
-
-    // Try trajectory first
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root)
-        && (identity.intent_ref.as_deref() == trajectory_artifact.intent_id.as_deref()
-            || identity.task_id.as_deref() == trajectory_artifact.task_id.as_deref())
-    {
-        derived_intent = Some(trajectory_artifact.derived_intent.clone());
-        acceptance_criteria.extend(trajectory_artifact.active_boundaries.clone());
-    }
-
-    // Try workunit
-    if let Some(task_id) = &identity.task_id
-        && let Ok(manifest) = workunit::load_workunit(project_root, task_id)
-    {
-        let intent_id = &manifest.intent_ref;
-        // Load from governance document intents
-        if let Ok(Some(doc)) = governance_document::load(project_root)
-            && let Some(intent_value) = doc.intents.get(intent_id)
-            && let Some(criteria) = intent_value
-                .get("acceptance_criteria")
-                .and_then(|v| v.as_array())
-        {
-            for c in criteria {
-                if let Some(s) = c.as_str() {
-                    acceptance_criteria.push(s.to_string());
-                }
-            }
+    // The canonical Git-owned custody record distinguishes original request
+    // from its agent-authored refinement. Never substitute one for the other.
+    let trajectory = trajectory::load_trajectory_cookie(project_root)?;
+    let selected_trajectory = trajectory.as_ref().filter(|trajectory| {
+        if let Some(intent_id) = identity.intent_ref.as_deref() {
+            trajectory.intent_id.as_deref() == Some(intent_id)
+        } else {
+            identity
+                .task_id
+                .as_deref()
+                .is_some_and(|task_id| trajectory.task_id.as_deref() == Some(task_id))
         }
-    }
-
-    // Try plan governance
-    if let Ok(Some(plan)) = plan_governance::load_plan(project_root) {
-        acceptance_criteria.extend(plan.constraints.forbidden_paths.clone());
-    }
-
-    // Try config.toml for done criteria
+    });
+    let document = governance_document::load(project_root)?;
+    let intent_id = identity
+        .intent_ref
+        .as_deref()
+        .or_else(|| selected_trajectory.and_then(|trajectory| trajectory.intent_id.as_deref()));
+    let recorded = document
+        .as_ref()
+        .and_then(|document| intent_id.and_then(|id| document.intents.get(id)));
+    let original_intent = recorded
+        .and_then(|record| record.get("raw_intent").and_then(|value| value.as_str()))
+        .map(ToOwned::to_owned)
+        .or_else(|| selected_trajectory.map(|trajectory| trajectory.original_intent.clone()))
+        .unwrap_or_else(|| "Not established".to_string());
+    let derived_intent = recorded
+        .and_then(|record| {
+            record
+                .get("refined_intent")
+                .and_then(|value| value.as_str())
+        })
+        .map(ToOwned::to_owned)
+        .or_else(|| selected_trajectory.map(|trajectory| trajectory.derived_intent.clone()));
+    // Validation obligations, execution boundaries and forbidden paths are
+    // different concepts. Do not recast scope limits as acceptance criteria.
+    let acceptance_criteria = recorded
+        .and_then(|record| {
+            record
+                .get("acceptance_criteria")
+                .and_then(|value| value.as_array())
+        })
+        .map(|values| {
+            values
+                .iter()
+                .filter_map(|value| value.as_str().map(ToOwned::to_owned))
+                .collect()
+        })
+        .unwrap_or_default();
     let done_criteria = crate::cli::DecapodProjectConfig::load(project_root)
         .ok()
-        .and_then(|c| c.repo.done_criteria);
+        .and_then(|config| config.repo.done_criteria);
 
     Ok(ObjectiveInfo {
-        original_intent: derived_intent
-            .clone()
-            .unwrap_or_else(|| "Not established".to_string()),
+        original_intent,
         derived_intent,
         acceptance_criteria,
         done_criteria,
     })
+}
+
+fn selected_trajectory(
+    root: &Path,
+    identity: &StateIdentity,
+) -> Result<Option<trajectory::TrajectoryArtifact>, error::DecapodError> {
+    Ok(
+        trajectory::load_trajectory_cookie(root)?.filter(|artifact| {
+            if let Some(intent) = identity.intent_ref.as_deref() {
+                artifact.intent_id.as_deref() == Some(intent)
+            } else if let Some(task) = identity.task_id.as_deref() {
+                artifact.task_id.as_deref() == Some(task)
+            } else {
+                identity.kind == StateIdentityKind::Trajectory && identity.id == artifact.run_id
+            }
+        }),
+    )
 }
 
 fn resolve_acceptance(
@@ -915,8 +1038,8 @@ fn resolve_scope_constraints(
     let mut protected_paths = Vec::new();
     let mut risk_tier = None;
 
-    // From trajectory
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
+    // Only the requested work's trajectory supplies task scope.
+    if let Some(trajectory_artifact) = selected_trajectory(project_root, identity)? {
         active_boundaries.extend(trajectory_artifact.active_boundaries.clone());
         repo_scope.extend(trajectory_artifact.repo_scope.clone());
     }
@@ -967,11 +1090,36 @@ fn dedup_sorted<T: Ord + Clone>(mut v: Vec<T>) -> Vec<T> {
 // ============================================================================
 
 fn load_custody_state(project_root: &Path) -> Result<CustodyState, error::DecapodError> {
-    // Custody state is embedded in the trajectory artifact
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
-        return Ok(trajectory_artifact.custody);
-    }
-    Ok(CustodyState::default())
+    Ok(trajectory::load_trajectory_cookie(project_root)?
+        .map(|artifact| artifact.custody)
+        .unwrap_or_default())
+}
+
+fn resolve_instruction_lineage(
+    root: &Path,
+    identity: &StateIdentity,
+) -> Result<Option<crate::core::custody::InstructionLineage>, error::DecapodError> {
+    let Some(intent_id) = identity.intent_ref.as_deref() else {
+        return Ok(None);
+    };
+    let Some(document) = governance_document::load(root)? else {
+        return Ok(None);
+    };
+    document
+        .intents
+        .get(intent_id)
+        .map(|record| {
+            let record: crate::core::custody::IntentRecord = serde_json::from_value(record.clone())
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!(
+                        "Invalid recorded instruction lineage: {e}"
+                    ))
+                })?;
+            record
+                .instruction_lineage()
+                .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+        })
+        .transpose()
 }
 
 fn resolve_custody(
@@ -980,8 +1128,8 @@ fn resolve_custody(
 ) -> Result<CustodyProjection, error::DecapodError> {
     let mut blockers = Vec::new();
 
-    // From trajectory blockers
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
+    // Only the requested work's trajectory supplies custody blockers.
+    if let Some(trajectory_artifact) = selected_trajectory(project_root, identity)? {
         blockers.extend(trajectory_artifact.blockers.clone());
     }
 
@@ -1188,8 +1336,8 @@ fn resolve_failed_paths(
 ) -> Result<Vec<FailedPath>, error::DecapodError> {
     let mut failed_paths = Vec::new();
 
-    // From trajectory loops with failed verification
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
+    // From the requested trajectory's failed verification loops.
+    if let Some(trajectory_artifact) = selected_trajectory(project_root, identity)? {
         for loop_rec in &trajectory_artifact.loops {
             if matches!(
                 loop_rec.status,
@@ -1236,7 +1384,9 @@ fn resolve_failed_paths(
     // From knowledge candidates with rejected status
     if let Ok(custody_state) = load_custody_state(project_root) {
         for candidate in &custody_state.knowledge_candidates {
-            if candidate.status == "rejected" {
+            if candidate.status == "rejected"
+                && identity.intent_ref.as_deref() == Some(candidate.intent_id.as_str())
+            {
                 failed_paths.push(FailedPath {
                     id: candidate.id.clone(),
                     hypothesis_or_approach: candidate.lesson.clone(),
@@ -1263,8 +1413,8 @@ fn resolve_blockers(
 ) -> Result<Vec<BlockerInfo>, error::DecapodError> {
     let mut blockers = Vec::new();
 
-    // From trajectory blockers
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
+    // From the requested trajectory's blockers.
+    if let Some(trajectory_artifact) = selected_trajectory(project_root, identity)? {
         for (i, blocker) in trajectory_artifact.blockers.iter().enumerate() {
             let kind = classify_blocker(blocker);
             blockers.push(BlockerInfo {
@@ -1425,8 +1575,8 @@ fn resolve_dependencies(
         }
     }
 
-    // From trajectory scope
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
+    // From the requested trajectory's scope.
+    if let Some(trajectory_artifact) = selected_trajectory(project_root, identity)? {
         for (i, scope_item) in trajectory_artifact.repo_scope.iter().enumerate() {
             dependencies.push(DependencyInfo {
                 id: format!("trajectory:scope:{}", i),
@@ -1513,8 +1663,8 @@ fn resolve_changed_surfaces(
         }
     }
 
-    // From trajectory modified_files
-    if let Ok(Some(trajectory_artifact)) = trajectory::load_trajectory_cookie(project_root) {
+    // From the requested trajectory's modified files.
+    if let Some(trajectory_artifact) = selected_trajectory(project_root, identity)? {
         for file in &trajectory_artifact.modified_files {
             if !files.contains(file) {
                 files.push(file.clone());
@@ -2151,8 +2301,8 @@ fn resolve_provenance(
         governance_document_hash = Some(format!("sha256:{:x}", hasher.finalize()));
     }
 
-    // Trajectory artifact hash
-    if let Ok(Some(trajectory)) = trajectory::load_trajectory_cookie(project_root) {
+    // Requested trajectory artifact hash.
+    if let Some(trajectory) = selected_trajectory(project_root, identity)? {
         trajectory_artifact_hash = Some(trajectory.artifact_hash.clone());
     }
 

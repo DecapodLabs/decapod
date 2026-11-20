@@ -437,6 +437,10 @@ pub(crate) struct InitWithCli {
     #[clap(skip)]
     pub existing_repository_contract: Option<crate::core::repository_profile::RepositoryContract>,
     #[clap(skip)]
+    pub existing_selected_work: Option<crate::core::intent_reconcile::selected::SelectedWork>,
+    #[clap(skip)]
+    pub existing_observed_path: Option<crate::core::trajectory::path::Policy>,
+    #[clap(skip)]
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
@@ -1478,6 +1482,53 @@ pub(crate) struct TrajectoryCli {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum TrajectoryCommand {
+    /// Observe an exact GitHub comment through the official client and append it;
+    /// an observed account is not authenticated human consent
+    ClarifyGithubComment {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        revision_id: String,
+        #[clap(long)]
+        expected_revision: String,
+        #[clap(long)]
+        repository: String,
+        #[clap(long)]
+        comment_id: u64,
+        #[clap(long)]
+        expected_body_digest: String,
+        /// Select anonymous HTTPS reads before execution; never an auth-error fallback
+        #[clap(long)]
+        public: bool,
+        #[clap(long, value_enum, default_value = "clarification")]
+        kind: crate::core::custody::RecordedInstructionKind,
+        #[clap(long = "supersedes")]
+        supersedes: Vec<String>,
+        #[clap(long)]
+        derived_intent: Option<String>,
+    },
+    /// Record a same-lineage instruction revision; source/principal are unverified claims
+    Clarify {
+        #[clap(long)]
+        run_id: String,
+        #[clap(long)]
+        revision_id: String,
+        #[clap(long)]
+        expected_revision: String,
+        /// Bounded recorded instruction, redacted before persistence
+        #[clap(long)]
+        instruction: String,
+        #[clap(long)]
+        source_ref: String,
+        #[clap(long)]
+        principal_claim: Option<String>,
+        #[clap(long, value_enum, default_value = "clarification")]
+        kind: crate::core::custody::RecordedInstructionKind,
+        #[clap(long = "supersedes")]
+        supersedes: Vec<String>,
+        #[clap(long)]
+        derived_intent: Option<String>,
+    },
     /// Bind an execution checkpoint to current source, intent and authority
     Checkpoint {
         #[clap(long)]
