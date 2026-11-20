@@ -347,6 +347,14 @@ pub fn get_workspace_status(repo_root: &Path) -> Result<WorkspaceStatus, Decapod
     })
 }
 
+pub(crate) fn observe_pr_for_diagnostic(
+    repo: &Path,
+    slug: &str,
+    number: u64,
+) -> Result<serde_json::Value, DecapodError> {
+    publication::diagnostic_read_pr(repo, slug, number)
+}
+
 fn resolve_workspace_credentials_report(
     repo_root: &Path,
 ) -> Option<crate::core::container_signer::WorkspaceCredentialsReport> {

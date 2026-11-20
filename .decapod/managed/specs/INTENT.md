@@ -717,8 +717,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `34b39fe29bf53c47f680c8f07d85b83ef0e022e8ae2a656a6de788df228c0f5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1201,3 +1201,11 @@ not duplicate implementation or unsupported issue closure.
 ## Accepted v0.146.0 audit reconciliation
 
 This map now uses accepted master `e9c40e929ee33aa5443c38b57276f96111db0b92` and the installed 0.146.0 kernel. The accepted #1699 bounded escalation CLI/RPC reference is implemented and covered by its exact-source execution; it is not complete external runtime adoption, semantic reasoning proof or the ten-worker A–H demonstration. Prior baseline paragraphs remain historical audit context. Pending #1697 physical recovery and #1702 canonical local-target admission are kept separate from accepted enforcement until individually verified and merged. Source-CI diagnostics do not substitute for the unchanged full native provider contract.
+
+## Read-only workspace diagnosis (#1071)
+
+Operators and agents need one command to identify the next recovery step
+when a workspace is blocked. The diagnostic shows accepted authority and
+worktree proposals separately and continues to explain malformed config
+without bootstrapping or repairing state. Verification and admission stay
+with the existing governed operations.

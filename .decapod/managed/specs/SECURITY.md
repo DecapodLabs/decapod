@@ -801,8 +801,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `34b39fe29bf53c47f680c8f07d85b83ef0e022e8ae2a656a6de788df228c0f5d`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `a127e2487fdf6060385edc41d564655a62725c6eb3a86ee001c0b3f3e867fcd9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1394,3 +1394,11 @@ accepted local source-definition digest before selection. The failed observation
 remains historical; fresh hosted execution must establish the repair. This is a
 local-readiness finding, not evidence of bypassing an independent remote merge
 service or of OS isolation from an unrestricted producer.
+
+## Diagnostic trust and redaction (#1071)
+
+Workspace diagnosis treats proposed config and binding overrides as candidate
+material. Only the existing policy resolver supplies accepted authority,
+with its local assurance level visible. Raw parser and transport errors,
+credential values, and task intent text stay out of the diagnostic. Current
+forge checks alone cannot establish Decapod admission.

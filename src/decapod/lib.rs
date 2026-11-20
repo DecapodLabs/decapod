@@ -2721,6 +2721,18 @@ pub fn run() -> Result<(), error::DecapodError> {
     // Keep them out of the migration/session path so a missing or damaged
     // local store cannot prevent bootstrap diagnostics from running.
     let command = match command {
+        Command::Workspace(WorkspaceCli {
+            command:
+                WorkspaceCommand::Diagnose {
+                    json,
+                    offline,
+                    pr,
+                    operation,
+                },
+        }) => {
+            let root = std::env::current_dir()?;
+            return core::workspace_diagnostic::run(&root, &operation, pr, offline, json);
+        }
         Command::Data(DataCli {
             command: DataCommand::Schema(schema_cli),
         }) => return run_schema_command(schema_cli),
@@ -11550,6 +11562,14 @@ fn run_workspace_command(
     use crate::core::workspace;
 
     match cli.command {
+        WorkspaceCommand::Diagnose {
+            json,
+            offline,
+            pr,
+            operation,
+        } => {
+            core::workspace_diagnostic::run(project_root, &operation, pr, offline, json)?;
+        }
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
                 std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
