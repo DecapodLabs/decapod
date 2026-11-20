@@ -807,7 +807,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973`
+- Repository signal fingerprint: `3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1379,8 +1379,11 @@ candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
 under scope `"repo.pr-readiness.v1"`. Missing, unauthorized, wrong-scope,
 expired, revoked, or stale approvals fail closed with
 `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, and downgrading `decapod.pr-readiness.v1`
-remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. Local
-cooperative actor labels and host-local SQLite retain their shared-UID trust
+remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. The
+consumer regression commits both profiles in separate Git revisions, records an
+approval for that exact transition, and checks that the runtime refuses it
+before selecting commands. Local cooperative actor labels and host-local SQLite
+retain their shared-UID trust
 boundary and do not claim cryptographic identity or OS sandboxing.
 
 The regression boundary uses real Git targets and native subprocess checks,

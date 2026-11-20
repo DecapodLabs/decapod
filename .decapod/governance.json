@@ -922,6 +922,15 @@
         "assets/tools/release_projection_drift_tests.rs",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-cli-downgrade-12",
+      "summary": "Exercise the committed strict profile downgrade in CLI conformance",
+      "input_digest": "sha256:ea13acbb45a0084e1c7e29a9a6b82c22240c4f76b8f3187d9011ee0360f55a63",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841",
+        "tests/consumer_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -962,25 +971,25 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the context, instruction-lineage and proof contracts on the accepted v0.156.0 release cut.",
-          "reviewed_code_fingerprint": "09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973",
+          "reason": "The corrected consumer fixture exercises the existing accepted-target validation runtime and Git state model.",
+          "reviewed_code_fingerprint": "3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59",
           "spec_material_hash": "e2d896e3d877cd3dea01906f29818bcac78d0569ddfe110993ec4ef076021465"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the context, instruction-lineage and proof contracts on the accepted v0.156.0 release cut.",
-          "reviewed_code_fingerprint": "09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973",
+          "reason": "The corrected fixture reaches the existing CLI and native adapter contract for repository profile migration.",
+          "reviewed_code_fingerprint": "3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59",
           "spec_material_hash": "9f674b51305fcb6387a39f0e3da98b93025ee55d912a5668d29d2c78000d67e1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the context, instruction-lineage and proof contracts on the accepted v0.156.0 release cut.",
-          "reviewed_code_fingerprint": "09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973",
-          "spec_material_hash": "7fad05c85152e38e4d1748874e8c96a7e3126c07559e234ae86d6f420898f448"
+          "reason": "Documented the committed accepted and candidate profiles and the approved downgrade negative control before command selection.",
+          "reviewed_code_fingerprint": "3ada8d4eeeb3879c3e4370871309e296349f939a2e43389ad3aebcb912623b59",
+          "spec_material_hash": "43b6c979dc3a9a9b5df4b6f2f5c4f38b4dd6408c760af9ee3c41b37b9f12fb0c"
         }
       ],
       "state": "APPROVED",
@@ -991,13 +1000,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795213880Z"
+      "updated_at": "1795217563Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:18775b03a2d61e5f1722aba4f0cbb6e172122b4815a10429982bdff9f2a34870",
+      "artifact_hash": "sha256:c4fd32e0e5e136babbb6aebe03984325d67712927255c1c4c06155a22406966d",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -1045,6 +1054,26 @@
         },
         {
           "name": "Bazel validate_termination",
+          "status": "passed"
+        },
+        {
+          "name": "CLI downgrade control after fixture repair",
+          "status": "passed"
+        },
+        {
+          "name": "CLI downgrade control before fixture repair",
+          "status": "failed"
+        },
+        {
+          "name": "Local full CLI contracts with five macOS PTY failures",
+          "status": "failed"
+        },
+        {
+          "name": "Rust formatting and diff whitespace",
+          "status": "passed"
+        },
+        {
+          "name": "Same five PTY failures with independently released accepted binary",
           "status": "passed"
         },
         {
@@ -1194,10 +1223,24 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 15
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:16",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 16
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:17",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 17
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 15,
+        "next_sequence": 17,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1406,6 +1449,46 @@
                 ],
                 "sequence": 15,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:16",
+                "observations": [
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44829768980/job/136613811669",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841",
+                  "Local before log sha256:0437e9da54f92c4e1a293d40d16bca66c52ac297923b629e6069d4beaea72857",
+                  "Local fixed test log sha256:10e22ff5c4d2dd7584e5a145d6c48f13ab19b831f302e16cc5064304ac8412ac"
+                ],
+                "proof_refs": [
+                  "CLI downgrade control before fixture repair",
+                  "CLI downgrade control after fixture repair",
+                  "Rust formatting and diff whitespace"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 16,
+                "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:17",
+                "observations": [
+                  "Local full CLI log sha256:4090048134d59e64a2c92791f1e001badd9dee043562360f88438a01830d260e",
+                  "Accepted v0.156.0 PTY control log sha256:1687a7b3d6bc6dc542df0aa376fa6f1959c01d511f6f7b1c96a2faca5cfb0fad"
+                ],
+                "proof_refs": [
+                  "Local full CLI contracts with five macOS PTY failures",
+                  "Same five PTY failures with independently released accepted binary"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 17,
+                "validation_findings": []
               }
             ]
           }
@@ -1414,6 +1497,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Accepted v0.156.0 PTY control log sha256:1687a7b3d6bc6dc542df0aa376fa6f1959c01d511f6f7b1c96a2faca5cfb0fad",
         "All 12 validation termination and contention cases passed locally, in addition to the nine datastore and fifteen spec conformance checks. While the previous head ran, accepted master moved to 722515f49e6f56f76ea64bf6ba94ede252df4593. The original governance jobs failed base identity or merge-base verification. This merge preserves the accepted observer source and authored spec prose, and native reconcile-merge retains the approved active journal and any accepted baseline obligations.",
         "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim.",
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
@@ -1421,28 +1505,37 @@
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
         "Integrated the immutable v0.155.1 target 2e206d26. Prior candidate GitHub CLI and core suites passed, while checkpoint and push context rejected the advanced target. Retained accepted release-entrypoint integrity and all prior checkpoints. Reviewed 107 source paths, with changes to the two Cargo version declarations and accepted release projection fixture. Current smoke ran in 13580ms within the unchanged 20000ms budget. All 16 release projection policy tests passed. Local project-check generated matching projections but returned a failure on the host with container custody, shared task proof and staged merge findings. No local full readiness is claimed.",
+        "Local before log sha256:0437e9da54f92c4e1a293d40d16bca66c52ac297923b629e6069d4beaea72857",
+        "Local fixed test log sha256:10e22ff5c4d2dd7584e5a145d6c48f13ab19b831f302e16cc5064304ac8412ac",
+        "Local full CLI log sha256:4090048134d59e64a2c92791f1e001badd9dee043562360f88438a01830d260e",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified.",
         "The maintainer merged release cut #1870 to ba21c8f1 while source checks were running. The accepted delta contained only Cargo package metadata and release notes. Retained unreleased work, current v0.156.0 projections and all ten checkpoints. The unchanged validation bound passed in 10536ms across three runs; 16 release policy cases passed. The host-local project check generated the expected projections then returned VALIDATE_TIMEOUT_OR_LOCK for shared storage contention. No local full readiness claim. GitHub requires independent approval from a collaborator on #1864.",
-        "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte."
+        "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte.",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44829768980/job/136613811669",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841"
       ],
       "inspected_files": [
         "assets/tools/source_ci/standalone-validation.sh",
-        "src/decapod/core/flight_recorder/acceptance.rs"
+        "src/decapod/core/flight_recorder/acceptance.rs",
+        "tests/common/consumer_readiness_fixture.rs"
       ],
       "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
       "modified_files": [
+        ".decapod/managed/specs/SECURITY.md",
         "assets/build/constitution_admission.rs",
         "src/decapod/core/docs.rs",
         "src/decapod/core/events.rs",
         "src/decapod/core/rpc.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/knowledge.rs",
+        "tests/consumer_readiness.rs",
         "tests/single_datastore.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "publish-ci-repair"
       ],
       "repo_scope": [
         "root"
