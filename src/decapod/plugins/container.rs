@@ -647,7 +647,7 @@ fn ensure_container_runtime_access_with_info(runtime: &str) -> Result<String, er
 
     let mut machine_start_output = None;
     if runtime == "podman" && podman_machine_start_supported() {
-        let started = start_podman_machine_quietly(runtime)?;
+        let started = start_podman_machine_quietly(&mut Command::new(runtime))?;
         machine_start_output = Some(started);
 
         // `podman machine start` reports an error when the machine is already
@@ -725,9 +725,9 @@ fn podman_machine_start_args() -> [&'static str; 5] {
 }
 
 fn start_podman_machine_quietly(
-    runtime: &str,
+    command: &mut Command,
 ) -> Result<std::process::Output, error::DecapodError> {
-    Command::new(runtime)
+    command
         .args(podman_machine_start_args())
         .stdin(Stdio::null())
         .stdout(Stdio::piped())

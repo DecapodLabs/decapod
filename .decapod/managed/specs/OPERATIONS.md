@@ -144,6 +144,10 @@ noninteractive `podman machine start --quiet --no-info --update-connection=false
 path, followed by another service probe. This does not launch Podman Desktop or
 change the default connection.
 
+The machine-start regression test passes a temporary script to `/bin/sh` and
+checks the production flags and closed stdin. The interpreter is the executable,
+so an inherited write descriptor for the script cannot cause Linux `ETXTBSY`.
+
 On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
 without a user systemd instance (`#1820`), `decapod auto container run` (and
 claim-triggered container preparation via `src/decapod/plugins/container.rs`)
@@ -458,7 +462,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525`
+- Repository signal fingerprint: `2a82d4de2d1517f104d67e8915cf563cbc988d85eeb2b6f74f8d3177491b26fa`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

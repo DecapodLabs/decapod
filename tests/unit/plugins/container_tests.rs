@@ -182,11 +182,9 @@ fn podman_machine_start_is_quiet_headless_and_noninteractive() {
 #[cfg(unix)]
 #[test]
 fn podman_machine_start_captures_output_without_reading_terminal_input() {
-    use std::os::unix::fs::PermissionsExt;
-
     let root = tempdir().expect("tempdir");
     let args_file = root.path().join("args");
-    let fake_runtime = root.path().join("podman");
+    let fake_runtime = root.path().join("podman.sh");
     fs::write(
         &fake_runtime,
         format!(
@@ -195,13 +193,9 @@ fn podman_machine_start_captures_output_without_reading_terminal_input() {
         ),
     )
     .expect("write fake podman");
-    let mut permissions = fs::metadata(&fake_runtime)
-        .expect("fake podman metadata")
-        .permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(&fake_runtime, permissions).expect("chmod fake podman");
-
-    let output = start_podman_machine_quietly(fake_runtime.to_str().expect("runtime path"))
+    // Execute the shell, so a concurrent child inheriting an open write
+    // descriptor for the script cannot make the executable text busy.
+    let output = start_podman_machine_quietly(Command::new("/bin/sh").arg(&fake_runtime))
         .expect("start fake podman");
     assert!(output.status.success(), "stdin must be non-interactive");
     assert_eq!(String::from_utf8_lossy(&output.stdout), "captured\n");
