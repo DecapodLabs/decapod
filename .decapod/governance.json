@@ -12,6 +12,14 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "claim:accepted-behavior-controls": {
+        "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
+        "status": "open"
+      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -88,6 +96,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:canonical-scope-projection": {
+        "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/scope.rs"
+        ],
+        "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
+        "status": "open"
       },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
@@ -308,6 +324,14 @@
         "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
         "status": "open"
       },
+      "claim:owned-native-path-authority": {
+        "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/path.rs"
+        ],
+        "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
+        "status": "open"
+      },
       "claim:pr1609-governed-publication": {
         "falsifier": "Any authored commit lacks a staged-material checkpoint, governance artifact, or required generated projection; exact-candidate validation fails",
         "proof_refs": [
@@ -377,6 +401,22 @@
         "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
         "status": "open"
       },
+      "claim:recorded-blocker-parity": {
+        "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
+        "proof_refs": [
+          "tests/unit/plan_governance_tests.rs"
+        ],
+        "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
+        "status": "open"
+      },
+      "claim:recorded-instruction-lineage": {
+        "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
+        "proof_refs": [
+          "tests/infer_precision.rs"
+        ],
+        "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
+        "status": "open"
+      },
       "claim:recovery-workspace-artifact-lookup": {
         "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
         "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
@@ -433,6 +473,14 @@
           "src/decapod/core/validation_runtime/snapshot/source_import.rs"
         ],
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+        "status": "open"
+      },
+      "claim:selected-root-and-relation-conservation": {
+        "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
+        "proof_refs": [
+          "src/decapod/core/intent_reconcile/selected.rs"
+        ],
+        "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
         "status": "open"
       },
       "claim:source-version-release-projections": {
@@ -821,6 +869,11 @@
       "id": "review-156-source-inventory",
       "summary": "Refresh the reviewed inventory after the v0.156.0 release bump",
       "input_digest": "sha256:dadf371df5b7c04d67cefe8c85715702af165f0bcb62a8272c3c15897843e170"
+    },
+    {
+      "id": "accepted-1561-merge",
+      "summary": "Synchronize the accepted v0.156.1 target and preserve proof coverage",
+      "input_digest": "sha256:e72bbc8c0bc718f9e5dbffad07cd483d5e41643de4589b3bdab04a0bb4387695"
     }
   ],
   "intents": {
@@ -861,22 +914,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Podman startup retains the accepted execution backend and runtime architecture.",
-          "reviewed_code_fingerprint": "6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059",
-          "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
+          "reason": "Production Podman startup keeps the accepted runtime backend and interface.",
+          "reviewed_code_fingerprint": "24a0d21d03e78a86ed5a81dd6f04fd8a268dc4326d5545c478dcee7ddf28858d",
+          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The production runtime command retains its original arguments, output handling and public interface.",
-          "reviewed_code_fingerprint": "6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059",
-          "spec_material_hash": "696b81ee20708c04db8b5405105acfbd5696ffd7b921f2549f9b948fb4c91907"
+          "reason": "The internal test command accepts the same production arguments and capture contract.",
+          "reviewed_code_fingerprint": "24a0d21d03e78a86ed5a81dd6f04fd8a268dc4326d5545c478dcee7ddf28858d",
+          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The test invokes its private script with a fixed interpreter; production stdin remains closed.",
-          "reviewed_code_fingerprint": "6f9c781eb36699b55498b43577a52d3850cbeb60eb283a21e8cab5ed89e69059",
+          "reason": "Production startup retains closed stdin. The test uses the fixed shell interpreter.",
+          "reviewed_code_fingerprint": "24a0d21d03e78a86ed5a81dd6f04fd8a268dc4326d5545c478dcee7ddf28858d",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -888,13 +941,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795215646Z"
+      "updated_at": "1795218756Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:35a3aa04e9c958a807ed44719c28547ac59a9031e99f1fee1c19e17a0372f5ba",
+      "artifact_hash": "sha256:9a8c0067f854765c92966569c3bb43b9b05c3bd22bc48d49bd9fabdccd813b9b",
       "checks": [
         {
           "name": "podman-machine-start",
@@ -929,10 +982,17 @@
             "intent_id": "intent:change_01M7XDX74RT7Q7GA6WT99KJDTX",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XDX77ZEQN008P9XDZDYACM",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XDX74RT7Q7GA6WT99KJDTX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XDX77ZEQN008P9XDZDYACM": {
@@ -968,6 +1028,19 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Buildkite 14681 rejected the stale merge base. Reviewed the new source inventory; only Cargo package version changed in the inventoried files."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -976,6 +1049,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Buildkite 14681 rejected the stale merge base. Reviewed the new source inventory; only Cargo package version changed in the inventoried files.",
         "Cargo test --locked --lib podman_machine_start: 2 passed on macOS.",
         "Reviewed all inventory differences since the accepted declaration. Only Cargo.toml and Cargo.lock changed the package version from 0.155.1 to 0.156.0. Required commands and workflow coverage were identical."
       ],
