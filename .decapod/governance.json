@@ -670,6 +670,11 @@
       "id": "cp-sync-5cc32689e",
       "summary": "Sync accepted master 5cc32689e (v0.152.0) and refresh 0.152.0 projections for #1739",
       "input_digest": "sha256:19a8e78a4ebad85a17ee857e7086a7e4ddbe639ba3afb40d0d6b917f5e4ea7f5"
+    },
+    {
+      "id": "cp-pin-01520",
+      "summary": "Refresh managed Dockerfile pin to Decapod v0.152.0 for #1739",
+      "input_digest": "sha256:ec0ffcacab47b2220fa25333d0f9a1c5f17e174bb9144725a9b1c87d718c9c8b"
     }
   ],
   "intents": {
