@@ -912,6 +912,16 @@
         "tests/infer_precision.rs",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1560-release-alignment-11",
+      "summary": "Reconcile the merged v0.156.0 release cut and preserve versioned projection and validation proof",
+      "input_digest": "sha256:85b50b9a4d14a224f50be8e2e3dd74b0ade4d9bdf7851bed1d754ec130bf82b2",
+      "proof_refs": [
+        "CHANGELOG.md",
+        "assets/tools/release_projection_drift_tests.rs",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -954,22 +964,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the integrated context, proof and validation contracts with accepted typed instruction lineage and custody-free state readback.",
-          "reviewed_code_fingerprint": "a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c",
+          "reason": "Review the context, instruction-lineage and proof contracts on the accepted v0.156.0 release cut.",
+          "reviewed_code_fingerprint": "09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973",
           "spec_material_hash": "e2d896e3d877cd3dea01906f29818bcac78d0569ddfe110993ec4ef076021465"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the integrated context, proof and validation contracts with accepted typed instruction lineage and custody-free state readback.",
-          "reviewed_code_fingerprint": "a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c",
+          "reason": "Review the context, instruction-lineage and proof contracts on the accepted v0.156.0 release cut.",
+          "reviewed_code_fingerprint": "09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973",
           "spec_material_hash": "9f674b51305fcb6387a39f0e3da98b93025ee55d912a5668d29d2c78000d67e1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the integrated context, proof and validation contracts with accepted typed instruction lineage and custody-free state readback.",
-          "reviewed_code_fingerprint": "a00e7546c695df075b277f0fe2e1c664d20e32bc9b5e68ddf287e55f77808e2c",
+          "reason": "Review the context, instruction-lineage and proof contracts on the accepted v0.156.0 release cut.",
+          "reviewed_code_fingerprint": "09a5d14deb344f4fe8f1d5905330bce0cd5f57608d13084bf64b3399c804c973",
           "spec_material_hash": "7fad05c85152e38e4d1748874e8c96a7e3126c07559e234ae86d6f420898f448"
         }
       ],
@@ -981,13 +991,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795212664Z"
+      "updated_at": "1795213880Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3904fcaaefe146983db4e6e6c9fdc8273537d7d5f17fb688ae6949088e13f9c2",
+      "artifact_hash": "sha256:18775b03a2d61e5f1722aba4f0cbb6e172122b4815a10429982bdff9f2a34870",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -1023,6 +1033,14 @@
         },
         {
           "name": "Bazel v0.155.1 bounded validate smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel v0.156.0 bounded validate smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel v0.156.0 release projection policy",
           "status": "passed"
         },
         {
@@ -1169,10 +1187,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 14
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:15",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 15
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 14,
+        "next_sequence": 15,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1365,6 +1390,22 @@
                 ],
                 "sequence": 14,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:15",
+                "observations": [
+                  "The maintainer merged release cut #1870 to ba21c8f1 while source checks were running. The accepted delta contained only Cargo package metadata and release notes. Retained unreleased work, current v0.156.0 projections and all ten checkpoints. The unchanged validation bound passed in 10536ms across three runs; 16 release policy cases passed. The host-local project check generated the expected projections then returned VALIDATE_TIMEOUT_OR_LOCK for shared storage contention. No local full readiness claim. GitHub requires independent approval from a collaborator on #1864."
+                ],
+                "proof_refs": [
+                  "Bazel v0.156.0 bounded validate smoke",
+                  "Bazel v0.156.0 release projection policy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 15,
+                "validation_findings": []
               }
             ]
           }
@@ -1383,6 +1424,7 @@
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified.",
+        "The maintainer merged release cut #1870 to ba21c8f1 while source checks were running. The accepted delta contained only Cargo package metadata and release notes. Retained unreleased work, current v0.156.0 projections and all ten checkpoints. The unchanged validation bound passed in 10536ms across three runs; 16 release policy cases passed. The host-local project check generated the expected projections then returned VALIDATE_TIMEOUT_OR_LOCK for shared storage contention. No local full readiness claim. GitHub requires independent approval from a collaborator on #1864.",
         "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte."
       ],
       "inspected_files": [
