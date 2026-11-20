@@ -797,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6fce094b04b691972d5b4d6744301b02bf10518a3101bb02cf6663b72b15f0f`
+- Repository signal fingerprint: `863d70c3e734ecc9a98c27ef5b3253e691f91373f1f1f5c736f563ee2b501691`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1344,3 +1344,7 @@ interventions and created-but-not-admitted PRs cannot become autonomous success.
 
 ## Fail-closed host attribution
 Missing provider-requested tool identities and kernel calls outside an actual in-flight bash interval prevent an autonomous-admission classification. Express these rejection conditions directly, without lint exceptions or weakening missing-input behavior. Source CI must pass both the mandatory core/library regression owner and lint before publication.
+
+## Source development release boundary
+
+Preserving canonical source entrypoint metadata is conditional on the existing repository/origin/ancestry/template proof, not a configuration flag or caller-computed digest alone. The release verifier additionally compares the current entrypoint to the immutable classified head. This prevents a valid-looking replacement version from gaining authority during refresh. Existing exact current manifest, Dockerfile, source/configuration inventory and staged-edit checks remain enforced. The regression uses the existing published-root source fixture and includes header replacement, payload tampering and foreign-origin refusals; successful CI execution remains distinct from test registration.

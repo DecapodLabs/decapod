@@ -11,9 +11,19 @@ pub(crate) struct Fixture {
 
 impl Fixture {
     pub(crate) fn new() -> Self {
-        let root = tempfile::tempdir().unwrap();
+        Self::with_source_versions(false)
+    }
+
+    fn with_source_versions(preserve: bool) -> Self {
+        let root = if preserve {
+            entrypoints::development_source_fixture()
+        } else {
+            tempfile::tempdir().unwrap()
+        };
         let repo = root.path();
-        git(repo, &["init", "-q", "-b", "master"]).unwrap();
+        if !preserve {
+            git(repo, &["init", "-q", "-b", "master"]).unwrap();
+        }
         git(repo, &["config", "user.name", "Projection Test"]).unwrap();
         git(
             repo,
@@ -21,17 +31,25 @@ impl Fixture {
         )
         .unwrap();
         fs::create_dir_all(repo.join(specs::LOCAL_PROJECT_SPECS_DIR)).unwrap();
-        fs::create_dir(repo.join("src")).unwrap();
+        fs::create_dir_all(repo.join("src")).unwrap();
         fs::write(repo.join("src/lib.rs"), "pub fn unchanged() {}\n").unwrap();
         fs::write(
             repo.join(".decapod/config.toml"),
-            "[repo]\nproduct_name = \"fixture\"\n",
+            if preserve {
+                "[repo]\nproduct_name = \"fixture\"\n_allow_entrypoint_version_drift = true\n"
+            } else {
+                "[repo]\nproduct_name = \"fixture\"\n"
+            },
         )
         .unwrap();
         for path in entrypoints::ENTRYPOINT_FILES {
             fs::write(
                 repo.join(path),
-                entrypoints::render_entrypoint_for_release(path, OLD).unwrap(),
+                entrypoints::render_entrypoint_for_release(
+                    path,
+                    if preserve { "0.0.0" } else { OLD },
+                )
+                .unwrap(),
             )
             .unwrap();
         }
@@ -131,6 +149,65 @@ fn accepts_only_exact_current_release_projections_without_mutating_checkout() {
     assert_eq!(before, git(fixture.root.path(), &["diff", "HEAD"]).unwrap());
     fixture.refresh();
     fixture.verify().unwrap();
+}
+
+#[test]
+fn accepts_preserved_source_versions_from_committed_development_templates() {
+    let fixture = Fixture::with_source_versions(true);
+    let repo = fixture.root.path();
+    assert!(entrypoints::preserves_source_entrypoint_versions(repo));
+    for path in entrypoints::ENTRYPOINT_FILES {
+        assert_eq!(
+            read_regular(repo, path).unwrap(),
+            blob(repo, &fixture.head, path).unwrap()
+        );
+        assert!(
+            read_regular(repo, path)
+                .unwrap()
+                .starts_with("<!-- decapod-release: 0.0.0 -->")
+        );
+    }
+    let before = git(repo, &["diff", "HEAD"]).unwrap();
+    fixture.verify().unwrap();
+    fixture.refresh();
+    fixture.verify().unwrap();
+    assert_eq!(before, git(repo, &["diff", "HEAD"]).unwrap());
+}
+
+#[test]
+fn preserved_source_versions_do_not_authorize_header_payload_or_origin_drift() {
+    for alteration in ["header", "payload", "origin"] {
+        let fixture = Fixture::with_source_versions(true);
+        let repo = fixture.root.path();
+        assert!(entrypoints::preserves_source_entrypoint_versions(repo));
+        match alteration {
+            "header" => {
+                fs::write(
+                    repo.join("AGENTS.md"),
+                    entrypoints::render_entrypoint_for_release("AGENTS.md", "0.0.2").unwrap(),
+                )
+                .unwrap();
+                // A valid version-bound fingerprint still cannot replace the
+                // immutable release head's preserved entrypoint metadata.
+                assert!(entrypoints::preserves_source_entrypoint_versions(repo));
+            }
+            "payload" => fixture.edit("AGENTS.md", |text| text.replace("Decapod", "Counterfeit")),
+            "origin" => {
+                git(
+                    repo,
+                    &[
+                        "remote",
+                        "set-url",
+                        "origin",
+                        "https://github.com/foreign/consumer",
+                    ],
+                )
+                .unwrap();
+            }
+            _ => unreachable!(),
+        }
+        assert!(fixture.verify().is_err(), "accepted {alteration} drift");
+    }
 }
 
 #[test]
