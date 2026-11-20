@@ -890,6 +890,11 @@
       "id": "sync-1873-issue-1834",
       "summary": "Reconcile accepted master while preserving the branch-authored repository contract",
       "input_digest": "sha256:ee3c93e3deb36e7c211b1b7327595ff5f00046de83f7c5cf8ab78c9e2e7e6a28"
+    },
+    {
+      "id": "sync-v1561-issue-1834",
+      "summary": "Reconcile the accepted v0.156.1 release and refresh exactly measured repository projections",
+      "input_digest": "sha256:3b595f447e191a9953a9d7fd3e05e85d91f46d5aa6c07b7a8d00d882860cbf5e"
     }
   ],
   "intents": {
@@ -931,22 +936,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved the authored design and reviewed it with the current accepted architecture",
-          "reviewed_code_fingerprint": "54eaf181b5eb693a940eab06d5562702ae269b437b42d6b19968ac72dff24693",
+          "reason": "Reviewed the authored architecture with the accepted v0.156.1 source snapshot",
+          "reviewed_code_fingerprint": "ec6ffa1c157e89a7f88c665b2f8e7d89f1e06c09252ea9da0061eea8410e3fde",
           "spec_material_hash": "34aab33dd1bb2c3afa61b73694e4aaecc78592804b4c5e4d356c9fbfb92a4578"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the interface contract alongside the accepted publication and policy changes",
-          "reviewed_code_fingerprint": "54eaf181b5eb693a940eab06d5562702ae269b437b42d6b19968ac72dff24693",
+          "reason": "Reviewed the authored interfaces with the accepted v0.156.1 source snapshot",
+          "reviewed_code_fingerprint": "ec6ffa1c157e89a7f88c665b2f8e7d89f1e06c09252ea9da0061eea8410e3fde",
           "spec_material_hash": "6e1107ee8c3137d8b3fad7926000cbda56e161489d8f5c3656614c78032b5904"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The change derives display metadata and preserves the accepted publication checks",
-          "reviewed_code_fingerprint": "54eaf181b5eb693a940eab06d5562702ae269b437b42d6b19968ac72dff24693",
+          "reason": "The authored change only derives display metadata and preserves publication authorization",
+          "reviewed_code_fingerprint": "ec6ffa1c157e89a7f88c665b2f8e7d89f1e06c09252ea9da0061eea8410e3fde",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -958,7 +963,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218080Z"
+      "updated_at": "1795218528Z"
     },
     "trajectory": {
       "active_boundaries": [
