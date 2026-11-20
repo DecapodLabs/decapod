@@ -725,6 +725,12 @@ fn merge_plan_section(
                 title,
                 intent,
                 state,
+                accepted_selected_work_revision: merge_option_3way(
+                    b_ref.and_then(|p| p.accepted_selected_work_revision.as_ref()),
+                    o.accepted_selected_work_revision.as_ref(),
+                    t.accepted_selected_work_revision.as_ref(),
+                    "plan.accepted_selected_work_revision",
+                )?,
                 todo_ids: merge_string_union(&o.todo_ids, &t.todo_ids),
                 proof_hooks: merge_string_union(&o.proof_hooks, &t.proof_hooks),
                 unknowns: merge_string_set_3way(

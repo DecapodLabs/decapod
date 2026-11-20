@@ -12,6 +12,14 @@
       "review_policy": "Reviewers must check that every claim remains falsifiable, evidence status is bounded by observed evidence, proof references resolve, and changes preserve schema compatibility or explicitly version it."
     },
     "unresolved": {
+      "claim:accepted-behavior-controls": {
+        "falsifier": "A cross-tenant leak, incompatible clean merge or rewritten accepted oracle earns required readiness without executing the unchanged applicable falsifier.",
+        "proof_refs": [
+          "tests/consumer_readiness.rs"
+        ],
+        "statement": "Accepted tenant and combined-interface negative controls run against the exact integrated artifact; authored positives alone never prove semantic alignment.",
+        "status": "open"
+      },
       "claim:accepted-executor-candidate-build": {
         "falsifier": "A changed carrier, altered accepted executor, missing or mismatched dual-root identity, incomplete required graph, or unauthenticated artifact can establish readiness; or candidate helper changes require a separate manual build despite a supported accepted executor.",
         "proof_refs": [
@@ -88,6 +96,14 @@
         "owner": "Decapod build maintainers",
         "question": "Should a future Bazel release permit the generated module lockfile to move under .config/build, or must it remain root-discovered?",
         "status": "deferred"
+      },
+      "claim:canonical-scope-projection": {
+        "falsifier": "Commas split literal paths, independent constraints are discarded, historical failures are erased or migration grants proof or a filesystem authorization claim.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/scope.rs"
+        ],
+        "statement": "Existing bounded task scope parser preserves JSON paths and only exact archived legacy projection fragments receive deterministic repair with history retained and approval revoked.",
+        "status": "open"
       },
       "claim:claim:container-work-preservation": {
         "falsifier": "A failed or interrupted command, local-only history, dirty tracked or untracked work, or unreadable Git status is deleted automatically; or eligible clean successful work cannot be removed.",
@@ -308,6 +324,14 @@
         "statement": "Only the configured native GitHub-hosted owner identity selects release mutation; sanitized Buildkite imports and missing or unknown runner identity remain false before credential-bearing jobs.",
         "status": "open"
       },
+      "claim:owned-native-path-authority": {
+        "falsifier": "Counterfeit loops or copied JSON, changed source/base/policy, revoked lease or a failed rerun can authorize current publication from an old pass.",
+        "proof_refs": [
+          "src/decapod/core/trajectory/path.rs"
+        ],
+        "statement": "Only current owned native authorization and actual terminal observations satisfy required path policy; full-host coverage remains unknown.",
+        "status": "open"
+      },
       "claim:pr1609-governed-publication": {
         "falsifier": "Any authored commit lacks a staged-material checkpoint, governance artifact, or required generated projection; exact-candidate validation fails",
         "proof_refs": [
@@ -377,6 +401,22 @@
         "statement": "Current Buildkite importer0.102.5 is accepted only through independently reviewed version and executable digests; old mixed and unknown tuples remain rejected",
         "status": "open"
       },
+      "claim:recorded-blocker-parity": {
+        "falsifier": "A required contradiction or spec decision is ignored at one supported boundary or old approval survives material instruction revision.",
+        "proof_refs": [
+          "tests/unit/plan_governance_tests.rs"
+        ],
+        "statement": "Canonical recorded blockers refuse required plan, execution, validation and publication transitions and lawful repair requires renewed acceptance.",
+        "status": "open"
+      },
+      "claim:recorded-instruction-lineage": {
+        "falsifier": "Origin rewrite, spoofed authentication or a new actor drops or widens accepted recorded instructions or reuses stale authority.",
+        "proof_refs": [
+          "tests/infer_precision.rs"
+        ],
+        "statement": "Original recorded instruction and ordered provider or reported revisions remain distinct from derived interpretation and human authorization; cold readers recover the same applicable revision.",
+        "status": "open"
+      },
       "claim:recovery-workspace-artifact-lookup": {
         "falsifier": "A captured file present only in the owning task workspace cannot be found at replay or a mismatched hash is accepted.",
         "statement": "Verification resolves task-bound file evidence using the same task-aware workspace lookup as capture, then enforces its stored hash.",
@@ -433,6 +473,14 @@
           "src/decapod/core/validation_runtime/snapshot/source_import.rs"
         ],
         "statement": "The importer accepts only independently reviewed official0.102.7 compiler/Linux/Darwin executable identities, with unchanged source, producer, recipe and artifact custody checks; older, unknown, mixed and swapped tuples remain invalid.",
+        "status": "open"
+      },
+      "claim:selected-root-and-relation-conservation": {
+        "falsifier": "Omitted R3, duplicate or stale DB mapping, candidate policy repin or the inconsistent accepted triangle earns current readiness.",
+        "proof_refs": [
+          "src/decapod/core/intent_reconcile/selected.rs"
+        ],
+        "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
         "status": "open"
       },
       "claim:strict-protocol-rollout": {
@@ -857,6 +905,11 @@
       "id": "attack-gaps-interop-accepted-ba21c8f1",
       "summary": "Merge accepted v0.156.0 metadata and make the strict-profile refusal test exercise the fixture's already committed downgrade, preserving the encoding controls and all CI deadlines",
       "input_digest": "sha256:94eb63852b5a9320794f285567ede617678b0db6087e9a6942f78320e176e043"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-033977e2",
+      "summary": "Integrate accepted approval verification and reconcile both authored spec sets while retaining the pinned encoding controls and verified downgrade fixture repair",
+      "input_digest": "sha256:7b3d6001eeb984ff3e22197bc60452a85169790725c3ce9fa95ec585ce07525e"
     }
   ],
   "intents": {
@@ -900,22 +953,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Keeps the accepted source authority and independent decoding boundary while testing the downgrade with the committed fixture.",
-          "reviewed_code_fingerprint": "363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298",
-          "spec_material_hash": "fa61badf2a21db73f52fe548b768ae0d92f6bcbe2fb5f15afd0dc3518d39570c"
+          "reason": "Preserve accepted approval verification alongside the independent encoding fixture boundary.",
+          "reviewed_code_fingerprint": "b47a99b97840b9e8f46c2af81234d01c1ca7db85277bac9a9825d60741dcab1f",
+          "spec_material_hash": "e198abb16a02d26f6e53498f10da950cf9eb16fedc330f5a0cc785b7a6478f06"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserves the existing refusal contract and the decoder profile. The CLI test setup reuses the committed candidate configuration.",
-          "reviewed_code_fingerprint": "363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298",
-          "spec_material_hash": "2a6640f4c0649408b1f14945ebf967073d00f5bb798d38e9fdf3b3d1eb3c51c7"
+          "reason": "Carry accepted proof and approval relationships together with the versioned encoding profile and its executable controls.",
+          "reviewed_code_fingerprint": "b47a99b97840b9e8f46c2af81234d01c1ca7db85277bac9a9825d60741dcab1f",
+          "spec_material_hash": "72efff23117432317ef5789d3f3cc36944eb15a13e31714d1b542b71c67c595b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retains the strict downgrade refusal after explicit approval and the assertion that native execution is never selected.",
-          "reviewed_code_fingerprint": "363c9fe96c031339b8fc17a4b75737b6e1387b29cad2eab9f0eba109b23ce298",
+          "reason": "Retain approval verification and strict profile refusal while keeping independent decoding evidence scoped to encoding.",
+          "reviewed_code_fingerprint": "b47a99b97840b9e8f46c2af81234d01c1ca7db85277bac9a9825d60741dcab1f",
           "spec_material_hash": "6e32c0b41ff1cc2b7f19741f625fc67345e1033a93330504ff366f0e45d9dfa5"
         }
       ],
@@ -927,13 +980,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795214085Z"
+      "updated_at": "1795218105Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bb06b694b09821499fb8cbfc6ee6db0e8cb1b9af87c25615e4f45774dde6198c",
+      "artifact_hash": "sha256:21cb67d68b30d55064b5db5325ecd1161cffa13565dc0196731f477673dc2ca5",
       "checks": [
         {
           "name": "accepted-contract-cli-fixture",
@@ -950,6 +1003,14 @@
         {
           "name": "native-generated-manifest-recovery",
           "status": "passed"
+        },
+        {
+          "name": "previous-downgrade-fixture-recovery",
+          "status": "passed"
+        },
+        {
+          "name": "previous-full-cli",
+          "status": "failed"
         },
         {
           "name": "released-nesting-boundary",
@@ -1020,10 +1081,17 @@
             "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
@@ -1163,6 +1231,26 @@
                 ],
                 "sequence": 9,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44830327164/job/136614841197"
+                ],
+                "proof_refs": [
+                  "previous-downgrade-fixture-recovery",
+                  "previous-full-cli"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/consumer_readiness.rs",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -1178,6 +1266,7 @@
         "/private/tmp/attack-gaps-interop-surrogate-before.json",
         "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests",
         "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44830327164/job/136614841197",
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
@@ -1203,7 +1292,8 @@
       "next_transitions": [
         "Push exact v0.156.0-based candidate for complete GitHub Actions runs and required review",
         "Refine plan and declare falsifiable checks",
-        "Remove duplicate fixture commit and verify the same downgrade refusal on the combined candidate"
+        "Remove duplicate fixture commit and verify the same downgrade refusal on the combined candidate",
+        "Verify the combined candidate on the accepted approval-verification base"
       ],
       "repo_scope": [
         "assets/schemas",
