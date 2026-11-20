@@ -829,6 +829,14 @@
       "proof_refs": [
         "Compare released scanner inventories on d96bf819a, ba21c8f16, and the candidate"
       ]
+    },
+    {
+      "id": "issue-1834-v0156-container-projection",
+      "summary": "Refresh the generated Dockerfile to the accepting v0.156.0 release",
+      "input_digest": "sha256:a3b1e8c5e9df4c723df8afe47922a49698f81fe92089e76f33f701db411f00be",
+      "proof_refs": [
+        "GitHub Decapod Validate 44831233206 measured the required v0.156.0 Dockerfile projection"
+      ]
     }
   ],
   "intents": {
