@@ -984,10 +984,11 @@ pub struct Attestation {
 
 /// Generate capabilities report
 pub fn generate_capabilities() -> CapabilitiesReport {
-    let docker_available = container_runtime::container_runtime_available();
-    let config = crate::core::workspace::discover_repo_root(None)
-        .map(|root| crate::cli::DecapodProjectConfig::load(&root).ok())
-        .unwrap_or_default();
+    let mut report = static_capabilities();
+    report.workspace.docker_available = container_runtime::container_runtime_available();
+    report.config = crate::core::workspace::discover_repo_root(None)
+        .ok()
+        .and_then(|root| crate::cli::DecapodProjectConfig::load(&root).ok());
 
     let (version_check, latest_version) = get_latest_version();
     // #1533: `is_latest` is true only when the registry answered and reports
@@ -995,12 +996,18 @@ pub fn generate_capabilities() -> CapabilitiesReport {
     // report says `version_check: "unavailable"` with `latest_version: null`;
     // it never falls back to the running version, which would make
     // `is_latest: true` ambiguous.
-    let is_latest = compute_is_latest(
+    report.is_latest = compute_is_latest(
         version_check,
         latest_version.as_deref(),
         env!("CARGO_PKG_VERSION"),
     );
+    report.latest_version = latest_version;
+    report.version_check = version_check;
+    report
+}
 
+/// The binary's contract, before adding optional host and registry observations.
+pub(crate) fn static_capabilities() -> CapabilitiesReport {
     CapabilitiesReport {
         version: env!("CARGO_PKG_VERSION").to_string(),
         backends: vec![
@@ -1398,7 +1405,7 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         ],
         workspace: WorkspaceCapabilities {
             enforcement_available: true,
-            docker_available,
+            docker_available: false,
             protected_patterns: vec![
                 "main".to_string(),
                 "master".to_string(),
@@ -1423,10 +1430,10 @@ pub fn generate_capabilities() -> CapabilitiesReport {
             "store_boundary_violation".to_string(),
             "decision_required".to_string(),
         ],
-        config,
-        is_latest,
-        latest_version,
-        version_check,
+        config: None,
+        is_latest: false,
+        latest_version: None,
+        version_check: VersionCheckStatus::Unavailable,
     }
 }
 

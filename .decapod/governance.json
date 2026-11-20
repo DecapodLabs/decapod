@@ -836,6 +836,16 @@
         "src/decapod/lib.rs",
         "tests/infer_precision.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1532-validation-latency-04",
+      "summary": "Keep bounded validation within the existing budget using the static CLI contract and one transaction-scoped canonical event schema inspection",
+      "input_digest": "sha256:8270dfb5d56e5e3a1a0be0c9a2a24f5c1f9d2e189a1adb0df45a7f5829ab5af8",
+      "proof_refs": [
+        "tests/single_datastore.rs",
+        "tests/spec_conformance.rs",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -878,22 +888,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked the authored context architecture against the current RPC repair. The existing mentor reflection engine continues to own custody and continuation.",
-          "reviewed_code_fingerprint": "c76db79ac93bb30ba1acccb072aa0c6faa90fb04569b22f8f1fcf4b7192ed6aa",
-          "spec_material_hash": "a26d42217db977c72ae4f7e8413a1ce07290f561cc7a5a0514c5ddb611878d74"
+          "reason": "Review the retained context and outcome contracts together with serialized capability checks and the transaction-scoped canonical event migration.",
+          "reviewed_code_fingerprint": "a28f734f7be71f715f539a04675c259321787ff138d38ae2650fdb1995ebdfbd",
+          "spec_material_hash": "62cfb1ca688fab2e91aab508c57abaecc79590008877fce1e85f7c6d4435ca10"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document authenticated mentor queries before source authoring and the reflection owner that enforces workspace and task custody.",
-          "reviewed_code_fingerprint": "c76db79ac93bb30ba1acccb072aa0c6faa90fb04569b22f8f1fcf4b7192ed6aa",
-          "spec_material_hash": "c8b26dce683471520b85f54eeaf22f2458cc98aad768a5dbd0445aab116abdee"
+          "reason": "Review the retained context and outcome contracts together with serialized capability checks and the transaction-scoped canonical event migration.",
+          "reviewed_code_fingerprint": "a28f734f7be71f715f539a04675c259321787ff138d38ae2650fdb1995ebdfbd",
+          "spec_material_hash": "9eed26965f6e922d957636c25757cba1f424375ed86934abda859d7ecbbadfe2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rechecked the authored admission limits. The named RPC exception preserves its session requirement and the reflection engine still checks custody before updating a continuation. Publication and mutation retain their existing gates.",
-          "reviewed_code_fingerprint": "c76db79ac93bb30ba1acccb072aa0c6faa90fb04569b22f8f1fcf4b7192ed6aa",
+          "reason": "Review the retained context and outcome contracts together with serialized capability checks and the transaction-scoped canonical event migration.",
+          "reviewed_code_fingerprint": "a28f734f7be71f715f539a04675c259321787ff138d38ae2650fdb1995ebdfbd",
           "spec_material_hash": "17c281f9a8745b21937900b8d899047ce8fca8020392294b1fa79dc912135788"
         }
       ],
@@ -905,14 +915,26 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795165724Z"
+      "updated_at": "1795168056Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4b7dded8023fadca17a562d2eb286b896752eddce96cf87141d53cedc59b04ed",
+      "artifact_hash": "sha256:4e31994e9048fd310f3aa4131c09f3e9b43cb9d4eec2e68f04c2f732ca7caa8b",
       "checks": [
+        {
+          "name": "Bazel bounded validate smoke",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel single_datastore",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel spec_conformance",
+          "status": "passed"
+        },
         {
           "name": "activation-conformance",
           "status": "passed"
@@ -1000,10 +1022,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1083,6 +1112,27 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/validate.rs",
+                  "tests/single_datastore.rs",
+                  "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed."
+                ],
+                "proof_refs": [
+                  "Bazel bounded validate smoke",
+                  "Bazel single_datastore",
+                  "Bazel spec_conformance"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1092,6 +1142,7 @@
       "destination": "pull request",
       "evidence": [
         "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim.",
+        "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified."
@@ -1104,7 +1155,11 @@
       "modified_files": [
         "assets/build/constitution_admission.rs",
         "src/decapod/core/docs.rs",
-        "src/decapod/plugins/knowledge.rs"
+        "src/decapod/core/events.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plugins/knowledge.rs",
+        "tests/single_datastore.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

@@ -2705,34 +2705,16 @@ fn validate_project_specs_layout(
     Ok(())
 }
 
-fn validate_machine_contract(
-    ctx: &ValidationContext,
-    repo_root: &Path,
-) -> Result<(), error::DecapodError> {
+fn validate_machine_contract(ctx: &ValidationContext) -> Result<(), error::DecapodError> {
     info("Machine Contract Drift Detection Gate", ctx);
 
-    let binary_path =
-        std::env::current_exe().map_err(|e| error::DecapodError::ValidationError(e.to_string()))?;
-    let capabilities_output = std::process::Command::new(&binary_path)
-        .current_dir(repo_root)
-        .args(["capabilities", "--format", "json"])
-        .output()
-        .map_err(|e| {
-            error::DecapodError::ValidationError(format!("Failed to run capabilities: {e}"))
+    // Validate the public report's JSON fields using the same report type and
+    // declarations as the CLI. Registry and container availability do not
+    // affect these fields and must not consume time in the proof worker.
+    let capabilities_json =
+        serde_json::to_value(crate::core::rpc::static_capabilities()).map_err(|e| {
+            error::DecapodError::ValidationError(format!("Invalid capabilities JSON: {e}"))
         })?;
-
-    if !capabilities_output.status.success() {
-        pass(
-            "Could not verify machine contract (capabilities failed)",
-            ctx,
-        );
-        return Ok(());
-    }
-
-    let capabilities_json: serde_json::Value = serde_json::from_str(&String::from_utf8_lossy(
-        &capabilities_output.stdout,
-    ))
-    .map_err(|e| error::DecapodError::ValidationError(format!("Invalid capabilities JSON: {e}")))?;
 
     let interlock_codes = capabilities_json["interlock_codes"]
         .as_array()
@@ -8232,7 +8214,7 @@ pub fn run_validation(
             timings,
             ctx,
             "validate_machine_contract",
-            validate_machine_contract(ctx, working_root)
+            validate_machine_contract(ctx)
         );
         gate!(
             s,
