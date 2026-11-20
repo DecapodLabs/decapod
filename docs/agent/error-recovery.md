@@ -296,13 +296,21 @@ canonical document ready for a follow-up checkpoint before committing the merge.
 integrity. A pending entry without terminal evidence does not establish whether
 the underlying write committed. Do not retry that write blindly.
 
-1. Inspect `decapod data broker audit` and identify the pending event ID reported
-   by `decapod data broker verify`. Establish that the original writer has stopped;
-   an old timestamp alone is not evidence of a crash.
+1. Inspect `decapod data broker verify` and `decapod data broker audit` to identify
+   the pending event ID and its `writer_liveness` classification (`active`,
+   `stopped`, or `unknown`). New `pending` events record `writer_pid`,
+   `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns`;
+   an old timestamp or bare PID check alone never proves writer termination.
 2. Preview `decapod data broker repair --event-id <id> --reason "<why the writer is stopped>"`.
-   The command refuses events younger than 300 seconds, future-dated events,
-   unknown targets, and entries already completed by a normal terminal event.
+   The command refuses active writers (`writer_liveness: "active"`), unknown
+   targets, and entries already completed by a normal terminal event. For
+   historical/legacy events lacking provenance or cross-host/unverifiable
+   incarnations, preview succeeds and reports `writer_liveness: "unknown"` with
+   `human_review_required: true`.
 3. Apply that same command with `--apply` to append an abandonment acknowledgment.
+   When `writer_liveness` is `stopped`, `--apply` succeeds directly; when
+   `writer_liveness` is `unknown`, `--apply` fails closed unless human review
+   confirms the writer has stopped and passes `--acknowledge-unknown-writer`.
    The original pending record remains, the reason and actor are recorded, and
    the original data outcome remains `unknown`. Repair targets exactly one event,
    even when other pending entries share its intent or correlation identifier.

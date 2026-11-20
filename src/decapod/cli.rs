@@ -2324,6 +2324,10 @@ pub(crate) enum BrokerCommand {
         /// Append an abandonment acknowledgment (default: read-only preview).
         #[clap(long)]
         apply: bool,
+        /// Explicit human-reviewed confirmation required to `--apply` repair when writer
+        /// liveness is `unknown` (e.g. legacy events lacking provenance or cross-host writes).
+        #[clap(long)]
+        acknowledge_unknown_writer: bool,
     },
 }
 

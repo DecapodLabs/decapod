@@ -1535,7 +1535,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1`
+- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2125,3 +2125,9 @@ Scoped regression coverage in `tests/unit/core/validate_tests.rs::risk_map_warni
 ## Compact storage v2 compatibility floor (#1739)
 
 `core::schemas::STORAGE_MIN_READER_VERSION` and `core::schemas::STORAGE_MIN_WRITER_VERSION` are `"0.144.2"`, and `core::migration::all_migrations()` sets `min_version = "0.144.2"` and `target_version = "0.144.2"` on `sqlite.compact_lossless_storage.v002` (`sequence: 1200`), matching the first release that implements `_ce_v1` envelope reconstruction (`core::events::reconstruct_stored_payload`) and component-backed journals. `core::events::{query,query_all_on_conn,query_subject_on_conn,query_subject_event_on_conn}` enforce `check_read_compatibility`, and `core::events::{ensure_tables,append_on_conn,check_subject_append_capacity}` enforce `check_storage_format_compatibility` (`STORAGE_FORMAT_INCOMPATIBLE`). Existing v2 datastores stamped `0.141.0` prior to #1739 are restamped to `0.144.2` on `activate`/migration and write-side table initialization (`reconcile_v2_storage_format_metadata`) without mutating event/task rows, downgrading higher valid floors, touching unmigrated v1 stores, or writing on read-only connections.
+
+## Verifiable broker writer incarnation and orphan recovery (#1783)
+
+`BrokerEvent` in `src/decapod/core/broker.rs` extends new `pending` audit events with backward-compatible optional fields `writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and `writer_pid_ns` populated by `WriterIncarnation::current()`, while terminal and acknowledgment events omit them when unset. `DbBroker::verify_replay` and `decapod data broker verify` populate each `Divergence` with `writer_liveness` (`active` | `stopped` | `unknown`), `human_review_required`, `liveness_detail`, and any captured `writer_*` provenance fields.
+
+`BrokerCommand::Repair` (`src/decapod/cli.rs`, routed to `DbBroker::repair_with_options` in `src/decapod/lib.rs`) adds `--acknowledge-unknown-writer` and reports `writer_liveness`, `human_review_required`, `liveness_detail`, `acknowledgment_required`, and `acknowledged_unknown_writer` in `RepairReport`. Active writers (`writer_liveness = "active"`) are unconditionally refused in both preview and `--apply`. Proven stopped writers (`writer_liveness = "stopped"`) repair directly with `--apply` without waiting on age thresholds or requiring overrides. Legacy provenance-free, partial, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` and `human_review_required = true` in `verify` and `repair` preview, and refuse silent `--apply` unless `--acknowledge-unknown-writer` is explicitly provided after human review. See `docs/agent/error-recovery.md` and `docs/agent/command-contracts.md`.

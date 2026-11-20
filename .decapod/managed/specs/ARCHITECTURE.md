@@ -1178,7 +1178,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1`
+- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1670,3 +1670,9 @@ Read-only source, event, and worktree projections remain strictly decoupled from
 ## Compact storage v2 floor reconciliation (#1739)
 
 `core::storage_compaction::{v2_format_metadata_needs_floor_upgrade,reconcile_v2_storage_format_metadata,stamp_storage_format_metadata}` compute `max_semver_floor` so `storage.min_reader_version` and `storage.min_writer_version` never fall below `0.144.2` on v2 stores (`storage.format_version = 2`), while preserving higher valid floors and leaving unmigrated v1 stores untouched until migration `1200` runs. `core::migration::schema_upgrade_pending` checks `v2_format_metadata_needs_floor_upgrade` so `check_and_migrate_with_backup_report` holds the exclusive storage lock and backup across legacy `0.141.0 -> 0.144.2` restamping, and `core::events::ensure_tables` reconciles on write-side initialization. Backwards-compatible reads and writes for `>= 0.144.2` binaries (`STORAGE_FORMAT_VERSION = 2`, `TODO_SCHEMA_VERSION = 18`) remain intact with no incompatible DDL or trigger additions.
+
+## Broker writer incarnation provenance (#1783)
+
+`DbBroker::build_event` (`src/decapod/core/broker.rs`) captures `WriterIncarnation::current()` on `pending` write audit events without adding external crate dependencies. On macOS, `RealIncarnationProbe` reads `libc::proc_pidinfo` (`PROC_PIDTBSDINFO`) process start timestamps (`pbi_start_tvsec`/`pbi_start_tvusec`), `kern.bootsessionuuid` via `libc::sysctlbyname`, and `libc::gethostuuid`. On Linux, it reads `/proc/<pid>/stat` field 22 (`starttime`), `/proc/sys/kernel/random/boot_id`, `/etc/machine-id` (or `/var/lib/dbus/machine-id`), and `/proc/self/ns/pid`, falling back safely to `None` / `ProcessProbe::Unverifiable` when unavailable.
+
+`assess_writer_liveness` establishes `WriterLiveness::Stopped` only when provenance is complete and either (a) the current boot incarnation (plus host ID and PID namespace when applicable) matches and the PID is absent/zombie (`ESRCH` / `SZOMB` / `Z`) or running with a different `writer_start_id` (proving PID reuse), or (b) `writer_host_id` matches the current host and `writer_boot_id` proves a different prior boot incarnation. Neither event age alone nor a bare PID check without start-identity and boot/host correlation ever proves writer termination.

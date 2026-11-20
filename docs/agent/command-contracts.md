@@ -157,6 +157,12 @@ This document defines the normative operational contracts for the Decapod CLI.
 - **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
 - **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`).
 
+### Broker Audit Verification & Orphan Recovery (`decapod data broker ...`)
+
+- **Writer incarnation provenance:** New `pending` broker audit events record optional OS writer provenance (`writer_pid`, `writer_start_id`, `writer_boot_id`, `writer_host_id`, and Linux `writer_pid_ns`).
+- **Liveness classification:** `decapod data broker verify` and `decapod data broker repair` establish `writer_liveness = "stopped"` only when provenance proves either (a) same host/boot/PID-namespace with an absent PID or a different observed `writer_start_id` (PID reuse), or (b) a different prior boot on the same verified host. Event age alone and bare PID checks without start-identity/boot correlation never establish writer termination.
+- **Fail-closed unknown handling:** Active writers (`writer_liveness = "active"`) are always refused. Legacy provenance-free, cross-host, or unverifiable pending events report `writer_liveness = "unknown"` (`human_review_required = true`) in `verify` and `repair` preview, and `decapod data broker repair --apply` refuses unless `--acknowledge-unknown-writer` is explicitly provided after human review.
+
 ## `decapod auto`
 - **Intent:** Automation: scheduled and event-driven
 

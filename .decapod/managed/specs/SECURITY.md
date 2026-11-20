@@ -797,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `411e4a60fdf683c659e74fce5e3c0e184c82226245d971cfb6a23dc9fe1039c1`
+- Repository signal fingerprint: `dbbd0c1707a760e7f2c55cf8e871ee655781155b1a6e7c5d0db20a8cbc498a56`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1307,3 +1307,9 @@ Git merge reconciliation from laundering invalid or partial proof:
 ## Compact storage v2 downgrade boundary (#1739)
 
 Compatibility-aware evaluators below `0.144.2` (`0.141.0`, `0.143.2`, `0.144.1`) fail closed with `STORAGE_FORMAT_INCOMPATIBLE` against both newly initialized and restamped v2 datastores, and `core::events` read/write paths enforce `check_read_compatibility` / `check_storage_format_compatibility` before accessing event rows. Already-released `0.141.0..0.144.1` binaries shipped prior to PR #1663 without `meta.storage.*` compatibility checks and share `TODO_SCHEMA_VERSION = 18` and `events` SQLite DDL with `0.144.2..0.148.13`; metadata checks alone cannot force those historical binaries to reject a v2 store without breaking `>= 0.144.2` compatibility. Deterministic offline tests in `tests/datastore_relational_compaction.rs` and `tests/datastore_contract.rs` verify version floors, restamping, and lossless `_ce_v1` reconstruction without network or external binary execution.
+
+## Fail-closed broker orphan acknowledgment (#1783)
+
+`prepare_repair_with_probe` and `assess_writer_liveness` (`src/decapod/core/broker.rs`) enforce fail-closed orphan repair boundaries against reused PIDs, cross-host shared storage, and historical provenance-free audit entries. Confirmed active writers (matching boot/host/PID-namespace, live PID, and matching `writer_start_id`) are unconditionally refused in both preview and `--apply`, even when `--acknowledge-unknown-writer` is supplied.
+
+Legacy provenance-free `pending` events, partial provenance lacking `writer_start_id` or `writer_boot_id`, cross-host boot mismatches, mismatched Linux PID namespaces, and uninspectable processes (`ProcessProbe::Unverifiable`) resolve to `WriterLiveness::Unknown` with `human_review_required = true`. Silent `broker repair --apply` is refused for all `Unknown` cases; applying requires explicit human review via `--acknowledge-unknown-writer`, records `writer_liveness`, `human_review_required`, and `acknowledge_unknown_writer` on the `"abandoned"` audit entry, preserves `original_outcome = "unknown"`, and remains gated by `control.mutate` policy and session checks.
