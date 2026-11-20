@@ -864,6 +864,15 @@
         ".decapod/config.toml",
         "tests/cli_contract_enforcement.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1540-release-alignment-07",
+      "summary": "Integrate the accepted v0.154.0 release, preserve both changelog sections and refresh release-bound projections",
+      "input_digest": "sha256:b4395c18ba8beeeeef610f32ab8d59ff4e0f06a56700cd0672b8c199e8322cc8",
+      "proof_refs": [
+        "CHANGELOG.md",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -906,22 +915,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the combined context, outcome evidence, and validation repair with current master instruction-readiness enforcement and retained observer coverage.",
-          "reviewed_code_fingerprint": "fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58",
+          "reason": "Review the combined instruction, context, observer and validation contracts at the v0.154.0 release transition.",
+          "reviewed_code_fingerprint": "1c4a64454b8c7be7feda64a4c3c798da92b8a629e0928e4c08f5d7c5053666ca",
           "spec_material_hash": "bffc9823a8d266cdc246fcb3b0db9585993f762eff7549ede8668b760c398c87"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the combined context, outcome evidence, and validation repair with current master instruction-readiness enforcement and retained observer coverage.",
-          "reviewed_code_fingerprint": "fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58",
+          "reason": "Review the combined instruction, context, observer and validation contracts at the v0.154.0 release transition.",
+          "reviewed_code_fingerprint": "1c4a64454b8c7be7feda64a4c3c798da92b8a629e0928e4c08f5d7c5053666ca",
           "spec_material_hash": "02261ea23321ee5b4bc72f0fd6ef42b4c968a88189d23792cbc7bab198c364ac"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the combined context, outcome evidence, and validation repair with current master instruction-readiness enforcement and retained observer coverage.",
-          "reviewed_code_fingerprint": "fd9385f6bf31083423335bf10289a0567609f436c9a1570f76bbe3dd93d7dd58",
+          "reason": "Review the combined instruction, context, observer and validation contracts at the v0.154.0 release transition.",
+          "reviewed_code_fingerprint": "1c4a64454b8c7be7feda64a4c3c798da92b8a629e0928e4c08f5d7c5053666ca",
           "spec_material_hash": "3db564110df603ab756553d38babde21a6b21926c8aad3bcec2c5d6dcf16e444"
         }
       ],
@@ -933,13 +942,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795168866Z"
+      "updated_at": "1795207612Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:79e7d5983a4e101b593e46511c4484da65d7a90f62620450fff74cbf94cc078c",
+      "artifact_hash": "sha256:1f28f1030b15fe7fb903244fb4cff3b7f1cddf00496a4cd54642da3f69108839",
       "checks": [
         {
           "name": "Bazel bounded validate smoke",
@@ -951,6 +960,10 @@
         },
         {
           "name": "Bazel spec_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "Bazel v0.154.0 bounded validate smoke",
           "status": "passed"
         },
         {
@@ -1069,10 +1082,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 10
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:11",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 11
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
+        "next_sequence": 11,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1203,6 +1223,21 @@
                 ],
                 "sequence": 10,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:11",
+                "observations": [
+                  "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness."
+                ],
+                "proof_refs": [
+                  "Bazel v0.154.0 bounded validate smoke"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 11,
+                "validation_findings": []
               }
             ]
           }
@@ -1214,6 +1249,7 @@
         "All 12 validation termination and contention cases passed locally, in addition to the nine datastore and fifteen spec conformance checks. While the previous head ran, accepted master moved to 722515f49e6f56f76ea64bf6ba94ede252df4593. The original governance jobs failed base identity or merge-base verification. This merge preserves the accepted observer source and authored spec prose, and native reconcile-merge retains the approved active journal and any accepted baseline obligations.",
         "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim.",
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
+        "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",

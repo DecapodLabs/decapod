@@ -18,6 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repetition-biased advisory selection, arbitrary no-match context, expired knowledge projection and non-atomic supersession.
 - Complete context-envelope budgeting and stale knowledge/plan checks on continuation bundles.
 
+## [0.154.0](https://github.com/DecapodLabs/decapod/compare/v0.153.2...v0.154.0) - 2026-11-20
+
+### Fixed
+
+- *(observer)* align the managed runtime header
+- *(observer)* refresh projections with the matching release
+- *(observer)* require retained run boundaries for completion
+- *(governance)* share recorded instruction readiness across gates
+
+### Other
+
+- *(governance)* reconcile accepted observer boundaries
+- *(governance)* integrate current release target
+- *(governance)* reconcile instruction gates with accepted master
+- *(governance)* integrate accepted Decapod v0.148.12
+- *(governance)* assert instruction and reapproval precedence
+- *(governance)* reconcile accepted release source inventory
+
 ## [0.153.2](https://github.com/DecapodLabs/decapod/compare/v0.153.1...v0.153.2) - 2026-11-20
 
 ### Fixed
