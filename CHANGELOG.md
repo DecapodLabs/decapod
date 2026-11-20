@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.153.1](https://github.com/DecapodLabs/decapod/compare/v0.153.0...v0.153.1) - 2026-11-20
+
+### Other
+
+- *(govern)* sync accepted master 271cfbd1d (v0.152.0, #1612)
+- record complete cache boundary spec reviews
+- persist verified Bazel dependency archives separately from build outputs
+
 ## [0.153.0](https://github.com/DecapodLabs/decapod/compare/v0.152.0...v0.153.0) - 2026-11-20
 
 ### Added
