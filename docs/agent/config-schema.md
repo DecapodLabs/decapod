@@ -153,10 +153,20 @@ nonempty set of unique `proof.commands` with `required = true`, and an explicit
   passed or skipped check. When every discovered workflow is `ci_only`, the
   required local commands still execute normally as the repository's local
   build/test contract.
-- `executions`: a table keyed by each required command name, containing `program`
-  (absolute canonical installed executable), `toolchain_files` (nonempty map of
-  labels to absolute canonical tool/runtime files), `environment` (explicit map),
-  `directory` (repository-relative, default `.`), and `timeout_seconds` (1–7200)
+- `executions`: a table keyed by each required command name, containing either
+  single-platform `program` (absolute canonical installed executable) and
+  `toolchain_files` (nonempty map of labels to absolute canonical tool/runtime
+  files), or a per-platform `platforms` table keyed by explicit canonical
+  platform keys (`linux-x86_64`, `linux-aarch64`, `macos-x86_64`,
+  `macos-aarch64`) where each platform entry provides its own `program` and
+  nonempty `toolchain_files` (mutually exclusive with top-level `program` and
+  `toolchain_files`), together with `environment` (explicit map), `directory`
+  (repository-relative, default `.`), and `timeout_seconds` (1–7200). Every
+  declared platform alternative is pinned by `reviewed_commands_digest` and
+  preserved across accepted targets (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`); at
+  execution time the host selects and byte-measures only the current host's
+  reviewed platform entry, failing closed if that platform is missing or
+  unsupported.
 
 `proof.required_profile.reviewed_sources_digest` separately pins the full
 workflow/action/helper/build inventory. `init` and `rpc --op agent.init` report

@@ -178,6 +178,11 @@
         "statement": "Persisted task pass cannot authorize a different task revision, and stale verification cannot overwrite a changed baseline",
         "status": "open"
       },
+      "claim:current-validation-withdrawal": {
+        "falsifier": "A newer observed required failure leaves old VERIFIED applicable, an old subject promotes after withdrawal, or fresh complete current-custody validation cannot recover after renewal.",
+        "statement": "A newer task-bound full not-ready judgment withdraws current workunit proof, preserves historical success, and fresh current-custody proof restores legitimate VERIFIED operation.",
+        "status": "open"
+      },
       "claim:dagger-removed": {
         "falsifier": "A Dagger engine can execute through the core adapter or generic receipt custody is weakened",
         "proof_refs": [
@@ -477,6 +482,7 @@
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
+      "trajectory:1922e307ad9422d0": "Live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent; verified against local SQLite and mock/denial Dactyl HTTP boundaries.",
       "trajectory:19c255ade3d72661": "25unit tests and actualMetal8elementprobe passed; one138tokenCPU inference matches independent scalar subset, memory chunks inactive, same-author/shared-infrastructure limits remain. Metal model reset failed; holdout not executed. New owned-model discard, reuse assertion, real alternate-API fallback diagnostics, nonempty-chunk fixture and independent four-phase collector are authored repairs awaiting fresh validation. No 5percent production calibration claim.",
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
@@ -672,6 +678,11 @@
       "proof_refs": [
         "claim-1737-actor-custody"
       ]
+    },
+    {
+      "id": "cp-sync-bc6475824",
+      "summary": "Integrate accepted master bc6475824 (v0.152.0) and refresh specs for #1737",
+      "input_digest": "sha256:96770553210ea3fee1c2c98c0e47077dbf9dadb6b16659e2512193c490c09dac"
     }
   ],
   "intents": {
@@ -712,23 +723,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconcile #1737 spec with origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs",
-          "reviewed_code_fingerprint": "254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5",
-          "spec_material_hash": "809019763dc25ef89df74a7bf93deb53da1b550d84cbbfdd5ba55a4c57b68d81"
+          "reason": "Synced #1737 claim and workspace actor gating with accepted master bc6475824 (v0.152.0).",
+          "reviewed_code_fingerprint": "aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c",
+          "spec_material_hash": "983dd54174e58074253884fe4deec30d08cdfbc37da61f152a780327e5212256"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconcile #1737 spec with origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs",
-          "reviewed_code_fingerprint": "254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5",
-          "spec_material_hash": "c7dec9f14fc196009259bfabf90dd328a1ea77b58144b88c46521946565eeba0"
+          "reason": "Synced #1737 explicit actor identity boundary contract with accepted master bc6475824 (v0.152.0).",
+          "reviewed_code_fingerprint": "aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c",
+          "spec_material_hash": "993970c6e8426cb3cf151af3218c16e867aae6d9e68c7388f196f298561f1226"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconcile #1737 spec with origin/master 755bbac6e (PR #1828) and move cfg(test) actor guard to authoring.rs",
-          "reviewed_code_fingerprint": "254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5",
-          "spec_material_hash": "aa296a6463f749b1cc873240a822371b5c0bf65c43d7e185e95203cd4563b335"
+          "reason": "Synced #1737 actor custody enforcement and unknown-claim recovery with accepted master bc6475824 (v0.152.0).",
+          "reviewed_code_fingerprint": "aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c",
+          "spec_material_hash": "0b0571a937c901183e78a8cb0070b8d7de081daebc00bad58c1dbb1c6b636ae6"
         }
       ],
       "state": "APPROVED",
@@ -739,13 +750,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795078039Z"
+      "updated_at": "1795145442Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:37047babb95577a2a5c8646b924bf18eec020681c8faaf46f4a84d8a4732803b",
+      "artifact_hash": "sha256:a13275e35f1a7176941339a95fbea1e6ee8a590b778d17757d26818af9ef9008",
       "checks": [
         {
           "name": "cargo_clippy_all_targets",
@@ -900,10 +911,17 @@
             "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
             "kind": "trajectory_step_recorded",
             "sequence": 13
+          },
+          {
+            "detail": "trajectory:branch_01M7QXTS6XVVV8NKSX2EE61TB7",
+            "event_id": "event:14",
+            "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 14
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 13,
+        "next_sequence": 14,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7QXTS6XVVV8NKSX2EE61TB7": {
@@ -1122,6 +1140,22 @@
                 ],
                 "sequence": 13,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:14",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  "Merged origin/master bc6475824 (v0.152.0); fmt, clippy --all-targets --all-features, claim_task_* 2/2, and todo_enforcement 5/5 passed"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 14,
+                "validation_findings": []
               }
             ]
           }
@@ -1138,6 +1172,7 @@
         "Merged origin/master 84f967382 (PR #1823 #1660, v0.149.3), fixed validation_history_archive_tests::capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit with cfg(test) thread-local actor guard, and sped up test_issue_1737 in tests/todo_enforcement.rs (cloned pre-journal baseline): fmt/clippy/archive_tests/claim_task_*/cloud_*/doc_alignment/todo_enforcement all passed",
         "Merged origin/master 89906b666 (PR #1819 #1247, v0.149.3) and updated 2 TodoCommand::Claim fixtures in tests/shared_state_semantics_1247.rs with explicit non-unknown agent: fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, cloud_cli_boundary 1/1, shared_state_semantics_1247 10/10, todo_enforcement 5/5 passed",
         "Merged origin/master a5a1edad (v0.149.0): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, core::todo::tests::claim_task_* 2/2, core::mentor::reflection::* 33/33, todo_enforcement 5/5, cli_contract_enforcement 23/23, doc_alignment 4/4 passed",
+        "Merged origin/master bc6475824 (v0.152.0); fmt, clippy --all-targets --all-features, claim_task_* 2/2, and todo_enforcement 5/5 passed",
         "Merged origin/master cfe2565da (PR #1816, v0.149.3): fmt --check ok, clippy --all-targets --all-features -- -D warnings ok, claim_task_* 2/2, todo_enforcement 5/5, cloud_cli_boundary 1/1, policy_self_authorization_1776 passed",
         "core::todo::* 94/94, core::mentor::reflection::* 33/33, todo_enforcement 5/5, plugins_todo_tests 40/40 (39/39 + autorun), cli_contract_enforcement 22/22, doc_alignment 4/4, agent_rpc_suite 5/5, context_capsule_rpc 5/5, infer_precision 7/7, spec_conformance 15/15, workspace_interlock 1/1, clippy & fmt clean"
       ],
@@ -1150,6 +1185,9 @@
       ],
       "intent_id": "intent:change_01M7QXTS2XBE1SK835T05MEJCV",
       "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "src/decapod/cli.rs",
         "src/decapod/core/authoring.rs",
         "src/decapod/core/mentor/reflection.rs",

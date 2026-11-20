@@ -81,7 +81,7 @@ button,input,a{font-family:inherit}
 .decapod-sidebar-bottom a{font-weight:800;font-size:12px;color:var(--links);text-decoration:none;margin-top:9px}
 #sidebar-resize-handle{opacity:0!important;pointer-events:none}
 #content.content{grid-row:3;min-width:0;padding:0 0 18px}
-#content main{width:min(100%,1000px);max-width:none;min-height:calc(100vh - 290px);padding:clamp(28px,3.7vw,64px) clamp(23px,4vw,68px) 60px;margin:0 auto;line-height:1.76;font-size:15px}
+#content main{width:min(100%,1000px);max-width:none;min-height:calc(100vh - 290px);padding:clamp(44px,4.8vw,80px) clamp(23px,4vw,68px) 60px;margin:0 auto;line-height:1.76;font-size:15px}
 #content main>h1:first-child{font-size:clamp(35px,4vw,54px);margin:0 0 25px}
 #content main h1,#content main h2,#content main h3,#content main h4{font-family:'Outfit',system-ui,sans-serif;color:var(--shell-strong);letter-spacing:-.043em;font-weight:800;line-height:1.16}
 #content main h2{margin-top:2.1em;font-size:clamp(26px,2.6vw,34px)}
@@ -114,9 +114,6 @@ button,input,a{font-family:inherit}
 .nav-wide-wrapper{display:none!important}
 .nav-wrapper{max-width:900px;margin:auto;padding:0 15px}
 .nav-wrapper a{background:var(--shell-soft);border:1px solid var(--shell-stroke);border-radius:13px}
-.decapod-docs-brand{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:14px}
-.decapod-docs-brand .decapod-docs-wordmark{width:175px;height:auto}
-.decapod-docs-label{font-weight:900;font-size:10px;letter-spacing:.15em;color:var(--links);padding:8px 12px;border-radius:999px;background:var(--shell-soft)}
 .decapod-docs-hero{display:grid;grid-template-columns:1.12fr .88fr;gap:25px;align-items:center;padding:clamp(27px,4vw,55px);border-radius:35px;background:radial-gradient(circle at 83% 10%,#ffd6a6 0%,transparent 53%),linear-gradient(145deg,#fff2df,#ffe9ce);box-shadow:0 17px 0 #f1cdb666,0 28px 45px #c66b4230;min-height:370px;color:#281c29}
 .decapod-docs-kicker{font-weight:900;letter-spacing:.13em;color:#a13d2c;font-size:10px}
 #content main .decapod-docs-hero h1{font-family:'Outfit',system-ui,sans-serif;font-weight:900;font-size:clamp(46px,5.5vw,75px);letter-spacing:-.085em;line-height:.96;white-space:normal;color:#291b28;margin:22px 0}
@@ -167,7 +164,7 @@ button,input,a{font-family:inherit}
  #menu-bar{grid-column:1/-1}
  #search-wrapper{grid-column:1/-1}
  #content.content{grid-column:1;grid-row:3}
- .decapod-reading-rail{display:block;grid-column:2;grid-row:3;padding:64px 20px 24px 0;align-self:start;position:sticky;top:95px}
+ .decapod-reading-rail{display:block;grid-column:2;grid-row:3;padding:clamp(44px,4.8vw,80px) 20px 24px 0;align-self:start;position:sticky;top:95px}
  .decapod-reading-rail-card{background:var(--shell-card);border:1px solid var(--shell-stroke);border-radius:26px;padding:24px 20px;box-shadow:var(--shell-shadow);display:flex;align-items:flex-start;flex-direction:column}
  .decapod-reading-rail-card img{align-self:center;filter:drop-shadow(0 12px 12px #f05b3730);max-width:114px}
  .decapod-rail-label{color:var(--links);font-size:9px;letter-spacing:.13em;font-weight:900}
@@ -186,7 +183,7 @@ button,input,a{font-family:inherit}
  #menu-bar,.menu-bar.sticky{min-height:72px;padding:10px 18px!important}
  #sidebar.sidebar{box-shadow:11px 0 35px #1d172422}
  #page-wrapper>.page{display:block}
- #content main{padding:35px clamp(20px,5vw,52px) 48px}
+ #content main{padding:47px clamp(20px,5vw,52px) 48px}
  .decapod-reading-rail{display:none}
 }
 @media(max-width:650px){
@@ -195,7 +192,7 @@ button,input,a{font-family:inherit}
  #menu-bar .icon-button,#menu-bar .right-buttons>a{width:33px;height:35px}
  .decapod-header-brand img.decapod-wordmark{width:123px}
  .decapod-docs-chip{display:none}
- #content main{padding:25px 17px 38px;font-size:14px}
+ #content main{padding:37px 17px 38px;font-size:14px}
  #content main>h1:first-child{font-size:35px}
  .decapod-docs-hero{grid-template-columns:1fr;padding:26px 22px;border-radius:26px;min-height:0}
  #content main .decapod-docs-hero h1{font-size:clamp(45px,12vw,64px)}
@@ -209,7 +206,3 @@ button,input,a{font-family:inherit}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 @media print{#sidebar,#menu-bar,.decapod-reading-rail,.decapod-sidebar-head,.decapod-page-footer{display:none!important}#page-wrapper,.page-wrapper{margin:0!important;transform:none!important}#content main{width:100%;max-width:none;padding:0}body{background:#fff}}
 
-/* Theme-aware landing identity, no browser JavaScript required. */
-.decapod-docs-brand .logo-c{display:none}
-.navy .decapod-docs-brand .logo-a,.coal .decapod-docs-brand .logo-a,.ayu .decapod-docs-brand .logo-a{display:none}
-.navy .decapod-docs-brand .logo-c,.coal .decapod-docs-brand .logo-c,.ayu .decapod-docs-brand .logo-c{display:block}

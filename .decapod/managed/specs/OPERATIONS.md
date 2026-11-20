@@ -144,6 +144,18 @@ noninteractive `podman machine start --quiet --no-info --update-connection=false
 path, followed by another service probe. This does not launch Podman Desktop or
 change the default connection.
 
+On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
+without a user systemd instance (`#1820`), `decapod auto container run` (and
+claim-triggered container preparation via `src/decapod/plugins/container.rs`)
+retains full `--cpus`, `--memory`, and `--pids-limit` enforcement and never
+disables cgroups. Operators or agents may specify a validated delegated parent
+through `--cgroup-parent` or `DECAPOD_CONTAINER_CGROUP_PARENT`, or run inside a
+delegated cgroup v2 subtree whose writable non-root ancestor enables `cpu`,
+`memory`, and `pids` in `cgroup.subtree_control` for automatic selection.
+Invalid values fail closed with `container_invalid_cgroup_parent` before runtime
+invocation, and OCI/cgroupfs creation or limit-enforcement permission errors emit
+`container_cgroup_permission_denied` rather than `container_workspace_permission_denied`.
+
 The explicit container-workspace launch hint makes a verified online backup in a
 private temporary directory, mounts it read-only and seeds container-local tmpfs.
 Backup failure prevents launch. Container-copy writes are ephemeral and are not
@@ -288,6 +300,18 @@ Hidden resource limits and memory pressure are not inferred. The ordinary Cargo
 job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
+
+### Current Release Alignment (v0.150.7)
+
+The `v0.150.7` release cut aligns the package version in `Cargo.toml`,
+root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
+managed projections refreshed by the `0.150.7` binary:
+`.decapod/managed/Dockerfile.decapod` pins `DECAPOD_IMAGE=ghcr.io/decapodlabs/decapod:v0.150.7-debian`
+and `DECAPOD_VERSION=0.150.7`, and `.decapod/managed/specs/.manifest.json`
+records `decapod_release` `0.150.7` alongside current codebase attestations.
+Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
+remain intentionally pinned at `0.148.0` under
+`[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
 
 ## Incident Response
 
@@ -434,8 +458,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
+- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -476,3 +500,12 @@ This recovers current work. It leaves old history unproven and enables no waiver
 ## PR1663 integrated storage behavior
 
 Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.
+
+## Projection performance budgets and bounded retention operations (#1734)
+
+- **Reproducible baseline measurement:** Run `cargo test --test projection_performance_budgets_1734 -- --ignored --nocapture` (optionally setting `DECAPOD_PROJECTION_BENCH_REPORT=<path>`) against disposable temporary stores to reproduce the measured baselines for indexed vs. unindexed subject cursor queries, unbounded vs. bounded event pages, concurrent WAL writer/reader contention, and multi-worktree enumeration. Always-on CI coverage runs via `cargo test --test projection_performance_budgets_1734` and `cargo test --lib core::projection_budget`.
+- **Degraded-mode triage:** When a read-only observer receives `status = "degraded"` on `EventProjectionPage` or `WorktreeProjectionPage`, inspect `degraded_reasons` rather than treating the response as complete:
+  - `response_byte_budget_exceeded` / `scan_budget_exceeded` / `worktree_budget_exceeded` / `wall_time_budget_exceeded`: resume incrementally from `cursor.next_seq` or `next_cursor`, or raise the caller budget within `HARD_MAX_*` limits. When the very first single event exceeds `max_response_bytes`, `next_seq` stays pinned before that record so no event is silently skipped.
+  - `reader_contention_deferred`: an exclusive maintenance lock or heavy write burst held the datastore beyond `reader_lock_timeout_ms`; retry with backoff without interfering with writers.
+  - `cursor_behind_retention_floor`: explicit bounded retention pruned events through `cursor.retention_floor_seq`; verify `cursor.retention_anchor_sha256` against the prior window and resume from the retained floor.
+- **Explicit bounded event retention:** `core/projection_budget.rs::apply_bounded_event_retention` is explicit-only and never runs implicitly on read paths. It computes a chained SHA-256 `EventRetentionAnchor` in `meta(namespace='event_retention')` inside `BEGIN IMMEDIATE` before deleting cold rows, preserves original surviving `seq` numbers, and ensures future `events::append_on_conn` calls remain strictly monotonic even after a full `keep_latest = 0` prune.

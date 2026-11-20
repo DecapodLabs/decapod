@@ -697,9 +697,11 @@ pub(crate) fn initialize_workbranch_governance_at(
     } else {
         scoped
     };
-    let context = (selected.len() == 1).then(|| {
+    let context = if selected.len() == 1 {
         let task = selected[0];
-        crate::core::governance_document::BranchWorkContext {
+        let scope = crate::core::fleet_coord::parse_scope_entries(&task.scope)
+            .map_err(DecapodError::ValidationError)?;
+        Some(crate::core::governance_document::BranchWorkContext {
             title: task.title.clone(),
             intent: if task.description.trim().is_empty() {
                 task.title.clone()
@@ -707,15 +709,11 @@ pub(crate) fn initialize_workbranch_governance_at(
                 format!("{}\n\n{}", task.title, task.description)
             },
             todo_ids: vec![task.id.clone()],
-            scope: task
-                .scope
-                .split(',')
-                .map(str::trim)
-                .filter(|s| !s.is_empty())
-                .map(str::to_string)
-                .collect(),
-        }
-    });
+            scope,
+        })
+    } else {
+        None
+    };
     crate::core::governance_document::initialize_workbranch_at(
         repo_root,
         &base_ref,
@@ -2488,6 +2486,14 @@ pub fn publish_workspace(
     )
 }
 
+/// Warnings emitted when a workspace PR is created and admitted.
+pub fn pr_admission_warnings(repo_root: &Path) -> Vec<String> {
+    vec![
+        "PR admission applies to the observed head and base only. It does not authorize merge; subsequent head, base or required-context changes require fresh applicable proof and merge checks.".into(),
+        crate::core::validate::todo_tmp_cleanup_instruction(repo_root),
+    ]
+}
+
 pub(crate) fn publish_workspace_with_readiness(
     repo_root: &Path,
     title: Option<String>,
@@ -2660,7 +2666,7 @@ pub(crate) fn publish_workspace_with_readiness(
         .map_err(publication::after_push)?;
         // The publisher's final admission callback rechecks remote and local
         // proof; failures there quarantine the existing PR before returning.
-        (Some(url), vec!["PR admission applies to the observed head and base only. It does not authorize merge; subsequent head, base or required-context changes require fresh applicable proof and merge checks.".into()])
+        (Some(url), pr_admission_warnings(repo_root))
     } else {
         (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
     };

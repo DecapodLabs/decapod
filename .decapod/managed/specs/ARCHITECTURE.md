@@ -1,22 +1,50 @@
 # Architecture
 
-## Claim and workspace actor gating (#1737)
+## Pure report projection does not authenticate proof (#1726)
 
-`core::authoring` owns `is_missing_or_unknown_actor`,
-`authoring_actor_required_error`, and `has_real_actor_checkout_custody`, shared
-across `core::todo` and `core::workspace::ensure_workspace` so claim admission,
-branch-scoped workspace creation, and checkout binding enforce one uniform actor
-contract. `core::todo::claim_task_with_lease` routes eligible legacy
-`"unknown"` claims through `force_release_assignment` (`unknown_actor_adopted`)
-inside the existing `with_task_journal` transaction, preserving monotonic lease
-generations and journal checkpoints.
+`core::governed_transition::project_report_publication` reads caller-owned JSON.
+Its only production consumer is `core::projection::project_validation_report`;
+it has no canonical producer, current task, candidate/base or authority lookup.
+A digest and mutually matching caller labels therefore cannot produce PROVEN.
+The existing pure helper retains failed/stale/unknown interpretations but leaves
+passing reports not_proven and ineligible. The projection exposes an additive
+optional `proof_reason` explaining the missing authority and current-validation
+remedy. Report identifiers and source remain display data. Actual native
+validation, canonical history/workunit proof and consequential publication retain
+their existing owners and are not redirected through this projection.
 
-Unit coverage in `tests/unit/core/todo_tests.rs` and black-box CLI coverage in
-`tests/todo_enforcement.rs` exercise `init --proof --no-ci --isolation-mode worktree`,
-read-only command preservation without `DECAPOD_AGENT_ID`, `"unknown"` / empty
-rejection across `todo claim` and `workspace ensure`, legacy `"unknown"`
-recovery with and without `authoring_bindings`, and cross-owner isolation
-between real actors.
+The RPC result also labels all projection inputs as caller-supplied and not
+canonically verified. `lib.rs::handle_interop_project` writes those constant
+provenance fields after parsing the request; caller-provided origin/verification
+labels cannot become authority. Approval formatting preserves the reported
+value but does not assert that a policy transition or principal decision ran.
+
+## Reversible integration lifecycle (`core::integration_removal`)
+
+`src/decapod/core/integration_removal.rs` separates repository integration
+scaffolding from project-authored instructions and retained governance/datastore
+history:
+
+- **Ownership provenance (`integration_ownership.json`):** `decapod init`
+  (`lib.rs::run_init_apply` + `record_init_ownership`) and `decapod setup hook`
+  (`lib.rs::run_hook_install` + `record_hook_ownership`) record SHA-256 digests,
+  file modes, and pre-existing exclusions in
+  `.decapod/managed/integration_ownership.json`. Uninitialized or legacy repos
+  without that manifest require cryptographic release/fingerprint header proof
+  on entrypoints and template/manifest hashes on specs; byte-identical authored
+  files without ownership evidence (such as unowned `AGENTS.md` or hooks) are
+  classified as `authored` and preserved.
+- **Non-mutating inspection:** `Command::Integration` dispatches in `lib.rs::run`
+  before session acquisition, migrations, or root-isolation guards, using
+  `StorageLock::diagnose` and lock-free `dactyl_db::AccessMode::ReadOnly`
+  probes alongside `fs::symlink_metadata` traversal.
+- **Crash-safe restoration manifest:** `remove_integration` atomically persists
+  `.decapod/integration-restore-manifest.json` (`status: "in_progress"`) with
+  exact file bytes and `.gitignore` delta before unlinking any owned file, then
+  transitions to `"applied"` and prunes only empty `.decapod/managed/`
+  directories. Re-init (`decapod init`) detects absent
+  `.decapod/managed/specs/.manifest.json` and regenerates missing scaffold specs
+  without overwriting authored spec prose.
 
 ## Cloud control-plane, DPoP custody, Dactyl 0.18.0, and Local/Cloud branding (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1066, #1158)
 
@@ -1150,8 +1178,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
+- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1201,11 +1229,18 @@ cannot acquire new protocol code merely because its repository source changed.
 Consumer repositories select `repo.pr-readiness.v1` through the canonical proof
 configuration. `core/repository_profile.rs` checks complete discovered workflow
 mapping, required commands and explicit execution declarations against reviewed
-source and command digests. `validation_runtime/repository_host.rs` translates
-that reviewed local contract into the existing bounded native runner; it does not
-interpret workflow YAML or introduce an orchestration engine. Every command runs
-in the frozen source snapshot, with byte-measured declared tool inputs and fresh
-accepted-target queries. Source/configuration/tool/target drift invalidates proof.
+source and command digests, including `RepositoryExecution::platforms`
+(`PlatformExecution` entries keyed by `CANONICAL_PLATFORM_KEYS`) and
+`RepositoryExecution::resolve_for_platform`. `validation_runtime/repository_host.rs`
+translates that reviewed local contract into the existing bounded native runner via
+`command_invocation_for_platform` / `select_commands_for_platform`, resolving and
+byte-measuring only the current host platform's reviewed executable and
+`toolchain_files` and failing closed (`MISSING_PLATFORM_EXECUTION` /
+`UNSUPPORTED_PLATFORM`) without fallback if the host platform is absent or
+unsupported; it does not interpret workflow YAML or introduce an orchestration
+engine. Every command runs in the frozen source snapshot, with byte-measured
+declared tool inputs before and after execution and fresh accepted-target queries.
+Source/configuration/tool/target drift invalidates proof.
 
 The resulting `repository_local_readiness` scope attests those local commands,
 not hosted workflow jobs, platform matrices or release/deployment execution. The
@@ -1571,3 +1606,91 @@ Concurrent authoring across isolated worktrees separates task custody, isolated 
 1. **Advisory source overlap vs. enforced custody/resource fencing:** `core/fleet_coord.rs::detect_overlaps` emits `enforced = false` (`advisory_category_overlap`, `advisory_scope_overlap`, `advisory_path_overlap`) for source categories and repository path declarations, while setting `enforced = true` (`resource_reservation`) only for named shared resources (`resource:release`, `resource:integration`, `resource:integration:<branch>`). `core/todo.rs::claim_task_with_lease` admits distinct tasks across overlapping source footprints with `integration_readiness = "combined_candidate_reconciliation_required"` while rejecting duplicate exclusive claims on an active task lease (`status = "conflict"`, `lease_state = "active"`) and competing shared-resource reservations (`conflict_class = "shared_resource"`, `resolution = "wait_for_resource_custody"`).
 2. **Checkout custody without transcript trust:** `core/workspace.rs::claim_branch_scoped_open_tasks` and `core/authoring.rs::{admit_authoring, check_authoring}` bind each active lease to at most one registered worktree (`AUTHORING_CHECKOUT_OCCUPIED`, `AUTHORING_TASK_ALREADY_BOUND`, `AUTHORING_CUSTODY_STALE`, `WORKSPACE_SECONDARY_CUSTODY`). A fresh actor without the first agent's transcript observes live claims via `decapod todo fleet` / `decapod todo list`, cannot hijack A's task or worktree, and either claims a separate permitted task or yields with a typed blocker. `core/authoring.rs::enforce_shared_resource_available` fences `workspace.publish` and `release.lineage_sync` (`SHARED_RESOURCE_OCCUPIED`) without blocking unrelated isolated worktree authoring.
 3. **Combined-candidate execution and target freshness:** Locally green isolated worktrees and clean textual Git merges never discharge joint proof. `core/validation_runtime.rs` and `core/validation_history.rs` execute required source checks against the exact combined head and accepted target, withholding `native-readiness-receipt.json` and blocking `todo done --validated` / `workspace publish` on incompatible producer/consumer interfaces or contradictory shared behavior until repaired and revalidated on the exact combined commit. When another branch lands first and advances the accepted target, prior receipts become stale (`STALE_ACCEPTED_BASE`, `WORKUNIT_PROOF_STALE`) until rebased/merged onto the new accepted target and revalidated. `tests/concurrent_worktree_integration_1469.rs` exercises all three scenarios end-to-end through the actual `decapod` binary and isolated Git worktrees.
+
+## Public BYOA, metacognition, and coordination book narrative (#1789)
+
+The public mdBook documentation under `docs/book/src/` (`index.md`,
+`introduction.md`, `mental-model.md`, `quickstart.md`, `concepts/agent-first.md`,
+`concepts/interoperability.md`, `concepts/constitution.md`, `concepts/mcp.md`,
+`workflows/single-agent.md`, `workflows/multi-agent.md`, `SUMMARY.md`) and the
+corresponding pointer in `README.md` document Decapod's existing repo-native
+governance kernel architecture without adding runtime code or altering
+`docs/agent/*` contracts.
+
+Every documented boundary maps directly to existing binary surfaces and tests:
+BYOA discovery and negotiation via `decapod rpc --op interop.manifest`,
+`interop.negotiate`, and `interop.project` (`src/decapod/core/interop.rs`,
+`tests/interop_conformance.rs`); Human -> Agent -> Kernel custody via
+`eval`, `docs ingest`, `session acquire`, `session handshake`, `todo`,
+`workspace`, `govern`, and `validate` (`tests/doc_alignment.rs`,
+`tests/contract_conformance.rs`); lease/overlap coordination via `todo claim`,
+`todo renew`, `todo handoff`, `todo yield`, and `todo fleet`
+(`tests/unit/core/fleet_coord_tests.rs`); decision-time orientation and
+bounded reflection via `infer orientation --reflection` and `mentor.obligations`
+(`tests/infer_precision.rs`); subordinate reference usage of the embedded
+Constitution (`decapod constitution get/search`, `decapod govern capsule query`);
+and repo-native Local (`decapod.db`) vs Cloud (Dactyl-routed task custody,
+`tests/cloud_managed_session.rs`) parity. No automatic merge arbitration,
+always-on daemon, or unimplemented MCP server capability is claimed.
+
+## Integrity-preserving merged journal reconciliation (#1780)
+
+`src/decapod/core/governance_document/merge_reconcile.rs` implements
+`core::governance_document::reconcile_merge`, exposed via
+`ArtifactsCommand::ReconcileMerge` in `cli.rs` and `lib.rs`. Instead of parsing
+potentially mixed working-tree JSON after a line-based Git merge, it reads
+canonical `.decapod/governance.json` blobs directly from immutable `HEAD`,
+`MERGE_HEAD`, and `merge-base --all` commits under `with_lock` after checking
+`ensure_ungrafted`.
+
+Two ancestry modes are supported:
+- **Same PR workstream** (matching `change.id`, `base_commit`, and normalized
+  `target_base`): 3-way merges `baseline`, `claims`, `resolutions`, `epochs`,
+  `recursive_passes`, `legacy_*`, `plan`, `checkpoints`, `trajectory`, and
+  `custody` events/trajectories, re-validates loops, clears changed or
+  trajectory-invalidated `validation` receipts, and recomputes canonical
+  `proof_status`, `verdicts`, and `artifact_hash`.
+- **Accepted target merge** (distinct `change.id` or no `change` where
+  `MERGE_HEAD` is an ancestor of the accepted `target_base` ref): retains
+  `ours`'s complete active workstream journal and proof posture while 3-way
+  merging newly accepted `baseline.policy` and unretired `baseline.unresolved`
+  entries and clearing stale `validation` receipts when trees differ.
+Any conflicting unaccepted PR identity, mismatched `base_commit` / `target_base`,
+deleted active journal, or conflicting check status fails closed without
+mutating `.decapod/governance.json`.
+
+## Projection performance budgets, degraded mode, and retention-stable receipts (#1734)
+
+Read-only source, event, and worktree projections remain strictly decoupled from visualization concerns (zero UI dependencies or display-specific state machines in the Decapod kernel) and never disrupt concurrent governed writers:
+
+1. **Covering SQLite indexes and bounded read access:** `core/schemas.rs::EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX` (`idx_events_stream_subject_seq` on `events(stream, subject_kind, subject_id, seq) WHERE subject_kind IS NOT NULL AND subject_id IS NOT NULL`) installed by `core/events.rs::ensure_tables` eliminates SQLite temp B-tree sorts and cross-subject stream scans for subject-scoped cursor replay while omitting NULL-subject streams from the B-tree, complementing `idx_events_stream_seq_unique(stream, seq)`. `core/events.rs::actors` executes `SELECT DISTINCT actor FROM events WHERE stream = ?1 ORDER BY actor ASC` directly instead of materializing full stream payloads. `core/db.rs::db_connect_readonly_bounded` opens strictly read-only (`AccessMode::ReadOnly`, `StorageLockMode::Shared`) fail-fast observer connections without long retry loops so read clients never queue behind or starve governed writers.
+2. **Measured-baseline budgets and explicit degraded mode:** `core/projection_budget.rs` (re-exported via `core/projection.rs`) enforces `ProjectionBudget` (`max_rows`, `max_response_bytes`, `max_scan_rows`, `max_worktrees`, `max_files_per_worktree`, `max_wall_time_ms`, `reader_lock_timeout_ms`) with hard kernel safety ceilings (`HARD_MAX_*`) and defaults calibrated from real measured runs (`tests/projection_performance_budgets_1734.rs::projection_performance_baseline_benchmark_1734`: 10,000-event store bounded to 179 KiB / 146 KiB peak batch at p50 = 3.93–4.99 ms vs 7.04 MiB / 33–44 ms unbounded; indexed subject query p50 = 743 us vs 1210 us unindexed; 4 concurrent WAL writers shifted p50 58–62 us -> 70–77 us with zero writer errors alongside 4 continuous read clients; 25-worktree dirty sweep hit the 500 ms wall budget at 19 worktrees / 517 ms -> default `max_worktrees = 24`). Exceeding any budget, encountering reader lock contention, or presenting a cursor behind the retention floor transitions the page to `ProjectionStatus::Degraded` with typed `DegradedReason` diagnostics (`ResponseByteBudgetExceeded`, `ScanBudgetExceeded`, `WorktreeBudgetExceeded`, `FileEnumerationBudgetExceeded`, `WallTimeBudgetExceeded`, `CursorBehindRetentionFloor`, `ReaderContentionDeferred`) without silent truncation or false completeness.
+3. **Retention-stable logical receipts and lock-free worktree enumeration:** `core/projection_budget.rs::{project_events_read_only, project_events_on_conn}` hashes recursively key-sorted canonical reconstructed logical events (`canonical_json_bytes`), making `content_sha256` and `window_receipt_sha256` bit-for-bit invariant across `core/storage_compaction.rs::{apply_v2_compaction_migration, gc_unreferenced_components, reclaim_pages_explicit}` and across `apply_bounded_event_retention` for retained windows. Explicit cold-window retention writes a chained cryptographic `EventRetentionAnchor` under `meta(namespace='event_retention', key=<stream>)` without renumbering surviving sequences, and `core/events.rs::append_on_conn` consults that floor only when a stream is empty so post-retention appends stay strictly monotonic with zero hot-path query overhead. `project_worktrees_read_only` runs all Git commands with `GIT_OPTIONAL_LOCKS=0` and bounded timeouts so multi-worktree observation never acquires index locks against concurrent agents.
+
+## Compact storage v2 floor reconciliation (#1739)
+
+`core::storage_compaction::{v2_format_metadata_needs_floor_upgrade,reconcile_v2_storage_format_metadata,stamp_storage_format_metadata}` compute `max_semver_floor` so `storage.min_reader_version` and `storage.min_writer_version` never fall below `0.144.2` on v2 stores (`storage.format_version = 2`), while preserving higher valid floors and leaving unmigrated v1 stores untouched until migration `1200` runs. `core::migration::schema_upgrade_pending` checks `v2_format_metadata_needs_floor_upgrade` so `check_and_migrate_with_backup_report` holds the exclusive storage lock and backup across legacy `0.141.0 -> 0.144.2` restamping, and `core::events::ensure_tables` reconciles on write-side initialization. Backwards-compatible reads and writes for `>= 0.144.2` binaries (`STORAGE_FORMAT_VERSION = 2`, `TODO_SCHEMA_VERSION = 18`) remain intact with no incompatible DDL or trigger additions.
+
+## Broker writer incarnation provenance (#1783)
+
+`DbBroker::build_event` (`src/decapod/core/broker.rs`) captures `WriterIncarnation::current()` on `pending` write audit events without adding external crate dependencies. On macOS, `RealIncarnationProbe` reads `libc::proc_pidinfo` (`PROC_PIDTBSDINFO`) process start timestamps (`pbi_start_tvsec`/`pbi_start_tvusec`), `kern.bootsessionuuid` via `libc::sysctlbyname`, and `libc::gethostuuid`. On Linux, it reads `/proc/<pid>/stat` field 22 (`starttime`), `/proc/sys/kernel/random/boot_id`, `/etc/machine-id` (or `/var/lib/dbus/machine-id`), and `/proc/self/ns/pid`, falling back safely to `None` / `ProcessProbe::Unverifiable` when unavailable.
+
+`assess_writer_liveness` establishes `WriterLiveness::Stopped` only when provenance is complete and either (a) the current boot incarnation (plus host ID and PID namespace when applicable) matches and the PID is absent/zombie (`ESRCH` / `SZOMB` / `Z`) or running with a different `writer_start_id` (proving PID reuse), or (b) `writer_host_id` matches the current host and `writer_boot_id` proves a different prior boot incarnation. Neither event age alone nor a bare PID check without start-identity and boot/host correlation ever proves writer termination.
+
+## Claim and workspace actor gating (#1737)
+
+`core::authoring` owns `is_missing_or_unknown_actor`,
+`authoring_actor_required_error`, and `has_real_actor_checkout_custody`, shared
+across `core::todo` and `core::workspace::ensure_workspace` so claim admission,
+branch-scoped workspace creation, and checkout binding enforce one uniform actor
+contract. `core::todo::claim_task_with_lease` routes eligible legacy
+`"unknown"` claims through `force_release_assignment` (`unknown_actor_adopted`)
+inside the existing `with_task_journal` transaction, preserving monotonic lease
+generations and journal checkpoints.
+
+Unit coverage in `tests/unit/core/todo_tests.rs` and black-box CLI coverage in
+`tests/todo_enforcement.rs` exercise `init --proof --no-ci --isolation-mode worktree`,
+read-only command preservation without `DECAPOD_AGENT_ID`, `"unknown"` / empty
+rejection across `todo claim` and `workspace ensure`, legacy `"unknown"`
+recovery with and without `authoring_bindings`, and cross-owner isolation
+between real actors.

@@ -1,23 +1,5 @@
 # Security
 
-## Actor custody enforcement and unknown-claim recovery (#1737)
-
-`core::authoring::is_missing_or_unknown_actor` and
-`core::authoring::authoring_actor_required_error` close the `"unknown"` / empty
-actor bypass across task claiming, lease lifecycle (`renew`, `yield`), explicit
-owner assignment, mentor reflection custody (`core::mentor::reflection::custody`),
-and workspace provisioning (`workspace::ensure_workspace` for both CLI and RPC).
-Failing closed at entry prevents `"unknown"` locks and unowned `agent/unknown/*`
-coordination todos or worktrees from being created.
-
-Recovery of legacy `assigned_to == "unknown"` claims is narrowly bounded:
-`claim_task_with_lease` and `claim_branch_scoped_open_tasks` allow an explicit
-real `DECAPOD_AGENT_ID` to adopt an `"unknown"` task only when
-`core::authoring::has_real_actor_checkout_custody` and
-`has_other_real_primary_owner` are both false. Tasks bound in `authoring_bindings`
-to a real actor, holding another real primary owner, or actively claimed by a
-real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT`).
-
 ## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
 
 - **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
@@ -40,8 +22,10 @@ real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONF
   `owner` repair locally or remotely, and `#1776` accepted-cloud enforcement
   continues to block unaccepted local downgrades.
 - **Public repository hygiene**: All code, tests, fixtures, docs, and specs in
-  this wave use synthetic `example.invalid` / loopback fixtures only — zero live
-  hostnames, merchant identifiers, private database schemas, or raw secrets.
+  this wave use synthetic `example.invalid` / loopback fixtures and public
+  registered wire markers (`OWNER_REPAIR_V1_SQL = "SELECT propodus.owner_repair_v1($1, ..., $11)"`)
+  only — zero live hostnames, merchant identifiers, private repository source
+  filenames, private database schemas/CTE expansions, or raw secrets.
 
 ## Ambiguous RPC JSON
 
@@ -813,8 +797,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `254d1f656b12af774be4ae1f8fe63577df598f58b2f3411a8772f58eccc353f5`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (240 files), `tests/` (249 files)
+- Repository signal fingerprint: `aea5567d3e456d1c7e0f8ae1bdf3293755f2e2ca51c95cba56b75ccc6d07046c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (244 files), `tests/` (256 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1293,3 +1277,57 @@ exercise real secrets nor prove actual native cache publication.
 ## Canonical local Git proof (#1069)
 
 Canonical local proof shares the OS user trust domain with source, policy, tools and SQLite; it is not cryptographic authentication or OS isolation. The local authority is accepted on canonical Git rather than supplied by a candidate report, and cannot act as cloud/forge identity. Target reads disable ambient Git redirects, transport and replacement objects. Material/policy/target changes invalidate applicability without rewriting historical success. Supported forge publication rejects local-only authority; unrestricted shell/Git remains outside that enforcement boundary. No keys, credentials or machine-local logs belong in tracked state.
+
+## Merge reconciliation fail-closed proof boundary (#1780)
+
+`core::governance_document::reconcile_merge` enforces three invariants to prevent
+Git merge reconciliation from laundering invalid or partial proof:
+1. **Immutable parent authority**: Inputs come exclusively from `HEAD`,
+   `MERGE_HEAD`, and `merge-base --all` blobs with graft and replace-object
+   protections; corrupted or tampered working-tree `.decapod/governance.json`
+   files outside an active Git merge (`MERGE_HEAD` absent) are rejected with
+   `GOVERNANCE_MERGE_NOT_IN_PROGRESS`.
+2. **Non-promotion of proof**: Merging a branch with failed or missing checks
+   retains every failed check and missing proof hook, forces `proof_status` and
+   `verdicts` recomputation via `TrajectoryArtifact::with_recomputed_hash()`, and
+   strips stale `validation` receipts whenever trajectory or validation state
+   changes. Contradictory statuses for the same named check fail closed with
+   `GOVERNANCE_MERGE_PROOF_CONFLICT`.
+3. **Authority disambiguation**: Unaccepted distinct workstreams (`change.id`
+   mismatch where `MERGE_HEAD` is not an ancestor of the accepted `target_base`
+   ref), conflicting `target_base` or `base_commit` values, or conflicting
+   non-additive edits fail closed with `GOVERNANCE_MERGE_AUTHORITY_CONFLICT`.
+   Full merge-commit checkpoint verification (`verify-checkpoints`) remains
+   independently enforced after committing the merge.
+
+## Per-platform execution selection boundary (#1736)
+
+`repo.pr-readiness.v1` per-platform execution entries (`RepositoryExecution::platforms` / `PlatformExecution`) preserve fail-closed `#[serde(deny_unknown_fields)]` schema strictness, reject ambient `PATH` resolution, relative paths, mixed top-level/per-platform declarations, and uncanonical or unsupported platform keys, and bind every declared platform alternative into `command_contract_digest` and `preserve_accepted` (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`). Candidate additions, removals, or edits to any platform table—including non-host platforms—cannot self-approve and remain rejected until independently accepted on the target (tracked separately from policy migration in #1738). At host selection and execution time (`RepositoryExecution::resolve_for_platform`, `repository_host::select_commands_for_platform`, `native_proof::validate_invocation`), only the current host platform's reviewed executable and `toolchain_files` are selected, checked for canonical host binary format, and byte-measured before and after execution; missing or unsupported host platforms fail closed without fallback.
+
+## Compact storage v2 downgrade boundary (#1739)
+
+Compatibility-aware evaluators below `0.144.2` (`0.141.0`, `0.143.2`, `0.144.1`) fail closed with `STORAGE_FORMAT_INCOMPATIBLE` against both newly initialized and restamped v2 datastores, and `core::events` read/write paths enforce `check_read_compatibility` / `check_storage_format_compatibility` before accessing event rows. Already-released `0.141.0..0.144.1` binaries shipped prior to PR #1663 without `meta.storage.*` compatibility checks and share `TODO_SCHEMA_VERSION = 18` and `events` SQLite DDL with `0.144.2..0.148.13`; metadata checks alone cannot force those historical binaries to reject a v2 store without breaking `>= 0.144.2` compatibility. Deterministic offline tests in `tests/datastore_relational_compaction.rs` and `tests/datastore_contract.rs` verify version floors, restamping, and lossless `_ce_v1` reconstruction without network or external binary execution.
+
+## Fail-closed broker orphan acknowledgment (#1783)
+
+`prepare_repair_with_probe` and `assess_writer_liveness` (`src/decapod/core/broker.rs`) enforce fail-closed orphan repair boundaries against reused PIDs, cross-host shared storage, and historical provenance-free audit entries. Confirmed active writers (matching boot/host/PID-namespace, live PID, and matching `writer_start_id`) are unconditionally refused in both preview and `--apply`, even when `--acknowledge-unknown-writer` is supplied.
+
+Legacy provenance-free `pending` events, partial provenance lacking `writer_start_id` or `writer_boot_id`, cross-host boot mismatches, mismatched Linux PID namespaces, and uninspectable processes (`ProcessProbe::Unverifiable`) resolve to `WriterLiveness::Unknown` with `human_review_required = true`. Silent `broker repair --apply` is refused for all `Unknown` cases; applying requires explicit human review via `--acknowledge-unknown-writer`, records `writer_liveness`, `human_review_required`, and `acknowledge_unknown_writer` on the `"abandoned"` audit entry, preserves `original_outcome = "unknown"`, and remains gated by `control.mutate` policy and session checks.
+
+## Actor custody enforcement and unknown-claim recovery (#1737)
+
+`core::authoring::is_missing_or_unknown_actor` and
+`core::authoring::authoring_actor_required_error` close the `"unknown"` / empty
+actor bypass across task claiming, lease lifecycle (`renew`, `yield`), explicit
+owner assignment, mentor reflection custody (`core::mentor::reflection::custody`),
+and workspace provisioning (`workspace::ensure_workspace` for both CLI and RPC).
+Failing closed at entry prevents `"unknown"` locks and unowned `agent/unknown/*`
+coordination todos or worktrees from being created.
+
+Recovery of legacy `assigned_to == "unknown"` claims is narrowly bounded:
+`claim_task_with_lease` and `claim_branch_scoped_open_tasks` allow an explicit
+real `DECAPOD_AGENT_ID` to adopt an `"unknown"` task only when
+`core::authoring::has_real_actor_checkout_custody` and
+`has_other_real_primary_owner` are both false. Tasks bound in `authoring_bindings`
+to a real actor, holding another real primary owner, or actively claimed by a
+real actor fail closed (`status: "conflict"` / `WORKSPACE_BRANCH_TODO_CLAIM_CONFLICT`).

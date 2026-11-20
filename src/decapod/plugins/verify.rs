@@ -3852,6 +3852,11 @@ pub fn run_diagnose_cli(
                 {
                     println!("  proof note: {reason}");
                 }
+                if let Some(cleanup) = task["cleanup_guidance"].as_str()
+                    && !cleanup.is_empty()
+                {
+                    println!("  cleanup: {cleanup}");
+                }
             }
         }
         println!(
@@ -3927,6 +3932,9 @@ fn diagnose_task(
         "decapod workspace publish".to_string()
     };
 
+    let cleanup_guidance = (next_command == "decapod workspace publish")
+        .then(|| crate::core::validate::todo_tmp_cleanup_instruction_for_task(&task.id, None));
+
     serde_json::json!({
         "todo_id": task.id,
         "state": task.status,
@@ -3941,6 +3949,7 @@ fn diagnose_task(
             "validation_hash_current": "not executed by read-only diagnose",
         },
         "next_command": next_command,
+        "cleanup_guidance": cleanup_guidance,
     })
 }
 #[cfg(test)]
