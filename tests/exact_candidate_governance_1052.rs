@@ -225,6 +225,7 @@ fn write_consumer_proof_config(repo_root: &Path, canonical_local_target: bool) {
         reviewed_commands_digest: String::new(),
         source_coverage: coverage,
         executions,
+        targets: Default::default(),
     };
     contract.reviewed_commands_digest =
         repository_profile::command_contract_digest(&commands, &contract)
@@ -246,6 +247,7 @@ fn write_consumer_proof_config(repo_root: &Path, canonical_local_target: bool) {
             max_input_bytes: 8 * 1024 * 1024 * 1024,
             max_files: 200_000,
             max_output_bytes: 16 * 1024 * 1024,
+            target: None,
         },
         &decapod::core::bounded_process::Cancellation::default(),
     )

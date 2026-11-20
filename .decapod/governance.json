@@ -142,6 +142,14 @@
         "statement": "Public validate can authorize source PR publication only after all applicable actual source checks and candidate builds pass with genuine current material/provider evidence; release-only packaging is explicitly outside core source scope",
         "status": "open"
       },
+      "claim:config-and-policy-authority": {
+        "falsifier": "Actual CLI or RPC accepts unsupported config for mutation, blocks schema repair, or grants a privilege solely from an unaccepted proposal; legitimate accepted operations deadlock.",
+        "proof_refs": [
+          "/private/tmp/decapod-boundary-red-c30w2kjb/evidence"
+        ],
+        "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
+        "status": "open"
+      },
       "claim:consumer-local-proof": {
         "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
         "proof_refs": [
@@ -675,6 +683,7 @@
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
       "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
+      "trajectory:14bb95d52b8efabf": "Fresh complete exact-candidate CI required after cloud test contract correction",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
       "trajectory:17139f4701f494a5": "Hosted verification and exact-candidate publication readiness remain pending; no local tests run.",
       "trajectory:17669a7d73b8ecb7": "RPC download403 is runner-specific; same pinned URL succeeded on another fresh runner. Policy fixture exit126 OS detail is unknown because stderr was discarded.",
@@ -767,6 +776,7 @@
       "trajectory:ec49216a39e5bf93": "The config decision is cooperative; its author and agent labels are not authenticated.",
       "trajectory:ecfec9650d4ed288": "Independent standalone validation exposed four stale generated release-bound entrypoints; supported init refresh changed headers only, required graph preserved.",
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
+      "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
     }
@@ -838,6 +848,11 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1867"
       ]
+    },
+    {
+      "id": "cp-sync-fff1f478d",
+      "summary": "Sync accepted master fff1f478d (v0.155.0) and verify canonical source entrypoint version preservation (#1862)",
+      "input_digest": "sha256:786df026cdddb0a0d02c6b27da1aca1e3ba8e356b1b1f227d4940c33daf9eaec"
     }
   ],
   "intents": {
@@ -878,23 +893,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted v0.154.0 integration preserves strict release classifier and source identity; official controller regenerates exact release projections.",
-          "reviewed_code_fingerprint": "c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89",
-          "spec_material_hash": "2c2e4917aee338c684e69b94d0325cf6f096d8baaee4a34cea56dd382b2fc4bd"
+          "reason": "Synced canonical source entrypoint release projection preservation (#1862) with accepted master fff1f478d (v0.155.0).",
+          "reviewed_code_fingerprint": "8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525",
+          "spec_material_hash": "16bc73fa00c32665fbf8add1cc12c811ddb513546f8dd18bbecc52898fabd89b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Release structural checks retain exact immutable bytes and canonical source predicate across evaluating release0.154.0.",
-          "reviewed_code_fingerprint": "c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89",
-          "spec_material_hash": "226ff8ef4f09b56f9ee8341792534653ed90d5626ab533ff1147a677568cc492"
+          "reason": "Synced entrypoint integrity & release projection drift interfaces (#1862) with accepted master fff1f478d (v0.155.0).",
+          "reviewed_code_fingerprint": "8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525",
+          "spec_material_hash": "31f0ad6076927108824b5dad18e270fcc076f0c2e348ff85884d6ad20784362d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No producer trust, policy checks, required graph or admission authority is weakened by the release epoch refresh.",
-          "reviewed_code_fingerprint": "c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89",
-          "spec_material_hash": "c6c1411b792e82814af1ba9e9d18a522d547db2fd69684938b897c1dd846f294"
+          "reason": "Synced fail-closed entrypoint version preservation security invariants (#1862) with accepted master fff1f478d (v0.155.0).",
+          "reviewed_code_fingerprint": "8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525",
+          "spec_material_hash": "9e339b89e8e6fee3b7ffb5a302984f70a3d5145e30c617dac94bc1f0b57d8d12"
         }
       ],
       "state": "APPROVED",
@@ -905,13 +920,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795169701Z"
+      "updated_at": "1795206484Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4bfbd5b773c9d2ae9f751b2e3c6ecf12d5e9896451e7113db6a973681219e814",
+      "artifact_hash": "sha256:fb8e34587ff22efd598c7de5b6eff207c9f35a2707fc9966b103f9e6725bbaaf",
       "checks": [
         {
           "name": "7ec-standalone-docker-drift",
@@ -1018,10 +1033,17 @@
             "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 9,
+        "next_sequence": 10,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VYYH74AZEP39ERERBKPVWM": {
@@ -1136,6 +1158,21 @@
                 "validation_findings": [
                   "Supported native init recovery rebuilt the conflicted generated manifest; all8 authored specs and exact proof configuration were independently checked unchanged; native-created entrypoint backups preserved privately."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Merged origin/master fff1f478d (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, entrypoint_integrity, and release_projection_drift unit tests"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 10,
+                "validation_findings": []
               }
             ]
           }
@@ -1153,6 +1190,7 @@
         "/private/tmp/attack-gaps-release-current-inventory-review.json",
         "/private/tmp/attack-gaps-release-wrapper-inventory-review.json",
         "/private/tmp/attack-gaps-release1858-validate-failure.log",
+        "Merged origin/master fff1f478d (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, entrypoint_integrity, and release_projection_drift unit tests",
         "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538",
         "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
@@ -1162,6 +1200,8 @@
       ],
       "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
         "assets/tools/release_projection_drift_tests.rs",
         "src/decapod/core/release_projection_drift.rs"
       ],

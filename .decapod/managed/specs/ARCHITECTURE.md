@@ -1189,8 +1189,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c4b06506c7d5da5195c0c971f85850d0e50e6d18e8e48f668820d38e2ff33a89`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
+- Repository signal fingerprint: `8c2e8e83d239fdb78f75802f5c29758704175df74eaa8eacb75e1d9dfd8ae525`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (246 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1752,6 +1752,18 @@ authorize a test result. Changed carrier acceptance requires an independently
 released controller, with complete baseline/provider proof still outstanding.
 This infrastructure work preserves PR #1575 and does not reconcile Laya policy
 inside a candidate-controlled validation definition.
+
+## Target-scoped deployment closure (#1740)
+
+`repository_profile::resolve_target_closure` resolves a selected target's transitive `depends_on` closure plus any additional targets whose `shared_inputs` prefixes/globs (`matches_shared_input`) intersect `<accepted_base>..HEAD` changed paths (`ApplicabilityFacts.changed_paths`), failing closed on unknown targets (`UNKNOWN_DEPLOYMENT_TARGET`), dependency cycles (`DEPLOYMENT_TARGET_CYCLE`), invalid patterns (`REPOSITORY_CONTRACT_INVALID`), or missing diff context (`MISSING_SHARED_INPUT_DIFF_CONTEXT`). `repository_profile::required_catalog_for_target` builds `Obligation`s solely for commands in the resolved closure while recording excluded commands as `StageDispositionKind::NonApplicable` (`out_of_target_scope_no_assurance`) and binding the resolved scope into `definition_digest` and `RequiredCatalog.source_inventory_digest`. `RepositoryHost::select_commands` verifies platform compatibility (`INCOMPATIBLE_TARGET_EXECUTOR`) and installed executables only for targets in `resolved_targets`, allowing a Linux-only slice to run without unrelated macOS executables while full validation (`options.target == None`) remains unchanged.
+
+## Workspace diagnostic composition (#1071)
+
+`src/decapod/core/workspace_diagnostic.rs` composes the canonical repository
+policy resolver, checkout and task custody readers, governance artifact
+inventory, historical validation reader, and optional GitHub readback.
+It projects local operation eligibility and proof applicability from those
+owners without introducing another admission authority.
 
 ## Release projections and source template authority
 

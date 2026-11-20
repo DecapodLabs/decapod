@@ -237,6 +237,7 @@ fn write_canonical_local_config(repo: &Path) {
         reviewed_commands_digest: String::new(),
         source_coverage,
         executions,
+        targets: Default::default(),
     };
     contract.reviewed_commands_digest =
         command_contract_digest(&commands, &contract).expect("compute command contract digest");
