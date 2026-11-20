@@ -711,7 +711,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707`
+- Repository signal fingerprint: `01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1203,3 +1203,5 @@ Decapod release metadata must remain independently distinguishable from source, 
 The current candidate integrates accepted release0.153.2 at34b98ab1. Its first Actions attempt was rejected before execution after the accepted target advanced; that refusal remains historical. Release projections are regenerated through official0.153.2, and the complete105-file source inventory is independently remeasured. The reviewed regression fixture is the only inventory input changed from the accepted base. GitHub Actions for the integrated exact candidate remain required; old passes and source registration do not establish current execution.
 
 Actions exposed a standalone-tool integration error in the first current-base candidate: the shared verifier could not call its crate-private source reader. The existing read-only predicate is now exported as an internal documented-hidden helper for that wrapper. Source-lineage regression setup stays in the library-only harness; the standalone wrapper retains its existing complete shared regression suite. No test is removed from the required library execution.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.

@@ -797,7 +797,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707`
+- Repository signal fingerprint: `01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1348,3 +1348,5 @@ Missing provider-requested tool identities and kernel calls outside an actual in
 ## Source development release boundary
 
 Preserving canonical source entrypoint metadata is conditional on the existing repository/origin/ancestry/template proof, not a configuration flag or caller-computed digest alone. The release verifier additionally compares the current entrypoint to the immutable classified head. This prevents a valid-looking replacement version from gaining authority during refresh. Existing exact current manifest, Dockerfile, source/configuration inventory and staged-edit checks remain enforced. The regression uses the existing published-root source fixture and includes header replacement, payload tampering and foreign-origin refusals; successful CI execution remains distinct from test registration.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.

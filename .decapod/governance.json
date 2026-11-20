@@ -806,6 +806,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/44702917836/job/136175392319"
       ]
+    },
+    {
+      "id": "release-source-fixture-identity",
+      "summary": "Preserve canonical Cargo repository metadata in the source-lineage fixture after actual full library refusal; no production check changes",
+      "input_digest": "sha256:b2b05c16df11fad4559bdeefc943331dff16c777f6cf8464453c016b73651f23",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
+      ]
     }
   ],
   "intents": {
@@ -846,23 +854,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Fix the actual standalone crate-boundary compile failure using existing read-only predicate exported hidden; shared test fixture takes a supplied source root, source-lineage tests stay in library harness.",
-          "reviewed_code_fingerprint": "eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707",
-          "spec_material_hash": "862094e10c8b3a56170f0cfe074e9875da4f4ef63f5d17674933b72386024722"
+          "reason": "Actual complete library execution revealed fixture version helper erased canonical Cargo repository. Preserve that metadata for the existing source fixture; production predicate unchanged.",
+          "reviewed_code_fingerprint": "01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c",
+          "spec_material_hash": "44756a7c45c50efc5b247b60a023ed70599db9f1209742dae03465a8206c859c"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Read-only helper visibility supports established standalone verifier without adding an authority or RPC operation; all exact projection checks remain.",
-          "reviewed_code_fingerprint": "eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707",
+          "reason": "Only test source-identity construction changes. Existing read-only predicate and standalone interface remain unchanged.",
+          "reviewed_code_fingerprint": "01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c",
           "spec_material_hash": "ab5445cf5a6f8eebfedb4108d6e048abeabb87fccbc84280fb73be17b4a79def"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing source/origin/ancestry/template predicate unchanged. Byte-exact header controls and payload/origin refusals remain selected in required full library tests.",
-          "reviewed_code_fingerprint": "eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707",
-          "spec_material_hash": "d013f22014a8b0d8142a917979689fca1ff96fc842d68eed5148def919084c9a"
+          "reason": "Source predicate remains strict for canonical package repository, origin, published ungrafted ancestry and exact template; negative header/payload/origin cases retained.",
+          "reviewed_code_fingerprint": "01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c",
+          "spec_material_hash": "84064e99276cf87213cd1132ac700cea9ade6adcb7d52d9770f6bb53a2b7b83f"
         }
       ],
       "state": "APPROVED",
@@ -873,13 +881,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795163326Z"
+      "updated_at": "1795166116Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9ef84e6a2ddd073a761db0fd9d8cf5ef2ec02477ee45ce24af82c26b264cf0b0",
+      "artifact_hash": "sha256:9a4695324492661f30d52fb675cb0e94b9dec1be18a5aba23410eedd2cd2c2c5",
       "checks": [
         {
           "name": "7ec-standalone-docker-drift",
@@ -895,6 +903,10 @@
         },
         {
           "name": "current-base-standalone-compile",
+          "status": "failed"
+        },
+        {
+          "name": "eee-full-supabase-library",
           "status": "failed"
         },
         {
@@ -960,10 +972,17 @@
             "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7VYYH74AZEP39ERERBKPVWM",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7VYYH3BHSTVTA25RZ50HRF9",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VYYH74AZEP39ERERBKPVWM": {
@@ -1042,6 +1061,24 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "assets/tools/release_projection_drift_tests.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
+                ],
+                "proof_refs": [
+                  "eee-full-supabase-library"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": [
+                  "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks."
+                ]
               }
             ]
           }
@@ -1058,7 +1095,8 @@
         "/private/tmp/attack-gaps-1862-first-context-failure.log",
         "/private/tmp/attack-gaps-release-current-inventory-review.json",
         "/private/tmp/attack-gaps-release-wrapper-inventory-review.json",
-        "/private/tmp/attack-gaps-release1858-validate-failure.log"
+        "/private/tmp/attack-gaps-release1858-validate-failure.log",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44704732212/job/136182283538"
       ],
       "inspected_files": [
         "src/decapod/core/entrypoint_integrity.rs",
@@ -1080,7 +1118,9 @@
       "shortcut_risk_signals": [],
       "task_id": "bugs_01m7vywgahvgjx7c",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks."
+      ]
     }
   },
   "legacy_digests": {

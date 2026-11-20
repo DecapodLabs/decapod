@@ -1178,7 +1178,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `eff541f9bd22e0e44af5fb25f48388259457b9db1d595744bce8adc76e4e8707`
+- Repository signal fingerprint: `01e8febe0090f98e8a55f2f0ca10a25713e413cb3462a6e094b0f42c4b85e75c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (245 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1747,3 +1747,5 @@ inside a candidate-controlled validation definition.
 `core::release_projection_drift::verify` reuses `entrypoint_integrity::preserves_source_entrypoint_versions` for Decapod source development rather than implementing another version exception or template reader. In that mode the expected entrypoint is its immutable release-head blob, and the working entrypoint must equal it byte for byte. The existing predicate independently validates canonical committed source templates, repository origin, ungrafted ancestry, policy opt-in and version-bound fingerprints. Other repositories retain the binary-release rendering path. Immutable release classification, staged/working change inventory, exact Dockerfile/spec/manifest hashes and all other-field comparisons remain required.
 
 The standalone `assets/tools/release_projection_drift.rs` wrapper links the ordinary Decapod library while compiling the shared verifier. Its source-version predicate must therefore be available across that crate boundary; it remains a read-only helper, not a grant. The shared projection fixture accepts an existing source root, while library-only lineage tests supply the existing published-root fixture from `entrypoint_integrity/history/tests.rs`.
+
+The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
