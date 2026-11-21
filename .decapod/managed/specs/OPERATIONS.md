@@ -147,6 +147,7 @@ change the default connection.
 The machine-start regression test passes a temporary script to `/bin/sh` and
 checks the production flags and closed stdin. The interpreter is the executable,
 so an inherited write descriptor for the script cannot cause Linux `ETXTBSY`.
+The test runs against an isolated mock process.
 
 On Linux hosts running rootless Podman with the `cgroupfs` manager on cgroup v2
 without a user systemd instance (`#1820`), `decapod auto container run` (and
