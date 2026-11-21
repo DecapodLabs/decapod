@@ -931,6 +931,11 @@
       "id": "integrate-v158-accepted",
       "summary": "Integrate accepted v0.158.0 source and refresh the checkpoint with its checksum-verified native controller",
       "input_digest": "sha256:c2fabe02536d83d600e1f61950a2c658d011f319764d56aa1231a968d7ea9e8e"
+    },
+    {
+      "id": "refresh-managed-v158-container-pin",
+      "summary": "Commit the v0.158.0 workspace image and version projected by the native controller",
+      "input_digest": "sha256:102c88a0cfd56bbfd364902ca5c10b134fc4ae8601b5a3a0c907a7fc2d504c13"
     }
   ],
   "intents": {
@@ -1007,8 +1012,12 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:de1365a7810302b594f7c7ad087b71175b7290e561e647232c1a255d41fcd7f0",
+      "artifact_hash": "sha256:489f66deade6062109b19d12cac1bca3d044e7a86a64615c9cea878f0eee815a",
       "checks": [
+        {
+          "name": "generated native 0.158.0 Dockerfile pin",
+          "status": "passed"
+        },
         {
           "name": "v0.158.0 accepted source inventory comparison",
           "status": "passed"
@@ -1035,10 +1044,17 @@
             "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7XNGJ92YWQ54H8DHVPT3PY3": {
@@ -1064,6 +1080,22 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Re-ensuring the existing registered workspace with the verified release artifact regenerated only the image and version header"
+                ],
+                "proof_refs": [
+                  "generated native 0.158.0 Dockerfile pin"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1073,6 +1105,7 @@
       "destination": "pull request",
       "evidence": [
         "Preserved existing checkpoint and fixture evidence across accepted master 1bdb1e6e2163fbe3761e1ee3bfeb4501306fac26",
+        "Re-ensuring the existing registered workspace with the verified release artifact regenerated only the image and version header",
         "Reviewed all 107 workflow and build inventory entries; Cargo.toml and Cargo.lock contain the only changed input bytes, the accepted root package version bump from 0.157.0 to 0.158.0"
       ],
       "execution_checkpoints": [
@@ -1146,7 +1179,8 @@
       ],
       "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
       "modified_files": [
-        ".decapod/config.toml"
+        ".decapod/config.toml",
+        ".decapod/managed/Dockerfile.decapod"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
