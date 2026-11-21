@@ -671,32 +671,29 @@ pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-fn table_exists_local(conn: &Connection, name: &str) -> Result<bool, error::DecapodError> {
-    Ok(conn.has_table(name)?)
-}
-
-fn column_exists(
-    conn: &Connection,
-    table: &str,
-    column: &str,
-) -> Result<bool, error::DecapodError> {
-    Ok(conn.has_column(table, column)?)
-}
-
 fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), error::DecapodError> {
-    let mut legacy_tables_present = false;
-    for &(_, table) in LEGACY_STREAM_TABLES {
-        legacy_tables_present |= table_exists_local(conn, table)?;
-    }
-    legacy_tables_present |= table_exists_local(conn, "task_events")?;
-
     let owns_transaction = conn.is_autocommit();
     if owns_transaction {
         conn.execute_batch("BEGIN IMMEDIATE")?;
     }
 
     let result = (|| {
-        let sequence_indexes = stream_sequence_unique_indexes(conn)?;
+        // Each Dactyl table, column or index probe inspects the full store.
+        // Read one schema under the migration transaction so all decisions
+        // share a catalog snapshot and steady-state appends avoid repeat scans.
+        let schema = conn.inspect_schema()?;
+        let legacy_tables_present = schema.table("task_events").is_some()
+            || LEGACY_STREAM_TABLES
+                .iter()
+                .any(|&(_, table)| schema.table(table).is_some());
+        let mut sequence_indexes: Vec<_> = schema
+            .indexes
+            .iter()
+            .filter(|index| {
+                index.table == "events" && index.unique && index.columns == ["stream", "seq"]
+            })
+            .map(|index| index.name.as_str())
+            .collect();
         // Modern checkpoints bind canonical sequence watermarks. Legacy imports
         // and renumbering are migration operations, not safe journal repair.
         let journal_authority_exists: bool = conn.query_row(
@@ -714,7 +711,7 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             // stream/sequence unique index before importing and renumbering;
             // SQLite may reject an otherwise-valid multi-row renumber while
             // that index is still enforcing transient values (#1280).
-            for index_name in sequence_indexes {
+            for index_name in sequence_indexes.drain(..) {
                 conn.execute(
                     &format!(
                         "DROP INDEX IF EXISTS \"{}\"",
@@ -726,11 +723,11 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
         }
 
         for &(stream, table) in LEGACY_STREAM_TABLES {
-            if !table_exists_local(conn, table)? {
+            let Some(layout) = schema.table(table) else {
                 continue;
-            }
+            };
             if table == "federation_events" {
-                let has_node = column_exists(conn, table, "node_id")?;
+                let has_node = layout.columns.iter().any(|column| column.name == "node_id");
                 if has_node {
                     conn.execute(
                         "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
@@ -747,7 +744,7 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
                     )?;
                 }
             } else {
-                let has_seq = column_exists(conn, table, "seq")?;
+                let has_seq = layout.columns.iter().any(|column| column.name == "seq");
                 if has_seq {
                     conn.execute(
                         &format!(
@@ -769,8 +766,8 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             conn.execute(&format!("DROP TABLE IF EXISTS {table}"), [])?;
         }
 
-        if table_exists_local(conn, "task_events")? {
-            let has_seq = column_exists(conn, "task_events", "seq")?;
+        if let Some(layout) = schema.table("task_events") {
+            let has_seq = layout.columns.iter().any(|column| column.name == "seq");
             if has_seq {
                 conn.execute(
                     "INSERT OR IGNORE INTO events(event_id, ts, seq, stream, subject_kind, subject_id, event_type, payload, actor)
@@ -789,10 +786,7 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             conn.execute("DROP TABLE IF EXISTS task_events", [])?;
         }
 
-        let sequence_indexes = stream_sequence_unique_indexes(conn)?;
-        let canonical_index_exists = sequence_indexes
-            .iter()
-            .any(|name| name == "idx_events_stream_seq_unique");
+        let canonical_index_exists = sequence_indexes.contains(&"idx_events_stream_seq_unique");
         if sequence_indexes.is_empty() {
             if !journal_authority_exists {
                 normalize_stream_sequences(conn)?;
@@ -801,7 +795,7 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             // identities remain untouched and already satisfy uniqueness.
             ensure_stream_sequences_are_unique(conn)?;
         }
-        if !canonical_index_exists || legacy_tables_present {
+        if !canonical_index_exists {
             conn.execute(schemas::EVENTS_TABLE_UNIQUE_STREAM_SEQUENCE_INDEX, [])?;
         }
         Ok(())
@@ -820,16 +814,6 @@ fn migrate_legacy_stream_tables_into_events(conn: &Connection) -> Result<(), err
             Err(error)
         }
     }
-}
-
-fn stream_sequence_unique_indexes(conn: &Connection) -> Result<Vec<String>, error::DecapodError> {
-    Ok(conn
-        .inspect_schema()?
-        .indexes
-        .into_iter()
-        .filter(|index| index.unique && index.columns == ["stream", "seq"])
-        .map(|index| index.name)
-        .collect())
 }
 
 /// Normalize legacy and concurrently-produced sequence values before the

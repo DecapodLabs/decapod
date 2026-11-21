@@ -137,6 +137,14 @@
         "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
         "status": "open"
       },
+      "claim:claim:recovery-release-proof": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
+        "status": "open"
+      },
       "claim:committed-scope-enforcement": {
         "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
         "proof_refs": [
@@ -858,6 +866,14 @@
       "proof_refs": [
         "Focused branch tests and accepted PR #1874 integration"
       ]
+    },
+    {
+      "id": "decapod-1837-20261120-master-reanchor",
+      "summary": "Integrate the current accepted target and record the same-holder heartbeat contract",
+      "input_digest": "sha256:fcdc3e64dc77b471ead2188bc3fc2d6e7ec4f046ac20c440162c96e233cbb8b6",
+      "proof_refs": [
+        "Accepted Decapod PR #1864 at d62e30ad7"
+      ]
     }
   ],
   "intents": {
@@ -906,11 +922,11 @@
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
-          "reviewed_code_fingerprint": "de35df79f5fcbe9f0c9d8f5e57acc954dd36acddd11898bafd15cd2cc7ec835d",
-          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
+          "reason": "Describe the task lease heartbeat contract and preserve ordinary renewal fencing.",
+          "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
+          "spec_material_hash": "46806bcd86ccd502d3930471ba7d0b847d258b579267fe7f08a489dd6b8dc972"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -928,7 +944,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795223163Z"
+      "updated_at": "1795235063Z"
     },
     "trajectory": {
       "active_boundaries": [

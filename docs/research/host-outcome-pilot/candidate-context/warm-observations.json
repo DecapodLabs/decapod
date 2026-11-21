@@ -1,0 +1,34 @@
+{
+  "schema": "decapod.private-candidate-warm-observations.v1",
+  "protocol_sha256": "565b84300f38eeb20a8bac29d53c1754838bec3241e6019dee355245f3620189",
+  "observations": [
+    {
+      "arm": "baseline",
+      "completed_command_executions": 7,
+      "scope": "CLI commands only; not complete tool count",
+      "host_exit": 0,
+      "host_timed_out": false,
+      "same_host_kernel_bytes": true,
+      "current_completion": "not_applicable",
+      "first_blocker": null,
+      "retained_unknown_request_id": null,
+      "interpretation": "postrepair continuation, warm project/compiler cache, fresh ephemeral host conversation; no provider-cache claim"
+    },
+    {
+      "arm": "governed",
+      "completed_command_executions": 14,
+      "scope": "CLI commands only; not complete tool count",
+      "host_exit": 0,
+      "host_timed_out": false,
+      "same_host_kernel_bytes": true,
+      "current_completion": "unproven",
+      "first_blocker": "AUTHORING_CUSTODY_STALE",
+      "retained_unknown_request_id": "retained privately; ambiguous write not replayed",
+      "interpretation": "postrepair continuation, warm project/compiler cache, fresh ephemeral host conversation; no provider-cache claim"
+    }
+  ],
+  "all_in_setup_ms": null,
+  "reviewed_human_minutes": null,
+  "model_delivery": "not independently observed",
+  "efficiency_claim": false
+}

@@ -42,6 +42,8 @@ fn write_manifest(
 
 fn write_capsule(root: &std::path::Path, task_id: &str) {
     let capsule = DeterministicContextCapsule {
+        knowledge: None,
+        governed_plan: None,
         schema_version: "1.1.0".to_string(),
         topic: "publish".to_string(),
         scope: "interfaces".to_string(),
@@ -68,6 +70,7 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     };
     write_context_capsule(root, &capsule).expect("write capsule");
 }

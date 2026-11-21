@@ -1,0 +1,1190 @@
+{
+  "schema_version": "decapod.outcome-comparison.v1",
+  "publication_ready": false,
+  "merge_authorized": false,
+  "evidence_limit": "Producer labels and digest references are assertions. This renderer does not authenticate captures, execute checks, infer semantic question labels, verify native proof, or establish current admission. Deterministic fixtures are not real-model outcomes; missing human attention prevents an efficiency ratio.",
+  "incomplete_pairs": [
+    "antigravity-governed-cold",
+    "claude-governed-cold-attempt2",
+    "codex-governed-identified",
+    "codex-governed-local-recovery",
+    "codex-governed-local-target"
+  ],
+  "unverified_pair_identities": [
+    "antigravity-governed-cold",
+    "claude-governed-cold-attempt2",
+    "codex-cold-unidentified",
+    "codex-governed-identified",
+    "codex-governed-local-recovery",
+    "codex-governed-local-target"
+  ],
+  "summaries": [
+    {
+      "arm": "baseline",
+      "runs": 1,
+      "completed": 1,
+      "unsuccessful_or_partial": 0,
+      "reported_independent_correct": 1,
+      "reported_verified_useful_work": 1,
+      "correctness_unobserved": 0,
+      "reviewed_active_human_minutes": null,
+      "reported_verified_useful_work_per_reviewed_human_minute": null
+    },
+    {
+      "arm": "governed",
+      "runs": 6,
+      "completed": 0,
+      "unsuccessful_or_partial": 6,
+      "reported_independent_correct": 0,
+      "reported_verified_useful_work": 0,
+      "correctness_unobserved": 1,
+      "reviewed_active_human_minutes": null,
+      "reported_verified_useful_work_per_reviewed_human_minute": null
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "codex-baseline-paired",
+      "pair_id": "codex-cold-unidentified",
+      "task_id": "greeting-cold",
+      "stratum": "cold",
+      "arm": "baseline",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": null,
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "dc43994bc3198b14f3d66e0fe5d23d24a2053a78",
+      "accepted_base": "dc43994bc3198b14f3d66e0fe5d23d24a2053a78",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": "dc43994bc3198b14f3d66e0fe5d23d24a2053a78",
+      "candidate_source_sha256": "b839a9bf96a238f0e96c595bd0fafba22152cb16beee94428a75d75183f0a9f6",
+      "candidate_dirty": true,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "host_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "71f295e9797c4b2ee440492ecf51ff6abd4f4e26e65380294f0af0789e3ba636",
+      "evidence_class": "real_host",
+      "status": "completed",
+      "functional_correctness": {
+        "value": true,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "0f4f0f37401839919730577da19bfbab66eea568bcd954079303b81234091bbc"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_applicable"
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": null,
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 144256.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c64b0b4fa7bc0ae2d8c59cccfef35a9d94386ab67427a4b2e13af2f7dad198c6"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 171920.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c64b0b4fa7bc0ae2d8c59cccfef35a9d94386ab67427a4b2e13af2f7dad198c6"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 587.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c64b0b4fa7bc0ae2d8c59cccfef35a9d94386ab67427a4b2e13af2f7dad198c6"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": 6.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c64b0b4fa7bc0ae2d8c59cccfef35a9d94386ab67427a4b2e13af2f7dad198c6"
+          },
+          "missing_reason": null
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 30185.467,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "0f4f0f37401839919730577da19bfbab66eea568bcd954079303b81234091bbc"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "codex-governed-cold",
+      "pair_id": "codex-cold-unidentified",
+      "task_id": "greeting-cold",
+      "stratum": "cold",
+      "arm": "governed",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": null,
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "accepted_base": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "candidate_source_sha256": "64ecef535710470dc1e83eb598977e38fab80fecf7fcfe674e4a06e69abd9679",
+      "candidate_dirty": false,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "host_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "71f295e9797c4b2ee440492ecf51ff6abd4f4e26e65380294f0af0789e3ba636",
+      "evidence_class": "real_host",
+      "status": "failed",
+      "functional_correctness": {
+        "value": false,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "b2fa26d3fac444843fd854c87e5c0d6331d69f833c29b898f0b19f98179f85fa"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": false,
+        "evidence": {
+          "class": "operator_report",
+          "sha256": "b2fa26d3fac444843fd854c87e5c0d6331d69f833c29b898f0b19f98179f85fa"
+        },
+        "missing_reason": null
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "authoring_actor_required",
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 371200.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "66309267cf220123031151665aba5d739f840d97d9dfcfd16fb60cef6bd03777"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 425296.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "66309267cf220123031151665aba5d739f840d97d9dfcfd16fb60cef6bd03777"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 1368.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "66309267cf220123031151665aba5d739f840d97d9dfcfd16fb60cef6bd03777"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": 16.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "66309267cf220123031151665aba5d739f840d97d9dfcfd16fb60cef6bd03777"
+          },
+          "missing_reason": null
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 83383.615,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "b2fa26d3fac444843fd854c87e5c0d6331d69f833c29b898f0b19f98179f85fa"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "codex-governed-identified",
+      "pair_id": "codex-governed-identified",
+      "task_id": "greeting-cold",
+      "stratum": "cold",
+      "arm": "governed",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": null,
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "accepted_base": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": "6706431cee5f43d5b8bf6efcd6d20f0b19595724",
+      "candidate_source_sha256": "64ecef535710470dc1e83eb598977e38fab80fecf7fcfe674e4a06e69abd9679",
+      "candidate_dirty": false,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "host_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "71f295e9797c4b2ee440492ecf51ff6abd4f4e26e65380294f0af0789e3ba636",
+      "evidence_class": "real_host",
+      "status": "failed",
+      "functional_correctness": {
+        "value": false,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "5e655e60a18aee606c728f6f4d04d5acc3583f0d49f8c4e467c81816471bfd63"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": false,
+        "evidence": {
+          "class": "operator_report",
+          "sha256": "5e655e60a18aee606c728f6f4d04d5acc3583f0d49f8c4e467c81816471bfd63"
+        },
+        "missing_reason": null
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "readiness_repository_missing",
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 1559040.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c2a84d53d82832d0440e40c5ffb97d5c61f1fcc3c9cefd6ac09e3a152bd1bd2a"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 1640306.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c2a84d53d82832d0440e40c5ffb97d5c61f1fcc3c9cefd6ac09e3a152bd1bd2a"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 5879.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c2a84d53d82832d0440e40c5ffb97d5c61f1fcc3c9cefd6ac09e3a152bd1bd2a"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": 67.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "c2a84d53d82832d0440e40c5ffb97d5c61f1fcc3c9cefd6ac09e3a152bd1bd2a"
+          },
+          "missing_reason": null
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 304195.05,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "5e655e60a18aee606c728f6f4d04d5acc3583f0d49f8c4e467c81816471bfd63"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "antigravity-governed-cold",
+      "pair_id": "antigravity-governed-cold",
+      "task_id": "greeting-cold",
+      "stratum": "cold",
+      "arm": "governed",
+      "host": "antigravity",
+      "host_version": "1.5.10",
+      "host_sha256": null,
+      "model": "gemini-4-carbon-medium",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "accepted_base": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "candidate_source_sha256": "64ecef535710470dc1e83eb598977e38fab80fecf7fcfe674e4a06e69abd9679",
+      "candidate_dirty": true,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "host_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "71f295e9797c4b2ee440492ecf51ff6abd4f4e26e65380294f0af0789e3ba636",
+      "evidence_class": "real_host",
+      "status": "partial",
+      "functional_correctness": {
+        "value": false,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "e3bba73df2c1c817f025eb5370a349c7a0156dabf39db47f1d236d5d1e2a20a8"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": false,
+        "evidence": {
+          "class": "operator_report",
+          "sha256": "e3bba73df2c1c817f025eb5370a349c7a0156dabf39db47f1d236d5d1e2a20a8"
+        },
+        "missing_reason": null
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "print_timeout",
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 2775723.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "24796665198da203ba6498ed559e62bbbfb4bc61942a9cbcd240c315de8999d9"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 255830.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "24796665198da203ba6498ed559e62bbbfb4bc61942a9cbcd240c315de8999d9"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 15024.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "24796665198da203ba6498ed559e62bbbfb4bc61942a9cbcd240c315de8999d9"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 604781.253,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "e3bba73df2c1c817f025eb5370a349c7a0156dabf39db47f1d236d5d1e2a20a8"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "claude-governed-cold-attempt2",
+      "pair_id": "claude-governed-cold-attempt2",
+      "task_id": "greeting-cold",
+      "stratum": "cold",
+      "arm": "governed",
+      "host": "claude-code",
+      "host_version": "2.1.311",
+      "host_sha256": null,
+      "model": "claude-opus-5-5",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "accepted_base": "62b3e5eb2480fe898ee14d54b1a90ec05e30b2e1",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": null,
+      "candidate_source_sha256": null,
+      "candidate_dirty": null,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "candidate_commit": "not_observed",
+        "candidate_dirty": "not_observed",
+        "candidate_source_sha256": "not_observed",
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "host_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "71f295e9797c4b2ee440492ecf51ff6abd4f4e26e65380294f0af0789e3ba636",
+      "evidence_class": "real_host",
+      "status": "launch_failed",
+      "functional_correctness": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "pre_inference_failure"
+      },
+      "governed_completion": {
+        "value": false,
+        "evidence": {
+          "class": "operator_report",
+          "sha256": "3b000f4a9beec17013b52a2e6cd8b8c0ab6f589b81fec871be7216158119e4c7"
+        },
+        "missing_reason": null
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "authentication_failed",
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 0.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "31d1ea2d4ae1986f1c4bcfc468a628f1451966040066816ce5f70a729dbe0e12"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 0.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "31d1ea2d4ae1986f1c4bcfc468a628f1451966040066816ce5f70a729dbe0e12"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 0.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "31d1ea2d4ae1986f1c4bcfc468a628f1451966040066816ce5f70a729dbe0e12"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 952.685,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "3b000f4a9beec17013b52a2e6cd8b8c0ab6f589b81fec871be7216158119e4c7"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "codex-governed-local-target",
+      "pair_id": "codex-governed-local-target",
+      "task_id": "greeting-cold",
+      "stratum": "cold",
+      "arm": "governed",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": "739cda86e15d30a6e2b40cf8dcbbfb988aaf48b305b27065573bb8e9fd41d002",
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "a0c89b9ae4d2f625d56d7149f818670a7f16df75",
+      "accepted_base": "a0c89b9ae4d2f625d56d7149f818670a7f16df75",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": "1215dd0648b66686f50d5b93aa1dc9508e57e8a6",
+      "candidate_source_sha256": "b839a9bf96a238f0e96c595bd0fafba22152cb16beee94428a75d75183f0a9f6",
+      "candidate_dirty": false,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "9c02a34a7973ff59ef40961c738a0a6bd41e1968880dd2b519e3264678f16439",
+      "evidence_class": "real_host",
+      "status": "partial",
+      "functional_correctness": {
+        "value": true,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "64d8aa742b14a19ccf8563f68cc8b8d4f90452c9ea3da9736d6238216bd9eb89"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "native_proof_receipt_unobserved_at_deadline",
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": 81.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "0189f001894917d7f649c190454d6dddda1f3ae3e7587b0753acd237f5b0fd60"
+          },
+          "missing_reason": null
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 600016.065,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "64d8aa742b14a19ccf8563f68cc8b8d4f90452c9ea3da9736d6238216bd9eb89"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "codex-governed-local-recovery",
+      "pair_id": "codex-governed-local-recovery",
+      "task_id": "greeting-recovery",
+      "stratum": "fresh_session_recovery",
+      "arm": "governed",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": "739cda86e15d30a6e2b40cf8dcbbfb988aaf48b305b27065573bb8e9fd41d002",
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "979d7deaec3e04e6bc19c421eddded35b6a35bd6268d40c81213650f4102bf75",
+      "source_commit": "1215dd0648b66686f50d5b93aa1dc9508e57e8a6",
+      "accepted_base": "a0c89b9ae4d2f625d56d7149f818670a7f16df75",
+      "task_source_sha256": "8f59cc7ec20e9fcb772c9a57578615bebdd0025db9db8480cb4aca0e7f54bdba",
+      "environment_sha256": null,
+      "candidate_commit": "1215dd0648b66686f50d5b93aa1dc9508e57e8a6",
+      "candidate_source_sha256": "b839a9bf96a238f0e96c595bd0fafba22152cb16beee94428a75d75183f0a9f6",
+      "candidate_dirty": false,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "environment_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "c209115873e0e461e86a2782f9938016b9cb98c0365789b045b9fdc7abcf7081",
+      "evidence_class": "real_host",
+      "status": "partial",
+      "functional_correctness": {
+        "value": true,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "34ab2400b5ae0e872cadd0f2beb839cb77e9e2c2392f20b883af7d33fbda953e"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "unsupported"
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "completion_proof_absent_candidate_not_accepted_history",
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 449152.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "df4521a8fc8664494039a061df814eadd2240ed6f2169580783e84caad6e2e35"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 492477.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "df4521a8fc8664494039a061df814eadd2240ed6f2169580783e84caad6e2e35"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 1144.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "df4521a8fc8664494039a061df814eadd2240ed6f2169580783e84caad6e2e35"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": 15.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "df4521a8fc8664494039a061df814eadd2240ed6f2169580783e84caad6e2e35"
+          },
+          "missing_reason": null
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 90204.6,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "34ab2400b5ae0e872cadd0f2beb839cb77e9e2c2392f20b883af7d33fbda953e"
+          },
+          "missing_reason": null
+        }
+      }
+    }
+  ]
+}

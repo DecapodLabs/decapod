@@ -61,6 +61,8 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     let readme_hash = sha256_hex(&readme);
     let policy_hash = sha256_hex(b"fixture-policy-v1");
     let capsule = DeterministicContextCapsule {
+        knowledge: None,
+        governed_plan: None,
         schema_version: "1.1.0".to_string(),
         topic: "release fixture".to_string(),
         scope: "interfaces".to_string(),
@@ -81,6 +83,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
         repo_signal_fingerprint: "test_fingerprint".to_string(),
         config_input_hash: String::new(),
         spec_input_hash: String::new(),
+        selection: None,
     }
     .with_recomputed_hash()
     .expect("compute capsule hash");
