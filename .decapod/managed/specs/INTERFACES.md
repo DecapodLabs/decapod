@@ -642,6 +642,10 @@ field; inactive evaluator aliases and compatibility DTOs are not public API.
 
 ## Reviewed native sequence interface
 
+`capture_readonly_identity` preserves each check's ordered program and named
+tool inputs when multiple checks share a local path. Each capture retains the
+same digest format, byte budget, deadline, and cancellation checks.
+
 `native_proof::Invocation.following` is an ordered vector of explicit native
 programs, arguments, working directories and environments, not a deserializable
 command authority. It is omitted from serialization when empty, preserving
@@ -1552,7 +1556,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e`
+- Repository signal fingerprint: `d183bb89cd7b3a0ada4b5223f516ed7a5f9c67a72bb16a1ba04aa569a920500d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
