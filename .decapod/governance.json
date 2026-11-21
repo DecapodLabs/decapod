@@ -877,6 +877,14 @@
       "proof_refs": [
         "Immutable CI context suite: 54 passed; local carrier suite started"
       ]
+    },
+    {
+      "id": "strict-carrier-native-regression",
+      "summary": "Prove carrier mismatches are denied before discovery and that accepted native proof still rejects altered helper bytes",
+      "input_digest": "sha256:5f2406704fa4e0364e95629932d296602bdc4bccae5f880a1c193c9013bc1b7b",
+      "proof_refs": [
+        "Three carrier regressions passed; old assertion revealed diagnostic sequencing"
+      ]
     }
   ],
   "intents": {
@@ -921,21 +929,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Describe the shared strict source graph and the independently accepted GitHub carrier.",
-          "reviewed_code_fingerprint": "b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e",
+          "reviewed_code_fingerprint": "52b51f5041ed5a5e38b495dacb7ecb8c764e6734170b717556b1d513121e634c",
           "spec_material_hash": "23f71033c0522d894cbb1ccc8c56344c1a4ec19f0788dcdc2d88e731f5057c17"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Specify the accepted configuration field and authenticated artifact, attempt and final freshness behavior.",
-          "reviewed_code_fingerprint": "b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e",
+          "reason": "Specify the accepted carrier declaration and exact authenticated attempt and artifact binding.",
+          "reviewed_code_fingerprint": "52b51f5041ed5a5e38b495dacb7ecb8c764e6734170b717556b1d513121e634c",
           "spec_material_hash": "0e4557e32a8a5d85a050e99186b98372d2ed9f574e2eb6a8d376393cb21e3199"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The designated GitHub carrier retains the existing accepted-base, official CLI, and authenticated execution boundaries.",
-          "reviewed_code_fingerprint": "b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e",
+          "reason": "The follow-up only covers the earlier rejection of a candidate carrier switch and the unchanged native closure rule.",
+          "reviewed_code_fingerprint": "52b51f5041ed5a5e38b495dacb7ecb8c764e6734170b717556b1d513121e634c",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -947,13 +955,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795242260Z"
+      "updated_at": "1795242857Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7144398eceaeb77cb9109d0b8b24e342fd7f648ba1fce8db126d4c3fc6f1e860",
+      "artifact_hash": "sha256:25f82df67caeda4b97ef9e6fd894a092236f6d06e057c29995c23cbb66cbf380",
       "checks": [
         {
           "name": "formatting",
@@ -961,11 +969,15 @@
         },
         {
           "name": "github-carrier-regressions",
-          "status": "partial"
+          "status": "passed"
         },
         {
           "name": "immutable-ci-context",
           "status": "passed"
+        },
+        {
+          "name": "prior-native-diagnostic",
+          "status": "failed"
         },
         {
           "name": "stale-accepted-base",
@@ -1000,10 +1012,17 @@
             "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7YBJQ55NB2J86RPXSYN0R62",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7YBJQ55NB2J86RPXSYN0R62": {
@@ -1050,6 +1069,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "All three new carrier tests passed. The old diagnostic-only assertion in the validation runtime suite flagged the deliberate earlier carrier admission refusal. The revised assertion covers that refusal and independently accepted native source-closure verification; exact rerun is in progress."
+                ],
+                "proof_refs": [
+                  "github-carrier-regressions",
+                  "prior-native-diagnostic"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "root",
+                  "src/decapod",
+                  "tests/ci_event_context_policy.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1059,6 +1097,7 @@
       "destination": "pull request",
       "evidence": [
         "All 54 immutable Git event-context checks passed with installed Python 3.14. Formatting and staged whitespace checks passed. The focused Rust carrier suite is in progress; the accepted repository carrier is unchanged and no publication proof exists.",
+        "All three new carrier tests passed. The old diagnostic-only assertion in the validation runtime suite flagged the deliberate earlier carrier admission refusal. The revised assertion covers that refusal and independently accepted native source-closure verification; exact rerun is in progress.",
         "The deterministic workbranch verifier rejects the previous head after the accepted target advances and permits the newly reconciled exact head. Ordinary publication remains subject to the currently accepted carrier."
       ],
       "inspected_files": [

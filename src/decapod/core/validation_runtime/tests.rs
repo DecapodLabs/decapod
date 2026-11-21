@@ -484,6 +484,12 @@ fn accepted_executor_rejects_unknown_workflow_provider_action_and_script() {
 fn native_validation_does_not_silently_use_remote_accepted_executor() {
     let fixture = accepted_executor_fixture();
     change_candidate_helpers(&fixture, false);
+    assert_admission_blocked(&fixture, false, "SOURCE_CI_PROVIDER_NOT_ACCEPTED");
+
+    let fixture = accepted_executor_fixture();
+    review_and_commit(&fixture, false, "independently accepted native carrier");
+    accept_current_base(&fixture);
+    change_candidate_helpers(&fixture, false);
     assert_admission_blocked(&fixture, false, "CONTROLLER_CONTRACT_UNSUPPORTED");
 }
 
