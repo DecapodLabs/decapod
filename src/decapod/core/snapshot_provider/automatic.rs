@@ -9,6 +9,8 @@ use super::*;
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet};
 
+const ACCEPTED_TARGET_RECHECK_INTERVAL: Duration = Duration::from_secs(60);
+
 #[derive(Clone, Debug)]
 pub struct ImportedPipeline {
     pub organization: String,
@@ -450,6 +452,25 @@ fn poll(
     }
     Ok(complete)
 }
+fn verify_pending_accepted_target(
+    runner: &mut impl Runner,
+    pending: &snapshot::PreparedSnapshot,
+    budget: &Budget<'_>,
+) -> Result<()> {
+    let request = pending.request();
+    let current = snapshot::accepted_target(
+        runner,
+        pending.root(),
+        &request.repository,
+        &request.accepted_base_ref,
+        budget,
+    )?;
+    ensure(
+        current.as_deref() == Some(request.accepted_base.as_str()),
+        "STALE_ACCEPTED_BASE: the accepted target moved during source preflight; synchronize the candidate and rerun validation",
+    )
+}
+
 /// Wait without materializing artifacts/evidence or mutating any provider state.
 /// One deadline covers all workflows, calls and sleeps. Authorization errors are
 /// returned immediately; there is no fallback, credential extraction or retry.
@@ -468,7 +489,12 @@ pub fn wait_for_source_runs(
     )?;
     provider::verify_remote_binding(runner, snapshot, budget)?;
     let mut state = PollState::default();
+    let mut next_target_check = Instant::now() + ACCEPTED_TARGET_RECHECK_INTERVAL;
     loop {
+        if Instant::now() >= next_target_check {
+            verify_pending_accepted_target(runner, snapshot, budget)?;
+            next_target_check = Instant::now() + ACCEPTED_TARGET_RECHECK_INTERVAL;
+        }
         let requests_before = budget.public_github_requests()?;
         if poll(runner, reader, snapshot, plan, &mut state, budget)? {
             break;

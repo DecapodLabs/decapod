@@ -41,6 +41,7 @@ struct Gh {
     calls: usize,
     bad_head: bool,
     failed: bool,
+    remote_base: Option<String>,
 }
 impl Default for Gh {
     fn default() -> Self {
@@ -56,6 +57,7 @@ impl Default for Gh {
             calls: 0,
             bad_head: false,
             failed: false,
+            remote_base: None,
         }
     }
 }
@@ -69,6 +71,24 @@ impl Runner for Gh {
             ));
         }
         if spec.program() == Program::GitTransport {
+            if spec
+                .arguments()
+                .iter()
+                .any(|argument| argument == "ls-remote")
+                && spec
+                    .arguments()
+                    .last()
+                    .is_some_and(|argument| argument == "refs/heads/master")
+            {
+                return Ok(Reply {
+                    exit_code: 0,
+                    stdout: self
+                        .remote_base
+                        .as_ref()
+                        .map(|head| format!("{head}\trefs/heads/master\n").into_bytes())
+                        .unwrap_or_default(),
+                });
+            }
             return Ok(Reply {
                 exit_code: if spec.arguments().iter().any(|s| s == "config") {
                     1
@@ -163,6 +183,22 @@ impl buildkite::PublicReader for Bk {
 }
 fn budget(c: &Cancellation) -> Budget<'_> {
     Budget::new(Duration::from_secs(5), 1024 * 1024, c).unwrap()
+}
+#[test]
+fn pending_source_proof_requires_the_original_accepted_target() {
+    let cancel = Cancellation::default();
+    let pending = snapshot();
+    let mut runner = Gh {
+        remote_base: Some(pending.request().accepted_base.clone()),
+        ..Default::default()
+    };
+    verify_pending_accepted_target(&mut runner, &pending, &budget(&cancel)).unwrap();
+    runner.remote_base = Some("d".repeat(40));
+    let error =
+        verify_pending_accepted_target(&mut runner, &pending, &budget(&cancel)).unwrap_err();
+    assert!(error.to_string().contains("STALE_ACCEPTED_BASE"));
+    runner.remote_base = None;
+    assert!(verify_pending_accepted_target(&mut runner, &pending, &budget(&cancel)).is_err());
 }
 #[test]
 fn multiple_imported_workflows_in_one_pipeline_complete_without_artifact_writes() {

@@ -195,7 +195,10 @@ Native execution is the default validation route. Enabling
 `proof.validation_buildkite_preflights` moves the required checks to Buildkite on
 the same claimed workspace branch. Validation uses non-forced push or exact-tip
 reuse, collects authenticated execution evidence and rechecks candidate, target
-and attempts. It creates no temporary branch, does not run a duplicate local
+and attempts. While Buildkite is pending, validation rereads the accepted target
+every minute. Target movement ends the local wait with `STALE_ACCEPTED_BASE`.
+Provider jobs remain untouched and the synchronized commit requires fresh proof.
+It creates no temporary branch, does not run a duplicate local
 prerequisite suite, and never deletes the work branch. Independent GitHub Actions
 results neither satisfy nor block this Buildkite profile.
 
@@ -458,7 +461,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1`
+- Repository signal fingerprint: `7418cf28250a69f72f0dbdb1dc99939426f808a5f748e7ad3c8c929cdcd7670e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
