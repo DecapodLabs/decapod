@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6bb085a8512ed67a2b0043ec939df8c3351fee32",
+    "accepted_commit": "aa4d25da11553ae337fcce6bd53361a1deb90ad7",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -861,67 +861,77 @@
     }
   },
   "change": {
-    "id": "change_01M7YH0NASVKZK93T7RK1ER7A0",
-    "base_commit": "6bb085a8512ed67a2b0043ec939df8c3351fee32",
+    "id": "change_01M7YVQJBA5XBCRWQNWNYMDVRP",
+    "base_commit": "aa4d25da11553ae337fcce6bd53361a1deb90ad7",
     "target_base": "origin/master"
   },
   "claims": {
-    "proof-recovery-diagnostics-1892": {
-      "statement": "Scoped validation failure extraction excludes non-blocking VALIDATION_LEASE_TTL_LOW stderr advisories, preserves readiness stage/scope when report.failures mirrors publication_readiness blockers, and exposes distinct canonical subcodes across EXECUTION_STATE_CHANGED, VALIDATION_HISTORY_TASK_STALE, and VALIDATION_HISTORY_TASK_UNBOUND without relaxing single-task custody fences.",
-      "falsifier": "Any VALIDATION_LEASE_TTL_LOW warning injects VALIDATION_HISTORY_TASK_STALE into scoped recovery labels, mirrored publication_readiness blockers report stage=project_gates instead of readiness, any task-history/execution-state failure drops its subcode behind READINESS_BLOCKED, or workunit lease renewal/checkpoint refresh mutates HEAD or done task completion timestamps.",
+    "p0-org-scoped-project-routing-1877": {
+      "statement": "decapod cloud projects auto-registers registration_required accounts, exposes server organization_id on project directories, requires exact --org disambiguation for duplicate project names, and isolates unresolved project creation requests by organization_id.",
+      "falsifier": "Duplicate project names select ambiguously without --org, unresolved creation replays across organizations, or registration_required fails instead of auto-registering.",
       "status": "supported",
       "proof_refs": [
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs"
+      ]
+    },
+    "p0-pay-and-use-enrollment-and-resume-1896": {
+      "statement": "Cloud auth and todo diagnostics map payment_required, pending_fulfillment, admin_approval_required, organization_already_enrolled, registration_required, and provider_link_stepup_required distinctly, attach RFC3986-encoded /pricing?repo=<owner%2Frepo> enrollment URLs when valid without requiring an Admin wizard, preserve active sessions through pending_fulfillment, and resume once backend_authorized && status==active without creating .decapod/data/decapod.db.",
+      "falsifier": "Any invalid slug enters ?repo=, pending_fulfillment triggers restart_required, admin=true && repo_assigned=false admits data queries, DecapodError reaches >=128 bytes under clippy, or Cloud init refresh creates .decapod/data/decapod.db.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "fix-1892-proof-recovery-diagnostics",
-      "summary": "Eliminate VALIDATION_LEASE_TTL_LOW false-positive task-stale label and disambiguate execution-binding and task-history recovery diagnostics (#1892)",
-      "input_digest": "sha256:6ce78c89df01514c7bf44ef8baf258086f7e3eb0453be17dd68cf737cd797040",
+      "id": "p0-pay-and-use-1877-1896",
+      "summary": "Integrate #1877 account registration/org scoping and implement #1896 P0 pay-and-use Cloud onboarding, pricing URLs, diagnostics, and zero-fallback init guard",
+      "input_digest": "sha256:cb03e63265a01e901d26df0f23b37288097d3e1bb87fb171afad67ba4d1bc50f",
       "proof_refs": [
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/unit/plugins/verify_tests.rs"
-      ]
-    },
-    {
-      "id": "fix-1892-dockerfile-refresh",
-      "summary": "Refresh Decapod-managed Dockerfile release pin to 0.158.1 (#1892)",
-      "input_digest": "sha256:25cd3680533a2ed781039c682720e978deac3066649c2c09262a217cd7cde096",
-      "proof_refs": [
-        "tests/unit/plugins/verify_tests.rs"
-      ]
-    },
-    {
-      "id": "fix-1892-unset-agent-test-fixture",
-      "summary": "Use task_journal lease rotation in workunit unit test when DECAPOD_AGENT_ID is unset in CI (#1892)",
-      "input_digest": "sha256:8c3bcf388a644d008e4b8a8650bf24a89a029f6fc4d3ad6b6d9ad7229ddc7c33",
-      "proof_refs": [
-        "tests/unit/core/workunit_journal_tests.rs"
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7YH0NASVKZK93T7RK1ER7A0": {
+    "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        ".decapod/governance.json",
+        ".decapod/managed/specs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs",
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+      "id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
-      "refined_intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "raw_intent": "Integrate Cloud #1877 and implement P0 pay-and-use onboarding (#1896)\n\nIntegrate #1877 (account registration and org-scoped project routing) and implement #1896 (select Cloud, sign in, pay at /pricing, and resume governed work without mandatory Admin setup).",
+      "refined_intent": "Integrate Cloud #1877 and implement P0 pay-and-use onboarding (#1896)\n\nIntegrate #1877 (account registration and org-scoped project routing) and implement #1896 (select Cloud, sign in, pay at /pricing, and resume governed work without mandatory Admin setup).",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -934,179 +944,176 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "intent": "Integrate Cloud #1877 (account registration, provider-link step-up, and organization-scoped project routing) and implement #1896 (select Cloud, sign in, pay at https://decapodlabs.ai/pricing?repo=<owner%2Frepo>, distinguish payment_required, pending_fulfillment, admin_approval_required, organization_already_enrolled, and resume governed work automatically without mandatory Admin wizard or local SQLite fallback).",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "decapod validate",
+        "cargo test"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Architecture unchanged by unset-agent test fixture update (#1892); refreshed generated spec fingerprint.",
-          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
-          "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
+          "reason": "Documented pricing_enrollment_url, repository-scoped status diagnostic mapping, Box<str> sizing (<128B), --org routing, FailureKind propagation, and Cloud init SQLite guard.",
+          "reviewed_code_fingerprint": "9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f",
+          "spec_material_hash": "75b8520bcaa95118ca57939266166e5dc8f2293c02ab5b146338741d716b02d8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented SAFE_BLOCKER_LABELS/SAFE_VALIDATION_SCOPES additions, wrapper peeling, stderr advisory filtering, and actionable checkpoint remediation for #1892.",
-          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
-          "spec_material_hash": "937591303d30ce71df3eef6cc82e0040a81a0acc5187ef9027bdef5f5d2d885a"
+          "reason": "Documented #1877 --org project flags, P0 CloudAuthStatus variants, enrollment_url JSON/Display contract, and additive account-status response fields.",
+          "reviewed_code_fingerprint": "9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f",
+          "spec_material_hash": "5e3ac419210ce08bad3084f86edf32f9db81048483b7c6b6eb31c9fc45a3906b"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security boundaries unchanged by unset-agent test fixture update (#1892); refreshed generated spec fingerprint.",
-          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
-          "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
+          "reason": "Documented strict slug validation for pricing enrollment URLs, pending_fulfillment session retention, admin vs paid seat orthogonality, and zero SQLite fallback in Cloud init.",
+          "reviewed_code_fingerprint": "9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f",
+          "spec_material_hash": "1796408b1406d50bbea59bc6b4b3e56d9a1583d2a264743571d73fd31fdc5e33"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "title": "Integrate Cloud #1877 and implement P0 pay-and-use onboarding (#1896)",
       "todo_ids": [
-        "bugs_01m7ygp2vgwy63ge"
+        "feat_01m7yvgvwmg495xt"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795252665Z"
+      "updated_at": "1795260951Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d6b597ec2a27cc4ae2b8fd3ed550db784ccb8a52b8fe347c6da93294480eb7d4",
+      "artifact_hash": "sha256:bdb91371f30780681837340c0432a804669956f9764fef728a7e8455586f9f72",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "cargo_test_cli_contract_enforcement",
+          "name": "integration-cli-contracts",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_task_journal",
+          "name": "integration-cloud-managed-session",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_validation_history",
+          "name": "integration-cloud-supabase-boundary",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_verify",
+          "name": "integration-cloud-todo-resume-wire",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_workunit",
+          "name": "integration-cloud-wave-parity",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_workunit_unset_agent",
+          "name": "unit-cloud-lib",
           "status": "passed"
         },
         {
-          "name": "cargo_test_workunit_verified_proof_1660",
+          "name": "unit-core-error",
           "status": "passed"
         }
       ],
-      "current_phase": "verify",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+            "detail": "trajectory:branch_01M7YVQJFQX6APEW5AG1T1K9X3",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03": {
+          "branch_01M7YVQJFQX6APEW5AG1T1K9X3": {
             "evidence_only": true,
-            "id": "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "id": "branch_01M7YVQJFQX6APEW5AG1T1K9X3",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "steps": [
               {
-                "action": "verify",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/dactyl.rs",
                   "src/decapod/core/todo.rs",
-                  "src/decapod/core/trajectory/execution.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/workunit.rs",
+                  "src/decapod/onboarding.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/dactyl.rs",
                   "src/decapod/core/todo.rs",
-                  "src/decapod/core/trajectory/execution.rs",
-                  "docs/agent/error-recovery.md",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)"
+                  "src/decapod/onboarding.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/core/cloud_project_tests.rs",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "tests/unit/core/propodus_tests.rs",
+                  "tests/cloud_backend_storage.rs"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_test_lib_verify",
-                  "cargo_test_lib_workunit",
-                  "cargo_test_lib_task_journal",
-                  "cargo_test_lib_validation_history",
-                  "cargo_test_cli_contract_enforcement",
-                  "cargo_test_workunit_verified_proof_1660"
+                  "unit-cloud-lib",
+                  "unit-core-error",
+                  "integration-cli-contracts",
+                  "integration-cloud-managed-session",
+                  "integration-cloud-supabase-boundary",
+                  "integration-cloud-wave-parity",
+                  "integration-cloud-todo-resume-wire",
+                  "fmt",
+                  "clippy"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/onboarding.rs",
+                  "tests/cloud_backend_storage.rs",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "tests/unit/core/cloud_project_tests.rs",
+                  "tests/unit/core/propodus_tests.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verify",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "cargo test --locked --features supabase-cloud --lib workunit with unset DECAPOD_AGENT_ID passed 45/45; cargo clippy --locked --all-targets --all-features -- -D warnings passed (0 warnings)"
-                ],
-                "proof_refs": [
-                  "cargo_test_lib_workunit_unset_agent"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1115,42 +1122,58 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)",
-        "cargo test --locked --features supabase-cloud --lib workunit with unset DECAPOD_AGENT_ID passed 45/45; cargo clippy --locked --all-targets --all-features -- -D warnings passed (0 warnings)"
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/task_journal.rs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/error.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/core/trajectory/execution.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plugins/verify.rs"
+        "src/decapod/onboarding.rs"
       ],
-      "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+      "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
       "modified_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/error-recovery.md",
-        "src/decapod/core/task_journal.rs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/error.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/core/trajectory/execution.rs",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs",
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
-        "Verify checkpoints, material-specs, project-check, push, PR, GHA green, merge"
+        "validation"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/governance.json",
+        ".decapod/managed/specs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs",
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ],
-      "run_id": "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+      "run_id": "branch_01M7YVQJFQX6APEW5AG1T1K9X3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7ygp2vgwy63ge",
+      "task_id": "feat_01m7yvgvwmg495xt",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -1,5 +1,14 @@
 # Security
 
+## Pay-and-use Cloud enrollment URLs, seat orthogonality, and zero SQLite fallback (#1877, #1896)
+
+- **Validated repository enrollment URLs (`src/decapod/core/cloud_client.rs::pricing_enrollment_url`, `is_valid_repo_slug`)**:
+  Rejects empty segments, `.` / `..` traversal, extra slashes, query/fragment characters, and opaque UUIDs before appending `?repo=<RFC3986-encoded-owner%2Frepo>`, falling back to static `https://decapodlabs.ai/pricing`. Enrollment links carry zero bearer tokens, refresh secrets, or DPoP state.
+- **Fail-closed authorization & non-destructive pending states (`src/decapod/core/cloud_project.rs`, `src/decapod/core/cloud_client.rs`)**:
+  `route()` admits Cloud data operations only when `backend_authorized == true && status == "active" && pending_fulfillment != Some(true)`. `pending_fulfillment` / `payment_pending` preserves saved private credentials rather than triggering destructive sign-in restarts; `admin_approval_required` (`admin=true, repo_assigned=false`) enforces that organization admin privileges never substitute for an assigned paid repository seat; `organization_already_enrolled` surfaces immutable `cloud_org_id` rather than inviting duplicate enrollment.
+- **No Cloud-to-SQLite fallback (`src/decapod/lib.rs::run_init_apply`)**:
+  Cloud-mode `decapod init` refresh skips `migration::check_and_migrate_with_backup_report` so `.decapod/data/decapod.db` is never initialized in Cloud repositories. All headless JSON auth/todo error outputs redact secrets and echo only bounded non-secret status guidance.
+
 ## Admission and observation limits
 
 The Constitution build rejects metadata-only self-promotion and unsupported enforcement assertions. Binding review declarations identify the required review process. They provide no authenticated reviewer identity. Repository overrides and runtime mandates retain their native owners. Superseded, expired, and unrelated knowledge is excluded from operative context and can be inspected through the appropriate audit path.
@@ -810,8 +819,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
+- Repository signal fingerprint: `9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

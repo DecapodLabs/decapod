@@ -1,5 +1,16 @@
 # Architecture
 
+## Pay-and-use Cloud onboarding, diagnostics, and project routing (#1877, #1896)
+
+- **Error & diagnostic taxonomy (`src/decapod/core/error.rs`, `src/decapod/core/cloud_todo_operation.rs`)**:
+  `CloudAuthStatus` adds `RegistrationRequired`, `ProviderLinkStepupRequired`, `PaymentRequired`, `PendingFulfillment`, `AdminApprovalRequired`, and `OrganizationAlreadyEnrolled`. Both `CloudAuthDiagnostic` and `cloud_todo_operation::Diagnostic` add `enrollment_url: Option<Box<str>>` (keeping `DecapodError` under the 128-byte `clippy::result_large_err` ceiling), emit `enrollment_url` conditionally in JSON, and append `; enroll: <url>` in `Display`. `cloud_todo_operation::failure_kind` classifies `PendingFulfillment` as `FailureKind::OnboardingPending` (retryable), `PaymentRequired | AdminApprovalRequired | OrganizationAlreadyEnrolled` as `FailureKind::Authorization`, and `RegistrationRequired | ProviderLinkStepupRequired` as `FailureKind::Authentication`.
+- **Pricing URL builder & repository-scoped error mapping (`src/decapod/core/cloud_client.rs`, `src/decapod/core/dactyl.rs`, `src/decapod/core/todo.rs`)**:
+  `CLOUD_PRICING_URL` (`https://decapodlabs.ai/pricing`), `is_valid_repo_slug`, and `pricing_enrollment_url` validate `<owner>/<repo>` segments and RFC 3986 encode the query parameter. Shared `diagnostic_for_status_code` backs both `transport_error_for_repository` (delegated from `transport_error`) and `cloud_project::project_auth_diagnostic`, wiring repository slugs through `cloud_client::{acquire, one_time_error, connect, projects, enroll_device_with_connector, request_mfa_step_up}`, `dactyl::CloudConnector::discover`, and `todo::{cloud_todo_diagnostic_with_auth, cloud_error, cloud_adapter_error}`.
+- **Account registration & organization-scoped routing (`src/decapod/core/cloud_project.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
+  `CloudProjectCommand::{Use, Create}` accept `--org` (`organization_id: Option<String>`), checked against `Project.organization_id`, `Creation.organization_id`, and `check_organization`. `identity()` auto-registers `registration_required` accounts via `AccountOperation::Register` (`operation: "account"`). `Response` accepts optional additive fields (`authorization_state`, `pending_fulfillment`, `cloud_org_id`, `admin`, `repo_assigned`, `organizations`, `projects[].organization_id`); `route()` requires `backend_authorized && status == "active" && pending_fulfillment != Some(true)` and invokes `project_auth_diagnostic` / `enrich_diagnostic` on failure.
+- **Onboarding & init boundary (`src/decapod/onboarding.rs`, `src/decapod/lib.rs`)**:
+  `setup_review_rows`, `customize_setup`, non-interactive Cloud init output, and `onboarding::ready` describe `/pricing` enrollment and automatic resume with no Admin setup wizard while preserving existing CLI contract assertions (`service confirms repository access` and omission of seat/billing pricing copy). `run_init_apply` guards `migration::check_and_migrate_with_backup_report` with `!init_with.backend.is_cloud() && !repo_ctx.effective_backend().is_cloud()` so Cloud refresh never initializes local SQLite.
+
 ## Constitution selection, knowledge, and evidence
 
 `core::docs::resolve_scoped_context` selects applicable operation, path, and tag bindings before unique lexical matches. `core::context_capsule` and the RPC resolver use that selection without filling empty advisory results with unrelated text. The existing knowledge and federation owners retain inactive history and project current applicable advisory entries. Corrections commit the new entry and prior-state event in one broker transaction.
@@ -1213,8 +1224,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
+- Repository signal fingerprint: `9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
