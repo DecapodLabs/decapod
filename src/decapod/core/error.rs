@@ -114,6 +114,10 @@ pub enum DecapodError {
     EnvVarError(env::VarError),
     /// Validation harness failure (proof gate, schema check, etc.)
     ValidationError(String),
+    /// An explicit policy gate refusal before entering a mutation.
+    PolicyDenied(String),
+    /// The command established that its requested mutation did not run.
+    MutationRejectedBeforeWrite(String),
     /// Resource not found (missing file, task, claim, etc.)
     NotFound(String),
     /// Feature not yet implemented
@@ -161,6 +165,9 @@ impl fmt::Display for DecapodError {
                 } else {
                     write!(f, "Validation error: {s}")
                 }
+            }
+            Self::PolicyDenied(s) | Self::MutationRejectedBeforeWrite(s) => {
+                write!(f, "Validation error: {s}")
             }
             Self::NotFound(s) => write!(f, "Not found: {s}"),
             Self::NotImplemented(s) => write!(f, "Not implemented: {s}"),

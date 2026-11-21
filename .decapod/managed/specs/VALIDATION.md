@@ -1540,7 +1540,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc`
+- Repository signal fingerprint: `3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1950,11 +1950,18 @@ standalone `tests/init_cli.rs`, which the finite profile did not select. Cases
 cover recommended setup, edit/cancel, terminal restoration, preview, redirected
 output and cloud review cancellation without a service connection. The fixture
 converts `TIOCSCTTY` to the platform ioctl request type, preserving its value
-across the macOS constant/parameter type difference. Scenario assertions and
-existing inventory/consumer cases remain unchanged. Required workflows, source
-selectors, test targets and budgets remain unchanged.
+across the macOS constant/parameter type difference. The key test exercises an
+arrow sequence followed by lone Escape with and without a controlling terminal.
+When macOS revokes the slave at child
+exit, the fixture reads the retained master and still asserts restoration of
+canonical mode and echo.
 Managed-session CLI cases separately cover authoritative access and recovery;
 neither fixture suite establishes a hosted purchase or paid customer journey.
+
+The required broker tests exercise an actual basic-trust archive denial.
+They check the task's persisted status and revision, the typed non-commit
+receipt, and same-ID replay across broker lifetimes with a single execution.
+The broker crash test continues to check genuine uncertainty separately.
 
 The reviewed source declaration for the 0.139.0 reconciliation measures all 105
 build/workflow/helper inputs against accepted master19acd21. Every input matches
@@ -2625,3 +2632,5 @@ The v0.156.2 metadata cut at `31f19a70` advances the evaluator release for this 
 The v0.156.2 PR job 136687113651 passed both broker probes and all eleven unfiltered core targets on `351115238`. The paired offline job passed 1,925 library cases. The separate CLI job still hit two existing aggregate deadlines. With accepted context and outcome changes at `d62e30ad`, preserve native interop and authority bytes from the target and run fresh checks on the reconciled encoding candidate.
 
 GitHub Actions run 44861445770 passed all checks on `aa0497d91`, including both CLI suites that had timed out and 1,956 offline library cases. The v0.157.0 cut at `146a00f41` changes only release metadata. Refresh the release projections and rerun the full check graph against that exact base with all 22 encoding inputs intact.
+
+On `91d8e8361`, GitHub Actions run 44868785435 passed the two broker probes, all eleven core targets, all three CLI targets, and 1,956 offline library cases. The accepted broker and onboarding changes at `f0cbb701` then advanced the base. Preserve those accepted source and test changes and execute the full check graph again on the reconciled encoding candidate.

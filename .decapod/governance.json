@@ -45,6 +45,16 @@
         "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
         "status": "open"
       },
+      "claim:bounded-applicable-active-context": {
+        "falsifier": "Repeated irrelevant text outranks a binding, a stale decision becomes operative, or an oversized response reaches the caller.",
+        "proof_refs": [
+          "tests/context_capsule_rpc.rs",
+          "tests/unit/core/docs_tests.rs",
+          "tests/unit/plugins/knowledge_tests.rs"
+        ],
+        "statement": "Existing context owners prefer explicit applicability, retain binding obligations and project bounded current scoped knowledge with inspectable reasons.",
+        "status": "open"
+      },
       "claim:bounded-escalation-admissibility": {
         "falsifier": "A paraphrase, forged/stale source or cross-task continuation clears a gap; an actual required approval is inferred; a renamed subject resets the budget; reflection grants native verification/publication; or the loop persists beyond its bounded journal.",
         "proof_refs": [
@@ -166,6 +176,15 @@
         "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
         "status": "open"
       },
+      "claim:constitution-admission-public-evidence": {
+        "falsifier": "A corpus-only self-promotion works, dangling references build, ordinary advisory research is suppressed, or authorship testimony becomes a public fact.",
+        "proof_refs": [
+          "tests/constitution_claims.rs",
+          "tests/constitution_scaffolding.rs"
+        ],
+        "statement": "The native compression path rejects metadata-only authority and unsupported enforcement claims while admitting useful advisory research. The chronology separates source evidence and testimony.",
+        "status": "open"
+      },
       "claim:consumer-local-proof": {
         "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
         "proof_refs": [
@@ -180,6 +199,15 @@
           "tests/unit/plugins/container_tests.rs"
         ],
         "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
+        "status": "open"
+      },
+      "claim:cooperative-boundary-outcome-limits": {
+        "falsifier": "A caller chooses an arbitrary executable, exit success becomes completion authority, or an unobserved outcome qualifies as independently useful work.",
+        "proof_refs": [
+          "tests/unit/core/native_boundary_tests.rs",
+          "tests/unit/core/outcome_comparison_tests.rs"
+        ],
+        "statement": "The native adapter delegates fixed operations to existing owners and the flight recorder preserves explicit limits of compact outcome evidence.",
         "status": "open"
       },
       "claim:created-context": {
@@ -935,6 +963,11 @@
       "id": "attack-gaps-interop-accepted-146a00f4",
       "summary": "Integrate accepted v0.157.0 metadata, refresh the release projections, and retain the exact encoding fixtures for current-base verification",
       "input_digest": "sha256:361ddb82adacd140471dedd22499d8f0ae9135f529b686f37566870fb880df60"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-f0cbb701",
+      "summary": "Integrate accepted broker and onboarding changes and preserve all raw encoding controls",
+      "input_digest": "sha256:eb747e4c7fb818f96400628ed79f39e5b22772d2b521277e0575b92cbebfde85"
     }
   ],
   "intents": {
@@ -978,22 +1011,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve the accepted context and outcome architecture beside the independent encoding boundary.",
-          "reviewed_code_fingerprint": "cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc",
-          "spec_material_hash": "11f12c1aab6a24c287e98dae300e034dbd6c0700070f5c2c20cef431b4fd7f04"
+          "reason": "Preserve the accepted broker lifecycle changes beside the independent encoding boundary.",
+          "reviewed_code_fingerprint": "3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788",
+          "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain the accepted native interoperability interfaces and all 22 raw encoding vectors.",
-          "reviewed_code_fingerprint": "cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc",
-          "spec_material_hash": "c34d5fe8d98b746104a6163a8354fe47b70551a63a1e5b5d0a895d4f7aaa3305"
+          "reason": "Retain the accepted onboarding and broker behavior and all 22 raw encoding vectors.",
+          "reviewed_code_fingerprint": "3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788",
+          "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve accepted authority checks and keep encoding evidence scoped to the measured decoding behavior.",
-          "reviewed_code_fingerprint": "cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc",
+          "reason": "Preserve accepted authority checks and keep encoding evidence scoped to measured decoding behavior.",
+          "reviewed_code_fingerprint": "3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -1005,7 +1038,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237163Z"
+      "updated_at": "1795240376Z"
     },
     "trajectory": {
       "active_boundaries": [
