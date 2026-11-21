@@ -45,6 +45,16 @@
         "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
         "status": "open"
       },
+      "claim:bounded-applicable-active-context": {
+        "falsifier": "Repeated irrelevant text outranks a binding, a stale decision becomes operative, or an oversized response reaches the caller.",
+        "proof_refs": [
+          "tests/context_capsule_rpc.rs",
+          "tests/unit/core/docs_tests.rs",
+          "tests/unit/plugins/knowledge_tests.rs"
+        ],
+        "statement": "Existing context owners prefer explicit applicability, retain binding obligations and project bounded current scoped knowledge with inspectable reasons.",
+        "status": "open"
+      },
       "claim:bounded-escalation-admissibility": {
         "falsifier": "A paraphrase, forged/stale source or cross-task continuation clears a gap; an actual required approval is inferred; a renamed subject resets the budget; reflection grants native verification/publication; or the loop persists beyond its bounded journal.",
         "proof_refs": [
@@ -166,6 +176,15 @@
         "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
         "status": "open"
       },
+      "claim:constitution-admission-public-evidence": {
+        "falsifier": "A corpus-only self-promotion works, dangling references build, ordinary advisory research is suppressed, or authorship testimony becomes a public fact.",
+        "proof_refs": [
+          "tests/constitution_claims.rs",
+          "tests/constitution_scaffolding.rs"
+        ],
+        "statement": "The native compression path rejects metadata-only authority and unsupported enforcement claims while admitting useful advisory research. The chronology separates source evidence and testimony.",
+        "status": "open"
+      },
       "claim:consumer-local-proof": {
         "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
         "proof_refs": [
@@ -180,6 +199,15 @@
           "tests/unit/plugins/container_tests.rs"
         ],
         "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
+        "status": "open"
+      },
+      "claim:cooperative-boundary-outcome-limits": {
+        "falsifier": "A caller chooses an arbitrary executable, exit success becomes completion authority, or an unobserved outcome qualifies as independently useful work.",
+        "proof_refs": [
+          "tests/unit/core/native_boundary_tests.rs",
+          "tests/unit/core/outcome_comparison_tests.rs"
+        ],
+        "statement": "The native adapter delegates fixed operations to existing owners and the flight recorder preserves explicit limits of compact outcome evidence.",
         "status": "open"
       },
       "claim:created-context": {
@@ -898,6 +926,11 @@
       "proof_refs": [
         "CI observed release-bound projection drift before the official refresh"
       ]
+    },
+    {
+      "id": "integrate-v158-accepted",
+      "summary": "Integrate accepted v0.158.0 source and refresh the checkpoint with its checksum-verified native controller",
+      "input_digest": "sha256:c2fabe02536d83d600e1f61950a2c658d011f319764d56aa1231a968d7ea9e8e"
     }
   ],
   "intents": {
@@ -941,22 +974,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The heartbeat retains current journal authority and generation fencing.",
-          "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
-          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
+          "reason": "The merged release and accepted changes preserve the candidate architecture and its existing custody boundaries. The behavioral change is documented in the canonical interface.",
+          "reviewed_code_fingerprint": "6b0e3d19917d56738039468539bc9147b967a2dc72d055b26a238639b729f73f",
+          "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Bind the authored interface changes to the candidate with the official release metadata.",
-          "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
-          "spec_material_hash": "46806bcd86ccd502d3930471ba7d0b847d258b579267fe7f08a489dd6b8dc972"
+          "reason": "The interface defines a generation-preserving same-holder heartbeat, and standard renewals retain explicit custody rotation.",
+          "reviewed_code_fingerprint": "6b0e3d19917d56738039468539bc9147b967a2dc72d055b26a238639b729f73f",
+          "spec_material_hash": "1ac584b0cc3d544556a8c971d63b1b9690977a575d625177038d5df7ac97b099"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The heartbeat retains current journal authority and generation fencing.",
-          "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
+          "reason": "The existing authorization and ownership gates continue to apply. The accepted security spec remains accurate for this scoped implementation.",
+          "reviewed_code_fingerprint": "6b0e3d19917d56738039468539bc9147b967a2dc72d055b26a238639b729f73f",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -968,14 +1001,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795238048Z"
+      "updated_at": "1795241986Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:71a166df9dbb26b64be2a16c90e583a57eae422ff6c9ba78c78ab5010784de09",
-      "checks": [],
+      "artifact_hash": "sha256:de1365a7810302b594f7c7ad087b71175b7290e561e647232c1a255d41fcd7f0",
+      "checks": [
+        {
+          "name": "v0.158.0 accepted source inventory comparison",
+          "status": "passed"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -990,16 +1028,53 @@
             "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7XNGJ92YWQ54H8DHVPT3PY3": {
+            "evidence_only": true,
+            "id": "branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "Reviewed all 107 workflow and build inventory entries; Cargo.toml and Cargo.lock contain the only changed input bytes, the accepted root package version bump from 0.157.0 to 0.158.0",
+                  "Preserved existing checkpoint and fixture evidence across accepted master 1bdb1e6e2163fbe3761e1ee3bfeb4501306fac26"
+                ],
+                "proof_refs": [
+                  "v0.158.0 accepted source inventory comparison"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "Preserved existing checkpoint and fixture evidence across accepted master 1bdb1e6e2163fbe3761e1ee3bfeb4501306fac26",
+        "Reviewed all 107 workflow and build inventory entries; Cargo.toml and Cargo.lock contain the only changed input bytes, the accepted root package version bump from 0.157.0 to 0.158.0"
+      ],
       "execution_checkpoints": [
         {
           "binding": {
@@ -1065,9 +1140,14 @@
           "sequence": 3
         }
       ],
-      "inspected_files": [],
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ],
       "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
-      "modified_files": [],
+      "modified_files": [
+        ".decapod/config.toml"
+      ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
