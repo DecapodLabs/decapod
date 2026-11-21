@@ -882,6 +882,14 @@
       "proof_refs": [
         "Accepted Decapod PR #1885 and exact 107-file source inventory comparison"
       ]
+    },
+    {
+      "id": "decapod-1881-official-v157-projections",
+      "summary": "Refresh committed projections using the checksum-verified v0.157.0 controller",
+      "input_digest": "sha256:5713b9507f0ac3860310b88d0c99e9797c8cf7e9b5454921651d04512d739f85",
+      "proof_refs": [
+        "CI observed release-bound projection drift before the official refresh"
+      ]
     }
   ],
   "intents": {
@@ -925,21 +933,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The accepted release changed version metadata and preserves the existing architecture.",
+          "reason": "The snapshot launch uses the existing private container and backup boundaries.",
           "reviewed_code_fingerprint": "5534d0ed4a8baec38b05fb3c68a5bb1cf13170eff3f53b5a8fa7aee844c677b4",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Interactive container snapshot policy and lifecycle.",
+          "reason": "Bind the authored workspace snapshot interface to the official release projections.",
           "reviewed_code_fingerprint": "5534d0ed4a8baec38b05fb3c68a5bb1cf13170eff3f53b5a8fa7aee844c677b4",
           "spec_material_hash": "134d6a8cc059005c133ebc691634bcd7268a5bcd1b7ed4136fc7188e80d94319"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The accepted release changed version metadata and preserves the current security boundaries.",
+          "reason": "The snapshot launch requires the same accepted backup grant and retains the private staging boundary.",
           "reviewed_code_fingerprint": "5534d0ed4a8baec38b05fb3c68a5bb1cf13170eff3f53b5a8fa7aee844c677b4",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
@@ -952,7 +960,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795236815Z"
+      "updated_at": "1795238126Z"
     },
     "trajectory": {
       "active_boundaries": [
