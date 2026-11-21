@@ -982,6 +982,14 @@
       "proof_refs": [
         "git_diff_check"
       ]
+    },
+    {
+      "id": "issue-1833-v01582-release-readiness",
+      "summary": "Reconcile reviewed inventory, generated container pin and current spec reviews with the accepted v0.158.2 release",
+      "input_digest": "sha256:acd61a78c98de84a7aad9aca84c765822adc5e372c339ea681d7dbc77c44f73b",
+      "proof_refs": [
+        "git_inventory_comparison"
+      ]
     }
   ],
   "intents": {
@@ -1022,23 +1030,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture with the accepted v0.158.0 source snapshot",
-          "reviewed_code_fingerprint": "a40d11f284286ae69d882d26421eddc4ad711186120f22b8e68ac17b104a41af",
-          "spec_material_hash": "4532cf0ab1de869551517c88cd3e6d4f22fedfd08f3a6cf77e8788f3a224a4b8"
+          "reason": "Review the source and design after the base sync. Portable approval verification uses accepted trust material and binds the exact transition subject.",
+          "reviewed_code_fingerprint": "55cb573a4605ab58853ef93f9a864e1b2c5e290c2c4aaa7a48a4a8c0b18b0394",
+          "spec_material_hash": "050fc14d019c6db178041f0c865cfac841fc3edbd57db31c77247dd802f9ee89"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces with the accepted v0.158.0 source snapshot",
-          "reviewed_code_fingerprint": "a40d11f284286ae69d882d26421eddc4ad711186120f22b8e68ac17b104a41af",
-          "spec_material_hash": "f8bf8558f1f3caf220bdfb587183f8dda9f252cc9adf9158b8808c8868666fc1"
+          "reason": "Review independent approval handoff for fresh CI checkouts and authenticated Dactyl lookup. The validation contract retains policy enforcement across release inventory changes.",
+          "reviewed_code_fingerprint": "55cb573a4605ab58853ef93f9a864e1b2c5e290c2c4aaa7a48a4a8c0b18b0394",
+          "spec_material_hash": "1091dbdf5fbedba9071d4377acd8a03dfec87677a51149efaf670dada525c2a5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the branch security contract with the accepted release snapshot",
-          "reviewed_code_fingerprint": "a40d11f284286ae69d882d26421eddc4ad711186120f22b8e68ac17b104a41af",
-          "spec_material_hash": "e021296ad91c1dc89f885ce89c095260b63eefb84f656893db16fffa1add013b"
+          "reason": "Review authorization and evidence provenance. Candidate material cannot establish approval authority and the Dactyl lookup uses the existing authenticated custody boundary.",
+          "reviewed_code_fingerprint": "55cb573a4605ab58853ef93f9a864e1b2c5e290c2c4aaa7a48a4a8c0b18b0394",
+          "spec_material_hash": "32dba93180f287c01c3c1be42e700899ea621f9286a415ca2a8c492fc55b68c4"
         }
       ],
       "state": "APPROVED",
@@ -1049,13 +1057,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795241752Z"
+      "updated_at": "1795256771Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b85498b6f910fefa172cfefb4e8f8477bff8f40cf04f673175439be61794948f",
+      "artifact_hash": "sha256:0556c2331e6bc2c74d2d0644a5c7f0639f8eaf5728b7df03fa05f6bd705d13c5",
       "checks": [
         {
           "name": "ci_checkout_inventory_transition",
@@ -1117,10 +1125,17 @@
             "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7XEJYDET27439XRSKSWYKZ6",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XEJYDET27439XRSKSWYKZ6": {
@@ -1183,6 +1198,19 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "All 107 v0.158.2 proof sources match accepted master aa4d25da1. The reviewed source inventory was reproduced at accepted 77282b10b and changed only through the accepted package version in Cargo.toml and Cargo.lock."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/validation_rules.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1192,6 +1220,7 @@
       "destination": "pull request",
       "evidence": [
         "A simulated scanner upgrade changed only the config digest. The exact transition passed with local maintainer approval and was rejected in a fresh clone of the same head and base.",
+        "All 107 v0.158.2 proof sources match accepted master aa4d25da1. The reviewed source inventory was reproduced at accepted 77282b10b and changed only through the accepted package version in Cargo.toml and Cargo.lock.",
         "Exact signed approvals pass in a fresh clone after a simulated scanner upgrade. Missing, expired, stale, and candidate-signed approvals fail closed. Cloud decision unit tests bind repository, generation, candidate tree, and transition.",
         "Host project check reported container_workspace_required and two pre-existing done TODOs without VERIFIED proof."
       ],
