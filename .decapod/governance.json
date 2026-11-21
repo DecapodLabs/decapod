@@ -870,6 +870,15 @@
       "proof_refs": [
         "release-candidate-profile"
       ]
+    },
+    {
+      "id": "release-required-actions-profile",
+      "summary": "Keep exact release workflow pin and policy fixtures aligned",
+      "input_digest": "sha256:d72653608f05ed676486d1aa14b81a61af7a81a4ab4e8a08bb8b1c1a6f4a3511",
+      "proof_refs": [
+        "exact-compiled-workflow-digest",
+        "release-metadata-policy"
+      ]
     }
   ],
   "intents": {
@@ -915,22 +924,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documents the existing protected check bodies and the release-only scheduling repair.",
-          "reviewed_code_fingerprint": "a8bab50ce5692850a8ad64ff5724189c98005cf6de73b6854dd2d61361685ea3",
+          "reason": "Documents the compiled-profile and workflow alignment for mandatory release check execution.",
+          "reviewed_code_fingerprint": "24189b206086a6f48588ca13afa24a5e82d3d05d6b4f594ab4840a5b3e121093",
           "spec_material_hash": "590a40c443b266cc2bcbb86cc241b40138b4df612f3ceaefa375e304d1b33cd8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The status context names, immutable CI input and command interfaces remain the same.",
-          "reviewed_code_fingerprint": "a8bab50ce5692850a8ad64ff5724189c98005cf6de73b6854dd2d61361685ea3",
+          "reason": "Retains the exact status names and accepted context binding.",
+          "reviewed_code_fingerprint": "24189b206086a6f48588ca13afa24a5e82d3d05d6b4f594ab4840a5b3e121093",
           "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Branch protection and review authority are preserved while the real tests now run for release-only candidates.",
-          "reviewed_code_fingerprint": "a8bab50ce5692850a8ad64ff5724189c98005cf6de73b6854dd2d61361685ea3",
+          "reason": "The compiled pin advances to the exact authored workflow bytes with all authority validation preserved.",
+          "reviewed_code_fingerprint": "24189b206086a6f48588ca13afa24a5e82d3d05d6b4f594ab4840a5b3e121093",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -942,20 +951,28 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795232416Z"
+      "updated_at": "1795234835Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9747719af67450dc535f73aa881ec864724b3dff00dfc2bc5a5e33a62393eef2",
+      "artifact_hash": "sha256:cb5241828aad190c56eec42c1e68cb9b5c12916806160a13d57c52c6c85a0270",
       "checks": [
+        {
+          "name": "exact-compiled-workflow-digest",
+          "status": "passed"
+        },
         {
           "name": "full-linux-profile",
           "status": "unavailable"
         },
         {
           "name": "release-candidate-profile",
+          "status": "passed"
+        },
+        {
+          "name": "release-metadata-policy",
           "status": "passed"
         },
         {
@@ -984,10 +1001,17 @@
             "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Y2QFVHR2Z0QWV098HQ6WC4",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y2QFVHR2Z0QWV098HQ6WC4": {
@@ -1016,6 +1040,28 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/readiness_profile.rs",
+                  "tests/release_metadata_policy.rs",
+                  "All 36 release metadata policy checks passed; actionlint passed; compiled workflow digest independently matches the exact CI bytes."
+                ],
+                "proof_refs": [
+                  "release-metadata-policy",
+                  "exact-compiled-workflow-digest"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  ".github/workflows/ci.yml",
+                  "assets/tools/source_ci_profile.rs",
+                  "tests/source_ci_profile_policy.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1024,6 +1070,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "All 36 release metadata policy checks passed; actionlint passed; compiled workflow digest independently matches the exact CI bytes.",
         "actionlint passed; 56 profile cases passed under canonical macOS TMPDIR, three Linux x86_64 runner checks require GitHub execution."
       ],
       "inspected_files": [],
@@ -1031,6 +1078,8 @@
       "modified_files": [
         ".github/workflows/ci.yml",
         "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "tests/release_metadata_policy.rs",
         "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
@@ -1041,6 +1090,8 @@
         ".decapod/managed/specs",
         ".github/workflows/ci.yml",
         "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "tests/release_metadata_policy.rs",
         "tests/source_ci_profile_policy.rs"
       ],
       "run_id": "branch_01M7Y2QFVHR2Z0QWV098HQ6WC4",

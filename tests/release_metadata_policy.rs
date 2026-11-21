@@ -388,14 +388,12 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
         "fmt",
         "clippy",
         "deps-lint",
-        "test",
         "integration-prepare",
         "test-integration",
         "integration-status",
         "test-master",
         "test-rpc-suite",
         "contracts",
-        "supabase-consumer",
         "workspace-lifecycle-docker",
         "state-commit-golden-vectors",
     ] {
@@ -405,6 +403,13 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
             "{job}"
         );
     }
+    let test = workflow_job(workflow, "test");
+    assert!(test.contains("if: needs.release-metadata.outputs.pr_like == 'true'"));
+    assert!(!test.contains("outputs.release_only"));
+    assert!(test.contains("target: [core, plugins, cli]"));
+    let consumer = workflow_job(workflow, "supabase-consumer");
+    assert!(!consumer.contains("outputs.release_only"));
+    assert!(consumer.contains("run-ci --check supabase-consumer"));
     let health = workflow_job(workflow, "health");
     assert!(health.contains("run-ci --check health"));
     assert!(
