@@ -822,70 +822,45 @@
     }
   },
   "change": {
-    "id": "issue-1764-1770-selected-approval",
+    "id": "change_01M7XH10HTX57Y8T4W2KKH7DGA",
     "base_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
     "target_base": "origin/master"
   },
-  "claims": {
-    "four-relation-witness": {
-      "statement": "The full four-relation model fails with its complete conflict witness while all proper subsets and the accepted consistent repair pass",
-      "falsifier": "A proper subset fails or a full contradictory model does not return all four relation identifiers",
-      "status": "supported",
-      "proof_refs": [
-        "local:selected-work-tests"
-      ]
-    },
-    "selected-policy-reapproval": {
-      "statement": "Changing the selected-work policy requires reapproval while unchanged policy preserves approved progress",
-      "falsifier": "An approved plan can execute on a different selected policy revision before being approved again",
-      "status": "supported",
-      "proof_refs": [
-        "local:plan-governance-tests"
-      ]
-    }
-  },
   "checkpoints": [
     {
-      "id": "selected-policy-approval-revision",
-      "summary": "Bind plan approval to the accepted selected-work revision and verify the complete four-relation conflict witness",
-      "input_digest": "sha256:ce424d72ac6bb7c9d8feecffe8ad5af82631d85b319dc03a9a5f9ce3127b9264",
-      "proof_refs": [
-        "local:53-focused-tests",
-        "local:rustfmt-and-whitespace",
-        "release-source:b533261ebbc860e8edf82eea57cac55b583699a2"
-      ]
+      "id": "fix-strict-profile-fixture",
+      "summary": "Reuse the committed downgrade candidate and keep its existing acceptance guard",
+      "input_digest": "sha256:bc55616d28b799352eb9f45cb14d9dcc83a3ce8f7f7bec2261689893ce813e75"
     },
     {
-      "id": "v156-projection-refresh",
-      "summary": "Refresh Docker and living-spec projections to the verified v0.156.0 release and preserve the earlier failed hosted validation",
-      "input_digest": "sha256:522b3f39348d48d6a7847ec5eae0e3e1b79b4a9b1b9b1f652ef9646d939c740f",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44830202264/job/136612907388",
-        "release-source:b533261ebbc860e8edf82eea57cac55b583699a2"
-      ]
+      "id": "fix-strict-fixture-v1560",
+      "summary": "Apply accepted v0.156.0 and refresh exact managed projections for the strict fixture repair",
+      "input_digest": "sha256:1ae979f693a3b98db3f45fb22c05d3a71b8d74b4eb73fa7ba917c220e4fb9369"
+    },
+    {
+      "id": "fix-strict-fixture-v1561",
+      "summary": "Integrate accepted v0.156.1 and preserve the covered fixture repair and exact hosted evidence",
+      "input_digest": "sha256:83c6aec6d576f6edf1c56750d5f1f874d12ab229866f5d655aa26f7e8aeb76d5"
     }
   ],
   "intents": {
-    "intent:followup_1764_1770_selected_approval": {
+    "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Preserve accepted history, issue-scoped behavior and existing release validation requirements"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/plan_governance.rs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plan_governance_tests.rs",
-        ".decapod/managed/specs"
+        ".decapod/governance.json",
+        ".decapod/managed/specs",
+        "tests/consumer_readiness.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:followup_1764_1770_selected_approval",
+      "id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Complete the remaining Decapod issue 1764, 1770, and 1860 work, merge the code when ready and merge the release cut",
-      "refined_intent": "Deliver the scoped selected policy reapproval and four-relation controls on the accepted combined implementation",
+      "raw_intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
+      "refined_intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -898,138 +873,170 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Require reapproval and fresh proof after a changed accepted policy and verify the full four-relation witness",
+      "intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
       "phases": [],
       "proof_hooks": [
-        "plan_governance and selected-work regressions",
-        "GitHub Actions against exact candidate and accepted target"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Describe policy revision binding at shared readiness gates and phase reset on reapproval",
-          "reviewed_code_fingerprint": "47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1",
+          "reason": "Preserve the accepted v0.156.1 selected-work architecture. The candidate changes a regression fixture.",
+          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the persisted selected-work approval revision and the supported reapproval response for stale plans",
-          "reviewed_code_fingerprint": "47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1",
+          "reason": "The strict-profile fixture preserves the accepted downgrade proof interface and its check.",
+          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The new plan binding consumes the same independently accepted selected-work policy and adds no authority, credential, or access surface",
-          "reviewed_code_fingerprint": "47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1",
+          "reason": "The confirmed fixture test exercises the approved transition and the existing unconditional rejection.",
+          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Bind plan approval to the selected-work policy revision",
+      "title": "Remove redundant strict-profile fixture commit",
       "todo_ids": [
-        "code_01m7xegrqm1cazcx"
+        "bugs_01m7xgt405he9by4"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795213651Z"
+      "updated_at": "1795218933Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Preserve accepted history, issue-scoped behavior and existing release validation requirements"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:deda2e1c5e19e629a3a0929cec43839651d18247095893806e6be14a8c098267",
+      "artifact_hash": "sha256:27fd0ec988f6d0eddd601f4a69d9434db0077f937d7af3e2d44cf1eeabc6a41d",
       "checks": [
         {
-          "name": "cli-contracts",
+          "name": "exact-hosted-strict-profile-test",
           "status": "passed"
         },
         {
-          "name": "combined-worktree",
+          "name": "previous-cli-strict-fixture",
+          "status": "failed"
+        },
+        {
+          "name": "prior-selective-cli-target-timeout",
+          "status": "failed"
+        },
+        {
+          "name": "strict-fixture-formatting",
           "status": "passed"
         },
         {
-          "name": "formatting",
-          "status": "passed"
-        },
-        {
-          "name": "plan-governance",
-          "status": "passed"
-        },
-        {
-          "name": "release-projections",
-          "status": "passed"
-        },
-        {
-          "name": "selected-work",
+          "name": "strict-fixture-v1560-projection-hashes",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verifying",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:followup_1764_1770_selected_approval",
+            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
             "event_id": "event:4",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
-          "followup_1764_1770_selected_approval": {
+          "branch_01M7XH10N43RM1J5HAVP45NYVV": {
             "evidence_only": true,
-            "id": "followup_1764_1770_selected_approval",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
+            "id": "branch_01M7XH10N43RM1J5HAVP45NYVV",
+            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verifying",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plan_governance.rs",
-                  "src/decapod/core/governance_document/merge_reconcile.rs",
-                  "src/decapod/core/intent_reconcile/selected.rs",
-                  "tests/unit/plan_governance_tests.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  ".decapod/managed/specs",
-                  "53 focused tests passed on the candidate assembled from the identical b1001f94 and accepted d96bf819 source trees, including 25 plan tests, four CLI checks, three selected-work tests, three accepted-policy or combined integration checks, and 18 release projection tests"
+                  "tests/consumer_readiness.rs",
+                  "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
                 ],
                 "proof_refs": [
-                  "plan-governance",
-                  "selected-work",
-                  "cli-contracts",
-                  "combined-worktree",
-                  "release-projections",
-                  "formatting"
+                  "previous-cli-strict-fixture",
+                  "strict-fixture-formatting"
                 ],
                 "scope": [
+                  ".decapod/governance.json",
                   ".decapod/managed/specs",
-                  "src/decapod/core/governance_document/merge_reconcile.rs",
-                  "src/decapod/core/intent_reconcile/selected.rs",
-                  "src/decapod/plan_governance.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/unit/plan_governance_tests.rs"
+                  "tests/consumer_readiness.rs"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator."
+                ],
+                "proof_refs": [
+                  "strict-fixture-v1560-projection-hashes"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "tests/consumer_readiness.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned."
+                ],
+                "proof_refs": [
+                  "exact-hosted-strict-profile-test",
+                  "prior-selective-cli-target-timeout"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "tests/consumer_readiness.rs"
+                ],
+                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1037,35 +1044,29 @@
         }
       },
       "declared_commands": [],
-      "destination": "DecapodLabs/decapod master",
+      "destination": "pull request",
       "evidence": [
-        "53 focused tests passed on the candidate assembled from the identical b1001f94 and accepted d96bf819 source trees, including 25 plan tests, four CLI checks, three selected-work tests, three accepted-policy or combined integration checks, and 18 release projection tests"
+        "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator.",
+        "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned.",
+        "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
       ],
       "inspected_files": [],
-      "intent_id": "intent:followup_1764_1770_selected_approval",
+      "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
       "modified_files": [
-        ".decapod/managed/specs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "src/decapod/plan_governance.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plan_governance_tests.rs"
+        "tests/consumer_readiness.rs"
       ],
       "next_transitions": [
-        "publish"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        ".decapod/governance.json",
         ".decapod/managed/specs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "src/decapod/plan_governance.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plan_governance_tests.rs"
+        "tests/consumer_readiness.rs"
       ],
-      "run_id": "followup_1764_1770_selected_approval",
+      "run_id": "branch_01M7XH10N43RM1J5HAVP45NYVV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7xegrqm1cazcx",
+      "task_id": "bugs_01m7xgt405he9by4",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
