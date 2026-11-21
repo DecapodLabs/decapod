@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
+    "accepted_commit": "6bb085a8512ed67a2b0043ec939df8c3351fee32",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -758,6 +758,7 @@
       "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
       "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
+      "trajectory:090ca62e2848cd74": "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
       "trajectory:14bb95d52b8efabf": "Fresh complete exact-candidate CI required after cloud test contract correction",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
@@ -772,6 +773,7 @@
       "trajectory:308bef2f77b39c87": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
       "trajectory:331b4335c37f48d2": "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
+      "trajectory:3a6dea5555de34d1": "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged.",
       "trajectory:3a8b13174a745bf8": "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection.",
       "trajectory:3a8cce72f404c6a2": "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
       "trajectory:3ce44b0c351b9137": "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
@@ -854,146 +856,56 @@
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
-      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
+      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
+      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
     }
   },
   "change": {
-    "id": "change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-    "base_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
+    "id": "change_01M7YH0NASVKZK93T7RK1ER7A0",
+    "base_commit": "6bb085a8512ed67a2b0043ec939df8c3351fee32",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "proof-recovery-diagnostics-1892": {
+      "statement": "Scoped validation failure extraction excludes non-blocking VALIDATION_LEASE_TTL_LOW stderr advisories, preserves readiness stage/scope when report.failures mirrors publication_readiness blockers, and exposes distinct canonical subcodes across EXECUTION_STATE_CHANGED, VALIDATION_HISTORY_TASK_STALE, and VALIDATION_HISTORY_TASK_UNBOUND without relaxing single-task custody fences.",
+      "falsifier": "Any VALIDATION_LEASE_TTL_LOW warning injects VALIDATION_HISTORY_TASK_STALE into scoped recovery labels, mirrored publication_readiness blockers report stage=project_gates instead of readiness, any task-history/execution-state failure drops its subcode behind READINESS_BLOCKED, or workunit lease renewal/checkpoint refresh mutates HEAD or done task completion timestamps.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/unit/core/workunit_journal_tests.rs",
+        "tests/unit/plugins/verify_tests.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "portable-json-encoding-v1",
-      "summary": "Correct independently reproduced Unicode, number overflow and depth decoder disagreements; add22 pinned raw vectors and legitimate native projection controls without changing production refusal or required recipes",
-      "input_digest": "sha256:8a49965a902c5826c0131d7e05ed7bb2ce8a53ef6a7d27e41ef0ecfda0ccd7ac",
+      "id": "fix-1892-proof-recovery-diagnostics",
+      "summary": "Eliminate VALIDATION_LEASE_TTL_LOW false-positive task-stale label and disambiguate execution-binding and task-history recovery diagnostics (#1892)",
+      "input_digest": "sha256:6ce78c89df01514c7bf44ef8baf258086f7e3eb0453be17dd68cf737cd797040",
       "proof_refs": [
-        "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
+        "tests/unit/core/workunit_journal_tests.rs",
+        "tests/unit/plugins/verify_tests.rs"
       ]
-    },
-    {
-      "id": "portable-json-encoding-v1-final",
-      "summary": "Exact portable encoding correction and22 raw vectors after removing accidental EOF blank lines; preserve prior checkpoint and actual native differential evidence",
-      "input_digest": "sha256:5197e8d7b731cb1f07436e13909b8a6d8be1f9f697c47466ec499bd6dbc9bc8e",
-      "proof_refs": [
-        "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
-      ]
-    },
-    {
-      "id": "encoding-accepted-observer-7225",
-      "summary": "Integrate accepted observer722515f4 with native journal reconciliation and generated manifest recovery; preserve encoding versus run-coverage distinction",
-      "input_digest": "sha256:cfc0ffd55b783506683a3ad49628b8b5b1d4beef899e2dd67d669638a8f15872",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1863"
-      ]
-    },
-    {
-      "id": "encoding-accepted-instruction-868f",
-      "summary": "Integrate accepted instruction readiness868f756e; preserve authored specs, native governance and exact proof policy",
-      "input_digest": "sha256:ea10f7467725aee93874c2f78807ff3e164b4e7415889a62ca41795e8301cbf9",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1861"
-      ]
-    },
-    {
-      "id": "encoding-accepted-v154-0f44",
-      "summary": "Integrate accepted0.154.0; regenerate native projections and correct identity probe to documented system version; preserve all22 vectors and required proof graph",
-      "input_digest": "sha256:e763bc75a7d2f55905d8a7751e88666f92dd8dfcfdd8640dfe9b39f06a27b7c6",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1867"
-      ]
-    },
-    {
-      "id": "encoding-accepted-v155-fff1",
-      "summary": "Integrate accepted v0.155.0, preserve authored specs and timing failure evidence, regenerate managed release projections and review all 105 source input hashes",
-      "input_digest": "sha256:b5cf17decab591b339055355caa6c5d230a4422191d6cda1806292f86996438e",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44717983927/job/136261849254"
-      ]
-    },
-    {
-      "id": "cp-sync-9b6a33b0e",
-      "summary": "Sync accepted master 9b6a33b0e (v0.155.0) and verify interop strict JSON decoding conformance (#1866)",
-      "input_digest": "sha256:095af6c14eb109ebd367e9341c0c617677a418d15af9b647ccba3a0d676d5bd0"
-    },
-    {
-      "id": "encoding-accepted-v1551-2e206",
-      "summary": "Integrate accepted v0.155.1 metadata, refresh managed projections and review the unchanged 22-vector encoding test scope",
-      "input_digest": "sha256:cc9644313cf2242f63431c6f79a4a97ed04ab6192290fa2baf6fcbe3936e6eba",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1869"
-      ]
-    },
-    {
-      "id": "attack-gaps-interop-accepted-d96bf819",
-      "summary": "Merge accepted contract recovery, preserve the release projection correction and all pinned encoding inputs, and refresh reviewed publication material for fresh GitHub Actions verification",
-      "input_digest": "sha256:a07cf7530c588f444c70a05a6ee13ac329b50bd4968974617bff62cc7cc970ba"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-ba21c8f1",
-      "summary": "Merge accepted v0.156.0 metadata and make the strict-profile refusal test exercise the fixture's already committed downgrade, preserving the encoding controls and all CI deadlines",
-      "input_digest": "sha256:94eb63852b5a9320794f285567ede617678b0db6087e9a6942f78320e176e043"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-033977e2",
-      "summary": "Integrate accepted approval verification and reconcile both authored spec sets while retaining the pinned encoding controls and verified downgrade fixture repair",
-      "input_digest": "sha256:7b3d6001eeb984ff3e22197bc60452a85169790725c3ce9fa95ec585ce07525e"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-73026d84",
-      "summary": "Merge accepted v0.156.1 metadata and refresh native projections while preserving the encoding fixtures, strict downgrade refusal and accepted approval checks",
-      "input_digest": "sha256:a20e8c3f52baf0bf4adc56515f06b3849383b6683d20a38ead2c7bfe66f8e040"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-9408bec1",
-      "summary": "Integrate the accepted strict-profile fixture and preserve the canonical downgrade case, all pinned encoding vectors and both authored spec sets",
-      "input_digest": "sha256:4cc083dce5ef027f132bbc40ddfdefeb4347584891cb332137fbe2269f2dfe41"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-31f19a70",
-      "summary": "Merge accepted v0.156.2 metadata, preserve the encoding inputs and canonical test, and refresh the native projections for current Actions verification",
-      "input_digest": "sha256:67ee3a09f791386afe420b732941908e67effb1d5ea45506380c0a6239ac62c4"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-d62e30ad",
-      "summary": "Integrate accepted context and outcome changes, preserve all native authority and encoding tests, and repin the measured reviewed source inventory",
-      "input_digest": "sha256:14f58e23f7cd5332c3a7a72d94352769722a7c8d8aa9e5b8b42eb3bd1f7c9db5"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-146a00f4",
-      "summary": "Integrate accepted v0.157.0 metadata, refresh the release projections, and retain the exact encoding fixtures for current-base verification",
-      "input_digest": "sha256:361ddb82adacd140471dedd22499d8f0ae9135f529b686f37566870fb880df60"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-f0cbb701",
-      "summary": "Integrate accepted broker and onboarding changes and preserve all raw encoding controls",
-      "input_digest": "sha256:eb747e4c7fb818f96400628ed79f39e5b22772d2b521277e0575b92cbebfde85"
-    },
-    {
-      "id": "attack-gaps-interop-accepted-1bdb1e6e",
-      "summary": "Integrate v0.158.0 release metadata and reviewed projections while preserving the portable encoding controls",
-      "input_digest": "sha256:c2899d3c967302764bc1c1324556047fa665ade7c6176a28eec7a7ada2dd0d71"
     }
   ],
   "intents": {
-    "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR": {
+    "intent:change_01M7YH0NASVKZK93T7RK1ER7A0": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "docs/conformance",
-        "assets/schemas",
-        "tests/interop_conformance.rs",
-        "tests/fixtures"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+      "id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "test: finish independent portable read-contract falsifiers #870 #871 #1733\n\nAudit existing public read-only profile, closed corrections and active owners; specify normative independently consumable read semantics before runtime changes; actual adversarial raw-input and import-without-authority controls plus lawful read recovery; no new proof registry or policy interpreter. Delivery uses exact-head GitHub Actions per user; all Buildkite excluded. Retain unsupported domains and whole issue acceptance.",
-      "refined_intent": "test: finish independent portable read-contract falsifiers #870 #871 #1733\n\nAudit existing public read-only profile, closed corrections and active owners; specify normative independently consumable read semantics before runtime changes; actual adversarial raw-input and import-without-authority controls plus lawful read recovery; no new proof registry or policy interpreter. Delivery uses exact-head GitHub Actions per user; all Buildkite excluded. Retain unsupported domains and whole issue acceptance.",
+      "raw_intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "refined_intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -1006,375 +918,197 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish a versioned transport-neutral contract over the existing read-only projection meanings, strict raw-byte vectors and one standalone Python consumer independent of Decapod code and storage. Compare decisions and reason classes with actual CLI execution. Imported claims remain caller-supplied and cannot grant proof, approval, custody or mutation. First reproduce any present decoder disagreement, then correct the independent consumer and protect legitimate Unicode/optional semantics. Preserve unsupported domains explicitly; this does not close authenticated observed conformance or the whole campaign. Source verification runs through GitHub Actions as expressly authorized; ignore all Buildkite.",
+      "intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
       "phases": [],
       "proof_hooks": [
-        "All22 raw vectors execute through actual CLI and independent Python; negative reasons and positive projection responses required"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
-          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
+          "reason": "No product intent, component topology, runtime security boundary, or operational contract outside VALIDATION.md and INTERFACES.md changed for #1892; refreshed generated projections only.",
+          "reviewed_code_fingerprint": "807b75f205991cfd12908ccdbd4fd6c6a51bf574eb86edc69f0a9b06452ce122",
           "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
-          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
-          "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
+          "reason": "Documented SAFE_BLOCKER_LABELS/SAFE_VALIDATION_SCOPES additions, wrapper peeling, stderr advisory filtering, and actionable checkpoint remediation for #1892.",
+          "reviewed_code_fingerprint": "807b75f205991cfd12908ccdbd4fd6c6a51bf574eb86edc69f0a9b06452ce122",
+          "spec_material_hash": "937591303d30ce71df3eef6cc82e0040a81a0acc5187ef9027bdef5f5d2d885a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
-          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
+          "reason": "No product intent, component topology, runtime security boundary, or operational contract outside VALIDATION.md and INTERFACES.md changed for #1892; refreshed generated projections only.",
+          "reviewed_code_fingerprint": "807b75f205991cfd12908ccdbd4fd6c6a51bf574eb86edc69f0a9b06452ce122",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Encoding-plane differential correction and pinned portable vectors #1733",
+      "title": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
       "todo_ids": [
-        "test_01m7w2bfayzzk8vm"
+        "bugs_01m7ygp2vgwy63ge"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795241729Z"
+      "updated_at": "1795249338Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:21cb67d68b30d55064b5db5325ecd1161cffa13565dc0196731f477673dc2ca5",
+      "artifact_hash": "sha256:3b0ac0a9886efec1ca960260fca51e649b51e887c78c181edad8a53f6443e75a",
       "checks": [
         {
-          "name": "accepted-contract-cli-fixture",
-          "status": "failed"
-        },
-        {
-          "name": "accepted-observer-integration",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
-          "name": "combined-candidate-formatting",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "native-generated-manifest-recovery",
+          "name": "cargo_test_cli_contract_enforcement",
           "status": "passed"
         },
         {
-          "name": "previous-downgrade-fixture-recovery",
+          "name": "cargo_test_lib_task_journal",
           "status": "passed"
         },
         {
-          "name": "previous-full-cli",
-          "status": "failed"
-        },
-        {
-          "name": "released-nesting-boundary",
+          "name": "cargo_test_lib_validation_history",
           "status": "passed"
         },
         {
-          "name": "released-unpaired-surrogate-differential",
-          "status": "failed"
+          "name": "cargo_test_lib_verify",
+          "status": "passed"
         },
         {
-          "name": "supported_version_identity",
+          "name": "cargo_test_lib_workunit",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_workunit_verified_proof_1660",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verify",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "detail": "trajectory:branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "event_id": "event:8",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
-          },
-          {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "event_id": "event:9",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 9
-          },
-          {
-            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "event_id": "event:10",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
-            "kind": "trajectory_step_recorded",
-            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 10,
-        "schema_version": "1.0.0",
+        "next_sequence": 4,
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
+          "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03": {
             "evidence_only": true,
-            "id": "branch_01M7W2EJ9TMH2SN63B74BWTEDV",
-            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "id": "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verify",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "tests/fixtures/interop_strict_json.py",
-                  "src/decapod/core/json.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "tests/interop_conformance.rs",
-                  "tests/fixtures/interop_strict_json.py",
-                  "tests/fixtures/interop_json_vectors.v1.json",
-                  "assets/schemas/interop-json-vectors.schema.json",
-                  "docs/conformance/json-v1.md",
-                  ".config/build/decapod.BUILD.bzl",
-                  "/private/tmp/attack-gaps-interop-surrogate-before.json",
-                  "/private/tmp/attack-gaps-interop-depth-before.json"
+                  "src/decapod/plugins/verify.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/trajectory/execution.rs",
+                  "docs/agent/error-recovery.md",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)"
                 ],
                 "proof_refs": [
-                  "released-unpaired-surrogate-differential",
-                  "released-nesting-boundary"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "cargo_test_lib_verify",
+                  "cargo_test_lib_workunit",
+                  "cargo_test_lib_task_journal",
+                  "cargo_test_lib_validation_history",
+                  "cargo_test_cli_contract_enforcement",
+                  "cargo_test_workunit_verified_proof_1660"
                 ],
                 "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "https://github.com/DecapodLabs/decapod/pull/1863"
-                ],
-                "proof_refs": [
-                  "accepted-observer-integration",
-                  "native-generated-manifest-recovery"
-                ],
-                "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": [
-                  "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "src/decapod/cli.rs",
-                  "tests/interop_conformance.rs",
-                  "/private/tmp/attack-gaps-controller154-install.json"
-                ],
-                "proof_refs": [
-                  "supported_version_identity"
-                ],
-                "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 6,
-                "validation_findings": [
-                  "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod",
-                  ".decapod/managed/specs/.manifest.json",
-                  "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  "tests/consumer_readiness.rs",
-                  "tests/common/consumer_readiness_fixture.rs",
-                  "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529"
-                ],
-                "proof_refs": [
-                  "accepted-contract-cli-fixture"
-                ],
-                "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo fmt --all -- --check",
-                "custody_event_id": "event:9",
-                "observations": [
-                  "tests/common/consumer_readiness_fixture.rs",
-                  "tests/consumer_readiness.rs"
-                ],
-                "proof_refs": [
-                  "combined-candidate-formatting"
-                ],
-                "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/consumer_readiness.rs",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 9,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:10",
-                "observations": [
-                  "https://github.com/DecapodLabs/decapod/actions/runs/44830327164/job/136614841197"
-                ],
-                "proof_refs": [
-                  "previous-downgrade-fixture-recovery",
-                  "previous-full-cli"
-                ],
-                "scope": [
-                  "assets/schemas",
-                  "docs/conformance",
-                  "tests/consumer_readiness.rs",
-                  "tests/fixtures",
-                  "tests/interop_conformance.rs"
-                ],
-                "sequence": 10,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo fmt --all -- --check"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "/private/tmp/attack-gaps-controller154-install.json",
-        "/private/tmp/attack-gaps-interop-depth-before.json",
-        "/private/tmp/attack-gaps-interop-surrogate-before.json",
-        "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529",
-        "https://github.com/DecapodLabs/decapod/actions/runs/44830327164/job/136614841197",
-        "https://github.com/DecapodLabs/decapod/pull/1863"
+        "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)"
       ],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "src/decapod/cli.rs",
-        "src/decapod/core/json.rs",
-        "tests/common/consumer_readiness_fixture.rs",
-        "tests/consumer_readiness.rs",
-        "tests/fixtures/interop_strict_json.py"
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/core/validation_history.rs",
+        "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+      "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/managed/Dockerfile.decapod",
-        ".decapod/managed/specs/.manifest.json",
-        "assets/schemas/interop-json-vectors.schema.json",
-        "docs/conformance/json-v1.md",
-        "tests/consumer_readiness.rs",
-        "tests/fixtures/interop_json_vectors.v1.json",
-        "tests/fixtures/interop_strict_json.py",
-        "tests/interop_conformance.rs"
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/error-recovery.md",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/trajectory/execution.rs",
+        "src/decapod/plugins/verify.rs",
+        "tests/unit/core/workunit_journal_tests.rs",
+        "tests/unit/plugins/verify_tests.rs"
       ],
       "next_transitions": [
-        "Push exact v0.156.0-based candidate for complete GitHub Actions runs and required review",
         "Refine plan and declare falsifiable checks",
-        "Remove duplicate fixture commit and verify the same downgrade refusal on the combined candidate",
-        "Verify the combined candidate on the accepted approval-verification base"
+        "Verify checkpoints, material-specs, project-check, push, PR, GHA green, merge"
       ],
       "repo_scope": [
-        "assets/schemas",
-        "docs/conformance",
-        "tests/consumer_readiness.rs",
-        "tests/fixtures",
-        "tests/interop_conformance.rs"
+        "root"
       ],
-      "run_id": "branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+      "run_id": "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m7w2bfayzzk8vm",
+      "task_id": "bugs_01m7ygp2vgwy63ge",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions.",
-        "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
-        "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

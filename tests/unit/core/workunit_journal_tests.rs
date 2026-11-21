@@ -677,6 +677,89 @@ fn resume_fences_changed_authoritative_task_lease() {
 }
 
 #[test]
+fn lease_renewal_exposes_custody_subcode_and_workunit_checkpoint_refreshes_without_changing_head() {
+    let root = accepted_execution_fixture();
+    let head_before = String::from_utf8(
+        std::process::Command::new("git")
+            .current_dir(root.path())
+            .args(["rev-parse", "HEAD"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    let data = root.path().join(".decapod/data");
+    // Uncheckpointed completed sibling task must not affect `task_test`'s binding
+    // and must retain its original completion state across active checkpoint refresh.
+    let conn = db::db_connect(&crate::core::todo::todo_db_path(&data).to_string_lossy()).unwrap();
+    conn.execute(
+        "INSERT INTO tasks(id,hash,title,status,created_at,updated_at,completed_at,dir_path,scope,intent_anchor,revision)
+         VALUES('secu_old','old001','Old completed task','done','1Z','2Z','2026-01-01T00:00:00Z',?1,'repo','intent:old',3)",
+        db::params![root.path().to_string_lossy().as_ref()],
+    )
+    .unwrap();
+    drop(conn);
+
+    checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(1)).unwrap();
+    let renewed = crate::core::todo::renew_claim_lease(
+        &data,
+        "task_test",
+        &crate::current_agent_id(),
+        Some(3600),
+    )
+    .unwrap();
+    assert_eq!(renewed["status"], "ok");
+
+    let resume_err = resume_workunit(root.path(), "task_test", "resume-stale", Some(2))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        resume_err.contains("EXECUTION_STATE_CHANGED"),
+        "{resume_err}"
+    );
+    assert!(
+        resume_err.contains("EXECUTION_TASK_CUSTODY_CHANGED"),
+        "{resume_err}"
+    );
+    assert!(
+        resume_err.contains("decapod govern workunit checkpoint"),
+        "{resume_err}"
+    );
+
+    let refreshed =
+        checkpoint_workunit(root.path(), "task_test", "refresh-after-renew", Some(2)).unwrap();
+    assert!(refreshed.resumable);
+    resume_workunit(root.path(), "task_test", "resume-fresh", Some(3)).unwrap();
+    assert!(
+        capture_validation_subject(root.path(), "task_test")
+            .unwrap()
+            .is_some()
+    );
+
+    let head_after = String::from_utf8(
+        std::process::Command::new("git")
+            .current_dir(root.path())
+            .args(["rev-parse", "HEAD"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    assert_eq!(head_after, head_before);
+
+    let conn = db::db_connect(&crate::core::todo::todo_db_path(&data).to_string_lossy()).unwrap();
+    let (old_status, old_completed_at): (String, Option<String>) = conn
+        .query_row(
+            "SELECT status, completed_at FROM tasks WHERE id = 'secu_old'",
+            [],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap();
+    assert_eq!(old_status, "done");
+    assert_eq!(old_completed_at.as_deref(), Some("2026-01-01T00:00:00Z"));
+}
+
+#[test]
 fn newly_failed_declaration_stays_claimed_without_authoritative_proof() {
     let root = accepted_execution_fixture();
     set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
