@@ -240,6 +240,11 @@ pub fn release_authoring_binding(
     }
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
+        let main_root =
+            crate::core::workspace::get_main_repo_root(root).unwrap_or_else(|_| root.to_path_buf());
+        if let Ok(store) = crate::core::cloud_workspace::CloudCustodyStore::machine() {
+            let _ = store.remove(&main_root, Path::new(worktree_id));
+        }
         return Ok(false);
     }
     let db_path = todo_db_path(root);
@@ -373,7 +378,12 @@ pub fn check_authoring(
 ) -> Result<(), error::DecapodError> {
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
-        return Err(error::DecapodError::NotImplemented("AUTHORING_PROFILE_UNSUPPORTED: cloud tasks/events do not support verified host checkout bindings; no local shadow or fallback".into()));
+        let main_root = crate::core::workspace::get_main_repo_root(checkout)
+            .or_else(|_| crate::core::workspace::get_main_repo_root(root))
+            .unwrap_or_else(|_| root.to_path_buf());
+        return crate::core::cloud_workspace::check_cloud_authoring(
+            &main_root, checkout, actor, bind,
+        );
     }
     if is_missing_or_unknown_actor(actor) {
         return Err(authoring_actor_required_error());

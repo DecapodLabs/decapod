@@ -1565,6 +1565,74 @@ fn percent_encode(value: &str) -> String {
     encoded
 }
 
+/// Redacted, bounded deprecation/sunset/diagnostic warning surfaced from
+/// `Decapod-Cloud-*`, `Sunset`, or `Deprecation` HTTP response headers.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CloudMetadataWarning {
+    pub code: String,
+    pub header: String,
+    pub value: String,
+    pub message: String,
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub fn warnings_from_cloud_metadata(
+    metadata: &dactyl_db::CloudResponseMetadata,
+) -> Vec<CloudMetadataWarning> {
+    const MAX_WARNINGS: usize = 8;
+    let mut pairs: Vec<(&str, &str)> = Vec::new();
+    if let Some(sunset) = metadata.sunset() {
+        pairs.push(("sunset", sunset));
+    }
+    if let Some(deprecation) = metadata.deprecation() {
+        pairs.push(("deprecation", deprecation));
+    }
+    for (name, value) in metadata.cloud_headers() {
+        pairs.push((name.as_str(), value.as_str()));
+    }
+    let parsed = parse_cloud_diagnostic_headers(pairs);
+    let mut warnings = Vec::new();
+    if let Some(deprecation) = parsed.deprecation {
+        warnings.push(CloudMetadataWarning {
+            code: "endpoint_deprecated".to_string(),
+            header: "Deprecation".to_string(),
+            value: deprecation.clone(),
+            message: format!(
+                "Cloud endpoint reported deprecation ({deprecation}); upgrade client or check transitional compatibility notice."
+            ),
+        });
+    }
+    if let Some(sunset) = parsed.sunset {
+        warnings.push(CloudMetadataWarning {
+            code: "endpoint_sunset".to_string(),
+            header: "Sunset".to_string(),
+            value: sunset.clone(),
+            message: format!(
+                "Cloud endpoint reported sunset ({sunset}); migrate before compatibility removal."
+            ),
+        });
+    }
+    for (name, raw_value) in metadata.cloud_headers() {
+        if warnings.len() >= MAX_WARNINGS {
+            break;
+        }
+        let lower = name.trim().to_ascii_lowercase();
+        if matches!(
+            lower.as_str(),
+            "decapod-cloud-notice" | "decapod-cloud-warning" | "decapod-cloud-action"
+        ) && let Some(clean) = sanitize_diagnostic_header_value(raw_value)
+        {
+            warnings.push(CloudMetadataWarning {
+                code: "cloud_notice".to_string(),
+                header: name.clone(),
+                value: clean.clone(),
+                message: format!("Cloud notice ({name}): {clean}"),
+            });
+        }
+    }
+    warnings
+}
+
 #[cfg(test)]
 #[path = "../../../tests/unit/core/propodus_tests.rs"]
 mod tests;

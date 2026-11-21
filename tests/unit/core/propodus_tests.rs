@@ -757,3 +757,64 @@ fn decapod_cloud_diagnostic_headers_are_parsed_bounded_and_redacted() {
     assert!(rendered.contains("req-403"));
     assert!(!rendered.contains("Propodus"));
 }
+
+#[cfg(feature = "supabase-cloud")]
+#[test]
+fn cloud_response_metadata_deprecation_and_sunset_warnings_are_bounded() {
+    let meta = dactyl_db::CloudResponseMetadata::default();
+    let empty = warnings_from_cloud_metadata(&meta);
+    assert!(empty.is_empty());
+
+    // Without mutating private fields of CloudResponseMetadata, verify direct
+    // deprecation/sunset header parsing integration produces bounded messages.
+    let parsed = parse_cloud_diagnostic_headers([
+        ("Deprecation", "true"),
+        ("Sunset", "2027-06-01T00:00:00Z"),
+        ("Decapod-Cloud-Deprecation", "v0-compat"),
+        ("Decapod-Cloud-Notice", "Bearer should-redact"),
+    ]);
+    assert_eq!(parsed.deprecation.as_deref(), Some("v0-compat"));
+    assert_eq!(parsed.sunset.as_deref(), Some("2027-06-01T00:00:00Z"));
+}
+
+#[cfg(feature = "supabase-cloud")]
+#[test]
+fn cloud_client_transport_error_maps_quota_overage_and_provider_disabled_codes() {
+    use crate::core::cloud_client::transport_error;
+    use crate::core::error::{CloudAuthStatus, DecapodError};
+    use dactyl_db::{AdapterErrorKind, DactylError};
+
+    let cases = [
+        (
+            AdapterErrorKind::RateLimited,
+            "quota_exceeded",
+            CloudAuthStatus::QuotaExceeded,
+        ),
+        (
+            AdapterErrorKind::RateLimited,
+            "overage_cap_exhausted",
+            CloudAuthStatus::OverageCapExhausted,
+        ),
+        (
+            AdapterErrorKind::Authorization,
+            "provider_disabled",
+            CloudAuthStatus::ProviderDisabled,
+        ),
+    ];
+
+    for (kind, code, expected_status) in cases {
+        let err = transport_error(DactylError::Adapter {
+            kind,
+            code: Some(code.to_string()),
+            message: "secret internal detail".to_string(),
+        });
+        match err {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, expected_status);
+                assert!(!diag.message.contains("secret internal detail"));
+                assert!(!diag.next_action.contains("secret internal detail"));
+            }
+            other => panic!("expected CloudAuth for {code}, got {other:?}"),
+        }
+    }
+}

@@ -29,11 +29,14 @@ pub enum CloudAuthStatus {
     KeyLost,
     MfaRequired,
     PaymentPending,
+    QuotaExceeded,
+    OverageCapExhausted,
     EntitlementDenied,
     UnauthorizedIdentity,
     RepositoryDenied,
     Offline,
     ProviderUnavailable,
+    ProviderDisabled,
     NonInteractive,
 }
 

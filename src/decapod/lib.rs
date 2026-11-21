@@ -346,10 +346,20 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 }
             }
         }
-        CloudCommand::Status => {
+        CloudCommand::Status { live } => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
             let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
-            let status = core::cloud_client::status(&project_root, &identity)?;
+            let result = if live {
+                core::cloud_client::status_live(&project_root, &identity)
+            } else {
+                core::cloud_client::status(&project_root, &identity)
+            };
+            let status = result.inspect_err(|error| {
+                if let error::DecapodError::CloudAuth(diagnostic) = error {
+                    print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                }
+            })?;
+            emit_cloud_warnings_if_text(&status, &format);
             println!(
                 "{}",
                 serde_json::to_string_pretty(&status).map_err(std::io::Error::other)?
@@ -373,11 +383,28 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             }
             Ok(())
         }
-        CloudCommand::Revoke { all, device_id } => {
+        CloudCommand::Revoke {
+            all,
+            device_id,
+            session_logout,
+            local_only,
+        } => {
             let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
             let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
-            let report =
-                core::cloud_client::revoke(&project_root, &identity, all, device_id.as_deref())?;
+            let report = core::cloud_client::revoke(
+                &project_root,
+                &identity,
+                all,
+                device_id.as_deref(),
+                session_logout,
+                local_only,
+            )
+            .inspect_err(|error| {
+                if let error::DecapodError::CloudAuth(diagnostic) = error {
+                    print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                }
+            })?;
+            emit_cloud_warnings_if_text(&report, &format);
             if format == "json" {
                 println!(
                     "{}",
@@ -385,11 +412,62 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 );
             } else {
                 println!(
-                    "Revoked device key and cleared saved cloud credentials for {}.",
+                    "Completed cloud revoke ({}) for {}.",
+                    report["operation"].as_str().unwrap_or("revoked"),
                     identity.canonical_name
                 );
             }
             Ok(())
+        }
+        CloudCommand::Devices { live } => {
+            let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+            let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+            let report = core::cloud_client::devices(&project_root, &identity, live).inspect_err(
+                |error| {
+                    if let error::DecapodError::CloudAuth(diagnostic) = error {
+                        print_cloud_auth_json_if_needed(diagnostic, Some(&format));
+                    }
+                },
+            )?;
+            emit_cloud_warnings_if_text(&report, &format);
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+                );
+            } else {
+                let count = report["devices"].as_array().map_or(0, Vec::len);
+                println!(
+                    "Enrolled cloud device keys for {} ({count} local record(s); server_readiness={}).",
+                    identity.canonical_name,
+                    report["server_readiness"].as_str().unwrap_or("not_checked"),
+                );
+                if let Some(items) = report["devices"].as_array() {
+                    for dev in items {
+                        println!(
+                            "  jkt={} backend={} active={} device_key_id={}",
+                            dev["jkt"].as_str().unwrap_or("-"),
+                            dev["backend"].as_str().unwrap_or("-"),
+                            dev["active"].as_bool().unwrap_or(false),
+                            dev["device_key_id"].as_str().unwrap_or("unrecorded"),
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
+    }
+}
+
+fn emit_cloud_warnings_if_text(report: &serde_json::Value, format: &str) {
+    if format == "json" {
+        return;
+    }
+    if let Some(warnings) = report.get("warnings").and_then(|v| v.as_array()) {
+        for warning in warnings {
+            if let Some(msg) = warning.get("message").and_then(|v| v.as_str()) {
+                eprintln!("warning: {msg}");
+            }
         }
     }
 }
@@ -2415,7 +2493,10 @@ fn run_init_apply(
         let _ = scaffold::blend_overrides(&target_dir, init_with.dry_run)?;
         // Sync override checksums
         let _ = docs_cli::sync_override_checksum(&target_dir, false, init_with.dry_run)?;
-        if !init_with.dry_run {
+        if !init_with.dry_run
+            && !init_with.backend.is_cloud()
+            && !core::cloud_workspace::is_cloud_project(&target_dir)
+        {
             // Existing projects upgrade autonomously on the same path as normal
             // governed commands. Legacy event files remain recovery inputs while
             // every runtime reader observes the reconciled canonical datastore.
@@ -3727,11 +3808,52 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         Command::Activate
         | Command::Capabilities(_)
         | Command::Constitution(_)
-        | Command::Docs(_) => true,
-        Command::Workspace(ws_cli) => matches!(ws_cli.command, WorkspaceCommand::Status),
+        | Command::Docs(_)
+        | Command::Eval(_)
+        | Command::Validate(_)
+        | Command::Session(_) => true,
+        Command::Workspace(ws_cli) => matches!(
+            ws_cli.command,
+            WorkspaceCommand::Status
+                | WorkspaceCommand::Ensure { .. }
+                | WorkspaceCommand::Diagnose { .. }
+                | WorkspaceCommand::Prune { .. }
+        ),
+        Command::Infer(infer_cli) => matches!(
+            infer_cli.command,
+            InferCommand::Orientation(_) | InferCommand::Boundary(_)
+        ),
+        Command::Govern(govern_cli) => matches!(
+            govern_cli.command,
+            GovernCommand::Plan(_)
+                | GovernCommand::Trajectory(_)
+                | GovernCommand::Artifacts(_)
+                | GovernCommand::ProjectCheck { .. }
+        ),
         Command::Rpc(rpc_cli) => matches!(
             rpc_cli.op.as_deref(),
-            Some("specs.refresh" | "intent.reconcile")
+            Some(
+                "agent.init"
+                    | "workspace.status"
+                    | "workspace.ensure"
+                    | "validate.run"
+                    | "specs.refresh"
+                    | "intent.reconcile"
+                    | "context.resolve"
+                    | "context.scope"
+                    | "context.capsule.query"
+                    | "context.bindings"
+                    | "constitution.get"
+                    | "schema.get"
+                    | "state.resolve"
+                    | "state.diff"
+                    | "standards.resolve"
+                    | "mentor.obligations"
+                    | "assurance.evaluate"
+                    | "interop.manifest"
+                    | "interop.negotiate"
+                    | "interop.project"
+            )
         ),
         _ => false,
     }
@@ -4554,8 +4676,14 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let store_root = find_governance_root(&project_root)
         .join(".decapod")
         .join("data");
-    core::fs_permissions::ensure_storage_dir(&store_root).map_err(error::DecapodError::IoError)?;
-    let _ = cleanup_expired_sessions(&project_root, Some(&store_root))?;
+    let is_cloud = core::cloud_workspace::is_cloud_project(&project_root);
+    if is_cloud {
+        let _ = cleanup_expired_sessions(&project_root, None)?;
+    } else {
+        core::fs_permissions::ensure_storage_dir(&store_root)
+            .map_err(error::DecapodError::IoError)?;
+        let _ = cleanup_expired_sessions(&project_root, Some(&store_root))?;
+    }
 
     let agent_id = current_agent_id();
     let session = read_agent_session(&project_root, &agent_id)?;
@@ -8406,22 +8534,27 @@ fn run_validation_worker_command(validate_cli: ValidateCli) -> Result<(), error:
         },
         root: store_root,
     };
-    if let Err(error) = validation_worker_lock_preflight(&store) {
-        println!(
-            "{}",
-            serde_json::json!({"status": "error", "error": error.to_string()})
-        );
-        return Ok(());
-    }
-    if let Err(error) = migration::check_and_migrate_with_backup_report(
-        &governance_root.join(".decapod"),
-        subsystems::initialize_all_dbs,
-    ) {
-        println!(
-            "{}",
-            serde_json::json!({"status": "error", "error": error.to_string()})
-        );
-        return Ok(());
+    let is_cloud = core::broker::DbBroker::new(&store.root).is_cloud()
+        || core::cloud_workspace::is_cloud_project(&workspace_root)
+        || core::cloud_workspace::is_cloud_project(&governance_root);
+    if !is_cloud {
+        if let Err(error) = validation_worker_lock_preflight(&store) {
+            println!(
+                "{}",
+                serde_json::json!({"status": "error", "error": error.to_string()})
+            );
+            return Ok(());
+        }
+        if let Err(error) = migration::check_and_migrate_with_backup_report(
+            &governance_root.join(".decapod"),
+            subsystems::initialize_all_dbs,
+        ) {
+            println!(
+                "{}",
+                serde_json::json!({"status": "error", "error": error.to_string()})
+            );
+            return Ok(());
+        }
     }
     let result = validate::run_validation(
         &store,
@@ -12007,7 +12140,9 @@ mod rpc_handlers {
         let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
 
         let agent_id = current_agent_id();
+        let is_cloud = core::cloud_workspace::is_cloud_project(ctx.project_root);
         if agent_id != "unknown"
+            && !is_cloud
             && let Ok(mut tasks) = todo::list_tasks(
                 &ctx.store.root,
                 Some("open".to_string()),

@@ -1042,26 +1042,49 @@ pub fn ensure_execute_ready(
         ));
     }
 
-    let db_path = crate::core::todo::todo_db_path(input.store_root);
-    let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
     let mut found = false;
-    for todo_id in &candidate_todo_ids {
-        let exists: Option<i64> = conn
-            .query_row(
-                "SELECT 1 FROM tasks WHERE id = ?1 LIMIT 1",
-                crate::core::db::params![todo_id],
-                |row| row.get(0),
-            )
-            .optional()
-            .map_err(error::DecapodError::StorageError)?;
-        if exists.is_some() {
-            found = true;
-            break;
+    if crate::core::broker::DbBroker::new(input.store_root).is_cloud()
+        || crate::core::cloud_workspace::is_cloud_project(input.project_root)
+    {
+        if crate::core::cloud_workspace::is_container_relay_active() {
+            let relay = crate::core::cloud_workspace::RelayProofControlTransport::from_env()?;
+            found = candidate_todo_ids.iter().any(|id| id == relay.task_id());
+        } else {
+            let main_root = crate::core::workspace::get_main_repo_root(input.project_root)
+                .unwrap_or_else(|_| input.project_root.to_path_buf());
+            let identity = crate::core::repo_identity::resolve_repository_identity(&main_root)?;
+            for todo_id in &candidate_todo_ids {
+                if crate::core::cloud_workspace::fetch_hosted_task_blocking(
+                    &main_root, &identity, todo_id,
+                )?
+                .is_some()
+                {
+                    found = true;
+                    break;
+                }
+            }
         }
+    } else {
+        let db_path = crate::core::todo::todo_db_path(input.store_root);
+        let conn = crate::core::db::db_connect(&db_path.to_string_lossy())?;
+        for todo_id in &candidate_todo_ids {
+            let exists: Option<i64> = conn
+                .query_row(
+                    "SELECT 1 FROM tasks WHERE id = ?1 LIMIT 1",
+                    crate::core::db::params![todo_id],
+                    |row| row.get(0),
+                )
+                .optional()
+                .map_err(error::DecapodError::StorageError)?;
+            if exists.is_some() {
+                found = true;
+                break;
+            }
+        }
+        // The task probe is complete; do not retain its storage lease while
+        // checking plan artifacts and invoking Git for scope evidence.
+        drop(conn);
     }
-    // The task probe is complete; do not retain its storage lease while
-    // checking plan artifacts and invoking Git for scope evidence.
-    drop(conn);
     if !found {
         // A task lookup cannot determine whether the agent still holds the
         // user's request. Keep the coordination gate closed, but do not turn
@@ -1515,6 +1538,9 @@ pub fn check_phase_entry_gates(
 pub fn collect_unverified_done_todos(
     store_root: &Path,
 ) -> Result<Vec<String>, error::DecapodError> {
+    if crate::core::broker::DbBroker::new(store_root).is_cloud() {
+        return Ok(Vec::new());
+    }
     let db_path = crate::core::todo::todo_db_path(store_root);
     if !db_path.exists() {
         return Ok(Vec::new());
@@ -1568,6 +1594,9 @@ pub fn collect_unverified_done_todos(
 }
 
 pub fn count_done_todos(store_root: &Path) -> Result<usize, error::DecapodError> {
+    if crate::core::broker::DbBroker::new(store_root).is_cloud() {
+        return Ok(0);
+    }
     let db_path = crate::core::todo::todo_db_path(store_root);
     if !db_path.exists() {
         return Ok(0);

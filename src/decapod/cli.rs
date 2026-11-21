@@ -1038,18 +1038,34 @@ pub(crate) enum CloudCommand {
         #[clap(long)]
         restart: bool,
     },
-    /// Inspect private managed-session state without network I/O or a live readiness claim.
-    Status,
+    /// Inspect private managed-session and spend-cap state.
+    Status {
+        /// Query live included usage and spend-cap policy using the active managed session.
+        #[clap(long)]
+        live: bool,
+    },
     /// Clear the local repository-scoped cloud session without exposing tokens.
     Logout,
-    /// Revoke the enrolled device key and clear local cloud credentials for this repository.
+    /// Revoke the enrolled device key or DPoP session and clear local cloud credentials.
     Revoke {
-        /// Clear saved sessions across all repositories for this device store.
+        /// Clear or revoke all enrolled devices across this repository/device store.
         #[clap(long)]
         all: bool,
-        /// Optional device key thumbprint (`jkt`) or device ID to target.
+        /// Optional server device key ID or thumbprint (`jkt`) to target.
         #[clap(long)]
         device_id: Option<String>,
+        /// Perform a DPoP-signed session logout (`action=logout`) with the enrolled device key signer.
+        #[clap(long)]
+        session_logout: bool,
+        /// Clear local device key and saved session state without contacting the cloud service.
+        #[clap(long)]
+        local_only: bool,
+    },
+    /// Inspect enrolled cloud device custody metadata without exposing private keys.
+    Devices {
+        /// Verify live cloud readiness and inspect server deprecation/sunset headers.
+        #[clap(long)]
+        live: bool,
     },
     /// List managed projects by name, with numbered choices saved privately.
     Projects,

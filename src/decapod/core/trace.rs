@@ -114,6 +114,9 @@ pub fn redact(value: Value) -> Value {
 }
 
 pub fn append_trace(project_root: &Path, event: TraceEvent) -> Result<(), DecapodError> {
+    if crate::core::cloud_workspace::is_cloud_project(project_root) {
+        return Ok(());
+    }
     let redacted_event = TraceEvent {
         trace_id: event.trace_id,
         ts: event.ts,
@@ -131,6 +134,9 @@ pub fn append_trace(project_root: &Path, event: TraceEvent) -> Result<(), Decapo
 }
 
 pub fn get_last_traces(project_root: &Path, n: usize) -> Result<Vec<String>, DecapodError> {
+    if crate::core::cloud_workspace::is_cloud_project(project_root) {
+        return Ok(vec![]);
+    }
     let path = events::canonical_db_path(&project_root.join(".decapod/data"));
     if !path.exists() {
         return Ok(vec![]);

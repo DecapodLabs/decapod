@@ -366,8 +366,54 @@ pub struct HostContainerSignerServer {
     handle: Option<std::thread::JoinHandle<()>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ContainerRelayOperation {
+    DactylQuery,
+    DactylBatch,
+    ProofControlRead,
+    ProofControlWrite,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct ContainerRelayRequest {
+    pub kind: String,
+    pub invocation_id: String,
+    pub workspace_id: String,
+    pub project_id: String,
+    pub task_id: String,
+    pub custody_id: String,
+    pub operation: ContainerRelayOperation,
+    pub rpc_op: String,
+    pub payload: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ContainerRelayResponse {
+    pub ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub message: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub result: Option<serde_json::Value>,
+}
+
+pub trait ContainerCloudRelayHandler: Send + Sync {
+    fn handle_relay(&self, request: &ContainerRelayRequest) -> ContainerRelayResponse;
+}
+
 impl HostContainerSignerServer {
     pub fn bind(socket_path: &Path, policy: ContainerSignerPolicy) -> Result<Self, DecapodError> {
+        Self::bind_with_relay(socket_path, policy, None)
+    }
+
+    pub fn bind_with_relay(
+        socket_path: &Path,
+        policy: ContainerSignerPolicy,
+        relay: Option<Arc<dyn ContainerCloudRelayHandler>>,
+    ) -> Result<Self, DecapodError> {
         if let Some(parent) = socket_path.parent() {
             crate::core::fs_permissions::ensure_private_dir(parent)
                 .map_err(DecapodError::IoError)?;
@@ -391,7 +437,7 @@ impl HostContainerSignerServer {
             while !stop_flag.load(Ordering::SeqCst) {
                 match listener.accept() {
                     Ok((stream, _)) => {
-                        let _ = handle_signer_connection(stream, &policy);
+                        let _ = handle_signer_connection(stream, &policy, relay.as_deref());
                     }
                     Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
                         std::thread::sleep(std::time::Duration::from_millis(10));
@@ -427,38 +473,67 @@ impl Drop for HostContainerSignerServer {
 fn handle_signer_connection(
     mut stream: UnixStream,
     policy: &ContainerSignerPolicy,
+    relay: Option<&dyn ContainerCloudRelayHandler>,
 ) -> std::io::Result<()> {
     let mut reader = BufReader::new(stream.try_clone()?);
     let mut line = String::new();
     reader.read_line(&mut line)?;
-    let now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs() as i64)
-        .unwrap_or(0);
-    let response = match serde_json::from_str::<ContainerSignRequest>(line.trim()) {
-        Ok(req) => policy.sign_request(&req, now, None),
-        Err(err) => ContainerSignResponse {
-            ok: false,
-            code: Some("CONTAINER_SIGNER_INVALID_REQUEST".to_string()),
-            message: Some(format!("malformed signing request: {err}")),
-            dpop_proof: None,
-            jkt: None,
-            ath: None,
-        },
+    let trimmed = line.trim();
+    let encoded = if let Ok(raw) = serde_json::from_str::<serde_json::Value>(trimmed)
+        && raw.get("kind").and_then(serde_json::Value::as_str) == Some("cloud_relay")
+    {
+        let response = match serde_json::from_value::<ContainerRelayRequest>(raw) {
+            Ok(req) => match relay {
+                Some(handler) => handler.handle_relay(&req),
+                None => ContainerRelayResponse {
+                    ok: false,
+                    code: Some("CLOUD_CONTAINER_RELAY_UNAVAILABLE".to_string()),
+                    message: Some(
+                        "typed cloud host relay is not configured on this signer socket"
+                            .to_string(),
+                    ),
+                    result: None,
+                },
+            },
+            Err(err) => ContainerRelayResponse {
+                ok: false,
+                code: Some("CONTAINER_RELAY_INVALID_REQUEST".to_string()),
+                message: Some(format!("malformed relay request: {err}")),
+                result: None,
+            },
+        };
+        serde_json::to_string(&response).unwrap_or_default()
+    } else {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0);
+        let response = match serde_json::from_str::<ContainerSignRequest>(trimmed) {
+            Ok(req) => policy.sign_request(&req, now, None),
+            Err(err) => ContainerSignResponse {
+                ok: false,
+                code: Some("CONTAINER_SIGNER_INVALID_REQUEST".to_string()),
+                message: Some(format!("malformed signing request: {err}")),
+                dpop_proof: None,
+                jkt: None,
+                ath: None,
+            },
+        };
+        serde_json::to_string(&response).unwrap_or_default()
     };
-    let encoded = serde_json::to_string(&response).unwrap_or_default();
     stream.write_all(encoded.as_bytes())?;
     stream.write_all(b"\n")?;
     stream.flush()
 }
 
-pub fn request_signature_via_socket(
+fn send_socket_json_line<Req: Serialize, Resp: for<'de> Deserialize<'de>>(
     socket_path: &Path,
-    request: &ContainerSignRequest,
-) -> Result<ContainerSignResponse, DecapodError> {
+    request: &Req,
+    label: &str,
+) -> Result<Resp, DecapodError> {
     let mut stream = UnixStream::connect(socket_path).map_err(DecapodError::IoError)?;
     let encoded = serde_json::to_string(request).map_err(|e| {
-        DecapodError::ValidationError(format!("failed serializing signer request: {e}"))
+        DecapodError::ValidationError(format!("failed serializing {label} request: {e}"))
     })?;
     stream
         .write_all(encoded.as_bytes())
@@ -468,9 +543,22 @@ pub fn request_signature_via_socket(
     let mut reader = BufReader::new(stream);
     let mut line = String::new();
     reader.read_line(&mut line).map_err(DecapodError::IoError)?;
-    serde_json::from_str(line.trim()).map_err(|e| {
-        DecapodError::ValidationError(format!("invalid container signer response: {e}"))
-    })
+    serde_json::from_str(line.trim())
+        .map_err(|e| DecapodError::ValidationError(format!("invalid {label} response: {e}")))
+}
+
+pub fn request_signature_via_socket(
+    socket_path: &Path,
+    request: &ContainerSignRequest,
+) -> Result<ContainerSignResponse, DecapodError> {
+    send_socket_json_line(socket_path, request, "container signer")
+}
+
+pub fn request_relay_via_socket(
+    socket_path: &Path,
+    request: &ContainerRelayRequest,
+) -> Result<ContainerRelayResponse, DecapodError> {
+    send_socket_json_line(socket_path, request, "container cloud relay")
 }
 
 /// Strip raw bearer, refresh, and provider secrets from inherited container

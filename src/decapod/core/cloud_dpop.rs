@@ -294,6 +294,12 @@ impl DeviceKeyStore {
         &self.file_path
     }
 
+    #[cfg(test)]
+    pub(crate) fn with_os_keychain(mut self, allow: bool) -> Self {
+        self.allow_os_keychain = allow;
+        self
+    }
+
     pub fn load(&self) -> Result<Option<DeviceKeyMaterial>, DecapodError> {
         if self.allow_os_keychain
             && let Some(raw) = keychain_load(&self.scope_key)?
@@ -720,21 +726,308 @@ fn device_keys_root_dir(project_root: &Path) -> Result<PathBuf, DecapodError> {
     Ok(dir)
 }
 
+pub(crate) fn os_keychain_platform_supported() -> bool {
+    cfg!(any(
+        target_os = "macos",
+        target_os = "linux",
+        target_os = "windows"
+    ))
+}
+
+pub(crate) fn keystore_policy_label() -> &'static str {
+    match std::env::var("DECAPOD_CLOUD_KEYSTORE").as_deref() {
+        Ok("file") => "file",
+        Ok("keychain") => "keychain",
+        _ => "auto",
+    }
+}
+
+pub(crate) fn os_keychain_available() -> bool {
+    #[cfg(test)]
+    if let Some(driver_avail) = test_keystore_available_override() {
+        return driver_avail;
+    }
+    #[cfg(target_os = "macos")]
+    {
+        true
+    }
+    #[cfg(target_os = "linux")]
+    {
+        linux_secret_service_available()
+    }
+    #[cfg(target_os = "windows")]
+    {
+        windows_credential_manager_available()
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+    {
+        false
+    }
+}
+
+#[cfg(any(target_os = "linux", target_os = "windows", test))]
+pub(crate) fn command_on_path(cmd: &str) -> Option<PathBuf> {
+    let path_var = std::env::var_os("PATH")?;
+    for dir in std::env::split_paths(&path_var) {
+        let candidate = dir.join(cmd);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub(crate) fn linux_secret_service_available_from(
+    dbus_session: Option<&str>,
+    secret_tool_path: Option<&Path>,
+) -> bool {
+    dbus_session.is_some_and(|v| !v.trim().is_empty()) && secret_tool_path.is_some()
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub(crate) fn secret_tool_lookup_args(scope_key: &str) -> Vec<String> {
+    vec![
+        "lookup".to_string(),
+        "service".to_string(),
+        KEYSTORE_SERVICE.to_string(),
+        "account".to_string(),
+        scope_key.to_string(),
+    ]
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub(crate) fn secret_tool_store_args(scope_key: &str) -> Vec<String> {
+    vec![
+        "store".to_string(),
+        "--label".to_string(),
+        format!("Decapod Cloud Device Key ({scope_key})"),
+        "service".to_string(),
+        KEYSTORE_SERVICE.to_string(),
+        "account".to_string(),
+        scope_key.to_string(),
+    ]
+}
+
+#[cfg(any(target_os = "linux", test))]
+pub(crate) fn secret_tool_clear_args(scope_key: &str) -> Vec<String> {
+    vec![
+        "clear".to_string(),
+        "service".to_string(),
+        KEYSTORE_SERVICE.to_string(),
+        "account".to_string(),
+        scope_key.to_string(),
+    ]
+}
+
+#[cfg(target_os = "linux")]
+fn linux_secret_service_available() -> bool {
+    let dbus = std::env::var("DBUS_SESSION_BUS_ADDRESS").ok();
+    let secret_tool = command_on_path("secret-tool");
+    linux_secret_service_available_from(dbus.as_deref(), secret_tool.as_deref())
+}
+
+#[cfg(any(target_os = "windows", test))]
+pub(crate) fn windows_credential_target(scope_key: &str) -> String {
+    format!("{KEYSTORE_SERVICE}/{scope_key}")
+}
+
+#[cfg(any(target_os = "windows", test))]
+pub(crate) fn windows_credential_manager_available_from(
+    powershell_path: Option<&Path>,
+    _session_name: Option<&str>,
+) -> bool {
+    powershell_path.is_some()
+}
+
+#[cfg(target_os = "windows")]
+fn windows_credential_manager_available() -> bool {
+    let ps = command_on_path("powershell.exe").or_else(|| command_on_path("powershell"));
+    let session = std::env::var("SESSIONNAME").ok();
+    windows_credential_manager_available_from(ps.as_deref(), session.as_deref())
+}
+
+#[cfg(test)]
+pub(crate) trait TestKeystoreDriver {
+    fn available(&self) -> bool;
+    fn load(&self, scope_key: &str) -> Result<Option<String>, DecapodError>;
+    fn store(&self, scope_key: &str, payload: &str) -> Result<(), DecapodError>;
+    fn delete(&self, scope_key: &str) -> Result<(), DecapodError>;
+}
+
+#[cfg(test)]
+thread_local! {
+    static TEST_KEYSTORE_DRIVER: std::cell::RefCell<Option<std::sync::Arc<dyn TestKeystoreDriver>>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(test)]
+pub(crate) struct TestKeystoreDriverGuard {
+    previous: Option<std::sync::Arc<dyn TestKeystoreDriver>>,
+}
+
+#[cfg(test)]
+impl Drop for TestKeystoreDriverGuard {
+    fn drop(&mut self) {
+        TEST_KEYSTORE_DRIVER.with(|cell| {
+            *cell.borrow_mut() = self.previous.take();
+        });
+    }
+}
+
+#[cfg(test)]
+pub(crate) fn install_test_keystore_driver(
+    driver: std::sync::Arc<dyn TestKeystoreDriver>,
+) -> TestKeystoreDriverGuard {
+    let previous = TEST_KEYSTORE_DRIVER.with(|cell| cell.borrow_mut().replace(driver));
+    TestKeystoreDriverGuard { previous }
+}
+
+#[cfg(test)]
+fn test_keystore_available_override() -> Option<bool> {
+    TEST_KEYSTORE_DRIVER.with(|cell| cell.borrow().as_ref().map(|driver| driver.available()))
+}
+
+#[cfg(test)]
+fn test_keystore_driver() -> Option<std::sync::Arc<dyn TestKeystoreDriver>> {
+    TEST_KEYSTORE_DRIVER.with(|cell| cell.borrow().clone())
+}
+
+/// Non-secret local device custody inventory record (never exposes private key material).
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Eq)]
+pub struct DeviceKeyInventory {
+    pub origin: String,
+    pub repository: String,
+    pub jkt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub device_key_id: Option<String>,
+    pub backend: String,
+    pub created_at: i64,
+    pub active: bool,
+    pub scope: String,
+    pub keystore_policy: String,
+    pub os_keychain_available: bool,
+}
+
+#[derive(Debug, Default, Clone, serde::Serialize, serde::Deserialize)]
+struct DeviceKeyRegistrationMeta {
+    version: u16,
+    jkt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    device_key_id: Option<String>,
+    updated_at: i64,
+}
+
+impl DeviceKeyStore {
+    fn registration_meta_path(&self) -> PathBuf {
+        self.file_path().with_extension("meta.json")
+    }
+
+    pub fn record_device_key_id(&self, jkt: &str, device_key_id: &str) -> Result<(), DecapodError> {
+        let trimmed = device_key_id.trim();
+        if trimmed.is_empty() {
+            return Ok(());
+        }
+        let path = self.registration_meta_path();
+        if let Some(parent) = path.parent() {
+            crate::core::fs_permissions::ensure_private_dir(parent)
+                .map_err(DecapodError::IoError)?;
+        }
+        let meta = DeviceKeyRegistrationMeta {
+            version: 1,
+            jkt: jkt.to_string(),
+            device_key_id: Some(trimmed.to_string()),
+            updated_at: current_unix_seconds(),
+        };
+        let bytes = serde_json::to_vec_pretty(&meta).map_err(|e| {
+            DecapodError::ValidationError(format!("failed serializing device key metadata: {e}"))
+        })?;
+        crate::core::fs_permissions::write_private(&path, bytes).map_err(DecapodError::IoError)
+    }
+
+    pub fn registered_device_key_id(&self, expected_jkt: &str) -> Option<String> {
+        let path = self.registration_meta_path();
+        let bytes = std::fs::read(path).ok()?;
+        let meta: DeviceKeyRegistrationMeta = serde_json::from_slice(&bytes).ok()?;
+        if meta.jkt == expected_jkt {
+            meta.device_key_id.filter(|v| !v.trim().is_empty())
+        } else {
+            None
+        }
+    }
+
+    pub fn clear_registered_device_key_id(&self) {
+        let _ = std::fs::remove_file(self.registration_meta_path());
+    }
+
+    pub fn inspect(
+        &self,
+        origin: &str,
+        repository: &str,
+    ) -> Result<Option<DeviceKeyInventory>, DecapodError> {
+        let Some(key) = self.load()? else {
+            return Ok(None);
+        };
+        let device_key_id = self.registered_device_key_id(&key.jkt);
+        Ok(Some(DeviceKeyInventory {
+            origin: origin.to_string(),
+            repository: repository.to_string(),
+            jkt: key.jkt.clone(),
+            device_key_id,
+            backend: key.backend.as_str().to_string(),
+            created_at: key.created_at,
+            active: true,
+            scope: "repository".to_string(),
+            keystore_policy: keystore_policy_label().to_string(),
+            os_keychain_available: os_keychain_available(),
+        }))
+    }
+}
+
 fn should_use_os_keychain(base_dir: &Path) -> bool {
     match std::env::var("DECAPOD_CLOUD_KEYSTORE").as_deref() {
         Ok("file") => return false,
-        Ok("keychain") => return cfg!(target_os = "macos"),
+        Ok("keychain") => return os_keychain_platform_supported(),
         _ => {}
+    }
+    #[cfg(test)]
+    if let Some(driver_avail) = test_keystore_available_override() {
+        let _ = base_dir;
+        return driver_avail;
     }
     if cfg!(test) || std::env::var_os("XDG_DATA_HOME").is_some() {
         let _ = base_dir;
         return false;
     }
-    cfg!(target_os = "macos")
+    os_keychain_available()
+}
+
+fn keychain_load(scope_key: &str) -> Result<Option<String>, DecapodError> {
+    #[cfg(test)]
+    if let Some(driver) = test_keystore_driver() {
+        return driver.load(scope_key);
+    }
+    platform_keychain_load(scope_key)
+}
+
+fn keychain_store(scope_key: &str, payload: &str) -> Result<(), DecapodError> {
+    #[cfg(test)]
+    if let Some(driver) = test_keystore_driver() {
+        return driver.store(scope_key, payload);
+    }
+    platform_keychain_store(scope_key, payload)
+}
+
+fn keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
+    #[cfg(test)]
+    if let Some(driver) = test_keystore_driver() {
+        return driver.delete(scope_key);
+    }
+    platform_keychain_delete(scope_key)
 }
 
 #[cfg(target_os = "macos")]
-fn keychain_load(scope_key: &str) -> Result<Option<String>, DecapodError> {
+fn platform_keychain_load(scope_key: &str) -> Result<Option<String>, DecapodError> {
     let output = std::process::Command::new("security")
         .args([
             "find-generic-password",
@@ -756,13 +1049,122 @@ fn keychain_load(scope_key: &str) -> Result<Option<String>, DecapodError> {
     Ok(None)
 }
 
-#[cfg(not(target_os = "macos"))]
-fn keychain_load(_scope_key: &str) -> Result<Option<String>, DecapodError> {
+#[cfg(target_os = "linux")]
+fn platform_keychain_load(scope_key: &str) -> Result<Option<String>, DecapodError> {
+    if !linux_secret_service_available() {
+        return Ok(None);
+    }
+    let args = secret_tool_lookup_args(scope_key);
+    let output = match std::process::Command::new("secret-tool")
+        .args(&args)
+        .output()
+    {
+        Ok(out) => out,
+        Err(_) => return Ok(None),
+    };
+    if !output.status.success() {
+        return Ok(None);
+    }
+    let value = String::from_utf8(output.stdout)
+        .map_err(|_| DecapodError::ValidationError("non-UTF8 secret service payload".into()))?;
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(trimmed.to_string()))
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn platform_keychain_load(scope_key: &str) -> Result<Option<String>, DecapodError> {
+    use std::io::Write;
+    use std::process::Stdio;
+    if !windows_credential_manager_available() {
+        return Ok(None);
+    }
+    let target = windows_credential_target(scope_key);
+    let script = r#"
+$ErrorActionPreference = 'Stop'
+$target = [Console]::In.ReadLine()
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class DecapodCred {
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct CREDENTIAL {
+        public int Flags;
+        public int Type;
+        public string TargetName;
+        public string Comment;
+        public System.Runtime.InteropServices.ComTypes.FILETIME LastWritten;
+        public int CredentialBlobSize;
+        public IntPtr CredentialBlob;
+        public int Persist;
+        public int AttributeCount;
+        public IntPtr Attributes;
+        public string TargetAlias;
+        public string UserName;
+    }
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern bool CredRead(string target, int type, int reservedFlag, out IntPtr credentialPtr);
+    [DllImport("advapi32.dll", SetLastError = true)]
+    public static extern void CredFree(IntPtr buffer);
+    public static string Read(string target) {
+        IntPtr ptr;
+        if (!CredRead(target, 1, 0, out ptr)) return null;
+        try {
+            CREDENTIAL cred = Marshal.PtrToStructure<CREDENTIAL>(ptr);
+            if (cred.CredentialBlob == IntPtr.Zero || cred.CredentialBlobSize <= 0) return null;
+            byte[] bytes = new byte[cred.CredentialBlobSize];
+            Marshal.Copy(cred.CredentialBlob, bytes, 0, cred.CredentialBlobSize);
+            return Encoding.UTF8.GetString(bytes);
+        } finally {
+            CredFree(ptr);
+        }
+    }
+}
+"@
+$val = [DecapodCred]::Read($target)
+if ($null -ne $val) { [Console]::Out.Write($val) }
+"#;
+    let ps = command_on_path("powershell.exe").unwrap_or_else(|| PathBuf::from("powershell.exe"));
+    let mut child = match std::process::Command::new(ps)
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+    {
+        Ok(child) => child,
+        Err(_) => return Ok(None),
+    };
+    if let Some(mut stdin) = child.stdin.take() {
+        let _ = writeln!(stdin, "{target}");
+    }
+    let Ok(output) = child.wait_with_output() else {
+        return Ok(None);
+    };
+    if !output.status.success() {
+        return Ok(None);
+    }
+    let value = String::from_utf8(output.stdout)
+        .map_err(|_| DecapodError::ValidationError("non-UTF8 credential payload".into()))?;
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(trimmed.to_string()))
+    }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+fn platform_keychain_load(_scope_key: &str) -> Result<Option<String>, DecapodError> {
     Ok(None)
 }
 
 #[cfg(target_os = "macos")]
-fn keychain_store(scope_key: &str, payload: &str) -> Result<(), DecapodError> {
+fn platform_keychain_store(scope_key: &str, payload: &str) -> Result<(), DecapodError> {
     let status = std::process::Command::new("security")
         .args([
             "add-generic-password",
@@ -785,15 +1187,132 @@ fn keychain_store(scope_key: &str, payload: &str) -> Result<(), DecapodError> {
     }
 }
 
-#[cfg(not(target_os = "macos"))]
-fn keychain_store(_scope_key: &str, _payload: &str) -> Result<(), DecapodError> {
+#[cfg(target_os = "linux")]
+fn platform_keychain_store(scope_key: &str, payload: &str) -> Result<(), DecapodError> {
+    use std::io::Write;
+    use std::process::Stdio;
+    if !linux_secret_service_available() {
+        return Err(DecapodError::ValidationError(
+            "FreeDesktop Secret Service is unavailable; falling back to mode-0600 private store"
+                .into(),
+        ));
+    }
+    let args = secret_tool_store_args(scope_key);
+    let mut child = std::process::Command::new("secret-tool")
+        .args(&args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(DecapodError::IoError)?;
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin
+            .write_all(payload.as_bytes())
+            .map_err(DecapodError::IoError)?;
+    }
+    let output = child.wait_with_output().map_err(DecapodError::IoError)?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(DecapodError::ValidationError(
+            "FreeDesktop Secret Service write failed; falling back to mode-0600 private store"
+                .into(),
+        ))
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn platform_keychain_store(scope_key: &str, payload: &str) -> Result<(), DecapodError> {
+    use std::io::Write;
+    use std::process::Stdio;
+    if !windows_credential_manager_available() {
+        return Err(DecapodError::ValidationError(
+            "Windows Credential Manager is unavailable; falling back to mode-0600 private store"
+                .into(),
+        ));
+    }
+    let target = windows_credential_target(scope_key);
+    let script = r#"
+$ErrorActionPreference = 'Stop'
+$target = [Console]::In.ReadLine()
+$secret = [Console]::In.ReadToEnd()
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class DecapodCredWrite {
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct CREDENTIAL {
+        public int Flags;
+        public int Type;
+        public string TargetName;
+        public string Comment;
+        public System.Runtime.InteropServices.ComTypes.FILETIME LastWritten;
+        public int CredentialBlobSize;
+        public IntPtr CredentialBlob;
+        public int Persist;
+        public int AttributeCount;
+        public IntPtr Attributes;
+        public string TargetAlias;
+        public string UserName;
+    }
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern bool CredWrite(ref CREDENTIAL userCredential, int flags);
+    public static bool Write(string target, string user, string secret) {
+        byte[] bytes = Encoding.UTF8.GetBytes(secret);
+        IntPtr blob = Marshal.AllocCoTaskMem(bytes.Length);
+        try {
+            Marshal.Copy(bytes, 0, blob, bytes.Length);
+            CREDENTIAL cred = new CREDENTIAL();
+            cred.Type = 1;
+            cred.TargetName = target;
+            cred.UserName = user;
+            cred.CredentialBlobSize = bytes.Length;
+            cred.CredentialBlob = blob;
+            cred.Persist = 2;
+            return CredWrite(ref cred, 0);
+        } finally {
+            Marshal.FreeCoTaskMem(blob);
+        }
+    }
+}
+"@
+if (-not [DecapodCredWrite]::Write($target, $target, $secret)) { exit 1 }
+"#;
+    let ps = command_on_path("powershell.exe").unwrap_or_else(|| PathBuf::from("powershell.exe"));
+    let mut child = std::process::Command::new(ps)
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(DecapodError::IoError)?;
+    if let Some(mut stdin) = child.stdin.take() {
+        writeln!(stdin, "{target}").map_err(DecapodError::IoError)?;
+        stdin
+            .write_all(payload.as_bytes())
+            .map_err(DecapodError::IoError)?;
+    }
+    let output = child.wait_with_output().map_err(DecapodError::IoError)?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(DecapodError::ValidationError(
+            "Windows Credential Manager write failed; falling back to mode-0600 private store"
+                .into(),
+        ))
+    }
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+fn platform_keychain_store(_scope_key: &str, _payload: &str) -> Result<(), DecapodError> {
     Err(DecapodError::ValidationError(
         "OS keychain unsupported on this platform".into(),
     ))
 }
 
 #[cfg(target_os = "macos")]
-fn keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
+fn platform_keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
     let _ = std::process::Command::new("security")
         .args([
             "delete-generic-password",
@@ -806,8 +1325,54 @@ fn keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
     Ok(())
 }
 
-#[cfg(not(target_os = "macos"))]
-fn keychain_delete(_scope_key: &str) -> Result<(), DecapodError> {
+#[cfg(target_os = "linux")]
+fn platform_keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
+    if linux_secret_service_available() {
+        let args = secret_tool_clear_args(scope_key);
+        let _ = std::process::Command::new("secret-tool")
+            .args(&args)
+            .status();
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn platform_keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
+    use std::io::Write;
+    use std::process::Stdio;
+    if !windows_credential_manager_available() {
+        return Ok(());
+    }
+    let target = windows_credential_target(scope_key);
+    let script = r#"
+$target = [Console]::In.ReadLine()
+Add-Type -TypeDefinition @"
+using System.Runtime.InteropServices;
+public class DecapodCredDel {
+    [DllImport("advapi32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern bool CredDelete(string target, int type, int flags);
+}
+"@
+[void][DecapodCredDel]::CredDelete($target, 1, 0)
+"#;
+    let ps = command_on_path("powershell.exe").unwrap_or_else(|| PathBuf::from("powershell.exe"));
+    if let Ok(mut child) = std::process::Command::new(ps)
+        .args(["-NoProfile", "-NonInteractive", "-Command", script])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+    {
+        if let Some(mut stdin) = child.stdin.take() {
+            let _ = writeln!(stdin, "{target}");
+        }
+        let _ = child.wait();
+    }
+    Ok(())
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+fn platform_keychain_delete(_scope_key: &str) -> Result<(), DecapodError> {
     Ok(())
 }
 

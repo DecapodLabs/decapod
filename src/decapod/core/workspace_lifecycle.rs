@@ -117,6 +117,14 @@ impl OwnedWorkspace {
     fn persist(&mut self) -> Result<(), DecapodError> {
         self.receipt.event_id = crate::core::ulid::new_ulid();
         self.receipt.ts = time::now_epoch_z();
+        if is_cloud_workspace_root(&self.root) {
+            let dir = cloud_lifecycle_dir(&self.root)?;
+            fs_permissions::ensure_private_dir(&dir)?;
+            let path = dir.join(format!("{}.receipt.json", key(&self.receipt.path)));
+            let bytes =
+                serde_json::to_vec_pretty(&self.receipt).map_err(|e| failure(&e.to_string()))?;
+            return fs_permissions::write_private(&path, bytes).map_err(DecapodError::IoError);
+        }
         events::append(
             &self.root.join(".decapod/data"),
             events::WORKSPACE_LIFECYCLE,
@@ -124,6 +132,26 @@ impl OwnedWorkspace {
         )?;
         Ok(())
     }
+}
+
+fn is_cloud_workspace_root(root: &Path) -> bool {
+    crate::core::db_maintenance::resolve_accepted_project_config(root)
+        .ok()
+        .is_some_and(|(_main, cfg, _)| cfg.repo.effective_backend().is_cloud())
+        || crate::cli::DecapodProjectConfig::load(root)
+            .ok()
+            .is_some_and(|cfg| cfg.repo.effective_backend().is_cloud())
+}
+
+fn cloud_lifecycle_dir(root: &Path) -> Result<PathBuf, DecapodError> {
+    let canonical = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    let repo_hash = format!(
+        "{:x}",
+        Sha256::digest(canonical.as_os_str().as_encoded_bytes())
+    );
+    Ok(crate::machine_config_dir()?
+        .join("cloud-workspaces")
+        .join(&repo_hash[..24]))
 }
 
 fn failure(detail: &str) -> DecapodError {
@@ -167,7 +195,11 @@ impl Drop for WorkspaceLease {
 }
 
 fn lease(root: &Path, target: &Path) -> Result<WorkspaceLease, DecapodError> {
-    let locks = root.join(".decapod/data/workspace-leases");
+    let locks = if is_cloud_workspace_root(root) {
+        cloud_lifecycle_dir(root)?.join("leases")
+    } else {
+        root.join(".decapod/data/workspace-leases")
+    };
     fs_permissions::ensure_storage_dir(&locks)?;
     let path = locks.join(format!("{}.lock", key(target)));
     let file = fs_permissions::open_storage_file(
@@ -183,6 +215,17 @@ fn lease(root: &Path, target: &Path) -> Result<WorkspaceLease, DecapodError> {
 }
 
 fn lookup(root: &Path, target: &Path) -> Result<Option<Receipt>, DecapodError> {
+    if is_cloud_workspace_root(root) {
+        let dir = cloud_lifecycle_dir(root)?;
+        let path = dir.join(format!("{}.receipt.json", key(target)));
+        if !path.exists() {
+            return Ok(None);
+        }
+        let bytes = fs::read(&path)?;
+        let receipt: Receipt = serde_json::from_slice(&bytes)
+            .map_err(|e| failure(&format!("invalid ownership receipt: {e}")))?;
+        return Ok(Some(receipt));
+    }
     let path = events::canonical_db_path(&root.join(".decapod/data"));
     if !path.exists() {
         return Ok(None);

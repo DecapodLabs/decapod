@@ -200,6 +200,12 @@ impl DbBroker {
     pub fn is_cloud(&self) -> bool {
         let project_root =
             find_decapod_project_root(&self.root).unwrap_or_else(|_| self.root.clone());
+        if crate::core::db_maintenance::resolve_accepted_project_config(&project_root)
+            .ok()
+            .is_some_and(|(_main, cfg, _)| cfg.repo.effective_backend().is_cloud())
+        {
+            return true;
+        }
         if let Ok(config) = crate::cli::DecapodProjectConfig::load(&project_root) {
             return config.repo.effective_backend().is_cloud();
         }
