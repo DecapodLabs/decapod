@@ -15,6 +15,8 @@ use std::io::Read;
 struct Project {
     project_id: String,
     name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    organization_id: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -30,6 +32,8 @@ struct Creation {
     account_id: String,
     request_id: String,
     name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    organization_id: Option<String>,
     #[serde(default)]
     project_id: Option<String>,
 }
@@ -53,12 +57,23 @@ struct Response {
     #[serde(default)]
     project_id: Option<String>,
     #[serde(default)]
+    organization_id: Option<String>,
+    #[serde(default)]
+    organizations: Vec<Organization>,
+    #[serde(default)]
     projects: Vec<Project>,
+}
+
+#[derive(Deserialize)]
+struct Organization {
+    id: String,
 }
 
 #[derive(Clone, Serialize)]
 pub struct ProjectView {
     pub name: String,
+    pub project_id: String,
+    pub organization_id: Option<String>,
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backend_authorized: Option<bool>,
@@ -73,8 +88,14 @@ pub struct ProjectOutput {
 
 pub enum Operation {
     List,
-    Use(String),
-    Create(String),
+    Use {
+        choice: String,
+        organization_id: Option<String>,
+    },
+    Create {
+        name: String,
+        organization_id: Option<String>,
+    },
 }
 
 fn invalid() -> DecapodError {
@@ -90,6 +111,14 @@ fn attention(message: &str, action: &str) -> DecapodError {
         message,
         action,
     ))
+}
+
+fn provider_link_stepup() -> CloudAuthDiagnostic {
+    CloudAuthDiagnostic::new(
+        CloudAuthStatus::ProviderLinkStepupRequired,
+        "The service requires provider-link verification for this account.",
+        "Complete provider verification in Cloud Admin, then retry.",
+    )
 }
 
 fn name_valid(value: &str) -> bool {
@@ -115,6 +144,36 @@ fn reference_valid(value: &str) -> bool {
             .is_some_and(|(a, b)| !a.is_empty() && !b.is_empty() && !b.contains('/'))
 }
 
+fn organization_valid(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 512
+        && !value.contains('/')
+        && !value.chars().any(|c| c.is_control() || c.is_whitespace())
+}
+
+fn check_organization(
+    requested: Option<&str>,
+    authorized: Option<&str>,
+) -> Result<(), DecapodError> {
+    if requested.is_some() && requested != authorized {
+        return Err(attention(
+            "The service did not confirm the project belongs to the requested organization.",
+            "Run `decapod cloud projects` and verify the organization and project you selected.",
+        ));
+    }
+    Ok(())
+}
+
+fn view(project: Project, status: String, backend_authorized: Option<bool>) -> ProjectView {
+    ProjectView {
+        name: project.name,
+        project_id: project.project_id,
+        organization_id: project.organization_id,
+        status,
+        backend_authorized,
+    }
+}
+
 fn load(guard: &SessionGuard) -> Result<Record, DecapodError> {
     let Some(value) = guard.project_record()? else {
         return Ok(Record::default());
@@ -125,19 +184,29 @@ fn load(guard: &SessionGuard) -> Result<Record, DecapodError> {
             .directory_account
             .as_deref()
             .is_some_and(|v| !uuid_valid(v))
-        || record
-            .directory
-            .iter()
-            .any(|p| !reference_valid(&p.project_id) || !name_valid(&p.name))
+        || record.directory.iter().any(|p| {
+            !reference_valid(&p.project_id)
+                || !name_valid(&p.name)
+                || p.organization_id
+                    .as_deref()
+                    .is_some_and(|id| !organization_valid(id))
+        })
         || record.selection.as_ref().is_some_and(|s| {
             !uuid_valid(&s.account_id)
                 || !reference_valid(&s.project.project_id)
                 || !name_valid(&s.project.name)
+                || s.project
+                    .organization_id
+                    .as_deref()
+                    .is_some_and(|id| !organization_valid(id))
         })
         || record.creation.as_ref().is_some_and(|p| {
             !uuid_valid(&p.account_id)
                 || !uuid_valid(&p.request_id)
                 || !name_valid(&p.name)
+                || p.organization_id
+                    .as_deref()
+                    .is_some_and(|id| !organization_valid(id))
                 || p.project_id
                     .as_deref()
                     .is_some_and(|id| !reference_valid(id))
@@ -160,7 +229,12 @@ fn request(
 ) -> Result<Response, DecapodError> {
     let value = connector
         .account_request(operation, &body, bearer, None)
-        .map_err(transport_error)?;
+        .map_err(|error| {
+            if error.adapter_code() == Some("provider_link_stepup_required") {
+                return DecapodError::CloudAuth(provider_link_stepup());
+            }
+            transport_error(error)
+        })?;
     let mut result: Response = serde_json::from_value(value).map_err(|_| invalid())?;
     if result.version != 1
         || !uuid_valid(&result.account_id)
@@ -171,15 +245,27 @@ fn request(
             .bytes()
             .all(|b| b.is_ascii_lowercase() || b == b'_')
         || result.projects.len() > 100
+        || result.organizations.len() > 100
+        || result
+            .organizations
+            .iter()
+            .any(|organization| !organization_valid(&organization.id))
         || result.projects.iter().any(|p| {
             !reference_valid(&p.project_id)
                 || p.name.chars().count() > 200
                 || p.name.chars().any(char::is_control)
+                || p.organization_id
+                    .as_deref()
+                    .is_some_and(|id| !organization_valid(id))
         })
         || result
             .project_id
             .as_deref()
             .is_some_and(|p| !reference_valid(p))
+        || result
+            .organization_id
+            .as_deref()
+            .is_some_and(|id| !organization_valid(id))
         || (result.backend_authorized && result.status != "active")
     {
         return Err(invalid());
@@ -193,19 +279,55 @@ fn request(
 }
 
 fn identity(connector: &CloudConnector, bearer: &str) -> Result<Response, DecapodError> {
-    let response = request(
+    let mut response = request(
         connector,
         bearer,
         AccountOperation::Status,
         json!({"version":1}),
     )?;
-    if response.status == "code_host_link_required" {
-        return Err(attention(
-            "The managed account needs a verified code-host link.",
-            "Complete account linking in the cloud portal, then retry.",
-        ));
+    if response.status == "registration_required" {
+        let registered = request(
+            connector,
+            bearer,
+            AccountOperation::Register,
+            json!({"version":1,"operation":"account"}),
+        )?;
+        if registered.account_id != response.account_id {
+            return Err(invalid());
+        }
+        require_identity(&registered)?;
+        let refreshed = request(
+            connector,
+            bearer,
+            AccountOperation::Status,
+            json!({"version":1}),
+        )?;
+        if refreshed.account_id != response.account_id {
+            return Err(invalid());
+        }
+        response = refreshed;
     }
+    require_identity(&response)?;
     Ok(response)
+}
+
+fn require_identity(response: &Response) -> Result<(), DecapodError> {
+    let diagnostic = match response.status.as_str() {
+        "code_host_link_required" => {
+            return Err(attention(
+                "The managed account needs a verified code-host link.",
+                "Complete account linking in the cloud portal, then retry.",
+            ));
+        }
+        "registration_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::RegistrationRequired,
+            "The service has not registered this account.",
+            "Complete account registration in Cloud Admin, then retry.",
+        ),
+        "provider_link_stepup_required" => provider_link_stepup(),
+        _ => return Ok(()),
+    };
+    Err(DecapodError::CloudAuth(diagnostic))
 }
 
 fn status(
@@ -226,6 +348,7 @@ fn status(
             "Run `decapod cloud projects` and explicitly select a project for the current account.",
         ));
     }
+    require_identity(&response)?;
     if response.project_id.as_deref() != Some(project) {
         return Err(invalid());
     }
@@ -249,10 +372,8 @@ fn new_request_id() -> Result<String, DecapodError> {
 }
 
 fn require_association(response: &Response) -> Result<(), DecapodError> {
-    if matches!(
-        response.status.as_str(),
-        "registration_required" | "admin_approval_required" | "code_host_link_required"
-    ) {
+    require_identity(response)?;
+    if response.status == "admin_approval_required" {
         return Err(attention(
             "The service did not confirm this account's project association.",
             "Ask the project administrator to review membership and assignment, then retry.",
@@ -264,7 +385,7 @@ fn require_association(response: &Response) -> Result<(), DecapodError> {
 fn pending_creation() -> DecapodError {
     attention(
         "A cloud project creation has an unresolved outcome. No new project or data operation was attempted.",
-        "Rerun `decapod cloud project create` with the original name and managed account to reconcile its saved request.",
+        "Rerun `decapod cloud project create` with the original name, organization and managed account to reconcile its saved request.",
     )
 }
 
@@ -274,6 +395,21 @@ pub(crate) fn execute(
     bearer: &str,
     operation: Operation,
 ) -> Result<ProjectOutput, DecapodError> {
+    let organization = match &operation {
+        Operation::List => None,
+        Operation::Use {
+            organization_id, ..
+        }
+        | Operation::Create {
+            organization_id, ..
+        } => organization_id.as_deref(),
+    };
+    if organization.is_some_and(|id| !organization_valid(id)) {
+        return Err(attention(
+            "The organization ID is invalid.",
+            "Use the exact organization ID from `decapod cloud projects --format json`.",
+        ));
+    }
     let mut record = load(guard)?;
     let current = identity(connector, bearer)?;
     if record
@@ -286,6 +422,18 @@ pub(crate) fn execute(
     match operation {
         Operation::List => {
             let mut projects = current.projects;
+            // The older directory wire format lists organization membership and
+            // project references independently. Read each missing association
+            // through the existing scoped status operation.
+            if !current.organizations.is_empty() {
+                for project in &mut projects {
+                    if project.organization_id.is_none() {
+                        project.organization_id =
+                            status(connector, bearer, &current.account_id, &project.project_id)?
+                                .organization_id;
+                    }
+                }
+            }
             projects.sort_by(|a, b| a.name.cmp(&b.name).then(a.project_id.cmp(&b.project_id)));
             record.directory_account = Some(current.account_id);
             record.directory = projects;
@@ -295,16 +443,15 @@ pub(crate) fn execute(
                 projects: record
                     .directory
                     .into_iter()
-                    .map(|p| ProjectView {
-                        name: p.name,
-                        status: "available".into(),
-                        backend_authorized: None,
-                    })
+                    .map(|p| view(p, "available".into(), None))
                     .collect(),
                 selected: false,
             })
         }
-        Operation::Use(choice) => {
+        Operation::Use {
+            choice,
+            organization_id,
+        } => {
             if record
                 .creation
                 .as_ref()
@@ -314,7 +461,7 @@ pub(crate) fn execute(
             }
             // Numeric choices refer to the exact previously printed directory,
             // never a fresh list whose ordering may have changed concurrently.
-            let project = if let Ok(index) = choice.parse::<usize>() {
+            let mut project = if let Ok(index) = choice.parse::<usize>() {
                 if index == 0
                     || record.directory_account.as_deref() != Some(current.account_id.as_str())
                 {
@@ -330,26 +477,52 @@ pub(crate) fn execute(
                     )
                 })?
             } else {
-                let matches: Vec<_> = current
+                let candidates = current
                     .projects
                     .into_iter()
-                    .filter(|p| p.name == choice || p.project_id == choice)
-                    .collect();
+                    .filter(|p| p.name == choice || p.project_id == choice);
+                let mut matches = Vec::new();
+                for mut project in candidates {
+                    if let Some(organization) = organization_id.as_deref() {
+                        if project.organization_id.is_none() {
+                            project.organization_id = status(
+                                connector,
+                                bearer,
+                                &current.account_id,
+                                &project.project_id,
+                            )?
+                            .organization_id;
+                        }
+                        if project.organization_id.as_deref() != Some(organization) {
+                            continue;
+                        }
+                    }
+                    matches.push(project);
+                }
                 if matches.len() != 1 {
                     return Err(attention(
                         "The project name is missing or ambiguous for this managed account.",
-                        "Run `decapod cloud projects` and select its numbered entry; no project was guessed or created.",
+                        "Run `decapod cloud projects` and select a numbered entry or specify `--org` with the exact project name.",
                     ));
                 }
                 matches.into_iter().next().expect("one selected project")
             };
             let response = status(connector, bearer, &current.account_id, &project.project_id)?;
             require_association(&response)?;
-            let view = ProjectView {
-                name: project.name.clone(),
-                status: response.status,
-                backend_authorized: Some(response.backend_authorized),
-            };
+            check_organization(
+                organization_id
+                    .as_deref()
+                    .or(project.organization_id.as_deref()),
+                response.organization_id.as_deref(),
+            )?;
+            if response.organization_id.is_some() {
+                project.organization_id = response.organization_id;
+            }
+            let view = view(
+                project.clone(),
+                response.status,
+                Some(response.backend_authorized),
+            );
             record.selection = Some(Selection {
                 account_id: current.account_id,
                 project,
@@ -361,7 +534,10 @@ pub(crate) fn execute(
                 selected: true,
             })
         }
-        Operation::Create(name) => {
+        Operation::Create {
+            name,
+            organization_id,
+        } => {
             if !name_valid(&name) {
                 return Err(attention(
                     "A project needs a nonempty name of at most 200 characters.",
@@ -369,79 +545,78 @@ pub(crate) fn execute(
                 ));
             }
             let mut creation = match &record.creation {
-                Some(p) if p.name == name && p.account_id == current.account_id => p.clone(),
+                Some(p)
+                    if p.name == name
+                        && p.account_id == current.account_id
+                        && p.organization_id == organization_id =>
+                {
+                    p.clone()
+                }
                 Some(p) if p.project_id.is_none() => return Err(pending_creation()),
                 _ => Creation {
                     account_id: current.account_id.clone(),
                     request_id: new_request_id()?,
                     name,
+                    organization_id,
                     project_id: None,
                 },
             };
-            if let Some(project_id) = &creation.project_id {
-                let checked = status(connector, bearer, &creation.account_id, project_id)?;
-                require_association(&checked)?;
-                record.selection = Some(Selection {
-                    account_id: creation.account_id.clone(),
-                    project: Project {
-                        project_id: project_id.clone(),
-                        name: creation.name.clone(),
-                    },
-                });
+            let project_id = if let Some(project_id) = &creation.project_id {
+                project_id.clone()
+            } else {
+                record.creation = Some(creation.clone());
                 save(guard, &record)?;
-                return Ok(ProjectOutput {
-                    version: 1,
-                    projects: vec![ProjectView {
-                        name: creation.name,
-                        status: checked.status,
-                        backend_authorized: Some(checked.backend_authorized),
-                    }],
-                    selected: true,
+                let mut body = json!({
+                    "version":1,
+                    "request_id":creation.request_id,
+                    "project_name":creation.name,
                 });
-            }
-            record.creation = Some(creation.clone());
-            save(guard, &record)?;
-            // The existing server register contract is idempotent for this
-            // request UUID. A timeout leaves it saved; no second UUID is made.
-            let response = match request(
-                connector,
-                bearer,
-                AccountOperation::Register,
-                json!({"version":1,"request_id":creation.request_id,"project_name":creation.name}),
-            ) {
-                Err(DecapodError::CloudAuth(diagnostic))
-                    if matches!(
-                        diagnostic.status,
-                        CloudAuthStatus::Offline | CloudAuthStatus::ProviderUnavailable
-                    ) =>
-                {
-                    return Err(pending_creation());
+                if let Some(organization) = &creation.organization_id {
+                    body["organization_id"] = json!(organization);
                 }
-                result => result?,
+                // A timeout leaves this request UUID and organization saved.
+                let response = match request(connector, bearer, AccountOperation::Register, body) {
+                    Err(DecapodError::CloudAuth(diagnostic))
+                        if matches!(
+                            diagnostic.status,
+                            CloudAuthStatus::Offline | CloudAuthStatus::ProviderUnavailable
+                        ) =>
+                    {
+                        return Err(pending_creation());
+                    }
+                    result => result?,
+                };
+                if response.account_id != creation.account_id {
+                    return Err(invalid());
+                }
+                require_identity(&response)?;
+                response.project_id.ok_or_else(invalid)?
             };
-            if response.account_id != creation.account_id {
-                return Err(invalid());
-            }
-            let project_id = response.project_id.ok_or_else(invalid)?;
             let checked = status(connector, bearer, &creation.account_id, &project_id)?;
             require_association(&checked)?;
+            check_organization(
+                creation.organization_id.as_deref(),
+                checked.organization_id.as_deref(),
+            )?;
+            let project = Project {
+                project_id: project_id.clone(),
+                name: creation.name.clone(),
+                organization_id: checked.organization_id,
+            };
             record.selection = Some(Selection {
                 account_id: creation.account_id.clone(),
-                project: Project {
-                    project_id: project_id.clone(),
-                    name: creation.name.clone(),
-                },
+                project: project.clone(),
             });
             creation.project_id = Some(project_id);
             record.creation = Some(creation.clone());
             save(guard, &record)?;
             Ok(ProjectOutput {
                 version: 1,
-                projects: vec![ProjectView {
-                    name: creation.name,
-                    status: checked.status,
-                    backend_authorized: Some(checked.backend_authorized),
-                }],
+                projects: vec![view(
+                    project,
+                    checked.status,
+                    Some(checked.backend_authorized),
+                )],
                 selected: true,
             })
         }
@@ -474,6 +649,10 @@ pub(crate) fn route(
         &selection.account_id,
         &selection.project.project_id,
     )?;
+    check_organization(
+        selection.project.organization_id.as_deref(),
+        response.organization_id.as_deref(),
+    )?;
     if !response.backend_authorized {
         return Err(attention(
             "The service has not authorized the selected cloud project.",
@@ -492,3 +671,7 @@ pub(crate) fn route(
         remote_url: original.remote_url.clone(),
     })
 }
+
+#[cfg(test)]
+#[path = "../../../tests/unit/core/cloud_project_tests.rs"]
+mod tests;

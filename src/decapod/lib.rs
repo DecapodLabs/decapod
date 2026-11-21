@@ -291,11 +291,25 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 let operation = match command {
                     CloudCommand::Projects => core::cloud_project::Operation::List,
                     CloudCommand::Project {
-                        command: CloudProjectCommand::Use { choice },
-                    } => core::cloud_project::Operation::Use(choice),
+                        command:
+                            CloudProjectCommand::Use {
+                                choice,
+                                organization_id,
+                            },
+                    } => core::cloud_project::Operation::Use {
+                        choice,
+                        organization_id,
+                    },
                     CloudCommand::Project {
-                        command: CloudProjectCommand::Create { name },
-                    } => core::cloud_project::Operation::Create(name),
+                        command:
+                            CloudProjectCommand::Create {
+                                name,
+                                organization_id,
+                            },
+                    } => core::cloud_project::Operation::Create {
+                        name,
+                        organization_id,
+                    },
                     _ => unreachable!("project operation"),
                 };
                 match core::cloud_client::projects(&project_root, &identity, operation) {
@@ -317,13 +331,15 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                                         "Selected project: {} ({}).",
                                         project.name, project.status
                                     );
+                                } else if let Some(organization) = &project.organization_id {
+                                    println!("{}. {} ({})", index + 1, project.name, organization);
                                 } else {
                                     println!("{}. {}", index + 1, project.name);
                                 }
                             }
                             if !output.selected {
                                 println!(
-                                    "Select a saved entry with `decapod cloud project use NUMBER`, or use its exact name."
+                                    "Select a saved entry by number or exact name. Add `--org` to disambiguate names."
                                 );
                             } else if output
                                 .projects

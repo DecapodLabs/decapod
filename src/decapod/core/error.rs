@@ -19,6 +19,8 @@ pub enum CloudAuthStatus {
     OnboardingPending,
     /// The service requires account action; its reason is not inferred locally.
     ActionRequired,
+    RegistrationRequired,
+    ProviderLinkStepupRequired,
     /// A one-time request has an uncertain outcome and cannot be replayed.
     RestartRequired,
     Expired,
