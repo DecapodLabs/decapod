@@ -4,7 +4,7 @@ use crate::core::broker::DbBroker;
 use crate::core::cloud_todo_operation::{
     self, Diagnostic as CloudTodoDiagnostic, Journal as CloudTodoJournal, OperationRecord, Outcome,
 };
-use crate::core::dactyl_todo::DactylTodoStore;
+use crate::core::dactyl_todo::{CLOUD_LEASE_RENEW_UNSUPPORTED, DactylTodoStore};
 use crate::core::db::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
@@ -8211,10 +8211,15 @@ fn cloud_add_request(command: &TodoCommand) -> Option<JsonValue> {
     }))
 }
 
-fn check_cloud_proof_support(
+fn check_cloud_todo_preflight(
     root: &Path,
     command: &TodoCommand,
 ) -> Result<(), error::DecapodError> {
+    if matches!(command, TodoCommand::Renew { .. }) {
+        return Err(error::DecapodError::NotImplemented(
+            CLOUD_LEASE_RENEW_UNSUPPORTED.into(),
+        ));
+    }
     if let TodoCommand::Done {
         validated: true,
         artifact,
@@ -8371,9 +8376,8 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     operation_id: Option<&str>,
     journal: Option<&CloudTodoJournal>,
 ) -> Result<JsonValue, error::DecapodError> {
-    // Reject invalid proof capture preflight before discovery, credential refresh or
-    // any other connector work. The direct-store entry also keeps this guard.
-    check_cloud_proof_support(root, command)?;
+    // Reject unsupported renewal and invalid proof capture before connector work.
+    check_cloud_todo_preflight(root, command)?;
     let mut operation = cloud_add_request(command)
         .map(|payload| {
             OperationRecord::new(
@@ -8481,7 +8485,7 @@ async fn run_cloud_todo_command_with_store_async(
     repo_id: &str,
     operation: Option<&OperationRecord>,
 ) -> Result<JsonValue, error::DecapodError> {
-    check_cloud_proof_support(root, command)?;
+    check_cloud_todo_preflight(root, command)?;
     let actor = env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
     let result = match command {
         TodoCommand::List {
@@ -8649,35 +8653,6 @@ async fn run_cloud_todo_command_with_store_async(
                 "backend": "dactyl",
                 "id": id,
                 "item": task,
-            })
-        }
-        TodoCommand::Renew {
-            id, lease_seconds, ..
-        } => {
-            let existing = store
-                .get_task(id)
-                .await
-                .map_err(|error| cloud_error(error, Some(repo_id)))?
-                .ok_or_else(|| {
-                    error::DecapodError::ValidationError(format!("Task {id} not found"))
-                })?;
-            if existing.status != "in_progress"
-                || existing.assignee.as_deref() != Some(actor.as_str())
-            {
-                return Err(error::DecapodError::ValidationError(format!(
-                    "CLOUD_LEASE_RENEW_DENIED: task {id} is not actively claimed by {actor}"
-                )));
-            }
-            let ttl = lease_seconds.unwrap_or(1800).clamp(60, 86400);
-            serde_json::json!({
-                "ts": now_iso(),
-                "cmd": "todo.renew",
-                "status": "ok",
-                "root": root.to_string_lossy(),
-                "backend": "dactyl",
-                "id": id,
-                "lease_ttl_seconds": ttl,
-                "item": existing,
             })
         }
         TodoCommand::Done {

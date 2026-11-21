@@ -51,6 +51,75 @@ impl ProofControlTransport for MockTransport {
     }
 }
 
+#[test]
+fn live_custody_requires_the_exact_current_workspace_fence() {
+    let transport = MockTransport::new();
+    let req = CustodyGetRequest {
+        project_id: "example/project".into(),
+        task_id: "todo_01abc".into(),
+        workspace_id: "ws_01abc".into(),
+        custody_id: "custody_01abc".into(),
+        task_revision: 4,
+        fencing_generation: 6,
+    };
+    let receipt = json!({
+        "version": 1,
+        "profile": "candidate-acceptance-v1",
+        "status": "custody_current",
+        "project_id": req.project_id,
+        "task_id": req.task_id,
+        "workspace_id": req.workspace_id,
+        "custody_id": req.custody_id,
+        "task_revision": req.task_revision,
+        "fencing_generation": req.fencing_generation,
+        "authority_generation": 2,
+        "expires_at": crate::core::time::format_rfc3339_nanos(
+            time::OffsetDateTime::now_utc() + time::Duration::hours(1)
+        ).expect("expiry"),
+    });
+    transport.push_read(Ok(receipt.clone()));
+    assert_eq!(custody_get(&transport, &req).unwrap().fencing_generation, 6);
+    let reads = transport.reads.borrow();
+    assert_eq!(reads[0].0, PROOF_ACCEPTANCE_READ_OP);
+    assert_eq!(reads[0].1["action"], "get_custody");
+    drop(reads);
+
+    for (field, bad_value) in [
+        ("status", json!("custody_bound")),
+        ("project_id", json!("example/other")),
+        ("workspace_id", json!("ws_other")),
+        ("custody_id", json!("custody_other")),
+        ("task_revision", json!(5)),
+        ("fencing_generation", json!(7)),
+        ("authority_generation", json!(0)),
+        ("expires_at", json!("2020-01-01T00:00:00Z")),
+    ] {
+        let mut mismatched = receipt.clone();
+        mismatched[field] = bad_value;
+        transport.push_read(Ok(mismatched));
+        assert!(
+            custody_get(&transport, &req)
+                .unwrap_err()
+                .to_string()
+                .contains("CLOUD_CUSTODY_RECEIPT_INVALID"),
+            "{field}"
+        );
+    }
+    transport.push_read(Err(classify_control_status(
+        None,
+        "transport_timeout",
+        "read timed out",
+        true,
+    )));
+    assert!(
+        custody_get(&transport, &req)
+            .unwrap_err()
+            .to_string()
+            .contains("CLOUD_CONTROL_UNAVAILABLE")
+    );
+    assert!(transport.writes.borrow().is_empty());
+}
+
 fn sample_capture_request(op_id: &str) -> ProofCaptureRequest {
     ProofCaptureRequest {
         contract: PROOF_CAPTURE_CONTRACT_ID.to_string(),

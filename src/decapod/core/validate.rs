@@ -958,8 +958,49 @@ fn validate_user_store_blank_slate(
 fn validate_repo_store_dogfood(
     store: &Store,
     ctx: &ValidationContext,
-    _working_root: &Path,
+    working_root: &Path,
 ) -> Result<(), error::DecapodError> {
+    if DbBroker::new(&store.root).is_cloud()
+        || crate::core::cloud_workspace::is_cloud_project(working_root)
+    {
+        info("Store: cloud (hosted custody verification)", ctx);
+        let main_root = crate::core::workspace::get_main_repo_root(working_root)
+            .unwrap_or_else(|_| working_root.to_path_buf());
+        match crate::core::workspace::git_toplevel(working_root) {
+            Ok(Some(toplevel))
+                if crate::core::workspace::is_canonical_decapod_workspace_path(&toplevel) =>
+            {
+                if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
+                    skip(
+                        "Cloud hosted custody live check skipped via DECAPOD_VALIDATE_SKIP_GIT_GATES",
+                        ctx,
+                    );
+                } else {
+                    match crate::core::cloud_workspace::check_cloud_authoring(
+                        &main_root,
+                        &toplevel,
+                        &crate::current_agent_id(),
+                        true,
+                    ) {
+                        Ok(()) => pass(
+                            "Cloud hosted custody verified (no local SQLite fallback)",
+                            ctx,
+                        ),
+                        Err(err) => {
+                            fail(&format!("Cloud hosted custody invalid: {err}"), ctx);
+                        }
+                    }
+                }
+            }
+            _ => {
+                pass(
+                    "Cloud backend configured; no local decapod.db required",
+                    ctx,
+                );
+            }
+        }
+        return Ok(());
+    }
     info("Store: repo (dogfood backlog semantics)", ctx);
 
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
@@ -4023,7 +4064,10 @@ fn get_current_task_type(working_root: &Path) -> Result<Option<String>, error::D
             .ok()
             .and_then(|main_root| {
                 let store_root = main_root.join(".decapod").join("data");
-                if store_root.join("decapod.db").is_file() && !store_root.join("todo.db").exists() {
+                if !DbBroker::new(&store_root).is_cloud()
+                    && store_root.join("decapod.db").is_file()
+                    && !store_root.join("todo.db").exists()
+                {
                     crate::core::todo::get_task(&store_root, task_id)
                         .ok()
                         .flatten()
@@ -4391,9 +4435,10 @@ fn validate_legacy_jsonl_retired(
         return Ok(());
     }
 
-    // Attempt self-heal: import + retire when a datastore exists.
+    // Attempt self-heal: import + retire when a local SQLite datastore exists.
     let db_path = data_root.join(crate::core::schemas::LOCAL_DB_NAME);
-    if db_path.exists()
+    if !crate::core::cloud_workspace::is_cloud_project(repo_root)
+        && db_path.exists()
         && let Ok(conn) = crate::core::db::db_connect(&db_path.to_string_lossy())
     {
         let _ = crate::core::events::import_legacy_jsonl(&data_root, &conn);
@@ -4443,9 +4488,9 @@ fn validate_knowledge_promotions_if_present(
     // Authority is decapod.db events (stream=knowledge). Legacy JSONL is retired.
     let data_root = repo_root.join(".decapod").join("data");
     let db_path = data_root.join(crate::core::schemas::LOCAL_DB_NAME);
-    if !db_path.exists() {
+    if crate::core::cloud_workspace::is_cloud_project(repo_root) || !db_path.exists() {
         skip(
-            "No local datastore; skipping knowledge promotion ledger gate",
+            "No active local datastore; skipping knowledge promotion ledger gate",
             ctx,
         );
         return Ok(());
@@ -4810,6 +4855,13 @@ fn validate_database_schema_versions(
         );
         return Ok(());
     }
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; local SQLite schema version gate skipped",
+            ctx,
+        );
+        return Ok(());
+    }
     let checks = migration::check_versioned_db_schema_expectations(&store.root)?;
     for check in checks {
         if !check.exists {
@@ -4877,8 +4929,11 @@ fn validate_health_cache_integrity(
 ) -> Result<(), error::DecapodError> {
     info("Health Cache Non-Authoritative Gate", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
-    if !db_path.exists() {
-        skip("decapod.db not found; skipping health integrity check", ctx);
+    if DbBroker::new(&store.root).is_cloud() || !db_path.exists() {
+        skip(
+            "No active local decapod.db; skipping health integrity check",
+            ctx,
+        );
         return Ok(());
     }
 
@@ -4947,8 +5002,8 @@ fn validate_policy_integrity(
 ) -> Result<(), error::DecapodError> {
     info("Policy Integrity Gates", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
-    if !db_path.exists() {
-        skip("decapod.db not found; skipping policy check", ctx);
+    if DbBroker::new(&store.root).is_cloud() || !db_path.exists() {
+        skip("No active local decapod.db; skipping policy check", ctx);
         return Ok(());
     }
 
@@ -5196,9 +5251,9 @@ fn validate_knowledge_integrity(
 ) -> Result<(), error::DecapodError> {
     info("Knowledge Integrity Gate", ctx);
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
-    if !db_path.exists() {
+    if DbBroker::new(&store.root).is_cloud() || !db_path.exists() {
         skip(
-            "decapod.db not found; skipping knowledge integrity check",
+            "No active local decapod.db; skipping knowledge integrity check",
             ctx,
         );
         return Ok(());
@@ -5373,8 +5428,8 @@ fn validate_lineage_hard_gate(
     let federation_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     let todo_db = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
 
-    // Fast path: if the canonical datastore is missing, skip entirely.
-    if !federation_db.exists() || !todo_db.exists() {
+    // Fast path: if the canonical datastore is missing or Cloud backend is active, skip entirely.
+    if DbBroker::new(&store.root).is_cloud() || !federation_db.exists() || !todo_db.exists() {
         skip("lineage inputs missing; skipping", ctx);
         return Ok(());
     }
@@ -5527,6 +5582,13 @@ fn validate_watcher_audit(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Watcher Audit Gate", ctx);
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; skipping local SQLite watcher audit",
+            ctx,
+        );
+        return Ok(());
+    }
     if events::exists(&store.root, events::WATCHER)? {
         pass("Watcher audit trail present", ctx);
     } else {
@@ -5568,6 +5630,13 @@ fn validate_archive_integrity(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Archive Integrity Gate", ctx);
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; skipping local SQLite archive check",
+            ctx,
+        );
+        return Ok(());
+    }
     let db_path = store.root.join(crate::core::schemas::LOCAL_DB_NAME);
     if !db_path.exists() {
         skip("decapod.db not found; skipping archive check", ctx);
@@ -5601,10 +5670,8 @@ fn validate_control_plane_contract(
     let data_dir = &store.root;
     let mut violations = Vec::new();
 
-    // Check for canonical broker audit trail presence.
-    if !events::exists(data_dir, events::BROKER)? {
-        // First run - no broker log yet, this is OK
-        pass("No broker events yet (first run)", ctx);
+    if DbBroker::new(data_dir).is_cloud() || !events::exists(data_dir, events::BROKER)? {
+        pass("No local SQLite broker audit required", ctx);
         return Ok(());
     }
 
@@ -5784,6 +5851,13 @@ fn validate_federation_gates(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("Federation Gates", ctx);
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; skipping local SQLite federation gates",
+            ctx,
+        );
+        return Ok(());
+    }
 
     let results = crate::plugins::federation::validate_federation(&store.root)?;
 
@@ -6477,7 +6551,11 @@ fn validate_projection_consistency(
         });
     }
 
-    if todo_db.exists() && events::exists(&data_root, events::TODO)? {
+    if !DbBroker::new(&data_root).is_cloud()
+        && !crate::core::cloud_workspace::is_cloud_project(main_root)
+        && todo_db.exists()
+        && events::exists(&data_root, events::TODO)?
+    {
         let conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
         let done_count: i64 = conn
             .query_row(
@@ -6647,7 +6725,9 @@ fn validate_projection_consistency(
                         e
                     ))
                 })?;
-                if let Some(task_id) = manifest.get("task_id").and_then(|v| v.as_str()) {
+                if !DbBroker::new(&data_root).is_cloud()
+                    && let Some(task_id) = manifest.get("task_id").and_then(|v| v.as_str())
+                {
                     let conn = db::db_connect_for_validate(&todo_db.to_string_lossy())?;
                     let status: Option<String> = conn
                         .query_row(
@@ -6828,7 +6908,7 @@ fn collect_active_todo_handoff_comments(
     store_root: &Path,
 ) -> Result<Vec<String>, error::DecapodError> {
     let db_path = store_root.join(crate::core::schemas::TODO_DB_NAME);
-    if !db_path.exists() {
+    if DbBroker::new(store_root).is_cloud() || !db_path.exists() {
         return Ok(Vec::new());
     }
 
@@ -7733,6 +7813,13 @@ fn validate_state_commit_gate(
 }
 
 fn validate_obligations(store: &Store, ctx: &ValidationContext) -> Result<(), error::DecapodError> {
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; skipping local SQLite obligation graph",
+            ctx,
+        );
+        return Ok(());
+    }
     // Initialize the DB to ensure tables exist
     crate::core::obligation::initialize_obligation_db(&store.root)?;
 
@@ -7768,6 +7855,13 @@ fn validate_lcm_immutability(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("LCM Immutability Gate", ctx);
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; skipping local SQLite LCM immutability gate",
+            ctx,
+        );
+        return Ok(());
+    }
     // LCM ledger authority is decapod.db events (stream=lcm), not lcm.events.jsonl.
     let has_events =
         crate::core::events::exists(&store.root, crate::core::events::LCM).unwrap_or(false);
@@ -7795,6 +7889,13 @@ fn validate_lcm_rebuild_gate(
     ctx: &ValidationContext,
 ) -> Result<(), error::DecapodError> {
     info("LCM Rebuild Gate", ctx);
+    if DbBroker::new(&store.root).is_cloud() {
+        skip(
+            "Cloud backend active; skipping local SQLite LCM rebuild gate",
+            ctx,
+        );
+        return Ok(());
+    }
     let has_events =
         crate::core::events::exists(&store.root, crate::core::events::LCM).unwrap_or(false);
     if !has_events {
@@ -7952,21 +8053,40 @@ pub fn evaluate_mandates(
                 let agent_id =
                     std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
                 if agent_id != "unknown" {
-                    let mut active_tasks = crate::core::todo::list_tasks(
-                        &store.root,
-                        Some("open".to_string()),
-                        None,
-                        None,
-                        None,
-                        None,
-                    );
-                    if let Ok(ref mut tasks) = active_tasks {
-                        let pre_filter_count = tasks.len();
-                        let debug_info = if !tasks.is_empty() {
-                            format!(
-                                "First task assigned to: '{}', My ID: '{}'",
-                                tasks[0].assigned_to, agent_id
+                    let active_assignees: Result<Vec<String>, error::DecapodError> =
+                        if DbBroker::new(&store.root).is_cloud() {
+                            crate::core::workspace::get_main_repo_root(project_root)
+                                .and_then(|main_root| {
+                                    let identity =
+                                        crate::core::repo_identity::resolve_repository_identity(
+                                            &main_root,
+                                        )?;
+                                    crate::core::cloud_workspace::list_hosted_open_tasks_blocking(
+                                        &main_root, &identity,
+                                    )
+                                })
+                                .map(|all| {
+                                    all.into_iter()
+                                        .filter(|t| t.status == "open" || t.status == "in_progress")
+                                        .map(|t| t.assignee.unwrap_or_default())
+                                        .collect()
+                                })
+                        } else {
+                            crate::core::todo::list_tasks(
+                                &store.root,
+                                Some("open".to_string()),
+                                None,
+                                None,
+                                None,
+                                None,
                             )
+                            .map(|tasks| tasks.into_iter().map(|t| t.assigned_to).collect())
+                            .map_err(|e| error::DecapodError::ValidationError(e.to_string()))
+                        };
+                    if let Ok(mut assignees) = active_assignees {
+                        let pre_filter_count = assignees.len();
+                        let debug_info = if let Some(first) = assignees.first() {
+                            format!("First task assigned to: '{}', My ID: '{}'", first, agent_id)
                         } else {
                             format!(
                                 "No tasks found. My ID: '{}', Root: '{}'",
@@ -7975,8 +8095,8 @@ pub fn evaluate_mandates(
                             )
                         };
 
-                        tasks.retain(|t| t.assigned_to == agent_id);
-                        if tasks.is_empty() {
+                        assignees.retain(|a| a == &agent_id);
+                        if assignees.is_empty() {
                             blockers.push(Blocker {
                                 kind: BlockerKind::MissingProof,
                                 message: format!("Mandate Violation: {} (Pre-filter: {}, {})", mandate.fragment.title, pre_filter_count, debug_info),
@@ -8079,8 +8199,14 @@ pub fn run_validation(
 
     let ctx = ValidationContext::new();
 
-    // Read broker evidence once through the canonical event boundary.
-    let broker_content = events::query_serialized_lines(&store.root, events::BROKER)?;
+    // Read broker evidence once through the canonical event boundary (skipped in Cloud mode).
+    let is_cloud_backend = DbBroker::new(&store.root).is_cloud()
+        || crate::core::cloud_workspace::is_cloud_project(working_root);
+    let broker_content = if is_cloud_backend {
+        String::new()
+    } else {
+        events::query_serialized_lines(&store.root, events::BROKER)?
+    };
 
     // Store validations — run sequentially since they set up state
     match store.kind {

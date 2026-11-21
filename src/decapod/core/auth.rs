@@ -388,6 +388,9 @@ impl CloudAuthGate for NoOpAuthGate {
 pub struct InteractiveAuthGate;
 impl CloudAuthGate for InteractiveAuthGate {
     fn check_and_trigger(&self, root: &Path) -> Result<(), DecapodError> {
+        if crate::core::broker::DbBroker::new(&root.join(".decapod/data")).is_cloud() {
+            return Ok(());
+        }
         if !is_token_valid(root) {
             println!(
                 "{} {}",

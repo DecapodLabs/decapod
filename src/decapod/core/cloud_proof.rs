@@ -295,6 +295,16 @@ pub struct CustodyRevokeRequest {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustodyGetRequest {
+    pub project_id: String,
+    pub task_id: String,
+    pub workspace_id: String,
+    pub custody_id: String,
+    pub task_revision: i64,
+    pub fencing_generation: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CustodyBindReceipt {
     pub task_revision: i64,
     pub fencing_generation: i64,
@@ -466,28 +476,90 @@ pub fn custody_bind<T: ProofControlTransport>(
     let resp = transport
         .write_control(PROOF_ACCEPTANCE_CONTROL_OP, &payload)
         .map_err(|err| err.to_decapod_error(Some(&req.operation_id)))?;
+    if resp.get("operation_id") != payload.get("operation_id") {
+        return Err(invalid_custody_receipt());
+    }
+    custody_receipt(&resp, &payload, "custody_bound")
+}
+
+/// Check a previously bound fence against current hosted repository authority.
+/// A historical mutation receipt cannot establish that the fence is still live.
+pub fn custody_get<T: ProofControlTransport>(
+    transport: &T,
+    req: &CustodyGetRequest,
+) -> Result<CustodyBindReceipt, DecapodError> {
+    if req.task_revision <= 0 || req.fencing_generation <= 0 {
+        return Err(DecapodError::ValidationError(
+            "CLOUD_CUSTODY_FENCE_INVALID: expected revision and fencing generation must be positive"
+                .into(),
+        ));
+    }
+    let payload = json!({
+        "version": 1,
+        "action": "get_custody",
+        "project_id": req.project_id,
+        "task_id": req.task_id,
+        "workspace_id": req.workspace_id,
+        "custody_id": req.custody_id,
+        "task_revision": req.task_revision,
+        "fencing_generation": req.fencing_generation,
+    });
+    let resp = transport
+        .read_control(PROOF_ACCEPTANCE_READ_OP, &payload)
+        .map_err(|mut err| {
+            if err.kind == CloudControlDenialKind::OutcomeUnknown {
+                err.kind = CloudControlDenialKind::Unavailable;
+            }
+            err.to_decapod_error(None)
+        })?;
+    let receipt = custody_receipt(&resp, &payload, "custody_current")?;
+    if receipt.task_revision != req.task_revision
+        || receipt.fencing_generation != req.fencing_generation
+    {
+        return Err(invalid_custody_receipt());
+    }
+    Ok(receipt)
+}
+
+fn invalid_custody_receipt() -> DecapodError {
+    DecapodError::ValidationError(
+        "CLOUD_CUSTODY_RECEIPT_INVALID: hosted custody response is missing, stale, or mismatched"
+            .into(),
+    )
+}
+
+fn custody_receipt(
+    response: &JsonValue,
+    request: &JsonValue,
+    status: &str,
+) -> Result<CustodyBindReceipt, DecapodError> {
+    if response["version"] != 1
+        || response["profile"] != "candidate-acceptance-v1"
+        || response["status"] != status
+        || ["project_id", "task_id", "workspace_id", "custody_id"]
+            .iter()
+            .any(|key| response.get(*key) != request.get(*key))
+    {
+        return Err(invalid_custody_receipt());
+    }
+    let positive = |key| {
+        response[key]
+            .as_i64()
+            .filter(|value| *value > 0)
+            .ok_or_else(invalid_custody_receipt)
+    };
+    positive("authority_generation")?;
+    let expires_at = response["expires_at"]
+        .as_str()
+        .filter(|value| {
+            crate::core::time::parse_rfc3339(value)
+                .is_ok_and(|expires| expires > time::OffsetDateTime::now_utc())
+        })
+        .ok_or_else(invalid_custody_receipt)?;
     Ok(CustodyBindReceipt {
-        task_revision: resp
-            .get("task_revision")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| {
-                DecapodError::ValidationError(
-                    "missing task_revision in custody_bind receipt".into(),
-                )
-            })?,
-        fencing_generation: resp
-            .get("fencing_generation")
-            .and_then(|v| v.as_i64())
-            .ok_or_else(|| {
-                DecapodError::ValidationError(
-                    "missing fencing_generation in custody_bind receipt".into(),
-                )
-            })?,
-        expires_at: resp
-            .get("expires_at")
-            .and_then(|v| v.as_str())
-            .unwrap_or_default()
-            .to_string(),
+        task_revision: positive("task_revision")?,
+        fencing_generation: positive("fencing_generation")?,
+        expires_at: expires_at.to_owned(),
     })
 }
 

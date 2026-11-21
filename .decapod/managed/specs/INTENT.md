@@ -1,5 +1,31 @@
 # Intent
 
+## Cloud Wave 2: quota/spend-cap visibility, cross-platform DPoP device custody, and SQLite-free Cloud workspaces (#1836, #1835, #1886)
+
+Completes Decapod Cloud operational parity across error taxonomy, device lifecycle,
+and workspace/validation workflows while preserving Decapod Local isolation:
+
+- **Quota, spend-cap & provider status mapping + live policy inspection (#1836)**:
+  Distinguishes `quota_exceeded`, `overage_cap_exhausted`, and `provider_disabled`
+  from generic availability failures in `cloud_client` and surfaces authenticated
+  included-usage and spend-cap state via `decapod cloud status --live`
+  (`AccountOperation::Status` with `operation = "resource_limits"`).
+- **Cross-platform DPoP keystore, signed revoke & device inventory (#1835)**:
+  Attaches the enrolled Ed25519 DPoP proof signer during `decapod cloud revoke`
+  (`--session-logout` DPoP session logout vs management device revocation),
+  abstracts OS keystore backends across macOS Keychain, Linux Secret Service
+  (`secret-tool`), and Windows Credential Manager with strict mode-`0600` private
+  file fallback, exposes non-secret custody inventory via
+  `decapod cloud devices [--live]`, and forwards redacted
+  `Deprecation`/`Sunset`/`Decapod-Cloud-*` diagnostic warnings from
+  `CloudResponseMetadata`.
+- **SQLite-free Cloud workspace provisioning & validation (#1886)**: Keeps
+  `decapod workspace ensure`, `decapod validate`, container isolation
+  (`HostContainerSignerServer` + `HostCloudRelayHandler`), and governed plan
+  checks usable when accepted repositories select `backend = "cloud"`, binding
+  hosted task custody (`custody_bind_or_reconcile`) and enforcing fail-closed
+  boundaries without creating, reading, or mutating `.decapod/data/decapod.db`.
+
 ## Pay-and-use Cloud onboarding and org-scoped project routing (#1877, #1896)
 
 Decapod Cloud enables a streamlined "select Cloud, sign in, pay, and use" flow without requiring a mandatory Admin setup wizard before repository enrollment:
@@ -738,8 +764,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
+- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

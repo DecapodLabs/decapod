@@ -1,5 +1,35 @@
 # Interfaces
 
+## Cloud Wave 2 CLI, error diagnostics, and hosted workspace interfaces (#1836, #1835, #1886)
+
+- **`decapod cloud` subcommands (`src/decapod/cli.rs::CloudCommand`)**:
+  - `decapod cloud status [--live]`: Without `--live`, emits private local
+    session/device state without network calls (`server_readiness: "not_checked"`).
+    With `--live`, queries `AccountOperation::Status` (`operation: "resource_limits"`)
+    and includes `resource_limits`, `spend_cap_status`, `spend_cap_warning`, and
+    redacted header `warnings`.
+  - `decapod cloud devices [--live]`: Reports non-secret `DeviceKeyInventory`
+    records (`origin`, `repository`, `jkt`, optional `device_key_id`, `backend`,
+    `scope`, `keystore_policy`, `os_keychain_available`) without key material;
+    `--live` checks project authorization and surfaces `CloudMetadataWarning`s.
+  - `decapod cloud revoke [--all] [--device-id <jkt-or-id>] [--session-logout] [--local-only]`:
+    Supports offline `--local-only` cleanup, explicit DPoP-signed
+    `--session-logout` (`action = "logout"`, mandatory enrolled device signer),
+    or management revocation (`--all` / `--device-id`).
+- **Typed cloud error mapping (`src/decapod/core/error.rs::CloudAuthStatus`)**:
+  Adds `QuotaExceeded` (`quota_exceeded`, `AdapterErrorKind::Quota`),
+  `OverageCapExhausted` (`overage_cap_exhausted`), and `ProviderDisabled`
+  (`provider_disabled`), all mapped to `FailureKind::Authorization` in
+  `cloud_todo_operation` and carrying zero upstream error strings.
+- **Hosted workspace & validation boundary (`src/decapod/core/cloud_workspace.rs`)**:
+  When accepted `.decapod/config.toml` selects `backend = "cloud"`,
+  `decapod workspace ensure` (and RPC `workspace.ensure`) bind or reconcile
+  `CloudCustodyRecord` via `get_operation`, seed branch governance from hosted
+  tasks (`hosted_tasks_for_governance_seed`), reject direct unsupported
+  `todo renew` with `CLOUD_LEASE_RENEW_UNSUPPORTED`, and support host-relay
+  container execution (`DECAPOD_CLOUD_CONTAINER_RELAY=1`) via
+  `RelayProofControlTransport` without exposing tokens or creating `decapod.db`.
+
 ## Pay-and-use Cloud CLI flags, auth diagnostics, and pricing URL contract (#1877, #1896)
 
 - **Managed project commands (`src/decapod/cli.rs`, `src/decapod/lib.rs`, `src/decapod/core/cloud_project.rs`)**:
@@ -1571,8 +1601,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
+- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

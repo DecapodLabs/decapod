@@ -1,5 +1,23 @@
 # Validation
 
+## Cloud Wave 2 verification (#1836, #1835, #1886)
+
+Verified on the merged `origin/master` (`v0.159.0`, including PR `#1901` and
+PR `#1902`) candidate:
+
+- **Feature matrix, formatting, and lints**:
+  - `reviewed_sources_digest` in `.decapod/config.toml` reconciled to `sha256:875df5f0a0da8415e102fa983a448cf995b93f52aa689d7a4dc71726a36c7ae9` after `v0.159.0` (`#1902`) bumped `Cargo.toml`/`Cargo.lock` with unchanged CI/toolchain/workflow contracts.
+  - `cargo check --locked --no-default-features --lib` with `RUSTFLAGS="-D warnings"`: passed (0 warnings).
+  - `cargo fmt --all -- --check`: passed.
+  - `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings).
+- **Unit & migration suites (`--locked --features supabase-cloud --lib`)**:
+  - `--lib` (`v0.159.0`): `1970 passed; 0 failed; 8 ignored` (including `cloud_dpop_tests` cross-platform OS keystore + `with_os_keychain` tests, `propodus_tests` bounded metadata warning & `quota_exceeded`/`overage_cap_exhausted`/`provider_disabled` mapping tests, `cloud_workspace_tests` custody bind/reconcile + container relay tests, and `#1901` unit checks).
+  - `--lib core::migration`: `13 passed; 0 failed`.
+- **Cloud & boundary integration suites (`--locked --features supabase-cloud`)**:
+  - `cloud_workspace_validation_1886`: `4 passed; 0 failed` (accepted Cloud `workspace ensure` + `validate` with conflicting SQLite bytes `existing_sqlite = false/true`, lost-ack `get_operation` reconciliation, and `--container` host-relay admission + replacement-container refusal).
+  - `cloud_supabase_boundary`: `52 passed; 0 failed` (including `live_cloud_status_reads_only_the_authenticated_spend_summary`, `quota_overage_and_provider_disabled_errors_surface_explicit_diagnostics`, `cloud_revoke_supports_dpop_session_logout_management_revoke_and_retry_on_failure`, and `cloud_devices_reports_non_secret_inventory_and_surfaces_deprecation_warnings`).
+  - `cloud_wave_parity` (`5/5`), `cloud_cli_boundary` (`2/2`), `cloud_command_path` (`1/1`), `cloud_dactyl_boundary` (`1/1`), `cloud_mixed_worktree` (`3/3`), `cloud_todo_resume_wire` (`3/3`), `policy_self_authorization_1776` (`9/9`), `propodus_contract` (`6/6`), `release_dependency_policy` (`4/4`), `release_workflow_policy` (`22/22`), and `supabase_service` (`3 passed; 0 failed; 4 ignored` external PG17/hosted fixtures).
+
 ## Context, admission, and outcome checks
 
 Focused Rust regressions cover repetition and no-match retrieval, override behavior, authorization boundaries, envelope budgets, atomic correction and expiry, legacy capsule hashes, source admission, public history generation, explicit host identity, and incomplete outcome samples. The accepted JSON and acceptance-observer tests remain part of the regression suite. The Constitution schema is independently checked by the existing workflow.
@@ -1551,8 +1569,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
+- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

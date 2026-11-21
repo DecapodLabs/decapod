@@ -22,6 +22,7 @@ pub mod cloud_project;
 pub mod cloud_proof;
 pub mod cloud_session;
 pub mod cloud_todo_operation;
+pub mod cloud_workspace;
 pub mod completion_evidence;
 pub mod constitution_cli;
 pub mod constitution_schema;

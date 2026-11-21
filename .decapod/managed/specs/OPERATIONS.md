@@ -1,5 +1,23 @@
 # Operations
 
+## Cloud Wave 2 spend-cap inspection, device lifecycle, and hosted workspace recovery (#1836, #1835, #1886)
+
+- **Spend-cap & quota diagnostics**: Use `decapod cloud status --live` to inspect
+  authenticated `resource_limits` and `spend_cap_status` / `spend_cap_warning`
+  for the active project. `quota_exceeded`, `overage_cap_exhausted`, and
+  `provider_disabled` responses preserve local task state and instruct operators
+  to resolve plan quotas, spend caps, or sign-in providers in Cloud Admin.
+- **Device custody inventory & revocation**: Use `decapod cloud devices [--live]`
+  to inspect enrolled local device key metadata (`jkt`, optional `device_key_id`,
+  keystore backend, OS keychain availability, and deprecation/sunset warnings).
+  Use `decapod cloud revoke` with `--session-logout` (DPoP-signed logout),
+  `--device-id <id>`, `--all`, or `--local-only` (offline credential wipe).
+- **Hosted workspace recovery**: In `backend = "cloud"` repositories, repeated
+  `decapod workspace ensure` reconciles uncertain `custody_bind` acks via
+  read-only `get_operation` rather than duplicating leases, and `decapod validate`
+  refuses revoked, task-revision-drifted, or expired hosted custody receipts with
+  `CLOUD_CUSTODY_RECEIPT_INVALID` without probing local SQLite.
+
 ## Inspecting native validation completion
 
 ## Operations Overview
@@ -458,8 +476,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
+- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

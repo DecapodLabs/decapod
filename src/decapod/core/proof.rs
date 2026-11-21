@@ -417,6 +417,9 @@ fn sync_proof_claims_to_health(
 
 /// Append proof event to store
 fn append_proof_event(store: &Store, event: &ProofEvent) -> Result<(), DecapodError> {
+    if crate::core::broker::DbBroker::new(&store.root).is_cloud() {
+        return Ok(());
+    }
     events::append(
         &store.root,
         events::VERIFICATION,

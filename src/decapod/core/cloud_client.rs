@@ -4,9 +4,9 @@
 use crate::core::backend::StorageContext;
 #[cfg(feature = "supabase-cloud")]
 use crate::core::backend::{BackendRoute, CloudDatastore};
-use crate::core::cloud_session::SessionStore;
 #[cfg(feature = "supabase-cloud")]
-use crate::core::cloud_session::{Bootstrap, Phase, Session, SessionGuard, SessionState};
+use crate::core::cloud_session::{Bootstrap, Phase, Session, SessionGuard};
+use crate::core::cloud_session::{SessionState, SessionStore};
 use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
 use crate::core::repo_identity::RepositoryIdentity;
 use std::path::Path;
@@ -65,6 +65,7 @@ fn diagnostic(
     DecapodError::CloudAuth(CloudAuthDiagnostic::new(status, message, next_action))
 }
 
+#[cfg(feature = "supabase-cloud")]
 fn restart_required() -> DecapodError {
     diagnostic(
         CloudAuthStatus::RestartRequired,
@@ -155,6 +156,21 @@ pub(crate) fn diagnostic_for_status_code(
             CloudAuthStatus::OrganizationAlreadyEnrolled,
             "This organization is already enrolled under an existing immutable Cloud organization record.",
             "Do not purchase a duplicate organization subscription. Ask an existing organization administrator for an invite or seat assignment for this repository, then retry.",
+        ),
+        "quota_exceeded" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::QuotaExceeded,
+            "The cloud service declined the request because the included quota is exhausted.",
+            "Ask a billing administrator to review the plan or eligible paid overages in Cloud Admin before trying again.",
+        ),
+        "overage_cap_exhausted" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::OverageCapExhausted,
+            "The cloud service declined new billable usage because the spend cap was reached.",
+            "Ask a billing administrator to review the current spend cap in Cloud Admin. Already admitted tasks can still use supported terminal operations.",
+        ),
+        "provider_disabled" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ProviderDisabled,
+            "This sign-in provider is disabled for the cloud deployment.",
+            "Choose an enabled provider on the Cloud Admin sign-in page.",
         ),
         "entitlement_denied" => CloudAuthDiagnostic::new(
             CloudAuthStatus::EntitlementDenied,
@@ -248,6 +264,14 @@ pub fn transport_error_for_repository(
             CloudAuthStatus::RepositoryDenied,
             "The service denied this account operation.",
             "Ask the account owner to review access, then retry.",
+        ),
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Quota,
+            ..
+        } => (
+            CloudAuthStatus::QuotaExceeded,
+            "The cloud service declined the request because the quota or payload limit was exceeded.",
+            "Ask a billing administrator to review the plan or eligible paid overages in Cloud Admin before trying again.",
         ),
         dactyl_db::DactylError::Adapter {
             kind: AdapterErrorKind::Timeout | AdapterErrorKind::Transport,
@@ -747,15 +771,23 @@ pub fn status(
     let origin = selected_origin()?;
     let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
     let guard = store.lock(LOCK_TIMEOUT)?;
-    let state = guard.state();
+    Ok(local_status(project_root, identity, &origin, guard.state()))
+}
+
+fn local_status(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    origin: &str,
+    state: &SessionState,
+) -> serde_json::Value {
     let device_key = crate::core::cloud_dpop::DeviceKeyStore::for_project(
-        &origin,
+        origin,
         &identity.canonical_name,
         project_root,
     )
     .ok()
     .and_then(|ks| ks.load().ok().flatten());
-    Ok(serde_json::json!({
+    serde_json::json!({
         "schema_version": "decapod.cloud.session.v1",
         "repository": identity.canonical_name,
         "phase": state.phase,
@@ -765,6 +797,192 @@ pub fn status(
         "device_jkt": device_key.as_ref().map(|k| k.jkt.clone()),
         "device_keystore": device_key.as_ref().map(|k| k.backend.as_str()),
         "server_readiness": "not_checked",
+    })
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub fn status_live(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    use dactyl_db::{AccountOperation, CloudConnector, CloudResponseMetadata};
+
+    let origin = selected_origin()?;
+    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
+    let guard = store.lock(LOCK_TIMEOUT)?;
+    let state = guard.state();
+    let session = state
+        .session
+        .as_ref()
+        .filter(|session| {
+            matches!(state.phase, Phase::Ready | Phase::CheckingReadiness)
+                && session.expires_at > now()
+        })
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::AuthRequired,
+                "Live cloud status requires a current managed session.",
+                "Run `decapod cloud login` to establish a session, then repeat live status.",
+            )
+        })?;
+    let (mut connector, discover_meta) =
+        CloudConnector::discover_with_metadata(&origin).map_err(transport_error)?;
+    let mut warnings = crate::core::propodus::warnings_from_cloud_metadata(&discover_meta);
+    if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
+        connector.origin(),
+        &identity.canonical_name,
+        project_root,
+    ) {
+        connector = connector.with_proof_signer(signer);
+    }
+    let selected =
+        crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity)?;
+    let mut req_meta = CloudResponseMetadata::default();
+    let response = connector
+        .account_request_with_metadata(
+            AccountOperation::Status,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": selected.canonical_name,
+                "operation": "resource_limits",
+            }),
+            &session.access_token,
+            None,
+            None,
+            &mut req_meta,
+        )
+        .map_err(transport_error)?;
+    warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
+        &req_meta,
+    ));
+    let resources = response
+        .get("resource_limits")
+        .filter(|value| response["version"] == 1 && value.is_object())
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::ProviderUnavailable,
+                "The service did not return a resource-limit summary.",
+                "Check the selected project's usage and spend cap in Cloud Admin.",
+            )
+        })?;
+    let mut result = local_status(project_root, identity, &origin, state);
+    result["resource_limits"] = resources.clone();
+    if let Some(spend_status) = resources
+        .pointer("/paid_overages/status")
+        .and_then(|v| v.as_str())
+    {
+        result["spend_cap_status"] = serde_json::json!(spend_status);
+        result["spend_cap_warning"] = serde_json::json!(matches!(
+            spend_status,
+            "warning" | "exhausted" | "cap_reached"
+        ));
+    }
+    if !warnings.is_empty() {
+        result["warnings"] = serde_json::json!(warnings);
+    }
+    Ok(result)
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+pub fn status_live(
+    _project_root: &Path,
+    _identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    selected_origin()?;
+    unreachable!("cloud origin is unavailable without the supabase-cloud feature")
+}
+
+pub fn devices(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    live: bool,
+) -> Result<serde_json::Value, DecapodError> {
+    let origin = selected_origin()?;
+    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
+    let guard = store.lock(LOCK_TIMEOUT)?;
+    let state = guard.state();
+    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        &origin,
+        &identity.canonical_name,
+        project_root,
+    )?;
+    let local_device = key_store.inspect(&origin, &identity.canonical_name)?;
+    let mut devices_list = Vec::new();
+    if let Some(entry) = &local_device {
+        devices_list.push(serde_json::json!(entry));
+    }
+    #[cfg_attr(not(feature = "supabase-cloud"), allow(unused_mut))]
+    let mut server_readiness = "not_checked";
+    #[cfg_attr(not(feature = "supabase-cloud"), allow(unused_mut))]
+    let mut warnings: Vec<crate::core::propodus::CloudMetadataWarning> = Vec::new();
+    #[cfg(feature = "supabase-cloud")]
+    if live {
+        use dactyl_db::{AccountOperation, CloudConnector, CloudResponseMetadata};
+
+        let session = state
+            .session
+            .as_ref()
+            .filter(|session| {
+                matches!(state.phase, Phase::Ready | Phase::CheckingReadiness)
+                    && session.expires_at > now()
+            })
+            .ok_or_else(|| {
+                diagnostic(
+                    CloudAuthStatus::AuthRequired,
+                    "Live cloud device inspection requires a current managed session.",
+                    "Run `decapod cloud login` to establish a session, then repeat `decapod cloud devices --live`.",
+                )
+            })?;
+        let (mut connector, discover_meta) =
+            CloudConnector::discover_with_metadata(&origin).map_err(transport_error)?;
+        warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
+            &discover_meta,
+        ));
+        if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
+            connector.origin(),
+            &identity.canonical_name,
+            project_root,
+        ) {
+            connector = connector.with_proof_signer(signer);
+        }
+        let selected =
+            crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity)?;
+        let mut req_meta = CloudResponseMetadata::default();
+        let response = connector
+            .account_request_with_metadata(
+                AccountOperation::Status,
+                &serde_json::json!({
+                    "version": 1,
+                    "project_id": selected.canonical_name,
+                }),
+                &session.access_token,
+                None,
+                None,
+                &mut req_meta,
+            )
+            .map_err(transport_error)?;
+        warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
+            &req_meta,
+        ));
+        if response.get("backend_authorized").and_then(|v| v.as_bool()) == Some(true) {
+            server_readiness = "checked";
+        }
+    }
+    #[cfg(not(feature = "supabase-cloud"))]
+    if live {
+        let _ = state;
+        unreachable!("cloud origin is unavailable without the supabase-cloud feature");
+    }
+    Ok(serde_json::json!({
+        "schema_version": "decapod.cloud.devices.v1",
+        "repository": identity.canonical_name,
+        "phase": state.phase,
+        "credential_present": state.session.is_some(),
+        "keystore_policy": crate::core::cloud_dpop::keystore_policy_label(),
+        "os_keychain_available": crate::core::cloud_dpop::os_keychain_available(),
+        "server_readiness": server_readiness,
+        "devices": devices_list,
+        "warnings": warnings,
     }))
 }
 
@@ -855,7 +1073,7 @@ pub fn enroll_device_with_connector(
         Some(audience),
         None,
     )?;
-    connector
+    let response = connector
         .account_request(
             dactyl_db::AccountOperation::DeviceEnroll,
             &serde_json::json!({
@@ -871,7 +1089,15 @@ pub fn enroll_device_with_connector(
             bearer,
             None,
         )
-        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
+    if let Some(device_key_id) = response
+        .get("device_key_id")
+        .or_else(|| response.pointer("/device_key/id"))
+        .and_then(|v| v.as_str())
+    {
+        let _ = key_store.record_device_key_id(&key.jkt, device_key_id);
+    }
+    Ok(response)
 }
 
 /// Request an account-level AAL2 MFA step-up challenge via `dactyl-db 0.18.0`
@@ -902,56 +1128,206 @@ pub fn revoke(
     identity: &RepositoryIdentity,
     all: bool,
     device_id: Option<&str>,
+    session_logout: bool,
+    local_only: bool,
 ) -> Result<serde_json::Value, DecapodError> {
+    if local_only && session_logout {
+        return Err(DecapodError::ValidationError(
+            "CONFLICTING_FLAGS: --local-only cannot be combined with --session-logout".into(),
+        ));
+    }
     let origin = selected_origin()?;
     let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
         &origin,
         &identity.canonical_name,
         project_root,
     )?;
-    let existing_jkt = key_store.load()?.map(|k| k.jkt.clone());
-    if let (Some(target), Some(current_jkt)) = (device_id, existing_jkt.as_deref())
-        && target.trim() != current_jkt
+    let existing_key = key_store.load()?;
+    let existing_jkt = existing_key.as_ref().map(|k| k.jkt.clone());
+    let stored_device_key_id = existing_jkt
+        .as_deref()
+        .and_then(|jkt| key_store.registered_device_key_id(jkt));
+    let requested_device_id = device_id.map(str::trim).filter(|s| !s.is_empty());
+    let matches_local = match requested_device_id {
+        None => true,
+        Some(target) => {
+            existing_jkt.as_deref() == Some(target)
+                || stored_device_key_id.as_deref() == Some(target)
+        }
+    };
+
+    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
+    let mut guard = store.lock(LOCK_TIMEOUT)?;
+    let has_session = guard.state().session.is_some();
+
+    if let Some(target) = requested_device_id
+        && !matches_local
+        && (local_only || session_logout || !has_session)
+        && existing_jkt.is_some()
     {
         return Err(DecapodError::ValidationError(format!(
             "DEVICE_KEY_NOT_FOUND: requested device key '{}' does not match enrolled device '{}'",
-            target.trim(),
-            current_jkt
+            target,
+            existing_jkt.as_deref().unwrap_or_default()
         )));
     }
-    let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
-    let mut guard = store.lock(LOCK_TIMEOUT)?;
+
+    if local_only {
+        key_store.delete()?;
+        key_store.clear_registered_device_key_id();
+        guard.clear_for_restart()?;
+        return Ok(serde_json::json!({
+            "schema_version": "decapod.cloud.revoke.v1",
+            "repository": identity.canonical_name,
+            "operation": "local_only",
+            "local_only": true,
+            "all_scopes": all,
+            "revoked_device_jkt": existing_jkt,
+            "revoked_device_key_id": stored_device_key_id,
+            "remote_revoked": false,
+            "status": "revoked",
+        }));
+    }
+
+    #[cfg_attr(not(feature = "supabase-cloud"), allow(unused_mut))]
     let mut remote_revoked = false;
+    #[cfg_attr(not(feature = "supabase-cloud"), allow(unused_mut))]
+    let mut operation = "local_orphan_cleanup";
+    #[cfg_attr(not(feature = "supabase-cloud"), allow(unused_mut))]
+    let mut warnings: Vec<crate::core::propodus::CloudMetadataWarning> = Vec::new();
+    #[cfg_attr(not(feature = "supabase-cloud"), allow(unused_mut))]
+    let mut revoked_device_key_id = stored_device_key_id.clone();
+
+    if session_logout && !has_session {
+        return Err(diagnostic(
+            CloudAuthStatus::AuthRequired,
+            "Session logout requires an active saved cloud session.",
+            "Run `decapod cloud login` first, or use `decapod cloud revoke --local-only` to clear local device state.",
+        ));
+    }
+
     #[cfg(feature = "supabase-cloud")]
-    if let Some(session) = guard.state().session.as_ref()
-        && let Ok(connector) = dactyl_db::CloudConnector::discover(&origin)
-    {
-        let payload = serde_json::json!({
-            "version": 1,
-            "project_id": identity.canonical_name,
-            "revoke_all": all,
-            "jwk_thumbprint": existing_jkt,
-        });
-        if connector
-            .account_request(
-                dactyl_db::AccountOperation::DeviceRevoke,
+    if let Some(session) = guard.state().session.as_ref() {
+        use dactyl_db::{AccountOperation, CloudResponseMetadata};
+
+        let is_dpop_session_token = session.access_token.starts_with("dpc_at_");
+        let use_session_logout =
+            session_logout || (is_dpop_session_token && !all && requested_device_id.is_none());
+
+        let (mut connector, discover_meta) =
+            dactyl_db::CloudConnector::discover_with_metadata(&origin).map_err(transport_error)?;
+        warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
+            &discover_meta,
+        ));
+
+        let payload = if use_session_logout {
+            operation = "logout";
+            let signer = crate::core::cloud_dpop::active_request_proof_signer(
+                connector.origin(),
+                &identity.canonical_name,
+                project_root,
+            )
+            .or_else(|| {
+                key_store.load().ok().flatten().map(|key| {
+                    std::sync::Arc::new(crate::core::cloud_dpop::DeviceDpopSigner::new(key))
+                        as std::sync::Arc<dyn dactyl_db::RequestProofSigner>
+                })
+            })
+            .ok_or_else(|| {
+                diagnostic(
+                    CloudAuthStatus::KeyLost,
+                    "DPoP session logout requires an enrolled local device key to sign the proof.",
+                    "Use `decapod cloud revoke --local-only` to clear local state, then run `decapod cloud login --restart`.",
+                )
+            })?;
+            connector = connector.with_proof_signer(signer);
+            serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+                "action": "logout",
+            })
+        } else if all {
+            operation = "revoke_all";
+            serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+                "action": "revoke_all",
+                "revoke_all": true,
+            })
+        } else {
+            operation = "revoke_key";
+            let target_key_id = requested_device_id
+                .filter(|t| existing_jkt.as_deref() != Some(*t))
+                .map(ToOwned::to_owned)
+                .or_else(|| stored_device_key_id.clone());
+            revoked_device_key_id = target_key_id.clone();
+            let mut body = serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+                "action": "revoke_key",
+                "revoke_all": false,
+            });
+            if let Some(key_id) = target_key_id {
+                body["device_key_id"] = serde_json::json!(key_id);
+            }
+            if matches_local && let Some(jkt) = existing_jkt.as_deref() {
+                body["jwk_thumbprint"] = serde_json::json!(jkt);
+            }
+            body
+        };
+
+        let mut req_meta = CloudResponseMetadata::default();
+        // Fail closed without deleting local key/session if remote revocation fails,
+        // so the command remains safely retryable.
+        connector
+            .account_request_with_metadata(
+                AccountOperation::DeviceRevoke,
                 &payload,
                 &session.access_token,
                 None,
+                None,
+                &mut req_meta,
             )
-            .is_ok()
-        {
-            remote_revoked = true;
-        }
+            .map_err(transport_error)?;
+        warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
+            &req_meta,
+        ));
+        remote_revoked = true;
     }
-    key_store.delete()?;
-    guard.clear_for_restart()?;
+
+    if operation == "logout" {
+        guard.clear_for_restart()?;
+        return Ok(serde_json::json!({
+            "schema_version": "decapod.cloud.revoke.v1",
+            "repository": identity.canonical_name,
+            "operation": operation,
+            "local_only": false,
+            "all_scopes": false,
+            "device_key_preserved": existing_jkt.is_some(),
+            "revoked_device_jkt": existing_jkt,
+            "remote_revoked": remote_revoked,
+            "warnings": warnings,
+            "status": "revoked",
+        }));
+    }
+
+    if all || matches_local {
+        key_store.delete()?;
+        key_store.clear_registered_device_key_id();
+    }
+    if all || requested_device_id.is_none() || matches_local {
+        guard.clear_for_restart()?;
+    }
     Ok(serde_json::json!({
         "schema_version": "decapod.cloud.revoke.v1",
         "repository": identity.canonical_name,
+        "operation": operation,
+        "local_only": false,
         "all_scopes": all,
-        "revoked_device_jkt": existing_jkt,
+        "revoked_device_jkt": if matches_local { existing_jkt } else { None },
+        "revoked_device_key_id": revoked_device_key_id,
         "remote_revoked": remote_revoked,
+        "warnings": warnings,
         "status": "revoked",
     }))
 }

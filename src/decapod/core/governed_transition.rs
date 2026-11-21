@@ -739,6 +739,9 @@ pub fn record_transition(
     store_root: &Path,
     trace: &TransitionTrace,
 ) -> Result<u64, crate::core::error::DecapodError> {
+    if crate::core::broker::DbBroker::new(store_root).is_cloud() {
+        return Ok(0);
+    }
     let mut event = trace_json(trace);
     let Some(object) = event.as_object_mut() else {
         return Err(crate::core::error::DecapodError::ValidationError(

@@ -414,6 +414,64 @@ pub fn remove_container_for_invocation(
     }
 }
 
+/// Inspect a running container and verify its immutable 64-hex container ID,
+/// `org.decapod.managed=workspace` ownership, registered workspace checkout
+/// path, and exact invocation label before admitting host-relay operations.
+pub fn verify_running_container_for_invocation(
+    runtime: &str,
+    name: &str,
+    workspace: &Path,
+    invocation: &str,
+    expected_container_id: Option<&str>,
+) -> Result<String, error::DecapodError> {
+    let inspected = Command::new(runtime)
+        .args(["container", "inspect", name, "--format", "{{json .}}"])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map_err(error::DecapodError::IoError)?;
+    if !inspected.status.success() {
+        return Err(error::DecapodError::ValidationError(format!(
+            "CLOUD_CONTAINER_ADMISSION_DENIED: running container '{name}' could not be inspected ({}); host-only or missing-container execution is refused",
+            String::from_utf8_lossy(&inspected.stderr).trim()
+        )));
+    }
+    let record: serde_json::Value = serde_json::from_slice(&inspected.stdout).map_err(|err| {
+        error::DecapodError::ValidationError(format!(
+            "CLOUD_CONTAINER_ADMISSION_DENIED: invalid container inspect payload: {err}"
+        ))
+    })?;
+    let id = record
+        .get("Id")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+    let running = record
+        .get("State")
+        .and_then(|s| s.get("Running"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+    let labels = &record["Config"]["Labels"];
+    let canonical_ws = workspace
+        .canonicalize()
+        .unwrap_or_else(|_| workspace.to_path_buf());
+    let observed_ws = labels["org.decapod.workspace.path"].as_str().unwrap_or("");
+    let observed_ws_matches = observed_ws == workspace.to_string_lossy().as_ref()
+        || Path::new(observed_ws)
+            .canonicalize()
+            .is_ok_and(|p| p == canonical_ws);
+    if !running
+        || id.len() != 64
+        || !id.bytes().all(|c| c.is_ascii_hexdigit())
+        || labels["org.decapod.managed"].as_str() != Some("workspace")
+        || !observed_ws_matches
+        || labels["org.decapod.invocation"].as_str() != Some(invocation)
+        || expected_container_id.is_some_and(|expected| expected != id)
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "CLOUD_CONTAINER_ADMISSION_DENIED: container '{name}' failed immutable ID, checkout, or invocation verification (running={running}, expected_invocation={invocation})"
+        )));
+    }
+    Ok(id.to_string())
+}
+
 /// Recover interrupted, labelled runs before deleting their workspace data.
 pub fn remove_workspace_containers_for_path(
     runtime: &str,

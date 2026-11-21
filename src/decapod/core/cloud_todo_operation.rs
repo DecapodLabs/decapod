@@ -235,6 +235,9 @@ pub fn failure_kind(error: &DecapodError) -> FailureKind {
             | CloudAuthStatus::PaymentRequired
             | CloudAuthStatus::AdminApprovalRequired
             | CloudAuthStatus::OrganizationAlreadyEnrolled
+            | CloudAuthStatus::QuotaExceeded
+            | CloudAuthStatus::OverageCapExhausted
+            | CloudAuthStatus::ProviderDisabled
             | CloudAuthStatus::ActionRequired => FailureKind::Authorization,
             CloudAuthStatus::Revoked
             | CloudAuthStatus::DeviceRevoked

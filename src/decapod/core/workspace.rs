@@ -663,9 +663,11 @@ pub(crate) fn initialize_workbranch_governance_at(
     })?;
     let main = get_main_repo_root(repo_root)?;
     let store_root = main.join(".decapod/data");
-    // A bootstrap validation can precede datastore creation. Absence means no
-    // captured task; existing storage errors must still fail closed.
-    let tasks = if store_root.join("decapod.db").exists() {
+    // In Cloud mode, never read or create `.decapod/data/decapod.db` when seeding
+    // workbranch governance; source task metadata comes from Cloud custody.
+    let tasks = if crate::core::cloud_workspace::is_cloud_project(&main) {
+        crate::core::cloud_workspace::hosted_tasks_for_governance_seed(&main, repo_root, agent_id)?
+    } else if store_root.join("decapod.db").exists() {
         todo::list_tasks(&store_root, Some("open".into()), None, None, None, None)?
     } else {
         Vec::new()
@@ -746,6 +748,9 @@ pub fn ensure_workspace(
 ) -> Result<WorkspaceStatus, DecapodError> {
     if todo::is_missing_or_unknown_actor(agent_id) {
         return Err(todo::authoring_actor_required_error());
+    }
+    if crate::core::cloud_workspace::is_cloud_project(repo_root) {
+        return ensure_cloud_workspace(repo_root, config, agent_id);
     }
     let main_repo = get_main_repo_root(repo_root)?;
     verify_workspace_parent(&main_repo)?;
@@ -950,6 +955,133 @@ pub fn ensure_workspace(
     let mut result = get_workspace_status(&worktree_path)?;
     result.root_isolation = Some(source_inventory);
     Ok(result)
+}
+
+fn ensure_cloud_workspace(
+    repo_root: &Path,
+    config: Option<WorkspaceConfig>,
+    agent_id: &str,
+) -> Result<WorkspaceStatus, DecapodError> {
+    let config = config.unwrap_or(WorkspaceConfig {
+        branch: None,
+        use_container: false,
+        base_image: None,
+        base_branch: None,
+    });
+    let main_repo = get_main_repo_root(repo_root)?;
+    let identity = crate::core::repo_identity::resolve_repository_identity(&main_repo)?;
+    let source_inventory = root_isolation(repo_root)?;
+    let status = get_workspace_status(repo_root)?;
+
+    let hosted_tasks =
+        crate::core::cloud_workspace::list_hosted_open_tasks_blocking(&main_repo, &identity)?;
+    let claimed_for_actor: Vec<_> = hosted_tasks
+        .iter()
+        .filter(|t| t.status == "in_progress" && t.assignee.as_deref() == Some(agent_id))
+        .collect();
+
+    let requested_branch = if let Some(explicit) = config.branch.clone() {
+        explicit
+    } else if status.git.in_worktree && status.can_work {
+        status.git.current_branch.clone()
+    } else {
+        let primary = claimed_for_actor.first().ok_or_else(|| {
+            DecapodError::ValidationError(format!(
+                "TODO_CUSTODY_REQUIRED: no actively claimed hosted task for '{agent_id}'; run `decapod todo claim --id <task-id>` first"
+            ))
+        })?;
+        format!("agent/{}/{}-work", sanitize_agent_id(agent_id), primary.id)
+    };
+
+    if is_branch_protected(&requested_branch) {
+        return Err(DecapodError::ValidationError(format!(
+            "PROTECTED_BRANCH_REFUSED: cannot provision workspace on protected branch '{requested_branch}'"
+        )));
+    }
+
+    let branch_task_ids = extract_task_ids_from_branch(&requested_branch);
+    if branch_task_ids.is_empty() {
+        return Err(DecapodError::ValidationError(format!(
+            "BRANCH_TASK_ID_REQUIRED: workspace branch '{requested_branch}' must reference the claimed hosted task ID"
+        )));
+    }
+
+    let base_branch = resolve_base_branch(&main_repo, config.base_branch.as_deref());
+    let (worktree_path, created_base) =
+        if status.git.in_worktree && is_canonical_decapod_workspace_path(repo_root) {
+            if let Some(ref wt_path) = status.git.worktree_path {
+                (wt_path.clone(), None)
+            } else {
+                (repo_root.to_path_buf(), None)
+            }
+        } else {
+            create_worktree(
+                &main_repo,
+                &requested_branch,
+                agent_id,
+                "cloud",
+                &base_branch,
+            )?
+        };
+
+    let mut ownership =
+        crate::core::workspace_lifecycle::acquire_registered(&main_repo, &worktree_path)?;
+    let (mut custody_record, _tasks) = crate::core::cloud_workspace::admit_cloud_checkout(
+        &main_repo,
+        &worktree_path,
+        &requested_branch,
+        agent_id,
+        Some(ownership.invocation()),
+        config.use_container,
+    )?;
+
+    initialize_workbranch_governance_at(
+        &worktree_path,
+        agent_id,
+        config.base_branch.as_deref(),
+        created_base.as_deref(),
+    )?;
+    refresh_workspace_release_surfaces(&worktree_path)?;
+
+    if config.use_container {
+        let runtime = container_runtime::find_container_runtime()?;
+        ownership.require_container(&runtime)?;
+        custody_record.container_expected = true;
+        custody_record.container_runtime = Some(runtime.clone());
+        custody_record.invocation_id = Some(ownership.invocation().to_string());
+        let custody_store = crate::core::cloud_workspace::CloudCustodyStore::machine()?;
+        custody_store.save(&main_repo, &custody_record)?;
+
+        crate::plugins::container::prepare_generated_container_profile(&worktree_path)?;
+        let image_tag = workspace_image_tag(agent_id, &requested_branch);
+        build_workspace_image(&worktree_path, &image_tag, &runtime)?;
+
+        let mut container_status = get_workspace_status(&worktree_path)?;
+        let container_command =
+            crate::core::cloud_workspace::cloud_container_workspace_launch_command(
+                &main_repo,
+                &worktree_path,
+                &runtime,
+                &image_tag,
+                ownership.invocation(),
+                &custody_record,
+                None,
+            )?;
+        container_status.blockers.push(Blocker {
+            kind: BlockerKind::WorkspaceRequired,
+            message: "Cloud container environment prepared with non-secret custody handoff (no local SQLite store).".to_string(),
+            resolve_hint: container_command,
+        });
+        container_status
+            .required_actions
+            .push("Enter containerized Cloud workspace".to_string());
+        container_status.root_isolation = Some(source_inventory);
+        return Ok(container_status);
+    }
+
+    let mut ensured = get_workspace_status(&worktree_path)?;
+    ensured.root_isolation = Some(source_inventory);
+    Ok(ensured)
 }
 
 fn create_worktree(
@@ -1800,7 +1932,7 @@ fn is_external_tracker_config(repo_root: &Path) -> bool {
     }
 }
 
-fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
+pub(crate) fn get_current_branch(repo_root: &Path) -> Result<String, DecapodError> {
     let output = Command::new("git")
         .args([
             "-C",
@@ -3487,13 +3619,14 @@ fn prune_workspaces_report_with_process_dir(
         });
     }
 
-    // 2) Get all tasks from todo database
+    // 2) Get all tasks from todo database (skip SQLite entirely under Cloud backend)
     let store_root = main_repo.join(".decapod").join("data");
-    let tasks = if store_root.exists() {
-        todo::list_tasks(&store_root, None, None, None, None, None)?
-    } else {
-        vec![]
-    };
+    let tasks =
+        if !crate::core::cloud_workspace::is_cloud_project(&main_repo) && store_root.exists() {
+            todo::list_tasks(&store_root, None, None, None, None, None)?
+        } else {
+            vec![]
+        };
 
     let mut pruned = Vec::new();
     let mut skipped = Vec::new();

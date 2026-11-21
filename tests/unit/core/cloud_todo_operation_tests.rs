@@ -175,6 +175,47 @@ fn physical_error_categories_are_not_flattened_to_validation() {
 }
 
 #[test]
+fn cloud_policy_denials_keep_distinct_statuses_and_stop_automatic_retry() {
+    use crate::core::cloud_client::transport_error;
+    use dactyl_db::AdapterErrorKind as Kind;
+
+    for (kind, code, status) in [
+        (
+            Kind::RateLimited,
+            "quota_exceeded",
+            CloudAuthStatus::QuotaExceeded,
+        ),
+        (
+            Kind::Quota,
+            "overage_cap_exhausted",
+            CloudAuthStatus::OverageCapExhausted,
+        ),
+        (
+            Kind::Authorization,
+            "provider_disabled",
+            CloudAuthStatus::ProviderDisabled,
+        ),
+    ] {
+        let raw = dactyl_db::DactylError::Adapter {
+            kind,
+            code: Some(code.into()),
+            message: "private backend message".into(),
+        };
+        assert!(!dactyl_failure_kind(&raw).retryable());
+        let error = transport_error(raw);
+        assert_eq!(failure_kind(&error), FailureKind::Authorization);
+        assert!(!failure_kind(&error).retryable());
+        let DecapodError::CloudAuth(diagnostic) = error else {
+            panic!("expected structured cloud policy denial");
+        };
+        assert_eq!(diagnostic.status, status);
+        let json = serde_json::to_value(diagnostic).unwrap();
+        assert_eq!(json["status"], code);
+        assert!(!json.to_string().contains("private backend message"));
+    }
+}
+
+#[test]
 fn journal_survives_interruption_and_never_downgrades_a_confirmed_success() {
     let temp = tempfile::tempdir().unwrap();
     let journal = Journal::at(temp.path().join("operations"));

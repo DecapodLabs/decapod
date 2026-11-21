@@ -352,6 +352,7 @@ impl DactylBridge {
                         }
                         #[cfg(not(feature = "supabase-cloud"))]
                         {
+                            let _ = repository;
                             return Err(DecapodError::Config(
                                 "Cloud requires the supabase-cloud capability; no local fallback is permitted".into(),
                             ));

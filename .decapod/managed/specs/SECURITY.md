@@ -1,5 +1,27 @@
 # Security
 
+## Cloud Wave 2 keystore custody, DPoP logout isolation, and fail-closed container relay (#1836, #1835, #1886)
+
+- **Cross-platform OS keystore & non-secret inventory (`src/decapod/core/cloud_dpop.rs`)**:
+  Private Ed25519 keys remain external to the repository across macOS Keychain,
+  Linux `secret-tool`, Windows DPAPI Credential Manager, and non-symlink
+  mode-`0600` private-file fallback. `DeviceKeyInventory` (`decapod cloud devices`)
+  and `.meta.json` `device_key_id` files store only public `jkt`/ID metadata and
+  never emit PKCS#8 bytes or tokens.
+- **DPoP vs management revoke separation & header redaction (`src/decapod/core/cloud_client.rs`, `src/decapod/core/propodus.rs`)**:
+  `--session-logout` (or `dpc_at_` sessions) requires an enrolled local device
+  DPoP signer and refuses to fall back to unsigned logout (`CloudAuthStatus::KeyLost`).
+  `warnings_from_cloud_metadata` bounds and redacts `Deprecation`, `Sunset`, and
+  `Decapod-Cloud-*` header notices so upstream secrets never reach stderr/JSON.
+- **Fail-closed container relay & SQLite non-creation (`src/decapod/core/cloud_workspace.rs`, `src/decapod/core/container_runtime.rs`, `src/decapod/core/validate.rs`)**:
+  `HostCloudRelayHandler` denies host-relay custody requests unless
+  `verify_running_container_for_invocation` verifies the running container's
+  immutable 64-hex `Id`, workspace path label, and `org.decapod.invocation` label.
+  Cloud `init`, `workspace ensure`, `govern`, `validate`, and validation-worker
+  paths fail closed on missing/revoked/drifted/expired hosted custody and never
+  create, read, or mutate `.decapod/data/decapod.db` (even if pre-existing legacy
+  SQLite bytes exist).
+
 ## Pay-and-use Cloud enrollment URLs, seat orthogonality, and zero SQLite fallback (#1877, #1896)
 
 - **Validated repository enrollment URLs (`src/decapod/core/cloud_client.rs::pricing_enrollment_url`, `is_valid_repo_slug`)**:
@@ -819,8 +841,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
+- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

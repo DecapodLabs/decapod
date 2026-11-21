@@ -392,7 +392,9 @@ impl AssuranceEngine {
         envelope["ts"] = serde_json::Value::String(timestamp);
         envelope["actor"] = serde_json::Value::String("decapod".into());
 
-        events::append(&self.data_root(), events::ASSURANCE, &envelope)?;
+        if !crate::core::broker::DbBroker::new(&self.data_root()).is_cloud() {
+            events::append(&self.data_root(), events::ASSURANCE, &envelope)?;
+        }
 
         Ok(attestation)
     }

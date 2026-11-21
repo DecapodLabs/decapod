@@ -1,5 +1,41 @@
 # Architecture
 
+## Cloud Wave 2 control-plane, keystore custody, and Cloud workspace runtime (#1836, #1835, #1886)
+
+- **Quota/cap taxonomy, spend inspection & metadata warnings (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_todo_operation.rs`, `src/decapod/core/propodus.rs`)**:
+  `CloudAuthStatus` adds `QuotaExceeded`, `OverageCapExhausted`, and
+  `ProviderDisabled`, mapped cleanly in `cloud_client::diagnostic_for_status_code`
+  and `AdapterErrorKind::Quota` in `transport_error_for_repository`, and classified
+  under `FailureKind::Authorization` in `cloud_todo_operation`.
+  `cloud_client::status_live` sends `AccountOperation::Status`
+  (`operation: "resource_limits"`) with DPoP signing when enrolled and projects
+  `resource_limits`, `spend_cap_status`, `spend_cap_warning`, and
+  `propodus::warnings_from_cloud_metadata(&CloudResponseMetadata)` (`CloudMetadataWarning`).
+- **Cross-platform OS keystore, DPoP revoke & device inventory (`src/decapod/core/cloud_dpop.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
+  `DeviceKeyStore` supports macOS Keychain, Linux Secret Service (`secret-tool`),
+  and Windows DPAPI/Credential Manager behind `DeviceKeyStorageBackend::OsKeychain`
+  with strict non-symlink mode-`0600` (`PrivateFile0600`) fallback, plus
+  non-secret `DeviceKeyInventory` (`inspect`) and `.meta.json` `device_key_id`
+  persistence (`record_device_key_id`, `registered_device_key_id`,
+  `clear_registered_device_key_id`). `cloud_client::revoke` separates
+  `dpc_at_` / `--session-logout` DPoP-signed `action=logout` from management
+  Bearer `device_revoke` / `--device-id` / `--all`, reconciles local state, and
+  returns `OperationOutcome`; `cloud_client::devices` lists local device custody
+  and optional `--live` readiness + header warnings.
+- **SQLite-free Cloud workspace custody & validation (`src/decapod/core/cloud_workspace.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/container_runtime.rs`, `src/decapod/core/container_signer.rs`, `src/decapod/core/validate.rs`, `src/decapod/plan_governance.rs`, `src/decapod/lib.rs`)**:
+  `cloud_workspace::{admit_cloud_checkout, check_cloud_authoring, custody_bind_or_reconcile, run_with_hosted_todo_store}`
+  route Cloud `workspace ensure`, `validate`, and workbranch governance seeding
+  through `DactylProofControlTransport` and `CloudCustodyStore` outside the repo.
+  For `--container` workflows, `cloud_workspace::{HostCloudRelayHandler, LiveHostCloudRelayExecutor, RelayProofControlTransport}`
+  and `container_runtime::verify_running_container_for_invocation` relay only
+  bounded custody operations through `HostContainerSignerServer::bind_with_relay`
+  while verifying immutable container `Id`, `State.Running`, workspace path, and
+  `org.decapod.invocation` labels. `lib.rs`, `validate.rs`, `plan_governance.rs`,
+  `trace.rs`, `proof.rs`, `governed_transition.rs`, and `assurance.rs` guard
+  SQLite migrations, broker/archive/mandate/watcher checks, and auxiliary trace
+  writes when `is_cloud_project` or `DbBroker::is_cloud()` holds. `todo.rs`
+  fails unsupported `TodoCommand::Renew` early via `CLOUD_LEASE_RENEW_UNSUPPORTED`.
+
 ## Pay-and-use Cloud onboarding, diagnostics, and project routing (#1877, #1896)
 
 - **Error & diagnostic taxonomy (`src/decapod/core/error.rs`, `src/decapod/core/cloud_todo_operation.rs`)**:
@@ -1229,8 +1265,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
+- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

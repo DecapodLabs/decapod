@@ -378,7 +378,13 @@ Agent must clear the disable marker through Decapod self-heal before retrying.",
             ),
         ],
     );
-    let _signer_server = prepare_container_signer_server(&repo, agent, &mut spec)?;
+    let _signer_server = prepare_container_signer_server(
+        &repo,
+        &workspace.path,
+        &docker,
+        workspace.ownership.invocation(),
+        &mut spec,
+    )?;
 
     let start = Instant::now();
     let output = execute_container_with_timeout(&docker, &spec.args, timeout_seconds).map_err(
@@ -2008,9 +2014,12 @@ fn build_docker_spec(
     inherit_env: bool,
     local_only: bool,
 ) -> Result<DockerSpec, error::DecapodError> {
+    let is_cloud = crate::core::cloud_workspace::is_cloud_project(repo_root);
     let decapod_dir = repo_root.join(".decapod/data");
-    crate::core::fs_permissions::ensure_storage_dir(&decapod_dir)
-        .map_err(error::DecapodError::IoError)?;
+    if !is_cloud {
+        crate::core::fs_permissions::ensure_storage_dir(&decapod_dir)
+            .map_err(error::DecapodError::IoError)?;
+    }
     let decapod_dir_str = decapod_dir
         .to_str()
         .ok_or_else(|| error::DecapodError::PathError("invalid .decapod path".to_string()))?;
@@ -2021,8 +2030,10 @@ fn build_docker_spec(
     // caller before the engine can create daemon-owned mountpoints there.
     // Preserve the datastore's explicit trusted-group policy for these leaves.
     let workspace_data = workspace.join(".decapod/data");
-    crate::core::fs_permissions::ensure_storage_dir(&workspace_data)
-        .map_err(error::DecapodError::IoError)?;
+    if !is_cloud {
+        crate::core::fs_permissions::ensure_storage_dir(&workspace_data)
+            .map_err(error::DecapodError::IoError)?;
+    }
     let workspace_decapod_mount = format!("{workspace_str}/.decapod/data");
     let container_name = format!(
         "decapod-agent-{}-{}",
@@ -2073,19 +2084,27 @@ fn build_docker_spec(
         "DECAPOD_PR=0".to_string(),
         "-e".to_string(),
         format!("DECAPOD_WORKSPACE={}", workspace_str),
-        "-e".to_string(),
-        "DECAPOD_LOCAL_ONLY=1".to_string(),
         "-v".to_string(),
         format!("{}:{}", workspace_str, workspace_str),
-        "-v".to_string(),
-        format!("{}:{}", decapod_dir_str, workspace_decapod_mount),
-        // Canonical datastore resolution uses the host-root path. Expose that
-        // alias too, without sharing the host's tracked governance or config.
-        "-v".to_string(),
-        format!("{decapod_dir_str}:{decapod_dir_str}"),
         "-w".to_string(),
         workspace_str.to_string(),
     ]);
+    if is_cloud {
+        // Preserve Cloud backend selection even if host environment sets DATASTORE=sqlite.
+        args.push("-e".to_string());
+        args.push("DATASTORE=supabase".to_string());
+    } else {
+        args.extend([
+            "-e".to_string(),
+            "DECAPOD_LOCAL_ONLY=1".to_string(),
+            "-v".to_string(),
+            format!("{}:{}", decapod_dir_str, workspace_decapod_mount),
+            // Canonical datastore resolution uses the host-root path. Expose that
+            // alias too, without sharing the host's tracked governance or config.
+            "-v".to_string(),
+            format!("{decapod_dir_str}:{decapod_dir_str}"),
+        ]);
+    }
 
     // Host-root runtime lookups must still see the branch's generated state.
     // This aliases the workspace volume, never the host's tracked specs.
@@ -2099,17 +2118,19 @@ fn build_docker_spec(
         repo_root.join(".decapod/managed").display()
     ));
 
-    // The applied migration ledger is authoritative for this shared database.
-    // Share its directory (atomic renames remain supported), not tracked specs.
-    let migrations = repo_root.join(".decapod/managed/migrations");
-    crate::core::fs_permissions::ensure_storage_dir(&migrations)
-        .map_err(error::DecapodError::IoError)?;
-    let workspace_migrations = workspace_managed.join("migrations");
-    crate::core::fs_permissions::ensure_storage_dir(&workspace_migrations)
-        .map_err(error::DecapodError::IoError)?;
-    for target in [migrations.clone(), workspace_migrations] {
-        args.push("-v".into());
-        args.push(format!("{}:{}", migrations.display(), target.display()));
+    if !is_cloud {
+        // The applied migration ledger is authoritative for this shared database.
+        // Share its directory (atomic renames remain supported), not tracked specs.
+        let migrations = repo_root.join(".decapod/managed/migrations");
+        crate::core::fs_permissions::ensure_storage_dir(&migrations)
+            .map_err(error::DecapodError::IoError)?;
+        let workspace_migrations = workspace_managed.join("migrations");
+        crate::core::fs_permissions::ensure_storage_dir(&workspace_migrations)
+            .map_err(error::DecapodError::IoError)?;
+        for target in [migrations.clone(), workspace_migrations] {
+            args.push("-v".into());
+            args.push(format!("{}:{}", migrations.display(), target.display()));
+        }
     }
 
     // Shared datastore policy remains owned by the host project, not editable
@@ -2127,6 +2148,14 @@ fn build_docker_spec(
 
     if inherit_env {
         for (k, v) in inherited_env_vars() {
+            if is_cloud
+                && matches!(
+                    k.as_str(),
+                    "DATASTORE" | "DATASTORE_ROUTE" | "DATASTORE_TOKEN"
+                )
+            {
+                continue;
+            }
             args.push("-e".to_string());
             args.push(format!("{k}={v}"));
         }
@@ -2185,35 +2214,41 @@ fn inherited_env_vars() -> BTreeMap<String, String> {
 
 fn prepare_container_signer_server(
     repo_root: &Path,
-    agent: &str,
+    workspace: &Path,
+    runtime: &str,
+    invocation: &str,
     spec: &mut DockerSpec,
 ) -> Result<Option<crate::core::container_signer::HostContainerSignerServer>, error::DecapodError> {
     let Ok(config) = crate::cli::DecapodProjectConfig::load(repo_root) else {
         return Ok(None);
     };
+    let is_cloud = crate::core::cloud_workspace::is_cloud_project(repo_root);
     let creds = &config.workspace.credentials;
-    let enabled = creds
-        .propodus_cloud
-        .as_deref()
-        .is_some_and(|v| v == "signer-broker" || v == "propodus-token");
+    let enabled = is_cloud
+        || creds
+            .propodus_cloud
+            .as_deref()
+            .is_some_and(|v| v == "signer-broker" || v == "propodus-token");
     if !enabled {
         return Ok(None);
     }
     let origin = crate::core::cloud_client::selected_origin().unwrap_or_default();
-    let repo_id = crate::core::repo_identity::resolve_repository_identity(repo_root)
-        .map(|id| id.canonical_name)
+    let identity = crate::core::repo_identity::resolve_repository_identity(repo_root).ok();
+    let repo_id = identity
+        .as_ref()
+        .map(|id| id.canonical_name.clone())
         .unwrap_or_default();
     if origin.is_empty() || repo_id.is_empty() {
         return Ok(None);
     }
     let key_store =
-        crate::core::cloud_dpop::DeviceKeyStore::for_project(&origin, &repo_id, repo_root)?;
+        crate::core::cloud_dpop::DeviceKeyStore::for_project(&origin, &repo_id, repo_root).ok();
     let sock_name = format!(
         "signer-{}.sock",
         crate::core::ulid::new_ulid().to_lowercase()
     );
     let data_dir = repo_root.join(".decapod/data");
-    let sock_path = if data_dir.is_dir() {
+    let sock_path = if !is_cloud && data_dir.is_dir() {
         crate::core::local_socket::path(&data_dir, &sock_name)
             .map_err(error::DecapodError::IoError)?
     } else {
@@ -2221,31 +2256,81 @@ fn prepare_container_signer_server(
             .join("decapod-container-signer")
             .join(&sock_name)
     };
+    let agent = crate::current_agent_id();
     let policy = crate::core::container_signer::ContainerSignerPolicy {
         allowed_repository: repo_id.clone(),
         allowed_origin: origin,
-        allowed_agent_id: agent.to_string(),
+        allowed_agent_id: agent,
         credentials: creds.clone(),
         session_expires_at: 0,
         revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
-        device_key_store: Some(key_store),
+        device_key_store: key_store,
         access_token_digest: None,
     };
-    let server =
-        crate::core::container_signer::HostContainerSignerServer::bind(&sock_path, policy)?;
+
+    let mut relay: Option<
+        std::sync::Arc<dyn crate::core::container_signer::ContainerCloudRelayHandler>,
+    > = None;
+    let mut handoff_envs: Vec<String> = Vec::new();
+    if is_cloud
+        && let Ok(custody_store) = crate::core::cloud_workspace::CloudCustodyStore::machine()
+        && let Ok(Some(mut record)) = custody_store.load(repo_root, workspace)
+        && let Some(id) = identity
+    {
+        record.container_expected = true;
+        record.container_runtime = Some(runtime.to_string());
+        record.container_name = Some(spec.container_name.clone());
+        record.invocation_id = Some(invocation.to_string());
+        let _ = custody_store.save(repo_root, &record);
+
+        let admission = std::sync::Arc::new(
+            crate::core::cloud_workspace::RuntimeContainerAdmissionVerifier {
+                main_root: repo_root.to_path_buf(),
+                runtime: runtime.to_string(),
+                container_name: spec.container_name.clone(),
+                expected_container_id: None,
+            },
+        );
+        let executor =
+            std::sync::Arc::new(crate::core::cloud_workspace::LiveHostCloudRelayExecutor {
+                project_root: repo_root.to_path_buf(),
+                identity: id,
+            });
+        relay = Some(std::sync::Arc::new(
+            crate::core::cloud_workspace::HostCloudRelayHandler {
+                project_id: record.project_id.clone(),
+                workspace_id: record.workspace_id.clone(),
+                worktree_path: workspace
+                    .canonicalize()
+                    .unwrap_or_else(|_| workspace.to_path_buf()),
+                task_id: record.task_id.clone(),
+                custody_id: record.custody_id.clone(),
+                invocation_id: invocation.to_string(),
+                admission: Some(admission),
+                executor,
+            },
+        ));
+        for (k, v) in crate::core::cloud_workspace::cloud_container_env_handoff(&record, None) {
+            handoff_envs.push("-e".to_string());
+            handoff_envs.push(format!("{k}={v}"));
+        }
+    }
+
+    let server = crate::core::container_signer::HostContainerSignerServer::bind_with_relay(
+        &sock_path, policy, relay,
+    )?;
     let sock_str = server.socket_path().to_string_lossy().to_string();
     let insert_idx = spec.args.len().saturating_sub(3);
-    spec.args.splice(
-        insert_idx..insert_idx,
-        [
-            "-v".to_string(),
-            format!("{sock_str}:{sock_str}"),
-            "-e".to_string(),
-            format!("DECAPOD_CONTAINER_SIGNER_SOCKET={sock_str}"),
-            "-e".to_string(),
-            format!("DECAPOD_CONTAINER_SIGNER_REPO={repo_id}"),
-        ],
-    );
+    let mut spliced = vec![
+        "-v".to_string(),
+        format!("{sock_str}:{sock_str}"),
+        "-e".to_string(),
+        format!("DECAPOD_CONTAINER_SIGNER_SOCKET={sock_str}"),
+        "-e".to_string(),
+        format!("DECAPOD_CONTAINER_SIGNER_REPO={repo_id}"),
+    ];
+    spliced.extend(handoff_envs);
+    spec.args.splice(insert_idx..insert_idx, spliced);
     Ok(Some(server))
 }
 

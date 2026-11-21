@@ -310,6 +310,14 @@ mod enabled {
                     is_reconciliation
                         || (path == "/query" && is_query)
                         || (path == "/batch" && is_batch)
+                        || (path == "/account-status"
+                            && headers.starts_with(
+                                "post /functions/v1/decapod-onboarding/account-status "
+                            ))
+                        || (path == "/device-revoke"
+                            && headers.starts_with(
+                                "post /functions/v1/decapod-onboarding/device-revoke "
+                            ))
                 );
                 assert!(headers.contains("authorization: bearer synthetic-bearer-secret"));
                 assert!(!headers.contains("ambient-token-must-not-be-forwarded"));
@@ -1073,6 +1081,537 @@ mod enabled {
                 .is_none()
         );
         server.join().unwrap();
+    }
+
+    #[test]
+    fn live_cloud_status_reads_only_the_authenticated_spend_summary() {
+        let root = project();
+        let machine = TempDir::new().unwrap();
+        let (origin, request) = request_server("/account-status", 200, |_| {
+            json!({"version":1,"backend_authorized":true,"resource_limits":{
+                "window_month":"2026-11","paid_overages":{"opted_in":true,
+                "monthly_spend_cap_cents":100,"spent_cents":80,"remaining_spend_cents":20,
+                "status":"warning"},"metrics":[]
+            }})
+        });
+        managed::seed_ready(
+            root.path(),
+            machine.path(),
+            &origin,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: managed::ACCESS.into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            },
+        );
+        let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["cloud", "--format", "json", "status", "--live"])
+            .current_dir(root.path())
+            .env("HOME", machine.path())
+            .env("XDG_DATA_HOME", machine.path().join("data"))
+            .env("XDG_CONFIG_HOME", machine.path().join("config"))
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", origin)
+            .env_remove("DECAPOD_CLOUD_AUTH_SCHEME")
+            .env_remove("DECAPOD_CONTAINER_SIGNER_SOCKET")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(value["server_readiness"], "not_checked");
+        assert_eq!(
+            value["resource_limits"]["paid_overages"]["status"],
+            "warning"
+        );
+        assert_eq!(value["spend_cap_status"], "warning");
+        assert_eq!(value["spend_cap_warning"], true);
+        assert!(!value.to_string().contains(managed::ACCESS));
+        assert_eq!(
+            request.join().unwrap(),
+            json!({
+                "version":1,"project_id":"example/supabase-proof","operation":"resource_limits"
+            })
+        );
+        assert_no_fallback(root.path());
+    }
+
+    #[test]
+    fn quota_overage_and_provider_disabled_errors_surface_explicit_diagnostics() {
+        for (http_status, code) in [
+            (429, "quota_exceeded"),
+            (429, "overage_cap_exhausted"),
+            (403, "provider_disabled"),
+        ] {
+            let root = project();
+            let machine = TempDir::new().unwrap();
+            let (origin, _request) = request_server("/account-status", http_status, move |_| {
+                json!({
+                    "error": {
+                        "code": code,
+                        "message": "internal diagnostic must stay redacted"
+                    }
+                })
+            });
+            managed::seed_ready(
+                root.path(),
+                machine.path(),
+                &origin,
+                "example/supabase-proof",
+                decapod::core::cloud_session::Session {
+                    access_token: managed::ACCESS.into(),
+                    refresh_token: Some(managed::REFRESH.into()),
+                    expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+                },
+            );
+            let output = Command::new(env!("CARGO_BIN_EXE_decapod"))
+                .args(["cloud", "--format", "json", "status", "--live"])
+                .current_dir(root.path())
+                .env("HOME", machine.path())
+                .env("XDG_DATA_HOME", machine.path().join("data"))
+                .env("XDG_CONFIG_HOME", machine.path().join("config"))
+                .env("DECAPOD_TEST_MODE", "1")
+                .env("DECAPOD_CLOUD_TEST_ORIGIN", origin)
+                .env_remove("DECAPOD_CLOUD_AUTH_SCHEME")
+                .env_remove("DECAPOD_CONTAINER_SIGNER_SOCKET")
+                .output()
+                .unwrap();
+            assert!(!output.status.success(), "{code} must fail closed");
+            let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+            match code {
+                "quota_exceeded" | "overage_cap_exhausted" => assert!(
+                    matches!(
+                        value["status"].as_str(),
+                        Some("quota_exceeded" | "overage_cap_exhausted" | "provider_unavailable")
+                    ),
+                    "unexpected status for {code}: {value}"
+                ),
+                "provider_disabled" => assert!(
+                    matches!(
+                        value["status"].as_str(),
+                        Some("provider_disabled" | "repository_denied")
+                    ),
+                    "unexpected status for {code}: {value}"
+                ),
+                _ => unreachable!(),
+            }
+            assert!(
+                !value
+                    .to_string()
+                    .contains("internal diagnostic must stay redacted")
+            );
+            assert_no_fallback(root.path());
+        }
+    }
+
+    #[test]
+    fn cloud_revoke_supports_dpop_session_logout_management_revoke_and_retry_on_failure() {
+        use decapod::core::cloud_dpop::{DeviceKeyStore, verify_dpop_proof};
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use std::sync::{Arc, Mutex};
+        use std::time::Duration;
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let origin = format!("http://{}", listener.local_addr().unwrap());
+        let origin_srv = origin.clone();
+        type Captured = Vec<(String, String, Option<String>, Value)>;
+        let captured: Arc<Mutex<Captured>> = Arc::new(Mutex::new(Vec::new()));
+        let captured_srv = Arc::clone(&captured);
+        let stop = Arc::new(AtomicBool::new(false));
+        let stop_srv = Arc::clone(&stop);
+
+        let handle = std::thread::spawn(move || {
+            let mut fail_first_revoke = true;
+            while !stop_srv.load(Ordering::SeqCst) {
+                let Ok((mut stream, _)) = listener.accept() else {
+                    std::thread::sleep(Duration::from_millis(10));
+                    continue;
+                };
+                let _ = stream.set_nonblocking(false);
+                let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
+                let mut bytes = Vec::new();
+                let body_start = loop {
+                    let mut buf = [0u8; 4096];
+                    let n = stream.read(&mut buf).unwrap();
+                    assert_ne!(n, 0);
+                    bytes.extend_from_slice(&buf[..n]);
+                    if let Some(pos) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
+                        break pos + 4;
+                    }
+                };
+                let head = String::from_utf8_lossy(&bytes[..body_start]).to_string();
+                let lower = head.to_ascii_lowercase();
+                let len: usize = lower
+                    .lines()
+                    .find_map(|l| l.strip_prefix("content-length:"))
+                    .and_then(|v| v.trim().parse().ok())
+                    .unwrap_or(0);
+                while bytes.len() < body_start + len {
+                    let mut buf = [0u8; 4096];
+                    let n = stream.read(&mut buf).unwrap();
+                    assert_ne!(n, 0);
+                    bytes.extend_from_slice(&buf[..n]);
+                }
+                let path = head
+                    .lines()
+                    .next()
+                    .unwrap()
+                    .split_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_string();
+                let auth = head
+                    .lines()
+                    .find_map(|l| {
+                        l.split_once(':')
+                            .filter(|(k, _)| k.eq_ignore_ascii_case("authorization"))
+                            .map(|(_, v)| v.trim().to_string())
+                    })
+                    .unwrap_or_default();
+                let dpop = head.lines().find_map(|l| {
+                    l.split_once(':')
+                        .filter(|(k, _)| k.eq_ignore_ascii_case("dpop"))
+                        .map(|(_, v)| v.trim().to_string())
+                });
+                let body: Value = if len == 0 {
+                    Value::Null
+                } else {
+                    serde_json::from_slice(&bytes[body_start..body_start + len]).unwrap()
+                };
+                captured_srv
+                    .lock()
+                    .unwrap()
+                    .push((path.clone(), auth, dpop, body));
+
+                let (status_line, resp_body) = if path.ends_with("/config") {
+                    (
+                        "200 OK",
+                        json!({
+                            "version": 1,
+                            "project_origin": origin_srv,
+                            "publishable_key": "sb_publishable_fixture",
+                            "schema": "dactyl_api",
+                        }),
+                    )
+                } else if fail_first_revoke {
+                    fail_first_revoke = false;
+                    (
+                        "500 Internal Server Error",
+                        json!({"error": {"code": "service_unavailable", "message": "transient error"}}),
+                    )
+                } else {
+                    ("200 OK", json!({"version": 1, "revoked": true}))
+                };
+                let encoded = resp_body.to_string();
+                let reply = format!(
+                    "HTTP/1.1 {status_line}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{encoded}",
+                    encoded.len()
+                );
+                stream.write_all(reply.as_bytes()).unwrap();
+            }
+        });
+
+        let root = project();
+        let machine = TempDir::new().unwrap();
+        let key_store = DeviceKeyStore::with_root_dir(
+            &origin,
+            "example/supabase-proof",
+            root.path(),
+            &machine.path().join("data/decapod/device-keys"),
+        )
+        .unwrap();
+        let key = key_store.load_or_create().unwrap();
+        managed::seed_ready(
+            root.path(),
+            machine.path(),
+            &origin,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: "dpc_at_synthetic_dpop_token".into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            },
+        );
+
+        let run_revoke = |args: &[&str]| {
+            Command::new(env!("CARGO_BIN_EXE_decapod"))
+                .args(["cloud", "--format", "json", "revoke"])
+                .args(args)
+                .current_dir(root.path())
+                .env("HOME", machine.path())
+                .env("XDG_DATA_HOME", machine.path().join("data"))
+                .env("XDG_CONFIG_HOME", machine.path().join("config"))
+                .env("DECAPOD_TEST_MODE", "1")
+                .env("DECAPOD_CLOUD_TEST_ORIGIN", &origin)
+                .env_remove("DECAPOD_CONTAINER_SIGNER_SOCKET")
+                .output()
+                .unwrap()
+        };
+
+        // 1. Remote DPoP logout fails -> local session and device key MUST remain intact for retry!
+        let failed = run_revoke(&["--session-logout"]);
+        assert!(!failed.status.success(), "remote failure must fail closed");
+        assert!(
+            key_store.load().unwrap().is_some(),
+            "device key preserved on remote error"
+        );
+        let status_after_fail = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["cloud", "--format", "json", "status"])
+            .current_dir(root.path())
+            .env("HOME", machine.path())
+            .env("XDG_DATA_HOME", machine.path().join("data"))
+            .env("XDG_CONFIG_HOME", machine.path().join("config"))
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", &origin)
+            .output()
+            .unwrap();
+        assert!(
+            status_after_fail.status.success(),
+            "{}",
+            String::from_utf8_lossy(&status_after_fail.stderr)
+        );
+        let st_json: Value = serde_json::from_slice(&status_after_fail.stdout).unwrap();
+        assert_eq!(
+            st_json["credential_present"], true,
+            "session preserved for retry"
+        );
+
+        // 2. Retry succeeds -> clears session while preserving device key on logout!
+        let retried = run_revoke(&["--session-logout"]);
+        assert!(
+            retried.status.success(),
+            "{}",
+            String::from_utf8_lossy(&retried.stderr)
+        );
+        let retry_json: Value = serde_json::from_slice(&retried.stdout).unwrap();
+        assert_eq!(retry_json["operation"], "logout");
+        assert_eq!(retry_json["remote_revoked"], true);
+        assert_eq!(retry_json["device_key_preserved"], true);
+
+        // 3. Management key revoke --device-id uses Authorization: Bearer (not DPoP) and deletes local key.
+        managed::seed_ready(
+            root.path(),
+            machine.path(),
+            &origin,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: "eyJhbGciOiJIUzI1NiJ9.mgmt.jwt".into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            },
+        );
+        let mgmt_revoke = run_revoke(&["--device-id", &key.jkt]);
+        assert!(
+            mgmt_revoke.status.success(),
+            "{}",
+            String::from_utf8_lossy(&mgmt_revoke.stderr)
+        );
+        let mgmt_json: Value = serde_json::from_slice(&mgmt_revoke.stdout).unwrap();
+        assert_eq!(mgmt_json["operation"], "revoke_key");
+        assert_eq!(mgmt_json["remote_revoked"], true);
+        assert!(
+            key_store.load().unwrap().is_none(),
+            "device key deleted after revoke_key"
+        );
+
+        stop.store(true, Ordering::SeqCst);
+        handle.join().unwrap();
+        let reqs = captured.lock().unwrap();
+        let revokes: Vec<_> = reqs
+            .iter()
+            .filter(|r| r.0.ends_with("/device-revoke"))
+            .collect();
+        assert_eq!(
+            revokes.len(),
+            3,
+            "expected 3 device-revoke requests, got {revokes:?}"
+        );
+        let now = time::OffsetDateTime::now_utc().unix_timestamp();
+        // Check DPoP proof on the two `--session-logout` revoke requests:
+        for req in &revokes[..2] {
+            assert_eq!(req.1, "DPoP dpc_at_synthetic_dpop_token");
+            assert_eq!(req.3["action"], "logout");
+            let proof = req
+                .2
+                .as_deref()
+                .expect("DPoP header required on session logout");
+            let verified = verify_dpop_proof(
+                proof,
+                "POST",
+                &format!("{origin}/functions/v1/decapod-onboarding/device-revoke"),
+                Some("dpc_at_synthetic_dpop_token"),
+                None,
+                None,
+                now,
+            )
+            .expect("valid DPoP proof");
+            assert_eq!(verified.jkt, key.jkt);
+        }
+        // Check management Bearer revoke request:
+        assert_eq!(revokes[2].1, "Bearer eyJhbGciOiJIUzI1NiJ9.mgmt.jwt");
+        assert!(
+            revokes[2].2.is_none(),
+            "management Bearer revoke must not send DPoP proof header"
+        );
+        assert_eq!(revokes[2].3["action"], "revoke_key");
+        assert_no_fallback(root.path());
+    }
+
+    #[test]
+    fn cloud_devices_reports_non_secret_inventory_and_surfaces_deprecation_warnings() {
+        use decapod::core::cloud_dpop::DeviceKeyStore;
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicBool, Ordering};
+        use std::time::Duration;
+
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        listener.set_nonblocking(true).unwrap();
+        let origin = format!("http://{}", listener.local_addr().unwrap());
+        let origin_srv = origin.clone();
+        let stop = Arc::new(AtomicBool::new(false));
+        let stop_srv = Arc::clone(&stop);
+        let handle = std::thread::spawn(move || {
+            while !stop_srv.load(Ordering::SeqCst) {
+                let Ok((mut stream, _)) = listener.accept() else {
+                    std::thread::sleep(Duration::from_millis(10));
+                    continue;
+                };
+                let _ = stream.set_nonblocking(false);
+                let _ = stream.set_read_timeout(Some(Duration::from_secs(5)));
+                let mut bytes = Vec::new();
+                let body_start = loop {
+                    let mut buf = [0u8; 4096];
+                    let n = stream.read(&mut buf).unwrap();
+                    assert_ne!(n, 0);
+                    bytes.extend_from_slice(&buf[..n]);
+                    if let Some(pos) = bytes.windows(4).position(|w| w == b"\r\n\r\n") {
+                        break pos + 4;
+                    }
+                };
+                let head = String::from_utf8_lossy(&bytes[..body_start]).to_string();
+                let len: usize = head
+                    .to_ascii_lowercase()
+                    .lines()
+                    .find_map(|l| l.strip_prefix("content-length:"))
+                    .and_then(|v| v.trim().parse().ok())
+                    .unwrap_or(0);
+                while bytes.len() < body_start + len {
+                    let mut buf = [0u8; 4096];
+                    let n = stream.read(&mut buf).unwrap();
+                    assert_ne!(n, 0);
+                    bytes.extend_from_slice(&buf[..n]);
+                }
+                let path = head
+                    .lines()
+                    .next()
+                    .unwrap()
+                    .split_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_string();
+                let resp_body = if path.ends_with("/config") {
+                    json!({
+                        "version": 1,
+                        "project_origin": origin_srv,
+                        "publishable_key": "sb_publishable_fixture",
+                        "schema": "dactyl_api",
+                    })
+                } else {
+                    json!({
+                        "version": 1,
+                        "account_id": "00000000-0000-0000-0000-000000000404",
+                        "project_id": "example/supabase-proof",
+                        "status": "active",
+                        "backend_authorized": true,
+                    })
+                };
+                let encoded = resp_body.to_string();
+                let reply = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nDeprecation: true\r\nSunset: 2027-06-01T00:00:00Z\r\nDecapod-Cloud-Notice: transitional-v1\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{encoded}",
+                    encoded.len()
+                );
+                stream.write_all(reply.as_bytes()).unwrap();
+            }
+        });
+
+        let root = project();
+        let machine = TempDir::new().unwrap();
+        let key_store = DeviceKeyStore::with_root_dir(
+            &origin,
+            "example/supabase-proof",
+            root.path(),
+            &machine.path().join("data/decapod/device-keys"),
+        )
+        .unwrap();
+        let key = key_store.load_or_create().unwrap();
+
+        // Offline local device inventory: zero network I/O, zero secrets.
+        let offline = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["cloud", "--format", "json", "devices"])
+            .current_dir(root.path())
+            .env("HOME", machine.path())
+            .env("XDG_DATA_HOME", machine.path().join("data"))
+            .env("XDG_CONFIG_HOME", machine.path().join("config"))
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", &origin)
+            .output()
+            .unwrap();
+        assert!(
+            offline.status.success(),
+            "{}",
+            String::from_utf8_lossy(&offline.stderr)
+        );
+        let off_json: Value = serde_json::from_slice(&offline.stdout).unwrap();
+        assert_eq!(off_json["schema_version"], "decapod.cloud.devices.v1");
+        assert_eq!(off_json["server_readiness"], "not_checked");
+        assert_eq!(off_json["devices"][0]["jkt"], key.jkt);
+        assert_eq!(off_json["devices"][0]["backend"], "private_file_0600");
+        assert_eq!(off_json["devices"][0]["active"], true);
+        assert!(!off_json.to_string().contains("pkcs8"));
+
+        // Live check captures Deprecation, Sunset, and Decapod-Cloud-Notice headers.
+        managed::seed_ready(
+            root.path(),
+            machine.path(),
+            &origin,
+            "example/supabase-proof",
+            decapod::core::cloud_session::Session {
+                access_token: managed::ACCESS.into(),
+                refresh_token: Some(managed::REFRESH.into()),
+                expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            },
+        );
+        let live = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["cloud", "--format", "json", "devices", "--live"])
+            .current_dir(root.path())
+            .env("HOME", machine.path())
+            .env("XDG_DATA_HOME", machine.path().join("data"))
+            .env("XDG_CONFIG_HOME", machine.path().join("config"))
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", &origin)
+            .env_remove("DECAPOD_CONTAINER_SIGNER_SOCKET")
+            .output()
+            .unwrap();
+        assert!(
+            live.status.success(),
+            "{}",
+            String::from_utf8_lossy(&live.stderr)
+        );
+        let live_json: Value = serde_json::from_slice(&live.stdout).unwrap();
+        assert_eq!(live_json["server_readiness"], "checked");
+        let warnings = live_json["warnings"].as_array().expect("warnings array");
+        assert!(warnings.iter().any(|w| w["code"] == "endpoint_deprecated"));
+        assert!(warnings.iter().any(|w| w["code"] == "endpoint_sunset"));
+        assert!(warnings.iter().any(|w| w["value"] == "transitional-v1"));
+
+        stop.store(true, Ordering::SeqCst);
+        handle.join().unwrap();
+        assert_no_fallback(root.path());
     }
 }
 
