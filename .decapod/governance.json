@@ -953,6 +953,11 @@
       "id": "sync-1887-issue-1834",
       "summary": "Reconcile accepted master after the typed broker change",
       "input_digest": "sha256:e1f448fa1b3a265a5acdccc201307d8b4a23be37dcbd07c6e55e93af6863509c"
+    },
+    {
+      "id": "sync-v1580-issue-1834",
+      "summary": "Reconcile the accepted v0.158.0 release and refresh the measured repository projections",
+      "input_digest": "sha256:98d18db0de5caf528742fe81bb63d95706460f8c7a900953a92348997574eacc"
     }
   ],
   "intents": {
@@ -994,22 +999,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture after accepting the upstream broker changes",
-          "reviewed_code_fingerprint": "01b7dda3bfd3b51356c6bfc4cac812f8b19fde88576f0fa486792dfa01d2b764",
+          "reason": "Reviewed the branch architecture with the accepted v0.158.0 source snapshot",
+          "reviewed_code_fingerprint": "65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b",
           "spec_material_hash": "10d91f6dc0f8b854c396ef60c4b10d0a6750c529128277f3fba9724772f7b4c4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces against the new accepted target",
-          "reviewed_code_fingerprint": "01b7dda3bfd3b51356c6bfc4cac812f8b19fde88576f0fa486792dfa01d2b764",
+          "reason": "Reviewed the branch interfaces with the accepted v0.158.0 source snapshot",
+          "reviewed_code_fingerprint": "65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b",
           "spec_material_hash": "11cc96f76553596785b069390c70d17fd8e04065cd086a64ce0c265eb177d1f2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the publication security contract against the new accepted target",
-          "reviewed_code_fingerprint": "01b7dda3bfd3b51356c6bfc4cac812f8b19fde88576f0fa486792dfa01d2b764",
+          "reason": "Deriving PR display metadata preserves publication authorization",
+          "reviewed_code_fingerprint": "65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -1021,7 +1026,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795240566Z"
+      "updated_at": "1795241758Z"
     },
     "trajectory": {
       "active_boundaries": [
