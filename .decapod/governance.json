@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d62e30ad788b2fe743a81d164244d2a7b3220701",
+    "accepted_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -858,59 +858,142 @@
     }
   },
   "change": {
-    "id": "terminal-broker-1882-1883",
-    "base_commit": "d62e30ad788b2fe743a81d164244d2a7b3220701",
+    "id": "change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+    "base_commit": "34b98ab1fa2d731c5729fa1afbeaed13f8739655",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "archive-policy-denial": {
-      "statement": "An explicit local archive policy refusal is persisted as a terminal non-commit receipt.",
-      "falsifier": "A basic-trust request changes the task, reports UNKNOWN, supplies a commit marker, or executes again after same-ID replay. A crash must still report UNKNOWN.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/group_broker.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "terminal-broker-fixes",
-      "summary": "Keep macOS onboarding interactive with inherited PTYs and preserve definitive archive policy denials in the broker.",
-      "input_digest": "sha256:19aaea3f1b3077dec843a2e6825ca59d8449b2754fe7500eb503d04eefae093f",
+      "id": "portable-json-encoding-v1",
+      "summary": "Correct independently reproduced Unicode, number overflow and depth decoder disagreements; add22 pinned raw vectors and legitimate native projection controls without changing production refusal or required recipes",
+      "input_digest": "sha256:8a49965a902c5826c0131d7e05ed7bb2ce8a53ef6a7d27e41ef0ecfda0ccd7ac",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/group_broker.rs"
+        "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
       ]
     },
     {
-      "id": "reconcile-accepted-release-157",
-      "summary": "Integrate exact accepted v0.157.0 release and refresh release-bound managed projections while preserving the two original fixes.",
-      "input_digest": "sha256:d72829d9b8b5e3de5133d2de2f93801fce7eb3b16cfed408d730e7ec10f61ac9",
+      "id": "portable-json-encoding-v1-final",
+      "summary": "Exact portable encoding correction and22 raw vectors after removing accidental EOF blank lines; preserve prior checkpoint and actual native differential evidence",
+      "input_digest": "sha256:5197e8d7b731cb1f07436e13909b8a6d8be1f9f697c47466ec499bd6dbc9bc8e",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/group_broker.rs"
+        "https://github.com/alexhraber/decapod-admission-acceptance-1763-20261118-0100/releases/download/acceptance-1761-1770-a62-20261118-01/portable-json-differentials-before-20261120.tar.gz"
       ]
+    },
+    {
+      "id": "encoding-accepted-observer-7225",
+      "summary": "Integrate accepted observer722515f4 with native journal reconciliation and generated manifest recovery; preserve encoding versus run-coverage distinction",
+      "input_digest": "sha256:cfc0ffd55b783506683a3ad49628b8b5b1d4beef899e2dd67d669638a8f15872",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1863"
+      ]
+    },
+    {
+      "id": "encoding-accepted-instruction-868f",
+      "summary": "Integrate accepted instruction readiness868f756e; preserve authored specs, native governance and exact proof policy",
+      "input_digest": "sha256:ea10f7467725aee93874c2f78807ff3e164b4e7415889a62ca41795e8301cbf9",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1861"
+      ]
+    },
+    {
+      "id": "encoding-accepted-v154-0f44",
+      "summary": "Integrate accepted0.154.0; regenerate native projections and correct identity probe to documented system version; preserve all22 vectors and required proof graph",
+      "input_digest": "sha256:e763bc75a7d2f55905d8a7751e88666f92dd8dfcfdd8640dfe9b39f06a27b7c6",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1867"
+      ]
+    },
+    {
+      "id": "encoding-accepted-v155-fff1",
+      "summary": "Integrate accepted v0.155.0, preserve authored specs and timing failure evidence, regenerate managed release projections and review all 105 source input hashes",
+      "input_digest": "sha256:b5cf17decab591b339055355caa6c5d230a4422191d6cda1806292f86996438e",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44717983927/job/136261849254"
+      ]
+    },
+    {
+      "id": "cp-sync-9b6a33b0e",
+      "summary": "Sync accepted master 9b6a33b0e (v0.155.0) and verify interop strict JSON decoding conformance (#1866)",
+      "input_digest": "sha256:095af6c14eb109ebd367e9341c0c617677a418d15af9b647ccba3a0d676d5bd0"
+    },
+    {
+      "id": "encoding-accepted-v1551-2e206",
+      "summary": "Integrate accepted v0.155.1 metadata, refresh managed projections and review the unchanged 22-vector encoding test scope",
+      "input_digest": "sha256:cc9644313cf2242f63431c6f79a4a97ed04ab6192290fa2baf6fcbe3936e6eba",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1869"
+      ]
+    },
+    {
+      "id": "attack-gaps-interop-accepted-d96bf819",
+      "summary": "Merge accepted contract recovery, preserve the release projection correction and all pinned encoding inputs, and refresh reviewed publication material for fresh GitHub Actions verification",
+      "input_digest": "sha256:a07cf7530c588f444c70a05a6ee13ac329b50bd4968974617bff62cc7cc970ba"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-ba21c8f1",
+      "summary": "Merge accepted v0.156.0 metadata and make the strict-profile refusal test exercise the fixture's already committed downgrade, preserving the encoding controls and all CI deadlines",
+      "input_digest": "sha256:94eb63852b5a9320794f285567ede617678b0db6087e9a6942f78320e176e043"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-033977e2",
+      "summary": "Integrate accepted approval verification and reconcile both authored spec sets while retaining the pinned encoding controls and verified downgrade fixture repair",
+      "input_digest": "sha256:7b3d6001eeb984ff3e22197bc60452a85169790725c3ce9fa95ec585ce07525e"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-73026d84",
+      "summary": "Merge accepted v0.156.1 metadata and refresh native projections while preserving the encoding fixtures, strict downgrade refusal and accepted approval checks",
+      "input_digest": "sha256:a20e8c3f52baf0bf4adc56515f06b3849383b6683d20a38ead2c7bfe66f8e040"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-9408bec1",
+      "summary": "Integrate the accepted strict-profile fixture and preserve the canonical downgrade case, all pinned encoding vectors and both authored spec sets",
+      "input_digest": "sha256:4cc083dce5ef027f132bbc40ddfdefeb4347584891cb332137fbe2269f2dfe41"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-31f19a70",
+      "summary": "Merge accepted v0.156.2 metadata, preserve the encoding inputs and canonical test, and refresh the native projections for current Actions verification",
+      "input_digest": "sha256:67ee3a09f791386afe420b732941908e67effb1d5ea45506380c0a6239ac62c4"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-d62e30ad",
+      "summary": "Integrate accepted context and outcome changes, preserve all native authority and encoding tests, and repin the measured reviewed source inventory",
+      "input_digest": "sha256:14f58e23f7cd5332c3a7a72d94352769722a7c8d8aa9e5b8b42eb3bd1f7c9db5"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-146a00f4",
+      "summary": "Integrate accepted v0.157.0 metadata, refresh the release projections, and retain the exact encoding fixtures for current-base verification",
+      "input_digest": "sha256:361ddb82adacd140471dedd22499d8f0ae9135f529b686f37566870fb880df60"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-f0cbb701",
+      "summary": "Integrate accepted broker and onboarding changes and preserve all raw encoding controls",
+      "input_digest": "sha256:eb747e4c7fb818f96400628ed79f39e5b22772d2b521277e0575b92cbebfde85"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-1bdb1e6e",
+      "summary": "Integrate v0.158.0 release metadata and reviewed projections while preserving the portable encoding controls",
+      "input_digest": "sha256:c2899d3c967302764bc1c1324556047fa665ade7c6176a28eec7a7ada2dd0d71"
     }
   ],
   "intents": {
-    "intent:terminal-broker-1882-1883": {
+    "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "docs/conformance",
+        "assets/schemas",
+        "tests/interop_conformance.rs",
+        "tests/fixtures"
       ],
       "created_sequence": 1,
-      "id": "intent:terminal-broker-1882-1883",
-      "instruction_origin": {
-        "source_ref": "caller:unverified"
-      },
+      "id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "finish this",
-      "refined_intent": "Fix and verify DecapodLabs/decapod #1882 and #1883, publish with required GitHub Actions, and close both issues with evidence.",
+      "raw_intent": "test: finish independent portable read-contract falsifiers #870 #871 #1733\n\nAudit existing public read-only profile, closed corrections and active owners; specify normative independently consumable read semantics before runtime changes; actual adversarial raw-input and import-without-authority controls plus lawful read recovery; no new proof registry or policy interpreter. Delivery uses exact-head GitHub Actions per user; all Buildkite excluded. Retain unsupported domains and whole issue acceptance.",
+      "refined_intent": "test: finish independent portable read-contract falsifiers #870 #871 #1733\n\nAudit existing public read-only profile, closed corrections and active owners; specify normative independently consumable read semantics before runtime changes; actual adversarial raw-input and import-without-authority controls plus lawful read recovery; no new proof registry or policy interpreter. Delivery uses exact-head GitHub Actions per user; all Buildkite excluded. Retain unsupported domains and whole issue acceptance.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -923,217 +1006,375 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete #1882 and #1883. Keep interactive onboarding usable with inherited PTYs, and report definite task archive policy denial while retaining uncertain broker outcomes.",
+      "intent": "Publish a versioned transport-neutral contract over the existing read-only projection meanings, strict raw-byte vectors and one standalone Python consumer independent of Decapod code and storage. Compare decisions and reason classes with actual CLI execution. Imported claims remain caller-supplied and cannot grant proof, approval, custody or mutation. First reproduce any present decoder disagreement, then correct the independent consumer and protect legitimate Unicode/optional semantics. Preserve unsupported domains explicitly; this does not close authenticated observed conformance or the whole campaign. Source verification runs through GitHub Actions as expressly authorized; ignore all Buildkite.",
       "phases": [],
       "proof_hooks": [
-        "macOS real-process onboarding PTY tests, durable broker denial/replay and crash tests, and required GitHub Actions"
+        "All22 raw vectors execute through actual CLI and independent Python; negative reasons and positive projection responses required"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The authored inherited-PTY and archive-refusal contracts were reviewed against the accepted v0.157.0 merge.",
-          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
-          "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
+          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
+          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
+          "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The authored terminal interaction and durable broker refusal contracts were reviewed against the accepted v0.157.0 merge.",
-          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
-          "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
+          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
+          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
+          "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The version transition and fixes preserve the user and broker authorization policy.",
-          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
-          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
+          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
+          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
+          "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Repair terminal onboarding and archive denial reporting",
+      "title": "Encoding-plane differential correction and pinned portable vectors #1733",
       "todo_ids": [
-        "bugs_01m7y1t47e39c35f"
+        "test_01m7w2bfayzzk8vm"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237255Z"
+      "updated_at": "1795241729Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bd2cc3e0d972fca2f67dab00fbd090ca8a303ccf0a8e8f39fa87e040094931a2",
+      "artifact_hash": "sha256:21cb67d68b30d55064b5db5325ecd1161cffa13565dc0196731f477673dc2ca5",
       "checks": [
         {
-          "name": "archive_policy_denial",
+          "name": "accepted-contract-cli-fixture",
+          "status": "failed"
+        },
+        {
+          "name": "accepted-observer-integration",
           "status": "passed"
         },
         {
-          "name": "broker_crash_uncertainty",
+          "name": "combined-candidate-formatting",
           "status": "passed"
         },
         {
-          "name": "exact_compiled_onboarding",
-          "status": "partial"
-        },
-        {
-          "name": "native_timed_pty_probe",
+          "name": "native-generated-manifest-recovery",
           "status": "passed"
         },
         {
-          "name": "original_checkpoint_onboarding",
+          "name": "previous-downgrade-fixture-recovery",
           "status": "passed"
         },
         {
-          "name": "stale_base_rejected",
+          "name": "previous-full-cli",
+          "status": "failed"
+        },
+        {
+          "name": "released-nesting-boundary",
+          "status": "passed"
+        },
+        {
+          "name": "released-unpaired-surrogate-differential",
+          "status": "failed"
+        },
+        {
+          "name": "supported_version_identity",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:terminal-broker-1882-1883",
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
             "event_id": "event:4",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:terminal-broker-1882-1883",
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
             "event_id": "event:5",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:terminal-broker-1882-1883",
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
             "event_id": "event:6",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:9",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
+          },
+          {
+            "detail": "trajectory:branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "event_id": "event:10",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
+            "kind": "trajectory_step_recorded",
+            "sequence": 10
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
-        "schema_version": "1.1.0",
+        "next_sequence": 10,
+        "schema_version": "1.0.0",
         "trajectories": {
-          "terminal-broker-1882-1883": {
+          "branch_01M7W2EJ9TMH2SN63B74BWTEDV": {
             "evidence_only": true,
-            "id": "terminal-broker-1882-1883",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "id": "branch_01M7W2EJ9TMH2SN63B74BWTEDV",
+            "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/broker.rs",
-                  "src/decapod/core/group_broker.rs",
-                  "tests/group_broker.rs",
-                  "The real broker returned a terminal NOT_COMMITTED receipt for a basic-trust archive request after returning through the child. Same-ID replay across broker lifetimes preserved the receipt and task status/revision and executed once. All original broker crash cases passed."
+                  "tests/fixtures/interop_strict_json.py",
+                  "src/decapod/core/json.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/interop_conformance.rs",
+                  "tests/fixtures/interop_strict_json.py",
+                  "tests/fixtures/interop_json_vectors.v1.json",
+                  "assets/schemas/interop-json-vectors.schema.json",
+                  "docs/conformance/json-v1.md",
+                  ".config/build/decapod.BUILD.bzl",
+                  "/private/tmp/attack-gaps-interop-surrogate-before.json",
+                  "/private/tmp/attack-gaps-interop-depth-before.json"
                 ],
                 "proof_refs": [
-                  "archive_policy_denial",
-                  "broker_crash_uncertainty"
+                  "released-unpaired-surrogate-differential",
+                  "released-nesting-boundary"
                 ],
                 "scope": [
-                  "root"
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
+                "validation_findings": [
+                  "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
+                ]
               },
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/onboarding.rs",
-                  "tests/cli_contracts.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/main.rs",
-                  "Sampled the earlier CLI hang inside a blocking read after Escape. The direct macOS termios probe passed arrow and lone-Escape input in ten independent PTYs per controlling-terminal mode. The final compiled regression is running."
+                  "https://github.com/DecapodLabs/decapod/pull/1863"
                 ],
                 "proof_refs": [
-                  "native_timed_pty_probe",
-                  "exact_compiled_onboarding"
+                  "accepted-observer-integration",
+                  "native-generated-manifest-recovery"
                 ],
                 "scope": [
-                  "root"
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
                 ],
                 "sequence": 5,
+                "validation_findings": [
+                  "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/cli.rs",
+                  "tests/interop_conformance.rs",
+                  "/private/tmp/attack-gaps-controller154-install.json"
+                ],
+                "proof_refs": [
+                  "supported_version_identity"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": [
+                  "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  ".decapod/managed/specs/.manifest.json",
+                  "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               },
               {
-                "action": "verification",
-                "custody_event_id": "event:6",
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
                 "observations": [
-                  "The original candidate passed six full macOS PTY runs and real broker regressions. Master advanced through release PR #1885 to 146a00f4117ffbcdcc93a68ffef6419f78453056; the former base proof returned PUBLICATION_MATERIAL_BASE_CHANGED. The integrated product code is unchanged and the release projections were regenerated with accepted v0.157.0 source. Fresh checks are required on the new source and target."
+                  "tests/consumer_readiness.rs",
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529"
                 ],
                 "proof_refs": [
-                  "original_checkpoint_onboarding",
-                  "stale_base_rejected"
+                  "accepted-contract-cli-fixture"
                 ],
                 "scope": [
-                  "root"
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
                 ],
-                "sequence": 6,
+                "sequence": 8,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "cargo fmt --all -- --check",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "tests/common/consumer_readiness_fixture.rs",
+                  "tests/consumer_readiness.rs"
+                ],
+                "proof_refs": [
+                  "combined-candidate-formatting"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/consumer_readiness.rs",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 9,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:10",
+                "observations": [
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44830327164/job/136614841197"
+                ],
+                "proof_refs": [
+                  "previous-downgrade-fixture-recovery",
+                  "previous-full-cli"
+                ],
+                "scope": [
+                  "assets/schemas",
+                  "docs/conformance",
+                  "tests/consumer_readiness.rs",
+                  "tests/fixtures",
+                  "tests/interop_conformance.rs"
+                ],
+                "sequence": 10,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
-      "destination": "GitHub pull request",
+      "declared_commands": [
+        "cargo fmt --all -- --check"
+      ],
+      "destination": "pull request",
       "evidence": [
-        "Sampled the earlier CLI hang inside a blocking read after Escape. The direct macOS termios probe passed arrow and lone-Escape input in ten independent PTYs per controlling-terminal mode. The final compiled regression is running.",
-        "The original candidate passed six full macOS PTY runs and real broker regressions. Master advanced through release PR #1885 to 146a00f4117ffbcdcc93a68ffef6419f78453056; the former base proof returned PUBLICATION_MATERIAL_BASE_CHANGED. The integrated product code is unchanged and the release projections were regenerated with accepted v0.157.0 source. Fresh checks are required on the new source and target.",
-        "The real broker returned a terminal NOT_COMMITTED receipt for a basic-trust archive request after returning through the child. Same-ID replay across broker lifetimes preserved the receipt and task status/revision and executed once. All original broker crash cases passed."
+        "/private/tmp/attack-gaps-controller154-install.json",
+        "/private/tmp/attack-gaps-interop-depth-before.json",
+        "/private/tmp/attack-gaps-interop-surrogate-before.json",
+        "Merged origin/master 9b6a33b0e (v0.155.0); passed cargo fmt, clippy --all-targets --all-features -D warnings, and interop_conformance integration tests",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44820025180/job/136580080529",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44830327164/job/136614841197",
+        "https://github.com/DecapodLabs/decapod/pull/1863"
       ],
       "inspected_files": [
-        "src/decapod/core/broker.rs",
-        "src/decapod/lib.rs"
+        ".config/build/decapod.BUILD.bzl",
+        "src/decapod/cli.rs",
+        "src/decapod/core/json.rs",
+        "tests/common/consumer_readiness_fixture.rs",
+        "tests/consumer_readiness.rs",
+        "tests/fixtures/interop_strict_json.py"
       ],
-      "intent_id": "intent:terminal-broker-1882-1883",
+      "intent_id": "intent:change_01M7W2EJ67Y2RM1R8WAMZW92QR",
       "modified_files": [
-        "src/decapod/core/group_broker.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/onboarding.rs",
-        "src/decapod/plugins/policy.rs",
-        "src/main.rs",
-        "tests/cli_contracts.rs",
-        "tests/group_broker.rs"
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/.manifest.json",
+        "assets/schemas/interop-json-vectors.schema.json",
+        "docs/conformance/json-v1.md",
+        "tests/consumer_readiness.rs",
+        "tests/fixtures/interop_json_vectors.v1.json",
+        "tests/fixtures/interop_strict_json.py",
+        "tests/interop_conformance.rs"
       ],
       "next_transitions": [
-        "Check the final compiled PTY cases and exact candidate GitHub Actions before opening the PR.",
-        "Run exact current-head PR checks before merge."
+        "Push exact v0.156.0-based candidate for complete GitHub Actions runs and required review",
+        "Refine plan and declare falsifiable checks",
+        "Remove duplicate fixture commit and verify the same downgrade refusal on the combined candidate",
+        "Verify the combined candidate on the accepted approval-verification base"
       ],
       "repo_scope": [
-        "root"
+        "assets/schemas",
+        "docs/conformance",
+        "tests/consumer_readiness.rs",
+        "tests/fixtures",
+        "tests/interop_conformance.rs"
       ],
-      "run_id": "terminal-broker-1882-1883",
+      "run_id": "branch_01M7W2EJ9TMH2SN63B74BWTEDV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7y1t47e39c35f",
+      "task_id": "test_01m7w2bfayzzk8vm",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions.",
+        "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
+        "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged."
+      ]
     }
   },
   "legacy_digests": {
