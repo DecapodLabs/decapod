@@ -1010,6 +1010,16 @@
         "tests/constitution_scaffolding.rs",
         "tests/context_capsule_rpc.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-v1562-accepted-alignment-16",
+      "summary": "Reconcile the accepted strict-profile regression and v0.156.2 release",
+      "input_digest": "sha256:328f3d21aeb1979c1dac3b6a4c019a926e927e86ca45250752be270f7e95a1b3",
+      "proof_refs": [
+        "CHANGELOG.md",
+        "assets/tools/release_projection_drift_tests.rs",
+        "tests/consumer_readiness.rs"
+      ]
     }
   ],
   "intents": {
@@ -1052,22 +1062,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The integration fixtures use the existing context and host APIs through the declared build executable.",
-          "reviewed_code_fingerprint": "a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8",
+          "reason": "The accepted changes strengthen an existing test and advance the release version.",
+          "reviewed_code_fingerprint": "5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The fixtures preserve the existing executable and RPC contracts under both repository test runners.",
-          "reviewed_code_fingerprint": "a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8",
+          "reason": "The context contracts and validated invocation paths carry forward from the preceding candidate.",
+          "reviewed_code_fingerprint": "5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e",
           "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented real Constitution schema inputs and executable custody for the isolated regression suite.",
-          "reviewed_code_fingerprint": "a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8",
+          "reason": "The accepted profile check verifies the candidate change before exercising the runtime downgrade refusal.",
+          "reviewed_code_fingerprint": "5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -1079,14 +1089,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795219521Z"
+      "updated_at": "1795225798Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f077b81824dab3cdf6a67c0bab0c98501a2415f279c96518bd55cbfdc308429d",
+      "artifact_hash": "sha256:bb2a2f3de6c42d9c8309233f179e89329bcb059d3d4dfb6bc484df74976cda7c",
       "checks": [
+        {
+          "name": "Accepted strict profile downgrade regression",
+          "status": "passed"
+        },
         {
           "name": "Bazel Constitution scaffolding before declaring the schema",
           "status": "failed"
@@ -1152,6 +1166,10 @@
           "status": "failed"
         },
         {
+          "name": "Earlier PR checkpoint after target movement",
+          "status": "failed"
+        },
+        {
           "name": "Existing plan after accepted selected-work revision implementation",
           "status": "passed"
         },
@@ -1166,6 +1184,10 @@
         {
           "name": "Local full CLI contracts with five macOS PTY failures",
           "status": "failed"
+        },
+        {
+          "name": "Local full project prerequisites at Git workspace gate",
+          "status": "partial"
         },
         {
           "name": "Local project prerequisites after projection refresh",
@@ -1253,6 +1275,18 @@
         },
         {
           "name": "v0.156.1 release-projection tests (16 cases)",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.2 release projection suite with 16 cases",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.2 seven context and interoperability targets with 77 cases",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.2 verification source inventory with two Cargo version files changed",
           "status": "passed"
         },
         {
@@ -1393,10 +1427,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 20
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:21",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 21
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 20,
+        "next_sequence": 21,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1713,6 +1754,32 @@
                 ],
                 "sequence": 20,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:21",
+                "observations": [
+                  "tests/consumer_readiness.rs",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "https://github.com/DecapodLabs/decapod/pull/1874",
+                  "https://github.com/DecapodLabs/decapod/pull/1876",
+                  "https://github.com/DecapodLabs/decapod/actions/runs/44841923446/job/136673457620",
+                  "Context suite sha256:c47546289786e975de4b6451e5d807a0ecf39b847b6b6aa3de9ab02b5583f3c8",
+                  "Project check refreshed tracked projections and timed out after 120 seconds at validate_git_workspace_context"
+                ],
+                "proof_refs": [
+                  "Earlier PR checkpoint after target movement",
+                  "Accepted strict profile downgrade regression",
+                  "v0.156.2 seven context and interoperability targets with 77 cases",
+                  "v0.156.2 release projection suite with 16 cases",
+                  "v0.156.2 verification source inventory with two Cargo version files changed",
+                  "Local full project prerequisites at Git workspace gate"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 21,
+                "validation_findings": []
               }
             ]
           }
@@ -1727,6 +1794,7 @@
         "All seven Bazel targets log sha256:e57e6f5fe7e9956988bbfcd313244d3bf43c89f49fd098627edf0c102feb77f1",
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
         "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness.",
+        "Context suite sha256:c47546289786e975de4b6451e5d807a0ecf39b847b6b6aa3de9ab02b5583f3c8",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
         "Exact CLI test log sha256:2b98ebaea4a91b7c33486e840c01365ad0cbade6402b8290114a4d9b7121dd63",
         "GitHub Actions run 44701103526 job 136170866608 failed two mentor reflection tests. Reproduced the continuation failure before editing. Restored the named mentor query exception while retaining authenticated sessions and the reflection engine custody checks. All seven infer_precision tests and the bootstrap RPC guard regression passed on the repaired code. Refreshed specs with the evaluating v0.153.2 candidate and reviewed current interfaces, architecture and security. The remaining original GitHub Actions jobs are still in flight. Push waits for their terminal results.",
@@ -1738,6 +1806,7 @@
         "Local project check reported VALIDATE_TIMEOUT_OR_LOCK after generating updated projections",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
         "Missing schema log sha256:dcc659f808edfe93a70c960ea2c3a7f2838057c6e112b7538ba9b69344193f71",
+        "Project check refreshed tracked projections and timed out after 120 seconds at validate_git_workspace_context",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified.",
         "Relative executable failure log sha256:4d33b141465f9e7f29c569b410d00abb2b74ef4374f06910ebb31237c9622e27",
@@ -1749,8 +1818,11 @@
         "https://github.com/DecapodLabs/decapod/actions/runs/44829768980/job/136613811669",
         "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136613930841",
         "https://github.com/DecapodLabs/decapod/actions/runs/44829779808/job/136636021953",
+        "https://github.com/DecapodLabs/decapod/actions/runs/44841923446/job/136673457620",
         "https://github.com/DecapodLabs/decapod/pull/1873",
-        "https://github.com/DecapodLabs/decapod/pull/1875"
+        "https://github.com/DecapodLabs/decapod/pull/1874",
+        "https://github.com/DecapodLabs/decapod/pull/1875",
+        "https://github.com/DecapodLabs/decapod/pull/1876"
       ],
       "inspected_files": [
         "assets/tools/source_ci/standalone-validation.sh",
@@ -1760,6 +1832,7 @@
       "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
+        ".decapod/managed/specs/OPERATIONS.md",
         ".decapod/managed/specs/SECURITY.md",
         "assets/build/constitution_admission.rs",
         "src/decapod/core/docs.rs",
@@ -1776,6 +1849,7 @@
         "Refine plan and declare falsifiable checks",
         "publish-ci-repair",
         "push-bazel-fixture-repair",
+        "push-current-accepted-alignment",
         "push-current-candidate",
         "reconcile-accepted-release"
       ],
