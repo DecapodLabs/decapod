@@ -1063,9 +1063,19 @@ pub(crate) enum CloudCommand {
 #[derive(Subcommand, Debug)]
 pub(crate) enum CloudProjectCommand {
     /// Select an exact project name or a number from `cloud projects`.
-    Use { choice: String },
+    Use {
+        choice: String,
+        /// Limit selection to an exact managed organization ID.
+        #[clap(long = "org")]
+        organization_id: Option<String>,
+    },
     /// Idempotently create and select a project; this does not purchase access.
-    Create { name: String },
+    Create {
+        name: String,
+        /// Create the project in this managed organization.
+        #[clap(long = "org")]
+        organization_id: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug)]

@@ -102,8 +102,16 @@ struct Service {
     read_error: Option<&'static str>,
     slow_refresh: bool,
     account: String,
+    account_status: &'static str,
     projects: Vec<(String, String)>,
+    project_organizations: BTreeMap<String, String>,
     project_allowed: bool,
+    project_status_override: Option<&'static str>,
+    authorization_state: Option<&'static str>,
+    pending_fulfillment: Option<bool>,
+    cloud_org_id: Option<&'static str>,
+    admin: Option<bool>,
+    repo_assigned: Option<bool>,
     registrations: BTreeMap<String, String>,
     lose_registration_once: bool,
     register_associated: bool,
@@ -172,17 +180,50 @@ impl Service {
             }
             ACCOUNT_STATUS => {
                 assert!(request.headers.contains_key("authorization"));
-                if let Some(project) = request.body["project_id"].as_str() {
+                if self.account_status != "registered" {
+                    json!({"version":1,"account_id":self.account,"status":self.account_status,"backend_authorized":false})
+                } else if let Some(project) = request.body["project_id"].as_str() {
                     let exists = self.projects.iter().any(|(id, _)| id == project);
                     let allowed = exists && self.project_allowed;
-                    json!({"version":1,"account_id":self.account,"project_id":project,"status":if allowed{"active"}else if exists{"entitlement_required"}else{"admin_approval_required"},"backend_authorized":allowed})
+                    let status = if allowed {
+                        "active"
+                    } else if let Some(override_status) = self.project_status_override {
+                        override_status
+                    } else if exists {
+                        "entitlement_required"
+                    } else {
+                        "admin_approval_required"
+                    };
+                    json!({
+                        "version": 1,
+                        "account_id": self.account,
+                        "project_id": project,
+                        "organization_id": self.project_organizations.get(project),
+                        "status": status,
+                        "authorization_state": self.authorization_state,
+                        "pending_fulfillment": self.pending_fulfillment,
+                        "cloud_org_id": self.cloud_org_id,
+                        "admin": self.admin,
+                        "repo_assigned": self.repo_assigned,
+                        "backend_authorized": allowed
+                    })
                 } else {
                     json!({"version":1,"account_id":self.account,"status":"registered","backend_authorized":false,
+                      "organizations":self.project_organizations.values().map(|id|json!({"id":id})).collect::<Vec<_>>(),
                       "projects":self.projects.iter().map(|(id,name)|json!({"project_id":id,"name":name})).collect::<Vec<_>>()})
                 }
             }
             ACCOUNT_REGISTER => {
                 assert!(request.headers.contains_key("authorization"));
+                if request.body["operation"] == "account" {
+                    assert_eq!(request.body, json!({"version":1,"operation":"account"}));
+                    self.account_status = "registered";
+                    return Some((
+                        200,
+                        json!({"version":1,"account_id":self.account,
+                      "status":"registered","backend_authorized":false}),
+                    ));
+                }
                 let operation = request.body["request_id"].as_str().unwrap().to_owned();
                 let name = request.body["project_name"].as_str().unwrap().to_owned();
                 let id = self
@@ -192,6 +233,10 @@ impl Service {
                     .clone();
                 if self.register_associated && !self.projects.iter().any(|(p, _)| p == &id) {
                     self.projects.push((id.clone(), name));
+                    if let Some(organization) = request.body["organization_id"].as_str() {
+                        self.project_organizations
+                            .insert(id.clone(), organization.into());
+                    }
                 }
                 if self.lose_registration_once {
                     self.lose_registration_once = false;
@@ -261,8 +306,16 @@ impl Fixture {
             read_error: None,
             slow_refresh: false,
             account: ACCOUNT.into(),
+            account_status: "registered",
             projects: Vec::new(),
+            project_organizations: BTreeMap::new(),
             project_allowed: true,
+            project_status_override: None,
+            authorization_state: None,
+            pending_fulfillment: None,
+            cloud_org_id: None,
+            admin: None,
+            repo_assigned: None,
             registrations: BTreeMap::new(),
             lose_registration_once: false,
             register_associated: true,
@@ -404,6 +457,23 @@ fn output(result: &Output) -> String {
         String::from_utf8_lossy(&result.stderr)
     )
 }
+fn assert_no_secrets(result: &Output) {
+    let text = output(result);
+    for secret in [
+        managed::ACCESS,
+        managed::REFRESH,
+        ROTATED_ACCESS,
+        ROTATED_REFRESH,
+        CODE,
+        "Bearer ",
+    ] {
+        assert!(
+            !text.contains(secret),
+            "secret marker `{secret}` leaked in CLI output: {text}"
+        );
+    }
+}
+
 fn failed(result: &Output, status: &str) {
     assert!(
         !result.status.success(),
@@ -1060,6 +1130,104 @@ fn managed_project_selection_routes_the_next_native_data_request() {
 }
 
 #[test]
+fn managed_project_directory_registers_the_current_account_and_reports_stepup() {
+    let f = Fixture::new("example/project-registration");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().account_status = "registration_required";
+    let registered = f.run(&["cloud", "projects", "--format", "json"]);
+    assert!(registered.status.success());
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert_eq!(f.count(ACCOUNT_STATUS), 2);
+
+    f.service.lock().unwrap().account_status = "provider_link_stepup_required";
+    let stepup = f.run(&["cloud", "projects", "--format", "json"]);
+    assert!(!stepup.status.success());
+    let text = output(&stepup);
+    assert!(text.contains("provider_link_stepup_required"));
+    assert!(text.contains("Cloud Admin"));
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_selection_uses_server_organization_for_duplicate_names() {
+    let f = Fixture::new("example/project-organization");
+    f.proof();
+    f.seed(false);
+    {
+        let mut service = f.service.lock().unwrap();
+        service.projects = vec![
+            ("source-one/shared".into(), "Team repository".into()),
+            ("source-two/shared".into(), "Team repository".into()),
+        ];
+        service.project_organizations = BTreeMap::from([
+            ("source-one/shared".into(), "org-west".into()),
+            ("source-two/shared".into(), "org-east".into()),
+        ]);
+    }
+    let listed = f.run(&["cloud", "projects", "--format", "json"]);
+    let view: Value = serde_json::from_slice(&listed.stdout).unwrap();
+    assert!(listed.status.success());
+    assert_eq!(view["projects"][0]["organization_id"], "org-west");
+    assert_eq!(view["projects"][1]["organization_id"], "org-east");
+    assert!(
+        !f.run(&["cloud", "project", "use", "Team repository"])
+            .status
+            .success()
+    );
+    let selected = f.run(&[
+        "cloud",
+        "project",
+        "use",
+        "Team repository",
+        "--org",
+        "org-east",
+        "--format",
+        "json",
+    ]);
+    assert!(selected.status.success());
+    let result: Value = serde_json::from_slice(&selected.stdout).unwrap();
+    assert_eq!(result["projects"][0]["project_id"], "source-two/shared");
+    assert_eq!(result["projects"][0]["organization_id"], "org-east");
+    assert!(
+        !f.run(&["cloud", "project", "use", "1", "--org", "org-east"])
+            .status
+            .success()
+    );
+}
+
+#[test]
+fn managed_project_creation_cannot_replay_an_unresolved_request_in_another_org() {
+    let f = Fixture::new("example/project-create-org");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().lose_registration_once = true;
+    let create = |org| {
+        f.run(&[
+            "cloud",
+            "project",
+            "create",
+            "Team repository",
+            "--org",
+            org,
+        ])
+    };
+    assert!(!create("org-east").status.success());
+    assert!(!create("org-west").status.success());
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert!(create("org-east").status.success());
+    let requests = f.requests.lock().unwrap();
+    let registered: Vec<_> = requests
+        .iter()
+        .filter(|r| r.path == ACCOUNT_REGISTER)
+        .collect();
+    assert_eq!(registered.len(), 2);
+    assert_eq!(registered[0].body, registered[1].body);
+    assert_eq!(registered[1].body["organization_id"], "org-east");
+}
+
+#[test]
 fn managed_project_creation_recovers_one_request_and_retains_its_receipt() {
     let f = Fixture::new("example/project-create");
     f.proof();
@@ -1110,7 +1278,7 @@ fn managed_project_creation_requires_current_account_association() {
     f.service.lock().unwrap().register_associated = false;
     failed(
         &f.run(&["cloud", "project", "create", "Team repository"]),
-        "action_required",
+        "admin_approval_required",
     );
     assert!(
         !f.run(&["todo", "list", "--format", "json"])
@@ -1250,7 +1418,7 @@ fn forged_private_project_reference_cannot_grant_access_or_fall_back() {
     std::fs::write(&record, serde_json::to_vec(&value).unwrap()).unwrap();
     failed(
         &f.run(&["todo", "list", "--format", "json"]),
-        "action_required",
+        "admin_approval_required",
     );
     assert_eq!(f.count(QUERY), 0);
     f.assert_no_fallback();
@@ -1286,5 +1454,154 @@ fn concurrent_project_creation_reuses_one_saved_operation() {
     }
     assert_eq!(f.count(ACCOUNT_REGISTER), 1);
     assert_eq!(f.service.lock().unwrap().registrations.len(), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn p0_pay_and_use_payment_required_surfacing_preserves_session_and_resumes() {
+    let f = Fixture::new("DecapodLabs/decapod");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![("DecapodLabs/decapod".into(), "Decapod".into())];
+        s.project_allowed = false;
+        s.project_status_override = Some("payment_required");
+        s.authorization_state = Some("payment_required");
+    }
+    assert!(
+        f.run(&["cloud", "project", "use", "Decapod"])
+            .status
+            .success()
+    );
+
+    let blocked = f.run(&["todo", "list", "--format", "json"]);
+    failed(&blocked, "payment_required");
+    assert!(
+        output(&blocked).contains("https://decapodlabs.ai/pricing?repo=DecapodLabs%2Fdecapod"),
+        "{}",
+        output(&blocked)
+    );
+    assert_no_secrets(&blocked);
+    assert_eq!(f.count(QUERY), 0);
+
+    let add_blocked = f.run(&["todo", "add", "Pay and resume", "--format", "json"]);
+    assert!(!add_blocked.status.success());
+    let add_diag: Value = serde_json::from_slice(&add_blocked.stdout).unwrap();
+    assert_eq!(
+        add_diag["schema_version"],
+        "decapod.cloud.todo-operation.v1"
+    );
+    assert_eq!(add_diag["status"], "blocked_before_submit");
+    assert_eq!(add_diag["failure_kind"], "authorization");
+    assert_eq!(add_diag["retryable"], false);
+    assert_eq!(
+        add_diag["enrollment_url"],
+        "https://decapodlabs.ai/pricing?repo=DecapodLabs%2Fdecapod"
+    );
+    assert!(
+        add_diag["next_action"]
+            .as_str()
+            .unwrap()
+            .contains("no Admin setup wizard"),
+        "{add_diag}"
+    );
+    assert_no_secrets(&add_blocked);
+    assert_eq!(f.count(QUERY), 0);
+    assert_eq!(f.status()["phase"], "ready");
+
+    {
+        let mut s = f.service.lock().unwrap();
+        s.project_allowed = true;
+        s.project_status_override = None;
+        s.authorization_state = Some("active");
+    }
+    let resumed = f.run(&["todo", "list", "--format", "json"]);
+    assert!(resumed.status.success(), "{}", output(&resumed));
+    assert_eq!(f.count(QUERY), 1);
+    assert_eq!(f.count(TOKEN), 0);
+    assert_no_secrets(&resumed);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn p0_pending_fulfillment_retains_session_and_resumes_after_webhook() {
+    let f = Fixture::new("DecapodLabs/decapod");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![("DecapodLabs/decapod".into(), "Decapod".into())];
+        s.project_allowed = false;
+        s.project_status_override = Some("payment_required");
+        s.authorization_state = Some("payment_required");
+        s.pending_fulfillment = Some(true);
+    }
+    assert!(
+        f.run(&["cloud", "project", "use", "Decapod"])
+            .status
+            .success()
+    );
+
+    let pending = f.run(&["todo", "list", "--format", "json"]);
+    failed(&pending, "pending_fulfillment");
+    assert!(!output(&pending).contains("restart_required"));
+    assert_no_secrets(&pending);
+    assert_eq!(f.count(QUERY), 0);
+    assert_eq!(f.status()["phase"], "ready");
+
+    {
+        let mut s = f.service.lock().unwrap();
+        s.pending_fulfillment = Some(false);
+        s.project_allowed = true;
+        s.project_status_override = None;
+        s.authorization_state = Some("active");
+    }
+    let resumed = f.run(&["todo", "list", "--format", "json"]);
+    assert!(resumed.status.success(), "{}", output(&resumed));
+    assert_eq!(f.count(QUERY), 1);
+    assert_eq!(f.count(TOKEN), 0);
+    assert_no_secrets(&resumed);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn p0_admin_approval_required_separates_org_admin_from_paid_repo_seat() {
+    let f = Fixture::new("DecapodLabs/decapod");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![("DecapodLabs/decapod".into(), "Decapod".into())];
+        s.project_allowed = false;
+        s.project_status_override = Some("admin_approval_required");
+        s.admin = Some(true);
+        s.repo_assigned = Some(false);
+    }
+    let blocked = f.run(&["cloud", "project", "use", "Decapod"]);
+    failed(&blocked, "admin_approval_required");
+    assert!(output(&blocked).contains("admin=true, repo_assigned=false"));
+    assert_no_secrets(&blocked);
+    assert_eq!(f.count(QUERY), 0);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn p0_organization_already_enrolled_surfaces_cloud_org_id() {
+    let f = Fixture::new("DecapodLabs/decapod");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![("DecapodLabs/decapod".into(), "Decapod".into())];
+        s.project_allowed = false;
+        s.project_status_override = Some("organization_already_enrolled");
+        s.cloud_org_id = Some("00000000-0000-0000-0000-000000000999");
+    }
+    let blocked = f.run(&["cloud", "project", "use", "Decapod"]);
+    failed(&blocked, "organization_already_enrolled");
+    assert!(output(&blocked).contains("00000000-0000-0000-0000-000000000999"));
+    assert_no_secrets(&blocked);
+    assert_eq!(f.count(QUERY), 0);
     f.assert_no_fallback();
 }

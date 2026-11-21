@@ -1,5 +1,16 @@
 # Interfaces
 
+## Pay-and-use Cloud CLI flags, auth diagnostics, and pricing URL contract (#1877, #1896)
+
+- **Managed project commands (`src/decapod/cli.rs`, `src/decapod/lib.rs`, `src/decapod/core/cloud_project.rs`)**:
+  `decapod cloud project use <CHOICE> [--org <ORGANIZATION_ID>]` and `decapod cloud project create <NAME> [--org <ORGANIZATION_ID>]` confirm organization ownership across `cloud_project::execute`. `ProjectView` includes `organization_id: Option<String>`, and `decapod cloud projects` appends `({organization})` in text mode when present.
+- **Cloud auth & todo operation diagnostics (`decapod.cloud.auth.v1`, `decapod.cloud.todo-operation.v1`)**:
+  `CloudAuthStatus` serializes as snake_case JSON values `registration_required`, `provider_link_stepup_required`, `payment_required`, `pending_fulfillment`, `admin_approval_required`, and `organization_already_enrolled`. When repository enrollment is actionable (`payment_required`, `entitlement_required`, and seat-required aliases), diagnostics attach `"enrollment_url": "https://decapodlabs.ai/pricing?repo=<owner%2Frepo>"` (or `"https://decapodlabs.ai/pricing"` when no valid slug is present) and render `; enroll: <url>` in human error text. `cloud_todo_operation::Diagnostic` propagates `enrollment_url` alongside `operation_id` and `authorization_url` without altering `OperationRecord` schema compatibility.
+- **Additive server account-status response fields (`src/decapod/core/cloud_project.rs::Response`)**:
+  Supports optional `authorization_state`, `pending_fulfillment`, `cloud_org_id`, `admin`, `repo_assigned`, `organizations`, and `projects[].organization_id` with `#[serde(default)]`, preserving full backward compatibility with legacy payloads.
+- **Verified offline & unit proof coverage (`tests/unit/core/cloud_project_tests.rs`, `tests/common/cloud_managed_scenarios.rs`, `tests/unit/core/propodus_tests.rs`, `tests/cloud_backend_storage.rs`)**:
+  Covers URL encoding/validation, all P0 status code & `FailureKind` mappings, `admin=true, repo_assigned=false` orthogonality, immutable `cloud_org_id` surfacing, `payment_required` / `pending_fulfillment` session preservation and automatic resume, `--org` selection and request-ID isolation, headless JSON secret-redaction checks, and zero local `decapod.db` creation on Cloud init refresh.
+
 ## Bounded context and host observations
 
 `context.resolve` retains its fragment contract and adds selection reasons, stable source identities, a scoped advisory knowledge projection, and current governed-plan context with explicit task binding. It returns an explicit no-match result for advisory queries and retains mandatory obligations. New capsule and bundle fields are versioned. Legacy hashes stay stable when the optional fields are absent. The complete context envelope is capped at 262,144 bytes, with at most twelve fragments and 8,192 excerpt bytes.
@@ -1560,8 +1571,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
+- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

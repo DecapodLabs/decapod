@@ -404,3 +404,34 @@ fn mock_onboarding_flags_do_not_bypass_managed_cloud_preflight() {
         "cloud agent session token should identify its backend"
     );
 }
+
+#[test]
+fn cloud_refresh_init_never_creates_local_fallback_db() {
+    let tmp = TempDir::new().expect("project tempdir");
+    let first = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--backend", "cloud", "--force", "--proof"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("initial cloud init");
+    assert!(
+        first.status.success(),
+        "{}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    assert!(!tmp.path().join(".decapod/data/decapod.db").exists());
+
+    let refresh = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["init", "--backend", "cloud", "--proof"])
+        .current_dir(tmp.path())
+        .output()
+        .expect("refresh cloud init");
+    assert!(
+        refresh.status.success(),
+        "{}",
+        String::from_utf8_lossy(&refresh.stderr)
+    );
+    assert!(
+        !tmp.path().join(".decapod/data/decapod.db").exists(),
+        "refresh init in cloud mode must not create local decapod.db"
+    );
+}
