@@ -301,14 +301,14 @@ job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
 
-### Current Release Alignment (v0.155.1)
+### Current Release Alignment (v0.156.1)
 
-The `v0.155.1` release cut aligns the package version in `Cargo.toml`,
+The `v0.156.1` release cut aligns the package version in `Cargo.toml`,
 root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
-managed projections refreshed by the `0.155.1` binary.
-`.decapod/managed/Dockerfile.decapod` pins the `v0.155.1-debian` image
-and `DECAPOD_VERSION=0.155.1`. The managed spec manifest records
-`decapod_release` as `0.155.1` alongside current codebase attestations.
+managed projections refreshed by the `0.156.1` binary.
+`.decapod/managed/Dockerfile.decapod` pins the `v0.156.1-debian` image
+and `DECAPOD_VERSION=0.156.1`. The managed spec manifest records
+`decapod_release` as `0.156.1` alongside current codebase attestations.
 Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
 remain intentionally pinned at `0.148.0` under
 `[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
