@@ -268,7 +268,7 @@ fn capture_once(
     }
     let (policy_digest, required_approvals) = capture_policy(root, task_id, approvals, &mut io)?;
     let owner = policy_owner(root, &mut io)?;
-    let custody = crate::core::todo::capture_execution_custody(
+    let custody = crate::core::todo::capture_execution_custody_binding(
         &owner.join(".decapod/data"),
         task_id,
         &crate::current_agent_id(),

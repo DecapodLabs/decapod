@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
+    "accepted_commit": "73026d840f214392e89750a7370c66bf1b182d2f",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -822,70 +822,39 @@
     }
   },
   "change": {
-    "id": "issue-1764-1770-selected-approval",
-    "base_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
+    "id": "change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+    "base_commit": "73026d840f214392e89750a7370c66bf1b182d2f",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "four-relation-witness": {
-      "statement": "The full four-relation model fails with its complete conflict witness while all proper subsets and the accepted consistent repair pass",
-      "falsifier": "A proper subset fails or a full contradictory model does not return all four relation identifiers",
-      "status": "supported",
-      "proof_refs": [
-        "local:selected-work-tests"
-      ]
-    },
-    "selected-policy-reapproval": {
-      "statement": "Changing the selected-work policy requires reapproval while unchanged policy preserves approved progress",
-      "falsifier": "An approved plan can execute on a different selected policy revision before being approved again",
-      "status": "supported",
-      "proof_refs": [
-        "local:plan-governance-tests"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "selected-policy-approval-revision",
-      "summary": "Bind plan approval to the accepted selected-work revision and verify the complete four-relation conflict witness",
-      "input_digest": "sha256:ce424d72ac6bb7c9d8feecffe8ad5af82631d85b319dc03a9a5f9ce3127b9264",
+      "id": "custody-heartbeat-tested",
+      "summary": "Keep validation heartbeat extensions under the existing task custody generation",
+      "input_digest": "sha256:3d2f4c55a94605abc72507ad0a911f5154670e2e13a348f9e3a6b20be16712f1",
       "proof_refs": [
-        "local:53-focused-tests",
-        "local:rustfmt-and-whitespace",
-        "release-source:b533261ebbc860e8edf82eea57cac55b583699a2"
-      ]
-    },
-    {
-      "id": "v156-projection-refresh",
-      "summary": "Refresh Docker and living-spec projections to the verified v0.156.0 release and preserve the earlier failed hosted validation",
-      "input_digest": "sha256:522b3f39348d48d6a7847ec5eae0e3e1b79b4a9b1b9b1f652ef9646d939c740f",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44830202264/job/136612907388",
-        "release-source:b533261ebbc860e8edf82eea57cac55b583699a2"
+        "cargo test --locked --lib archive_tests"
       ]
     }
   ],
   "intents": {
-    "intent:followup_1764_1770_selected_approval": {
+    "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Preserve accepted history, issue-scoped behavior and existing release validation requirements"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/plan_governance.rs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plan_governance_tests.rs",
-        ".decapod/managed/specs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:followup_1764_1770_selected_approval",
+      "id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Complete the remaining Decapod issue 1764, 1770, and 1860 work, merge the code when ready and merge the release cut",
-      "refined_intent": "Deliver the scoped selected policy reapproval and four-relation controls on the accepted combined implementation",
+      "raw_intent": "Decapod #1837: support an audited same-holder task heartbeat without fencing current workunit custody",
+      "refined_intent": "Decapod #1837: support an audited same-holder task heartbeat without fencing current workunit custody",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -898,174 +867,88 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Require reapproval and fresh proof after a changed accepted policy and verify the full four-relation witness",
+      "intent": "Audit real lease extensions while preserving the custody identity used by existing workunit and validation checkpoints.",
       "phases": [],
       "proof_hooks": [
-        "plan_governance and selected-work regressions",
-        "GitHub Actions against exact candidate and accepted target"
+        "Test stable custody across heartbeats, stale-holder refusal and existing fenced renewal behavior."
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Describe policy revision binding at shared readiness gates and phase reset on reapproval",
-          "reviewed_code_fingerprint": "47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1",
-          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the persisted selected-work approval revision and the supported reapproval response for stale plans",
-          "reviewed_code_fingerprint": "47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1",
-          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The new plan binding consumes the same independently accepted selected-work policy and adds no authority, credential, or access surface",
-          "reviewed_code_fingerprint": "47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1",
-          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Bind plan approval to the selected-work policy revision",
+      "title": "Separate the same-holder heartbeat from custody rotation",
       "todo_ids": [
-        "code_01m7xegrqm1cazcx"
+        "cicd_01m7xnffzj103fyk"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795213651Z"
+      "updated_at": "1795218284Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Preserve accepted history, issue-scoped behavior and existing release validation requirements"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:deda2e1c5e19e629a3a0929cec43839651d18247095893806e6be14a8c098267",
-      "checks": [
-        {
-          "name": "cli-contracts",
-          "status": "passed"
-        },
-        {
-          "name": "combined-worktree",
-          "status": "passed"
-        },
-        {
-          "name": "formatting",
-          "status": "passed"
-        },
-        {
-          "name": "plan-governance",
-          "status": "passed"
-        },
-        {
-          "name": "release-projections",
-          "status": "passed"
-        },
-        {
-          "name": "selected-work",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "validation",
+      "artifact_hash": "sha256:c5e35ce2aff77f302fd1fd42f33a7d6c447b17bfb72fc4315e9d8f8fbfa12ae8",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:followup_1764_1770_selected_approval",
-            "event_id": "event:4",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
-        "schema_version": "1.0.0",
-        "trajectories": {
-          "followup_1764_1770_selected_approval": {
-            "evidence_only": true,
-            "id": "followup_1764_1770_selected_approval",
-            "intent_id": "intent:followup_1764_1770_selected_approval",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/decapod/plan_governance.rs",
-                  "src/decapod/core/governance_document/merge_reconcile.rs",
-                  "src/decapod/core/intent_reconcile/selected.rs",
-                  "tests/unit/plan_governance_tests.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  ".decapod/managed/specs",
-                  "53 focused tests passed on the candidate assembled from the identical b1001f94 and accepted d96bf819 source trees, including 25 plan tests, four CLI checks, three selected-work tests, three accepted-policy or combined integration checks, and 18 release projection tests"
-                ],
-                "proof_refs": [
-                  "plan-governance",
-                  "selected-work",
-                  "cli-contracts",
-                  "combined-worktree",
-                  "release-projections",
-                  "formatting"
-                ],
-                "scope": [
-                  ".decapod/managed/specs",
-                  "src/decapod/core/governance_document/merge_reconcile.rs",
-                  "src/decapod/core/intent_reconcile/selected.rs",
-                  "src/decapod/plan_governance.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/unit/plan_governance_tests.rs"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "next_sequence": 3,
+        "schema_version": "1.1.0",
+        "trajectories": {}
       },
       "declared_commands": [],
-      "destination": "DecapodLabs/decapod master",
-      "evidence": [
-        "53 focused tests passed on the candidate assembled from the identical b1001f94 and accepted d96bf819 source trees, including 25 plan tests, four CLI checks, three selected-work tests, three accepted-policy or combined integration checks, and 18 release projection tests"
+      "destination": "pull request",
+      "evidence": [],
+      "execution_checkpoints": [
+        {
+          "binding": {
+            "governance_digest": "sha256:9ce08b7a9e3c4606e229cb69ac1276543f6d8cf9e12aa02e8504492ac6d40603",
+            "head_revision": "73026d840f214392e89750a7370c66bf1b182d2f",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+            "material_digest": "sha256:f56f5589b35a59f8f929f355d0ef1d994847892232b084f36b54be44f094fb16",
+            "plan_digest": "sha256:36f605624158a6655ebbe3c6b33ee872d93ecb260be089bb18f7bd2b1672cc5f",
+            "policy_digest": "sha256:78b9bc17a20cc939ec6032d5700b6be56becdd8fa34d568872e2c5c93b3df54f",
+            "required_approvals": [],
+            "run_id": "branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:c4b05230a56e5146fd5daf3d2322f62856816c82c39988dc10a103a037bdf253",
+            "task_id": "cicd_01m7xnffzj103fyk",
+            "trajectory_digest": "sha256:e4cb5ae377a0a55d93d798b7c448b8a197add5c4807e420e4b94a093aab17cfd",
+            "validation_epoch_digest": "sha256:7c56fb2d9d32115bdb82ad53ce87e2ef40020d0d86d76969a7e56619fbf6d195",
+            "work_branch": "agent/codex-cloud-followups/cicd_01m7xnffzj103fyk-lease-heartbeat"
+          },
+          "binding_digest": "sha256:825405b0d2983c9c3a06074c54842e44d275dc48419e0942411dff693acd5b5c",
+          "checkpoint_id": "custody-heartbeat-tested",
+          "sequence": 1
+        }
       ],
       "inspected_files": [],
-      "intent_id": "intent:followup_1764_1770_selected_approval",
-      "modified_files": [
-        ".decapod/managed/specs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "src/decapod/plan_governance.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plan_governance_tests.rs"
-      ],
+      "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+      "modified_files": [],
       "next_transitions": [
-        "publish"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/managed/specs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "src/decapod/plan_governance.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/plan_governance_tests.rs"
+        "root"
       ],
-      "run_id": "followup_1764_1770_selected_approval",
+      "run_id": "branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7xegrqm1cazcx",
+      "task_id": "cicd_01m7xnffzj103fyk",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
