@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
+    "accepted_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -822,45 +822,57 @@
     }
   },
   "change": {
-    "id": "change_01M7XH10HTX57Y8T4W2KKH7DGA",
-    "base_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
+    "id": "change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+    "base_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "macos-admission-fixture": {
+      "statement": "The live-admission test fixture works with both equivalent macOS temporary directory paths.",
+      "falsifier": "The existing live-admission test rejects the fixture-owned closure under either alias or canonical TMPDIR.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
+    },
+    "stale-checkpoint-diagnostic": {
+      "statement": "A hosted checkpoint with a stale target reports the event base and observed ref revision and continues to refuse current publication material.",
+      "falsifier": "Moving the target permits current material verification or the error omits the expected and observed revisions.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "fix-strict-profile-fixture",
-      "summary": "Reuse the committed downgrade candidate and keep its existing acceptance guard",
-      "input_digest": "sha256:bc55616d28b799352eb9f45cb14d9dcc83a3ce8f7f7bec2261689893ce813e75"
-    },
-    {
-      "id": "fix-strict-fixture-v1560",
-      "summary": "Apply accepted v0.156.0 and refresh exact managed projections for the strict fixture repair",
-      "input_digest": "sha256:1ae979f693a3b98db3f45fb22c05d3a71b8d74b4eb73fa7ba917c220e4fb9369"
-    },
-    {
-      "id": "fix-strict-fixture-v1561",
-      "summary": "Integrate accepted v0.156.1 and preserve the covered fixture repair and exact hosted evidence",
-      "input_digest": "sha256:83c6aec6d576f6edf1c56750d5f1f874d12ab229866f5d655aa26f7e8aeb76d5"
+      "id": "issue-1880-admission-followups",
+      "summary": "Verify the macOS canonical fixture path and distinguish stale checkpoint input from current publication material",
+      "input_digest": "sha256:4c3331d74ed81e0a819da3c708acce005d27068c26756884d1c30436a960c96c",
+      "proof_refs": [
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA": {
+    "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        ".decapod/governance.json",
-        ".decapod/managed/specs",
-        "tests/consumer_readiness.rs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+      "id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
-      "refined_intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
+      "raw_intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
+      "refined_intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -873,7 +885,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
+      "intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -883,160 +895,109 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve the accepted v0.156.1 selected-work architecture. The candidate changes a regression fixture.",
-          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "reason": "The existing provider material verifier still owns the target check before and after inspection.",
+          "reviewed_code_fingerprint": "2003b10c00ffbdfa2b57c1df0b364ead167909d957b4a1a8006b66326b0fe977",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The strict-profile fixture preserves the accepted downgrade proof interface and its check.",
-          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "reason": "The existing checkpoint command and typed error code are preserved. The explanatory diagnostic identifies both revisions.",
+          "reviewed_code_fingerprint": "2003b10c00ffbdfa2b57c1df0b364ead167909d957b4a1a8006b66326b0fe977",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The confirmed fixture test exercises the approved transition and the existing unconditional rejection.",
-          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "reason": "The exact target comparison and canonical tool admission rules are preserved. The fixture supplies its own file by canonical path.",
+          "reviewed_code_fingerprint": "2003b10c00ffbdfa2b57c1df0b364ead167909d957b4a1a8006b66326b0fe977",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Remove redundant strict-profile fixture commit",
+      "title": "Fix the macOS admission fixture and verify current checkpoint behavior",
       "todo_ids": [
-        "bugs_01m7xgt405he9by4"
+        "bugs_01m7y0ymbvm3n79c"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218933Z"
+      "updated_at": "1795234590Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:27fd0ec988f6d0eddd601f4a69d9434db0077f937d7af3e2d44cf1eeabc6a41d",
+      "artifact_hash": "sha256:46482320ce8145f2e41ecec7922c6b47000d931d4afecb9852e5addd4558fecd",
       "checks": [
         {
-          "name": "exact-hosted-strict-profile-test",
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "previous-cli-strict-fixture",
-          "status": "failed"
-        },
-        {
-          "name": "prior-selective-cli-target-timeout",
-          "status": "failed"
-        },
-        {
-          "name": "strict-fixture-formatting",
+          "name": "macos-aliased-tmpdir",
           "status": "passed"
         },
         {
-          "name": "strict-fixture-v1560-projection-hashes",
+          "name": "macos-canonical-tmpdir",
+          "status": "passed"
+        },
+        {
+          "name": "stale-checkpoint-diagnostic",
           "status": "passed"
         }
       ],
-      "current_phase": "verifying",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
+            "detail": "trajectory:branch_01M7Y1RM088RSG5RQVPD1TAGGE",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
-        "schema_version": "1.0.0",
+        "next_sequence": 4,
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7XH10N43RM1J5HAVP45NYVV": {
+          "branch_01M7Y1RM088RSG5RQVPD1TAGGE": {
             "evidence_only": true,
-            "id": "branch_01M7XH10N43RM1J5HAVP45NYVV",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "id": "branch_01M7Y1RM088RSG5RQVPD1TAGGE",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "steps": [
               {
-                "action": "verifying",
+                "action": "validation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "tests/consumer_readiness.rs",
-                  "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
+                  "src/decapod/core/workspace.rs",
+                  "tests/unit/core/workspace_publication_tests.rs",
+                  "docs/book/src/reference/governance-artifacts.md",
+                  "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory."
                 ],
                 "proof_refs": [
-                  "previous-cli-strict-fixture",
-                  "strict-fixture-formatting"
+                  "stale-checkpoint-diagnostic",
+                  "macos-aliased-tmpdir",
+                  "macos-canonical-tmpdir",
+                  "formatting"
                 ],
                 "scope": [
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs",
-                  "tests/consumer_readiness.rs"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator."
-                ],
-                "proof_refs": [
-                  "strict-fixture-v1560-projection-hashes"
-                ],
-                "scope": [
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs",
-                  "tests/consumer_readiness.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned."
-                ],
-                "proof_refs": [
-                  "exact-hosted-strict-profile-test",
-                  "prior-selective-cli-target-timeout"
-                ],
-                "scope": [
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs",
-                  "tests/consumer_readiness.rs"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1046,27 +1007,26 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator.",
-        "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned.",
-        "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
+        "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory."
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+      "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
       "modified_files": [
-        "tests/consumer_readiness.rs"
+        "docs/book/src/reference/governance-artifacts.md",
+        "src/decapod/core/workspace.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ],
       "next_transitions": [
+        "Checkpoint the tested local change",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/governance.json",
-        ".decapod/managed/specs",
-        "tests/consumer_readiness.rs"
+        "root"
       ],
-      "run_id": "branch_01M7XH10N43RM1J5HAVP45NYVV",
+      "run_id": "branch_01M7Y1RM088RSG5RQVPD1TAGGE",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7xgt405he9by4",
+      "task_id": "bugs_01m7y0ymbvm3n79c",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -54,6 +54,13 @@ independently require complete applicable checks, current source/policy and
 exact publisher readback for this report's actual head/base. The required
 full-library owner remains mandatory, including the publication regressions.
 
+The hosted checkpoint check reports the immutable PR event base and the
+resolved target ref when those revisions differ. Historical checkpoint results
+remain bound to the original commits. Evidence for current admission must
+bind the newly accepted base. The macOS live-admission regression records
+its fixture-owned toolchain file by canonical path so the same checks run
+when the host temp directory is reached through a symlink.
+
 ## Live rejection specificity (#1748)
 
 The disposable GitHub acceptance requires the invalid payload's actual failure,
@@ -1534,7 +1541,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f`
+- Repository signal fingerprint: `97e5f971aa9b4908428db1104ec97cca16e64c8ca895e6065ef463ad17a62ff0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
