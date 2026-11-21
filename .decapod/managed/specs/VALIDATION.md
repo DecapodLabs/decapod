@@ -6,6 +6,7 @@ Verified on the merged `origin/master` (`v0.159.0`, including PR `#1901` and
 PR `#1902`) candidate:
 
 - **Feature matrix, formatting, and lints**:
+  - `reviewed_sources_digest` in `.decapod/config.toml` reconciled to `sha256:875df5f0a0da8415e102fa983a448cf995b93f52aa689d7a4dc71726a36c7ae9` after `v0.159.0` (`#1902`) bumped `Cargo.toml`/`Cargo.lock` with unchanged CI/toolchain/workflow contracts.
   - `cargo check --locked --no-default-features --lib` with `RUSTFLAGS="-D warnings"`: passed (0 warnings).
   - `cargo fmt --all -- --check`: passed.
   - `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings).

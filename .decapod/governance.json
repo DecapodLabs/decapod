@@ -927,6 +927,14 @@
       "proof_refs": [
         "specs.refresh; cargo test --locked --features supabase-cloud --lib (1970 passed, 8 ignored); core::migration (13 passed); 13 integration targets (115 passed, 4 ignored); clippy --all-targets --all-features (-D warnings); check --no-default-features (-D warnings)"
       ]
+    },
+    {
+      "id": "wave2-proof-profile-v0159",
+      "summary": "Reconcile reviewed_sources_digest for v0.159.0 (#1902) Cargo.toml/Cargo.lock bump",
+      "input_digest": "sha256:0887543d8923020d4b67129c7df931a3aed72dcc9a81c60bd416374f413462e0",
+      "proof_refs": [
+        "discovered source inventory sha256:875df5f0a0da8415e102fa983a448cf995b93f52aa689d7a4dc71726a36c7ae9; zero CI/workflow/toolchain changes"
+      ]
     }
   ],
   "intents": {
