@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
+    "accepted_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -822,45 +822,47 @@
     }
   },
   "change": {
-    "id": "change_01M7XH10HTX57Y8T4W2KKH7DGA",
-    "base_commit": "d96bf819ab5b5ae3da38ecfde8fc0a4d2cbe95b8",
+    "id": "change_01M7Y129MHEWPSSPVXH5YRY2K7",
+    "base_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "interactive-container-snapshot": {
+      "statement": "Interactive preparation refuses unapproved backups before building and uses an allowed isolated destination for approved snapshots.",
+      "falsifier": "Default-denied configuration yields a launch command or image build, or approved snapshot escapes the backup boundary or persists after exit.",
+      "status": "open"
+    }
   },
   "checkpoints": [
     {
-      "id": "fix-strict-profile-fixture",
-      "summary": "Reuse the committed downgrade candidate and keep its existing acceptance guard",
-      "input_digest": "sha256:bc55616d28b799352eb9f45cb14d9dcc83a3ce8f7f7bec2261689893ce813e75"
-    },
-    {
-      "id": "fix-strict-fixture-v1560",
-      "summary": "Apply accepted v0.156.0 and refresh exact managed projections for the strict fixture repair",
-      "input_digest": "sha256:1ae979f693a3b98db3f45fb22c05d3a71b8d74b4eb73fa7ba917c220e4fb9369"
-    },
-    {
-      "id": "fix-strict-fixture-v1561",
-      "summary": "Integrate accepted v0.156.1 and preserve the covered fixture repair and exact hosted evidence",
-      "input_digest": "sha256:83c6aec6d576f6edf1c56750d5f1f874d12ab229866f5d655aa26f7e8aeb76d5"
+      "id": "decapod-1881-20261120-bootstrap",
+      "summary": "Check snapshot authorization before building and stage approved backups under workspace custody",
+      "input_digest": "sha256:060a08120e451f600fc97c09d4298b149e124c595496ba44ec3cb5286aa94742",
+      "proof_refs": [
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/workspace_tests.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA": {
+    "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        ".decapod/governance.json",
-        ".decapod/managed/specs",
-        "tests/consumer_readiness.rs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+      "id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
-      "refined_intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
+      "raw_intent": "Fix governed container workspace database bootstrap (#1881)",
+      "refined_intent": "Fix governed container workspace database bootstrap (#1881)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -873,170 +875,98 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Remove redundant strict-profile fixture commit\n\nUse the candidate commit created by the consumer fixture constructor. Assert its configuration differs from accepted main and preserve the policy refusal assertion. Verify through GitHub Actions.",
+      "intent": "Report the accepted backup policy denial before building an interactive container, and stage authorized private snapshots within the governed backup directory.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Regression tests for default denial, approved backup and snapshot cleanup"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve the accepted v0.156.1 selected-work architecture. The candidate changes a regression fixture.",
-          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "reason": "Interactive launch keeps the existing image/runtime and offline database snapshot structure.",
+          "reviewed_code_fingerprint": "88ecab07cc9a2552942d8707a94b7b4cd14d99ccf3108f821d8f55f20e5657e8",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The strict-profile fixture preserves the accepted downgrade proof interface and its check.",
-          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
-          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
+          "reason": "The launch policy, snapshot location, and cleanup behavior are documented.",
+          "reviewed_code_fingerprint": "88ecab07cc9a2552942d8707a94b7b4cd14d99ccf3108f821d8f55f20e5657e8",
+          "spec_material_hash": "79cda83897e8fa51daa108a1eb0c834506bb390d548b49ad2f97f3d63227f1ae"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The confirmed fixture test exercises the approved transition and the existing unconditional rejection.",
-          "reviewed_code_fingerprint": "37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f",
+          "reason": "Canonical backup authorization is unchanged and still enforced at execution.",
+          "reviewed_code_fingerprint": "88ecab07cc9a2552942d8707a94b7b4cd14d99ccf3108f821d8f55f20e5657e8",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Remove redundant strict-profile fixture commit",
+      "title": "Fix governed container workspace database bootstrap (#1881)",
       "todo_ids": [
-        "bugs_01m7xgt405he9by4"
+        "bugs_01m7y0whxdb3hvnh"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218933Z"
+      "updated_at": "1795231204Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Current claimed task and isolated work branch",
+        "Keep canonical backup authorization and live database isolation"
       ],
-      "artifact_hash": "sha256:27fd0ec988f6d0eddd601f4a69d9434db0077f937d7af3e2d44cf1eeabc6a41d",
-      "checks": [
-        {
-          "name": "exact-hosted-strict-profile-test",
-          "status": "passed"
-        },
-        {
-          "name": "previous-cli-strict-fixture",
-          "status": "failed"
-        },
-        {
-          "name": "prior-selective-cli-target-timeout",
-          "status": "failed"
-        },
-        {
-          "name": "strict-fixture-formatting",
-          "status": "passed"
-        },
-        {
-          "name": "strict-fixture-v1560-projection-hashes",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "verifying",
+      "artifact_hash": "sha256:6a16d8b1924aadb164993bb09167603f9b50852f0f8145e1c118a485adad97c0",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
+            "detail": "trajectory:branch_01M7Y129RN75WJTWV4YWTAYHWH",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7XH10N43RM1J5HAVP45NYVV",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
-        "schema_version": "1.0.0",
+        "next_sequence": 4,
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7XH10N43RM1J5HAVP45NYVV": {
+          "branch_01M7Y129RN75WJTWV4YWTAYHWH": {
             "evidence_only": true,
-            "id": "branch_01M7XH10N43RM1J5HAVP45NYVV",
-            "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+            "id": "branch_01M7Y129RN75WJTWV4YWTAYHWH",
+            "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
             "steps": [
               {
-                "action": "verifying",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "tests/consumer_readiness.rs",
-                  "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
+                  "src/decapod/core/workspace.rs",
+                  "tests/todo_enforcement.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  "Workspace launch regression tests in tests/unit/core/workspace_tests.rs and tests/todo_enforcement.rs"
                 ],
-                "proof_refs": [
-                  "previous-cli-strict-fixture",
-                  "strict-fixture-formatting"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs",
-                  "tests/consumer_readiness.rs"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator."
-                ],
-                "proof_refs": [
-                  "strict-fixture-v1560-projection-hashes"
-                ],
-                "scope": [
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs",
-                  "tests/consumer_readiness.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verifying",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned."
-                ],
-                "proof_refs": [
-                  "exact-hosted-strict-profile-test",
-                  "prior-selective-cli-target-timeout"
-                ],
-                "scope": [
-                  ".decapod/governance.json",
-                  ".decapod/managed/specs",
-                  "tests/consumer_readiness.rs"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1046,27 +976,25 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "All 12 v0.156.0 managed hashes match the exact projections generated by the checksum-verified hosted evaluator.",
-        "The exact e4a493d branch CLI log reports the named strict-profile regression passed. Related aggregate CLI targets reached 900 seconds. Its retry rejected the earlier Git base after the accepted v0.156.1 release moved master. Current projected material is version-aligned.",
-        "The prior hosted run failed on the empty second Git commit. The revised fixture asserts a real accepted and candidate configuration delta before exercising the existing approval and downgrade assertion."
+        "Workspace launch regression tests in tests/unit/core/workspace_tests.rs and tests/todo_enforcement.rs"
       ],
       "inspected_files": [],
-      "intent_id": "intent:change_01M7XH10HTX57Y8T4W2KKH7DGA",
+      "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
       "modified_files": [
-        "tests/consumer_readiness.rs"
+        "src/decapod/core/workspace.rs",
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/workspace_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        ".decapod/governance.json",
-        ".decapod/managed/specs",
-        "tests/consumer_readiness.rs"
+        "root"
       ],
-      "run_id": "branch_01M7XH10N43RM1J5HAVP45NYVV",
+      "run_id": "branch_01M7Y129RN75WJTWV4YWTAYHWH",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7xgt405he9by4",
+      "task_id": "bugs_01m7y0whxdb3hvnh",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

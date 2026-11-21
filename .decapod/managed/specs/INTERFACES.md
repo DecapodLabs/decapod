@@ -58,6 +58,15 @@ dispatched before session/migration startup in `src/decapod/lib.rs`:
   (`PERMANENT_STATE_DELETION_BOUNDARY`) and `--remove-protected-governance`
   (`PROTECTED_GOVERNANCE_REMOVAL_BLOCKED`) are refused by integration removal.
 
+## Interactive container workspace snapshots (#1881)
+
+`decapod workspace ensure --container` checks the accepted database backup
+policy before building the interactive image. If the backup is denied, the
+command returns a pending workspace with the policy reason and a maintainer
+action. An authorized launch stages the snapshot in a fresh private directory
+under the worktree's `.decapod/backups/`, mounts it read-only, seeds container
+tmpfs, and removes the staged file when the launch ends.
+
 ## Delegated cgroup parent selection and cgroup diagnostics (#1820)
 
 `decapod auto container run` (`src/decapod/plugins/container.rs::ContainerCommand::Run`)
@@ -1539,7 +1548,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `37ee3e703b6fb48391a0b6c956be2b1f2fd271168bf7015ba579bd24a778c43f`
+- Repository signal fingerprint: `f5e9df19dc6be14a47503bcf00b66bfeac66031fb1ae6d747af29ee10a9b8572`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
