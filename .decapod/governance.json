@@ -981,6 +981,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1899"
       ]
+    },
+    {
+      "id": "issue-1832-v01583-release-readiness",
+      "summary": "Sync the accepted v0.158.3 release and reconcile the verified release-only inventory and generated projections",
+      "input_digest": "sha256:706d33b75c425441d162c6d4a3e3d32eb139b5fefb021440efc14f3186ad696a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/releases/tag/v0.158.3"
+      ]
     }
   ],
   "intents": {
@@ -1022,22 +1030,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the target and platform readiness architecture on the source tree that now includes the accepted publication metadata fix.",
-          "reviewed_code_fingerprint": "7d60a08bd4cdf14a6acd59bff749ae109489a0971dcbcc4333d5157774c0db40",
+          "reason": "Reviewed the platform and target scoped readiness architecture section on the accepted v0.158.3 source tree. The published release changes package metadata and this branch preserves its authored readiness behavior.",
+          "reviewed_code_fingerprint": "f896d76e770ea403c4d9e1b66c5c3fa515fb0b2c1bf0901a0828da7e32389e50",
           "spec_material_hash": "16907f358575a9e9c60904f2088cfbffc629eee142be3ef3ac05a2d2b528a9ed"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the combined publication contract. Metadata derivation preserves validation, and target-scoped proof still cannot authorize repository-wide publication or QA verification.",
-          "reviewed_code_fingerprint": "7d60a08bd4cdf14a6acd59bff749ae109489a0971dcbcc4333d5157774c0db40",
+          "reason": "Reviewed the platform and target scoped readiness interfaces section on the accepted v0.158.3 source tree. The published release changes package metadata and this branch preserves its authored readiness behavior.",
+          "reviewed_code_fingerprint": "f896d76e770ea403c4d9e1b66c5c3fa515fb0b2c1bf0901a0828da7e32389e50",
           "spec_material_hash": "608b1a5cddb1cab9b318b6d6392abb04729694903a56a59b3ff360a5bc6a62a2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the accepted trust boundary after the base moved. Target receipt handling preserves the required full-repository authority.",
-          "reviewed_code_fingerprint": "7d60a08bd4cdf14a6acd59bff749ae109489a0971dcbcc4333d5157774c0db40",
+          "reason": "Reviewed the platform and target scoped readiness security section on the accepted v0.158.3 source tree. The published release changes package metadata and this branch preserves its authored readiness behavior.",
+          "reviewed_code_fingerprint": "f896d76e770ea403c4d9e1b66c5c3fa515fb0b2c1bf0901a0828da7e32389e50",
           "spec_material_hash": "0d6cfdb356d5d78d85b07fe889077511f1f9c125e9fb24069429c436650da873"
         }
       ],
@@ -1049,14 +1057,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795261407Z"
+      "updated_at": "1795262083Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Configured Buildkite preflight can push. This work stays in the local worktree.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:f27e67b783cfa6af505438020eaaa07c14ee0dfd3705504422605fa13d0aa94a",
+      "artifact_hash": "sha256:7bea309e61c4a17316f68fa42cc5b631f6234d945ec29d7c6f0a87eea7a1ffac",
       "checks": [
         {
           "name": "consumer_readiness",
@@ -1095,10 +1103,17 @@
             "intent_id": "intent:change_01M7XE6G0T8RHZHNZFP3W4PWWX",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XE6G6GF23J2VA1R6FXQP8M",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XE6G0T8RHZHNZFP3W4PWWX",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XE6G6GF23J2VA1R6FXQP8M": {
@@ -1141,6 +1156,19 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "All 107 proof inputs match the accepted v0.158.3 source tree. Cargo.toml and Cargo.lock are the only proof-input differences from the previously reviewed inventory and both carry the accepted version increment."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/repository_profile.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1150,6 +1178,7 @@
       "destination": "pull request",
       "evidence": [
         "40 consumer_readiness tests and the canonical target-only history test passed.",
+        "All 107 proof inputs match the accepted v0.158.3 source tree. Cargo.toml and Cargo.lock are the only proof-input differences from the previously reviewed inventory and both carry the accepted version increment.",
         "All 107 v0.158.2 proof sources match accepted master aa4d25da1. The reviewed source inventory was reproduced at accepted 77282b10b and changed only through the accepted package version in Cargo.toml and Cargo.lock."
       ],
       "inspected_files": [
