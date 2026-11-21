@@ -913,6 +913,11 @@
       "id": "sync-1874-issue-1833",
       "summary": "Reconcile the accepted committed downgrade fixture and retain the authored follow-up",
       "input_digest": "sha256:25e6161b57595191263514147b79cc40a03d63fea71b7168f9f1712becca0a63"
+    },
+    {
+      "id": "sync-v1562-issue-1833",
+      "summary": "Reconcile the accepted v0.156.2 release and refresh the measured repository projections",
+      "input_digest": "sha256:f9fbe976db9eec69fb2e042fde9481958d8f1d84e209e5388fd0336da1924702"
     }
   ],
   "intents": {
@@ -953,22 +958,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture with the accepted fixture correction",
-          "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
+          "reason": "Reviewed the branch architecture with the accepted v0.156.2 snapshot",
+          "reviewed_code_fingerprint": "4e7822bd411c06dc23c191ac31153ac016f0bcc39c868ce27604a0675fa6c581",
           "spec_material_hash": "0151dc429a1d954eed1329835f7c2a90b293abb006fff48a643f1f6d6b7b4c36"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces with the accepted fixture correction",
-          "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
+          "reason": "Reviewed the branch interfaces with the accepted v0.156.2 snapshot",
+          "reviewed_code_fingerprint": "4e7822bd411c06dc23c191ac31153ac016f0bcc39c868ce27604a0675fa6c581",
           "spec_material_hash": "8c3aeda8f1262b81c00145451a389238c1b1cc0d692da51438b2f9781290c0f8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the publication security contract against the accepted target",
-          "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
+          "reason": "Reviewed the branch security contract with the accepted v0.156.2 snapshot",
+          "reviewed_code_fingerprint": "4e7822bd411c06dc23c191ac31153ac016f0bcc39c868ce27604a0675fa6c581",
           "spec_material_hash": "24af5a8132ac64807c77741d40ce8c18efbb619f108a0c48baa465cef345f133"
         }
       ],
@@ -980,7 +985,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795223212Z"
+      "updated_at": "1795225755Z"
     },
     "trajectory": {
       "active_boundaries": [
