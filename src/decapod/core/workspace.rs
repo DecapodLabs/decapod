@@ -2823,10 +2823,13 @@ pub(crate) fn verify_provider_publication_material(
                 &format!("{reference}^{{commit}}"),
             ])
             .bounded_output(CONTROL_TIMEOUT)?;
-        if !output.status.success() || String::from_utf8_lossy(&output.stdout).trim() != base {
-            return Err(DecapodError::ValidationError(
-                "PUBLICATION_MATERIAL_BASE_CHANGED: declared target differs from immutable accepted base".into(),
-            ));
+        let resolved = String::from_utf8_lossy(&output.stdout);
+        let observed = output.status.success().then(|| resolved.trim());
+        if observed != Some(base) {
+            return Err(DecapodError::ValidationError(format!(
+                "PUBLICATION_MATERIAL_BASE_CHANGED: expected event base {base}, but {reference} resolves to {}. Verify current publication material in a new run against the accepted target.",
+                observed.unwrap_or("no commit")
+            )));
         }
         Ok(())
     };
