@@ -510,6 +510,11 @@ later work to the old task. It cannot satisfy the full current-candidate gate
 used by `workspace publish`. Missing, corrupt, ambiguous or mismatched evidence
 fails closed rather than selecting a convenient successful run.
 
+`workspace_publication` derives omitted GitHub PR metadata only on the creation
+path. It reads non-merge commits between the verified remote base and head, and
+then rechecks admission immediately before creation. Existing matching PRs
+continue through readback without changing their metadata.
+
 ## Candidate and accepted-target custody
 
 Source-CI validation binds execution evidence to the immutable candidate and
@@ -1224,7 +1229,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89f1253e7c9c7d703041eaef9633a79ac77fbf8ae1ad30c5cc7f56c272b2d74e`
+- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

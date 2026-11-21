@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.158.3](https://github.com/DecapodLabs/decapod/compare/v0.158.2...v0.158.3) - 2026-11-21
+
+### Fixed
+
+- canonicalize admission test paths and clarify stale bases
+- *(workspace)* derive omitted pull request metadata ([#1834](https://github.com/DecapodLabs/decapod/pull/1834))
+
+### Other
+
+- *(merge)* sync accepted master after #1898
+- *(specs)* refresh managed Dockerfile pin for v0.158.2
+- *(proof)* reconcile v0.158.2 release inventory
+- *(merge)* reconcile accepted v0.158.2 release
+- *(merge)* sync accepted v0.158.2 release
+- *(merge)* reconcile accepted v0.158.1 release
+- *(merge)* adopt current accepted proof inventory
+- *(merge)* sync accepted v0.158.0 release
+- *(merge)* reconcile accepted v0.158.0 release
+- *(merge)* sync accepted master after #1887
+- *(merge)* sync admission follow-ups with current master
+- *(governance)* reconcile the v0.157.0 proof inventory
+- *(governance)* refresh v0.157.0 projections
+- *(merge)* sync accepted v0.157.0 release
+- *(merge)* sync admission follow-ups with accepted v0.157.0
+- *(merge)* sync accepted master after #1864
+- *(merge)* sync accepted v0.156.2 release
+- *(merge)* sync accepted master after #1874
+- *(readiness)* exercise the committed strict-profile downgrade
+- *(merge)* sync accepted v0.156.1 release
+- *(merge)* sync accepted master after #1873
+- *(govern)* refresh generated v0.156.0 container pin
+- *(proof)* reconcile v0.156.0 release inventory
+- *(merge)* sync accepted v0.156.0 release
+- *(merge)* sync accepted master for PR metadata
+
 ## [0.158.2](https://github.com/DecapodLabs/decapod/compare/v0.158.1...v0.158.2) - 2026-11-21
 
 ### Fixed
