@@ -898,6 +898,18 @@
         "tests/unit/core/cloud_project_tests.rs",
         "tests/unit/core/propodus_tests.rs"
       ]
+    },
+    {
+      "id": "p0-pay-and-use-reconcile-1898",
+      "summary": "Reconcile origin/master (#1898) with v0.158.2 release pins and refreshed Living Specs",
+      "input_digest": "sha256:50f1524eacb7920fe59803cfec727e057abc990779e777f999de6c2891b6ca8e",
+      "proof_refs": [
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -955,22 +967,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented pricing_enrollment_url, repository-scoped status diagnostic mapping, Box<str> sizing (<128B), --org routing, FailureKind propagation, and Cloud init SQLite guard.",
-          "reviewed_code_fingerprint": "9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f",
+          "reason": "Re-verified P0 Cloud architecture (#1877, #1896) alongside #1898 workspace publication changes and v0.158.2 refresh.",
+          "reviewed_code_fingerprint": "89f1253e7c9c7d703041eaef9633a79ac77fbf8ae1ad30c5cc7f56c272b2d74e",
           "spec_material_hash": "75b8520bcaa95118ca57939266166e5dc8f2293c02ab5b146338741d716b02d8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented #1877 --org project flags, P0 CloudAuthStatus variants, enrollment_url JSON/Display contract, and additive account-status response fields.",
-          "reviewed_code_fingerprint": "9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f",
+          "reason": "Re-verified P0 Cloud interfaces (#1877, #1896) after merging origin/master (#1898) and refreshing v0.158.2 specs.",
+          "reviewed_code_fingerprint": "89f1253e7c9c7d703041eaef9633a79ac77fbf8ae1ad30c5cc7f56c272b2d74e",
           "spec_material_hash": "5e3ac419210ce08bad3084f86edf32f9db81048483b7c6b6eb31c9fc45a3906b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented strict slug validation for pricing enrollment URLs, pending_fulfillment session retention, admin vs paid seat orthogonality, and zero SQLite fallback in Cloud init.",
-          "reviewed_code_fingerprint": "9f36bd56791be20ffa417efb75d0f943bece0f4e130354897fba82e402be117f",
+          "reason": "Re-verified P0 Cloud security invariants (#1877, #1896) against merged origin/master (#1898).",
+          "reviewed_code_fingerprint": "89f1253e7c9c7d703041eaef9633a79ac77fbf8ae1ad30c5cc7f56c272b2d74e",
           "spec_material_hash": "1796408b1406d50bbea59bc6b4b3e56d9a1583d2a264743571d73fd31fdc5e33"
         }
       ],
@@ -982,7 +994,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795260951Z"
+      "updated_at": "1795261102Z"
     },
     "trajectory": {
       "active_boundaries": [
