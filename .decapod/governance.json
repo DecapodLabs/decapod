@@ -866,6 +866,14 @@
       "proof_refs": [
         "Accepted Decapod PR #1864 at d62e30ad7"
       ]
+    },
+    {
+      "id": "decapod-1881-20261120-recheck-specs",
+      "summary": "Bind all required specification reviews to the exact candidate on current master",
+      "input_digest": "sha256:f21fd89c119b5181a95c7291dc2d35e1ead11eca87e5de02c3a4ad87ab0bd5f3",
+      "proof_refs": [
+        "Exact-head spec review recovery after integrating d62e30ad7"
+      ]
     }
   ],
   "intents": {
@@ -909,23 +917,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Interactive launch keeps the existing image/runtime and offline database snapshot structure.",
-          "reviewed_code_fingerprint": "88ecab07cc9a2552942d8707a94b7b4cd14d99ccf3108f821d8f55f20e5657e8",
-          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
+          "reason": "The current accepted architecture uses the same interactive runtime and offline snapshot structure.",
+          "reviewed_code_fingerprint": "89a887cca4ccbe13f42784a79cefa518727c9608b17c0f1629707afab8a2da7b",
+          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve the documented launch policy and snapshot lifecycle after accepting the new master context changes.",
+          "reason": "Describe the interactive policy check, governed destination, and snapshot lifecycle.",
           "reviewed_code_fingerprint": "89a887cca4ccbe13f42784a79cefa518727c9608b17c0f1629707afab8a2da7b",
           "spec_material_hash": "134d6a8cc059005c133ebc691634bcd7268a5bcd1b7ed4136fc7188e80d94319"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Canonical backup authorization is unchanged and still enforced at execution.",
-          "reviewed_code_fingerprint": "88ecab07cc9a2552942d8707a94b7b4cd14d99ccf3108f821d8f55f20e5657e8",
-          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
+          "reason": "Existing canonical authorization and the live database boundary remain in force.",
+          "reviewed_code_fingerprint": "89a887cca4ccbe13f42784a79cefa518727c9608b17c0f1629707afab8a2da7b",
+          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
       "state": "APPROVED",
@@ -936,7 +944,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795231639Z"
+      "updated_at": "1795235365Z"
     },
     "trajectory": {
       "active_boundaries": [
