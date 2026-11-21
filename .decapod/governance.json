@@ -879,6 +879,14 @@
         "exact-compiled-workflow-digest",
         "release-metadata-policy"
       ]
+    },
+    {
+      "id": "release-ci-v1570-base",
+      "summary": "Integrate the accepted v0.157.0 release and refresh its managed pins",
+      "input_digest": "sha256:a066c05455f7d4fac21a9d6e89f067b19eaf38eca9c2d4290ba681f07b180e09",
+      "proof_refs": [
+        "accepted-release-metadata-only"
+      ]
     }
   ],
   "intents": {
@@ -924,22 +932,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documents the compiled-profile and workflow alignment for mandatory release check execution.",
-          "reviewed_code_fingerprint": "24189b206086a6f48588ca13afa24a5e82d3d05d6b4f594ab4840a5b3e121093",
+          "reason": "Retains the protected release check scheduling behavior on the new release base.",
+          "reviewed_code_fingerprint": "4ab40d909c22a6a4e19b2d556fe92e2232340e8efb7f3db8c259a583b9cf069a",
           "spec_material_hash": "590a40c443b266cc2bcbb86cc241b40138b4df612f3ceaefa375e304d1b33cd8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retains the exact status names and accepted context binding.",
-          "reviewed_code_fingerprint": "24189b206086a6f48588ca13afa24a5e82d3d05d6b4f594ab4840a5b3e121093",
+          "reason": "The release check context names remain stable.",
+          "reviewed_code_fingerprint": "4ab40d909c22a6a4e19b2d556fe92e2232340e8efb7f3db8c259a583b9cf069a",
           "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The compiled pin advances to the exact authored workflow bytes with all authority validation preserved.",
-          "reviewed_code_fingerprint": "24189b206086a6f48588ca13afa24a5e82d3d05d6b4f594ab4840a5b3e121093",
+          "reason": "The metadata-only accepted base change leaves the existing update and independent review authority unchanged.",
+          "reviewed_code_fingerprint": "4ab40d909c22a6a4e19b2d556fe92e2232340e8efb7f3db8c259a583b9cf069a",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -951,14 +959,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795234835Z"
+      "updated_at": "1795237825Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cb5241828aad190c56eec42c1e68cb9b5c12916806160a13d57c52c6c85a0270",
+      "artifact_hash": "sha256:c129030a942b659f43c6fa1f5e95505792159c1051a4299025910ab7c962191a",
       "checks": [
+        {
+          "name": "accepted-release-metadata-only",
+          "status": "passed"
+        },
         {
           "name": "exact-compiled-workflow-digest",
           "status": "passed"
@@ -1008,10 +1020,17 @@
             "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Y2QFVHR2Z0QWV098HQ6WC4",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y2QFVHR2Z0QWV098HQ6WC4": {
@@ -1062,6 +1081,28 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "The diff from d62e30ad7 to accepted 146a00f41 is limited to CHANGELOG.md, Cargo.lock, and Cargo.toml. Used the checksum-verified v0.157.0 tag workflow binary to refresh managed release pins."
+                ],
+                "proof_refs": [
+                  "accepted-release-metadata-only"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  ".github/workflows/ci.yml",
+                  "assets/tools/source_ci_profile.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "tests/release_metadata_policy.rs",
+                  "tests/source_ci_profile_policy.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1071,11 +1112,13 @@
       "destination": "pull request",
       "evidence": [
         "All 36 release metadata policy checks passed; actionlint passed; compiled workflow digest independently matches the exact CI bytes.",
+        "The diff from d62e30ad7 to accepted 146a00f41 is limited to CHANGELOG.md, Cargo.lock, and Cargo.toml. Used the checksum-verified v0.157.0 tag workflow binary to refresh managed release pins.",
         "actionlint passed; 56 profile cases passed under canonical macOS TMPDIR, three Linux x86_64 runner checks require GitHub execution."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
         ".github/workflows/ci.yml",
         "assets/tools/source_ci_profile.rs",
         "src/decapod/core/readiness_profile.rs",
@@ -1087,6 +1130,7 @@
       ],
       "repo_scope": [
         ".decapod/governance.json",
+        ".decapod/managed",
         ".decapod/managed/specs",
         ".github/workflows/ci.yml",
         "assets/tools/source_ci_profile.rs",
