@@ -1540,7 +1540,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788`
+- Repository signal fingerprint: `2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2634,3 +2634,5 @@ The v0.156.2 PR job 136687113651 passed both broker probes and all eleven unfilt
 GitHub Actions run 44861445770 passed all checks on `aa0497d91`, including both CLI suites that had timed out and 1,956 offline library cases. The v0.157.0 cut at `146a00f41` changes only release metadata. Refresh the release projections and rerun the full check graph against that exact base with all 22 encoding inputs intact.
 
 On `91d8e8361`, GitHub Actions run 44868785435 passed the two broker probes, all eleven core targets, all three CLI targets, and 1,956 offline library cases. The accepted broker and onboarding changes at `f0cbb701` then advanced the base. Preserve those accepted source and test changes and execute the full check graph again on the reconciled encoding candidate.
+
+Standalone validation passed on `59526e792` before the v0.158.0 cut at `1bdb1e6e` advanced the base. The cut changes only release metadata. Reconcile it into the encoding candidate and run fresh GitHub Actions with all 22 encoding inputs and the accepted broker and onboarding fixes intact.

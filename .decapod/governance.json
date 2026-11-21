@@ -968,6 +968,11 @@
       "id": "attack-gaps-interop-accepted-f0cbb701",
       "summary": "Integrate accepted broker and onboarding changes and preserve all raw encoding controls",
       "input_digest": "sha256:eb747e4c7fb818f96400628ed79f39e5b22772d2b521277e0575b92cbebfde85"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-1bdb1e6e",
+      "summary": "Integrate v0.158.0 release metadata and reviewed projections while preserving the portable encoding controls",
+      "input_digest": "sha256:c2899d3c967302764bc1c1324556047fa665ade7c6176a28eec7a7ada2dd0d71"
     }
   ],
   "intents": {
@@ -1011,22 +1016,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve the accepted broker lifecycle changes beside the independent encoding boundary.",
-          "reviewed_code_fingerprint": "3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788",
+          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
+          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
           "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain the accepted onboarding and broker behavior and all 22 raw encoding vectors.",
-          "reviewed_code_fingerprint": "3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788",
+          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
+          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
           "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserve accepted authority checks and keep encoding evidence scoped to measured decoding behavior.",
-          "reviewed_code_fingerprint": "3f52ec8f3a951d6bd65d575bb0f6cc7779a22a4519eb512d17110f106a1cf788",
+          "reason": "Bind the reviewed encoding and accepted broker and onboarding behavior to the v0.158.0 candidate and refreshed projections.",
+          "reviewed_code_fingerprint": "2a09be69ec504b239cb29e7f6aea670383db387b67e93ef7cce03e31006febe6",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -1038,7 +1043,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795240376Z"
+      "updated_at": "1795241729Z"
     },
     "trajectory": {
       "active_boundaries": [
