@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e62302f6519c21d4e3ab7405a5ad0a49a544ca768fcdd6336d7f37722431cf8`
+- Repository signal fingerprint: `fa765a270134d14ec557a65ee47659cf3320ef9244ccb7b7ca6e2ed366b7d2b2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2554,6 +2554,11 @@ converts missing platform evidence into success.
 
 ## Governed repository proof-policy migration (#1738)
 
+The strict-profile regression compares the candidate configuration already
+committed by the consumer fixture with the accepted Git target. It binds
+approval to those two commits and checks that the runtime still rejects the
+downgrade before executor selection. See #1871.
+
 `tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
 cover the `repo.pr-readiness.v1` transition contract across source-inventory
 updates (`reviewed_sources_digest`) and command/execution upgrades
@@ -2606,3 +2611,5 @@ The v0.156.0 cut at `ba21c8f1` changes only release metadata. The combined candi
 On `7b7d83e4`, Actions jobs 136614741062 and 136614841197 both executed and passed the repaired downgrade test. The CLI suites still exceeded their aggregate budgets, and the branch core job passed encoding conformance while failing three adjacent timing gates. Reconcile the accepted approval-verification changes at `033977e2` and rerun the complete GitHub Actions suite for that base.
 
 The v0.156.1 metadata cut at `73026d84` follows the accepted approval-verification changes. It preserves the encoding fixtures and downgrade assertion. Use the v0.156.1 evaluator and execute fresh checks on the new exact base. The inspected source inventory still differs only in the Bazel data declaration.
+
+The accepted downgrade fixture at `9408bec1` also verifies that the committed candidate config differs from the accepted config. The encoding branch now uses those exact accepted fixture bytes. The two earlier downgrade executions remain historical evidence. The v0.156.1 PR offline suite passed 1,925 library cases on head `61a57f71` before the base advanced.

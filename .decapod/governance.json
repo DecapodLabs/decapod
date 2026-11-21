@@ -915,6 +915,11 @@
       "id": "attack-gaps-interop-accepted-73026d84",
       "summary": "Merge accepted v0.156.1 metadata and refresh native projections while preserving the encoding fixtures, strict downgrade refusal and accepted approval checks",
       "input_digest": "sha256:a20e8c3f52baf0bf4adc56515f06b3849383b6683d20a38ead2c7bfe66f8e040"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-9408bec1",
+      "summary": "Integrate the accepted strict-profile fixture and preserve the canonical downgrade case, all pinned encoding vectors and both authored spec sets",
+      "input_digest": "sha256:4cc083dce5ef027f132bbc40ddfdefeb4347584891cb332137fbe2269f2dfe41"
     }
   ],
   "intents": {
@@ -958,22 +963,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Carry accepted approval verification and the raw JSON decoder boundary through the v0.156.1 projections.",
-          "reviewed_code_fingerprint": "4e62302f6519c21d4e3ab7405a5ad0a49a544ca768fcdd6336d7f37722431cf8",
+          "reason": "Retain the accepted fixture verification and the independent raw-input decoding boundary.",
+          "reviewed_code_fingerprint": "fa765a270134d14ec557a65ee47659cf3320ef9244ccb7b7ca6e2ed366b7d2b2",
           "spec_material_hash": "e198abb16a02d26f6e53498f10da950cf9eb16fedc330f5a0cc785b7a6478f06"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Keep the accepted approval contract and the 22 versioned executable input vectors available after the metadata merge.",
-          "reviewed_code_fingerprint": "4e62302f6519c21d4e3ab7405a5ad0a49a544ca768fcdd6336d7f37722431cf8",
+          "reason": "Preserve the accepted fixture and reviewable vector artifacts across the incoming journal reconciliation.",
+          "reviewed_code_fingerprint": "fa765a270134d14ec557a65ee47659cf3320ef9244ccb7b7ca6e2ed366b7d2b2",
           "spec_material_hash": "72efff23117432317ef5789d3f3cc36944eb15a13e31714d1b542b71c67c595b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Retain the strict profile refusal and the bounded scope of independent encoding conformance.",
-          "reviewed_code_fingerprint": "4e62302f6519c21d4e3ab7405a5ad0a49a544ca768fcdd6336d7f37722431cf8",
+          "reason": "Use the exact accepted strict-profile downgrade assertion and keep encoding evidence within its declared scope.",
+          "reviewed_code_fingerprint": "fa765a270134d14ec557a65ee47659cf3320ef9244ccb7b7ca6e2ed366b7d2b2",
           "spec_material_hash": "6e32c0b41ff1cc2b7f19741f625fc67345e1033a93330504ff366f0e45d9dfa5"
         }
       ],
@@ -985,7 +990,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218917Z"
+      "updated_at": "1795223229Z"
     },
     "trajectory": {
       "active_boundaries": [

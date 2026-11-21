@@ -2844,7 +2844,21 @@ fn decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_ap
         readiness_profile::REQUIRED_PROFILE,
         format!("sha256:{}", "0".repeat(64)),
     )));
-    // The fixture already committed the candidate profile with the full config.
+    let config_path = consumer_readiness_fixture::CONFIG;
+    assert_eq!(
+        git(
+            &fixture.options.root,
+            &[
+                "diff",
+                "--name-only",
+                "refs/remotes/origin/main",
+                "HEAD",
+                "--",
+                config_path,
+            ],
+        ),
+        config_path,
+    );
     let tid = transition_id_for_fixture(&fixture);
     approve_transition_with_caller(&fixture.options.root, &tid, "operator", 900).unwrap();
     let mut host = fixture.host();
