@@ -45,6 +45,16 @@
         "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
         "status": "open"
       },
+      "claim:bounded-applicable-active-context": {
+        "falsifier": "Repeated irrelevant text outranks a binding, a stale decision becomes operative, or an oversized response reaches the caller.",
+        "proof_refs": [
+          "tests/context_capsule_rpc.rs",
+          "tests/unit/core/docs_tests.rs",
+          "tests/unit/plugins/knowledge_tests.rs"
+        ],
+        "statement": "Existing context owners prefer explicit applicability, retain binding obligations and project bounded current scoped knowledge with inspectable reasons.",
+        "status": "open"
+      },
       "claim:bounded-escalation-admissibility": {
         "falsifier": "A paraphrase, forged/stale source or cross-task continuation clears a gap; an actual required approval is inferred; a renamed subject resets the budget; reflection grants native verification/publication; or the loop persists beyond its bounded journal.",
         "proof_refs": [
@@ -166,6 +176,15 @@
         "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
         "status": "open"
       },
+      "claim:constitution-admission-public-evidence": {
+        "falsifier": "A corpus-only self-promotion works, dangling references build, ordinary advisory research is suppressed, or authorship testimony becomes a public fact.",
+        "proof_refs": [
+          "tests/constitution_claims.rs",
+          "tests/constitution_scaffolding.rs"
+        ],
+        "statement": "The native compression path rejects metadata-only authority and unsupported enforcement claims while admitting useful advisory research. The chronology separates source evidence and testimony.",
+        "status": "open"
+      },
       "claim:consumer-local-proof": {
         "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
         "proof_refs": [
@@ -180,6 +199,15 @@
           "tests/unit/plugins/container_tests.rs"
         ],
         "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
+        "status": "open"
+      },
+      "claim:cooperative-boundary-outcome-limits": {
+        "falsifier": "A caller chooses an arbitrary executable, exit success becomes completion authority, or an unobserved outcome qualifies as independently useful work.",
+        "proof_refs": [
+          "tests/unit/core/native_boundary_tests.rs",
+          "tests/unit/core/outcome_comparison_tests.rs"
+        ],
+        "statement": "The native adapter delegates fixed operations to existing owners and the flight recorder preserves explicit limits of compact outcome evidence.",
         "status": "open"
       },
       "claim:created-context": {
@@ -908,6 +936,11 @@
       "id": "sync-v1570-issue-1832",
       "summary": "Reconcile the accepted v0.157.0 release and refresh the measured repository projections",
       "input_digest": "sha256:a0d1b2f5d4982d610f1759520b1236812380e00bad87a0a41cd4d5e029aa8808"
+    },
+    {
+      "id": "sync-1887-issue-1832",
+      "summary": "Reconcile accepted master after the typed broker change",
+      "input_digest": "sha256:04ccbbeb8f29677ab1be341ae38740ad2e2274b5c5cc0886b866cffb4d294d90"
     }
   ],
   "intents": {
@@ -949,22 +982,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture with the accepted v0.157.0 source snapshot",
-          "reviewed_code_fingerprint": "d3a3788585c0e66df4550b1f85ab4b5c75302c0fbc6d41634671daa4e86ee5bd",
-          "spec_material_hash": "0e2bdacc77044a5159768a8e8e77ab7b0f8eba6e5aa5838a96bfae8363c885e2"
+          "reason": "Reviewed the branch architecture after accepting the upstream broker changes",
+          "reviewed_code_fingerprint": "cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5",
+          "spec_material_hash": "bed87e35669f128c49f2a64958bb274bcb3935123eacae7e404d3500d760886c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces with the accepted v0.157.0 source snapshot",
-          "reviewed_code_fingerprint": "d3a3788585c0e66df4550b1f85ab4b5c75302c0fbc6d41634671daa4e86ee5bd",
-          "spec_material_hash": "f90f8fa593eb57983c3ee1b75157cb8251b63a39490b508a5beeea2190aece6e"
+          "reason": "Reviewed the branch interfaces against the new accepted target",
+          "reviewed_code_fingerprint": "cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5",
+          "spec_material_hash": "9f14bd1fea8a30431239d9160429a2cba3b32c2dc41992dba5abb433929ab428"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the branch security contract with the accepted release snapshot",
-          "reviewed_code_fingerprint": "d3a3788585c0e66df4550b1f85ab4b5c75302c0fbc6d41634671daa4e86ee5bd",
+          "reason": "Reviewed the publication security contract against the new accepted target",
+          "reviewed_code_fingerprint": "cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5",
           "spec_material_hash": "7d1b1c1950585d420d4ee6a0a138eb9665f8ba3a17de33af5715d494553849d3"
         }
       ],
@@ -976,7 +1009,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237496Z"
+      "updated_at": "1795240567Z"
     },
     "trajectory": {
       "active_boundaries": [

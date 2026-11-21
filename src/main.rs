@@ -1,9 +1,19 @@
+use decapod::core::{error::DecapodError, group_broker};
+
 fn main() {
     if let Err(error) = decapod::run() {
-        if let decapod::core::error::DecapodError::DiagnosticExit(code) = error {
+        if let DecapodError::DiagnosticExit(code) = error {
             std::process::exit(code);
         }
         eprintln!("{error}");
-        std::process::exit(1);
+        let exit_code = match error {
+            DecapodError::MutationRejectedBeforeWrite(_)
+                if group_broker::is_internal_invocation() =>
+            {
+                group_broker::PRE_MUTATION_POLICY_DENIAL_EXIT
+            }
+            _ => 1,
+        };
+        std::process::exit(exit_code);
     }
 }

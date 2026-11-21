@@ -1540,7 +1540,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d3a3788585c0e66df4550b1f85ab4b5c75302c0fbc6d41634671daa4e86ee5bd`
+- Repository signal fingerprint: `cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1950,11 +1950,18 @@ standalone `tests/init_cli.rs`, which the finite profile did not select. Cases
 cover recommended setup, edit/cancel, terminal restoration, preview, redirected
 output and cloud review cancellation without a service connection. The fixture
 converts `TIOCSCTTY` to the platform ioctl request type, preserving its value
-across the macOS constant/parameter type difference. Scenario assertions and
-existing inventory/consumer cases remain unchanged. Required workflows, source
-selectors, test targets and budgets remain unchanged.
+across the macOS constant/parameter type difference. The key test exercises an
+arrow sequence followed by lone Escape with and without a controlling terminal.
+When macOS revokes the slave at child
+exit, the fixture reads the retained master and still asserts restoration of
+canonical mode and echo.
 Managed-session CLI cases separately cover authoritative access and recovery;
 neither fixture suite establishes a hosted purchase or paid customer journey.
+
+The required broker tests exercise an actual basic-trust archive denial.
+They check the task's persisted status and revision, the typed non-commit
+receipt, and same-ID replay across broker lifetimes with a single execution.
+The broker crash test continues to check genuine uncertainty separately.
 
 The reviewed source declaration for the 0.139.0 reconciliation measures all 105
 build/workflow/helper inputs against accepted master19acd21. Every input matches

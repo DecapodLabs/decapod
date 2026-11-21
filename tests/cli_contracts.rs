@@ -242,7 +242,7 @@ mod init_config_behavior;
 mod terminal_onboarding {
     use std::fs::{self, File};
     use std::io::{self, Read, Write};
-    use std::os::fd::{AsRawFd, FromRawFd};
+    use std::os::fd::{AsRawFd, FromRawFd, RawFd};
     use std::os::unix::process::CommandExt;
     use std::path::{Path, PathBuf};
     use std::process::{Child, Command, ExitStatus, Stdio};
@@ -300,18 +300,32 @@ mod terminal_onboarding {
         _home: tempfile::TempDir,
     }
 
+    fn terminal_settings(fd: RawFd) -> io::Result<libc::termios> {
+        let mut settings = unsafe { std::mem::zeroed() };
+        if unsafe { libc::tcgetattr(fd, &mut settings) } == 0 {
+            Ok(settings)
+        } else {
+            Err(io::Error::last_os_error())
+        }
+    }
+
     impl SetupTerminal {
         fn start(directory: &Path, args: &[&str]) -> Self {
             Self::start_with_env(directory, args, &[])
         }
 
         fn start_with_env(directory: &Path, args: &[&str], environment: &[(&str, &str)]) -> Self {
+            Self::start_in_session(directory, args, environment, true)
+        }
+
+        fn start_in_session(
+            directory: &Path,
+            args: &[&str],
+            environment: &[(&str, &str)],
+            attach_controlling_terminal: bool,
+        ) -> Self {
             let (master, slave) = terminal_pair();
-            let mut termios = unsafe { std::mem::zeroed() };
-            assert_eq!(
-                unsafe { libc::tcgetattr(slave.as_raw_fd(), &mut termios) },
-                0
-            );
+            let termios = terminal_settings(slave.as_raw_fd()).unwrap();
             let flags = unsafe { libc::fcntl(master.as_raw_fd(), libc::F_GETFL) };
             assert_ne!(
                 unsafe { libc::fcntl(master.as_raw_fd(), libc::F_SETFL, flags | libc::O_NONBLOCK) },
@@ -332,11 +346,11 @@ mod terminal_onboarding {
                 .stdout(Stdio::from(slave.try_clone().unwrap()))
                 .stderr(Stdio::from(slave.try_clone().unwrap()));
             unsafe {
-                command.pre_exec(|| {
+                command.pre_exec(move || {
                     if libc::setsid() < 0 {
                         return Err(io::Error::last_os_error());
                     }
-                    if libc::ioctl(0, libc::TIOCSCTTY as _, 0) < 0 {
+                    if attach_controlling_terminal && libc::ioctl(0, libc::TIOCSCTTY as _, 0) < 0 {
                         return Err(io::Error::last_os_error());
                     }
                     Ok(())
@@ -403,11 +417,18 @@ mod terminal_onboarding {
                 self.pump();
                 if let Some(status) = self.child.try_wait().unwrap() {
                     self.pump();
-                    let mut termios = unsafe { std::mem::zeroed() };
-                    assert_eq!(
-                        unsafe { libc::tcgetattr(self.slave.as_raw_fd(), &mut termios) },
-                        0
-                    );
+                    let settings = terminal_settings(self.slave.as_raw_fd());
+                    #[cfg(target_os = "macos")]
+                    let settings = settings.or_else(|error| {
+                        // The session leader's exit can revoke the slave on macOS.
+                        // The master still exposes the terminal mode it left behind.
+                        if error.raw_os_error() == Some(libc::ENOTTY) {
+                            terminal_settings(self.master.as_raw_fd())
+                        } else {
+                            Err(error)
+                        }
+                    });
+                    let termios = settings.expect("read terminal mode after setup exits");
                     assert_eq!(
                         termios.c_lflag & (libc::ICANON | libc::ECHO),
                         self.original_flags & (libc::ICANON | libc::ECHO),
@@ -539,15 +560,31 @@ mod terminal_onboarding {
     #[test]
     fn lone_escape_cancels_without_hanging_or_leaking_raw_mode() {
         let project = tempfile::tempdir().unwrap();
-        let mut terminal = SetupTerminal::start(project.path(), &["init", "--dir", "."]);
-        terminal.expect("What are you building?");
-        terminal.send("\n");
-        terminal.expect("How would you like to set up?");
-        terminal.send("\x1b");
-        assert!(!terminal.finish().success());
-        assert!(terminal.output.contains("Setup cancelled"));
-        assert!(!project.path().join(".decapod").exists());
-        assert!(!project.path().join(".git").exists());
+        for attach_controlling_terminal in [true, false] {
+            let mut terminal = SetupTerminal::start_in_session(
+                project.path(),
+                &["init", "--dir", "."],
+                &[],
+                attach_controlling_terminal,
+            );
+            terminal.expect("What are you building?");
+            terminal.send("\n");
+            // The question is printed before the selector switches to raw input.
+            terminal.expect("1. Recommended");
+            let mode = terminal_settings(terminal.slave.as_raw_fd()).unwrap();
+            assert_eq!(
+                mode.c_lflag & (libc::ICANON | libc::ECHO),
+                0,
+                "selector did not enter raw mode (controlling terminal attached: {attach_controlling_terminal})"
+            );
+            terminal.send("\x1b[B");
+            terminal.expect("› Customize");
+            terminal.send("\x1b");
+            assert!(!terminal.finish().success());
+            assert!(terminal.output.contains("Setup cancelled"));
+            assert!(!project.path().join(".decapod").exists());
+            assert!(!project.path().join(".git").exists());
+        }
     }
 
     #[test]

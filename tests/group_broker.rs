@@ -671,6 +671,105 @@ fn broker_crash_preserves_unknown_outcomes_without_reexecution() {
 
 #[cfg(unix)]
 #[test]
+fn archive_policy_denial_is_durable_without_reexecution() {
+    let _timing = BrokerTestTiming::start("archive_policy_denial_is_durable_without_reexecution");
+    let (_tmp, dir, password) = setup_repo();
+    if !broker_socket_supported(&dir, &password) {
+        eprintln!("skipping: unix socket transport not permitted in this sandbox");
+        return;
+    }
+    let actor = "archive-denial-basic";
+    let password = acquire_session_password_with(&dir, actor, run_decapod);
+    let auth = [
+        ("DECAPOD_AGENT_ID", actor),
+        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+    ];
+    let added = run_decapod(&dir, &["todo", "add", "archive denial fixture"], &auth);
+    assert!(
+        added.status.success(),
+        "{}",
+        String::from_utf8_lossy(&added.stderr)
+    );
+    let task: serde_json::Value = serde_json::from_slice(&added.stdout).unwrap();
+    let id = task["id"].as_str().unwrap();
+    let conn = decapod::core::db::Connection::open(dir.join(".decapod/data/decapod.db")).unwrap();
+    let task_state = || -> (String, i64) {
+        conn.query_row(
+            "SELECT status, revision FROM tasks WHERE id = ?1",
+            [id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .unwrap()
+    };
+    let before = task_state();
+    assert_ne!(before.0, "archived");
+
+    assert!(wait_for_no_broker_artifacts(&dir, Duration::from_secs(6)));
+    let request_id = "ARCHIVE_POLICY_DENIAL";
+    let hook = dir.join("archive-denial-broker.log");
+    let mut envs = auth.to_vec();
+    envs.extend([
+        ("DECAPOD_GROUP_BROKER_REQUEST_ID", request_id),
+        (
+            "DECAPOD_GROUP_BROKER_TEST_HOOK_FILE",
+            hook.to_str().unwrap(),
+        ),
+    ]);
+    let archive = || {
+        run_decapod(
+            &dir,
+            &["todo", "archive", "--id", id, "--format", "json"],
+            &envs,
+        )
+    };
+    let denied = archive();
+    assert!(!denied.status.success());
+    let diagnostic = String::from_utf8_lossy(&denied.stderr);
+    assert!(
+        diagnostic.contains("Policy gate denied for 'task.archive'"),
+        "{diagnostic}"
+    );
+    assert!(diagnostic.contains("BROKER_POLICY_DENIED"), "{diagnostic}");
+    assert!(diagnostic.contains("commit_marker=<none>"), "{diagnostic}");
+    assert!(!diagnostic.contains("BROKER_UNKNOWN"), "{diagnostic}");
+    assert_eq!(task_state(), before);
+
+    let receipt = || -> (String, Option<String>, String, Option<i64>) {
+        conn.query_row(
+            "SELECT status, commit_marker, result_envelope, retry_after_ms_hint
+             FROM request_dedupe WHERE request_id = ?1",
+            [request_id],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
+        )
+        .unwrap()
+    };
+    let recorded = receipt();
+    assert_eq!(recorded.0, "NOT_COMMITTED");
+    assert!(recorded.1.is_none());
+    assert!(recorded.3.is_none());
+    let envelope: serde_json::Value = serde_json::from_str(&recorded.2).unwrap();
+    assert_eq!(envelope["error"], "BROKER_POLICY_DENIED");
+    assert_eq!(envelope["request_id"], request_id);
+    assert!(wait_for_no_broker_artifacts(&dir, Duration::from_secs(6)));
+    let replay = archive();
+    assert_eq!(replay.status.code(), denied.status.code());
+    assert_eq!(replay.stderr, denied.stderr);
+    assert_eq!(task_state(), before);
+    assert_eq!(receipt(), recorded);
+    let hooks = std::fs::read_to_string(hook).unwrap();
+    assert_eq!(
+        hooks
+            .lines()
+            .filter(|line| line.contains("pre_exec|ARCHIVE_POLICY_DENIAL"))
+            .count(),
+        1,
+        "{hooks}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
 fn explicit_shared_storage_uses_broker_route_without_private_fallback() {
     let _timing = BrokerTestTiming::start(
         "explicit_shared_storage_uses_broker_route_without_private_fallback",
