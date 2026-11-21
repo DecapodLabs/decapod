@@ -928,6 +928,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1889"
       ]
+    },
+    {
+      "id": "issue-1880-77282b10-integration",
+      "summary": "Integrate accepted master and reuse the reviewed v0.158.0 proof inventory accepted in #1866",
+      "input_digest": "sha256:0901e0610374780b7b71a5c511338233edc4d7fc92bc7c46f80efb0fc772c1c4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1866"
+      ]
     }
   ],
   "intents": {
@@ -971,23 +979,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing verifier owns the same before-and-after target checks and all inputs match the integrated release.",
-          "reviewed_code_fingerprint": "58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777",
-          "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
+          "reason": "The existing provider verifier still owns both target checks. This branch uses the accepted proof inventory.",
+          "reviewed_code_fingerprint": "38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f",
+          "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic includes the two revisions.",
-          "reviewed_code_fingerprint": "58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777",
-          "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
+          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic gives both revisions.",
+          "reviewed_code_fingerprint": "38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f",
+          "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact-target and canonical-tool checks are enforced and all proof obligations remain declared.",
-          "reviewed_code_fingerprint": "58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777",
-          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
+          "reason": "The exact-target and canonical-tool checks retain their existing enforcement.",
+          "reviewed_code_fingerprint": "38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f",
+          "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
@@ -998,7 +1006,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795241740Z"
+      "updated_at": "1795243729Z"
     },
     "trajectory": {
       "active_boundaries": [

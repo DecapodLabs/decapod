@@ -67,11 +67,6 @@ bind the newly accepted base. The macOS live-admission regression records
 its fixture-owned toolchain file by canonical path so the same checks run
 when the host temp directory is reached through a symlink.
 
-The reviewed proof inventory accounts for the v0.158.0 version entries in
-`Cargo.toml` and `Cargo.lock`. All 107 inventoried inputs match accepted
-`master` at `1bdb1e6e`. The required checks, adapters, and toolchain retain
-their existing declarations.
-
 ## Live rejection specificity (#1748)
 
 The disposable GitHub acceptance requires the invalid payload's actual failure,
@@ -1552,7 +1547,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777`
+- Repository signal fingerprint: `38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2620,3 +2615,31 @@ and a baseline manifest whose template hash and fingerprint come from
 the manifest's release renderer. Its content hash comes from the committed
 entrypoint. The test verifies the real manifest shape and repeats validation
 after a second projection refresh.
+
+## Portable encoding execution plan
+
+The current encoding change has an actual released-binary counterexample and a source-level correction in the independent test consumer. Its existing unfiltered interoperability target will execute every pinned negative and positive vector through the real CLI and the independent Python process, retaining exact consumer versions/hashes and raw-input hashes in a versioned diagnostic report. Formatting and native checkpoint history are separate from runtime test execution. GitHub Actions supplies source verification under the maintainer's delivery instruction; pending results must not be called passing native admission or full campaign completion.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+Run encoding conformance against the v0.155.1 release base. The release metadata merge preserves all 22 raw inputs and corresponding positive controls. Retain the full core suite and the timing assertions.
+
+The previous PR run on `08f76bff` against `2e206d26` passed both broker probes and all eleven core targets in GitHub Actions job 136580615071. The reconciliation with accepted contract recovery at `d96bf819` preserves that run as historical evidence and retains the full test suite for a fresh run. The reviewed source inventory has 105 inputs and differs from the accepted base only in the existing Bazel test data declaration.
+
+The v0.156.0 cut at `ba21c8f1` changes only release metadata. The combined candidate also repairs the inherited strict-profile downgrade fixture. The constructor already commits the candidate repository profile while preserving the surrounding config. GitHub Actions job 136580080529 failed on a second empty commit before reaching the refusal assertion. The test now uses the committed candidate and still requires `REQUIRED_PROFILE_DOWNGRADE` after transition approval, with zero native execution selections. Keep the existing CLI and core suites, test filters, and deadlines for the fresh run.
+
+On `7b7d83e4`, Actions jobs 136614741062 and 136614841197 both executed and passed the repaired downgrade test. The CLI suites still exceeded their aggregate budgets, and the branch core job passed encoding conformance while failing three adjacent timing gates. Reconcile the accepted approval-verification changes at `033977e2` and rerun the complete GitHub Actions suite for that base.
+
+The v0.156.1 metadata cut at `73026d84` follows the accepted approval-verification changes. It preserves the encoding fixtures and downgrade assertion. Use the v0.156.1 evaluator and execute fresh checks on the new exact base. The inspected source inventory still differs only in the Bazel data declaration.
+
+The accepted downgrade fixture at `9408bec1` also verifies that the committed candidate config differs from the accepted config. The encoding branch now uses those exact accepted fixture bytes. The two earlier downgrade executions remain historical evidence. The v0.156.1 PR offline suite passed 1,925 library cases on head `61a57f71` before the base advanced.
+
+The v0.156.2 metadata cut at `31f19a70` advances the evaluator release for this branch. The encoding inputs, canonical downgrade fixture, and complete check graph carry forward. The v0.156.1 core result belongs to `61a57f71` and its accepted base. Run fresh GitHub Actions against the v0.156.2 target.
+
+The v0.156.2 PR job 136687113651 passed both broker probes and all eleven unfiltered core targets on `351115238`. The paired offline job passed 1,925 library cases. The separate CLI job still hit two existing aggregate deadlines. With accepted context and outcome changes at `d62e30ad`, preserve native interop and authority bytes from the target and run fresh checks on the reconciled encoding candidate.
+
+GitHub Actions run 44861445770 passed all checks on `aa0497d91`, including both CLI suites that had timed out and 1,956 offline library cases. The v0.157.0 cut at `146a00f41` changes only release metadata. Refresh the release projections and rerun the full check graph against that exact base with all 22 encoding inputs intact.
+
+On `91d8e8361`, GitHub Actions run 44868785435 passed the two broker probes, all eleven core targets, all three CLI targets, and 1,956 offline library cases. The accepted broker and onboarding changes at `f0cbb701` then advanced the base. Preserve those accepted source and test changes and execute the full check graph again on the reconciled encoding candidate.
+
+Standalone validation passed on `59526e792` before the v0.158.0 cut at `1bdb1e6e` advanced the base. The cut changes only release metadata. Reconcile it into the encoding candidate and run fresh GitHub Actions with all 22 encoding inputs and the accepted broker and onboarding fixes intact.
