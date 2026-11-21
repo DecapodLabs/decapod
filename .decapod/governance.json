@@ -903,6 +903,11 @@
       "id": "sync-v1561-issue-1833",
       "summary": "Reconcile the accepted v0.156.1 release and refresh exactly measured repository projections",
       "input_digest": "sha256:b83038481768fb131dcece1899e5fa1e7858bf99095c0e492c99a6bbdf80e25d"
+    },
+    {
+      "id": "fixture-issue-1833",
+      "summary": "Verify the committed strict-profile downgrade without an empty duplicate Git commit",
+      "input_digest": "sha256:64451f90d27c977e9004317a0aa2c99978f367c17b32a7c6269302ab7c1bcac2"
     }
   ],
   "intents": {
@@ -943,22 +948,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the authored architecture with the accepted v0.156.1 source snapshot",
-          "reviewed_code_fingerprint": "98a1ce23308fb7d72d4d578a6b5e9711d5d1553b79e26a5be9fc1659588e75a0",
+          "reason": "Reviewed the existing authored architecture against the corrected committed downgrade fixture",
+          "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
           "spec_material_hash": "0151dc429a1d954eed1329835f7c2a90b293abb006fff48a643f1f6d6b7b4c36"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the authored interfaces with the accepted v0.156.1 source snapshot",
-          "reviewed_code_fingerprint": "98a1ce23308fb7d72d4d578a6b5e9711d5d1553b79e26a5be9fc1659588e75a0",
+          "reason": "Reviewed the existing authored interfaces after correcting the Git fixture",
+          "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
           "spec_material_hash": "8c3aeda8f1262b81c00145451a389238c1b1cc0d692da51438b2f9781290c0f8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the authored security material with the accepted v0.156.1 source snapshot",
-          "reviewed_code_fingerprint": "98a1ce23308fb7d72d4d578a6b5e9711d5d1553b79e26a5be9fc1659588e75a0",
+          "reason": "The fixture still requires the strict policy downgrade to fail before selecting any proof",
+          "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
           "spec_material_hash": "24af5a8132ac64807c77741d40ce8c18efbb619f108a0c48baa465cef345f133"
         }
       ],
@@ -970,7 +975,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218525Z"
+      "updated_at": "1795222925Z"
     },
     "trajectory": {
       "active_boundaries": [
