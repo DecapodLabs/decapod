@@ -849,6 +849,14 @@
       "proof_refs": [
         "Local focused quota classification and live/offline status tests"
       ]
+    },
+    {
+      "id": "validator-release-image",
+      "summary": "Match the managed Dockerfile to the independently observed v0.156.1 validator",
+      "input_digest": "sha256:c4cccd1f49752564edbb8c25a979f7ea87885135ce75f239b457560251c7d78a",
+      "proof_refs": [
+        "Buildkite 14755 standalone validation generated Dockerfile diff"
+      ]
     }
   ],
   "intents": {
@@ -892,21 +900,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the accepted patch release and approval verification while keeping the read-only cloud status boundary.",
+          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
           "reviewed_code_fingerprint": "3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Keep the distinct quota denial classes and read-only live status contract with the current accepted release.",
+          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
           "reviewed_code_fingerprint": "3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f",
-          "spec_material_hash": "a6099a12d87179f9f338122ec33b0e1a84f1f3a5afa18fb9f6b55cfbf631362b"
+          "spec_material_hash": "41755d97103fd006cecaec49391ce001c58ede00d0e712d11138883a68e12dff"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review the accepted patch release and approval verification while keeping the read-only cloud status boundary.",
+          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
           "reviewed_code_fingerprint": "3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
@@ -919,13 +927,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795221077Z"
+      "updated_at": "1795222087Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e9c4a414bf8eace2366d39cf8e1cdf478ec964d9f377decb04edf19dbb26b55f",
+      "artifact_hash": "sha256:2a6c14e898e965563ddd27a5a85c15a0414c58d58671e60c7d92db34e71ce8a3",
       "checks": [
         {
           "name": "cloud-quota-status",
@@ -987,6 +995,29 @@
       "destination": "pull request",
       "evidence": [
         "One unit test and two cloud CLI fixture tests passed."
+      ],
+      "execution_checkpoints": [
+        {
+          "binding": {
+            "governance_digest": "sha256:3b34af43c27c0916f9d84f1346bd08d102ce6efe6ff034ddc7e3feb612c40300",
+            "head_revision": "37fa58cf4a280139fc353b8651e41a0859746a75",
+            "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",
+            "material_digest": "sha256:76daf9f5e1c6e789feb414c98ab2bbbcc4afe83b1fa7b3cee3d5eed1efedc6a1",
+            "plan_digest": "sha256:a53598c123088c592bc74fa9245d9f806865a4b22ae8e26adac23b5fc140b69e",
+            "policy_digest": "sha256:d182a86a73bad08ec82073aa2435e227224b3d22dc23e25d69ec9c4e7754a9a8",
+            "required_approvals": [],
+            "run_id": "branch_01M7XKSEBSEFAKEYAWXATFVWXW",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:aa82fd17db5219d60a7f0bf1cad6d2dcf38f3f426f9c53c1d735850019d653c3",
+            "task_id": "secu_01m7xkqvszen8y4p",
+            "trajectory_digest": "sha256:e9c4a414bf8eace2366d39cf8e1cdf478ec964d9f377decb04edf19dbb26b55f",
+            "validation_epoch_digest": "sha256:e584738b4106361783c6c6314acfd7c18c1b23da11b1a654847403a1c1c16b2c",
+            "work_branch": "agent/codex-cloud-followups/secu_01m7xkqvszen8y4p-quota-diagnostics"
+          },
+          "binding_digest": "sha256:1b02d982e434596035468c8a2f3932c3d61a3bed57a15d2fb7c4db644580081e",
+          "checkpoint_id": "validator-release-image",
+          "sequence": 1
+        }
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7XKSE571FTZ40TSVA5TC3JZ",

@@ -433,6 +433,7 @@ admitted.
 managed session and the service's read-only account resource-limit operation.
 It reports the service summary after project selection. Ordinary `cloud status`
 continues to read the local session only.
+The live request requires a managed session for the selected repository.
 
 Decapod is invoked by each contributor's coding agent in the repository.
 Local `DECAPOD_AGENT_ID` labels and `[governance.rbac]` describe cooperative
