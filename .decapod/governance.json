@@ -965,6 +965,14 @@
       "proof_refs": [
         "git_inventory_comparison"
       ]
+    },
+    {
+      "id": "issue-1832-sync-1898",
+      "summary": "Reconcile target-scoped readiness with the latest accepted stale-base diagnostics",
+      "input_digest": "sha256:2200e2da1b4a9bedfb4645704dbcdbcb7c54d95effe74c630c7033518f123835",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1898"
+      ]
     }
   ],
   "intents": {
@@ -1006,22 +1014,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Review the target and platform readiness boundary on the updated source tree. Platform selection remains canonical and target-scoped evidence carries its own proof context.",
-          "reviewed_code_fingerprint": "c930dfb2819fdd4ae202eaadf4b57251031e8ea1483ff62dc75c3fca14a69da5",
+          "reason": "Rechecked the target and platform architecture after the accepted stale-base diagnostics merge. Target proof stays bound to its execution subject.",
+          "reviewed_code_fingerprint": "e5356a0760951d8bc94d4f0b152bb026632754667fd8c42806a7e64ef209136e",
           "spec_material_hash": "a028063db936feae83b8ed5e2547bc755de6fd425d9b17b36b7874be158288e7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Review the command and receipt contracts with the current source and tests. A target-scoped proof is reported explicitly when repository-wide publication or QA verification requires full proof.",
-          "reviewed_code_fingerprint": "c930dfb2819fdd4ae202eaadf4b57251031e8ea1483ff62dc75c3fca14a69da5",
+          "reason": "Rechecked scope-specific proof and QA diagnostics on the integrated source tree. Repository-wide publication still requires unscoped validation.",
+          "reviewed_code_fingerprint": "e5356a0760951d8bc94d4f0b152bb026632754667fd8c42806a7e64ef209136e",
           "spec_material_hash": "bb44e570b9a2ff963e4431cd8f742cdcd3034ae18bf42d27f403fd07e19615ac"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Review coverage and transition authority after the base sync. Target-scoped receipts do not satisfy repository-wide publication authority.",
-          "reviewed_code_fingerprint": "c930dfb2819fdd4ae202eaadf4b57251031e8ea1483ff62dc75c3fca14a69da5",
+          "reason": "Reviewed the target approval requirements after the base moved. Target proof cannot grant broader publication authority.",
+          "reviewed_code_fingerprint": "e5356a0760951d8bc94d4f0b152bb026632754667fd8c42806a7e64ef209136e",
           "spec_material_hash": "0d6cfdb356d5d78d85b07fe889077511f1f9c125e9fb24069429c436650da873"
         }
       ],
@@ -1033,7 +1041,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795256771Z"
+      "updated_at": "1795258718Z"
     },
     "trajectory": {
       "active_boundaries": [
