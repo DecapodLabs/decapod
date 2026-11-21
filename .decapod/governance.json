@@ -842,6 +842,14 @@
       "proof_refs": [
         "cargo test --locked --lib archive_tests"
       ]
+    },
+    {
+      "id": "validator-release-image",
+      "summary": "Match the managed Dockerfile to the independently observed v0.156.1 validator",
+      "input_digest": "sha256:fd6cf096bfe21d129c7c602c0cfd2e4c21279158277350631c5c23cd06d386c3",
+      "proof_refs": [
+        "Buildkite 14755 standalone validation generated Dockerfile diff"
+      ]
     }
   ],
   "intents": {
@@ -885,21 +893,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "This iteration records the reviewed release source inventory and clarifies the existing heartbeat eligibility in operations; effective architecture and custody boundaries are as in the prior review.",
+          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
           "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "This iteration records the reviewed release source inventory and clarifies the existing heartbeat eligibility in operations; effective architecture and custody boundaries are as in the prior review.",
+          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
           "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "This iteration records the reviewed release source inventory and clarifies the existing heartbeat eligibility in operations; effective architecture and custody boundaries are as in the prior review.",
+          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
           "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
@@ -912,13 +920,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795219955Z"
+      "updated_at": "1795222088Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4978ee6e46e0a4d7e1f4dee95e9273601143ff38bde564dd4fc0a2c2f56d40e9",
+      "artifact_hash": "sha256:71a166df9dbb26b64be2a16c90e583a57eae422ff6c9ba78c78ab5010784de09",
       "checks": [],
       "current_phase": "intent",
       "custody": {
@@ -986,6 +994,27 @@
           "binding_digest": "sha256:750585e27a616c23872fcea8b087f213bbabbb36f68dee7a93ddea4a02f98599",
           "checkpoint_id": "heartbeat-review-exact-release",
           "sequence": 2
+        },
+        {
+          "binding": {
+            "governance_digest": "sha256:9ce08b7a9e3c4606e229cb69ac1276543f6d8cf9e12aa02e8504492ac6d40603",
+            "head_revision": "b957becf8382a8156278e8bf1e7e828f6d75d7d5",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+            "material_digest": "sha256:092e107a0bf2c00e484a3836434e0c68d85594a80848d2659bab5aaebd488e66",
+            "plan_digest": "sha256:5da3745f8b0d611b3e8a160308fb5e5991aee267f9cf3166e93bc7ee08694200",
+            "policy_digest": "sha256:d182a86a73bad08ec82073aa2435e227224b3d22dc23e25d69ec9c4e7754a9a8",
+            "required_approvals": [],
+            "run_id": "branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:c4b05230a56e5146fd5daf3d2322f62856816c82c39988dc10a103a037bdf253",
+            "task_id": "cicd_01m7xnffzj103fyk",
+            "trajectory_digest": "sha256:e4cb5ae377a0a55d93d798b7c448b8a197add5c4807e420e4b94a093aab17cfd",
+            "validation_epoch_digest": "sha256:6ae1be2b691af33d7f63af984db40be7f0fd5a4920ecb7274b29bd26078d8c5b",
+            "work_branch": "agent/codex-cloud-followups/cicd_01m7xnffzj103fyk-lease-heartbeat"
+          },
+          "binding_digest": "sha256:fe8955394e1aa3706b8641328e7e540a94f7117754d2f126aab766877d968dbb",
+          "checkpoint_id": "validator-release-image",
+          "sequence": 3
         }
       ],
       "inspected_files": [],

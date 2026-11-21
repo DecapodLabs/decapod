@@ -239,8 +239,9 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   extends the claiming agent's active deadline against the observed generation.
   The same-holder heartbeat is journaled and preserves the task revision, lease
   generation and workunit custody binding. A heartbeat rejects expired or
-  reassigned claims and leaves an already longer deadline in place. An explicit `todo renew` without
-  `--heartbeat` remains a fenced custody rotation.
+  reassigned claims and leaves an already longer deadline in place. An explicit
+  `todo renew` without `--heartbeat` remains a fenced custody rotation. The
+  archive regression compares the new expiry with the original custody digest.
 - **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
   default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
   and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
