@@ -5,18 +5,17 @@ use std::process::Command;
 use tempfile::TempDir;
 
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .current_dir(dir)
-        .env("DECAPOD_AGENT_ID", "context-capsule-agent")
-        .env("DECAPOD_CLAIM_AUTORUN", "0")
-        .args(args)
-        .output()
-        .expect("run decapod")
+    run_decapod_with_env(dir, args, &[])
 }
 
 fn run_decapod_with_env(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
-    cmd.current_dir(dir).args(args);
+    let executable =
+        fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve Decapod test executable");
+    let mut cmd = Command::new(executable);
+    cmd.current_dir(dir)
+        .env("DECAPOD_AGENT_ID", "context-capsule-agent")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .args(args);
     for (k, v) in envs {
         cmd.env(k, v);
     }
@@ -470,4 +469,73 @@ fn rpc_context_bundle_round_trip_rejects_tamper_and_stale_inputs() {
     );
     assert!(!stale.status.success(), "stale bundle must be rejected");
     assert!(String::from_utf8_lossy(&stale.stderr).contains("CONTEXT_BUNDLE_STALE"));
+}
+
+#[test]
+fn rpc_context_resolve_rejects_an_oversized_complete_envelope() {
+    let (_tmp, dir) = setup_repo();
+    let path = dir.join(".decapod/config.toml");
+    let mut config: toml::Value = toml::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
+    config["repo"]["product_summary"] = toml::Value::String("bounded context ".repeat(25000));
+    fs::write(&path, toml::to_string_pretty(&config).unwrap()).unwrap();
+    let result = run_decapod(&dir, &["rpc", "--op", "context.resolve"]);
+    // Ordinary RPC operations preserve their existing process-exit convention;
+    // semantic refusal is carried by the structured envelope.
+    assert!(result.stdout.len() < 256 * 1024);
+    let payload: Value = serde_json::from_slice(&result.stdout).unwrap();
+    assert_eq!(payload["success"], false);
+    assert_eq!(payload["error"]["code"], "context_budget_exceeded");
+    assert!(
+        payload["mandates"]
+            .as_array()
+            .is_some_and(|m| !m.is_empty())
+    );
+}
+
+#[test]
+fn rpc_context_resolve_recovers_current_canonical_intent_with_explicit_task_binding() {
+    let (_tmp, dir) = setup_repo();
+    let init = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "plan",
+            "init",
+            "--title",
+            "design",
+            "--intent",
+            "Current design A",
+            "--todo-id",
+            "intent-fixture",
+        ],
+    );
+    assert!(
+        init.status.success(),
+        "{}",
+        String::from_utf8_lossy(&init.stderr)
+    );
+    for (task, binding) in [("intent-fixture", "bound"), ("unrelated-task", "unbound")] {
+        let result = run_decapod(
+            &dir,
+            &[
+                "rpc",
+                "--op",
+                "context.resolve",
+                "--params",
+                &serde_json::json!({"task_id":task,"query":"design"}).to_string(),
+            ],
+        );
+        assert!(
+            result.status.success(),
+            "{}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        let payload: Value = serde_json::from_slice(&result.stdout).unwrap();
+        assert_eq!(
+            payload["result"]["governed_plan"]["intent"],
+            "Current design A"
+        );
+        assert_eq!(payload["result"]["governed_plan"]["task_binding"], binding);
+        assert_eq!(payload["result"]["governed_plan"]["state"], "DRAFT");
+    }
 }

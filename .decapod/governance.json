@@ -925,6 +925,11 @@
       "id": "attack-gaps-interop-accepted-31f19a70",
       "summary": "Merge accepted v0.156.2 metadata, preserve the encoding inputs and canonical test, and refresh the native projections for current Actions verification",
       "input_digest": "sha256:67ee3a09f791386afe420b732941908e67effb1d5ea45506380c0a6239ac62c4"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-d62e30ad",
+      "summary": "Integrate accepted context and outcome changes, preserve all native authority and encoding tests, and repin the measured reviewed source inventory",
+      "input_digest": "sha256:14f58e23f7cd5332c3a7a72d94352769722a7c8d8aa9e5b8b42eb3bd1f7c9db5"
     }
   ],
   "intents": {
@@ -968,23 +973,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserve the accepted fixture contract and independent decoding boundary through the v0.156.2 projection refresh.",
-          "reviewed_code_fingerprint": "ca25013eae8dab0ba58f78a5cbb0a2818c7cdf07f3da8ffd857bbf65364fe510",
-          "spec_material_hash": "e198abb16a02d26f6e53498f10da950cf9eb16fedc330f5a0cc785b7a6478f06"
+          "reason": "Preserve the accepted context and outcome architecture beside the independent encoding boundary.",
+          "reviewed_code_fingerprint": "4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c",
+          "spec_material_hash": "11f12c1aab6a24c287e98dae300e034dbd6c0700070f5c2c20cef431b4fd7f04"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain the committed encoding schema and all pinned tests alongside the accepted CLI contracts.",
-          "reviewed_code_fingerprint": "ca25013eae8dab0ba58f78a5cbb0a2818c7cdf07f3da8ffd857bbf65364fe510",
-          "spec_material_hash": "72efff23117432317ef5789d3f3cc36944eb15a13e31714d1b542b71c67c595b"
+          "reason": "Retain the accepted native interoperability interfaces and the versioned raw-input conformance artifacts.",
+          "reviewed_code_fingerprint": "4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c",
+          "spec_material_hash": "c34d5fe8d98b746104a6163a8354fe47b70551a63a1e5b5d0a895d4f7aaa3305"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Keep current fixture refusal, actual legitimate projections, and their separate proof limits.",
-          "reviewed_code_fingerprint": "ca25013eae8dab0ba58f78a5cbb0a2818c7cdf07f3da8ffd857bbf65364fe510",
-          "spec_material_hash": "6e32c0b41ff1cc2b7f19741f625fc67345e1033a93330504ff366f0e45d9dfa5"
+          "reason": "Keep accepted authority, strict downgrade refusal and bounded decoding evidence in their existing scopes.",
+          "reviewed_code_fingerprint": "4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c",
+          "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
@@ -995,7 +1000,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795225707Z"
+      "updated_at": "1795231720Z"
     },
     "trajectory": {
       "active_boundaries": [

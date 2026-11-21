@@ -1,5 +1,11 @@
 # Validation
 
+## Context, admission, and outcome checks
+
+Focused Rust regressions cover repetition and no-match retrieval, override behavior, authorization boundaries, envelope budgets, atomic correction and expiry, legacy capsule hashes, source admission, public history generation, explicit host identity, and incomplete outcome samples. The accepted JSON and acceptance-observer tests remain part of the regression suite. The Constitution schema is independently checked by the existing workflow.
+
+The handoff at `6199af03` recorded 121 focused passes against its v0.148.12 source. Its push validation rejected stale merge-base and spec metadata. That evidence remains historical. This candidate requires its own check results on the accepted target. Host records under `docs/research/host-outcome-pilot` and issues #880 and #1095 retain timeouts, missing measurements, and the distinction between observed context resolution and delivery to a model. The public chronology makes no claim about priority or measured effectiveness.
+
 ## Cloud control-plane, Dactyl 0.18.0, and Local/Cloud branding verification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1377, #1380)
 
 - **Dependency & build locks**: `tests/release_dependency_policy.rs` verifies
@@ -1534,8 +1540,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ca25013eae8dab0ba58f78a5cbb0a2818c7cdf07f3da8ffd857bbf65364fe510`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2615,3 +2621,5 @@ The v0.156.1 metadata cut at `73026d84` follows the accepted approval-verificati
 The accepted downgrade fixture at `9408bec1` also verifies that the committed candidate config differs from the accepted config. The encoding branch now uses those exact accepted fixture bytes. The two earlier downgrade executions remain historical evidence. The v0.156.1 PR offline suite passed 1,925 library cases on head `61a57f71` before the base advanced.
 
 The v0.156.2 metadata cut at `31f19a70` advances the evaluator release for this branch. The encoding inputs, canonical downgrade fixture, and complete check graph carry forward. The v0.156.1 core result belongs to `61a57f71` and its accepted base. Run fresh GitHub Actions against the v0.156.2 target.
+
+The v0.156.2 PR job 136687113651 passed both broker probes and all eleven unfiltered core targets on `351115238`. The paired offline job passed 1,925 library cases. The separate CLI job still hit two existing aggregate deadlines. With accepted context and outcome changes at `d62e30ad`, preserve native interop and authority bytes from the target and run fresh checks on the reconciled encoding candidate.

@@ -1,0 +1,360 @@
+{
+  "schema_version": "decapod.outcome-comparison.v1",
+  "publication_ready": false,
+  "merge_authorized": false,
+  "evidence_limit": "Producer labels and digest references are assertions. This renderer does not authenticate captures, execute checks, infer semantic question labels, verify native proof, or establish current admission. Deterministic fixtures are not real-model outcomes; missing human attention prevents an efficiency ratio.",
+  "incomplete_pairs": [],
+  "unverified_pair_identities": [],
+  "summaries": [
+    {
+      "arm": "baseline",
+      "runs": 1,
+      "completed": 1,
+      "unsuccessful_or_partial": 0,
+      "reported_independent_correct": 1,
+      "reported_verified_useful_work": 1,
+      "correctness_unobserved": 0,
+      "reviewed_active_human_minutes": null,
+      "reported_verified_useful_work_per_reviewed_human_minute": null
+    },
+    {
+      "arm": "governed",
+      "runs": 1,
+      "completed": 0,
+      "unsuccessful_or_partial": 1,
+      "reported_independent_correct": 0,
+      "reported_verified_useful_work": 0,
+      "correctness_unobserved": 0,
+      "reviewed_active_human_minutes": null,
+      "reported_verified_useful_work_per_reviewed_human_minute": null
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "candidate-pilot5-baseline",
+      "pair_id": "candidate-pilot5-fresh-host",
+      "task_id": "greeting-rejected-B",
+      "stratum": "fresh_host_precompiled_toolchain",
+      "arm": "baseline",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": "739cda86e15d30a6e2b40cf8dcbbfb988aaf48b305b27065573bb8e9fd41d002",
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "1f86d562b4a82b9be6bc85061f342366db59398c874b0cb44ad1f5736ec6c329",
+      "source_commit": "3ab4faaff8be4f7aee43f761c7c5c9c4b5ff963f",
+      "accepted_base": "3ab4faaff8be4f7aee43f761c7c5c9c4b5ff963f",
+      "task_source_sha256": "9f20135c8ae04b30899fdb3fbcc03f21d781e3886f0425dabdc81edd06f3c66c",
+      "environment_sha256": "b7f1ffd168c5d741998c1c4a00beff103600c476b82571aabbf2d98bbf059d20",
+      "candidate_commit": "3ab4faaff8be4f7aee43f761c7c5c9c4b5ff963f",
+      "candidate_source_sha256": "b839a9bf96a238f0e96c595bd0fafba22152cb16beee94428a75d75183f0a9f6",
+      "candidate_dirty": true,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "4205afbe96a0c9d0c02083a7a08a049dfe149fe9ddff6b0d82301bdf1fbaea21",
+      "evidence_class": "real_host",
+      "status": "completed",
+      "functional_correctness": {
+        "value": true,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "8ee02bd345d444d0ce0327a98a9a7a9529ccd0f02ed72ee1183931ea89571682"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_applicable"
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": null,
+      "selected_context_ids": [],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 119424.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "67d79ed7cf4ec491742039d807d7a5f1cf7f56c6156b7acc2f0982b4d4d4e15d"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 145345.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "67d79ed7cf4ec491742039d807d7a5f1cf7f56c6156b7acc2f0982b4d4d4e15d"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 472.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "67d79ed7cf4ec491742039d807d7a5f1cf7f56c6156b7acc2f0982b4d4d4e15d"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": 10043.0,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "992080d8cb374a254d71b48722b9519a5b61e1f5455c625d35b496887c970ca1"
+          },
+          "missing_reason": null
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 29030.538,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "5c347263ce8501aa174c6acaa92e25acc213edf64c7879ecb7846bc8c834c19c"
+          },
+          "missing_reason": null
+        }
+      }
+    },
+    {
+      "run_id": "candidate-pilot5-governed",
+      "pair_id": "candidate-pilot5-fresh-host",
+      "task_id": "greeting-rejected-B",
+      "stratum": "fresh_host_precompiled_toolchain",
+      "arm": "governed",
+      "host": "codex",
+      "host_version": "0.169.0",
+      "host_sha256": "739cda86e15d30a6e2b40cf8dcbbfb988aaf48b305b27065573bb8e9fd41d002",
+      "model": "gpt-6.1-sol",
+      "kernel_sha256": "1f86d562b4a82b9be6bc85061f342366db59398c874b0cb44ad1f5736ec6c329",
+      "source_commit": "9179e8ae174e6a45675b174e30769c63a3ab8343",
+      "accepted_base": "9179e8ae174e6a45675b174e30769c63a3ab8343",
+      "task_source_sha256": "9f20135c8ae04b30899fdb3fbcc03f21d781e3886f0425dabdc81edd06f3c66c",
+      "environment_sha256": "b7f1ffd168c5d741998c1c4a00beff103600c476b82571aabbf2d98bbf059d20",
+      "candidate_commit": "8e4431fbb93de935390b1d21da1dcd5b49d48f02",
+      "candidate_source_sha256": "b839a9bf96a238f0e96c595bd0fafba22152cb16beee94428a75d75183f0a9f6",
+      "candidate_dirty": false,
+      "policy_sha256": null,
+      "constitution_sha256": null,
+      "context_sha256": null,
+      "identity_missing": {
+        "constitution_sha256": "not_observed",
+        "context_sha256": "not_observed",
+        "policy_sha256": "not_observed"
+      },
+      "protocol_sha256": "4205afbe96a0c9d0c02083a7a08a049dfe149fe9ddff6b0d82301bdf1fbaea21",
+      "evidence_class": "real_host",
+      "status": "partial",
+      "functional_correctness": {
+        "value": true,
+        "evidence": {
+          "class": "independent_check",
+          "sha256": "52316b28e5020600f18ac029e8ec8e686ef9ab408522d93b071679e19707a2ec"
+        },
+        "missing_reason": null
+      },
+      "governed_completion": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "context_delivery": {
+        "value": null,
+        "evidence": null,
+        "missing_reason": "not_observed"
+      },
+      "first_missing_boundary": "current_completion_not_independently_verified",
+      "selected_context_ids": [
+        "fixture-pilot5-accepted-A"
+      ],
+      "metrics": {
+        "active_human_minutes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "approval_decisions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "cached_input_tokens": {
+          "value": 4711552.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "6d665223200ce569b6d6a2461608a28eee870f575c2329f666ee91be126b3cae"
+          },
+          "missing_reason": null
+        },
+        "context_bytes": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "files_read": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "harmful_context_rate": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "human_interruptions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "incorrectly_suppressed_escalations": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_reviewed"
+        },
+        "input_tokens": {
+          "value": 4802036.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "6d665223200ce569b6d6a2461608a28eee870f575c2329f666ee91be126b3cae"
+          },
+          "missing_reason": null
+        },
+        "model_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "output_tokens": {
+          "value": 7435.0,
+          "evidence": {
+            "class": "real_host",
+            "sha256": "6d665223200ce569b6d6a2461608a28eee870f575c2329f666ee91be126b3cae"
+          },
+          "missing_reason": null
+        },
+        "retained_bytes": {
+          "value": 456641.0,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "75b24f3967252349d40b43ee357a55de10ccad27ab73ccbe2841385a0289e4d2"
+          },
+          "missing_reason": null
+        },
+        "retries": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "setup_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "test_actions": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "tool_calls": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "total_cost_usd": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "validation_ms": {
+          "value": null,
+          "evidence": null,
+          "missing_reason": "not_observed"
+        },
+        "wall_ms": {
+          "value": 486989.264625,
+          "evidence": {
+            "class": "operator_report",
+            "sha256": "27ee315db820bcca89c65cd500a12e3ccfe03128c277a2d17b7b6225502795a7"
+          },
+          "missing_reason": null
+        }
+      }
+    }
+  ]
+}

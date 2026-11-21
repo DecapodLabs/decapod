@@ -8,6 +8,11 @@ still run with the permissions granted by their host environment. See the
 [security specification](.decapod/managed/specs/SECURITY.md) for the implemented
 controls and their limits.
 
+The [Constitution provenance and security limits](docs/book/src/concepts/constitution-history.md)
+separate source identity, contribution review, advisory guidance, implemented
+gates and measured effectiveness. Corpus routing does not authenticate arbitrary
+repository instructions or intercept unrestricted host actions.
+
 ## For Agents
 
 Agents follow the [repository contract](AGENTS.md) and the security guidance in
