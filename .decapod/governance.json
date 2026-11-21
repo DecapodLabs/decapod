@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
+    "accepted_commit": "2e206d26dd5983c108c687c55d68819ca74da07f",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -511,6 +511,11 @@
         "statement": "Explicit accepted selected roots map uniquely through existing obligations and supported eq/ne relations are checked globally without asserting implementation correctness.",
         "status": "open"
       },
+      "claim:source-version-release-projections": {
+        "falsifier": "A genuine preserved-source release is rejected, or a differently versioned/fingerprinted header, altered payload, foreign origin, changed source/configuration/manifest or staged edit gains release-only proof.",
+        "statement": "A classified version-only Decapod release preserves exactly its committed canonical source entrypoint versions under the existing verified source policy, while replacement headers, payloads, foreign origin and non-projection drift are refused.",
+        "status": "open"
+      },
       "claim:strict-protocol-rollout": {
         "falsifier": "The fallback accepts altered or new carrier content after only changing the review digest, supported R failure falls back to H, or an old released executable is claimed to acquire unimplemented bootstrap behavior.",
         "proof_refs": [
@@ -788,6 +793,7 @@
       "trajectory:54138daaebe9eade": "A declared human decision reference is provenance, not authenticated publication authority; candidate-only exception records cannot waive proof.",
       "trajectory:576cf7a5bf4d1081": "Accepted master a56fd2d3 is user merge of release1402; only Cargo package version and changelog changed from d891d81d",
       "trajectory:5df598ceaca5724c": "Native account projects have service-owned references distinct from Git labels. Reuse accepted session custody and preserve credential record format; account IDs and metadata are routing facts, never authorization.",
+      "trajectory:5e4f747d85cba404": "Supported native init recovery rebuilt the conflicted generated manifest; all8 authored specs and exact proof configuration were independently checked unchanged; native-created entrypoint backups preserved privately.",
       "trajectory:5ee1fa08127d67cd": "Mock fixture counters are not LLM semantic reasoning measurements.",
       "trajectory:5fe8315a1e8b30f0": "Native acceptance remains unmet mandatory publication evidence in blocked claim, plan proof hooks, deferred evidence, and publication stop condition; not an unresolved architecture decision.",
       "trajectory:62203fa208725296": "Four-platform release packaging is outside current source readiness; genuine artifact proof and resource limits must remain explicit",
@@ -832,6 +838,7 @@
       "trajectory:bcd92ac4414c0831": "Pinned transformersv5.3.0 aad13b87ed59f2afcfaebc985f403301887a35fc modeling_qwen3_5.py SHA0e7410f5251e5c324a5628c5340ee3551f7a6a505ce398569fcc3b5f3ac07f7a read as mathematical specification only, never executed. Source config b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204, weight SHA04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696 independently pinned. Metadata range only read, not installed or used as inference proof.",
       "trajectory:be3ba7edc9e65ad8": "Normalpostresetvalidateef3clearedremoteproof/custodyandnativefullsnapshotpreparation, thennativecompilationfailedE0599atnewexportwrite_all becauseWrite trait wasnotinscope. Addsamefunctionlocaltraitimportusedbyexistingexporter, no manualbuild/test. Staticreviewalsofoundrelated-repository syntheticfixture stillusedoriginalreviewURLafterrepochange; correctbothfixtureURLs toretainstrictidentitycheckandaddwrong-URLassertion. Allsixnewnative testsremainunexecuted, notpassingclaims; main1461/source39passed. No model/calibration/corpus/math/tolerance/8runrecipe/deadline/authoritychange. Preserveef3failureandallolderhistory; exactnewcandidate mustrerunofficialvalidate.",
       "trajectory:be3c3283ef364d55": "Integrate accepted master f779e39111ec8b3c8c41569f68a3a7604df167e7 and merged1675 accepted-policy hardening with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
+      "trajectory:c96cdca5a17c6c85": "Actual library failure is fixture loss of Cargo repository identity, not permission to weaken the source predicate. Preserve all existing production checks.",
       "trajectory:ca49d9c87a027ecd": "Integrate accepted master e8f8848d19a02ad8e2a580cf7722fe4ff9342221 after merged bootstrap repair PR1683 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
       "trajectory:d0a94b9a48019b7e": "Integrate accepted master fded2dd0b5f02f9c874301d4b98cfd59ad188357 after merged PR1682 native inventory evidence with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
       "trajectory:d2ed52f5ef441b6a": "Source fixtures are synthetic and generated at runtime; no real credential hidden or scanner exemption added. Existing scanner/redaction regressions must execute again. Native model/reference/holdout proof remains unexecuted.",
@@ -861,121 +868,149 @@
     }
   },
   "change": {
-    "id": "change_01M7Y1RKWEFCV1EW8XJF38D5JV",
-    "base_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
+    "id": "change_01M7XDZTPZ55X1AKM697A21WTK",
+    "base_commit": "2e206d26dd5983c108c687c55d68819ca74da07f",
     "target_base": "origin/master"
   },
   "claims": {
-    "macos-admission-fixture": {
-      "statement": "The live-admission test fixture works with both equivalent macOS temporary directory paths.",
-      "falsifier": "The existing live-admission test rejects the fixture-owned closure under either alias or canonical TMPDIR.",
+    "pr-metadata-1834": {
+      "statement": "New GitHub PRs use explicit fields when supplied and otherwise derive readable metadata from authored commits at the verified head and base.",
+      "falsifier": "A reconciliation merge supplies the title, a unique conventional subject with a body yields empty metadata, missing or ambiguous conventional subjects allow creation without a title, or an existing matching PR must derive metadata again.",
       "status": "supported",
       "proof_refs": [
-        "tests/unit/core/workspace_publication_tests.rs"
-      ]
-    },
-    "stale-checkpoint-diagnostic": {
-      "statement": "A hosted checkpoint with a stale target reports the event base and observed ref revision and continues to refuse current publication material.",
-      "falsifier": "Moving the target permits current material verification or the error omits the expected and observed revisions.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/unit/core/workspace_publication_tests.rs"
+        "cargo test --locked --lib workspace::publication::tests"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "issue-1880-admission-followups",
-      "summary": "Verify the macOS canonical fixture path and distinguish stale checkpoint input from current publication material",
-      "input_digest": "sha256:4c3331d74ed81e0a819da3c708acce005d27068c26756884d1c30436a960c96c",
+      "id": "issue-1834-pr-metadata",
+      "summary": "Derive omitted PR metadata from verified branch-only commits",
+      "input_digest": "sha256:ddcb86a2e3a3f85b8c2ebddfa468cbe3e595176fdd0b37af45a6425ddf9e5c30",
       "proof_refs": [
-        "tests/unit/core/workspace_publication_tests.rs"
+        "cargo test --locked --lib workspace::publication::tests (41 passed)"
       ]
     },
     {
-      "id": "issue-1880-accepted-v01570",
-      "summary": "Integrate accepted v0.157.0 and rerun the exact stale-base and macOS fixture regressions",
-      "input_digest": "sha256:30300528dbfcd0d796169871b2db0da4ac0f35f308ede058b6c27aadef2d9d21",
+      "id": "issue-1834-sync-d96bf819",
+      "summary": "Sync accepted master and preserve the PR metadata change",
+      "input_digest": "sha256:81c4f321323bc834d55796e12ead391b5b085f632581c81090373aac617796c3"
+    },
+    {
+      "id": "issue-1834-sync-ba21c8f16",
+      "summary": "Sync accepted v0.156.0 release for PR metadata",
+      "input_digest": "sha256:73f04e6e682c05fb67a6e720dce0d87d29e2537afb623be9e0e6c6c9a7f27571"
+    },
+    {
+      "id": "issue-1834-accepted-release-inventory",
+      "summary": "Refresh the reviewed inventory for the accepted version-only release delta",
+      "input_digest": "sha256:c7a761a2293b7e93a8de97d37eab36c988eaad60a98f49c289c4d5e09c0517e1",
       "proof_refs": [
-        "tests/unit/core/workspace_publication_tests.rs"
+        "Compare released scanner inventories on d96bf819a, ba21c8f16, and the candidate"
       ]
     },
     {
-      "id": "issue-1880-projections-v01570",
-      "summary": "Refresh the managed Dockerfile pin and specs manifest with the released v0.157.0 controller",
-      "input_digest": "sha256:0a0367e6bd16dd9d66c685f6caad3d7d79d6625daa98c8d48646fcdeb0bc2561",
+      "id": "issue-1834-v0156-container-projection",
+      "summary": "Refresh the generated Dockerfile to the accepting v0.156.0 release",
+      "input_digest": "sha256:a3b1e8c5e9df4c723df8afe47922a49698f81fe92089e76f33f701db411f00be",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/actions/runs/44869042711"
+        "GitHub Decapod Validate 44831233206 measured the required v0.156.0 Dockerfile projection"
       ]
     },
     {
-      "id": "issue-1880-review-v01570-inventory",
-      "summary": "Reconcile the reviewed 107-file proof inventory to the two accepted v0.157.0 version fields",
-      "input_digest": "sha256:00c59cd2f6b0b53e1af425a2d27b087d9dffd6db0784a1aa9420d849bd390059",
+      "id": "sync-1873-issue-1834",
+      "summary": "Reconcile accepted master while preserving the branch-authored repository contract",
+      "input_digest": "sha256:ee3c93e3deb36e7c211b1b7327595ff5f00046de83f7c5cf8ab78c9e2e7e6a28"
+    },
+    {
+      "id": "sync-v1561-issue-1834",
+      "summary": "Reconcile the accepted v0.156.1 release and refresh exactly measured repository projections",
+      "input_digest": "sha256:3b595f447e191a9953a9d7fd3e05e85d91f46d5aa6c07b7a8d00d882860cbf5e"
+    },
+    {
+      "id": "fixture-issue-1834",
+      "summary": "Verify the committed strict-profile downgrade without an empty duplicate Git commit",
+      "input_digest": "sha256:1195de21312e0f01f71b314062edcd916e5ea05726cf3b484d9c91f988a1f773"
+    },
+    {
+      "id": "sync-1874-issue-1834",
+      "summary": "Reconcile the accepted committed downgrade fixture and retain the authored follow-up",
+      "input_digest": "sha256:73752f98767aa95006b332bc4ff846ef2143e0f5b5ed4445aad82d1656040be9"
+    },
+    {
+      "id": "sync-v1562-issue-1834",
+      "summary": "Reconcile the accepted v0.156.2 release and refresh the measured repository projections",
+      "input_digest": "sha256:84cae4aa5ab4926e0b8863ede0afd70932532dcf4f1f0c2e9515ae5d83fc619e"
+    },
+    {
+      "id": "sync-1864-issue-1834",
+      "summary": "Reconcile accepted master after the context and native host changes",
+      "input_digest": "sha256:a1c4806f97ce5e2326a0ae36596cce5a91330ff8e0d1687825900e46e461d827"
+    },
+    {
+      "id": "sync-v1570-issue-1834",
+      "summary": "Reconcile the accepted v0.157.0 release and refresh the measured repository projections",
+      "input_digest": "sha256:c4a171fd7a8cb921e72cd70b58c6f3e86dfed492e981ca15f7cca167851a9a32"
+    },
+    {
+      "id": "sync-1887-issue-1834",
+      "summary": "Reconcile accepted master after the typed broker change",
+      "input_digest": "sha256:e1f448fa1b3a265a5acdccc201307d8b4a23be37dcbd07c6e55e93af6863509c"
+    },
+    {
+      "id": "sync-v1580-issue-1834",
+      "summary": "Reconcile the accepted v0.158.0 release and refresh the measured repository projections",
+      "input_digest": "sha256:98d18db0de5caf528742fe81bb63d95706460f8c7a900953a92348997574eacc"
+    },
+    {
+      "id": "issue-1834-sync-v01582",
+      "summary": "Reconcile the governed publication metadata change with the accepted v0.158.2 release and refresh the merged tree attestations",
+      "input_digest": "sha256:fef402deab63987a1e07ead44be582287acf5894eff41c56305d6e601d6d3ea3",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1885"
+        "git_diff_check"
       ]
     },
     {
-      "id": "issue-1880-f0cbb701-integration",
-      "summary": "Integrate accepted target f0cbb701 and verify its 107 proof-input bytes are identical to the reviewed inventory",
-      "input_digest": "sha256:95b57c859e8a441f28341b2814e1f2d3fe8ba0679b1b31814e853b87d3a679c4",
+      "id": "issue-1834-v01582-proof-inventory",
+      "summary": "Refresh spec reviews and reconcile the release-only source inventory against the byte-identical accepted base",
+      "input_digest": "sha256:7c2d07c8d99158b28685dc3e9a3be886bc277c0a03748a04ef4d78f3d151a754",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1887"
+        "git_inventory_comparison"
       ]
     },
     {
-      "id": "issue-1880-v0158-integration",
-      "summary": "Integrate accepted v0.158.0 and reconcile generated files and the exact released proof inventory",
-      "input_digest": "sha256:ae100be98292a7c285ad6fd054f56067dcfb94ad8c1ee021aeb6ca32364fa90b",
+      "id": "issue-1834-v01582-dockerfile-pin",
+      "summary": "Commit the v0.158.2 managed image pin generated by project-check to match the standalone validation runner",
+      "input_digest": "sha256:257a5a6fc1bffe64d8293ade3341bd6d03f6cbd34e517e8b7176da3b3ef87bf5",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1889"
+        "https://buildkite.com/decapodlabs/decapod/builds/15332"
       ]
     },
     {
-      "id": "issue-1880-77282b10-integration",
-      "summary": "Integrate accepted master and reuse the reviewed v0.158.0 proof inventory accepted in #1866",
-      "input_digest": "sha256:0901e0610374780b7b71a5c511338233edc4d7fc92bc7c46f80efb0fc772c1c4",
+      "id": "issue-1834-sync-1898",
+      "summary": "Reconcile validated PR metadata work with the newly accepted stale-base diagnostics and refreshed spec reviews",
+      "input_digest": "sha256:5e5ecbaf494b46f80a3ac930bd5b02c1e9d62cb29213ba289ec2bbf22f7f41e3",
       "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1866"
-      ]
-    },
-    {
-      "id": "issue-1880-01581-integration",
-      "summary": "Integrate accepted v0.158.1 and refresh release projections and the 107-file proof inventory",
-      "input_digest": "sha256:33a69ff6fd7be1942f56504ed2163e44c0a08a4dfdc6b16eacf99e7acc0e919a",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1891"
-      ]
-    },
-    {
-      "id": "issue-1880-1582-integration",
-      "summary": "Integrate accepted v0.158.2 and refresh the exact source proof declaration and generated files",
-      "input_digest": "sha256:07864d0c202291cdcdd9cf24a0f980116a958a1985ade080ffbeac3b5a6f03c0",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1897"
+        "https://github.com/DecapodLabs/decapod/pull/1898"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV": {
+    "intent:change_01M7XDZTPZ55X1AKM697A21WTK": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "root"
+        "src/decapod/core/workspace_publication.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
-      "instruction_origin": {
-        "source_ref": "caller:unverified"
-      },
+      "id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
-      "refined_intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
+      "raw_intent": "[#1834] Derive workspace publish PR metadata\n\nDerive the GitHub PR title and description from branch-only authored commits, preserve explicit input and idempotent readback, and test merge reconciliation histories.",
+      "refined_intent": "[#1834] Derive workspace publish PR metadata\n\nDerive the GitHub PR title and description from branch-only authored commits, preserve explicit input and idempotent readback, and test merge reconciliation histories.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -988,160 +1023,179 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
+      "intent": "Use the exact base-to-candidate commit range to derive GitHub PR metadata when omitted. Preserve explicit fields and reuse of existing matching PRs. Reject ambiguous titles before PR creation.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "workspace_publication Rust regression tests",
+        "decapod validate before PR creation"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing verifier owns the target checks and all 107 proof inputs match the accepted release.",
-          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
-          "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
+          "reason": "Rechecked publication architecture after the accepted stale-base diagnostics merge. Metadata resolution still happens inside creation after the unchanged admission boundary.",
+          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
+          "spec_material_hash": "2c203d575961974e1d5d7296f9b4a06099f48235755e9c1209b805b579feb3db"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic gives both revisions.",
-          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
-          "spec_material_hash": "937591303d30ce71df3eef6cc82e0040a81a0acc5187ef9027bdef5f5d2d885a"
+          "reason": "Reviewed the metadata interface and combined tests after the base moved. Existing matching PRs keep their metadata and explicit input is preserved.",
+          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
+          "spec_material_hash": "a22fa4d1dc75bda5fe3bee835008075717fa46dd0deb324b968037a91e389024"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact-target and canonical-tool policies retain the same enforcement and proof obligations.",
-          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
+          "reason": "The merged diagnostics preserve the accepted protection and exact-candidate admission. The metadata changes retain the same trust boundaries.",
+          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix the macOS admission fixture and verify current checkpoint behavior",
+      "title": "Derive default workspace PR metadata",
       "todo_ids": [
-        "bugs_01m7y0ymbvm3n79c"
+        "code_01m7xdyc0d5e15e8"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795256213Z"
+      "updated_at": "1795258655Z"
     },
     "trajectory": {
       "active_boundaries": [
+        "All changes are local. Configured Buildkite validation may push and is outside this start-work request.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0025f25989aa3b876cb53b730d160baa9ec63e4ed986f404986a50c5cf839e5f",
+      "artifact_hash": "sha256:ba166ff4f94c54c3cb88c5937bff9598834832a2e14eaf056bfcaa144bd240de",
       "checks": [
         {
-          "name": "formatting",
+          "name": "accepted_release_inventory_comparison",
           "status": "passed"
         },
         {
-          "name": "integrated-formatting",
+          "name": "git_diff_check",
           "status": "passed"
         },
         {
-          "name": "integrated-macos-aliased-tmpdir",
-          "status": "passed"
-        },
-        {
-          "name": "integrated-macos-canonical-tmpdir",
-          "status": "passed"
-        },
-        {
-          "name": "integrated-stale-checkpoint-diagnostic",
-          "status": "passed"
-        },
-        {
-          "name": "macos-aliased-tmpdir",
-          "status": "passed"
-        },
-        {
-          "name": "macos-canonical-tmpdir",
-          "status": "passed"
-        },
-        {
-          "name": "stale-checkpoint-diagnostic",
+          "name": "publication_regression_suite",
           "status": "passed"
         }
       ],
-      "current_phase": "validation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7Y1RM088RSG5RQVPD1TAGGE",
+            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7Y1RM088RSG5RQVPD1TAGGE",
+            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
-        "schema_version": "1.1.0",
+        "next_sequence": 7,
+        "schema_version": "1.0.0",
         "trajectories": {
-          "branch_01M7Y1RM088RSG5RQVPD1TAGGE": {
+          "branch_01M7XDZTSZ9NGN9242JXXJ2HKK": {
             "evidence_only": true,
-            "id": "branch_01M7Y1RM088RSG5RQVPD1TAGGE",
-            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+            "id": "branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "steps": [
               {
-                "action": "validation",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "src/decapod/core/workspace_publication.rs",
                   "src/decapod/core/workspace.rs",
+                  "src/decapod/core/workspace_publication.rs",
                   "tests/unit/core/workspace_publication_tests.rs",
-                  "docs/book/src/reference/governance-artifacts.md",
-                  "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory."
+                  "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback."
                 ],
                 "proof_refs": [
-                  "stale-checkpoint-diagnostic",
-                  "macos-aliased-tmpdir",
-                  "macos-canonical-tmpdir",
-                  "formatting"
+                  "git_diff_check"
                 ],
                 "scope": [
-                  "root"
+                  "src/decapod/core/workspace_publication.rs"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "validation",
+                "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "The three focused regressions passed against the integrated v0.157.0 source at target 146a00f4117ffbcdcc93a68ffef6419f78453056."
+                  "41 tests passed in the final publication suite with a canonical macOS temporary directory."
                 ],
                 "proof_refs": [
-                  "integrated-stale-checkpoint-diagnostic",
-                  "integrated-macos-aliased-tmpdir",
-                  "integrated-macos-canonical-tmpdir",
-                  "integrated-formatting"
+                  "publication_regression_suite"
                 ],
                 "scope": [
-                  "root"
+                  "src/decapod/core/workspace_publication.rs"
                 ],
                 "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock."
+                ],
+                "proof_refs": [
+                  "accepted_release_inventory_comparison"
+                ],
+                "scope": [
+                  "src/decapod/core/workspace_publication.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "The v0.158.2 controller discovered 107 proof sources. The candidate and accepted aa4d25da1 match byte-for-byte. The reviewed digest at accepted 77282b10b was reproduced, and the only covered changes since that review are the accepted Decapod package version in Cargo.toml and Cargo.lock."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/workspace_publication.rs"
+                ],
+                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -1151,28 +1205,30 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory.",
-        "The three focused regressions passed against the integrated v0.157.0 source at target 146a00f4117ffbcdcc93a68ffef6419f78453056."
+        "41 tests passed in the final publication suite with a canonical macOS temporary directory.",
+        "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback.",
+        "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock.",
+        "The v0.158.2 controller discovered 107 proof sources. The candidate and accepted aa4d25da1 match byte-for-byte. The reviewed digest at accepted 77282b10b was reproduced, and the only covered changes since that review are the accepted Decapod package version in Cargo.toml and Cargo.lock."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+      "inspected_files": [
+        "src/decapod/core/workspace_publication.rs"
+      ],
+      "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
       "modified_files": [
-        "docs/book/src/reference/governance-artifacts.md",
         "src/decapod/core/workspace.rs",
+        "src/decapod/core/workspace_publication.rs",
         "tests/unit/core/workspace_publication_tests.rs"
       ],
       "next_transitions": [
-        "Checkpoint the tested local change",
-        "Refine plan and declare falsifiable checks",
-        "Verify the committed integration and run authorized preflight"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        "src/decapod/core/workspace_publication.rs"
       ],
-      "run_id": "branch_01M7Y1RM088RSG5RQVPD1TAGGE",
+      "run_id": "branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7y0ymbvm3n79c",
+      "task_id": "code_01m7xdyc0d5e15e8",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

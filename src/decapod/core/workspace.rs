@@ -2689,8 +2689,8 @@ pub(crate) fn publish_workspace_with_readiness(
             &base_branch,
             &proof,
             &readiness,
-            title.as_deref().unwrap_or(&status.git.current_branch),
-            description.as_deref().unwrap_or(""),
+            title.as_deref(),
+            description.as_deref(),
         )
         .map_err(publication::after_push)?;
         // The publisher's final admission callback rechecks remote and local
