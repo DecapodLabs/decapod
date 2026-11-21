@@ -842,6 +842,14 @@
         "tests/todo_enforcement.rs",
         "tests/unit/core/workspace_tests.rs"
       ]
+    },
+    {
+      "id": "decapod-1881-20261120-release-inventory",
+      "summary": "Reconcile strict source inventory to accepted Cargo release version metadata",
+      "input_digest": "sha256:97c192293e5bf821897dc50c1f301fec59d1d360d5eb3308c559876413411320",
+      "proof_refs": [
+        "Accepted source inventory comparison: b1001f942 versus 31f19a70e"
+      ]
     }
   ],
   "intents": {
@@ -919,8 +927,13 @@
         "Current claimed task and isolated work branch",
         "Keep canonical backup authorization and live database isolation"
       ],
-      "artifact_hash": "sha256:6a16d8b1924aadb164993bb09167603f9b50852f0f8145e1c118a485adad97c0",
-      "checks": [],
+      "artifact_hash": "sha256:83488ddbe6e1e259325f86884329b2b345afe09fb23eb7d68c237e52b8465215",
+      "checks": [
+        {
+          "name": "container-snapshot-regressions",
+          "status": "passed"
+        }
+      ],
       "current_phase": "intent",
       "custody": {
         "events": [
@@ -942,10 +955,17 @@
             "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Y129RN75WJTWV4YWTAYHWH",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Y129MHEWPSSPVXH5YRY2K7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y129RN75WJTWV4YWTAYHWH": {
@@ -968,6 +988,22 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Three workspace launch lifecycle and path tests and two CLI coordination/authorization tests passed; the approved path ran the actual database backup with a fake container runtime.",
+                  "Reconstructed all 105 digests from accepted Git source; reviewed inventory differs from the pinned v0.155.1 baseline only in root Cargo package version bytes. No workflow, helper or toolchain change."
+                ],
+                "proof_refs": [
+                  "container-snapshot-regressions"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -976,6 +1012,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Reconstructed all 105 digests from accepted Git source; reviewed inventory differs from the pinned v0.155.1 baseline only in root Cargo package version bytes. No workflow, helper or toolchain change.",
+        "Three workspace launch lifecycle and path tests and two CLI coordination/authorization tests passed; the approved path ran the actual database backup with a fake container runtime.",
         "Workspace launch regression tests in tests/unit/core/workspace_tests.rs and tests/todo_enforcement.rs"
       ],
       "inspected_files": [],
