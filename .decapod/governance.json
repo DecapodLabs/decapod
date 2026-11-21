@@ -1006,6 +1006,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1899"
       ]
+    },
+    {
+      "id": "issue-1833-v01583-release-readiness",
+      "summary": "Sync the accepted v0.158.3 release and reconcile the verified release-only inventory and generated projections",
+      "input_digest": "sha256:bdb1d048b5b86954e07c95d826584aaee084852ab2ec3711beffb95506cedb4c",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/releases/tag/v0.158.3"
+      ]
     }
   ],
   "intents": {
@@ -1046,22 +1054,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed portable transition validation on the source tree that now includes the accepted publication metadata fix.",
-          "reviewed_code_fingerprint": "891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524",
+          "reason": "Reviewed the portable policy transition approvals architecture section on the accepted v0.158.3 source tree. The published release changes package metadata and this branch preserves its authored readiness behavior.",
+          "reviewed_code_fingerprint": "26626dc98def801cfa927a8ee09266fa8bd58536e1bd44977aac6c649abbbb31",
           "spec_material_hash": "ca93de113cc6ec9d235d19099c6a6dd87e651f0b05b2036cc4657a44f97e9a68"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the combined publication and policy approval interfaces, including the accepted base and current transition binding.",
-          "reviewed_code_fingerprint": "891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524",
+          "reason": "Reviewed the portable policy transition approvals interfaces section on the accepted v0.158.3 source tree. The published release changes package metadata and this branch preserves its authored readiness behavior.",
+          "reviewed_code_fingerprint": "26626dc98def801cfa927a8ee09266fa8bd58536e1bd44977aac6c649abbbb31",
           "spec_material_hash": "6fe65c2c6a58b185868b3943ad7b890751bfd743f07347870d751f8fd1eba381"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed approval custody after the base moved. Accepted signer trust and authenticated Cloud decisions remain independent of candidate metadata.",
-          "reviewed_code_fingerprint": "891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524",
+          "reason": "Reviewed the portable policy transition approvals security section on the accepted v0.158.3 source tree. The published release changes package metadata and this branch preserves its authored readiness behavior.",
+          "reviewed_code_fingerprint": "26626dc98def801cfa927a8ee09266fa8bd58536e1bd44977aac6c649abbbb31",
           "spec_material_hash": "32dba93180f287c01c3c1be42e700899ea621f9286a415ca2a8c492fc55b68c4"
         }
       ],
@@ -1073,13 +1081,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795261423Z"
+      "updated_at": "1795262084Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0556c2331e6bc2c74d2d0644a5c7f0639f8eaf5728b7df03fa05f6bd705d13c5",
+      "artifact_hash": "sha256:b6cd35cd2dff2d625ebea4c8bec6b6afc333099fac1a38d1cc57f91c957d76ea",
       "checks": [
         {
           "name": "ci_checkout_inventory_transition",
@@ -1148,10 +1156,17 @@
             "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7XEJYDET27439XRSKSWYKZ6",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7XEJY33RNZW3ZA13HS25DMN",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XEJYDET27439XRSKSWYKZ6": {
@@ -1227,6 +1242,19 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "All 107 proof inputs match the accepted v0.158.3 source tree. Cargo.toml and Cargo.lock are the only proof-input differences from the previously reviewed inventory and both carry the accepted version increment."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/validation_rules.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1236,6 +1264,7 @@
       "destination": "pull request",
       "evidence": [
         "A simulated scanner upgrade changed only the config digest. The exact transition passed with local maintainer approval and was rejected in a fresh clone of the same head and base.",
+        "All 107 proof inputs match the accepted v0.158.3 source tree. Cargo.toml and Cargo.lock are the only proof-input differences from the previously reviewed inventory and both carry the accepted version increment.",
         "All 107 v0.158.2 proof sources match accepted master aa4d25da1. The reviewed source inventory was reproduced at accepted 77282b10b and changed only through the accepted package version in Cargo.toml and Cargo.lock.",
         "Exact signed approvals pass in a fresh clone after a simulated scanner upgrade. Missing, expired, stale, and candidate-signed approvals fail closed. Cloud decision unit tests bind repository, generation, candidate tree, and transition.",
         "Host project check reported container_workspace_required and two pre-existing done TODOs without VERIFIED proof."

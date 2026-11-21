@@ -729,7 +729,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524`
+- Repository signal fingerprint: `26626dc98def801cfa927a8ee09266fa8bd58536e1bd44977aac6c649abbbb31`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
