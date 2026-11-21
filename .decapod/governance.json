@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "2e206d26dd5983c108c687c55d68819ca74da07f",
+    "accepted_commit": "aa4d25da11553ae337fcce6bd53361a1deb90ad7",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -868,149 +868,110 @@
     }
   },
   "change": {
-    "id": "change_01M7XDZTPZ55X1AKM697A21WTK",
-    "base_commit": "2e206d26dd5983c108c687c55d68819ca74da07f",
+    "id": "change_01M7YVQJBA5XBCRWQNWNYMDVRP",
+    "base_commit": "aa4d25da11553ae337fcce6bd53361a1deb90ad7",
     "target_base": "origin/master"
   },
   "claims": {
-    "pr-metadata-1834": {
-      "statement": "New GitHub PRs use explicit fields when supplied and otherwise derive readable metadata from authored commits at the verified head and base.",
-      "falsifier": "A reconciliation merge supplies the title, a unique conventional subject with a body yields empty metadata, missing or ambiguous conventional subjects allow creation without a title, or an existing matching PR must derive metadata again.",
+    "p0-org-scoped-project-routing-1877": {
+      "statement": "decapod cloud projects auto-registers registration_required accounts, exposes server organization_id on project directories, requires exact --org disambiguation for duplicate project names, and isolates unresolved project creation requests by organization_id.",
+      "falsifier": "Duplicate project names select ambiguously without --org, unresolved creation replays across organizations, or registration_required fails instead of auto-registering.",
       "status": "supported",
       "proof_refs": [
-        "cargo test --locked --lib workspace::publication::tests"
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs"
+      ]
+    },
+    "p0-pay-and-use-enrollment-and-resume-1896": {
+      "statement": "Cloud auth and todo diagnostics map payment_required, pending_fulfillment, admin_approval_required, organization_already_enrolled, registration_required, and provider_link_stepup_required distinctly, attach RFC3986-encoded /pricing?repo=<owner%2Frepo> enrollment URLs when valid without requiring an Admin wizard, preserve active sessions through pending_fulfillment, and resume once backend_authorized && status==active without creating .decapod/data/decapod.db.",
+      "falsifier": "Any invalid slug enters ?repo=, pending_fulfillment triggers restart_required, admin=true && repo_assigned=false admits data queries, DecapodError reaches >=128 bytes under clippy, or Cloud init refresh creates .decapod/data/decapod.db.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "issue-1834-pr-metadata",
-      "summary": "Derive omitted PR metadata from verified branch-only commits",
-      "input_digest": "sha256:ddcb86a2e3a3f85b8c2ebddfa468cbe3e595176fdd0b37af45a6425ddf9e5c30",
+      "id": "p0-pay-and-use-1877-1896",
+      "summary": "Integrate #1877 account registration/org scoping and implement #1896 P0 pay-and-use Cloud onboarding, pricing URLs, diagnostics, and zero-fallback init guard",
+      "input_digest": "sha256:cb03e63265a01e901d26df0f23b37288097d3e1bb87fb171afad67ba4d1bc50f",
       "proof_refs": [
-        "cargo test --locked --lib workspace::publication::tests (41 passed)"
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ]
     },
     {
-      "id": "issue-1834-sync-d96bf819",
-      "summary": "Sync accepted master and preserve the PR metadata change",
-      "input_digest": "sha256:81c4f321323bc834d55796e12ead391b5b085f632581c81090373aac617796c3"
-    },
-    {
-      "id": "issue-1834-sync-ba21c8f16",
-      "summary": "Sync accepted v0.156.0 release for PR metadata",
-      "input_digest": "sha256:73f04e6e682c05fb67a6e720dce0d87d29e2537afb623be9e0e6c6c9a7f27571"
-    },
-    {
-      "id": "issue-1834-accepted-release-inventory",
-      "summary": "Refresh the reviewed inventory for the accepted version-only release delta",
-      "input_digest": "sha256:c7a761a2293b7e93a8de97d37eab36c988eaad60a98f49c289c4d5e09c0517e1",
+      "id": "p0-pay-and-use-reconcile-1898",
+      "summary": "Reconcile origin/master (#1898) with v0.158.2 release pins and refreshed Living Specs",
+      "input_digest": "sha256:50f1524eacb7920fe59803cfec727e057abc990779e777f999de6c2891b6ca8e",
       "proof_refs": [
-        "Compare released scanner inventories on d96bf819a, ba21c8f16, and the candidate"
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ]
     },
     {
-      "id": "issue-1834-v0156-container-projection",
-      "summary": "Refresh the generated Dockerfile to the accepting v0.156.0 release",
-      "input_digest": "sha256:a3b1e8c5e9df4c723df8afe47922a49698f81fe92089e76f33f701db411f00be",
+      "id": "p0-pay-and-use-reconcile-1900",
+      "summary": "Reconcile origin/master v0.158.3 (#1899, #1900) and refresh release-bound Dockerfile and Living Specs",
+      "input_digest": "sha256:e87fa0fdaaca037ad8861c814914829261e60301ce0e6caf54da32db53c2aa93",
       "proof_refs": [
-        "GitHub Decapod Validate 44831233206 measured the required v0.156.0 Dockerfile projection"
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ]
     },
     {
-      "id": "sync-1873-issue-1834",
-      "summary": "Reconcile accepted master while preserving the branch-authored repository contract",
-      "input_digest": "sha256:ee3c93e3deb36e7c211b1b7327595ff5f00046de83f7c5cf8ab78c9e2e7e6a28"
-    },
-    {
-      "id": "sync-v1561-issue-1834",
-      "summary": "Reconcile the accepted v0.156.1 release and refresh exactly measured repository projections",
-      "input_digest": "sha256:3b595f447e191a9953a9d7fd3e05e85d91f46d5aa6c07b7a8d00d882860cbf5e"
-    },
-    {
-      "id": "fixture-issue-1834",
-      "summary": "Verify the committed strict-profile downgrade without an empty duplicate Git commit",
-      "input_digest": "sha256:1195de21312e0f01f71b314062edcd916e5ea05726cf3b484d9c91f988a1f773"
-    },
-    {
-      "id": "sync-1874-issue-1834",
-      "summary": "Reconcile the accepted committed downgrade fixture and retain the authored follow-up",
-      "input_digest": "sha256:73752f98767aa95006b332bc4ff846ef2143e0f5b5ed4445aad82d1656040be9"
-    },
-    {
-      "id": "sync-v1562-issue-1834",
-      "summary": "Reconcile the accepted v0.156.2 release and refresh the measured repository projections",
-      "input_digest": "sha256:84cae4aa5ab4926e0b8863ede0afd70932532dcf4f1f0c2e9515ae5d83fc619e"
-    },
-    {
-      "id": "sync-1864-issue-1834",
-      "summary": "Reconcile accepted master after the context and native host changes",
-      "input_digest": "sha256:a1c4806f97ce5e2326a0ae36596cce5a91330ff8e0d1687825900e46e461d827"
-    },
-    {
-      "id": "sync-v1570-issue-1834",
-      "summary": "Reconcile the accepted v0.157.0 release and refresh the measured repository projections",
-      "input_digest": "sha256:c4a171fd7a8cb921e72cd70b58c6f3e86dfed492e981ca15f7cca167851a9a32"
-    },
-    {
-      "id": "sync-1887-issue-1834",
-      "summary": "Reconcile accepted master after the typed broker change",
-      "input_digest": "sha256:e1f448fa1b3a265a5acdccc201307d8b4a23be37dcbd07c6e55e93af6863509c"
-    },
-    {
-      "id": "sync-v1580-issue-1834",
-      "summary": "Reconcile the accepted v0.158.0 release and refresh the measured repository projections",
-      "input_digest": "sha256:98d18db0de5caf528742fe81bb63d95706460f8c7a900953a92348997574eacc"
-    },
-    {
-      "id": "issue-1834-sync-v01582",
-      "summary": "Reconcile the governed publication metadata change with the accepted v0.158.2 release and refresh the merged tree attestations",
-      "input_digest": "sha256:fef402deab63987a1e07ead44be582287acf5894eff41c56305d6e601d6d3ea3",
+      "id": "p0-pay-and-use-sources-1900",
+      "summary": "Update reviewed_sources_digest for accepted v0.158.3 Cargo.toml/Cargo.lock bump (#1900)",
+      "input_digest": "sha256:7e2f0550e518cb7b077c3d114b04a8b9999cbfdfc27d08ff5856d1bed3190953",
       "proof_refs": [
-        "git_diff_check"
-      ]
-    },
-    {
-      "id": "issue-1834-v01582-proof-inventory",
-      "summary": "Refresh spec reviews and reconcile the release-only source inventory against the byte-identical accepted base",
-      "input_digest": "sha256:7c2d07c8d99158b28685dc3e9a3be886bc277c0a03748a04ef4d78f3d151a754",
-      "proof_refs": [
-        "git_inventory_comparison"
-      ]
-    },
-    {
-      "id": "issue-1834-v01582-dockerfile-pin",
-      "summary": "Commit the v0.158.2 managed image pin generated by project-check to match the standalone validation runner",
-      "input_digest": "sha256:257a5a6fc1bffe64d8293ade3341bd6d03f6cbd34e517e8b7176da3b3ef87bf5",
-      "proof_refs": [
-        "https://buildkite.com/decapodlabs/decapod/builds/15332"
-      ]
-    },
-    {
-      "id": "issue-1834-sync-1898",
-      "summary": "Reconcile validated PR metadata work with the newly accepted stale-base diagnostics and refreshed spec reviews",
-      "input_digest": "sha256:5e5ecbaf494b46f80a3ac930bd5b02c1e9d62cb29213ba289ec2bbf22f7f41e3",
-      "proof_refs": [
-        "https://github.com/DecapodLabs/decapod/pull/1898"
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7XDZTPZ55X1AKM697A21WTK": {
+    "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/workspace_publication.rs"
+        ".decapod/governance.json",
+        ".decapod/managed/specs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs",
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+      "id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
+      "instruction_origin": {
+        "source_ref": "caller:unverified"
+      },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "[#1834] Derive workspace publish PR metadata\n\nDerive the GitHub PR title and description from branch-only authored commits, preserve explicit input and idempotent readback, and test merge reconciliation histories.",
-      "refined_intent": "[#1834] Derive workspace publish PR metadata\n\nDerive the GitHub PR title and description from branch-only authored commits, preserve explicit input and idempotent readback, and test merge reconciliation histories.",
+      "raw_intent": "Integrate Cloud #1877 and implement P0 pay-and-use onboarding (#1896)\n\nIntegrate #1877 (account registration and org-scoped project routing) and implement #1896 (select Cloud, sign in, pay at /pricing, and resume governed work without mandatory Admin setup).",
+      "refined_intent": "Integrate Cloud #1877 and implement P0 pay-and-use onboarding (#1896)\n\nIntegrate #1877 (account registration and org-scoped project routing) and implement #1896 (select Cloud, sign in, pay at /pricing, and resume governed work without mandatory Admin setup).",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -1023,179 +984,176 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Use the exact base-to-candidate commit range to derive GitHub PR metadata when omitted. Preserve explicit fields and reuse of existing matching PRs. Reject ambiguous titles before PR creation.",
+      "intent": "Integrate Cloud #1877 (account registration, provider-link step-up, and organization-scoped project routing) and implement #1896 (select Cloud, sign in, pay at https://decapodlabs.ai/pricing?repo=<owner%2Frepo>, distinguish payment_required, pending_fulfillment, admin_approval_required, organization_already_enrolled, and resume governed work automatically without mandatory Admin wizard or local SQLite fallback).",
       "phases": [],
       "proof_hooks": [
-        "workspace_publication Rust regression tests",
-        "decapod validate before PR creation"
+        "decapod validate",
+        "cargo test"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked publication architecture after the accepted stale-base diagnostics merge. Metadata resolution still happens inside creation after the unchanged admission boundary.",
-          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
-          "spec_material_hash": "2c203d575961974e1d5d7296f9b4a06099f48235755e9c1209b805b579feb3db"
+          "reason": "Re-verified P0 Cloud architecture (#1877, #1896) with v0.158.3 reviewed source inventory.",
+          "reviewed_code_fingerprint": "9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb",
+          "spec_material_hash": "212ec25a1d1f39cd8e4c5f3e04e3a366cff864ff2c1116c145b8d21518effd53"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the metadata interface and combined tests after the base moved. Existing matching PRs keep their metadata and explicit input is preserved.",
-          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
-          "spec_material_hash": "a22fa4d1dc75bda5fe3bee835008075717fa46dd0deb324b968037a91e389024"
+          "reason": "Re-verified P0 Cloud interfaces (#1877, #1896) with v0.158.3 reviewed source inventory.",
+          "reviewed_code_fingerprint": "9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb",
+          "spec_material_hash": "3713c77f6522d20a86465eb3c439fc3ad17fc69e6aceee7ea11917563d303f3e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The merged diagnostics preserve the accepted protection and exact-candidate admission. The metadata changes retain the same trust boundaries.",
-          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
-          "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
+          "reason": "Re-verified P0 Cloud security invariants (#1877, #1896) with v0.158.3 reviewed source inventory.",
+          "reviewed_code_fingerprint": "9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb",
+          "spec_material_hash": "1796408b1406d50bbea59bc6b4b3e56d9a1583d2a264743571d73fd31fdc5e33"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Derive default workspace PR metadata",
+      "title": "Integrate Cloud #1877 and implement P0 pay-and-use onboarding (#1896)",
       "todo_ids": [
-        "code_01m7xdyc0d5e15e8"
+        "feat_01m7yvgvwmg495xt"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795258655Z"
+      "updated_at": "1795262225Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "All changes are local. Configured Buildkite validation may push and is outside this start-work request.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ba166ff4f94c54c3cb88c5937bff9598834832a2e14eaf056bfcaa144bd240de",
+      "artifact_hash": "sha256:bdb91371f30780681837340c0432a804669956f9764fef728a7e8455586f9f72",
       "checks": [
         {
-          "name": "accepted_release_inventory_comparison",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "git_diff_check",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "publication_regression_suite",
+          "name": "integration-cli-contracts",
+          "status": "passed"
+        },
+        {
+          "name": "integration-cloud-managed-session",
+          "status": "passed"
+        },
+        {
+          "name": "integration-cloud-supabase-boundary",
+          "status": "passed"
+        },
+        {
+          "name": "integration-cloud-todo-resume-wire",
+          "status": "passed"
+        },
+        {
+          "name": "integration-cloud-wave-parity",
+          "status": "passed"
+        },
+        {
+          "name": "unit-cloud-lib",
+          "status": "passed"
+        },
+        {
+          "name": "unit-core-error",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+            "detail": "trajectory:branch_01M7YVQJFQX6APEW5AG1T1K9X3",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
-        "schema_version": "1.0.0",
+        "next_sequence": 4,
+        "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7XDZTSZ9NGN9242JXXJ2HKK": {
+          "branch_01M7YVQJFQX6APEW5AG1T1K9X3": {
             "evidence_only": true,
-            "id": "branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
-            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "id": "branch_01M7YVQJFQX6APEW5AG1T1K9X3",
+            "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
             "steps": [
               {
-                "action": "verification",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/workspace_publication.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "tests/unit/core/workspace_publication_tests.rs",
-                  "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback."
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/onboarding.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/onboarding.rs",
+                  "src/decapod/lib.rs",
+                  "tests/unit/core/cloud_project_tests.rs",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "tests/unit/core/propodus_tests.rs",
+                  "tests/cloud_backend_storage.rs"
                 ],
                 "proof_refs": [
-                  "git_diff_check"
+                  "unit-cloud-lib",
+                  "unit-core-error",
+                  "integration-cli-contracts",
+                  "integration-cloud-managed-session",
+                  "integration-cloud-supabase-boundary",
+                  "integration-cloud-wave-parity",
+                  "integration-cloud-todo-resume-wire",
+                  "fmt",
+                  "clippy"
                 ],
                 "scope": [
-                  "src/decapod/core/workspace_publication.rs"
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/onboarding.rs",
+                  "tests/cloud_backend_storage.rs",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "tests/unit/core/cloud_project_tests.rs",
+                  "tests/unit/core/propodus_tests.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "41 tests passed in the final publication suite with a canonical macOS temporary directory."
-                ],
-                "proof_refs": [
-                  "publication_regression_suite"
-                ],
-                "scope": [
-                  "src/decapod/core/workspace_publication.rs"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock."
-                ],
-                "proof_refs": [
-                  "accepted_release_inventory_comparison"
-                ],
-                "scope": [
-                  "src/decapod/core/workspace_publication.rs"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "The v0.158.2 controller discovered 107 proof sources. The candidate and accepted aa4d25da1 match byte-for-byte. The reviewed digest at accepted 77282b10b was reproduced, and the only covered changes since that review are the accepted Decapod package version in Cargo.toml and Cargo.lock."
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "src/decapod/core/workspace_publication.rs"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
@@ -1204,31 +1162,58 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "41 tests passed in the final publication suite with a canonical macOS temporary directory.",
-        "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback.",
-        "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock.",
-        "The v0.158.2 controller discovered 107 proof sources. The candidate and accepted aa4d25da1 match byte-for-byte. The reviewed digest at accepted 77282b10b was reproduced, and the only covered changes since that review are the accepted Decapod package version in Cargo.toml and Cargo.lock."
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/workspace_publication.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs"
       ],
-      "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+      "intent_id": "intent:change_01M7YVQJBA5XBCRWQNWNYMDVRP",
       "modified_files": [
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_publication.rs",
-        "tests/unit/core/workspace_publication_tests.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs",
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "validation"
       ],
       "repo_scope": [
-        "src/decapod/core/workspace_publication.rs"
+        ".decapod/governance.json",
+        ".decapod/managed/specs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/onboarding.rs",
+        "tests/cloud_backend_storage.rs",
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
       ],
-      "run_id": "branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+      "run_id": "branch_01M7YVQJFQX6APEW5AG1T1K9X3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m7xdyc0d5e15e8",
+      "task_id": "feat_01m7yvgvwmg495xt",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
