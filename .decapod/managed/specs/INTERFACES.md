@@ -162,6 +162,11 @@ idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
   `todo done --validated` route through Dactyl.
   `todo renew` returns `CLOUD_LEASE_RENEW_UNSUPPORTED` before contacting Dactyl
   because the hosted task contract cannot extend an authoritative lease.
+  The proof-control client checks a workspace fence through the read-only
+  `get_custody` action. A current receipt must match the project, task,
+  workspace, custody identifier, task revision, and fencing generation.
+  A prior bind receipt cannot replace this check. Both receipt types require
+  an active expiry and a positive provider authority generation.
   `todo done --validated` fails closed locally with `"proof-capture"` when
   candidate commit/evidence bounds are absent; when valid evidence is supplied,
   it submits `propodus_proof_acceptance_v1` `capture` (`status = "captured"`,
@@ -1554,7 +1559,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970`
+- Repository signal fingerprint: `6079593877b8c16a380979ccfda48bc0a27807aa603d5dae3151ba5c3a5daaec`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

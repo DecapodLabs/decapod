@@ -863,6 +863,15 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "hosted-current-custody-client": {
+      "statement": "The hosted proof client accepts only a live receipt for the precise requested checkout fence and refuses stale, expired, mismatched, or unavailable observations.",
+      "falsifier": "A stale, unrelated, expired or historical response passes live custody verification, or a read failure is classified as a committed write.",
+      "status": "supported",
+      "proof_refs": [
+        "cargo test --locked --lib core::cloud_proof::tests (3 passed)",
+        "cargo test --locked --test cloud_wave_parity (5 passed)"
+      ]
+    },
     "hosted-renewal-fails-closed": {
       "statement": "Cloud renewal returns an unsupported error without connector access or local fallback, while existing local renewal behavior is preserved.",
       "falsifier": "A Cloud renew reports success or builds the connector, or a local claim holder cannot renew.",
@@ -885,6 +894,14 @@
       "id": "cloud-lease-v157-projections",
       "summary": "Refresh the managed Docker pin and living specs for the v0.157.0 accepted base.",
       "input_digest": "sha256:1058a0172d95203d3be2448fa476835d4fb22387e7e15147c1d6ac547145c3f0"
+    },
+    {
+      "id": "hosted-current-custody-client",
+      "summary": "Verify the exact hosted checkout custody through a read-only Propodus control request.",
+      "input_digest": "sha256:b74c3654a6b04dade0b7423e2d6619a9acb305ba70f37caf326940dcb0fb2602",
+      "proof_refs": [
+        "8 focused tests passed"
+      ]
     }
   ],
   "intents": {
@@ -918,7 +935,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Ensure cloud TODO reports renewal only if an authoritative hosted lease write occurred. Preserve local renewal and the current cloud task lifecycle.",
+      "intent": "Require a fresh provider-backed custody observation tied to the exact hosted project, task, workspace, revision, and fence before Cloud workspace validation uses the receipt.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -928,43 +945,47 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted v0.157.0 changes release projections only for this branch, and Cloud task architecture stays Dactyl-backed.",
-          "reviewed_code_fingerprint": "848fa34b6d74fe3e62cc1189202e64390a69694b45f574c9faeb940e3e604ac0",
-          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
+          "reason": "The Cloud proof client uses the existing Propodus/Dactyl transport; the verified workspace receipt does not change layering.",
+          "reviewed_code_fingerprint": "6079593877b8c16a380979ccfda48bc0a27807aa603d5dae3151ba5c3a5daaec",
+          "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The explicit unsupported hosted renewal response is documented, with the signal refreshed for the accepted v0.157.0 base.",
-          "reviewed_code_fingerprint": "848fa34b6d74fe3e62cc1189202e64390a69694b45f574c9faeb940e3e604ac0",
-          "spec_material_hash": "84f66c8bd323be7afbfc9462ff222f13726e5dd609b442905ef1e30b634bf17d"
+          "reason": "Record the live get_custody request and exact receipt checks for a hosted checkout.",
+          "reviewed_code_fingerprint": "6079593877b8c16a380979ccfda48bc0a27807aa603d5dae3151ba5c3a5daaec",
+          "spec_material_hash": "514903e4ca218393b7e8a809897ea70c16058c61c7d726ccd97f916613c08b9e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refuse renewal before touching either backend. The release projection refresh changes no security behavior.",
-          "reviewed_code_fingerprint": "848fa34b6d74fe3e62cc1189202e64390a69694b45f574c9faeb940e3e604ac0",
+          "reason": "Bind and observation retain hosted authorization. Identity, expiry and fence validation cover cross-workspace and stale replies without local authority.",
+          "reviewed_code_fingerprint": "6079593877b8c16a380979ccfda48bc0a27807aa603d5dae3151ba5c3a5daaec",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Reject unimplemented hosted TODO lease renewal",
+      "title": "Verify authoritative hosted checkout custody",
       "todo_ids": [
         "code_01m7y60s8z07ek9w"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237681Z"
+      "updated_at": "1795242044Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ce849250a3e9dc4a7bd8e2154d2ac80bbe03b5902a6dd64ac5028b6f86d162d7",
+      "artifact_hash": "sha256:834169f92964bd566309b73d348d57cc6dfb6fde6d3a09d4ce066caf10064eab",
       "checks": [
         {
           "name": "cloud-cli-boundary",
+          "status": "passed"
+        },
+        {
+          "name": "cloud-proof-unit",
           "status": "passed"
         },
         {
@@ -1015,10 +1036,24 @@
             "intent_id": "intent:change_01M7Y6C9B5Y1X2MXBYBZTN1430",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7Y6C9EYAF40CT1AF8HZMGQT",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7Y6C9B5Y1X2MXBYBZTN1430",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M7Y6C9EYAF40CT1AF8HZMGQT",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M7Y6C9B5Y1X2MXBYBZTN1430",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y6C9EYAF40CT1AF8HZMGQT": {
@@ -1083,6 +1118,49 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "implementation",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/authoring.rs",
+                  "src/decapod/core/cloud_proof.rs",
+                  "Cloud checkout authoring requires a live hosted fence. The existing bind receipt is historical and cannot recheck assignment, expiry, revocation or current provider authority."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "root",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/cloud_cli_boundary.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Three focused tests and five Dactyl transport/compatibility tests passed. Ordinary Cloud workspace admission and validation require the live binding to be integrated into their control paths."
+                ],
+                "proof_refs": [
+                  "cloud-proof-unit",
+                  "cloud-wave-parity"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "root",
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/cloud_cli_boundary.rs",
+                  "tests/cloud_wave_parity.rs",
+                  "tests/unit/core/cloud_proof_tests.rs"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1091,16 +1169,20 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Cloud checkout authoring requires a live hosted fence. The existing bind receipt is historical and cannot recheck assignment, expiry, revocation or current provider authority.",
         "Focused local suites passed all seven tests. No full publication proof was captured.",
         "Seven focused tests passed on the v0.157.0 integration. GitHub standalone validation passed its code checks but flagged generated projections. Regenerated Dockerfile and living-spec metadata with the v0.157.0 source-evaluation binary.",
-        "The released Cloud CLI renew path reads the task and reports success without a mutation. The adapter updates only a process-local cache. Propodus custody_bind has a separate repository, workspace, version and fencing contract."
+        "The released Cloud CLI renew path reads the task and reports success without a mutation. The adapter updates only a process-local cache. Propodus custody_bind has a separate repository, workspace, version and fencing contract.",
+        "Three focused tests and five Dactyl transport/compatibility tests passed. Ordinary Cloud workspace admission and validation require the live binding to be integrated into their control paths."
       ],
       "inspected_files": [
-        "src/decapod/core/authoring.rs"
+        "src/decapod/core/authoring.rs",
+        "src/decapod/core/workspace.rs"
       ],
       "intent_id": "intent:change_01M7Y6C9B5Y1X2MXBYBZTN1430",
       "modified_files": [
         ".decapod/managed/specs/INTERFACES.md",
+        "src/decapod/core/cloud_proof.rs",
         "src/decapod/core/dactyl_todo.rs",
         "src/decapod/core/todo.rs",
         "tests/cloud_cli_boundary.rs"
@@ -1111,9 +1193,12 @@
       "repo_scope": [
         ".decapod/managed/specs",
         "root",
+        "src/decapod/core/cloud_proof.rs",
         "src/decapod/core/dactyl_todo.rs",
         "src/decapod/core/todo.rs",
-        "tests/cloud_cli_boundary.rs"
+        "tests/cloud_cli_boundary.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/unit/core/cloud_proof_tests.rs"
       ],
       "run_id": "branch_01M7Y6C9EYAF40CT1AF8HZMGQT",
       "schema_version": "1.1.0",

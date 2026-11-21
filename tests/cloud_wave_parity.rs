@@ -531,7 +531,8 @@ fn dactyl_018_dpop_signer_and_control_request_wire_contract() {
         DeviceDpopSigner, DeviceKeyMaterial, DeviceKeyStorageBackend, verify_dpop_proof,
     };
     use decapod::core::cloud_proof::{
-        CustodyBindRequest, DactylProofControlTransport, custody_bind, new_uuid_v4,
+        CustodyBindRequest, CustodyGetRequest, DactylProofControlTransport, custody_bind,
+        custody_get, new_uuid_v4,
     };
     use decapod::core::db_maintenance::{
         RepoAccessTier, evaluate_cloud_repair_authority, fetch_cloud_repository_access_status,
@@ -549,12 +550,13 @@ fn dactyl_018_dpop_signer_and_control_request_wire_contract() {
     let origin_for_server = origin.clone();
 
     let server_thread = std::thread::spawn(move || {
-        // Expect 4 requests:
+        // Expect 5 requests:
         // 1. GET /functions/v1/decapod-onboarding/config
         // 2. POST /rest/v1/rpc/propodus_repository_access_v1 (status)
         // 3. POST /rest/v1/rpc/propodus_repository_access_v1 (evaluate_repair_authority)
         // 4. POST /rest/v1/rpc/propodus_proof_acceptance_v1 (custody_bind)
-        for _ in 0..4 {
+        // 5. POST /rest/v1/rpc/propodus_proof_acceptance_get_v1 (get_custody)
+        for _ in 0..5 {
             let (mut stream, _) = listener.accept().expect("accept");
             let mut buf = vec![0u8; 32768];
             let n = stream.read(&mut buf).expect("read");
@@ -614,10 +616,22 @@ fn dactyl_018_dpop_signer_and_control_request_wire_contract() {
                     .to_string()
                 }
             } else {
+                let current = path == "/rest/v1/rpc/propodus_proof_acceptance_get_v1";
                 serde_json::json!({
+                    "version": 1,
+                    "profile": "candidate-acceptance-v1",
+                    "status": if current { "custody_current" } else { "custody_bound" },
+                    "operation_id": "2b7919d7-2efd-4854-bb6d-796759b9e71a",
+                    "project_id": "example/repo",
+                    "task_id": "resource:db-migration",
+                    "workspace_id": "ws-1",
+                    "custody_id": "custody-1",
                     "task_revision": 2,
                     "fencing_generation": 5,
-                    "expires_at": "2026-11-19T00:00:00Z",
+                    "authority_generation": 2,
+                    "expires_at": decapod::core::time::format_rfc3339_nanos(
+                        time::OffsetDateTime::now_utc() + time::Duration::hours(1)
+                    ).expect("expiry"),
                 })
                 .to_string()
             };
@@ -661,7 +675,7 @@ fn dactyl_018_dpop_signer_and_control_request_wire_contract() {
         &transport,
         &CustodyBindRequest {
             project_id: "example/repo".to_string(),
-            operation_id: new_uuid_v4().expect("uuid"),
+            operation_id: "2b7919d7-2efd-4854-bb6d-796759b9e71a".into(),
             task_id: "resource:db-migration".to_string(),
             workspace_id: "ws-1".to_string(),
             custody_id: "custody-1".to_string(),
@@ -672,11 +686,25 @@ fn dactyl_018_dpop_signer_and_control_request_wire_contract() {
     .expect("custody bind via Dactyl control_request");
     assert_eq!(receipt.task_revision, 2);
     assert_eq!(receipt.fencing_generation, 5);
+    let current = custody_get(
+        &transport,
+        &CustodyGetRequest {
+            project_id: "example/repo".into(),
+            task_id: "resource:db-migration".into(),
+            workspace_id: "ws-1".into(),
+            custody_id: "custody-1".into(),
+            task_revision: receipt.task_revision,
+            fencing_generation: receipt.fencing_generation,
+        },
+    )
+    .expect("fresh custody observation via Dactyl control_request");
+    assert_eq!(current.task_revision, receipt.task_revision);
+    assert_eq!(current.fencing_generation, receipt.fencing_generation);
 
     server_thread.join().expect("server thread");
 
     let calls = observed_headers.lock().expect("lock");
-    assert_eq!(calls.len(), 4);
+    assert_eq!(calls.len(), 5);
     assert_eq!(calls[0].0, "/functions/v1/decapod-onboarding/config");
     assert!(calls[0].1.is_none(), "discovery must not carry auth header");
     let now = std::time::SystemTime::now()
