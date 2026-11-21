@@ -2,8 +2,10 @@ use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use decapod::CloudRuntimeConfig;
+use decapod::core::backend::{BackendRoute, StorageContext};
+use decapod::core::dactyl_todo::DactylTodoStore;
 use decapod::core::error::DecapodError;
-use decapod::core::repo_identity::RepositoryIdentity;
+use decapod::core::repo_identity::{RepositoryIdentity, resolve_repository_identity};
 use decapod::core::storage::{Task, TodoStore};
 use decapod::core::store::{Store, StoreKind};
 use decapod::core::todo::{CloudTodoStoreFactory, TodoCli, run_todo_cli_with_cloud_factory};
@@ -217,6 +219,41 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
         &factory,
     )
     .expect("cloud claim");
+    let renewal = run_todo_cli_with_cloud_factory(
+        &decapod_store,
+        parse_todo(&[
+            "renew",
+            "--id",
+            "cloud-cli-1",
+            "--agent",
+            "cloud-cli-agent",
+            "--lease-seconds",
+            "300",
+        ]),
+        &factory,
+    )
+    .expect_err("a hosted claim cannot renew without a hosted write");
+    assert!(matches!(
+        renewal,
+        DecapodError::NotImplemented(message)
+            if message.starts_with("CLOUD_LEASE_RENEW_UNSUPPORTED:")
+    ));
+    let route = BackendRoute::Cloud {
+        repository: resolve_repository_identity(project.path()).expect("fixture repository"),
+        uri: "invalid fixture URI".into(),
+    };
+    let context =
+        StorageContext::from_route(route, Some("fixture-bearer")).expect("fixture context");
+    let adapter = DactylTodoStore::new(context, "DecapodLabs/decapod");
+    let renewal = adapter
+        .renew_task_lease_blocking("cloud-cli-1", "cloud-cli-agent".into(), 300)
+        .expect_err("remote adapter cannot renew via its local lease cache");
+    assert!(
+        renewal
+            .to_string()
+            .starts_with("CLOUD_LEASE_RENEW_UNSUPPORTED:"),
+        "unexpected adapter error: {renewal}"
+    );
     run_todo_cli_with_cloud_factory(
         &decapod_store,
         parse_todo(&["done", "--id", "cloud-cli-1", "--format", "json"]),

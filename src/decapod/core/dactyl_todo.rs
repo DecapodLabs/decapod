@@ -15,6 +15,7 @@ use async_trait::async_trait;
 use time::{OffsetDateTime, PlainDateTime};
 
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
+pub(crate) const CLOUD_LEASE_RENEW_UNSUPPORTED: &str = "CLOUD_LEASE_RENEW_UNSUPPORTED: the hosted task contract has no authoritative lease renewal operation";
 
 /// Dactyl-backed todo store used by the cloud command path.
 pub use crate::core::cloud_proof::LeaseCustodyRecord;
@@ -483,6 +484,9 @@ impl DactylTodoStore {
         actor: String,
         lease_ttl_seconds: u64,
     ) -> Result<LeaseCustodyRecord> {
+        if self.context.is_remote() {
+            return Err(anyhow!(CLOUD_LEASE_RENEW_UNSUPPORTED));
+        }
         let ttl = lease_ttl_seconds.clamp(60, 86400);
         let task = self
             .get_task_blocking(id)?

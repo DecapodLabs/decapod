@@ -158,8 +158,10 @@ idempotent (`SCOPE_ALREADY_CANONICAL`) on repeat invocations.
   `OWNER_REPAIR_V1_SQL` transmits strictly the registered wire marker
   `SELECT propodus.owner_repair_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
   inside `DactylBridge::atomic` (never server-internal SQL expansion).
-- **Cloud todo & proof capture**: `todo claim`, `todo renew`, `todo yield`, and
-  `todo done --validated` route through Dactyl without `RESOURCE_CUSTODY_PROFILE_UNSUPPORTED`.
+- **Cloud todo & proof capture**: `todo claim`, `todo yield`, and
+  `todo done --validated` route through Dactyl.
+  `todo renew` returns `CLOUD_LEASE_RENEW_UNSUPPORTED` before contacting Dactyl
+  because the hosted task contract cannot extend an authoritative lease.
   `todo done --validated` fails closed locally with `"proof-capture"` when
   candidate commit/evidence bounds are absent; when valid evidence is supplied,
   it submits `propodus_proof_acceptance_v1` `capture` (`status = "captured"`,
@@ -1552,7 +1554,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e`
+- Repository signal fingerprint: `fe7f6b9d733f08eab29bd03223fabac690be2d42152435583353880ad97d0653`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
