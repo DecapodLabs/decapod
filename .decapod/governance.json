@@ -834,6 +834,14 @@
       "proof_refs": [
         "cargo test --locked --lib archive_tests"
       ]
+    },
+    {
+      "id": "heartbeat-review-exact-release",
+      "summary": "Review unchanged 105-source proof inventory after the accepted patch release and retain strict heartbeat eligibility",
+      "input_digest": "sha256:3253b3d56c446054b8f2edcb846de50e70b5d9c1c19ec71b9515dea98ffc67b2",
+      "proof_refs": [
+        "cargo test --locked --lib archive_tests"
+      ]
     }
   ],
   "intents": {
@@ -873,6 +881,29 @@
         "Test stable custody across heartbeats, stale-holder refusal and existing fenced renewal behavior."
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "This iteration records the reviewed release source inventory and clarifies the existing heartbeat eligibility in operations; effective architecture and custody boundaries are as in the prior review.",
+          "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
+          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "This iteration records the reviewed release source inventory and clarifies the existing heartbeat eligibility in operations; effective architecture and custody boundaries are as in the prior review.",
+          "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
+          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "This iteration records the reviewed release source inventory and clarifies the existing heartbeat eligibility in operations; effective architecture and custody boundaries are as in the prior review.",
+          "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
+          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Separate the same-holder heartbeat from custody rotation",
@@ -881,13 +912,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218284Z"
+      "updated_at": "1795219955Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c5e35ce2aff77f302fd1fd42f33a7d6c447b17bfb72fc4315e9d8f8fbfa12ae8",
+      "artifact_hash": "sha256:4978ee6e46e0a4d7e1f4dee95e9273601143ff38bde564dd4fc0a2c2f56d40e9",
       "checks": [],
       "current_phase": "intent",
       "custody": {
@@ -934,6 +965,27 @@
           "binding_digest": "sha256:825405b0d2983c9c3a06074c54842e44d275dc48419e0942411dff693acd5b5c",
           "checkpoint_id": "custody-heartbeat-tested",
           "sequence": 1
+        },
+        {
+          "binding": {
+            "governance_digest": "sha256:9ce08b7a9e3c4606e229cb69ac1276543f6d8cf9e12aa02e8504492ac6d40603",
+            "head_revision": "9dd0e07a82151a212c0b90965a042febf34eb660",
+            "intent_id": "intent:change_01M7XNGJ1SCH24ESWG6NTXSBS5",
+            "material_digest": "sha256:92f0872cbc7307583a27497c948d2361204c8cc1dc4502748471d0ad25690181",
+            "plan_digest": "sha256:70c6b10d180301d4db5c315c8d8f114e64a417a1cbb38c4880b16f13b26731d4",
+            "policy_digest": "sha256:d182a86a73bad08ec82073aa2435e227224b3d22dc23e25d69ec9c4e7754a9a8",
+            "required_approvals": [],
+            "run_id": "branch_01M7XNGJ92YWQ54H8DHVPT3PY3",
+            "schema_version": "1.0.0",
+            "task_custody_digest": "sha256:c4b05230a56e5146fd5daf3d2322f62856816c82c39988dc10a103a037bdf253",
+            "task_id": "cicd_01m7xnffzj103fyk",
+            "trajectory_digest": "sha256:e4cb5ae377a0a55d93d798b7c448b8a197add5c4807e420e4b94a093aab17cfd",
+            "validation_epoch_digest": "sha256:277c7a9614b18596a2b7e521b1d05246e183b718ddb40bfe954a5352d0796523",
+            "work_branch": "agent/codex-cloud-followups/cicd_01m7xnffzj103fyk-lease-heartbeat"
+          },
+          "binding_digest": "sha256:750585e27a616c23872fcea8b087f213bbabbb36f68dee7a93ddea4a02f98599",
+          "checkpoint_id": "heartbeat-review-exact-release",
+          "sequence": 2
         }
       ],
       "inspected_files": [],

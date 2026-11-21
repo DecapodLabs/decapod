@@ -5178,6 +5178,8 @@ fn heartbeat_claim_lease(
     lease_seconds: Option<u64>,
     expected_generation: Option<i64>,
 ) -> Result<JsonValue, error::DecapodError> {
+    type LeaseRow = (String, Option<String>, Option<String>, i64, Option<String>);
+
     if authoring::is_missing_or_unknown_actor(agent_id) || agent_id != crate::current_agent_id() {
         return Err(authoring::authoring_actor_required_error());
     }
@@ -5199,7 +5201,7 @@ fn heartbeat_claim_lease(
         TaskJournalSelection::Ids(vec![id.to_owned()]),
         |conn| {
             enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id, None)?;
-            let row: Option<(String, Option<String>, Option<String>, i64, Option<String>)> = conn.query_row(
+            let row: Option<LeaseRow> = conn.query_row(
                 "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_generation, 0), lease_lifecycle FROM tasks WHERE id = ?1",
                 [id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
             ).optional()?;

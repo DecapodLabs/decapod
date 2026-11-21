@@ -229,7 +229,7 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   and workunit checkpoints (`VALIDATION_HISTORY_TASK_STALE` on `todo done --validated
   --commit`, `govern workunit transition --to verified`, and `govern workunit resume`).
   To surface avoidable mid-validation lease expiration before long provider runs,
-  `validation_history::capture_task_binding_with_budget` calls the read-only
+  `validation_history::capture_task_binding_with_budget` calls the
   `todo::ensure_validation_lease_ttl` guard *before* freezing `HistoricalTaskBinding`.
   Validation renews only with explicit opt-in. The mode is
   selected by `DECAPOD_VALIDATE_LEASE_TTL`: `warn` (default) emits a
@@ -238,7 +238,8 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   `VALIDATION_LEASE_TTL_INSUFFICIENT`; `renew` is an explicit operator opt-in that
   extends the claiming agent's active deadline against the observed generation.
   The same-holder heartbeat is journaled and preserves the task revision, lease
-  generation and workunit custody binding. An explicit `todo renew` without
+  generation and workunit custody binding. A heartbeat rejects expired or
+  reassigned claims and leaves an already longer deadline in place. An explicit `todo renew` without
   `--heartbeat` remains a fenced custody rotation.
 - **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
   default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
@@ -459,7 +460,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `95436c442939e04941bfbef9f1dd85292d1fe39426620474f88ae576ee726634`
+- Repository signal fingerprint: `29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
