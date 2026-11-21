@@ -296,6 +296,30 @@ fn capture_once(
     })
 }
 
+/// Identify which immutable execution-binding dimension changed so recovery
+/// diagnostics expose the concrete precondition without hashing sensitive data.
+fn classify_execution_state_change(
+    expected: &ExecutionStateBinding,
+    current: &ExecutionStateBinding,
+) -> &'static str {
+    if current.work_branch != expected.work_branch
+        || current.material_digest != expected.material_digest
+    {
+        "EXECUTION_MATERIAL_CHANGED"
+    } else if current.intent_id != expected.intent_id || current.plan_digest != expected.plan_digest
+    {
+        "EXECUTION_PLAN_OR_INTENT_CHANGED"
+    } else if current.required_approvals != expected.required_approvals {
+        "EXECUTION_POLICY_CHANGED"
+    } else if current.task_custody_digest != expected.task_custody_digest {
+        "EXECUTION_TASK_CUSTODY_CHANGED"
+    } else if current.policy_digest != expected.policy_digest {
+        "EXECUTION_POLICY_CHANGED"
+    } else {
+        "EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED"
+    }
+}
+
 /// Re-measures current source and authority. Equality alone is insufficient:
 /// expiry/revocation and human gates are evaluated anew by capture_policy and
 /// accepted_plan. A checkpoint commit may advance HEAD but cannot rewrite its
@@ -321,9 +345,13 @@ pub fn verify_execution_binding(
         let current_head = current.head_revision.clone();
         current.head_revision = expected.head_revision.clone();
         if &current != expected {
+            let subcode = classify_execution_state_change(expected, &current);
             return Err(blocked(
                 "EXECUTION_STATE_CHANGED",
-                "source, plan, intent, boundaries, policy or required approval changed; review the change and create a fresh checkpoint",
+                &format!(
+                    "{subcode}: source, plan, intent, boundaries, policy or required approval changed; review the change and create a fresh checkpoint (`decapod govern workunit checkpoint --task-id {task_id} --operation-id <id>` or `decapod govern trajectory checkpoint --run-id {} --checkpoint-id <id>`)",
+                    current.run_id
+                ),
             ));
         }
         if !valid_revision(&expected.head_revision) || !valid_revision(&current_head) {

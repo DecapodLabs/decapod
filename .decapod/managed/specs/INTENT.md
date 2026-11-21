@@ -729,7 +729,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b`
+- Repository signal fingerprint: `cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1239,3 +1239,13 @@ Actions exposed a standalone-tool integration error in the first current-base ca
 The full Supabase-enabled library execution caught a test-fixture identity omission: the release-version helper must retain the canonical Cargo package repository field when it reuses the existing published-root source fixture. The correction changes fixture construction only; origin, ungrafted ancestry, committed template and immutable entrypoint checks remain strict. Prior failed candidate eee794ba and actual job136182283538 remain preserved.
 
 Release projection integrity and retained observer-run completeness are separate proof surfaces. A successful version-only comparison cannot turn missing run boundaries or incomplete tool observation into an autonomous-admission claim; the existing acceptance observer retains that judgment. Preserving source-entrypoint versions grants no observation coverage.
+
+## Portable encoding interpretation assurance
+
+The existing governance interoperability work now includes a narrowly versioned raw-JSON decoding contract at `docs/conformance/json-v1.md`. Its purpose is to make the independent standard-library Python consumer agree with the real native RPC parser on malformed input and legitimate Unicode, finite-number and nesting boundaries. The 22 pinned inputs protect rejection and ordinary read-only operation. This is one encoding-plane correction; it does not complete the independent governance-envelope profile or authenticate imported proof, approval or custody.
+
+The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
+
+The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.

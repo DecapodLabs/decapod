@@ -1206,13 +1206,13 @@ fn validation_contract_digest(projection: &TaskProjection) -> Result<String, Dec
     // different lifecycle stages; neither discharges any additional task gate.
     let mut gates: Vec<String> = match &projection.verification {
         Some(verification) => serde_json::from_str(&verification.proof_plan).map_err(|_| {
-            invalid("VALIDATION_HISTORY_TASK_STALE: malformed declared task proof plan")
+            invalid("VALIDATION_HISTORY_TASK_STALE: TASK_PROOF_PLAN_MALFORMED: malformed declared task proof plan")
         })?,
         None => vec!["validate_passes".into()],
     };
     if gates.is_empty() || gates.iter().any(|gate| gate.trim().is_empty()) {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: empty declared task proof plan",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_PROOF_PLAN_EMPTY: empty declared task proof plan",
         ));
     }
     for gate in &mut gates {
@@ -1242,7 +1242,7 @@ pub(super) fn ensure_task_full_validation_plan(
     let projections = capture_selected(conn, &[task_id.to_owned()])?;
     let projection = projections
         .get(task_id)
-        .ok_or_else(|| invalid("VALIDATION_HISTORY_TASK_UNBOUND: missing task"))?;
+        .ok_or_else(|| invalid("VALIDATION_HISTORY_TASK_UNBOUND: TASK_MISSING: missing task"))?;
     let gates: Vec<String> = match &projection.verification {
         Some(verification) => serde_json::from_str(&verification.proof_plan).map_err(|_| {
             invalid("VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED: malformed task proof plan")
@@ -1260,12 +1260,12 @@ pub(super) fn capture_validation_binding(
     let journal = read_journal(conn, Some(&ids))?;
     check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
     let head = journal.heads.get(task_id).ok_or_else(|| {
-        invalid("VALIDATION_HISTORY_TASK_UNBOUND: no complete canonical task checkpoint")
+        invalid("VALIDATION_HISTORY_TASK_UNBOUND: TASK_HISTORY_CHECKPOINT_MISSING: no complete canonical task checkpoint")
     })?;
     let current = capture_selected(conn, &ids)?;
     if current.get(task_id) != Some(&head.projection) {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_UNBOUND: live task differs from its journal",
+            "VALIDATION_HISTORY_TASK_UNBOUND: TASK_LIVE_JOURNAL_DRIFT: live task differs from its journal",
         ));
     }
     let task = &head.projection.task;
@@ -1279,7 +1279,7 @@ pub(super) fn capture_validation_binding(
             != super::fleet_coord::LeaseState::Active
     {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody",
+            "VALIDATION_HISTORY_TASK_UNBOUND: TASK_EXCLUSIVE_CUSTODY_REQUIRED: validation requires current exclusive task custody",
         ));
     }
     Ok(super::HistoricalTaskBinding {
@@ -1306,16 +1306,16 @@ pub(super) fn check_validation_binding(
     let head = journal
         .heads
         .get(&binding.task_id)
-        .ok_or_else(|| invalid("VALIDATION_HISTORY_TASK_STALE: missing canonical task history"))?;
+        .ok_or_else(|| invalid("VALIDATION_HISTORY_TASK_STALE: TASK_HISTORY_CHECKPOINT_MISSING: missing canonical task history"))?;
     let current = capture_selected(conn, &ids)?;
     if current.get(&binding.task_id) != Some(&head.projection) {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: live task differs from its journal",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_LIVE_JOURNAL_DRIFT: live task differs from its journal",
         ));
     }
     if !allow_lifecycle_progress && head.record_digest != binding.checkpoint_digest {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: task changed during validation",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_CHANGED_DURING_VALIDATION: task changed during validation",
         ));
     }
     if !allow_lifecycle_progress {
@@ -1330,7 +1330,7 @@ pub(super) fn check_validation_binding(
                 != super::fleet_coord::LeaseState::Active
         {
             return Err(invalid(
-                "VALIDATION_HISTORY_TASK_STALE: live validation custody expired or was released before archival",
+                "VALIDATION_HISTORY_TASK_STALE: TASK_LEASE_EXPIRED_OR_RELEASED: live validation custody expired or was released before archival",
             ));
         }
     }
@@ -1347,7 +1347,7 @@ pub(super) fn check_validation_binding(
         if let Some(prior) = previous.as_ref() {
             if !allow_lifecycle_progress {
                 return Err(invalid(
-                    "VALIDATION_HISTORY_TASK_STALE: task advanced during validation",
+                    "VALIDATION_HISTORY_TASK_STALE: TASK_ADVANCED_DURING_VALIDATION: task advanced during validation",
                 ));
             }
             check_validation_lifecycle_step(binding, prior, &checkpoint)?;
@@ -1365,7 +1365,7 @@ pub(super) fn check_validation_binding(
                 || validation_contract_digest(&checkpoint.projection)? != binding.contract_digest
             {
                 return Err(invalid(
-                    "VALIDATION_HISTORY_TASK_STALE: captured task identity differs",
+                    "VALIDATION_HISTORY_TASK_STALE: TASK_CAPTURED_IDENTITY_MISMATCH: captured task identity differs",
                 ));
             }
             captured_watermark = Some(checkpoint.source_watermark);
@@ -1374,7 +1374,7 @@ pub(super) fn check_validation_binding(
     }
     if previous.as_ref().map(|value| &value.record_digest) != Some(&head.record_digest) {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: captured checkpoint is absent",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_CAPTURED_CHECKPOINT_ABSENT: captured checkpoint is absent",
         ));
     }
     let altered_history: bool = conn.query_row(
@@ -1384,7 +1384,7 @@ pub(super) fn check_validation_binding(
     )?;
     if altered_history {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: restored or incomplete chronology requires new proof",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_CHRONOLOGY_RESTORED_OR_GAPPED: restored or incomplete chronology requires new proof",
         ));
     }
     Ok(())
@@ -1428,14 +1428,14 @@ fn check_validation_lifecycle_step(
         || (proof_only && task != prior)
     {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: task intent, dependency, custody or chronology changed",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_LIFECYCLE_CUSTODY_CHANGED: task intent, dependency, custody or chronology changed",
         ));
     }
     // Once released, an old record cannot renew authoring authority even under
     // the same actor name. A normal new claim changes generation and is rejected.
     if prior.assigned_to.as_deref().unwrap_or("").is_empty() && !assigned.is_empty() {
         return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: released custody was reacquired",
+            "VALIDATION_HISTORY_TASK_STALE: TASK_CUSTODY_REACQUIRED: released custody was reacquired",
         ));
     }
     Ok(())

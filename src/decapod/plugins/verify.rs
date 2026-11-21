@@ -388,6 +388,8 @@ const SAFE_VALIDATION_SCOPES: &[&str] = &[
     "source_pr_readiness",
     "repository_local_readiness",
     "repository_local_git_readiness",
+    "repository_target_readiness",
+    "repository_local_git_target_readiness",
     "ci_local",
     "project_prerequisites",
 ];
@@ -677,6 +679,63 @@ const SAFE_BLOCKER_LABELS: &[&str] = &[
     "VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED",
     "VALIDATION_HISTORY_TASK_STALE",
     "VALIDATION_HISTORY_TASK_UNBOUND",
+    "VALIDATION_LEASE_TTL_INSUFFICIENT",
+    "TASK_JOURNAL_INCOMPLETE_HISTORY",
+    "TASK_PROOF_PLAN_MALFORMED",
+    "TASK_PROOF_PLAN_EMPTY",
+    "TASK_HISTORY_CHECKPOINT_MISSING",
+    "TASK_LIVE_JOURNAL_DRIFT",
+    "TASK_CHANGED_DURING_VALIDATION",
+    "TASK_LEASE_EXPIRED_OR_RELEASED",
+    "TASK_ADVANCED_DURING_VALIDATION",
+    "TASK_CAPTURED_IDENTITY_MISMATCH",
+    "TASK_CAPTURED_CHECKPOINT_ABSENT",
+    "TASK_CHRONOLOGY_RESTORED_OR_GAPPED",
+    "TASK_LIFECYCLE_CUSTODY_CHANGED",
+    "TASK_CUSTODY_REACQUIRED",
+    "TASK_ARCHIVED_REQUIRES_HISTORY",
+    "TASK_MISSING",
+    "TASK_EXCLUSIVE_CUSTODY_REQUIRED",
+    "EXECUTION_STATE_CHANGED",
+    "EXECUTION_POLICY_CHANGED",
+    "EXECUTION_TASK_CUSTODY_CHANGED",
+    "EXECUTION_MATERIAL_CHANGED",
+    "EXECUTION_PLAN_OR_INTENT_CHANGED",
+    "EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED",
+    "EXECUTION_BINDING_INVALID",
+    "EXECUTION_HISTORY_CHANGED",
+    "EXECUTION_CAPTURE_CHANGED",
+    "EXECUTION_MATERIAL_UNAVAILABLE",
+    "EXECUTION_DECISION_REQUIRED",
+    "EXECUTION_CHECKPOINT_LIMIT",
+    "EXECUTION_CHECKPOINT_CORRUPT",
+    "EXECUTION_CHECKPOINT_CONFLICT",
+    "EXECUTION_CHECKPOINT_MISSING",
+    "EXECUTION_CONTEXT_MISSING",
+    "EXECUTION_TASK_MISMATCH",
+    "EXECUTION_INTENT_MISSING",
+    "EXECUTION_INTENT_TERMINAL",
+    "EXECUTION_APPROVAL_REQUIRED",
+    "EXECUTION_APPROVAL_MISSING",
+    "EXECUTION_APPROVAL_INVALID",
+    "EXECUTION_APPROVAL_LIMIT",
+    "EXECUTION_POLICY_INVALID",
+    "EXECUTION_POLICY_LIMIT",
+    "WORKUNIT_CHECKPOINT_REQUIRED",
+    "WORKUNIT_RECOVERY_REQUIRED",
+    "WORKUNIT_INTENT_CONFLICT",
+    "WORKUNIT_PROOF_CHANGED",
+    "WORKUNIT_PROOF_ATOMIC_DOMAIN_UNSUPPORTED",
+    "WORKUNIT_GENERATION_CONFLICT",
+    "WORKUNIT_OPERATION_CONFLICT",
+    "WORKUNIT_JOURNAL_INVALID",
+    "NOT_READY",
+    "FREEZE_FAILED",
+    "STALE_POLICY",
+    "SOURCE_CHANGED_DURING_ADAPTER_PREPARATION",
+    "OBSERVED_PATH_NOT_PROVEN",
+    "OBSERVED_PATH_STALE",
+    "TARGET_SCOPE_UNSUPPORTED",
     "WORKSPACE_AMBIGUOUS_TASK_HASH",
     "WORKSPACE_BASE_UNRESOLVED",
     "WORKSPACE_OWNERSHIP_UNVERIFIED",
@@ -887,12 +946,26 @@ fn split_leading_code_token(s: &str) -> Option<(&str, &str)> {
     }
 }
 
-// Inspect only structured leading wrappers/error codes of a validation blocker
-// or failure string so arbitrary untrusted suffixes (task titles, trajectory
-// blocker details, rule descriptions, URLs, paths) never trigger label emission.
-fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>) {
-    let mut current = raw.trim_start();
-    for _ in 0..4 {
+/// Strip outer validation scope and DecapodError Display wrappers repeatedly so
+/// canonical blocker subcodes embedded behind nested error formatting are exposed.
+fn strip_error_wrappers(mut current: &str) -> &str {
+    const WRAPPER_PREFIXES: &[&str] = &[
+        "Validation error:",
+        "I/O error:",
+        "context:",
+        "Not implemented:",
+        "Not found:",
+        "Configuration error:",
+        "Context pack error:",
+        "Session error:",
+        "Path error:",
+        "storage error:",
+        "Dactyl error:",
+        "gate error:",
+        "Error:",
+    ];
+    for _ in 0..6 {
+        current = current.trim_start();
         let mut stripped = false;
         for scope in SAFE_VALIDATION_SCOPES {
             if let Some(after_scope) = current.strip_prefix(scope)
@@ -906,7 +979,7 @@ fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>
         if stripped {
             continue;
         }
-        for prefix in ["Validation error:", "gate error:", "Error:"] {
+        for prefix in WRAPPER_PREFIXES {
             if let Some(rest) = strip_known_prefix(current, prefix) {
                 current = rest.trim_start();
                 stripped = true;
@@ -917,6 +990,50 @@ fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>
             break;
         }
     }
+    current
+}
+
+/// Return true for non-fatal advisory notices emitted to stderr so advisory
+/// prose (such as `VALIDATION_LEASE_TTL_LOW`) is never mistaken for a failure.
+fn is_non_blocking_advisory_line(line: &str) -> bool {
+    line.trim_start().starts_with("VALIDATION_LEASE_TTL_LOW:")
+}
+
+/// Extract canonical labels from bounded structured stderr lines while ignoring
+/// non-blocking advisory warnings and unlabelled middle prose.
+fn collect_structured_stderr_labels(stderr: &[u8], labels: &mut Vec<&'static str>) {
+    let slice = &stderr[..stderr.len().min(MAX_DIAGNOSTIC_TEXT_SCAN_BYTES)];
+    let text = String::from_utf8_lossy(slice);
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || is_non_blocking_advisory_line(trimmed) {
+            continue;
+        }
+        extract_labels_from_structured_text(trimmed, labels);
+    }
+}
+
+/// Scan bounded text for token-bounded canonical labels after filtering out
+/// non-blocking advisory lines on stderr.
+fn collect_tokens_bounded_excluding_advisories(bytes: &[u8], labels: &mut Vec<&'static str>) {
+    let slice = &bytes[..bytes.len().min(MAX_DIAGNOSTIC_TEXT_SCAN_BYTES)];
+    let text = String::from_utf8_lossy(slice);
+    let mut filtered = String::with_capacity(text.len().min(MAX_DIAGNOSTIC_TEXT_SCAN_BYTES));
+    for line in text.lines() {
+        if is_non_blocking_advisory_line(line) {
+            continue;
+        }
+        filtered.push_str(line);
+        filtered.push('\n');
+    }
+    collect_tokens_bounded(filtered.as_bytes(), labels);
+}
+
+// Inspect only structured leading wrappers/error codes of a validation blocker
+// or failure string so arbitrary untrusted suffixes (task titles, trajectory
+// blocker details, rule descriptions, URLs, paths) never trigger label emission.
+fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>) {
+    let mut current = strip_error_wrappers(raw);
 
     if let Some(after_auto) = current.strip_prefix("AUTOREMEDIABLE_VALIDATION_ERROR ") {
         if let Some(after_code_kw) = after_auto.strip_prefix("code=") {
@@ -1034,8 +1151,9 @@ fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>
     }
 
     // Peel repeatable `<ALLOWLISTED_CODE>: ` chains (for example `READINESS_BLOCKED:
-    // FINGERPRINT_ONLY_SPECS: ...`) while checking non-code nested wrappers.
-    for _ in 0..3 {
+    // Validation error: EXECUTION_STATE_CHANGED: EXECUTION_POLICY_CHANGED: ...`)
+    // while checking non-code nested wrappers.
+    for _ in 0..6 {
         let Some((token, after)) = split_leading_code_token(current) else {
             break;
         };
@@ -1043,10 +1161,12 @@ fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>
             break;
         };
         push_unique_label(labels, label);
-        let next = after
-            .trim_start()
-            .trim_start_matches([':', '—', '-'])
-            .trim_start();
+        let next = strip_error_wrappers(
+            after
+                .trim_start()
+                .trim_start_matches([':', '—', '-'])
+                .trim_start(),
+        );
         if next.starts_with("Cannot publish:") {
             if let Some(rest) = next.strip_prefix("Cannot publish:") {
                 extract_labels_from_cannot_publish(rest, labels);
@@ -1091,27 +1211,40 @@ fn extract_from_validation_json(
         }
     }
 
-    let report_failed = obj
-        .get("report")
-        .and_then(|v| v.as_object())
-        .is_some_and(|report| {
-            report.get("status").and_then(|v| v.as_str()) == Some("fail")
-                || report
-                    .get("fail_count")
-                    .and_then(|v| v.as_u64())
-                    .is_some_and(|count| count > 0)
+    let readiness_obj = obj.get("readiness").and_then(|v| v.as_object());
+    let readiness_failed = readiness_obj
+        .and_then(|r| r.get("ready"))
+        .and_then(|v| v.as_bool())
+        == Some(false);
+
+    let report_obj = obj.get("report").and_then(|v| v.as_object());
+    let report_failed = report_obj.is_some_and(|report| {
+        report.get("status").and_then(|v| v.as_str()) == Some("fail")
+            || report
+                .get("fail_count")
+                .and_then(|v| v.as_u64())
+                .is_some_and(|count| count > 0)
+    });
+    let report_failures = report_obj
+        .and_then(|r| r.get("failures"))
+        .and_then(|v| v.as_array());
+    // When project gates passed cleanly, `lib.rs` mirrors readiness blockers into
+    // `report.failures` prefixed with `publication_readiness:`. Preserve the true
+    // readiness stage/scope instead of misclassifying as `project_gates`.
+    let mirrored_readiness_only = readiness_failed
+        && report_failures.is_some_and(|failures| {
+            !failures.is_empty()
+                && failures.iter().all(|item| {
+                    item.as_str()
+                        .is_some_and(|line| line.trim_start().starts_with("publication_readiness:"))
+                })
         });
 
     if report_failed {
-        if stage.is_none() {
+        if stage.is_none() && !mirrored_readiness_only {
             stage = Some("project_gates");
         }
-        if let Some(failures) = obj
-            .get("report")
-            .and_then(|v| v.as_object())
-            .and_then(|r| r.get("failures"))
-            .and_then(|v| v.as_array())
-        {
+        if let Some(failures) = report_failures {
             for failure in failures {
                 if let Some(line) = failure.as_str() {
                     extract_labels_from_structured_text(line, &mut labels);
@@ -1120,30 +1253,29 @@ fn extract_from_validation_json(
         }
     }
 
-    if let Some(readiness) = obj.get("readiness").and_then(|v| v.as_object()) {
-        let ready = readiness.get("ready").and_then(|v| v.as_bool());
-        if ready == Some(false) {
-            readiness_scope = canonical_safe_scope(readiness.get("scope"));
-            if stage.is_none() {
-                stage = if readiness.get("proof_ready").and_then(|v| v.as_bool()) == Some(true) {
-                    Some("post_validation_readiness")
-                } else {
-                    Some("readiness")
+    if let Some(readiness) = readiness_obj
+        && readiness_failed
+    {
+        readiness_scope = canonical_safe_scope(readiness.get("scope"));
+        if stage.is_none() {
+            stage = if readiness.get("proof_ready").and_then(|v| v.as_bool()) == Some(true) {
+                Some("post_validation_readiness")
+            } else {
+                Some("readiness")
+            };
+        }
+        if let Some(blockers) = readiness.get("blockers").and_then(|v| v.as_array()) {
+            for blocker in blockers {
+                let Some(blocker_obj) = blocker.as_object() else {
+                    continue;
                 };
-            }
-            if let Some(blockers) = readiness.get("blockers").and_then(|v| v.as_array()) {
-                for blocker in blockers {
-                    let Some(blocker_obj) = blocker.as_object() else {
-                        continue;
-                    };
-                    if let Some(detail) = blocker_obj.get("detail").and_then(|v| v.as_str()) {
-                        extract_labels_from_structured_text(detail, &mut labels);
-                    }
-                    if let Some(code) = blocker_obj.get("code").and_then(|v| v.as_str())
-                        && let Some(label) = canonical_safe_label(code)
-                    {
-                        push_unique_label(&mut labels, label);
-                    }
+                if let Some(detail) = blocker_obj.get("detail").and_then(|v| v.as_str()) {
+                    extract_labels_from_structured_text(detail, &mut labels);
+                }
+                if let Some(code) = blocker_obj.get("code").and_then(|v| v.as_str())
+                    && let Some(label) = canonical_safe_label(code)
+                {
+                    push_unique_label(&mut labels, label);
                 }
             }
         }
@@ -1153,7 +1285,7 @@ fn extract_from_validation_json(
         stage = Some("validation_report");
     }
 
-    collect_tokens_bounded(stderr, &mut labels);
+    collect_structured_stderr_labels(stderr, &mut labels);
 
     let scope = match stage {
         Some("readiness") | Some("post_validation_readiness") => readiness_scope.or(top_scope),
@@ -1176,14 +1308,24 @@ fn format_diagnostic_header(stage: Option<&'static str>, scope: Option<&'static 
     header
 }
 
+/// Rank specific leaf codes ahead of category umbrellas and generic `READINESS_BLOCKED`
+/// so bounded diagnostic messages always preserve the exact failure cause first.
+fn label_priority(label: &str) -> u8 {
+    match label {
+        "READINESS_BLOCKED" => 2,
+        "EXECUTION_STATE_CHANGED"
+        | "VALIDATION_HISTORY_TASK_STALE"
+        | "VALIDATION_HISTORY_TASK_UNBOUND" => 1,
+        _ => 0,
+    }
+}
+
 fn build_safe_validation_diagnostic(
     stage: Option<&'static str>,
     scope: Option<&'static str>,
     mut labels: Vec<&'static str>,
 ) -> SafeValidationDiagnostic {
-    // Keep non-generic specific labels ahead of READINESS_BLOCKED so bounded
-    // output never drops the root blocker code behind the outer wrapper.
-    labels.sort_by_key(|label| *label == "READINESS_BLOCKED");
+    labels.sort_by_key(|label| label_priority(label));
 
     let header = format_diagnostic_header(stage, scope);
     if labels.is_empty() {
@@ -1238,7 +1380,7 @@ fn extract_safe_validation_diagnostic(stdout: &[u8], stderr: &[u8]) -> SafeValid
 
     let mut labels = Vec::new();
     collect_tokens_bounded(stdout, &mut labels);
-    collect_tokens_bounded(stderr, &mut labels);
+    collect_tokens_bounded_excluding_advisories(stderr, &mut labels);
     build_safe_validation_diagnostic(None, None, labels)
 }
 
@@ -2637,7 +2779,7 @@ pub(crate) fn prepare_historical_completion(
     ensure_historical_proof_plan(target.proof_plan.as_deref())?;
     if !matches!(target.status.as_str(), "open" | "in_progress" | "done") {
         return Err(error::DecapodError::ValidationError(
-            "VALIDATION_HISTORY_TASK_STALE: archived tasks require their existing completion history".into(),
+            "VALIDATION_HISTORY_TASK_STALE: TASK_ARCHIVED_REQUIRES_HISTORY: archived tasks require their existing completion history".into(),
         ));
     }
     let proof = validation_history::lookup(repo_root, store, candidate_sha)?;
