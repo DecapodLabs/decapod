@@ -1031,11 +1031,11 @@ pub fn enforce_broker_mutation_policy_for_target(
     let actor_trust = actor_trust_level_raw(root, actor)?;
     if trust_level_to_int(&actor_trust) < trust_level_to_int(required_trust) {
         if op_name == "policy.control" {
-            return Err(error::DecapodError::ValidationError(format!(
+            return Err(error::DecapodError::PolicyDenied(format!(
                 "Policy gate denied for '{op_name}': zone 'policy.control' requires trust '{required_trust}' (actor '{actor}' trust '{actor_trust}' < required '{required_trust}')"
             )));
         }
-        return Err(error::DecapodError::ValidationError(format!(
+        return Err(error::DecapodError::PolicyDenied(format!(
             "Policy gate denied for '{op_name}': actor '{actor}' trust '{actor_trust}' < required '{required_trust}'"
         )));
     }
@@ -1052,14 +1052,14 @@ pub fn enforce_broker_mutation_policy_for_target(
             root: root.to_path_buf(),
         };
         if !check_approval(&store, op_name, target.or(Some(op_name)), "global")? {
-            return Err(error::DecapodError::ValidationError(format!(
+            return Err(error::DecapodError::PolicyDenied(format!(
                 "Policy gate denied for '{op_name}': configured approval category requires human approval"
             )));
         }
     }
     if let Some((zone_trust, zone_requires_approval)) = zone_policy_from_todo(root, zone_name)? {
         if trust_level_to_int(&actor_trust) < trust_level_to_int(&zone_trust) {
-            return Err(error::DecapodError::ValidationError(format!(
+            return Err(error::DecapodError::PolicyDenied(format!(
                 "Policy gate denied for '{op_name}': zone '{zone_name}' requires trust '{zone_trust}' (actor '{actor_trust}')"
             )));
         }
@@ -1072,7 +1072,7 @@ pub fn enforce_broker_mutation_policy_for_target(
             if human_in_loop_required(&store, zone_name, risk, high)
                 && !check_approval(&store, zone_name, target.or(Some(zone_name)), "global")?
             {
-                return Err(error::DecapodError::ValidationError(format!(
+                return Err(error::DecapodError::PolicyDenied(format!(
                     "Policy gate denied for '{op_name}': zone '{zone_name}' requires approval"
                 )));
             }

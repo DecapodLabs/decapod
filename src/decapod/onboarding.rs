@@ -260,12 +260,13 @@ pub(super) enum Key {
 pub(super) struct Terminal {
     tty: std::fs::File,
     saved: libc::termios,
+    raw: libc::termios,
 }
 
 #[cfg(unix)]
 impl Terminal {
     pub(super) fn open() -> Option<Self> {
-        use std::os::fd::AsRawFd;
+        use std::os::fd::{AsFd, AsRawFd};
         if !io::stdin().is_terminal()
             || !io::stdout().is_terminal()
             || std::env::var("TERM").is_ok_and(|term| term == "dumb")
@@ -276,6 +277,12 @@ impl Terminal {
             .read(true)
             .write(true)
             .open("/dev/tty")
+            .or_else(|_| {
+                io::stdin()
+                    .as_fd()
+                    .try_clone_to_owned()
+                    .map(std::fs::File::from)
+            })
             .ok()?;
         let mut saved = unsafe { std::mem::zeroed() };
         if unsafe { libc::tcgetattr(tty.as_raw_fd(), &mut saved) } != 0 {
@@ -285,36 +292,38 @@ impl Terminal {
         unsafe {
             libc::cfmakeraw(&mut raw);
         }
+        raw.c_cc[libc::VMIN] = 1;
+        raw.c_cc[libc::VTIME] = 0;
         if unsafe { libc::tcsetattr(tty.as_raw_fd(), libc::TCSANOW, &raw) } != 0 {
             return None;
         }
         print!("\x1b[?25l");
-        Some(Self { tty, saved })
+        Some(Self { tty, saved, raw })
     }
 
-    fn byte(&mut self, timeout_ms: Option<i32>) -> io::Result<Option<u8>> {
+    fn read_continuation(&mut self) -> io::Result<Option<u8>> {
         use std::os::fd::AsRawFd;
-        if let Some(timeout) = timeout_ms {
-            let mut poll = libc::pollfd {
-                fd: self.tty.as_raw_fd(),
-                events: libc::POLLIN,
-                revents: 0,
-            };
-            let result = unsafe { libc::poll(&mut poll, 1, timeout) };
-            if result < 0 {
-                return Err(io::Error::last_os_error());
-            }
-            if result == 0 {
-                return Ok(None);
-            }
+        let fd = self.tty.as_raw_fd();
+        let mut timed = self.raw;
+        // Put the deadline on the terminal read itself. A PTY wakeup does
+        // not necessarily mean the read can complete.
+        timed.c_cc[libc::VMIN] = 0;
+        timed.c_cc[libc::VTIME] = 1; // In tenths of a second.
+        if unsafe { libc::tcsetattr(fd, libc::TCSANOW, &timed) } != 0 {
+            return Err(io::Error::last_os_error());
         }
         let mut byte = [0];
-        self.tty.read_exact(&mut byte)?;
-        Ok(Some(byte[0]))
+        let read = self.tty.read(&mut byte);
+        if unsafe { libc::tcsetattr(fd, libc::TCSANOW, &self.raw) } != 0 {
+            return Err(io::Error::last_os_error());
+        }
+        read.map(|count| (count != 0).then_some(byte[0]))
     }
 
     pub(super) fn key(&mut self) -> io::Result<Key> {
-        let byte = self.byte(None)?.expect("blocking byte read");
+        let mut first = [0];
+        self.tty.read_exact(&mut first)?;
+        let [byte] = first;
         Ok(match byte {
             3 | 4 => Key::Cancel,
             b'\r' | b'\n' => Key::Enter,
@@ -322,8 +331,8 @@ impl Terminal {
             27 => {
                 // A lone Escape cancels immediately after a bounded wait.
                 // Never wait indefinitely for an incomplete escape sequence.
-                match self.byte(Some(60))? {
-                    Some(b'[' | b'O') => match self.byte(Some(60))? {
+                match self.read_continuation()? {
+                    Some(b'[' | b'O') => match self.read_continuation()? {
                         Some(b'A') => Key::Up,
                         Some(b'B') => Key::Down,
                         _ => Key::Ignore,
@@ -343,7 +352,7 @@ impl Terminal {
                 };
                 let mut bytes = vec![byte];
                 for _ in 1..len {
-                    if let Some(next) = self.byte(Some(60))? {
+                    if let Some(next) = self.read_continuation()? {
                         bytes.push(next);
                     }
                 }
