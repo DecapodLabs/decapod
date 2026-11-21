@@ -5,17 +5,13 @@ use std::process::Command;
 use tempfile::TempDir;
 
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
-    Command::new(env!("CARGO_BIN_EXE_decapod"))
-        .current_dir(dir)
-        .env("DECAPOD_AGENT_ID", "context-capsule-agent")
-        .env("DECAPOD_CLAIM_AUTORUN", "0")
-        .args(args)
-        .output()
-        .expect("run decapod")
+    run_decapod_with_env(dir, args, &[])
 }
 
 fn run_decapod_with_env(dir: &Path, args: &[&str], envs: &[(&str, &str)]) -> std::process::Output {
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let executable =
+        fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve Decapod test executable");
+    let mut cmd = Command::new(executable);
     cmd.current_dir(dir)
         .env("DECAPOD_AGENT_ID", "context-capsule-agent")
         .env("DECAPOD_CLAIM_AUTORUN", "0")

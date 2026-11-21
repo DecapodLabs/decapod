@@ -4,6 +4,9 @@
 
 The Constitution build rejects metadata-only self-promotion and unsupported enforcement assertions. Binding review declarations identify the required review process. They provide no authenticated reviewer identity. Repository overrides and runtime mandates retain their native owners. Superseded, expired, and unrelated knowledge is excluded from operative context and can be inspected through the appropriate audit path.
 
+The sandboxed scaffolding tests use the checked-in corpus and schema to check promotion, declared enforcement, and reference validity.
+The activation and capsule fixtures resolve the candidate executable before entering temporary repositories so their child commands exercise the build under test.
+
 The cooperative adapter accepts bounded regular files and delegates fixed operation arguments to the current executable. It grants neither host sandbox enforcement nor approval. Compact comparison inputs distinguish reported, captured, and independently checked evidence. Context return, actual model delivery, functional correctness, and current native completion require separate observations.
 
 ## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
@@ -807,7 +810,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd`
+- Repository signal fingerprint: `a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

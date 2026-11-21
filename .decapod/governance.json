@@ -999,6 +999,17 @@
         "assets/tools/release_projection_drift_tests.rs",
         "tests/consumer_readiness.rs"
       ]
+    },
+    {
+      "id": "context-outcomes-bazel-fixtures-15",
+      "summary": "Run Constitution, activation and capsule contract regressions with declared Bazel inputs",
+      "input_digest": "sha256:4432b9c33325bde1550fccd19283f29af87843f108e98399c4d2fab4773ec9c6",
+      "proof_refs": [
+        "assets/schemas/constitution.schema.json",
+        "tests/activation_conformance.rs",
+        "tests/constitution_scaffolding.rs",
+        "tests/context_capsule_rpc.rs"
+      ]
     }
   ],
   "intents": {
@@ -1041,23 +1052,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The accepted patch release advances the package version and its generated projections. The selected-work approval architecture remains present in this candidate.",
-          "reviewed_code_fingerprint": "ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd",
+          "reason": "The integration fixtures use the existing context and host APIs through the declared build executable.",
+          "reviewed_code_fingerprint": "a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The accepted release advances the displayed version. The integrated selected-work readiness and context interfaces preserve their contracts.",
-          "reviewed_code_fingerprint": "ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd",
+          "reason": "The fixtures preserve the existing executable and RPC contracts under both repository test runners.",
+          "reviewed_code_fingerprint": "a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8",
           "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The patch release carries the previously reviewed approval gate and the repaired downgrade control. The reviewed inventory delta contains only the two Cargo version files.",
-          "reviewed_code_fingerprint": "ba12254d53a3cc43d527a0b9ece401d58a11593b02b45dcf198f49e0088075fd",
-          "spec_material_hash": "43b6c979dc3a9a9b5df4b6f2f5c4f38b4dd6408c760af9ee3c41b37b9f12fb0c"
+          "reason": "Documented real Constitution schema inputs and executable custody for the isolated regression suite.",
+          "reviewed_code_fingerprint": "a103ae61b62b1de1685c1d166ee0ef0593b39eae24285596e4dd3db6d1c973e8",
+          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
       "state": "APPROVED",
@@ -1068,14 +1079,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218559Z"
+      "updated_at": "1795219521Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4a81c676b6396714d1842eae54eba6b54640511cc89be40f27900e2fdac8191d",
+      "artifact_hash": "sha256:f077b81824dab3cdf6a67c0bab0c98501a2415f279c96518bd55cbfdc308429d",
       "checks": [
+        {
+          "name": "Bazel Constitution scaffolding before declaring the schema",
+          "status": "failed"
+        },
+        {
+          "name": "Bazel activation and capsule fixture launch with relative executable",
+          "status": "failed"
+        },
         {
           "name": "Bazel bounded validate smoke",
           "status": "passed"
@@ -1157,6 +1176,10 @@
           "status": "failed"
         },
         {
+          "name": "Reviewed 107 verification sources with only one Bazel test input declaration changed",
+          "status": "passed"
+        },
+        {
           "name": "Reviewed all 107 verification source paths; Cargo version changes only",
           "status": "passed"
         },
@@ -1166,6 +1189,10 @@
         },
         {
           "name": "Same five PTY failures with independently released accepted binary",
+          "status": "passed"
+        },
+        {
+          "name": "Seven sandboxed integration targets with 77 cases",
           "status": "passed"
         },
         {
@@ -1214,6 +1241,14 @@
         },
         {
           "name": "v0.156.1 exact CLI downgrade control",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.1 native validation runtime regression (15196 ms in 20000 ms budget)",
+          "status": "passed"
+        },
+        {
+          "name": "v0.156.1 pilot report reproduction (three report files)",
           "status": "passed"
         },
         {
@@ -1351,10 +1386,17 @@
             "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
             "kind": "trajectory_step_recorded",
             "sequence": 19
+          },
+          {
+            "detail": "trajectory:branch_01M7VZD4F86FKX5EED4EQW74V7",
+            "event_id": "event:20",
+            "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
+            "kind": "trajectory_step_recorded",
+            "sequence": 20
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 19,
+        "next_sequence": 20,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7VZD4F86FKX5EED4EQW74V7": {
@@ -1645,6 +1687,32 @@
                 ],
                 "sequence": 19,
                 "validation_findings": []
+              },
+              {
+                "action": "ci-repair",
+                "custody_event_id": "event:20",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "tests/activation_conformance.rs",
+                  "tests/context_capsule_rpc.rs",
+                  "Missing schema log sha256:dcc659f808edfe93a70c960ea2c3a7f2838057c6e112b7538ba9b69344193f71",
+                  "Relative executable failure log sha256:4d33b141465f9e7f29c569b410d00abb2b74ef4374f06910ebb31237c9622e27",
+                  "All seven Bazel targets log sha256:e57e6f5fe7e9956988bbfcd313244d3bf43c89f49fd098627edf0c102feb77f1",
+                  "Reviewed inventory sha256:5b12ef03db3308d39f4dc54127811117d23f4ed2aad9b6ae2e7b7a12a4909a8a"
+                ],
+                "proof_refs": [
+                  "Bazel Constitution scaffolding before declaring the schema",
+                  "Bazel activation and capsule fixture launch with relative executable",
+                  "Seven sandboxed integration targets with 77 cases",
+                  "Reviewed 107 verification sources with only one Bazel test input declaration changed",
+                  "v0.156.1 native validation runtime regression (15196 ms in 20000 ms budget)",
+                  "v0.156.1 pilot report reproduction (three report files)"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 20,
+                "validation_findings": []
               }
             ]
           }
@@ -1656,6 +1724,7 @@
         "Accepted v0.156.0 PTY control log sha256:1687a7b3d6bc6dc542df0aa376fa6f1959c01d511f6f7b1c96a2faca5cfb0fad",
         "All 12 validation termination and contention cases passed locally, in addition to the nine datastore and fifteen spec conformance checks. While the previous head ran, accepted master moved to 722515f49e6f56f76ea64bf6ba94ede252df4593. The original governance jobs failed base identity or merge-base verification. This merge preserves the accepted observer source and authored spec prose, and native reconcile-merge retains the approved active journal and any accepted baseline obligations.",
         "All 123 focused Rust checks passed: 67 library and 56 integration. The first signed source commit is febca34a and is published as PR #1864 under the user-directed GitHub Actions path. The Pages build publishes docs/book/book only, so the two chronology evidence links now target actual tracked JSON on GitHub. CI and required approval remain outstanding; no publication-readiness or issue closure claim.",
+        "All seven Bazel targets log sha256:e57e6f5fe7e9956988bbfcd313244d3bf43c89f49fd098627edf0c102feb77f1",
         "Bazel fastbuild validated three runs in 10251ms (3522, 3357, 3372ms) after removing runtime probes from the serialized contract gate and consolidating event schema inspection within the existing migration transaction. The 20000ms aggregate budget is unchanged. Nine datastore and fifteen public spec conformance tests passed.",
         "Both original Actions workflows reached terminal states. The final CLI job repeated the two repaired reflection failures. Four Bazel targets passed on the preceding base, and reflection, plan-gate and event unit regressions passed after accepted instruction readiness. The v0.154.0 smoke passed in 9426ms with the unchanged 20000ms budget. The local project prerequisites refreshed matching projections then reached their 120s limit in validate_stale_workspaces. This records the observed local limit without claiming project prerequisites or full readiness.",
         "Current 0.153.2 source compiled. 67 focused library tests, 36 scaffolding, four claims, seven capsule schema and two activation tests passed. Capsule RPC suite was running at this observation. Candidate project-check refreshed Docker/spec projections, and reported 207 passes plus four failures: host container proof, dirty-file commit threshold, scanner findings, and two unrelated done tasks lacking VERIFIED evidence. This is not full native readiness. GitHub Actions are the requested publication checks.",
@@ -1668,9 +1737,12 @@
         "Local full CLI log sha256:4090048134d59e64a2c92791f1e001badd9dee043562360f88438a01830d260e",
         "Local project check reported VALIDATE_TIMEOUT_OR_LOCK after generating updated projections",
         "Master advanced from 722515f49 to 868f756e7 during checkpoint verification. Merged the accepted plan instruction gates and their semantic specs. Recomputed the combined inventory across 107 existing reviewed inputs and found no changed source inventory paths from this accepted-base update. The combined reviewed digest independently remains sha256:e2b9ea2ba5923ceb9a0310e37aa1f0e4a8331de32b470a4e3d17a5016168a7c7.",
+        "Missing schema log sha256:dcc659f808edfe93a70c960ea2c3a7f2838057c6e112b7538ba9b69344193f71",
         "Reclaimed the expired task with the same agent on the existing isolated branch. Merged accepted workspace diagnostics, target-scoped deployment proof, proof-policy migration and v0.155.0. Verified 107 reviewed source inputs. The digest transition from the integrated v0.154.0 source changes the package version in Cargo.toml and Cargo.lock only. GitHub v0.155.0 release binary checksum verified; its native merge and specs refresh preserve prior checkpoint evidence and material spec changes. The precise Bazel smoke passed in 9706ms against the unchanged 20000ms budget.",
         "Recovered the successor task claim using its original broker request ID. Fresh workspace starts at accepted 34b98ab1 v0.153.2. Reauthored source from signed 6199af03 without importing old governance or custody. Preserved merged acceptance observer and strict JSON owner. Reviewed 107 current verification inputs: 101 identical to accepted target, four changes and two additions for build declarations, constitution admission and history. User directed GitHub Actions and expressly excluded Buildkite. Full native readiness and real-host completion remain unverified.",
+        "Relative executable failure log sha256:4d33b141465f9e7f29c569b410d00abb2b74ef4374f06910ebb31237c9622e27",
         "Release policy test log sha256:ed98aa1d684b9135cb94a14291382629c40992396ec5163bbe1ca60bfe71b3e8",
+        "Reviewed inventory sha256:5b12ef03db3308d39f4dc54127811117d23f4ed2aad9b6ae2e7b7a12a4909a8a",
         "Reviewed inventory sha256:e5586821ec8549128d7965f2a6ed24496d7aaa0961916a7a5cbc7578d7f81910",
         "The maintainer merged release cut #1870 to ba21c8f1 while source checks were running. The accepted delta contained only Cargo package metadata and release notes. Retained unreleased work, current v0.156.0 projections and all ten checkpoints. The unchanged validation bound passed in 10536ms across three runs; 16 release policy cases passed. The host-local project check generated the expected projections then returned VALIDATE_TIMEOUT_OR_LOCK for shared storage contention. No local full readiness claim. GitHub requires independent approval from a collaborator on #1864.",
         "While exact v0.155.1 Actions ran, accepted master advanced to d96bf819 through #1865. Integrated typed instruction lineage, proof boundaries and read-only state RPCs with the existing authenticated mentor and task-bound reflection. Retained both RPC regression tests and all nine authored checkpoints. Ten merged inference, reflection and scope tests passed. Three steady-state validations took 9774ms, under the unchanged 20000ms budget. Prior exact standalone Actions passed on both events and public chronology reproduced byte-for-byte.",
@@ -1687,6 +1759,7 @@
       ],
       "intent_id": "intent:change_01M7VZD4BTX53EKY131QYDPS9C",
       "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/specs/SECURITY.md",
         "assets/build/constitution_admission.rs",
         "src/decapod/core/docs.rs",
@@ -1694,12 +1767,15 @@
         "src/decapod/core/rpc.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/plugins/knowledge.rs",
+        "tests/activation_conformance.rs",
         "tests/consumer_readiness.rs",
+        "tests/context_capsule_rpc.rs",
         "tests/single_datastore.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks",
         "publish-ci-repair",
+        "push-bazel-fixture-repair",
         "push-current-candidate",
         "reconcile-accepted-release"
       ],

@@ -74,7 +74,9 @@ fn run_bounded(command: &mut Command, dir: &Path, program: &str, args: &[&str]) 
 }
 
 fn run_decapod(dir: &Path, args: &[&str], password: Option<&str>) -> Output {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let executable =
+        fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve Decapod test executable");
+    let mut command = Command::new(executable);
     command.env_remove("GITHUB_ACTIONS").env_remove("BUILDKITE");
     command
         .current_dir(dir)
