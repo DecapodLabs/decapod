@@ -908,6 +908,11 @@
       "id": "fixture-issue-1833",
       "summary": "Verify the committed strict-profile downgrade without an empty duplicate Git commit",
       "input_digest": "sha256:64451f90d27c977e9004317a0aa2c99978f367c17b32a7c6269302ab7c1bcac2"
+    },
+    {
+      "id": "sync-1874-issue-1833",
+      "summary": "Reconcile the accepted committed downgrade fixture and retain the authored follow-up",
+      "input_digest": "sha256:25e6161b57595191263514147b79cc40a03d63fea71b7168f9f1712becca0a63"
     }
   ],
   "intents": {
@@ -948,21 +953,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the existing authored architecture against the corrected committed downgrade fixture",
+          "reason": "Reviewed the branch architecture with the accepted fixture correction",
           "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
           "spec_material_hash": "0151dc429a1d954eed1329835f7c2a90b293abb006fff48a643f1f6d6b7b4c36"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the existing authored interfaces after correcting the Git fixture",
+          "reason": "Reviewed the branch interfaces with the accepted fixture correction",
           "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
           "spec_material_hash": "8c3aeda8f1262b81c00145451a389238c1b1cc0d692da51438b2f9781290c0f8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The fixture still requires the strict policy downgrade to fail before selecting any proof",
+          "reason": "Reviewed the publication security contract against the accepted target",
           "reviewed_code_fingerprint": "04a75b24a5e28f81a095277cc170ec4744b2d760f7eefd95ead8eb36b79a10f7",
           "spec_material_hash": "24af5a8132ac64807c77741d40ce8c18efbb619f108a0c48baa465cef345f133"
         }
@@ -975,7 +980,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795222925Z"
+      "updated_at": "1795223212Z"
     },
     "trajectory": {
       "active_boundaries": [

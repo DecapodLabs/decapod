@@ -2554,6 +2554,11 @@ converts missing platform evidence into success.
 
 ## Governed repository proof-policy migration (#1738)
 
+The strict-profile regression compares the candidate configuration already
+committed by the consumer fixture with the accepted Git target. It binds
+approval to those two commits and checks that the runtime still rejects the
+downgrade before executor selection. See #1871.
+
 `tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
 cover the `repo.pr-readiness.v1` transition contract across source-inventory
 updates (`reviewed_sources_digest`) and command/execution upgrades
