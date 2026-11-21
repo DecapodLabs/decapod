@@ -850,6 +850,14 @@
       "proof_refs": [
         "Buildkite 14755 standalone validation generated Dockerfile diff"
       ]
+    },
+    {
+      "id": "accepted-strict-profile-fixture",
+      "summary": "Integrate the current accepted strict-profile fixture and preserve the tested follow-up",
+      "input_digest": "sha256:68066a842a56a2f8e0dd68d80daf7367b3d2c306bd5bca3def673821043c8add",
+      "proof_refs": [
+        "Focused branch tests and accepted PR #1874 integration"
+      ]
     }
   ],
   "intents": {
@@ -893,22 +901,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
-          "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "de35df79f5fcbe9f0c9d8f5e57acc954dd36acddd11898bafd15cd2cc7ec835d",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
-          "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "de35df79f5fcbe9f0c9d8f5e57acc954dd36acddd11898bafd15cd2cc7ec835d",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Align the managed image with the exact accepted validator release and bind the current scope documentation.",
-          "reviewed_code_fingerprint": "29a3bb14f6ae87598f90e276b72c584b9bfa667b0dae3f21ae3db8d5f746730d",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "de35df79f5fcbe9f0c9d8f5e57acc954dd36acddd11898bafd15cd2cc7ec835d",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -920,7 +928,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795222088Z"
+      "updated_at": "1795223163Z"
     },
     "trajectory": {
       "active_boundaries": [
