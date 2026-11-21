@@ -1833,6 +1833,8 @@ The Podman headless-launch regression creates its executable in a child process
 and waits for the writer to exit. Concurrent test processes cannot inherit a
 writable descriptor for the fixture. The regression asserts the launch arguments,
 closed standard input, and captured output.
+On the v0.156.2 workbranch, the hosted Linux offline fixture job ran that
+regression and finished with 1,925 passed, zero failed, and eight ignored.
 
 Lifecycle tests execute their temporary shell runtime only after a bounded, side-effect-free listing proves the fixture inode has no open writers. The probe retries Linux `ETXTBSY` only, for at most two seconds; other failures remain fatal. A Linux regression holds an actual write descriptor, verifies the kernel refusal, then releases it and requires successful execution. Production container mutation and error handling are unchanged. Publication reviews classify SECURITY.md as unchanged relative to the accepted PR base when its semantic content is identical, regardless of accepted upstream additions; current code fingerprints still bind that explicit review.
 

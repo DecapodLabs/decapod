@@ -843,6 +843,11 @@
       "id": "align-podman-fixture-1562",
       "summary": "Reconcile the fixture candidate with accepted v0.156.2 and its generated material",
       "input_digest": "sha256:cee9d92bcb504775a33279d12002c0caf02ca144ec21825d1f8ff55b9da95648"
+    },
+    {
+      "id": "sync-fixture-docker-pin",
+      "summary": "Converge generated Dockerfile with release and record the observed Linux fixture result",
+      "input_digest": "sha256:66eb2214f709e88e11719f1f5c25fe53547fe7cbd83907232659a8a3b034cadb"
     }
   ],
   "intents": {
@@ -921,11 +926,19 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4eec8f9792c19ad2e92ef23f0e79e8adc61b7b409e2f775e91e2b98f8e9bed15",
+      "artifact_hash": "sha256:e288dd2a38311dc26400db1863dcdd98d8d44314a10749d63a2889dfd801de20",
       "checks": [
         {
           "name": "fixture-formatting",
           "status": "passed"
+        },
+        {
+          "name": "linux-podman-fixture",
+          "status": "passed"
+        },
+        {
+          "name": "previous-actions-release-projection",
+          "status": "failed"
         },
         {
           "name": "prior-actions-podman-fixture",
@@ -968,10 +981,17 @@
             "intent_id": "intent:change_01M7XTN9CF3BNEA59Z9QQH5SPE",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7XTN9GGN8YGXRRY8DNV8T7X",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7XTN9CF3BNEA59Z9QQH5SPE",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7XTN9GGN8YGXRRY8DNV8T7X": {
@@ -1015,6 +1035,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Exact-head job 136691273384 passed the repaired Podman assertion and 1925 library tests. Hosted prerequisite validation caught the older Dockerfile pin. The official controller regenerated the v0.156.2 file; the Rust test is unchanged."
+                ],
+                "proof_refs": [
+                  "linux-podman-fixture",
+                  "previous-actions-release-projection"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "tests/unit/plugins/container_tests.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1023,12 +1062,14 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Exact-head job 136691273384 passed the repaired Podman assertion and 1925 library tests. Hosted prerequisite validation caught the older Dockerfile pin. The official controller regenerated the v0.156.2 file; the Rust test is unchanged.",
         "GitHub Actions job 136648909385 hit ETXTBSY in the Podman fixture. The new writer exits before the fixture runs. Exact-head Actions verification is pending.",
         "Run 44849492916 rejected the old accepted target before executing tests. Merged accepted 31f19a70 and used the checksum-verified official v0.156.2 tag workflow artifact. Parallel-fixture execution requires new Actions evidence."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7XTN9CF3BNEA59Z9QQH5SPE",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
         "tests/unit/plugins/container_tests.rs"
       ],
       "next_transitions": [
