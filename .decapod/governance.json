@@ -890,6 +890,14 @@
       "proof_refs": [
         "Accepted Decapod PR #1885 and exact 107-file source inventory comparison"
       ]
+    },
+    {
+      "id": "decapod-1837-official-v157-projections",
+      "summary": "Refresh committed projections using the checksum-verified v0.157.0 controller",
+      "input_digest": "sha256:bf55c56134d3b8508043d73344301c921a15f703f0fc84b4efc42a36ef0d0b0a",
+      "proof_refs": [
+        "CI observed release-bound projection drift before the official refresh"
+      ]
     }
   ],
   "intents": {
@@ -933,21 +941,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The accepted release changed version metadata and preserves the existing architecture.",
+          "reason": "The heartbeat retains current journal authority and generation fencing.",
           "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Task-lease heartbeat and ordinary renewal contracts.",
+          "reason": "Bind the authored interface changes to the candidate with the official release metadata.",
           "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
           "spec_material_hash": "46806bcd86ccd502d3930471ba7d0b847d258b579267fe7f08a489dd6b8dc972"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The accepted release changed version metadata and preserves the current security boundaries.",
+          "reason": "The heartbeat retains current journal authority and generation fencing.",
           "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
@@ -960,7 +968,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795236815Z"
+      "updated_at": "1795238048Z"
     },
     "trajectory": {
       "active_boundaries": [
