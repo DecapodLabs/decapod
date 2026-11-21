@@ -7,6 +7,8 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::Path;
 
+mod constitution_admission;
+
 // Every map here is a BTreeMap, not a HashMap. serde writes these maps into the
 // JSON that the binary embeds, and HashMap iteration order changes from build to
 // build, so identical inputs would give different binaries (#1176).
@@ -47,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed=assets/constitution.json");
     println!("cargo:rerun-if-changed=docs/agent/");
     println!("cargo:rerun-if-changed=assets/build/compress_constitution.rs");
+    println!("cargo:rerun-if-changed=assets/build/constitution_admission.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let out_dir = env::var("OUT_DIR")?;
@@ -59,6 +62,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let json_content = fs::read_to_string(&json_path)?;
+    constitution_admission::validate(&serde_json::from_str(&json_content)?)?;
     let mut graph: ConstitutionGraph = serde_json::from_str(&json_content)?;
 
     // Also ingest files from docs/agent/ directory

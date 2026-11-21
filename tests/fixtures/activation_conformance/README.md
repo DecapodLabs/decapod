@@ -13,9 +13,9 @@ Required evidence for a host run:
 - the task was claimed and work happened in a Decapod-managed workspace;
 - proof prerequisites blocked premature completion;
 - validation ran before completion;
-- the final workunit reached VERIFIED only after a passing proof result.
+- the final workunit reached VERIFIED only with native proof applicable to its exact task, candidate and accepted target; a declared prerequisite result is insufficient.
 
-The Rust integration test `activation_conformance` runs this same repository-native contract from a clean checkout and emits a JSON observation report on failure. External host runs should capture the equivalent observations using the schema in `result.schema.json` and attach the raw transcript or command receipts.
+The Rust integration test `activation_conformance` exercises deterministic discovery, context and custody boundaries from a clean checkout. Its diagnostic gate-skip flags and absent full readiness profile deliberately test refusal: project prerequisites and a self-declared passing result cannot establish VERIFIED completion. Its failure report is a diagnostic, not a real-host result or publication receipt. External host runs must meet the complete contract using `result.schema.json`; keep operational captures private and publish compact redacted observations and receipt identities. The opt-in pilot protocol and its amendments retain failures and unavailable observations separately.
 
 Host procedure:
 

@@ -137,6 +137,14 @@
         "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
         "status": "open"
       },
+      "claim:claim:recovery-release-proof": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
+        "status": "open"
+      },
       "claim:committed-scope-enforcement": {
         "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
         "proof_refs": [
@@ -850,6 +858,14 @@
       "proof_refs": [
         "Accepted source inventory comparison: b1001f942 versus 31f19a70e"
       ]
+    },
+    {
+      "id": "decapod-1881-20261120-master-reanchor",
+      "summary": "Integrate the accepted context changes and reviewed release inventory while preserving the snapshot fix",
+      "input_digest": "sha256:0a343f46d6b26c7ac65ccef44f0e67319ff7f733fec61fcf248fdd989bd1bcd9",
+      "proof_refs": [
+        "Accepted Decapod PR #1864 at d62e30ad7"
+      ]
     }
   ],
   "intents": {
@@ -900,9 +916,9 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The launch policy, snapshot location, and cleanup behavior are documented.",
-          "reviewed_code_fingerprint": "88ecab07cc9a2552942d8707a94b7b4cd14d99ccf3108f821d8f55f20e5657e8",
-          "spec_material_hash": "79cda83897e8fa51daa108a1eb0c834506bb390d548b49ad2f97f3d63227f1ae"
+          "reason": "Preserve the documented launch policy and snapshot lifecycle after accepting the new master context changes.",
+          "reviewed_code_fingerprint": "89a887cca4ccbe13f42784a79cefa518727c9608b17c0f1629707afab8a2da7b",
+          "spec_material_hash": "134d6a8cc059005c133ebc691634bcd7268a5bcd1b7ed4136fc7188e80d94319"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -920,7 +936,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795231204Z"
+      "updated_at": "1795231639Z"
     },
     "trajectory": {
       "active_boundaries": [

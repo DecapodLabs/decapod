@@ -46,3 +46,15 @@ The Constitution has a **global baseline**, with local policy layered separately
 The Constitution is community-contributable through **reviewed GitHub pull requests** to [Decapod](https://github.com/DecapodLabs/decapod). See [Contributing](https://github.com/DecapodLabs/decapod/blob/master/CONTRIBUTING.md) for the repository's review and proof expectations.
 
 Useful contributions strengthen a software-engineering or software-business golden path, document a relevant research result and its limitations, clarify an architectural tradeoff, or improve how agents retrieve applicable knowledge. Include sources and explain which engineering decisions the material improves. Changes affecting binding behavior also require compatibility and validation evidence.
+
+Corpus schema 3.1 and the existing compression build apply structural admission.
+Ordinary nodes remain advisory doctrine. Binding/router promotions must change
+the reviewed native admission registry and identify the owning control and PR
+review requirement. Declared guidance remains `not_machine_enforced`; native
+execution gates retain their own measured proof. Editing metadata or a review
+label cannot authenticate human approval or establish that a check passed.
+
+See [Constitution provenance](constitution-history.md) for reproducible source
+history, author testimony, external research dates and security/effectiveness
+limits. The global JSON corpus, early Markdown embedding, scoped retrieval and
+later provenance/gates have separate histories.
