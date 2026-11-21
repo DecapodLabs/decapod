@@ -874,6 +874,14 @@
       "proof_refs": [
         "Accepted Decapod PR #1864 at d62e30ad7"
       ]
+    },
+    {
+      "id": "decapod-1837-20261120-recheck-specs",
+      "summary": "Bind all required specification reviews to the exact candidate on current master",
+      "input_digest": "sha256:e017c18dd6cbfd257d57d6007e9f0d56dadad1fbde36ee94d70a19a197a71420",
+      "proof_refs": [
+        "Exact-head spec review recovery after integrating d62e30ad7"
+      ]
     }
   ],
   "intents": {
@@ -917,23 +925,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
-          "reviewed_code_fingerprint": "de35df79f5fcbe9f0c9d8f5e57acc954dd36acddd11898bafd15cd2cc7ec835d",
-          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
+          "reason": "The current task journal remains the authoritative lease store and workunit proof still binds custody.",
+          "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
+          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Describe the task lease heartbeat contract and preserve ordinary renewal fencing.",
+          "reason": "Document the lease heartbeat flag and generation fence after the accepted base change.",
           "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
           "spec_material_hash": "46806bcd86ccd502d3930471ba7d0b847d258b579267fe7f08a489dd6b8dc972"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
-          "reviewed_code_fingerprint": "de35df79f5fcbe9f0c9d8f5e57acc954dd36acddd11898bafd15cd2cc7ec835d",
-          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
+          "reason": "The heartbeat uses current same-holder and generation checks within the existing journal authorization.",
+          "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
+          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
       "state": "APPROVED",
@@ -944,7 +952,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795235063Z"
+      "updated_at": "1795235365Z"
     },
     "trajectory": {
       "active_boundaries": [
