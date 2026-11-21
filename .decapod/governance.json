@@ -872,6 +872,40 @@
     "base_commit": "b407e6177a779ddf3cabf176785416d978b1ad13",
     "target_base": "origin/master"
   },
+  "claims": {
+    "wave2-cloud-1835": {
+      "statement": "decapod cloud revoke attaches an enrolled Ed25519 DPoP proof signer on session logout while separating management revocation, DeviceKeyStore abstracts macOS Keychain, Linux Secret Service, and Windows DPAPI with mode-0600 fallback, and decapod cloud devices reports non-secret inventory plus bounded CloudMetadataWarning header notices.",
+      "falsifier": "Session logout succeeds without an enrolled DPoP signer, DeviceKeyInventory or logs emit private PKCS#8 bytes or bearer tokens, Linux/Windows keystore selectors silently reuse in-repo paths, or unredacted upstream headers propagate verbatim.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_supabase_boundary.rs::cloud_devices_reports_non_secret_inventory_and_surfaces_deprecation_warnings",
+        "tests/cloud_supabase_boundary.rs::cloud_revoke_supports_dpop_session_logout_management_revoke_and_retry_on_failure",
+        "tests/unit/core/cloud_dpop_tests.rs::cross_platform_keystore_backends_support_os_custody_and_strict_file_fallback",
+        "tests/unit/core/propodus_tests.rs::cloud_response_metadata_deprecation_and_sunset_warnings_are_bounded"
+      ]
+    },
+    "wave2-cloud-1836": {
+      "statement": "cloud_client explicitly maps quota_exceeded, overage_cap_exhausted, provider_disabled, and AdapterErrorKind::Quota under CloudAuthStatus/FailureKind::Authorization, and decapod cloud status --live reports authenticated resource_limits and spend-cap policy.",
+      "falsifier": "Any quota_exceeded, overage_cap_exhausted, or provider_disabled response collapses into generic ProviderUnavailable, leaks raw upstream error text, or decapod cloud status --live omits spend_cap_status or skips authentication.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_supabase_boundary.rs::live_cloud_status_reads_only_the_authenticated_spend_summary",
+        "tests/cloud_supabase_boundary.rs::quota_overage_and_provider_disabled_errors_surface_explicit_diagnostics",
+        "tests/unit/core/propodus_tests.rs::cloud_client_transport_error_maps_quota_overage_and_provider_disabled_codes"
+      ]
+    },
+    "wave2-cloud-1886": {
+      "statement": "Repositories whose accepted config selects backend=cloud execute workspace ensure, validate, container host-relay custody admission, and governed checks via hosted Dactyl/ProofControl transport without creating, reading, or mutating local .decapod/data/decapod.db.",
+      "falsifier": "Any Cloud workspace ensure, init refresh, validate, validation-worker, or plan-governance path initializes or mutates .decapod/data/decapod.db, admits a replacement container with mismatched Id, or accepts revoked/drifted/expired hosted custody.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_workspace_validation_1886.rs::accepted_cloud_workspace_ensure_and_validate_work_without_sqlite_under_conflicting_datastore",
+        "tests/cloud_workspace_validation_1886.rs::cloud_workspace_ensure_container_and_host_relay_preserve_isolation_and_refuse_tampering",
+        "tests/cloud_workspace_validation_1886.rs::repeated_workspace_ensure_reconciles_lost_bind_acknowledgement_via_get_operation",
+        "tests/unit/core/cloud_workspace_tests.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "wave2-impl",
@@ -884,6 +918,14 @@
       "input_digest": "sha256:9d1835ef810412ee789bf8eb37941dfc966299d4ffaa7888f01e0d961c6ec65a",
       "proof_refs": [
         "cargo test --locked --features supabase-cloud --lib (1970 passed; 8 ignored); core::migration (13 passed); 13 integration targets (115 passed; 4 ignored); clippy --all-targets --all-features (-D warnings); check --no-default-features (-D warnings); fmt --check"
+      ]
+    },
+    {
+      "id": "wave2-specs-governance",
+      "summary": "Update Living Specs, spec reviews, trajectory, and falsifiable claims for Wave 2 (#1836, #1835, #1886)",
+      "input_digest": "sha256:0ac757485401ee9c2a4c8a4f1dc200e68ffb6f83a568b43642c890185ae0e8be",
+      "proof_refs": [
+        "specs.refresh; cargo test --locked --features supabase-cloud --lib (1970 passed, 8 ignored); core::migration (13 passed); 13 integration targets (115 passed, 4 ignored); clippy --all-targets --all-features (-D warnings); check --no-default-features (-D warnings)"
       ]
     }
   ],
@@ -926,6 +968,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented Cloud Wave 2 architecture: quota/cap transport diagnostics, OS keystore backends, DeviceKeyInventory, signed revoke paths, HostCloudRelayHandler, and SQLite-free Cloud workspace/validation guards (#1836, #1835, #1886).",
+          "reviewed_code_fingerprint": "4a50c07e245be74c1bc87191efc0dc8e7ccb4448036f5eb0447aff65a7be0ee9",
+          "spec_material_hash": "cd94b17ce917d23e4abdadfc121f2badd96c85af11c96bda18ef91441c7afdae"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated Cloud Wave 2 interfaces for decapod cloud status --live, devices [--live], revoke [--session-logout|--local-only|--device-id], CloudAuthStatus quota/overage/provider_disabled mapping, and Cloud workspace/relay custody contracts (#1836, #1835, #1886).",
+          "reviewed_code_fingerprint": "4a50c07e245be74c1bc87191efc0dc8e7ccb4448036f5eb0447aff65a7be0ee9",
+          "spec_material_hash": "ea044136f529246b3c2e0573b15f849f6cf6de2efd2a3699247458b82e751a1f"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented Cloud Wave 2 security boundaries: external cross-platform OS key custody, DPoP logout isolation, bounded/redacted CloudMetadataWarning notices, immutable container ID relay verification, and zero decapod.db fallback (#1836, #1835, #1886).",
+          "reviewed_code_fingerprint": "4a50c07e245be74c1bc87191efc0dc8e7ccb4448036f5eb0447aff65a7be0ee9",
+          "spec_material_hash": "6ad4791978ddd39be2770c8e21ca080f1275a78fc9439e6c0e81ea64be4f8193"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Implement Decapod Wave 2 (#1836, #1835, #1886)",
@@ -934,15 +999,40 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795264933Z"
+      "updated_at": "1795272630Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3460b475f3aefdc1d275d4971dd6f3186cf565d7efb110aed1becf8a514dd838",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:cc01fbb20c5928711df45486f95c7197bce947f063610c679e1fedb3510c7342",
+      "checks": [
+        {
+          "name": "cargo_clippy_all_targets",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt_check",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_wave2_integration_suites",
+          "status": "passed"
+        },
+        {
+          "name": "migration_validation",
+          "status": "passed"
+        },
+        {
+          "name": "no_default_features_check",
+          "status": "passed"
+        },
+        {
+          "name": "unit_tests_lib_supabase_cloud",
+          "status": "passed"
+        }
+      ],
+      "current_phase": "verify",
       "custody": {
         "events": [
           {
@@ -956,20 +1046,112 @@
             "intent_id": "intent:change_01M7Z20F24XVZ8N02XPQXN0C9W",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_01M7Z20F5YKJE2AN3HGHQ4YPBB",
+            "event_id": "event:4",
+            "intent_id": "intent:change_01M7Z20F24XVZ8N02XPQXN0C9W",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_01M7Z20F5YKJE2AN3HGHQ4YPBB": {
+            "evidence_only": true,
+            "id": "branch_01M7Z20F5YKJE2AN3HGHQ4YPBB",
+            "intent_id": "intent:change_01M7Z20F24XVZ8N02XPQXN0C9W",
+            "steps": [
+              {
+                "action": "verify",
+                "command": "cargo check --locked --no-default-features --lib (RUSTFLAGS=-D warnings)",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/propodus.rs",
+                  "src/decapod/core/container_runtime.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/propodus.rs",
+                  "src/decapod/core/container_runtime.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "tests/cloud_workspace_validation_1886.rs",
+                  "tests/cloud_supabase_boundary.rs",
+                  "tests/unit/core/cloud_dpop_tests.rs",
+                  "tests/unit/core/cloud_workspace_tests.rs",
+                  "tests/unit/core/propodus_tests.rs",
+                  "Merged origin/master (#1901, #1902 v0.159.0) cleanly; check --no-default-features (-D warnings) passed; fmt --check passed; clippy --all-targets --all-features (-D warnings) passed; --lib 1970 passed (8 ignored); core::migration 13/13 passed; cloud_supabase_boundary 52/52; cloud_workspace_validation_1886 4/4; cloud_wave_parity 5/5; policy_self_authorization_1776 9/9."
+                ],
+                "proof_refs": [
+                  "no_default_features_check",
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "unit_tests_lib_supabase_cloud",
+                  "migration_validation",
+                  "cloud_wave2_integration_suites"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "src/decapod",
+                  "tests"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo check --locked --no-default-features --lib (RUSTFLAGS=-D warnings)",
+        "cargo fmt --all -- --check",
+        "cargo test --locked --features supabase-cloud --lib (1970 passed; 8 ignored)",
+        "cargo test --locked --features supabase-cloud --test cloud_supabase_boundary --test cloud_wave_parity --test cloud_workspace_validation_1886 --test cloud_cli_boundary --test cloud_mixed_worktree --test policy_self_authorization_1776 (+7 targets)",
+        "cargo test --locked --lib core::migration (13 passed)"
+      ],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
+      "evidence": [
+        "Merged origin/master (#1901, #1902 v0.159.0) cleanly; check --no-default-features (-D warnings) passed; fmt --check passed; clippy --all-targets --all-features (-D warnings) passed; --lib 1970 passed (8 ignored); core::migration 13/13 passed; cloud_supabase_boundary 52/52; cloud_workspace_validation_1886 4/4; cloud_wave_parity 5/5; policy_self_authorization_1776 9/9."
+      ],
+      "inspected_files": [
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/container_runtime.rs",
+        "src/decapod/core/propodus.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/plan_governance.rs"
+      ],
       "intent_id": "intent:change_01M7Z20F24XVZ8N02XPQXN0C9W",
-      "modified_files": [],
+      "modified_files": [
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/container_runtime.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/propodus.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plan_governance.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/cloud_workspace_validation_1886.rs",
+        "tests/unit/core/cloud_dpop_tests.rs",
+        "tests/unit/core/cloud_workspace_tests.rs",
+        "tests/unit/core/propodus_tests.rs"
+      ],
       "next_transitions": [
+        "Checkpoint specs and run decapod validate (Buildkite)",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
