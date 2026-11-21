@@ -514,3 +514,245 @@ fn diagnose_task_includes_todo_scoped_tmp_cleanup_when_ready_to_publish() {
     assert!(guidance.contains("wildcard or root-level deletion of /tmp"));
     assert!(guidance.contains("/tmp/decapod"));
 }
+
+#[test]
+fn scoped_validation_diagnostics_ignore_ttl_low_advisory_and_expose_execution_state_change() {
+    let detail = "Validation error: EXECUTION_STATE_CHANGED: EXECUTION_POLICY_CHANGED: source, plan, intent, boundaries, policy or required approval changed; review the change and create a fresh checkpoint (`decapod govern workunit checkpoint --task-id code_01m7yeeq4kzbm5q8 --operation-id <id>` or `decapod govern trajectory checkpoint --run-id run_01 --checkpoint-id <id>`), private_path=/Users/secret/repo";
+    let child_json = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "publication_ready": false,
+        "report": {
+            "status": "fail",
+            "fail_count": 1,
+            "failures": [
+                format!("publication_readiness: READINESS_BLOCKED: {detail}")
+            ]
+        },
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": detail
+            }]
+        }
+    });
+    let stderr_warning = b"VALIDATION_LEASE_TTL_LOW: remaining task claim lease (3590s) for 'code_01m7yeeq4kzbm5q8' is shorter than the validation budget (7500s); validation continues without mutating custody, but a lease that expires mid-run fails with VALIDATION_HISTORY_TASK_STALE; run `decapod todo renew --id code_01m7yeeq4kzbm5q8 --lease-seconds 7500` and refresh any workunit/governance checkpoint before running validation\n";
+
+    let diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&child_json).unwrap().as_bytes(),
+        stderr_warning,
+    );
+    assert_eq!(diag.stage, Some("readiness"));
+    assert_eq!(diag.scope, Some("repository_local_readiness"));
+    assert_eq!(
+        diag.labels,
+        vec![
+            "EXECUTION_POLICY_CHANGED",
+            "EXECUTION_STATE_CHANGED",
+            "READINESS_BLOCKED"
+        ]
+    );
+    assert!(
+        !diag.labels.contains(&"VALIDATION_HISTORY_TASK_STALE"),
+        "TTL advisory prose on stderr must never inject VALIDATION_HISTORY_TASK_STALE: {diag:?}"
+    );
+    assert!(!diag.message.contains("/Users/secret/repo"));
+    assert!(diag.message.len() < 1024);
+
+    // Non-JSON fallback must also filter VALIDATION_LEASE_TTL_LOW advisory lines.
+    let non_json_diag = super::extract_safe_validation_diagnostic(
+        b"I/O error: Validation error: EXECUTION_STATE_CHANGED: EXECUTION_TASK_CUSTODY_CHANGED: lease rotated secret=hidden",
+        stderr_warning,
+    );
+    assert!(
+        !non_json_diag
+            .labels
+            .contains(&"VALIDATION_HISTORY_TASK_STALE"),
+        "non-JSON fallback must ignore VALIDATION_LEASE_TTL_LOW prose: {non_json_diag:?}"
+    );
+    assert!(
+        non_json_diag
+            .labels
+            .contains(&"EXECUTION_TASK_CUSTODY_CHANGED"),
+        "{non_json_diag:?}"
+    );
+    assert!(
+        !non_json_diag.message.contains("hidden"),
+        "{non_json_diag:?}"
+    );
+}
+
+#[test]
+fn scoped_validation_diagnostics_distinguish_all_task_history_and_unbound_preconditions() {
+    let stale_cases = [
+        (
+            "TASK_PROOF_PLAN_MALFORMED",
+            "malformed declared task proof plan",
+        ),
+        ("TASK_PROOF_PLAN_EMPTY", "empty declared task proof plan"),
+        (
+            "TASK_HISTORY_CHECKPOINT_MISSING",
+            "missing canonical task history",
+        ),
+        (
+            "TASK_LIVE_JOURNAL_DRIFT",
+            "live task differs from its journal",
+        ),
+        (
+            "TASK_CHANGED_DURING_VALIDATION",
+            "task changed during validation",
+        ),
+        (
+            "TASK_LEASE_EXPIRED_OR_RELEASED",
+            "live validation custody expired or was released before archival",
+        ),
+        (
+            "TASK_ADVANCED_DURING_VALIDATION",
+            "task advanced during validation",
+        ),
+        (
+            "TASK_CAPTURED_IDENTITY_MISMATCH",
+            "captured task identity differs",
+        ),
+        (
+            "TASK_CAPTURED_CHECKPOINT_ABSENT",
+            "captured checkpoint is absent",
+        ),
+        (
+            "TASK_CHRONOLOGY_RESTORED_OR_GAPPED",
+            "restored or incomplete chronology requires new proof",
+        ),
+        (
+            "TASK_LIFECYCLE_CUSTODY_CHANGED",
+            "task intent, dependency, custody or chronology changed",
+        ),
+        ("TASK_CUSTODY_REACQUIRED", "released custody was reacquired"),
+        (
+            "TASK_ARCHIVED_REQUIRES_HISTORY",
+            "archived tasks require their existing completion history",
+        ),
+    ];
+
+    for (subcode, detail) in stale_cases {
+        let blocker_detail = format!(
+            "Validation error: VALIDATION_HISTORY_TASK_STALE: {subcode}: {detail}; secret=/private/db"
+        );
+        let doc = serde_json::json!({
+            "status": "fail",
+            "scope": "publication_readiness",
+            "report": {
+                "status": "fail",
+                "fail_count": 1,
+                "failures": [format!("publication_readiness: READINESS_BLOCKED: {blocker_detail}")]
+            },
+            "readiness": {
+                "scope": "repository_local_readiness",
+                "ready": false,
+                "proof_ready": false,
+                "blockers": [{
+                    "code": "READINESS_BLOCKED",
+                    "detail": blocker_detail
+                }]
+            }
+        });
+        let diag = super::extract_safe_validation_diagnostic(
+            serde_json::to_string(&doc).unwrap().as_bytes(),
+            b"",
+        );
+        assert_eq!(diag.stage, Some("readiness"), "subcode={subcode}");
+        assert_eq!(
+            diag.scope,
+            Some("repository_local_readiness"),
+            "subcode={subcode}"
+        );
+        assert_eq!(
+            diag.labels,
+            vec![
+                subcode,
+                "VALIDATION_HISTORY_TASK_STALE",
+                "READINESS_BLOCKED"
+            ],
+            "subcode={subcode}"
+        );
+        assert!(!diag.message.contains("/private/db"));
+        assert!(diag.message.len() < 1024);
+    }
+
+    let unbound_cases = [
+        ("TASK_MISSING", "missing task"),
+        (
+            "TASK_HISTORY_CHECKPOINT_MISSING",
+            "no complete canonical task checkpoint",
+        ),
+        (
+            "TASK_LIVE_JOURNAL_DRIFT",
+            "live task differs from its journal",
+        ),
+        (
+            "TASK_EXCLUSIVE_CUSTODY_REQUIRED",
+            "validation requires current exclusive task custody",
+        ),
+    ];
+    for (subcode, detail) in unbound_cases {
+        let blocker_detail = format!(
+            "I/O error: Validation error: VALIDATION_HISTORY_TASK_UNBOUND: {subcode}: {detail}; path=/tmp/secret"
+        );
+        let doc = serde_json::json!({
+            "status": "fail",
+            "scope": "publication_readiness",
+            "readiness": {
+                "scope": "source_pr_readiness",
+                "ready": false,
+                "proof_ready": false,
+                "blockers": [{
+                    "code": "READINESS_BLOCKED",
+                    "detail": blocker_detail
+                }]
+            }
+        });
+        let diag = super::extract_safe_validation_diagnostic(
+            serde_json::to_string(&doc).unwrap().as_bytes(),
+            b"",
+        );
+        assert_eq!(diag.stage, Some("readiness"), "subcode={subcode}");
+        assert_eq!(diag.scope, Some("source_pr_readiness"), "subcode={subcode}");
+        assert_eq!(
+            diag.labels,
+            vec![
+                subcode,
+                "VALIDATION_HISTORY_TASK_UNBOUND",
+                "READINESS_BLOCKED"
+            ],
+            "subcode={subcode}"
+        );
+        assert!(!diag.message.contains("/tmp/secret"));
+    }
+
+    let incomplete_journal = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": "Validation error: TASK_JOURNAL_INCOMPLETE_HISTORY: uncheckpointed domain-event suffix for code_secret"
+            }]
+        }
+    });
+    let diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&incomplete_journal)
+            .unwrap()
+            .as_bytes(),
+        b"",
+    );
+    assert_eq!(
+        diag.labels,
+        vec!["TASK_JOURNAL_INCOMPLETE_HISTORY", "READINESS_BLOCKED"]
+    );
+    assert!(!diag.message.contains("code_secret"));
+}

@@ -197,7 +197,7 @@ pub(crate) fn ensure_validation_lease_ttl(
                 row
             else {
                 return Err(error::DecapodError::ValidationError(
-                    "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody".into(),
+                    "VALIDATION_HISTORY_TASK_UNBOUND: TASK_EXCLUSIVE_CUSTODY_REQUIRED: validation requires current exclusive task custody".into(),
                 ));
             };
             if assigned_to.is_empty()
@@ -209,7 +209,7 @@ pub(crate) fn ensure_validation_lease_ttl(
                     != fleet_coord::LeaseState::Active
             {
                 return Err(error::DecapodError::ValidationError(
-                    "VALIDATION_HISTORY_TASK_UNBOUND: validation requires current exclusive task custody".into(),
+                    "VALIDATION_HISTORY_TASK_UNBOUND: TASK_EXCLUSIVE_CUSTODY_REQUIRED: validation requires current exclusive task custody".into(),
                 ));
             }
             let expires_secs = lease_expires_at
@@ -223,7 +223,7 @@ pub(crate) fn ensure_validation_lease_ttl(
         return Ok(ValidationLeaseTtl::Sufficient { remaining_secs });
     }
     let renew_hint = format!(
-        "run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` and refresh any workunit/governance checkpoint before running validation"
+        "run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` and refresh any workunit/governance checkpoint before running validation; e.g. `decapod govern workunit checkpoint --task-id {task_id} --operation-id <id>`"
     );
     match mode {
         ValidationLeaseTtlMode::Warn => {
