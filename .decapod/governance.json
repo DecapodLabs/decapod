@@ -898,6 +898,11 @@
       "id": "sync-v1562-issue-1832",
       "summary": "Reconcile the accepted v0.156.2 release and refresh the measured repository projections",
       "input_digest": "sha256:1e963ef1df91af8690de36a455fdbe2bd0ef4efc10d112fdad816eee4a33dbd0"
+    },
+    {
+      "id": "sync-1864-issue-1832",
+      "summary": "Reconcile accepted master after the context and native host changes",
+      "input_digest": "sha256:c901990b1c44f8cf242a78dc42c1bb7f44728884ea58eae96d772fdb01ddfe92"
     }
   ],
   "intents": {
@@ -939,23 +944,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture with the accepted v0.156.2 snapshot",
-          "reviewed_code_fingerprint": "ac330c1c04ab804644f9fb3b025bdd7b083dc88a78a58a849fd30a28e850aeef",
-          "spec_material_hash": "90afa10536338a20d2632bedf518a03c6d182c265acecc74bcb232ade4866e14"
+          "reason": "Reviewed the branch architecture after accepting the upstream host and context changes",
+          "reviewed_code_fingerprint": "e926a0569a54df983b3951f3777dbdd58452c886edd24b2163fdea61ad223fc1",
+          "spec_material_hash": "0e2bdacc77044a5159768a8e8e77ab7b0f8eba6e5aa5838a96bfae8363c885e2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces with the accepted v0.156.2 snapshot",
-          "reviewed_code_fingerprint": "ac330c1c04ab804644f9fb3b025bdd7b083dc88a78a58a849fd30a28e850aeef",
-          "spec_material_hash": "0db3885a54f2ee77a2789b25965de465e47346df1478bf89cc859a9fcc8e64e4"
+          "reason": "Reviewed the branch interfaces against the new accepted target",
+          "reviewed_code_fingerprint": "e926a0569a54df983b3951f3777dbdd58452c886edd24b2163fdea61ad223fc1",
+          "spec_material_hash": "f90f8fa593eb57983c3ee1b75157cb8251b63a39490b508a5beeea2190aece6e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the branch security contract with the accepted v0.156.2 snapshot",
-          "reviewed_code_fingerprint": "ac330c1c04ab804644f9fb3b025bdd7b083dc88a78a58a849fd30a28e850aeef",
-          "spec_material_hash": "d9ade5825045e5f2e6a38950afb46665f947f1de0ede34c0df99eb82a2afb8cd"
+          "reason": "Reviewed the publication security contract against the new accepted target",
+          "reviewed_code_fingerprint": "e926a0569a54df983b3951f3777dbdd58452c886edd24b2163fdea61ad223fc1",
+          "spec_material_hash": "7d1b1c1950585d420d4ee6a0a138eb9665f8ba3a17de33af5715d494553849d3"
         }
       ],
       "state": "APPROVED",
@@ -966,7 +971,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795225752Z"
+      "updated_at": "1795232422Z"
     },
     "trajectory": {
       "active_boundaries": [

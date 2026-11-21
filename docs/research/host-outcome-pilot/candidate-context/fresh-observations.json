@@ -1,0 +1,58 @@
+{
+  "schema": "decapod.private-candidate-pilot-observations.v1",
+  "kernel_kind": "unreleased candidate binary; not the independently released production controller",
+  "production_source_candidate": "f68666f74fe2a49e30b84d350e1daa5d9542ff37",
+  "evidence_authentication": "producer declarations plus local operational captures; no provider authentication",
+  "setup_clock_scope": "after initial filesystem/runtime freeze; initial copy preparation not timed",
+  "sampling": "two predeclared arms, baseline then governed, one task each; no efficacy inference",
+  "conditioning": "fresh ephemeral host sessions; both source states were independently compiled before launch; warm/cold cache not randomized",
+  "limits": [
+    "static guidance arms unrun",
+    "warm persistent-host workflow unrun",
+    "active human attention and semantic question classification not reviewed",
+    "all-in setup cost incomplete",
+    "monetary cost and model-call count unavailable",
+    "current independently admitted completion not established",
+    "operator-selected A is a fixture input, not authenticated human policy"
+  ],
+  "observations": [
+    {
+      "arm": "baseline",
+      "class": "operator_analysis_of_real_host_operational_events",
+      "host_and_kernel_identity_stable": true,
+      "completed_command_executions": 5,
+      "tool_count_coverage": "CLI commands only; not a complete all-tool count",
+      "failed_test_event_indices": [
+        10
+      ],
+      "passing_test_event_indices": [
+        15
+      ],
+      "reasoning_output_tokens_reported": 9,
+      "selected_knowledge_text_bytes": null,
+      "selected_knowledge_source_hash": null,
+      "context_delivery_to_provider": "unobserved",
+      "candidate_source_hash_scope": "src/lib.rs bytes only; commit/dirty recorded separately",
+      "native_completion_record": "not_applicable"
+    },
+    {
+      "arm": "governed",
+      "class": "operator_analysis_of_real_host_operational_events",
+      "host_and_kernel_identity_stable": true,
+      "completed_command_executions": 38,
+      "tool_count_coverage": "CLI commands only; not a complete all-tool count",
+      "failed_test_event_indices": [
+        54
+      ],
+      "passing_test_event_indices": [
+        84
+      ],
+      "reasoning_output_tokens_reported": 348,
+      "selected_knowledge_text_bytes": 222,
+      "selected_knowledge_source_hash": "6c869db59b9ecd2b2abef4586c278165c9898822f363f24311314c7fb57738f6",
+      "context_delivery_to_provider": "unobserved",
+      "candidate_source_hash_scope": "src/lib.rs bytes only; commit/dirty recorded separately",
+      "native_completion_record": "absent"
+    }
+  ]
+}

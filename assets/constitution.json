@@ -1,6 +1,6 @@
 {
   "$schema": "./schemas/constitution.schema.json",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "nodes": {
     "core/DECAPOD": {
       "id": "core/DECAPOD",
@@ -217,6 +217,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/SCAFFOLDING": {
@@ -419,6 +425,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/ARCHITECTURE": {
@@ -664,6 +676,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/DOCS": {
@@ -858,6 +876,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/INTERFACES": {
@@ -1077,6 +1101,12 @@
           "Issue or PR evidence states that untrusted external attachments were not executed or imported.",
           "Release evidence identifies the contract version and proves that deprecated adapters are removed or remain within the recorded migration window."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/METHODOLOGY": {
@@ -1286,6 +1316,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/PLUGINS": {
@@ -1496,6 +1532,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/SPECS": {
@@ -1557,7 +1599,8 @@
         ],
         "apply": [
           "When a spec constrains action, carry the constraint into the plan before implementation inference.",
-          "Spec changes need compatibility reasoning, affected surfaces, migration path, and validation evidence."
+          "Spec changes need compatibility reasoning, affected surfaces, migration path, and validation evidence.",
+          "Global corpus contributions remain advisory unless the admission registry and owning control explicitly admit binding authority through repository PR review. Source metadata, research prose and retrieval rank never attest that a native gate executed."
         ],
         "avoid": [
           "Do not bypass a binding spec because a local change is easy.",
@@ -1690,6 +1733,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/METADATA": {
@@ -1875,6 +1924,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/ENGINEERING_EXCELLENCE": {
@@ -2449,6 +2504,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/DEPRECATION": {
@@ -2625,6 +2686,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "core/EMERGENCY_PROTOCOL": {
@@ -2802,6 +2869,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "architecture/ALGORITHMS": {
@@ -20400,7 +20473,8 @@
         "references": [
           "core/METHODOLOGY",
           "methodology/RESEARCH_PRODUCTION",
-          "core/RESEARCH"
+          "core/RESEARCH",
+          "research/REPOSITORY_CONTEXT_2026"
         ],
         "referenced_by": [
           "core/METHODOLOGY"
@@ -27643,6 +27717,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "data/DATA_ENGINEERING": {
@@ -45763,7 +45843,8 @@
           "research/WORD2VEC_2013",
           "research/YOLO_2016",
           "research/ZFS_2003",
-          "research/ZOOKEEPER_2010"
+          "research/ZOOKEEPER_2010",
+          "research/REPOSITORY_CONTEXT_2026"
         ],
         "referenced_by": [
           "core/DECAPOD",
@@ -45922,6 +46003,12 @@
           "Generated specs are refreshed when core doctrine changes route behavior or proof expectations.",
           "Issue or PR evidence states that untrusted external attachments were not executed or imported."
         ]
+      },
+      "authority_review": {
+        "control_id": "core/SPECS",
+        "required_review": "repository_pr_review",
+        "enforcement": "not_machine_enforced",
+        "basis": "https://github.com/DecapodLabs/decapod/commit/6ab6de3134286a790d78d370ca3fb43c0d92f834"
       }
     },
     "methodology/STRATEGIC_DECISION": {
@@ -47485,6 +47572,194 @@
         "release": [
           "Generated specs or issue evidence are refreshed when methodology doctrine changes accepted scope, routes, or proof expectations.",
           "Release evidence states any validation caveat, environmental blocker, or intentionally deferred risk."
+        ]
+      }
+    },
+    "research/REPOSITORY_CONTEXT_2026": {
+      "id": "research/REPOSITORY_CONTEXT_2026",
+      "category": "research",
+      "title": "Evaluating AGENTS.md: repository context experiments (2026)",
+      "authority": "doctrine",
+      "binding": "advisory",
+      "summary": "Advisory empirical context-file research, arXiv:2602.11988v3. It studies coding-agent tasks and inference cost, not Decapod governance or universal context-poisoning mechanisms.",
+      "architect_notes": [
+        "Separate observed task outcomes from proposed explanations for why an agent followed a file.",
+        "Measure the complete treatment, including unsuccessful attempts and verification overhead; a smaller prompt is not an outcome."
+      ],
+      "init_questions": [
+        {
+          "id": "comparison",
+          "prompt": "Which repository-context treatment and task outcome are being compared?",
+          "why": "An explicit treatment prevents mixing file effects with host, model or task changes.",
+          "answers": [
+            "no context file",
+            "human-written file",
+            "generated static file",
+            "on-demand context"
+          ]
+        },
+        {
+          "id": "acceptance",
+          "prompt": "Who independently checks the final candidate and what observations remain unavailable?",
+          "why": "A model claim or token count cannot establish accepted work.",
+          "answers": [
+            "fixed checker",
+            "native proof",
+            "independent review",
+            "unobserved"
+          ]
+        }
+      ],
+      "decision_matrix": [
+        {
+          "choice": "retain a scoped instruction",
+          "use_when": "A concrete nonstandard repository practice matters to this task.",
+          "avoid_when": "Its status or applicability is unknown.",
+          "implications": "Identify the source and compare outcomes before generalizing."
+        },
+        {
+          "choice": "run a paired pilot",
+          "use_when": "The proposed context treatment can be held apart from task and host changes.",
+          "avoid_when": "Only selected successful examples or synthetic traces are available.",
+          "implications": "Predeclare arms, independent acceptance and missing measurements."
+        },
+        {
+          "choice": "report an unresolved comparison",
+          "use_when": "Authentication, custody, delivery or cost observation is unavailable.",
+          "avoid_when": "The missing boundary can be directly inspected through its existing owner.",
+          "implications": "Retain failed attempts and state the precise limit; do not synthesize a gain."
+        }
+      ],
+      "tradeoffs": [
+        {
+          "axis": "context coverage and applicability",
+          "option_a": "Preserve broad durable reference material.",
+          "option_b": "Deliver only current relevant slices for the task.",
+          "guidance": "Evaluate the selected projection; corpus size and injected context are different measurements."
+        },
+        {
+          "axis": "measurement effort and claim strength",
+          "option_a": "Use a small diagnostic pilot with explicit unknowns.",
+          "option_b": "Invest in controlled repeated trials and independent acceptance.",
+          "guidance": "Scale the conclusion to the observations; do not manufacture precision from incomplete samples."
+        }
+      ],
+      "scaffolding": {
+        "capture": [
+          "Record treatment, source/base, host/model, task, context identity and independent acceptance before comparing results."
+        ],
+        "generate": [
+          "Produce a compact comparison retaining unsuccessful trials and null values for unobserved cost or attention."
+        ],
+        "defer": [
+          "Defer causal or efficiency claims when treatment identity, model delivery or acceptance is unresolved."
+        ],
+        "proof": [
+          "Compare completed task behavior independently; a passing retrieval fixture establishes projection semantics only."
+        ]
+      },
+      "spec_impacts": {
+        "intent": [
+          "State the engineering decision the comparison informs without treating the paper as user authorization."
+        ],
+        "architecture": [
+          "Reuse the existing context and proof owners instead of adding another policy or memory framework."
+        ],
+        "interfaces": [
+          "Distinguish delivered context, host declarations, observed invocations and verified final state."
+        ],
+        "proof": [
+          "Keep diagnostic fixtures, real-host observations and independently checked outcomes separate."
+        ]
+      },
+      "proof": {
+        "static": [
+          "Check citation/version, advisory metadata, source links and lookup reachability."
+        ],
+        "runtime": [
+          "Exercise actual task acceptance and error/degraded paths when evaluating a context treatment."
+        ],
+        "release": [
+          "Require the repository normal review and exact-candidate proof; this research node adds no required validation gate."
+        ]
+      },
+      "research_doctrine": {
+        "authors": [
+          "Thibaud Gloaguen",
+          "Niels Mündler-Sasahara",
+          "Mark Niklas Müller",
+          "Veselin Raychev",
+          "Martin Vechev"
+        ],
+        "year": 2026,
+        "domain": "Empirical software engineering and coding-agent repository context",
+        "research_question": "How do repository-level context files affect coding-agent task completion and inference cost in the evaluated settings?",
+        "contribution": "The reported tasks do not show a general success benefit from context files and incur additional inference cost. This is empirical evidence within those evaluated conditions.",
+        "mechanism": "Comparative task experiments observe behavior and cost; they do not establish a transformer attention or cache mechanism for persistent rejected premises.",
+        "engineering_translation": [
+          "Specify each context treatment before the trial.",
+          "Use an independent task checker and preserve incomplete or failed runs.",
+          "Keep human attention, runtime and model usage distinct, with nulls for missing observations."
+        ],
+        "limitations": [
+          "The paper does not evaluate Decapod.",
+          "The reported workload, agents and model versions do not establish behavior for every host or repository.",
+          "A citation neither authenticates a human decision nor proves that a particular model consumed a context packet."
+        ],
+        "modern_parallels": [
+          "Compare nonstandard repository instructions with the task current source and policy.",
+          "Distinguish repository recovery from conversation replay or provider-cache claims.",
+          "Treat software-productivity analogies as hypotheses requiring their own measurements."
+        ],
+        "misreadings": [
+          "More concise context is not automatically more effective.",
+          "Instruction following is not independently accepted engineering work.",
+          "A research result does not become a binding repository directive through retrieval rank."
+        ],
+        "related_nodes": [
+          "research/BROOKS_1986",
+          "research/END_TO_END_1984",
+          "research/COT_2022"
+        ],
+        "retrieval": {
+          "match": [
+            "Retrieve for a concrete repository-context experiment or interpretation of context-file cost claims."
+          ],
+          "avoid": [
+            "Avoid generic background injection when the task does not concern context evaluation."
+          ],
+          "next_queries": [
+            "Query the current context, authority and independent proof owners for the actual repository."
+          ]
+        }
+      },
+      "terms": [
+        "agents.md evaluation",
+        "repository context experiment",
+        "coding-agent context files",
+        "context treatment cost",
+        "independent task acceptance"
+      ],
+      "links": {
+        "references": [
+          "methodology/RESEARCH"
+        ],
+        "referenced_by": [
+          "methodology/RESEARCH"
+        ]
+      },
+      "sections": {
+        "context": [
+          "Citation: https://arxiv.org/abs/2602.11988v3 (2026-09-29). Source metadata and evaluated scope should accompany any result claim."
+        ],
+        "concepts": [
+          "Context treatments, independent acceptance, inference cost and applicability are separate observations."
+        ],
+        "impact": [
+          "Use the study to motivate evaluation of a proposed context treatment; it does not certify this implementation."
+        ],
+        "relevance": [
+          "Useful when designing repository-context pilots and distinguishing measured outcomes from context-file recommendations."
         ]
       }
     }
@@ -52341,6 +52616,9 @@
     ],
     "executive recommendation": [
       "methodology/EXECUTIVE_ALIGNMENT"
+    ],
+    "agents.md evaluation": [
+      "research/REPOSITORY_CONTEXT_2026"
     ]
   }
 }

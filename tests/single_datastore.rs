@@ -119,6 +119,11 @@ fn legacy_stream_sequences_are_normalized_around_existing_unique_index() {
         [],
     )
     .unwrap();
+    conn.execute_batch(
+        "CREATE TABLE other_stream (stream TEXT, seq INTEGER);
+         CREATE UNIQUE INDEX other_stream_seq ON other_stream(stream, seq);",
+    )
+    .unwrap();
     conn.execute(
         "INSERT INTO events(event_id, ts, seq, stream, event_type, payload, actor)
          VALUES('canonical-1', '2026-01-01T00:00:00Z', 1, 'broker', 'op', '{}', 'test')",
@@ -160,6 +165,9 @@ fn legacy_stream_sequences_are_normalized_around_existing_unique_index() {
         index.name == "idx_events_stream_seq_unique"
             && index.unique
             && index.columns == ["stream", "seq"]
+    }));
+    assert!(schema.indexes.iter().any(|index| {
+        index.name == "other_stream_seq" && index.table == "other_stream" && index.unique
     }));
 }
 
