@@ -870,6 +870,14 @@
       "proof_refs": [
         "native-proof-shared-bytes"
       ]
+    },
+    {
+      "id": "publisher-v1570-base",
+      "summary": "Integrate the accepted v0.157.0 release and refresh its managed pins",
+      "input_digest": "sha256:20af6646d63ddec1f93d9555daef65aae29ac478ad4aed3bbb8538d9126944fc",
+      "proof_refs": [
+        "accepted-release-metadata-only"
+      ]
     }
   ],
   "intents": {
@@ -915,22 +923,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Defines the lifetime of shared byte observations during final publication verification.",
-          "reviewed_code_fingerprint": "d183bb89cd7b3a0ada4b5223f516ed7a5f9c67a72bb16a1ba04aa569a920500d",
+          "reason": "Retains the documented per-capture measurement behavior on the accepted release base.",
+          "reviewed_code_fingerprint": "950b219db522ddaca7ccb7060f088df1a895c145ce62f56c794be7190ad35d42",
           "spec_material_hash": "8ca6f633deaa1ad0632c359d2f88759d7966981950efcdcd4e73b9f07f318482"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Specifies unchanged digest identity and bounds for shared toolchain inputs.",
-          "reviewed_code_fingerprint": "d183bb89cd7b3a0ada4b5223f516ed7a5f9c67a72bb16a1ba04aa569a920500d",
+          "reason": "Retains the exact per-check binding and scope contract on the new release base.",
+          "reviewed_code_fingerprint": "950b219db522ddaca7ccb7060f088df1a895c145ce62f56c794be7190ad35d42",
           "spec_material_hash": "9642e0c745c51e16bffde6fe6aa46d027fb28baec9fab7ee7bab8138942c7bec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Per-check bindings, native file validation, freshness boundaries and remote assurance remain enforced.",
-          "reviewed_code_fingerprint": "d183bb89cd7b3a0ada4b5223f516ed7a5f9c67a72bb16a1ba04aa569a920500d",
+          "reason": "The release base changes Cargo metadata and changelog; publication authority and security invariants are unchanged.",
+          "reviewed_code_fingerprint": "950b219db522ddaca7ccb7060f088df1a895c145ce62f56c794be7190ad35d42",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -942,14 +950,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795232030Z"
+      "updated_at": "1795237664Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c92f2fb653f0c2a782f9c44d4bda6148e05eae10bc7c04063413bbd295b5c714",
+      "artifact_hash": "sha256:64efe0af084dc8f9eb619537dd785be53e033efbfa37e00ffd65d35daca11db4",
       "checks": [
+        {
+          "name": "accepted-release-metadata-only",
+          "status": "passed"
+        },
         {
           "name": "native-proof-shared-bytes",
           "status": "passed"
@@ -976,10 +988,17 @@
             "intent_id": "intent:change_01M7Y285K6VEWRB8V3MK8NYRV4",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Y285Q0GCYPX5XYNT1Q78X4",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Y285K6VEWRB8V3MK8NYRV4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y285Q0GCYPX5XYNT1Q78X4": {
@@ -1004,6 +1023,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Compared accepted v0.156.2 base d62e30ad7 with new master 146a00f41. The three changed files are CHANGELOG.md, Cargo.lock, and Cargo.toml. Current managed pins came from the digest-verified v0.157.0 release workflow binary."
+                ],
+                "proof_refs": [
+                  "accepted-release-metadata-only"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "src/decapod/core/native_proof.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1012,11 +1049,13 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Compared accepted v0.156.2 base d62e30ad7 with new master 146a00f41. The three changed files are CHANGELOG.md, Cargo.lock, and Cargo.toml. Current managed pins came from the digest-verified v0.157.0 release workflow binary.",
         "Targeted verify fixture retains exact per-check digests, charges shared input bytes once, fails with exceeded byte budget, and observes same-length changed input on the next capture."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7Y285K6VEWRB8V3MK8NYRV4",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
         "src/decapod/core/native_proof.rs"
       ],
       "next_transitions": [
@@ -1024,6 +1063,7 @@
       ],
       "repo_scope": [
         ".decapod/governance.json",
+        ".decapod/managed",
         ".decapod/managed/specs",
         "src/decapod/core/native_proof.rs"
       ],
