@@ -834,6 +834,14 @@
       "proof_refs": [
         "23 snapshot_provider::automatic tests including exact target movement"
       ]
+    },
+    {
+      "id": "accepted-strict-profile-fixture",
+      "summary": "Integrate the current accepted strict-profile fixture and preserve the tested follow-up",
+      "input_digest": "sha256:893411f4d3e2eb41232e49646ef41ac4b824e7a7e8fc931609ec5024349c914e",
+      "proof_refs": [
+        "Focused branch tests and accepted PR #1874 integration"
+      ]
     }
   ],
   "intents": {
@@ -877,22 +885,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The pending wait makes a bounded read of the exact accepted target and retains all current proof and source-custody rules.",
-          "reviewed_code_fingerprint": "7418cf28250a69f72f0dbdb1dc99939426f808a5f748e7ad3c8c929cdcd7670e",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "f48c57b00ed31532f0868589b3899affc8334885cfeb45aeec45704be0cac270",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The pending wait makes a bounded read of the exact accepted target and retains all current proof and source-custody rules.",
-          "reviewed_code_fingerprint": "7418cf28250a69f72f0dbdb1dc99939426f808a5f748e7ad3c8c929cdcd7670e",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "f48c57b00ed31532f0868589b3899affc8334885cfeb45aeec45704be0cac270",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The pending wait makes a bounded read of the exact accepted target and retains all current proof and source-custody rules.",
-          "reviewed_code_fingerprint": "7418cf28250a69f72f0dbdb1dc99939426f808a5f748e7ad3c8c929cdcd7670e",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "f48c57b00ed31532f0868589b3899affc8334885cfeb45aeec45704be0cac270",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -904,7 +912,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795221466Z"
+      "updated_at": "1795223161Z"
     },
     "trajectory": {
       "active_boundaries": [
