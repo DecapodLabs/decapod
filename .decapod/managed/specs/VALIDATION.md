@@ -67,9 +67,9 @@ bind the newly accepted base. The macOS live-admission regression records
 its fixture-owned toolchain file by canonical path so the same checks run
 when the host temp directory is reached through a symlink.
 
-The reviewed proof inventory accounts for the v0.157.0 version entries in
+The reviewed proof inventory accounts for the v0.158.0 version entries in
 `Cargo.toml` and `Cargo.lock`. All 107 inventoried inputs match accepted
-`master` at `f0cbb701`. The required checks, adapters, and toolchain retain
+`master` at `1bdb1e6e`. The required checks, adapters, and toolchain retain
 their existing declarations.
 
 ## Live rejection specificity (#1748)
@@ -1552,7 +1552,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a`
+- Repository signal fingerprint: `58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

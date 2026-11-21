@@ -920,6 +920,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1887"
       ]
+    },
+    {
+      "id": "issue-1880-v0158-integration",
+      "summary": "Integrate accepted v0.158.0 and reconcile generated files and the exact released proof inventory",
+      "input_digest": "sha256:ae100be98292a7c285ad6fd054f56067dcfb94ad8c1ee021aeb6ca32364fa90b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1889"
+      ]
     }
   ],
   "intents": {
@@ -963,22 +971,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The same verifier owns the target checks and the inventory matches the integrated release.",
-          "reviewed_code_fingerprint": "76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a",
+          "reason": "The existing verifier owns the same before-and-after target checks and all inputs match the integrated release.",
+          "reviewed_code_fingerprint": "58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777",
           "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing checkpoint commands and error codes are preserved and the diagnostic reports both revisions.",
-          "reviewed_code_fingerprint": "76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a",
+          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic includes the two revisions.",
+          "reviewed_code_fingerprint": "58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777",
           "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact-target and canonical-tool requirements remain enforced and all proof obligations remain declared.",
-          "reviewed_code_fingerprint": "76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a",
+          "reason": "The exact-target and canonical-tool checks are enforced and all proof obligations remain declared.",
+          "reviewed_code_fingerprint": "58c251ea07dc68335c0f42cf8d6d281070509a4269045a0fc0cb045ef55aa777",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -990,7 +998,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795240299Z"
+      "updated_at": "1795241740Z"
     },
     "trajectory": {
       "active_boundaries": [
