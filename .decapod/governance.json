@@ -905,6 +905,11 @@
       "id": "sync-1874-issue-1834",
       "summary": "Reconcile the accepted committed downgrade fixture and retain the authored follow-up",
       "input_digest": "sha256:73752f98767aa95006b332bc4ff846ef2143e0f5b5ed4445aad82d1656040be9"
+    },
+    {
+      "id": "sync-v1562-issue-1834",
+      "summary": "Reconcile the accepted v0.156.2 release and refresh the measured repository projections",
+      "input_digest": "sha256:84cae4aa5ab4926e0b8863ede0afd70932532dcf4f1f0c2e9515ae5d83fc619e"
     }
   ],
   "intents": {
@@ -946,22 +951,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture with the accepted fixture correction",
-          "reviewed_code_fingerprint": "c6d1eb332c3b2dfbdb0fd050c4a8174cfdf90cf5417eda9abde58f84380c73cc",
+          "reason": "Reviewed the branch architecture with the accepted v0.156.2 snapshot",
+          "reviewed_code_fingerprint": "19a45d1775dd6bbd715708aeff1b8f1b75c2cb734261705375d264d1964f3edd",
           "spec_material_hash": "34aab33dd1bb2c3afa61b73694e4aaecc78592804b4c5e4d356c9fbfb92a4578"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces with the accepted fixture correction",
-          "reviewed_code_fingerprint": "c6d1eb332c3b2dfbdb0fd050c4a8174cfdf90cf5417eda9abde58f84380c73cc",
+          "reason": "Reviewed the branch interfaces with the accepted v0.156.2 snapshot",
+          "reviewed_code_fingerprint": "19a45d1775dd6bbd715708aeff1b8f1b75c2cb734261705375d264d1964f3edd",
           "spec_material_hash": "6e1107ee8c3137d8b3fad7926000cbda56e161489d8f5c3656614c78032b5904"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the publication security contract against the accepted target",
-          "reviewed_code_fingerprint": "c6d1eb332c3b2dfbdb0fd050c4a8174cfdf90cf5417eda9abde58f84380c73cc",
+          "reason": "Deriving PR display metadata preserves existing security checks",
+          "reviewed_code_fingerprint": "19a45d1775dd6bbd715708aeff1b8f1b75c2cb734261705375d264d1964f3edd",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -973,7 +978,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795223208Z"
+      "updated_at": "1795225753Z"
     },
     "trajectory": {
       "active_boundaries": [

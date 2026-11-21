@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.156.2](https://github.com/DecapodLabs/decapod/compare/v0.156.1...v0.156.2) - 2026-11-21
+
+### Fixed
+
+- *(ci)* reuse the committed strict-profile fixture candidate
+
+### Other
+
+- *(merge)* sync strict fixture with accepted v0.156.1
+- *(merge)* sync accepted v0.156.0 release
+
 ## [0.156.1](https://github.com/DecapodLabs/decapod/compare/v0.156.0...v0.156.1) - 2026-11-20
 
 ### Fixed
