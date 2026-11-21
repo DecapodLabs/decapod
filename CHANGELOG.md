@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.158.2](https://github.com/DecapodLabs/decapod/compare/v0.158.1...v0.158.2) - 2026-11-21
+
+### Fixed
+
+- *(verify)* isolate lease advisory stderr and disambiguate task-history diagnostics ([#1892](https://github.com/DecapodLabs/decapod/pull/1892))
+
+### Other
+
+- *(workunit)* support unset DECAPOD_AGENT_ID in lease renewal unit test ([#1892](https://github.com/DecapodLabs/decapod/pull/1892))
+- *(specs)* refresh managed Dockerfile pin for v0.158.1 ([#1892](https://github.com/DecapodLabs/decapod/pull/1892))
+
 ## [0.158.1](https://github.com/DecapodLabs/decapod/compare/v0.158.0...v0.158.1) - 2026-11-21
 
 ### Fixed
