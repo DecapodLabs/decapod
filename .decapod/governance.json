@@ -868,6 +868,14 @@
       "proof_refs": [
         "tests/unit/core/workspace_publication_tests.rs"
       ]
+    },
+    {
+      "id": "issue-1880-projections-v01570",
+      "summary": "Refresh the managed Dockerfile pin and specs manifest with the released v0.157.0 controller",
+      "input_digest": "sha256:0a0367e6bd16dd9d66c685f6caad3d7d79d6625daa98c8d48646fcdeb0bc2561",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/44869042711"
+      ]
     }
   ],
   "intents": {
