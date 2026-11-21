@@ -9017,7 +9017,15 @@ pub fn run_todo_cli_with_cloud_factory_in_workspace<F: CloudTodoStoreFactory>(
                 "archived",
                 "task.archive",
                 serde_json::json!({}),
-            )?
+            )
+            .map_err(|error| match error {
+                // Archive has a single mutation; its broker policy gate runs
+                // before the task transaction is entered.
+                error::DecapodError::PolicyDenied(reason) => {
+                    error::DecapodError::MutationRejectedBeforeWrite(reason)
+                }
+                other => other,
+            })?
         }
         TodoCommand::Comment { id, comment } => comment_task(root, id, comment)?,
         TodoCommand::Edit {
