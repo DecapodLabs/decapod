@@ -935,6 +935,14 @@
       "proof_refs": [
         "discovered source inventory sha256:875df5f0a0da8415e102fa983a448cf995b93f52aa689d7a4dc71726a36c7ae9; zero CI/workflow/toolchain changes"
       ]
+    },
+    {
+      "id": "wave2-linux-keystore-fix",
+      "summary": "Enable KEYSTORE_SERVICE cfg on Linux/Windows and clean secret-tool clippy borrows",
+      "input_digest": "sha256:1c6eefa78eb709b9a8e272e4f8dc75b65b9068cf298a4b06140beb768f28132c",
+      "proof_refs": [
+        "check --no-default-features (-D warnings); clippy --all-targets --all-features (-D warnings); cloud_dpop (5 passed); fmt --check"
+      ]
     }
   ],
   "intents": {
@@ -980,22 +988,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented Cloud Wave 2 architecture: quota/cap transport diagnostics, OS keystore backends, DeviceKeyInventory, signed revoke paths, HostCloudRelayHandler, and SQLite-free Cloud workspace/validation guards (#1836, #1835, #1886).",
-          "reviewed_code_fingerprint": "4a50c07e245be74c1bc87191efc0dc8e7ccb4448036f5eb0447aff65a7be0ee9",
+          "reason": "Re-verified Cloud Wave 2 architecture with cross-platform KEYSTORE_SERVICE cfg fix and clippy clean (#1835).",
+          "reviewed_code_fingerprint": "fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2",
           "spec_material_hash": "cd94b17ce917d23e4abdadfc121f2badd96c85af11c96bda18ef91441c7afdae"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated Cloud Wave 2 interfaces for decapod cloud status --live, devices [--live], revoke [--session-logout|--local-only|--device-id], CloudAuthStatus quota/overage/provider_disabled mapping, and Cloud workspace/relay custody contracts (#1836, #1835, #1886).",
-          "reviewed_code_fingerprint": "4a50c07e245be74c1bc87191efc0dc8e7ccb4448036f5eb0447aff65a7be0ee9",
+          "reason": "Re-verified Cloud Wave 2 interfaces with cross-platform KEYSTORE_SERVICE cfg fix (#1835).",
+          "reviewed_code_fingerprint": "fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2",
           "spec_material_hash": "ea044136f529246b3c2e0573b15f849f6cf6de2efd2a3699247458b82e751a1f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented Cloud Wave 2 security boundaries: external cross-platform OS key custody, DPoP logout isolation, bounded/redacted CloudMetadataWarning notices, immutable container ID relay verification, and zero decapod.db fallback (#1836, #1835, #1886).",
-          "reviewed_code_fingerprint": "4a50c07e245be74c1bc87191efc0dc8e7ccb4448036f5eb0447aff65a7be0ee9",
+          "reason": "Re-verified Cloud Wave 2 security boundaries for cross-platform OS key custody (#1835).",
+          "reviewed_code_fingerprint": "fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2",
           "spec_material_hash": "6ad4791978ddd39be2770c8e21ca080f1275a78fc9439e6c0e81ea64be4f8193"
         }
       ],
@@ -1007,7 +1015,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795272630Z"
+      "updated_at": "1795273653Z"
     },
     "trajectory": {
       "active_boundaries": [

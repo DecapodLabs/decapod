@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 
 const DEVICE_KEY_SCHEMA_VERSION: u32 = 1;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux", target_os = "windows", test))]
 const KEYSTORE_SERVICE: &str = "com.decapod.cloud.device-key";
 pub const MAX_DPOP_CLOCK_SKEW_SECONDS: i64 = 300;
 
@@ -1056,7 +1056,7 @@ fn platform_keychain_load(scope_key: &str) -> Result<Option<String>, DecapodErro
     }
     let args = secret_tool_lookup_args(scope_key);
     let output = match std::process::Command::new("secret-tool")
-        .args(&args)
+        .args(args)
         .output()
     {
         Ok(out) => out,
@@ -1199,7 +1199,7 @@ fn platform_keychain_store(scope_key: &str, payload: &str) -> Result<(), Decapod
     }
     let args = secret_tool_store_args(scope_key);
     let mut child = std::process::Command::new("secret-tool")
-        .args(&args)
+        .args(args)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -1330,7 +1330,7 @@ fn platform_keychain_delete(scope_key: &str) -> Result<(), DecapodError> {
     if linux_secret_service_available() {
         let args = secret_tool_clear_args(scope_key);
         let _ = std::process::Command::new("secret-tool")
-            .args(&args)
+            .args(args)
             .status();
     }
     Ok(())
