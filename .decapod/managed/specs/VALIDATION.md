@@ -1534,7 +1534,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `24a0d21d03e78a86ed5a81dd6f04fd8a268dc4326d5545c478dcee7ddf28858d`
+- Repository signal fingerprint: `f38d99184e7422d62007e51b4bda1526a50bd77bd337c94439889290b5980a34`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2553,6 +2553,11 @@ update, source-CI subset or generated checkpoint grants release authority or
 converts missing platform evidence into success.
 
 ## Governed repository proof-policy migration (#1738)
+
+The strict-profile regression compares the candidate configuration already
+committed by the consumer fixture with the accepted Git target. It binds
+approval to those two commits and checks that the runtime still rejects the
+downgrade before executor selection. See #1871.
 
 `tests/unit/core/repository_profile_tests.rs` and `tests/consumer_readiness.rs`
 cover the `repo.pr-readiness.v1` transition contract across source-inventory
