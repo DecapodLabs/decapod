@@ -1829,6 +1829,11 @@ PR #1589 integrates accepted v0.134.2 journal/RBAC changes and preserves the act
 
 ## CI fixture execution and review dispositions
 
+The managed Cloud CLI fixtures exercise account-only registration after a
+registration-required reply, explicit provider-link step-up, service-confirmed
+organization selection among duplicate names, and recovery of an unresolved
+create request within its original organization.
+
 Lifecycle tests execute their temporary shell runtime only after a bounded, side-effect-free listing proves the fixture inode has no open writers. The probe retries Linux `ETXTBSY` only, for at most two seconds; other failures remain fatal. A Linux regression holds an actual write descriptor, verifies the kernel refusal, then releases it and requires successful execution. Production container mutation and error handling are unchanged. Publication reviews classify SECURITY.md as unchanged relative to the accepted PR base when its semantic content is identical, regardless of accepted upstream additions; current code fingerprints still bind that explicit review.
 
 The socket lifecycle fixture likewise permits a bounded `AddrInUse` interval after closing its own listeners: a parallel fork may retain the descriptor until exec. Its live-peer refusal and replacement-owner assertions still run first, and stale cleanup must succeed within two seconds. Production stale-socket removal continues refusing live peers; no retry policy is added to production operations.

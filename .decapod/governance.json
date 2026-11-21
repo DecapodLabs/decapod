@@ -838,6 +838,11 @@
       "id": "bind-cloud-project-org",
       "summary": "Register the current account and scope project routing and retries to the confirmed organization",
       "input_digest": "sha256:afdb5165664301b6d0f8afce61ca8640135b33e37329069221116f281eb8ca1f"
+    },
+    {
+      "id": "sync-cloud-project-docker-pin",
+      "summary": "Converge generated Dockerfile and specs to the accepted source release",
+      "input_digest": "sha256:c44457258dfa24d1446ab371db50a97ae8e4d21167c0dd1b578057b06361df84"
     }
   ],
   "intents": {
@@ -921,8 +926,16 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:edca33838c9fced6cf35bf8c8a570045b10805d66efa10453c9206ccb415e398",
+      "artifact_hash": "sha256:0ab2d49610da76ba5bac02d05bdb730d26df4bd0c6a47dde1d867be2de5abe7c",
       "checks": [
+        {
+          "name": "previous-actions-offline-fixtures",
+          "status": "passed"
+        },
+        {
+          "name": "previous-actions-release-projection",
+          "status": "failed"
+        },
         {
           "name": "rust-formatting",
           "status": "passed"
@@ -949,10 +962,17 @@
             "intent_id": "intent:change_01M7XW3DF3681QR2G5MRJZX36M",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7XW3DJT6GEE9JQEAYZ3ATZG",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7XW3DF3681QR2G5MRJZX36M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7XW3DJT6GEE9JQEAYZ3ATZG": {
@@ -982,6 +1002,31 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "GitHub job 136705680527 found only the stale generated v0.156.1 Docker pin. Native workspace ensure regenerated the v0.156.2 pin. Offline fixtures passed on the previous candidate; rerun current Actions."
+                ],
+                "proof_refs": [
+                  "previous-actions-release-projection",
+                  "previous-actions-offline-fixtures"
+                ],
+                "scope": [
+                  "\".decapod/governance.json\"]}",
+                  "\".decapod/managed/specs\"",
+                  "\"src/decapod/core/cloud_project.rs\"",
+                  "\"src/decapod/core/error.rs\"",
+                  "\"src/decapod/lib.rs\"",
+                  "\"tests/supabase_service.rs\"",
+                  "\"tests/unit\"",
+                  "tests/common/cloud_managed_scenarios.rs",
+                  "{\"paths\":[\"src/decapod/cli.rs\""
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -990,11 +1035,13 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "GitHub job 136705680527 found only the stale generated v0.156.1 Docker pin. Native workspace ensure regenerated the v0.156.2 pin. Offline fixtures passed on the previous candidate; rerun current Actions.",
         "Reviewed the server account-only registration and project-status response contracts. Added offline CLI checks for registration, provider step-up, duplicate names and organization-bound create retries. Hosted Actions execution is pending."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7XW3DF3681QR2G5MRJZX36M",
       "modified_files": [
+        ".decapod/managed/Dockerfile.decapod",
         "tests/common/cloud_managed_scenarios.rs"
       ],
       "next_transitions": [
