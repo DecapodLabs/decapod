@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.159.0](https://github.com/DecapodLabs/decapod/compare/v0.158.3...v0.159.0) - 2026-11-21
+
+### Added
+
+- *(cloud)* integrate #1877 and implement P0 pay-and-use onboarding ([#1896](https://github.com/DecapodLabs/decapod/pull/1896))
+
+### Other
+
+- *(proof)* reconcile reviewed_sources_digest for v0.158.3 ([#1900](https://github.com/DecapodLabs/decapod/pull/1900))
+- *(merge)* reconcile accepted origin/master v0.158.3 ([#1900](https://github.com/DecapodLabs/decapod/pull/1900))
+- *(merge)* reconcile accepted origin/master ([#1898](https://github.com/DecapodLabs/decapod/pull/1898))
+
 ## [0.158.3](https://github.com/DecapodLabs/decapod/compare/v0.158.2...v0.158.3) - 2026-11-21
 
 ### Fixed
