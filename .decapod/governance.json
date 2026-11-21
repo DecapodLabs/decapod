@@ -936,6 +936,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1866"
       ]
+    },
+    {
+      "id": "issue-1880-01581-integration",
+      "summary": "Integrate accepted v0.158.1 and refresh release projections and the 107-file proof inventory",
+      "input_digest": "sha256:33a69ff6fd7be1942f56504ed2163e44c0a08a4dfdc6b16eacf99e7acc0e919a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1891"
+      ]
     }
   ],
   "intents": {
@@ -979,22 +987,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing provider verifier still owns both target checks. This branch uses the accepted proof inventory.",
-          "reviewed_code_fingerprint": "38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f",
+          "reason": "The existing verifier owns the two target checks and the proof inventory matches accepted source.",
+          "reviewed_code_fingerprint": "c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382",
           "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic gives both revisions.",
-          "reviewed_code_fingerprint": "38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f",
+          "reason": "The checkpoint command and stable error code remain. The explanatory text includes the two revisions.",
+          "reviewed_code_fingerprint": "c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382",
           "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact-target and canonical-tool checks retain their existing enforcement.",
-          "reviewed_code_fingerprint": "38e73813e821086140d331b8405d07eb5e626c458865b0bcfb7ca53300d9091f",
+          "reason": "The exact-target and canonical-tool requirements remain in force with the same proof obligations.",
+          "reviewed_code_fingerprint": "c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -1006,7 +1014,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795243729Z"
+      "updated_at": "1795245711Z"
     },
     "trajectory": {
       "active_boundaries": [
