@@ -834,6 +834,14 @@
       "proof_refs": [
         "cargo test --locked --lib publication_privacy"
       ]
+    },
+    {
+      "id": "accepted-strict-profile-fixture",
+      "summary": "Integrate the current accepted strict-profile fixture and preserve the tested follow-up",
+      "input_digest": "sha256:ffd9c5ef148404d88714004be3a58bcec13cd2192f60b9715c21e5bc91c1c2e0",
+      "proof_refs": [
+        "Focused branch tests and accepted PR #1874 integration"
+      ]
     }
   ],
   "intents": {
@@ -877,22 +885,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The local privacy preflight adds a check to the existing proof boundary and changes no wire format, endpoint, or proof provider contract.",
-          "reviewed_code_fingerprint": "1c710478ce25c3206a1a5f91fbd38438dd55bc6ccf1a7ca47dcd1f029623cf0e",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "9f2d142f2a2327912d13765cb112af526d81150327ce246e2402cefb4c791a38",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The local privacy preflight adds a check to the existing proof boundary and changes no wire format, endpoint, or proof provider contract.",
-          "reviewed_code_fingerprint": "1c710478ce25c3206a1a5f91fbd38438dd55bc6ccf1a7ca47dcd1f029623cf0e",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "9f2d142f2a2327912d13765cb112af526d81150327ce246e2402cefb4c791a38",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Describe the private operator policy, authored Git range, pre-submission enforcement and redacted findings.",
-          "reviewed_code_fingerprint": "1c710478ce25c3206a1a5f91fbd38438dd55bc6ccf1a7ca47dcd1f029623cf0e",
+          "reason": "Carry the previously tested authored behavior through the accepted strict-profile fixture change.",
+          "reviewed_code_fingerprint": "9f2d142f2a2327912d13765cb112af526d81150327ce246e2402cefb4c791a38",
           "spec_material_hash": "321ef804148ef3e8857a3733a1eb3a1320a32d3a2ef444c81aecac5aa02fddf7"
         }
       ],
@@ -904,7 +912,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795220419Z"
+      "updated_at": "1795223162Z"
     },
     "trajectory": {
       "active_boundaries": [
