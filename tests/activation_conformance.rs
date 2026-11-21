@@ -74,7 +74,9 @@ fn run_bounded(command: &mut Command, dir: &Path, program: &str, args: &[&str]) 
 }
 
 fn run_decapod(dir: &Path, args: &[&str], password: Option<&str>) -> Output {
-    let mut command = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    let executable =
+        fs::canonicalize(env!("CARGO_BIN_EXE_decapod")).expect("resolve Decapod test executable");
+    let mut command = Command::new(executable);
     command.env_remove("GITHUB_ACTIONS").env_remove("BUILDKITE");
     command
         .current_dir(dir)
@@ -198,8 +200,8 @@ fn rpc(dir: &Path, password: &str, op: &str, params: Value) -> Value {
 
 #[test]
 fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
-    // Exercise activation and a bounded workunit prerequisite proof, not publication readiness.
-    // This prerequisite result is not full publication-readiness proof.
+    // Exercise activation and refusal to promote declared prerequisites into
+    // verified completion. The fixture has no complete readiness profile.
 
     let (_temp, root, password) = setup_repo();
     let mut observations = Vec::new();
@@ -426,8 +428,7 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
     observations.push(Observation {
         id: "proof_prerequisite_refusal",
         passed: !premature_verify.status.success()
-            && (premature_output.contains("missing passing proof result")
-                || premature_output.contains("proof result")),
+            && premature_output.contains("VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED"),
         evidence: premature_output,
     });
 
@@ -466,9 +467,9 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
     let readiness = run_decapod(&workspace_path, &["validate"], Some(&password));
     let readiness_output = combined(&readiness);
     observations.push(Observation {
-        id: "missing_full_profile_refused",
+        id: "full_readiness_override_refused",
         passed: !readiness.status.success()
-            && readiness_output.contains("READINESS_PROFILE_REQUIRED"),
+            && readiness_output.contains("READINESS_GATE_OVERRIDE_UNSUPPORTED"),
         evidence: readiness_output,
     });
     require_success(
@@ -491,26 +492,34 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         ),
         "workunit record-proof",
     );
-    require_success(
+    let declared_only = run_decapod(
+        &workspace_path,
+        &[
+            "govern",
+            "workunit",
+            "transition",
+            "--task-id",
+            &task_id,
+            "--to",
+            "verified",
+        ],
+        Some(&password),
+    );
+    let manifest = parse_json(
         &run_decapod(
             &workspace_path,
-            &[
-                "govern",
-                "workunit",
-                "transition",
-                "--task-id",
-                &task_id,
-                "--to",
-                "verified",
-            ],
+            &["govern", "workunit", "get", "--task-id", &task_id],
             Some(&password),
         ),
-        "workunit verified transition",
+        "workunit after refused declaration",
     );
     observations.push(Observation {
-        id: "bounded_workunit_completion",
-        passed: true,
-        evidence: format!("workunit {task_id} reached VERIFIED for bounded project prerequisites, not publication readiness"),
+        id: "declared_prerequisite_is_not_completion",
+        passed: !declared_only.status.success()
+            && combined(&declared_only).contains("VALIDATION_HISTORY_TASK_PROOF_UNSUPPORTED")
+            && manifest["status"] == "CLAIMED"
+            && manifest["validation_record"].is_null(),
+        evidence: combined(&declared_only),
     });
 
     let report = ActivationReport {
@@ -530,4 +539,70 @@ fn clean_checkout_activation_path_is_bounded_and_proof_gated() {
         "activation conformance report:\n{}",
         serde_json::to_string_pretty(&report).expect("serialize report")
     );
+}
+
+#[test]
+fn cooperative_boundary_cli_delegates_bootstrap_and_preserves_native_custody_refusal() {
+    let (_temp, root, password) = setup_repo();
+    let request_path = root.join("boundary-request.json");
+    let invoke = |boundary: Value| {
+        fs::write(
+            &request_path,
+            serde_json::to_vec(&serde_json::json!({
+                "schema_version":"decapod.native-boundary.v1", "agent_id":AGENT_ID,
+                "timeout_seconds":90, "boundary":boundary
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        run_decapod(
+            &root,
+            &[
+                "infer",
+                "boundary",
+                "--input",
+                request_path.to_str().unwrap(),
+            ],
+            Some(&password),
+        )
+    };
+    for kind in ["initialize", "context"] {
+        let boundary = if kind == "context" {
+            serde_json::json!({"kind":kind,"params":{"query":"proof"}})
+        } else {
+            serde_json::json!({"kind":kind})
+        };
+        let output = invoke(boundary);
+        let result = parse_json(&output, "native bootstrap delegation");
+        assert_eq!(result["native_exit_success"], true);
+        assert_eq!(result["native_result"]["success"], true);
+        assert_eq!(result["publication_ready"], false);
+        assert_eq!(result["merge_authorized"], false);
+        assert_eq!(result["kernel_sha256"].as_str().unwrap().len(), 64);
+    }
+    // No claimed task exists. The adapter cannot turn its actor label into custody.
+    let refused = invoke(
+        serde_json::json!({"kind":"workspace","branch":"agent/activation-fixture-agent/unclaimed"}),
+    );
+    assert!(
+        !refused.status.success(),
+        "missing native claim must remain refused"
+    );
+    assert_eq!(
+        String::from_utf8_lossy(&run_git(&root, &["branch", "--show-current"]).stdout).trim(),
+        "master"
+    );
+    let unsafe_request = serde_json::json!({"schema_version":"decapod.native-boundary.v1","agent_id":AGENT_ID,"boundary":{"kind":"initialize"},"executable":"/bin/sh"});
+    fs::write(&request_path, serde_json::to_vec(&unsafe_request).unwrap()).unwrap();
+    let refused = run_decapod(
+        &root,
+        &[
+            "infer",
+            "boundary",
+            "--input",
+            request_path.to_str().unwrap(),
+        ],
+        Some(&password),
+    );
+    assert!(!refused.status.success());
 }

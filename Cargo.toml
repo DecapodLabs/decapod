@@ -1,7 +1,7 @@
 [package]
 name = "decapod"
 default-run = "decapod"
-version = "0.156.2"
+version = "0.157.0"
 edition = "2024"
 rust-version = "1.96.1"
 build = "assets/build/compress_constitution.rs"
@@ -35,6 +35,11 @@ path = "src/main.rs"
 [[bin]]
 name = "decapod-build"
 path = "assets/tools/build_lifecycle.rs"
+required-features = ["build-tools"]
+
+[[bin]]
+name = "decapod-constitution-history"
+path = "assets/tools/constitution_history.rs"
 required-features = ["build-tools"]
 
 [[bin]]

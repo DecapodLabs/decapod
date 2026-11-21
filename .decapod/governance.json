@@ -137,6 +137,14 @@
         "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Reconcile the nine agent document indexes, run their invariant in the existing mandatory contract target, and isolate real libtest executable copying in a waited child process to prevent inherited writable descriptors. Preserve production no-retry failure semantics.",
         "status": "open"
       },
+      "claim:claim:recovery-release-proof": {
+        "falsifier": "Changes outside manifest scope, hand-edited generated evidence, missing current checkpoints, or a full-readiness claim based on this CI runner.",
+        "proof_refs": [
+          ".decapod/managed/specs/VALIDATION.md"
+        ],
+        "statement": "The candidate applies only the reviewed repair scope with newly admitted custody and actual checkpoints; historical and unrun proof remain distinct. Retain current accepted dependencies, production release boundaries and collector contracts; preserve the inactive preparation proposal with a regression proving it cannot self-authorize. Four-platform qualification remains open.",
+        "status": "open"
+      },
       "claim:committed-scope-enforcement": {
         "falsifier": "A clean committed forbidden edit, deletion, rename source or over-budget delta reaches provider execution or readiness",
         "proof_refs": [
@@ -852,6 +860,14 @@
       "proof_refs": [
         "tests/unit/core/workspace_publication_tests.rs"
       ]
+    },
+    {
+      "id": "issue-1880-accepted-v01570",
+      "summary": "Integrate accepted v0.157.0 and rerun the exact stale-base and macOS fixture regressions",
+      "input_digest": "sha256:30300528dbfcd0d796169871b2db0da4ac0f35f308ede058b6c27aadef2d9d21",
+      "proof_refs": [
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -896,22 +912,22 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "The existing provider material verifier still owns the target check before and after inspection.",
-          "reviewed_code_fingerprint": "2003b10c00ffbdfa2b57c1df0b364ead167909d957b4a1a8006b66326b0fe977",
-          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
+          "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
+          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "The existing checkpoint command and typed error code are preserved. The explanatory diagnostic identifies both revisions.",
-          "reviewed_code_fingerprint": "2003b10c00ffbdfa2b57c1df0b364ead167909d957b4a1a8006b66326b0fe977",
-          "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
+          "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
+          "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "The exact target comparison and canonical tool admission rules are preserved. The fixture supplies its own file by canonical path.",
-          "reviewed_code_fingerprint": "2003b10c00ffbdfa2b57c1df0b364ead167909d957b4a1a8006b66326b0fe977",
-          "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
+          "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
+          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
       "state": "APPROVED",
@@ -922,16 +938,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795234590Z"
+      "updated_at": "1795236870Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:46482320ce8145f2e41ecec7922c6b47000d931d4afecb9852e5addd4558fecd",
+      "artifact_hash": "sha256:0025f25989aa3b876cb53b730d160baa9ec63e4ed986f404986a50c5cf839e5f",
       "checks": [
         {
           "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "integrated-formatting",
+          "status": "passed"
+        },
+        {
+          "name": "integrated-macos-aliased-tmpdir",
+          "status": "passed"
+        },
+        {
+          "name": "integrated-macos-canonical-tmpdir",
+          "status": "passed"
+        },
+        {
+          "name": "integrated-stale-checkpoint-diagnostic",
           "status": "passed"
         },
         {
@@ -968,10 +1000,17 @@
             "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7Y1RM088RSG5RQVPD1TAGGE",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y1RM088RSG5RQVPD1TAGGE": {
@@ -999,6 +1038,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "validation",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "The three focused regressions passed against the integrated v0.157.0 source at target 146a00f4117ffbcdcc93a68ffef6419f78453056."
+                ],
+                "proof_refs": [
+                  "integrated-stale-checkpoint-diagnostic",
+                  "integrated-macos-aliased-tmpdir",
+                  "integrated-macos-canonical-tmpdir",
+                  "integrated-formatting"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1007,7 +1064,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory."
+        "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory.",
+        "The three focused regressions passed against the integrated v0.157.0 source at target 146a00f4117ffbcdcc93a68ffef6419f78453056."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
@@ -1018,7 +1076,8 @@
       ],
       "next_transitions": [
         "Checkpoint the tested local change",
-        "Refine plan and declare falsifiable checks"
+        "Refine plan and declare falsifiable checks",
+        "Verify the committed integration and run authorized preflight"
       ],
       "repo_scope": [
         "root"

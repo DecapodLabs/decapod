@@ -1,5 +1,14 @@
 # Security
 
+## Admission and observation limits
+
+The Constitution build rejects metadata-only self-promotion and unsupported enforcement assertions. Binding review declarations identify the required review process. They provide no authenticated reviewer identity. Repository overrides and runtime mandates retain their native owners. Superseded, expired, and unrelated knowledge is excluded from operative context and can be inspected through the appropriate audit path.
+
+The sandboxed scaffolding tests use the checked-in corpus and schema to check promotion, declared enforcement, and reference validity.
+The activation and capsule fixtures resolve the candidate executable before entering temporary repositories so their child commands exercise the build under test.
+
+The cooperative adapter accepts bounded regular files and delegates fixed operation arguments to the current executable. It grants neither host sandbox enforcement nor approval. Compact comparison inputs distinguish reported, captured, and independently checked evidence. Context return, actual model delivery, functional correctness, and current native completion require separate observations.
+
 ## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
 
 - **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
@@ -801,8 +810,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `97e5f971aa9b4908428db1104ec97cca16e64c8ca895e6065ef463ad17a62ff0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1373,8 +1382,11 @@ candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)`
 under scope `"repo.pr-readiness.v1"`. Missing, unauthorized, wrong-scope,
 expired, revoked, or stale approvals fail closed with
 `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`, and downgrading `decapod.pr-readiness.v1`
-remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. Local
-cooperative actor labels and host-local SQLite retain their shared-UID trust
+remains unconditionally blocked with `REQUIRED_PROFILE_DOWNGRADE`. The
+consumer regression commits both profiles in separate Git revisions, records an
+approval for that exact transition, and checks that the runtime refuses it
+before selecting commands. Local cooperative actor labels and host-local SQLite
+retain their shared-UID trust
 boundary and do not claim cryptographic identity or OS sandboxing.
 
 The regression boundary uses real Git targets and native subprocess checks,
