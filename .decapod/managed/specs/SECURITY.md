@@ -1,5 +1,15 @@
 # Security
 
+## Local publication privacy policy
+
+An operator can place a mode-0600 `.decapod/data/publication-deny.txt` in the
+canonical repository's private state directory. Each nonempty line is a
+case-sensitive literal identifier. Full validation checks commit messages,
+paths and added lines in the authored Git range and cumulative patch before
+submitting the candidate to a proof provider. Diagnostics include the local
+rule line number. Keep the policy in ignored local state and use synthetic
+identifiers in tracked fixtures.
+
 ## Device key custody, container signing isolation, and fail-closed cloud boundaries (#1778, #1066, #1590, #1809, #1808)
 
 - **Key custody outside repositories**: `DeviceKeyStore` rejects any key path
@@ -801,8 +811,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `47506d628e2ca2b32b024f1a5a6370d5c78bb2e2a5fca7cfb214a226e55118f1`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
+- Repository signal fingerprint: `1c710478ce25c3206a1a5f91fbd38438dd55bc6ccf1a7ca47dcd1f029623cf0e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (259 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

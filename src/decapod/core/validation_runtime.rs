@@ -1202,6 +1202,7 @@ fn run(
             "STALE_ACCEPTED_BASE: current remote target differs before adapter preparation",
         ));
     }
+    publication_privacy::check(options, &budget, &initial_identity)?;
     let selection = match host.select(&project, &budget) {
         Ok(selection) => selection,
         Err(blockers) if !blockers.is_empty() => {
@@ -2944,6 +2945,7 @@ mod tests;
 pub mod snapshot;
 
 mod executor_contract;
+mod publication_privacy;
 
 pub mod repository_host;
 pub mod rust_worker;
