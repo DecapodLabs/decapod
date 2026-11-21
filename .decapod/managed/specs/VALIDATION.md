@@ -1,5 +1,11 @@
 # Validation
 
+## Context, admission, and outcome checks
+
+Focused Rust regressions cover repetition and no-match retrieval, override behavior, authorization boundaries, envelope budgets, atomic correction and expiry, legacy capsule hashes, source admission, public history generation, explicit host identity, and incomplete outcome samples. The accepted JSON and acceptance-observer tests remain part of the regression suite. The Constitution schema is independently checked by the existing workflow.
+
+The handoff at `6199af03` recorded 121 focused passes against its v0.148.12 source. Its push validation rejected stale merge-base and spec metadata. That evidence remains historical. This candidate requires its own check results on the accepted target. Host records under `docs/research/host-outcome-pilot` and issues #880 and #1095 retain timeouts, missing measurements, and the distinction between observed context resolution and delivery to a model. The public chronology makes no claim about priority or measured effectiveness.
+
 ## Cloud control-plane, Dactyl 0.18.0, and Local/Cloud branding verification (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1377, #1380)
 
 - **Dependency & build locks**: `tests/release_dependency_policy.rs` verifies
@@ -1534,8 +1540,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e7822bd411c06dc23c191ac31153ac016f0bcc39c868ce27604a0675fa6c581`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
+- Repository signal fingerprint: `335b62531981d4c345b94079c519ccd2aa09943ab91ffe07e6f72baeb07b7a55`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

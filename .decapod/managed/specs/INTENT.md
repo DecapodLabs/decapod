@@ -1,5 +1,9 @@
 # Intent
 
+## Applicable context and verifiable outcomes
+
+Decapod keeps the global Constitution and repository decisions durable. An agent requests a bounded projection for the current task. Explicit policy and current intent determine authority, while provenance distinguishes guidance, replaced decisions, and observed execution. The pilot records retain failed attempts and distinguish a functional result from admitted completion. (#1772, #1774, #657, #880, #1095, #879)
+
 ## Reporting claims and current proof (#1726, #1735)
 
 Decapod remains the repo-native governance kernel; consumers must distinguish
@@ -722,8 +726,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e7822bd411c06dc23c191ac31153ac016f0bcc39c868ce27604a0675fa6c581`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
+- Repository signal fingerprint: `335b62531981d4c345b94079c519ccd2aa09943ab91ffe07e6f72baeb07b7a55`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

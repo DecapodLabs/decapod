@@ -1,5 +1,13 @@
 # Interfaces
 
+## Bounded context and host observations
+
+`context.resolve` retains its fragment contract and adds selection reasons, stable source identities, a scoped advisory knowledge projection, and current governed-plan context with explicit task binding. It returns an explicit no-match result for advisory queries and retains mandatory obligations. New capsule and bundle fields are versioned. Legacy hashes stay stable when the optional fields are absent. The complete context envelope is capped at 262,144 bytes, with at most twelve fragments and 8,192 excerpt bytes.
+
+`infer boundary --input` accepts a bounded `decapod.native-boundary.v1` request with a host agent ID. `trace flight-recorder compare --input` reads compact outcome observations and preserves missing metrics and incomplete runs. `trace flight-recorder acceptance --capture` continues to correlate the independently captured observer inputs.
+
+`mentor.obligations` accepts authenticated queries before source authoring. The reflection engine verifies workspace and task custody before it updates a continuation. Its result does not grant publication authority.
+
 ## Caller-supplied validation report projections (#1726)
 
 Every `interop.project` result adds optional `input_origin=caller_supplied` and
@@ -703,6 +711,11 @@ Constitution supplies broader engineering doctrine. Version, capabilities,
 Constitution lookup, and embedded documentation remain available when project
 state needs recovery. Documentation ingestion can update an existing local
 awareness marker; it is not an implementation or completion proof.
+
+The project-check machine-contract gate validates the serialized capability
+names and interlock codes from the declarations shared with the CLI. The
+gate does not depend on container or registry availability. The public
+`capabilities` command includes these runtime observations.
 
 `eval --stdin --format json` accepts the complete incoming prompt. The agent
 proceeds only after exit 0 and `status: allow`. A blocked result or nonzero exit
@@ -1539,8 +1552,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e7822bd411c06dc23c191ac31153ac016f0bcc39c868ce27604a0675fa6c581`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (251 files), `tests/` (258 files)
+- Repository signal fingerprint: `335b62531981d4c345b94079c519ccd2aa09943ab91ffe07e6f72baeb07b7a55`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

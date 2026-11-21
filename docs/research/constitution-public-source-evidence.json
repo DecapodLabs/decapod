@@ -1,0 +1,2972 @@
+{
+  "schema_version": "decapod.public-history-input.v1",
+  "source": "https://github.com/DecapodLabs/decapod",
+  "observed_at": "2026-11-17T22:26:35Z",
+  "evidence_class": "operator_captured_public_forge",
+  "tags": {
+    "v0.0.1": "5f18337f4bac79326f105da32704a097472fd373",
+    "v0.0.10": "ec10c14d80e04f2610fe889db54a0fc971df6db0",
+    "v0.0.11": "e7362240409608f7c3cc1ec5e86377d87c6d730d",
+    "v0.0.12": "e663e41f04930b721b42398f42163f7e91663876",
+    "v0.0.13": "4bb4f977f4d596db06141c6ed42844893a257c29",
+    "v0.0.14": "e78d1fa64cf4a1cc7104ce743e0ed3f5bed1cfb6",
+    "v0.0.16": "937a9b4f0b8cf9cd8b22755bbf4c032649cea07a",
+    "v0.0.17": "502a8b470115247455603eb2058e8d2ce3f4b11c",
+    "v0.0.18": "dca88789f41e56d5c5deca73848c46012369083e",
+    "v0.0.19": "ce3d0366b4eeaa4cba3afea52278c2d0976692b2",
+    "v0.0.2": "5c9a7fed1df56531ae2ee6dc652713b8ff17dd97",
+    "v0.0.20": "a1000c970743cd14d2b4c955470fd22b1dc9e076",
+    "v0.0.21": "ed2041d98dcfac0917853a33c215e3e6786da910",
+    "v0.0.3": "eb94a16aaffb2ceaa39deaca1660e1ee751544fc",
+    "v0.0.4": "5adbd2174652a8f8f89b48e30ccec61c7e2c5b53",
+    "v0.0.5": "d4ecb8696844f804bc2943dafaa473d6c07b9989",
+    "v0.0.6": "505c89fadae6885fbcb6126feb4b56cd86ed599c",
+    "v0.0.7": "71c9336cfee746b1f8cd8396bb8936d192884c7c",
+    "v0.0.8": "7f4e307739d19befe49643580d313ef65a2e810a",
+    "v0.0.9": "3b6c859dfc2f8c75a9a12f6bd02787d74cc916ad",
+    "v0.1.0": "0de7d3d7e64d5d384635f6df1e6461967e31b605",
+    "v0.1.1": "ea6d09936f163d0becde2679ac6dfa599b935130",
+    "v0.1.10": "9802df5502ee2759c8adf7b12ea44288edbaf995",
+    "v0.1.11": "974ea6062f1b438cc51dedd38dbb065c8c5ed997",
+    "v0.1.12": "8957d926f8a15eb75b57e0e4ca27b442189d08d8",
+    "v0.1.13": "0622ac5a0f0f1eb6e67b8bc1119bc223ddd318e1",
+    "v0.1.14": "5d82356ab0fa8b5262a79a4b7e84419c7ad0e549",
+    "v0.1.15": "ec7b3237f928edeb487c7ff2b53dfe39459c8a78",
+    "v0.1.16": "c99e14a10418d1a3d80ef84b6c97761b70817244",
+    "v0.1.17": "f5ac4548555bfec937486c1d69c1ec97c10d3ed1",
+    "v0.1.18": "59b487be3a4fcb5a7089b1ded775aae5d7864e34",
+    "v0.1.19": "ec8e2a9e34c4de149e14c6c37fd7a9da4ae30370",
+    "v0.1.2": "560b8722040bf9a58b44ca7d6c55fdb551dce735",
+    "v0.1.3": "cd2ac96a269f5d5f5c02a70a3bd11abecfce96cf",
+    "v0.1.4": "7418bb60196e52c2f52efe6faacb84474faf06ca",
+    "v0.1.5": "4dc29073e1f929b3f181c61024f4a126f0fd50ff",
+    "v0.1.6": "ff20e08574ffb2494c550ef6ad899a9821a26d8f",
+    "v0.1.7": "5fbc5ec43f533b97f7a945415ab00a5a7227247a",
+    "v0.1.8": "d7770f3f3e1bb065d5c1acb5867b6c15ae702195",
+    "v0.1.9": "3b42e3e2ff7e0cf84775df2addeeaed2af78d6bd",
+    "v0.10.0": "ffc340e8fb096ac4255ac66ee065e2396ad480bf",
+    "v0.100.0": "ea3e01ca5b95d7e539abbff301314efb1d236898",
+    "v0.100.1": "df6074ca1ae4c3d515a4d582115fae242c94fd2e",
+    "v0.101.0": "eaa3473134a2198f2d959b67d11cc28d216063d8",
+    "v0.101.1": "109486e432ae291aba87b587fdd3800654eb4d9e",
+    "v0.102.0": "05be0103e71be44321a6a9ba9a7af729d17b9d68",
+    "v0.102.1": "9c99de7d981edd31e814d892fc69f410c16af678",
+    "v0.102.2": "54fafc4e9be846ff0c4376c53a9c3100b27299a3",
+    "v0.103.0": "d0d5b15c69b96d41eab2d80c7cee9d0e48e868b4",
+    "v0.104.0": "f6eecf1a13045c7b75f833854da1bf586c81fe2e",
+    "v0.104.1": "ddb95d11b9f1a863ab0ccfef04b1f7fd6a6f7558",
+    "v0.104.2": "37d1cc8aaceaf8f7c6290ead9f3b5f7c4b23fcd8",
+    "v0.104.3": "a2811a956950fdbfc7250b5047d1db7316485f27",
+    "v0.105.0": "cee9433b4c5ff170e20b4c06156a33643b904bf9",
+    "v0.105.1": "02e8c4e9f8a7fc1c9678978dbce20aa23ecc3ca8",
+    "v0.106.0": "f1e2074bb18b1c82247f7af22216d46a48458f6b",
+    "v0.106.1": "69f5aac50be924a1cbdd39839d5e1ae622289c2b",
+    "v0.107.0": "2e4f867e6973de1048f4e46214f799a8cadd8f17",
+    "v0.107.1": "a9326349fdccd78692fd8e0a30da4c215081d6f4",
+    "v0.107.2": "e0c0bc3882dc9aed04f9782253c3ad82b63663dc",
+    "v0.107.3": "54e5e28c930db13ec44849839608381b4552528a",
+    "v0.107.4": "d473cd2a00fa19c50289a1e019e4e64d4132699f",
+    "v0.107.5": "0144292aa31b55334fcfaff2bb892d65fdbe29c6",
+    "v0.108.0": "e523256956b52557ae1b0d886ad107a915ab3d73",
+    "v0.108.1": "c8cb37bda38e0e132f5bd5d28626ae7b77780617",
+    "v0.109.0": "14a83896b394e16c0e0a0f4c2671ba9ed9824288",
+    "v0.11.0": "8794cf6410ffdadbd063c7cfca38a58bfd4151eb",
+    "v0.11.1": "03669089543211adaa283453b1c17bf205438ac3",
+    "v0.11.2": "0adefc21ef8dd2de8bd49021d2aefe3ac2c17381",
+    "v0.110.0": "5d418f8b7aabe5478004d480fd9638a64491545f",
+    "v0.111.0": "d5ed49a1c9a70d4cff8439bd06cebea9076cbcde",
+    "v0.111.1": "c0a9a727d1e52537378e5e1d6051b73a26ea6a4a",
+    "v0.111.2": "e8a95d1cc73b6eaedf3ad3878e3fe362104153da",
+    "v0.111.3": "8482113e5ae6d1a135fe41a4aefcd9bb896ccc18",
+    "v0.111.4": "c6db33b4f34604d1d211740e657e116ed5592222",
+    "v0.111.5": "11db3d24936b1b402a22fef4503c281b2f0cc393",
+    "v0.111.6": "c379a1e66478c67873f1db51e9fd44b1b1d83356",
+    "v0.112.0": "ff9f94b69f7e3ff6d0ad01de4632e24dc175b38a",
+    "v0.113.0": "871f79ff56ab3e693a95a049d85507bb7f249787",
+    "v0.114.0": "41beb7f66d1cbbe1963b18c4ea2d8eea78abdbdc",
+    "v0.114.1": "c388cd99e6002d6362764dd77c43721b006476dc",
+    "v0.114.2": "30db5ce12727a3a5527c913b8a1d7659f4ba699f",
+    "v0.114.3": "90bcee0d93845666285f94148205dd0603f073bd",
+    "v0.115.0": "ca05712ca4db79b32c6a39e7e2e0fa49d26f0c9a",
+    "v0.116.0": "b0aeadf846e263ff2f6bbd6e8240d72d51a4c57f",
+    "v0.117.0": "078e71e57b72c0f11a479a61c7e6103176dad192",
+    "v0.118.0": "5aeb2441578ff01794beb442a2db84c9dcbf4906",
+    "v0.119.0": "eaf6432c819afa875428753ed96c0d0e79f59c86",
+    "v0.119.1": "8496c7994a414341422a33af2a4040a51302ef90",
+    "v0.12.0": "975411a01f1edb70efabf51c50ce6bc65af72edf",
+    "v0.12.1": "1a2e19dfae9e79295fb728b482224f05730fee28",
+    "v0.120.0": "01101a4945f14c3032f4e87e03f266b7137cddb3",
+    "v0.120.1": "0314d19cf2df01a02d156184d310119cd834e558",
+    "v0.121.0": "c9bec31144f2e42e156eaeb6e65a877248d5f48c",
+    "v0.121.1": "c741e75630741284d8c85cfd0e5779d1309360a3",
+    "v0.121.2": "e398d290f1281de02716197d129e9f51c7a9f586",
+    "v0.121.3": "ed0225f4f7573334ba05ca209d6b6466e502da6b",
+    "v0.122.0": "54699102cec4de3295cc64fd39c178582034dcb0",
+    "v0.122.1": "020d6d8e4f5790870414695a078017df7d2c469b",
+    "v0.123.0": "0d12e9e8b73ad10d7d02027b3d84a8f77518bdec",
+    "v0.123.1": "b7791b43741e385949469c8487cdc289cacd5bab",
+    "v0.123.2": "925511ecbb85e24481db5d55f2c9c4ad834f5ffd",
+    "v0.123.3": "65c0d02d9046ba848c946653eeaf7106da18ed40",
+    "v0.123.4": "c217c322522ef319e9a7822ab0d7d7c260e4b849",
+    "v0.123.5": "6b2017c0d5a19d171ceeb6dfe6c3a0395268989a",
+    "v0.123.6": "ef977a76c647ae3f31e31ad2ee25be56d4ec9914",
+    "v0.123.7": "fa0661ad37d617617624e812a30f72d12ab1ac16",
+    "v0.123.8": "802105057715a501d6f0b8f91d03e871daac991f",
+    "v0.124.0": "308851a382b9e74404217216a95f873f8deae764",
+    "v0.124.1": "0c38daeadb31daa43db7bf20ea03595ba0ecb7f6",
+    "v0.124.2": "037cdfe40904c921da2c60c6bd56e4b035241df2",
+    "v0.124.3": "c217dff5fb738f7b6cb063ed62e30b08a1e1efcc",
+    "v0.125.0": "aeb8d79544aeb25a726c00ed4969f1ef1ac570f0",
+    "v0.126.0": "d928424ca02e557b0b114c96fdad80a64e54fc01",
+    "v0.126.1": "049ac570f81eb8ffb3a81191b9a0b9c850ae2423",
+    "v0.126.2": "410068f63e9c75d733a116ef1dd65b913abe875a",
+    "v0.126.3": "3d09f22c3d0689f889ce6fc0d6e6910faeb2f0be",
+    "v0.126.4": "17ab8c5c9b466b8e0b2b629678af44beb7a307ce",
+    "v0.126.5": "cb2e97c702b94bef4f633c66bcb5e15ab811cc12",
+    "v0.127.0": "3bbb50ea80f0692b640671197aa15372a3329253",
+    "v0.127.1": "256503194358b75bf90be4ce4ca51bc14e02f485",
+    "v0.128.0": "277c4a5e40f75f7c77e675979cc8e1e11a860ede",
+    "v0.129.0": "64ac14e9ef632eb98baef63d9f6a44afa97adff3",
+    "v0.13.0": "67d673abe2e1ecc2ef5f007ef8b238886c1d9420",
+    "v0.130.0": "9d6dab1f52ae3f64cab4a243b0ce41201e144fc0",
+    "v0.130.1": "82eff22aa9fc1f996b1fc27697e2e8fa9f60903b",
+    "v0.130.2": "87321098866d79c95cb5ae051e4b8060e68a2d73",
+    "v0.131.0": "aecc08a413f25542a2eb6bb0a0d9cf3dc84096b2",
+    "v0.132.0": "efb0b4a1f238541bf0d597addd29705d35730581",
+    "v0.133.0": "2e918340ea51029482c984f8f1085041d6f300eb",
+    "v0.133.1": "eacfa4c4b5c60179c1a79bdd26446e9f1f5ca38c",
+    "v0.133.2": "9d286036a3d2e3730bc3288b5160864e9cbb578d",
+    "v0.134.0": "06047e01501fac6bf989118eaa39b95b7d90aedb",
+    "v0.134.1": "12b657f240ca8ff850f0c22cc8472d423a32d9ef",
+    "v0.134.2": "c3d4779fef7aa8f2cd95c234958fcc60d26274a3",
+    "v0.135.0": "9a7849aa49798fca2726db6e4b413746c2e981a5",
+    "v0.136.0": "2dfcbefbcf9facc93c7b7ac65a53a8c89cec2604",
+    "v0.136.1": "f0fae8dffdf8bd95ef3d694f3e56a378d3d99e26",
+    "v0.136.2": "10851ee8ca15a77b6eb488f4d1642a4c218e1669",
+    "v0.136.3": "29e9b1fafb29469e00117e476468668437c5c0a0",
+    "v0.136.4": "2254d2622297fea46af978edf9b68e81ad1efbe8",
+    "v0.137.0": "4d80d2315f9f9f7507dc7cb4832897705f0a62ad",
+    "v0.137.1": "9c257f697529a435e1f5759e42a9be85bf7e5af6",
+    "v0.137.2": "f9e23f4214c2e6afd2fc56d103302a27fd779335",
+    "v0.137.3": "05619b04b0f9a6fda3ab0c89ddcd93e9865a2dd7",
+    "v0.137.4": "a19b8bd72126c9b9de346989a9004bd53723d341",
+    "v0.138.0": "e5125f0294e28d9009b1ae24fe022dcbde5ef8f6",
+    "v0.138.1": "5107d5e397ca9114a3e8fca0ef2c630e5e46e2b4",
+    "v0.138.2": "2c9fabc27d681c2ae7636a648008a056fff2903b",
+    "v0.138.3": "1533a7d7cac7d9bff44e1b3f068c0b7ac3a63ced",
+    "v0.139.0": "de71885ef610b563f918bd66923d7c9156051169",
+    "v0.139.1": "7c1f1d9f8dae68d6f60ee27f0072c16370bc51c3",
+    "v0.14.0": "08e11501d125dffdae5ebd8e5243c3478c9ab8bd",
+    "v0.14.1": "15d16a37fb80c75887ff6f24e275a3c9f2d865be",
+    "v0.140.0": "5d9341d9c031a6e617b17c900ebfbb8889de244d",
+    "v0.140.1": "abd381456f304e8814b5072fa99d644a822627a8",
+    "v0.140.2": "dbe386537d65e5ca167fcccf4dac36686fe6d818",
+    "v0.140.3": "c1382ce3f5606b988f0eb48cca5cc69d7910e1b2",
+    "v0.141.0": "35ed4a711fa34bab189f18b28af022e8ee66d871",
+    "v0.142.0": "dc4ceedefdef3715269051a08469a8abe07a39af",
+    "v0.143.0": "c6a633d59bd3ebc2aacb7d0ab70b6530d6473c00",
+    "v0.143.1": "8fe86224b1d59e758db5e8704ce0e900f398e439",
+    "v0.143.2": "760a3bb1dfb103b54d66f7105d188bb506807382",
+    "v0.144.0": "16cbb6e4d1e9c9f33bd9654f5fbcbfd2fce999fc",
+    "v0.144.1": "4bba85ec1e16a00cc1dcfba56e08360e721540bc",
+    "v0.144.2": "2657589731b7de88ddb9f1fd23423e9583378031",
+    "v0.144.3": "2bac99e14a09118e7244549073689834dd6ebb92",
+    "v0.144.4": "691592e2376113a0541d7bc13e582f7f1190452b",
+    "v0.144.5": "52cee2ed727ab406d0089ea73aa1a9cdcc2e2729",
+    "v0.144.6": "f0848fccdcc1faaf6e33035742dcbb8b2c1565fc",
+    "v0.145.0": "b8b1722ac9f122c98c1cc998f8314a3a608c63d6",
+    "v0.145.1": "39f217cbf88fd5ada22093e7c405e2f533e3ea66",
+    "v0.145.2": "6c3193f06e2013e0c6218cb886d6489fec1dcd78",
+    "v0.145.3": "a8cc3bae4711088dceb2dd293ea8a1459e5816aa",
+    "v0.145.4": "6dd0811ef0f7175bd2fd492647217c6e20da4d5b",
+    "v0.145.5": "99692484273ab8d225285dc9a98a21f558bf4715",
+    "v0.145.6": "b6f181c5e36d9755478a0246990f1f136291c38d",
+    "v0.146.0": "d03c13907d092ac6f610cc8926bd2607bf48bfdd",
+    "v0.147.0": "cab763b71ea972ce0ceaac7962e32e249f1fe72a",
+    "v0.148.0": "cd4de12a7e6a2ac5c37152431d82e6e691eb0418",
+    "v0.148.1": "8d08afc71d310d47575c9e07b6d18a1f97d2cb18",
+    "v0.148.2": "b2f4c30a5cb5e66cbd940194cfe75b57eeb4b0fc",
+    "v0.148.3": "c7aae8e118534b6151f1b8f98b59d9cddd3b2ae2",
+    "v0.148.4": "fe401d24d2b28742e594fe24de8730752b1e9228",
+    "v0.148.5": "df80b809939560e3878c18c788cc4cf5d5729ddd",
+    "v0.148.6": "68a112b7ec69d5e6ecbdfbf4a971264a4a17b3bf",
+    "v0.148.7": "647988f4ea0c55c1e6a459d6680a5a52a483015e",
+    "v0.148.8": "456cc1a668959b58cbdee2f50fb86ec7da4f611e",
+    "v0.148.9": "6cb0265f3ac6c66b9540c0ce5a7f1a00fcb9583c",
+    "v0.15.0": "1f029965851117fe1d9d6712449175bd698b4836",
+    "v0.15.1": "aa604c16bae4cf80c5fa450d433a7b181d01e70b",
+    "v0.15.2": "096b118b45ba6a45eec71c2ec83604f79ffa63bc",
+    "v0.16.0": "f23770b6548dc90e05925452cd65ed4fc63ae757",
+    "v0.16.1": "296c11650363b750f13fe3eb044528e5c5e8a4da",
+    "v0.17.0": "8e82b84ceefdbb61e9e780c75b2a6e8ada3c9047",
+    "v0.18.0": "b2b7c030eabccc22c07d8b0da350348ce319569b",
+    "v0.19.0": "00a01ce7ddec76cbce50d47d5a8681d257d8a8b0",
+    "v0.19.1": "98afd337be686e28844940d99a288830bc42bf74",
+    "v0.19.2": "6cade3410ae0e528f8ca33c5dda776e4a4372a01",
+    "v0.19.3": "a10a3ff9e30609c12ef282b62ec22275e9e57e36",
+    "v0.19.4": "ec5a81c0896f744a36dd42178d6ecae3365659f0",
+    "v0.19.5": "e925e3e9a1845ef38f6e5ee14b3d6450162cbd8a",
+    "v0.2.0": "14c35e48ae76a97fced18d05bbeb8a252c7165aa",
+    "v0.2.1": "732f6385ab92d3219bc88589590816abfd6b7313",
+    "v0.2.2": "5ac9d2808c7c5f855620b13ea56cc98962ac624c",
+    "v0.20.0": "72a0e1b42d678cb473fad8460cd85b4106f637a1",
+    "v0.21.0": "6c131060bab66250d732a6b9bd39a95b0bcb668a",
+    "v0.22.0": "296fba8370d8bd41462c5a35ff675e2276f3256f",
+    "v0.23.0": "353176fe600410d3cb2feaab87d30bb07ee9f886",
+    "v0.23.1": "3b7daa81577c4225d02146c3d11ffcda4bec11d9",
+    "v0.23.10": "3d3faf9884e9317884192994ac0773599a34dc44",
+    "v0.23.2": "1741a77acccdc8259dab52e14a958a52c5e6d0e5",
+    "v0.23.3": "728797a457669f14acde6491e156f6a4dd23b483",
+    "v0.23.4": "e46c6a5146cc99585f1c8690da96c5c33c3b8011",
+    "v0.23.5": "9a82c2f180e9d8d71e43235fe90661351f6711a8",
+    "v0.23.6": "a38f9cc56a98d29de115fd8c33da12d8c1479104",
+    "v0.23.7": "df3a675e091931999afec66afc4d1688c1ef8caa",
+    "v0.23.8": "28dba2b5c225c25fd43b886f3b901c5ed7f33645",
+    "v0.23.9": "0d1ff79c4ad8f2f8c41fee8e32f52caecd49e237",
+    "v0.24.0": "e7243062d981ef8d2628f0e9a6a6ab43c303c7f2",
+    "v0.25.0": "6ba47bfcc173db766364985345fa2394d41ab081",
+    "v0.25.1": "09450986c48d67290c42b9d149c94ede88b316f3",
+    "v0.25.2": "3f4f7230fb0d970521feecef09805a8715e83068",
+    "v0.25.3": "b61c826eba37ba13aa11a2563d5d2dfb4396443e",
+    "v0.25.4": "8cfbd6afa61e1e1c45bcbfb38975dc70ef08c493",
+    "v0.25.5": "f97b4e5ad0bebecf44c3e2f22ef36518bde0671a",
+    "v0.26.0": "161da395044cad438a1ed693bb18fc5537da132c",
+    "v0.26.1": "8f17551ce0a40a5e344b332d020ac99f381e2b06",
+    "v0.28.10": "766b8299a05f04fd51056383b59e5d315dca1869",
+    "v0.28.11": "7a1ca157657ddee7474f6e227e9ce563c526b31f",
+    "v0.28.12": "82f4e9b17402f28f0679afc17e8b06e3a18cf3c8",
+    "v0.28.7": "92534d5a481a31230c908961bcebf8e0f38c12d1",
+    "v0.28.8": "9f1e7d67b6168d6107f3d024ce78067c2d38094a",
+    "v0.28.9": "56b179477007f896fda64691272c3e4e52a71fe0",
+    "v0.29.0": "4856d062d2513c0f898cddae9030477c511d0b83",
+    "v0.29.1": "62cee15c99b69d8242c4d265c691a24aad32fa89",
+    "v0.29.2": "1fd23a98cbc76f0ae965dd9670fd860842ab837d",
+    "v0.29.3": "c25b67a62692792fefb34c2233a8a652715ecc51",
+    "v0.29.4": "fb8ed80e47e2fa09bd599d8acaa402c9f54087ed",
+    "v0.29.5": "4d5692c099bc61b014e44a515d91ea626a4ba7c6",
+    "v0.29.6": "98a91953be79c89f43b88ea367cb05f9a7e57da7",
+    "v0.3.0": "beea1abec03e76d7b79dd4776ab15e57bfd4593b",
+    "v0.3.1": "96a587a1633bf79215bcf55bc4a384a24958dbbf",
+    "v0.3.2": "6588340fe30b2f5f1d6d732e4e83d3e3522a1720",
+    "v0.3.3": "9a204301f3ba536a9357e23aea3b11a0ac915c60",
+    "v0.30.0": "8b0951c6ce3a330c94094ec4cc969b8f5c7d2793",
+    "v0.31.0": "d4d1d32e4ad916430a57326205ca7ed0c2b98554",
+    "v0.31.1": "41bd63258938f2ff10522096da3837999b22c414",
+    "v0.32.0": "de67d8069f463abafa59a69143f09d0b32a50bc9",
+    "v0.32.1": "e40ee0a9d823bbf2bc8c93fb31692b662472f33e",
+    "v0.32.2": "fa31af692e0e4c7e89bececc57c5164bc0f7208d",
+    "v0.32.3": "f9aa9330803233e978346920a4e79b74fc329e11",
+    "v0.32.4": "f0cf8c8f9085b73aa3df8e4fb8fc56d61683ae79",
+    "v0.33.0": "0d100be47ac791740ca25533c9a53f531ddf5e10",
+    "v0.34.0": "1e6b585ba94bc4e20a77006ea4556d9e1fcee440",
+    "v0.35.0": "0a09ce966fbfc64f0627e3581a2812d46b9dbcd2",
+    "v0.35.1": "2ee0077e57beb764123993d658f2b984c4fb503d",
+    "v0.35.2": "e401ed513e38b9301aeee288661f3e2873469403",
+    "v0.35.3": "685b3b62186af4b7a064d750fadbd75bc764db8e",
+    "v0.35.4": "cf1b42d37525c150e955abcad4f64238b09ff5f0",
+    "v0.35.5": "b7cdef27096c9a07b6bd9a5f458f998bb5f5e15c",
+    "v0.35.6": "6ad1992744bda75a805bf6495e35f35d96b007fc",
+    "v0.35.7": "cdc0893bae48618d90f5dc9449b36cc768d57001",
+    "v0.35.8": "e96fba91d177c8335b481ba3bcb45603c0f6ca38",
+    "v0.36.0": "8437f3eea5d215e6bfd7551c26d491b6d1f57d70",
+    "v0.36.1": "9f20a73b25d8bec89a9bf079e061c6dfb47b78b3",
+    "v0.36.2": "560bfa7acb37e8a58c71e2fe52b990ca0432942c",
+    "v0.36.3": "7e0aa65b01745920b88e5a4c0077af0c5224961a",
+    "v0.36.4": "0aa4478d5f0f64821b5b99a601c08c3405d288da",
+    "v0.36.5": "d1f14fe6fd077ef4277c2faf5b6ea1ca90e5947f",
+    "v0.36.6": "da5020fc26de374dd4b13f57c27746478c9e9c99",
+    "v0.36.7": "91ee6a4591724c5ff1545158e7a4b9ecb2a6a16b",
+    "v0.37.0": "2ea2d6f2ab4c73ef70ce1af2b2c9fed1207d9287",
+    "v0.37.1": "c7be5a9df267c51dbd3336a910541a039cb7b485",
+    "v0.37.10": "3bb59257a5c2b044232b7525436ecff5c867dbbc",
+    "v0.37.11": "b06ea9207982f0fc386ad6521ef2b6bc3db8c9fc",
+    "v0.37.2": "ad94c02768be0ba89d2a74e0680d2e70f759ea3d",
+    "v0.37.3": "0ef08d7f01ac7ee6fb08d2a7884d53b6849a9c39",
+    "v0.37.4": "7a71764ee1049f7d871fd1544342c2778e45ef6c",
+    "v0.37.5": "3d61bfd5481066104ace92f4f7d444c10b17c070",
+    "v0.37.6": "16abe403f516b92228a6446aa7b7066719794941",
+    "v0.37.7": "9b8120b79fa0416eac1ad2df0f8d87749cf088e7",
+    "v0.37.8": "f200463641dd95d4dcfad97f06a5417688eaa7c8",
+    "v0.37.9": "5e287241e12088813efffbef6b1121ce8bea82f5",
+    "v0.38.0": "3771413bc7e672d9df526e3ca2beb66cf8f05a2a",
+    "v0.38.1": "6c9a8a6a7159919755ba0af490d41cb982786a9a",
+    "v0.38.10": "2eb9fb10c5f03690c1b0dadd5092097aee9661c7",
+    "v0.38.11": "93243ac3197ac3f11ca28249e0db4f804c306bb0",
+    "v0.38.12": "0f974e7c782318a2988dcde5287ea2a4b27e6a0f",
+    "v0.38.13": "cbf7f7b82f5cfc051f02948293a73be0d74da870",
+    "v0.38.2": "4c14e965934e0082cc23c1a4894dca755a7b342d",
+    "v0.38.3": "d12d5e596f97e5ff7b4c1bc1057922f24e6879ac",
+    "v0.38.4": "37ccb215869f971540f7917d2554373cfc8f4f63",
+    "v0.38.5": "3ec92fd5621e482c42697544a62e3cf3e5878c05",
+    "v0.38.6": "8baec18ecb221bcebc4420defeb6b8fa1538a66f",
+    "v0.38.7": "7f4c235c6f7d026424ed77a58da188bf63b14d09",
+    "v0.38.8": "3959f429709cd73d1f7ad41b5fd8c2db3553507b",
+    "v0.38.9": "ad63ed868130e6d718169d5466381c1987698acf",
+    "v0.39.0": "467139875a72a7f1f1dae7dff0f83327ea6d03aa",
+    "v0.4.0": "be8dc90abf91eda7688e404a7151079c3750432f",
+    "v0.40.0": "5c0decd7c54c66d10a803f124086305794cd55c3",
+    "v0.40.1": "8fbe16f9934f9b2b8f1af9ce5a7808cc31c10997",
+    "v0.41.0": "60dec4cc50025f3b2a15380583929b168d99d090",
+    "v0.41.1": "77e779f1aa51621ca9b1e9b45a5b021e40633ae9",
+    "v0.41.2": "4f4cf7aa06b89985b09e514a8126eff03d976f23",
+    "v0.42.0": "5e3980efd994342165ff96cd3d573fc185936d53",
+    "v0.42.1": "d3a73c4c0e8004f4748439d2e8e0326af0f7299d",
+    "v0.43.0": "62d526777c3a5ead96b893dfabccf54f80d07b2e",
+    "v0.43.1": "dc31ec56052f701e72a5b542d1530749120c9c82",
+    "v0.44.0": "564fc74e879c4ef5f96ee7268ff024252b8cfdfb",
+    "v0.44.1": "a2ffc369cf12f97bc2eca8a598b1dd6cf7a52a8b",
+    "v0.44.2": "d043e5f2a2fb300ee73434c3695d4762432c49a5",
+    "v0.44.3": "753949a882b975f06e10e825a00486aedfcb3873",
+    "v0.44.4": "27e7235507a46d7adadec45cab72fa026e35b6da",
+    "v0.44.5": "48e6f2a36fb198c254762cbeddb42a11cf7c4eac",
+    "v0.44.6": "0674e3160d2f5a719da30930734cfb0f6d7250d5",
+    "v0.45.0": "9ef8540bbbb30555661d3aabf65f92af893ee617",
+    "v0.46.0": "95724ae3f46207a6e4757ed99ed19a5755da7152",
+    "v0.46.1": "986ac0a4b5d94be3f35c4c4c05e20575fd35acaa",
+    "v0.46.2": "27c04039e484ef3773944c38b12aa19d2161c599",
+    "v0.46.3": "32682f838753c1275b4433ab139cedb2ac5419ac",
+    "v0.46.4": "5da066351aa8e87bbc74551a90bae323de25caac",
+    "v0.47.0": "13e436ac041d6cf138e5858de6d686675571b51d",
+    "v0.47.1": "d1f5bb9f76100ac27023df0edd53e2de99fac802",
+    "v0.47.10": "c0f57fa439ef49837f58e24f9a61adc38e01355e",
+    "v0.47.11": "fa33e052e1232ea193f9cbf6594e9cb630106100",
+    "v0.47.12": "e2ec05230815ba1a72bb9d11308b41b9c0982b52",
+    "v0.47.14": "02e09ec23550124706ceaa33f6818bae7e883399",
+    "v0.47.15": "954840205abba21d5a29e1e41baf98cb4704def3",
+    "v0.47.16": "ccdae7bba4130eefa9cb6ef79fe1783717e67399",
+    "v0.47.17": "ff7ec204648b32fabaf23878954bd9dd704248da",
+    "v0.47.18": "6f0c5ace25dd32fd4c70bf0518402e0217e1a7be",
+    "v0.47.19": "c0e6916161c6873c0c21b4ed1d41248158c7fb57",
+    "v0.47.2": "d2ab4a7171ad05139e4efae2bec5b28b4308b218",
+    "v0.47.20": "e673e0b058fb565ce14855b63c3a241d98a7e6de",
+    "v0.47.21": "e751a0f31deb5837fad342ba85c726793ff79f9b",
+    "v0.47.22": "afc08100a32e27e1efd81ff632af5eab9cd9c24d",
+    "v0.47.23": "d1dbe31649798e507a619365d34ad81548237ef0",
+    "v0.47.24": "50c45ce5bafbce70556bf4045aaccab5586d317b",
+    "v0.47.25": "6687b59c514b2be57996db92a023a2f680ef84ab",
+    "v0.47.26": "6c9a2a746cbb4a475569f5c30b98f5e12f71f0ff",
+    "v0.47.27": "c063e6abec318a6a61e928bcd326fc782e89d87a",
+    "v0.47.28": "1f921455f2fe72650452f90224079c38e27eb722",
+    "v0.47.29": "60661e9f480326a7df6eeb7fef9fd2972c1ea574",
+    "v0.47.3": "dab6a1b347832c4cbf2f7948289c9417317bc3c0",
+    "v0.47.30": "551ae222309d2c8b29c4e29368a1429954b1c4cd",
+    "v0.47.31": "1941ed2421f8e262872cf44e53692031a218cbb9",
+    "v0.47.32": "9cc51b04044d8d4d7406abde1bf545e979a3f457",
+    "v0.47.33": "4f4e16addc37b1f2d60b7aca8d0fdccc1c5d71f8",
+    "v0.47.34": "1a0aa6539da0757add31e0ee7dab15858f7c257e",
+    "v0.47.35": "57b85a4833a4ae4b4eb829c44a9ce5effb780cd7",
+    "v0.47.36": "0f6acaacceede98ed7330f77840c3a319c29dd15",
+    "v0.47.37": "ffb4d834ed801145c9a0842ef3ccf2bba264da1b",
+    "v0.47.4": "a40f6ef98ee96db3ad27f94c421859b9e2f22075",
+    "v0.47.5": "b709a2188f4d6846745379561f12186b7dbda0ec",
+    "v0.47.6": "6144922a44f2677647c4249227f24f0314147039",
+    "v0.47.7": "7ad0d164f2e1bff835d4cfe4821d6091050b13e6",
+    "v0.47.8": "bdd00544f14f1de881d4439e55590194dd6f54af",
+    "v0.47.9": "8efd5d99ee5980dc1d89db4ef96eb2b654cc2e3a",
+    "v0.48.0": "d7382dee4d4ea280b60fcfa188ff4ba154fe7d61",
+    "v0.48.1": "1e439c94c9e9a533ae81e7fa1db86803e82d6e73",
+    "v0.48.2": "7865d7135fb82f20b8d89aab71332f145970368a",
+    "v0.48.3": "2e38f62007f5963bb7d6479601435901cfd537f8",
+    "v0.48.4": "7dbd91b47a5f69671149327318c6782c1b66909b",
+    "v0.48.5": "ec7982ab4886d2bfd826abaae3af5bc8c946c7da",
+    "v0.48.6": "594c2347c928505dfd2469a7d1af56f1ba24f22f",
+    "v0.48.7": "a2be4fc76404255a45686b3b5653b7b64190b887",
+    "v0.48.8": "4fcd5cec621591f014af25487007f33c6f2dc281",
+    "v0.49.0": "73591f68736121923f3d3b35140fe15867459f58",
+    "v0.49.1": "e328f6b9f025d5a1375a5175a69f280b8dbce5cf",
+    "v0.49.2": "cbd03067a6731a1ff9c5b655c9883bdca1acc1b2",
+    "v0.5.0": "861f4171e038825d1d637a0bc54afbb3f4757135",
+    "v0.5.1": "4a9317f7fe7fbd612b9170a64b22825a5ac9dafb",
+    "v0.5.2": "563d3ad6d1e5f3dfebb91fe863303c8190abbef2",
+    "v0.50.0": "a742a5cd819db6effac3d527d4c737938b964301",
+    "v0.50.1": "fb05e27f5963560fa323906af5e18bdef784b6ef",
+    "v0.51.0": "ab1d8384b1d4d79393d43d684da5738c14a7faf5",
+    "v0.51.1": "c92453091136378001bc17ecae8b8da52a12d2b1",
+    "v0.51.2": "722994c3b219e7a27d43a6175b542c03a7d16f9b",
+    "v0.51.3": "61e8104d143842595257b42525ed4c324161276c",
+    "v0.51.4": "b98f14b599f6ff0a028d5b5933392a1442936ecb",
+    "v0.52.0": "559678c53ce201538a9161237a503e2ab8b2397f",
+    "v0.52.1": "b0adadf8a5ed2361a790892d67a80b9c15de9294",
+    "v0.52.2": "48a2ff5c827928e931c298f70eba914d6f317d13",
+    "v0.53.0": "fb22ecd29f30f305347db3024eca2cdbfc7b8451",
+    "v0.53.1": "42560c76beb8bb22101ec5722a9bdb97882abb9f",
+    "v0.53.2": "b2b591c6c9acde6f10c308d5c8a6b650ec97a114",
+    "v0.53.3": "d3cf810685e066e4294a9c3d54e724e20c7f6fa5",
+    "v0.54.0": "14e1021f6651d9ed94a863b188a388514544b0b6",
+    "v0.55.0": "d6fecab2104dad20871937e8da845211292fe3cc",
+    "v0.55.1": "79a74da1cade031c405e849498fc9791b1b1f4dc",
+    "v0.55.2": "1043148f4a7083a1d43081194bc3bc728a69a0c3",
+    "v0.56.0": "ac29c2d612e314d08996198a402389aeb407326d",
+    "v0.56.1": "1dc11603deb5cbc2b78a695f049d0fde1a090f89",
+    "v0.56.2": "bad76b97ef9c45360fb11130cb2c87deee6a9123",
+    "v0.57.0": "0416699607e75f39fc260e10f4779d014b1ff8a9",
+    "v0.57.1": "0c42307a11a38da7241e48609e22577e3fe3eecf",
+    "v0.57.2": "bf03822b5cc6c64d756c1c4327886d43201ed0f9",
+    "v0.57.3": "c2b35a7f3d3ad2b1e9d49331fa895334cd3fdc03",
+    "v0.57.4": "4412ffa3c4230750aa136081b2e58f683fe27cef",
+    "v0.57.5": "5a873e2e2dc1d994e79abed172aa3dcd22be94f8",
+    "v0.58.0": "b15debcf20b57e109b64c1f3e6025064d31b1b19",
+    "v0.58.1": "d1f41e3a22ecd93878811223f2dc195faaaa7002",
+    "v0.58.3": "7f73ab29b2373538cd7cb4161a4dcf8bd8bebfa2",
+    "v0.58.4": "fd0bcb9e10efe83b05e3dbada17384da04361a3d",
+    "v0.58.5": "a8ea63b17d49d1625bcd0468ecf2fce65ea0e01c",
+    "v0.59.0": "752c5b20e3d7331b3b87c3aa9cbfc9ffd61c4dd0",
+    "v0.59.1": "13b38225ef17d37e9cce172926e81e9b722284e7",
+    "v0.59.2": "9a6d5d4f2630fed36fd2b765bd2b5fa44b4eb2c2",
+    "v0.59.3": "bef213a3cd9cd1d5f975ed1187552232cd5eae50",
+    "v0.59.4": "a2e90e621e8d71fa0589821695f00d859870a121",
+    "v0.59.5": "3435d9c239990556349a5f2e25cd1e81978f8e8e",
+    "v0.59.6": "3a396497a88bbcd4f1342a2e38d557363dda4ba3",
+    "v0.6.0": "3479bc89df0da98e8e011d54d06137721b7e3d55",
+    "v0.6.1": "7f8d520aa31131498f5e19128ab3ef1722ae9b0d",
+    "v0.6.2": "9a8df0a7256a2bf2b02102e427ae8c6d102bd5da",
+    "v0.6.3": "930ce067bb6a88199c418837189225e93cca8109",
+    "v0.6.4": "f5ff582faf4a7466e706e0d956446920eb3d7040",
+    "v0.6.5": "9f9f95cc0ea78d9c32bea17cfdce19f9e7bd4387",
+    "v0.6.6": "5eedd3e62787f188e35fff8c78490447858676b4",
+    "v0.6.7": "5acaa817cf2b0ba07cfb43437da6817474d6e8b9",
+    "v0.6.8": "55767d12c957e312d56778763196f49530f12f97",
+    "v0.6.9": "f4b93c0af77948386c98990db94457ec41bb0a13",
+    "v0.60.0": "4f170c0939135e717f96c0cf262ed5840d82b2df",
+    "v0.60.1": "e98d385d4f3fe677f74cb953bd8a95e618bcf3f6",
+    "v0.60.11": "787685b48c2feade26fa32d14b82528d7f12c666",
+    "v0.60.12": "4330d50e30d8bcc769b7b54cd46255e7ba702efa",
+    "v0.60.13": "c04b0bddc3a9bd9f4a9e9248009b2444f2218ba2",
+    "v0.60.14": "112f4917aeb2acdcb76236f87a7b124ea0539a4c",
+    "v0.60.15": "1f21861945d171ef5da097825b36600dc454084a",
+    "v0.60.16": "2e3c96c3dfd3e1f45c408ebeb29cadb4bc648c8b",
+    "v0.60.17": "141934a664ed25b0645210d2dacedf56302f8f2d",
+    "v0.60.2": "103f833e47086ac346938f69a7b47cb03db321e1",
+    "v0.60.3": "cb39bc3a8e29a69d50c84e7025bb19ab9e492d50",
+    "v0.60.4": "ac17948a607961f721be3a9d1a4deb002b3e0561",
+    "v0.60.5": "8370a92e6c4fdf7db8327b8ceff06ce85473c359",
+    "v0.60.6": "13e9dfb503fc619501697c203131a02d4a3434b8",
+    "v0.60.7": "44090594847c6f05f19ece9b791d44ca6acec064",
+    "v0.60.8": "0b4f02dae1369a4a6b07977f381a1562ee44b1ff",
+    "v0.60.9": "9f715ba2c8ee23feac1e36388bc7bd8f892e6272",
+    "v0.61.0": "96aec7ea120d4d94beab9d9302d47dc4357005bc",
+    "v0.61.1": "5e974b9f7c3e02355400658a9817cdad404e89b3",
+    "v0.62.0": "70e8ca2dbd0db67e58d6fc58a79136eb636e45c8",
+    "v0.62.1": "b46144124dcddd3eeca60e1458b7a7f1c040ecc0",
+    "v0.62.2": "ec258f0b45afb48aa91643df61a608aade5043f6",
+    "v0.62.3": "ff92521d780d9f708bce5e334f8d46a1ab74ce7f",
+    "v0.62.4": "03c8ca2603453ade32088c0743d2c17f75b8842e",
+    "v0.62.5": "ef14ca5d4705e4866b11b8ccb23dec16ac47a106",
+    "v0.62.6": "1e6cda68b127af92adec9023dac955b5471582cf",
+    "v0.62.7": "114bcd26d219e65aeaa336fffa8ce5081737f980",
+    "v0.63.0": "648f3129b087f19544849526a65551ea60c870d1",
+    "v0.63.1": "468ee8f9227b2fee1e4dccc27921929a825c7a07",
+    "v0.63.2": "ef0d4f7c5bdd66d09be52edd960c6596277d0e24",
+    "v0.63.3": "9b2e6697d50e8e0bfc61400c3aba0c0b88e2b0c5",
+    "v0.63.4": "4b2f9162a47f95261334e6df25a3e0d3a1bf3962",
+    "v0.63.5": "7b7bb098dd5812ae00211e0340d884b8a0612026",
+    "v0.63.6": "da4c54857768dd3f03a11fdf89fdb3f5b01d2a14",
+    "v0.63.7": "7a15f2b39a6db7817150a51c81d1c8044d6ef393",
+    "v0.64.0": "d417abf6d609bf9f5cf45fb078e62a0ac0e5a558",
+    "v0.65.0": "0d7f33b11f65188b3fdbb24df13bd2124eda11b8",
+    "v0.66.0": "3aa061998ef103cc1bc69176f7d48f689aa0309a",
+    "v0.66.1": "f321d8195bd95223e68c60299ec9f79cf38f25c7",
+    "v0.66.10": "81ce9149982f8b8fa98394f09701695d00ec78ff",
+    "v0.66.2": "cbdf8c92bae2ec3ebc4737450aab31b1028026b9",
+    "v0.66.3": "088cb68d9d4fdd112f4383ea37d117d67707c954",
+    "v0.66.4": "4e9c65d3e75531fc7f98d242c9c1edf823b2b736",
+    "v0.66.5": "7a4e5701df0ba6e7a8a6b5d4befce7c40c579c5d",
+    "v0.66.6": "37671257d3cb6e640e91878b976c5e7ce14eb1e7",
+    "v0.66.7": "b24a4346ecf4d8806788f6a27d31a05cf690e333",
+    "v0.66.8": "197ef4f5c8944cd1dd5449062307a9aeca934710",
+    "v0.66.9": "34c8b12c46f141fd36eab49d8f6be1755d785a1c",
+    "v0.67.0": "5b229436be222b80363518b269a51c3c14f14998",
+    "v0.68.0": "eecb8dab01ce1852227f7aad9b9ff26556463a6a",
+    "v0.69.0": "9d9683532beb53288ada9b33e39d92b43eb12f05",
+    "v0.69.1": "12305818a0d9608b54f8aebe036cafe76dee80f0",
+    "v0.7.0": "091f5ecfef5a02600c5808b61ffa5f40274bf4df",
+    "v0.70.0": "ae50e546a4ac830f3444df47d340a39a256bba42",
+    "v0.71.0": "6c0c9304e71f4f369b152c9812396c60c8f21251",
+    "v0.71.1": "69abda2216b149167f4a159e01a152b4343f0766",
+    "v0.71.2": "c4576799b79ce8daff6cba7bac10b36fbdd03955",
+    "v0.71.3": "952b4ae43c5c3a510b68e37cd831a263fdd44d12",
+    "v0.71.4": "1bcb6dd0753f11afca7ffcdb89e4c433b0d93eed",
+    "v0.71.5": "3373740c1e62506accf1395c55e1a936e6c659de",
+    "v0.72.0": "a696a4cf7595ff38a535486c08b33150618deeb7",
+    "v0.72.1": "7231131d806eba50ff84103977d82f19be67b6c0",
+    "v0.72.10": "3d0eef6b6f8bdaa4d3626f488421c70791def15e",
+    "v0.72.11": "f1d2d8fa8ba8c2c15cc00a5b60855688b8b7a3fe",
+    "v0.72.12": "44112a3edeebe896b79336d051d195b50ab5086b",
+    "v0.72.13": "50b6bff9fb0c88112dc1c00a07b4c4dff476738a",
+    "v0.72.14": "966730ebe2cf2def8bdfc64f289b1f9892e30af6",
+    "v0.72.15": "0364e4e9a93d629e4eebb3ea9e0350bba39a18d6",
+    "v0.72.16": "c4c19d1ab01e41dba6f14fad77a07bdd7bf7df9d",
+    "v0.72.17": "9aaed6f4c1051b16e28ad5dc190b5ca36f694ae6",
+    "v0.72.2": "94517a9496c27177f685d9aeab0ef7f9a6e1222b",
+    "v0.72.3": "7252791caa5c5cf264c01933a64ca2e91f80f1df",
+    "v0.72.4": "aa13d0d0fe164bc06e5caf1888f5441b4b8af2bb",
+    "v0.72.5": "5fbb24dc946a13eacdcab25d3d558d6403d9f7cc",
+    "v0.72.6": "a9f9eb34c8eb6f2f71f59dce0947f48845a32e76",
+    "v0.72.7": "3823ed217b3d203b764104b4977a7216d4d80a27",
+    "v0.72.8": "b5d1a0d0941abaf9090b1808ceb4d9086cdb485d",
+    "v0.72.9": "688cce06f87137d43a213c399f28fc4ea9bb8cee",
+    "v0.73.0": "f9274e1f2e744fb11b00bb28e40cf08c78656709",
+    "v0.73.1": "2f99e4144252c2668f81aac197904b7f2d6a35c7",
+    "v0.73.2": "ab03bd8c63ed3c4c029f31c58344e3ea536f60f9",
+    "v0.73.3": "fecae756096f12667324d6613ee6513396532b9a",
+    "v0.74.0": "416c2b8917c2276c22e6c7b9747d6a5dc06bec3b",
+    "v0.75.0": "542c14d9513bb414f4002947100d619d537de7cf",
+    "v0.76.0": "b5a78f9e6d26105f5532b5c258ec11225ceee51a",
+    "v0.77.0": "9ce997dba61da05198d2f891b34a5f26f389e673",
+    "v0.78.0": "be1f5bd4e9391563d82943b24f6ab336e1b9cbd9",
+    "v0.79.0": "0f8ecbd0841fef094bd2e8508ce080dfd4f9bbc1",
+    "v0.79.1": "54c9008d5e1a6ccae0f7d9a1d9f449dc142cbf58",
+    "v0.8.0": "2e80dcbe2d70fb8f1dabb6359cfc9bb3405785ca",
+    "v0.8.1": "82e53e656f9e2f8811fabf53e7163de4af02d5df",
+    "v0.80.0": "5119be7ddbd16845baab5887746616e928528817",
+    "v0.80.1": "d237795161b6e4d164b6da68d1c64c49c5bc8938",
+    "v0.80.2": "3da0014079d9ba05ec2a91572d29b4c660849bed",
+    "v0.80.3": "11445e5965ba4ea4a66c6c240c2ab71d1f5c2ec0",
+    "v0.80.4": "fb8207bd41e3ea3f1e66a441c9431226020f0a55",
+    "v0.81.0": "f7c5e8caeb4cfda7b842b4226f6f7625c3df86a6",
+    "v0.81.1": "e7373d6b228661ba06b91bf5ca432a92c93e5f8b",
+    "v0.82.0": "06c5e5f52e661ea51c54e8e9e817f91e19d89875",
+    "v0.82.1": "8afb1fae327692e84e33dc2c4da1e3efe10c34d3",
+    "v0.83.0": "8be844ea9190ba3eb7ef6f61cd88d42154ab9560",
+    "v0.83.1": "990d93c3a355516ec3a11a35ee7715be6c8f8d2d",
+    "v0.83.2": "3b7fd685bde208afd533a5e6e76fe8e8e071acd2",
+    "v0.84.0": "0f519c99a4c006359672c333bb8f76a024198243",
+    "v0.85.0": "c8cb17b95045d09a88af8d3f2ee827472d2450dc",
+    "v0.86.0": "c0e215f05d3d1b8aaca736c8431850cfee51aabc",
+    "v0.86.1": "2b7ca41b5a71b6ab1f37e787c9a892e23c0abf91",
+    "v0.86.2": "67d1d3feff20eeaf6778028c560551b6c158f37d",
+    "v0.87.0": "b2b85dce1b2c75e34521d7378d28220646c61f87",
+    "v0.88.0": "8c33463eef8b7ceb084958cf554e5c030d9f1417",
+    "v0.89.0": "d0d225f9aea31fcd016dcb65e8cd06481115ca10",
+    "v0.89.1": "a247f96bdfcc3e96a311eabd4fcad5524e896a55",
+    "v0.89.2": "b4f4367c3504d18326000ae7272e5df189f12272",
+    "v0.89.3": "9777de87c41b0c4f029eac029f523a58561973ef",
+    "v0.89.4": "70bfc74f5faa54b3fed5349213211798f5955aa0",
+    "v0.9.0": "b8b637d39d1f52396526bae83f7fff8f77ecccdf",
+    "v0.90.0": "cb770ec81c6c97ae348b7128c2a7253cce0737b0",
+    "v0.91.0": "5f425dc55a2ac92a65d451906cb10eacfad532b9",
+    "v0.92.0": "31a1fc02fa3052692367c9aa690457e91c930331",
+    "v0.93.0": "c5bfce443a7b3a72e8faa6ba3821d6410afd2577",
+    "v0.94.0": "bcde46857766113a5360ea9af2319789b16e7a3e",
+    "v0.94.1": "ea105daf21bc5609d06305086f53f53ef73eadd4",
+    "v0.95.0": "28a72cd2524d824cee94ad8efe0026b36a4a70a9",
+    "v0.95.1": "46982e03c847a4fb5201f112cbda77972b12ebe7",
+    "v0.95.2": "fdca8940eb9365a7fb3c97e53fd6f718f9b2d020",
+    "v0.95.3": "4884aeac58347eb676c45575112efb8cdfc89315",
+    "v0.95.4": "93ea14f00729e926680fa0b2ee8abba77f0ed0d2",
+    "v0.95.5": "257b9f8fc6e0c23a2bf8bde4d97bb3a4d8d793c0",
+    "v0.96.0": "c07fb4598e7bc7af0c3f205ab4d8bd408b04127d",
+    "v0.96.1": "c5c8a2025af6122c04658a3c6e0a57c9a1d03b40",
+    "v0.96.10": "532b75829a2feeda1db051a3be164a343ec98c6e",
+    "v0.96.11": "c9decad60330cc0738021bcc271db99c756be9ef",
+    "v0.96.12": "d9759b3a3c3c73ca5c5cce4bd92703144c7d0aaf",
+    "v0.96.13": "f45c26c636af4fc81bdaeefa41a49d1816363b31",
+    "v0.96.14": "72f70106801b7e57f627965d9ac1e04e1ae82245",
+    "v0.96.15": "faf191eaeb17d3e3c4eebf720d02fbd614eb3c91",
+    "v0.96.16": "12bf9d09fb831e28c4bcaee749138b13720334ba",
+    "v0.96.17": "a1a674b58cd0a079c82aa7cef89d2b6d04c8856a",
+    "v0.96.18": "714bebef46893c5549db055ec2f51e922eb3ed09",
+    "v0.96.19": "52af857566d8bf7e78dc922b2b445250c591eeb4",
+    "v0.96.2": "7f51576d0169d064ef4d51dbbed7abbdc7e57d2d",
+    "v0.96.20": "70e639ed40bc4113c3c0a750a8ec8596cc901525",
+    "v0.96.21": "e362a116ee3c85c5cdfb68d698cdf74b100a98d3",
+    "v0.96.3": "5c06718fc1f021782ca42e1b756dd82b508985b2",
+    "v0.96.4": "096bbbd1be2750fdf3f7c8db9e9182f2a8b2b495",
+    "v0.96.5": "ddc63b8d7349be3ed44f65f51916a4721be0ec16",
+    "v0.96.6": "c072fc76cf5e8b1f5c28c2ec8cfbaf1cc2ca37c3",
+    "v0.96.7": "c686bf19aec29dcb7383af4efc4bf8713a79578c",
+    "v0.96.8": "22cb8e329df8508e4f1e63c622f7523b9cc65fea",
+    "v0.96.9": "60a080f129a7ba91bb0f2dbf9a3414991937830b",
+    "v0.97.0": "ffff2140b619bd169cb933570bb5dba40a30cc01",
+    "v0.98.0": "522a6407d6bcf3f1dc51f575546ad5a53fd6b25b",
+    "v0.98.1": "620821193bfb12e60f3ef434a58af8b98e3f52f0",
+    "v0.98.2": "77c5f4683b2bbdca13f506371330de54cd3b4252",
+    "v0.98.3": "6390a39f6d6e2e09e4b59ec8278c6af3987aa453",
+    "v0.99.0": "a09ceedf8abcea7a1d55e20d25f809f4d2c04ad3",
+    "v0.99.1": "52d38ef730f469adc5e03056af5ac6961bef90c1",
+    "v0.99.10": "72ee8337ff6583d82f48a728c9c70af2de9187bc",
+    "v0.99.11": "bff6d0b64f060bb29c5bbfca6530a6c250c51400",
+    "v0.99.12": "8034f9c82a387d093043a9d52eeb99b12b154053",
+    "v0.99.13": "90553989ae6703a4e042258aa5e6e56ce89b558f",
+    "v0.99.14": "fd63714924e86433acaae26dcf40231dcfd48350",
+    "v0.99.15": "50ccd29bab513e70318fe9989dff596cc4084cd0",
+    "v0.99.2": "380d30a28d890114796e33632a90e9b39e6cbfba",
+    "v0.99.3": "e58d9ffe44141df6374d5e969d55b9c624d480ae",
+    "v0.99.4": "b8db9856dd207cc99279cde5c14f17ca84b23742",
+    "v0.99.5": "c830bcbd1f4e66f6cc95d3e46cdde6caf7054438",
+    "v0.99.6": "7fe1a58dbd94cfb72a6b877dc3f615e3a14a5380",
+    "v0.99.7": "c00fc1bb7c7014a65b6a2b2a0a6274d39a90699c",
+    "v0.99.8": "60fde54ad01d2046a5ffb200db49e3c0943643f5",
+    "v0.99.9": "f6aa64fb5fae641d38943d7a2eb2729b8078fffa"
+  },
+  "releases": {
+    "v0.0.1": {
+      "published_at": "2026-02-11T12:51:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.1"
+    },
+    "v0.0.10": {
+      "published_at": "2026-02-11T23:44:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.10"
+    },
+    "v0.0.11": {
+      "published_at": "2026-02-12T00:24:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.11"
+    },
+    "v0.0.12": {
+      "published_at": "2026-02-12T00:37:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.12"
+    },
+    "v0.0.13": {
+      "published_at": "2026-02-12T00:51:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.13"
+    },
+    "v0.0.14": {
+      "published_at": "2026-02-12T01:19:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.14"
+    },
+    "v0.0.16": {
+      "published_at": "2026-02-12T02:00:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.16"
+    },
+    "v0.0.17": {
+      "published_at": "2026-02-12T03:58:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.17"
+    },
+    "v0.0.18": {
+      "published_at": "2026-02-12T04:53:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.18"
+    },
+    "v0.0.19": {
+      "published_at": "2026-02-12T05:35:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.19"
+    },
+    "v0.0.2": {
+      "published_at": "2026-02-11T13:17:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.2"
+    },
+    "v0.0.20": {
+      "published_at": "2026-02-12T19:19:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.20"
+    },
+    "v0.0.21": {
+      "published_at": "2026-02-12T19:37:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.21"
+    },
+    "v0.0.3": {
+      "published_at": "2026-02-11T14:23:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.3"
+    },
+    "v0.0.4": {
+      "published_at": "2026-02-11T16:20:39Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.4"
+    },
+    "v0.0.5": {
+      "published_at": "2026-02-11T17:30:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.5"
+    },
+    "v0.0.6": {
+      "published_at": "2026-02-11T21:39:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.6"
+    },
+    "v0.0.7": {
+      "published_at": "2026-02-11T22:52:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.7"
+    },
+    "v0.0.8": {
+      "published_at": "2026-02-11T23:09:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.8"
+    },
+    "v0.0.9": {
+      "published_at": "2026-02-11T23:26:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.0.9"
+    },
+    "v0.1.0": {
+      "published_at": "2026-02-12T20:25:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.0"
+    },
+    "v0.1.1": {
+      "published_at": "2026-02-12T20:48:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.1"
+    },
+    "v0.1.10": {
+      "published_at": "2026-02-13T04:50:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.10"
+    },
+    "v0.1.11": {
+      "published_at": "2026-02-13T05:33:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.11"
+    },
+    "v0.1.12": {
+      "published_at": "2026-02-13T06:40:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.12"
+    },
+    "v0.1.13": {
+      "published_at": "2026-02-13T07:30:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.13"
+    },
+    "v0.1.14": {
+      "published_at": "2026-02-13T08:57:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.14"
+    },
+    "v0.1.15": {
+      "published_at": "2026-02-13T09:37:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.15"
+    },
+    "v0.1.16": {
+      "published_at": "2026-02-13T09:58:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.16"
+    },
+    "v0.1.17": {
+      "published_at": "2026-02-13T10:25:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.17"
+    },
+    "v0.1.18": {
+      "published_at": "2026-02-13T19:37:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.18"
+    },
+    "v0.1.2": {
+      "published_at": "2026-02-12T21:18:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.2"
+    },
+    "v0.1.3": {
+      "published_at": "2026-02-12T22:11:39Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.3"
+    },
+    "v0.1.4": {
+      "published_at": "2026-02-12T23:20:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.4"
+    },
+    "v0.1.5": {
+      "published_at": "2026-02-13T00:41:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.5"
+    },
+    "v0.1.6": {
+      "published_at": "2026-02-13T01:56:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.6"
+    },
+    "v0.1.7": {
+      "published_at": "2026-02-13T02:16:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.7"
+    },
+    "v0.1.8": {
+      "published_at": "2026-02-13T03:20:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.8"
+    },
+    "v0.1.9": {
+      "published_at": "2026-02-13T04:35:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.1.9"
+    },
+    "v0.10.0": {
+      "published_at": "2026-02-15T06:52:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.10.0"
+    },
+    "v0.100.0": {
+      "published_at": "2026-09-12T09:49:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.100.0"
+    },
+    "v0.100.1": {
+      "published_at": "2026-09-16T19:27:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.100.1"
+    },
+    "v0.101.0": {
+      "published_at": "2026-09-17T06:27:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.101.0"
+    },
+    "v0.101.1": {
+      "published_at": "2026-09-18T01:21:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.101.1"
+    },
+    "v0.102.0": {
+      "published_at": "2026-09-18T12:26:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.102.0"
+    },
+    "v0.102.1": {
+      "published_at": "2026-09-19T06:35:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.102.1"
+    },
+    "v0.102.2": {
+      "published_at": "2026-09-19T08:18:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.102.2"
+    },
+    "v0.103.0": {
+      "published_at": "2026-09-20T01:22:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.103.0"
+    },
+    "v0.104.0": {
+      "published_at": "2026-09-20T03:17:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.104.0"
+    },
+    "v0.104.1": {
+      "published_at": "2026-09-20T04:11:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.104.1"
+    },
+    "v0.104.2": {
+      "published_at": "2026-09-20T05:51:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.104.2"
+    },
+    "v0.104.3": {
+      "published_at": "2026-10-01T08:01:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.104.3"
+    },
+    "v0.105.0": {
+      "published_at": "2026-10-01T12:53:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.105.0"
+    },
+    "v0.105.1": {
+      "published_at": "2026-10-09T20:27:37Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.105.1"
+    },
+    "v0.106.0": {
+      "published_at": "2026-10-09T21:56:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.106.0"
+    },
+    "v0.106.1": {
+      "published_at": "2026-10-09T22:27:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.106.1"
+    },
+    "v0.107.0": {
+      "published_at": "2026-10-10T20:01:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.107.0"
+    },
+    "v0.107.1": {
+      "published_at": "2026-10-10T21:35:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.107.1"
+    },
+    "v0.107.2": {
+      "published_at": "2026-10-11T01:07:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.107.2"
+    },
+    "v0.107.3": {
+      "published_at": "2026-10-11T14:06:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.107.3"
+    },
+    "v0.107.4": {
+      "published_at": "2026-10-11T20:21:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.107.4"
+    },
+    "v0.107.5": {
+      "published_at": "2026-10-11T22:07:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.107.5"
+    },
+    "v0.108.0": {
+      "published_at": "2026-10-12T19:23:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.108.0"
+    },
+    "v0.108.1": {
+      "published_at": "2026-10-12T21:05:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.108.1"
+    },
+    "v0.109.0": {
+      "published_at": "2026-10-12T23:49:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.109.0"
+    },
+    "v0.11.0": {
+      "published_at": "2026-02-15T07:27:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.11.0"
+    },
+    "v0.11.1": {
+      "published_at": "2026-02-15T07:39:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.11.1"
+    },
+    "v0.11.2": {
+      "published_at": "2026-02-15T08:47:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.11.2"
+    },
+    "v0.110.0": {
+      "published_at": "2026-10-13T04:14:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.110.0"
+    },
+    "v0.111.0": {
+      "published_at": "2026-10-13T20:45:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.0"
+    },
+    "v0.111.1": {
+      "published_at": "2026-10-13T20:53:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.1"
+    },
+    "v0.111.2": {
+      "published_at": "2026-10-13T23:50:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.2"
+    },
+    "v0.111.3": {
+      "published_at": "2026-10-14T01:50:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.3"
+    },
+    "v0.111.4": {
+      "published_at": "2026-10-14T12:32:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.4"
+    },
+    "v0.111.5": {
+      "published_at": "2026-10-14T13:02:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.5"
+    },
+    "v0.111.6": {
+      "published_at": "2026-10-14T16:02:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.111.6"
+    },
+    "v0.112.0": {
+      "published_at": "2026-10-14T20:47:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.112.0"
+    },
+    "v0.113.0": {
+      "published_at": "2026-10-14T22:45:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.113.0"
+    },
+    "v0.114.0": {
+      "published_at": "2026-10-15T03:04:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.114.0"
+    },
+    "v0.114.1": {
+      "published_at": "2026-10-15T04:33:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.114.1"
+    },
+    "v0.114.2": {
+      "published_at": "2026-10-15T05:57:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.114.2"
+    },
+    "v0.114.3": {
+      "published_at": "2026-10-15T08:13:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.114.3"
+    },
+    "v0.115.0": {
+      "published_at": "2026-10-15T12:50:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.115.0"
+    },
+    "v0.116.0": {
+      "published_at": "2026-10-16T03:56:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.116.0"
+    },
+    "v0.117.0": {
+      "published_at": "2026-10-16T15:59:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.117.0"
+    },
+    "v0.118.0": {
+      "published_at": "2026-10-17T05:47:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.118.0"
+    },
+    "v0.119.0": {
+      "published_at": "2026-10-18T01:57:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.0"
+    },
+    "v0.119.1": {
+      "published_at": "2026-10-18T17:35:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.119.1"
+    },
+    "v0.12.0": {
+      "published_at": "2026-02-15T21:58:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.12.0"
+    },
+    "v0.12.1": {
+      "published_at": "2026-02-15T23:19:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.12.1"
+    },
+    "v0.120.0": {
+      "published_at": "2026-10-20T18:54:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.120.0"
+    },
+    "v0.120.1": {
+      "published_at": "2026-10-21T03:39:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.120.1"
+    },
+    "v0.121.0": {
+      "published_at": "2026-10-21T10:24:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.121.0"
+    },
+    "v0.121.1": {
+      "published_at": "2026-10-22T15:48:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.121.1"
+    },
+    "v0.121.2": {
+      "published_at": "2026-11-01T06:36:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.121.2"
+    },
+    "v0.121.3": {
+      "published_at": "2026-11-03T01:26:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.121.3"
+    },
+    "v0.122.0": {
+      "published_at": "2026-11-03T02:18:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.122.0"
+    },
+    "v0.122.1": {
+      "published_at": "2026-11-03T02:53:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.122.1"
+    },
+    "v0.123.0": {
+      "published_at": "2026-11-03T05:51:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.0"
+    },
+    "v0.123.1": {
+      "published_at": "2026-11-03T06:29:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.1"
+    },
+    "v0.123.2": {
+      "published_at": "2026-11-03T07:34:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.2"
+    },
+    "v0.123.3": {
+      "published_at": "2026-11-03T08:11:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.3"
+    },
+    "v0.123.4": {
+      "published_at": "2026-11-03T08:59:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.4"
+    },
+    "v0.123.5": {
+      "published_at": "2026-11-03T10:22:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.5"
+    },
+    "v0.123.6": {
+      "published_at": "2026-11-03T17:19:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.6"
+    },
+    "v0.123.7": {
+      "published_at": "2026-11-03T18:02:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.7"
+    },
+    "v0.123.8": {
+      "published_at": "2026-11-03T19:24:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.123.8"
+    },
+    "v0.124.0": {
+      "published_at": "2026-11-03T21:41:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.124.0"
+    },
+    "v0.124.1": {
+      "published_at": "2026-11-03T22:31:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.124.1"
+    },
+    "v0.124.2": {
+      "published_at": "2026-11-03T23:21:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.124.2"
+    },
+    "v0.124.3": {
+      "published_at": "2026-11-04T01:18:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.124.3"
+    },
+    "v0.125.0": {
+      "published_at": "2026-11-04T02:42:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.125.0"
+    },
+    "v0.126.0": {
+      "published_at": "2026-11-04T09:50:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.126.0"
+    },
+    "v0.126.1": {
+      "published_at": "2026-11-04T21:18:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.126.1"
+    },
+    "v0.126.2": {
+      "published_at": "2026-11-05T00:04:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.126.2"
+    },
+    "v0.126.3": {
+      "published_at": "2026-11-05T05:16:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.126.3"
+    },
+    "v0.126.4": {
+      "published_at": "2026-11-06T01:17:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.126.4"
+    },
+    "v0.126.5": {
+      "published_at": "2026-11-06T04:59:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.126.5"
+    },
+    "v0.127.0": {
+      "published_at": "2026-11-06T20:55:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.127.0"
+    },
+    "v0.127.1": {
+      "published_at": "2026-11-06T22:36:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.127.1"
+    },
+    "v0.128.0": {
+      "published_at": "2026-11-07T03:17:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.128.0"
+    },
+    "v0.129.0": {
+      "published_at": "2026-11-07T05:30:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.129.0"
+    },
+    "v0.13.0": {
+      "published_at": "2026-02-15T23:41:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.13.0"
+    },
+    "v0.130.0": {
+      "published_at": "2026-11-07T07:35:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.130.0"
+    },
+    "v0.130.1": {
+      "published_at": "2026-11-07T08:27:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.130.1"
+    },
+    "v0.130.2": {
+      "published_at": "2026-11-07T09:39:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.130.2"
+    },
+    "v0.131.0": {
+      "published_at": "2026-11-07T23:55:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.131.0"
+    },
+    "v0.132.0": {
+      "published_at": "2026-11-08T02:04:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.132.0"
+    },
+    "v0.133.0": {
+      "published_at": "2026-11-09T04:56:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.133.0"
+    },
+    "v0.133.1": {
+      "published_at": "2026-11-09T09:07:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.133.1"
+    },
+    "v0.133.2": {
+      "published_at": "2026-11-09T09:43:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.133.2"
+    },
+    "v0.134.0": {
+      "published_at": "2026-11-09T18:55:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.134.0"
+    },
+    "v0.134.1": {
+      "published_at": "2026-11-09T20:35:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.134.1"
+    },
+    "v0.134.2": {
+      "published_at": "2026-11-09T22:40:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.134.2"
+    },
+    "v0.135.0": {
+      "published_at": "2026-11-09T23:55:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.135.0"
+    },
+    "v0.136.0": {
+      "published_at": "2026-11-10T01:17:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.136.0"
+    },
+    "v0.136.1": {
+      "published_at": "2026-11-10T03:42:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.136.1"
+    },
+    "v0.136.2": {
+      "published_at": "2026-11-10T06:01:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.136.2"
+    },
+    "v0.136.3": {
+      "published_at": "2026-11-10T18:11:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.136.3"
+    },
+    "v0.136.4": {
+      "published_at": "2026-11-11T01:12:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.136.4"
+    },
+    "v0.137.0": {
+      "published_at": "2026-11-11T05:59:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.137.0"
+    },
+    "v0.137.1": {
+      "published_at": "2026-11-11T06:50:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.137.1"
+    },
+    "v0.137.2": {
+      "published_at": "2026-11-11T08:04:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.137.2"
+    },
+    "v0.137.3": {
+      "published_at": "2026-11-11T09:35:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.137.3"
+    },
+    "v0.137.4": {
+      "published_at": "2026-11-11T10:35:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.137.4"
+    },
+    "v0.138.0": {
+      "published_at": "2026-11-11T17:03:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.138.0"
+    },
+    "v0.138.1": {
+      "published_at": "2026-11-11T21:16:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.138.1"
+    },
+    "v0.138.2": {
+      "published_at": "2026-11-11T21:53:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.138.2"
+    },
+    "v0.138.3": {
+      "published_at": "2026-11-12T01:26:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.138.3"
+    },
+    "v0.139.0": {
+      "published_at": "2026-11-12T09:32:43Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.139.0"
+    },
+    "v0.139.1": {
+      "published_at": "2026-11-12T11:12:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.139.1"
+    },
+    "v0.14.0": {
+      "published_at": "2026-02-16T00:13:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.14.0"
+    },
+    "v0.14.1": {
+      "published_at": "2026-02-16T00:30:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.14.1"
+    },
+    "v0.140.0": {
+      "published_at": "2026-11-12T12:43:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.140.0"
+    },
+    "v0.140.1": {
+      "published_at": "2026-11-12T14:15:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.140.1"
+    },
+    "v0.140.2": {
+      "published_at": "2026-11-12T16:29:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.140.2"
+    },
+    "v0.140.3": {
+      "published_at": "2026-11-12T17:28:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.140.3"
+    },
+    "v0.141.0": {
+      "published_at": "2026-11-13T01:04:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.141.0"
+    },
+    "v0.142.0": {
+      "published_at": "2026-11-13T02:40:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.142.0"
+    },
+    "v0.143.0": {
+      "published_at": "2026-11-13T03:49:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.143.0"
+    },
+    "v0.143.1": {
+      "published_at": "2026-11-13T05:20:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.143.1"
+    },
+    "v0.143.2": {
+      "published_at": "2026-11-13T07:08:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.143.2"
+    },
+    "v0.144.0": {
+      "published_at": "2026-11-13T10:07:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.0"
+    },
+    "v0.144.1": {
+      "published_at": "2026-11-13T19:08:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.1"
+    },
+    "v0.144.2": {
+      "published_at": "2026-11-13T20:26:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.2"
+    },
+    "v0.144.3": {
+      "published_at": "2026-11-13T21:12:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.3"
+    },
+    "v0.144.4": {
+      "published_at": "2026-11-13T23:03:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.4"
+    },
+    "v0.144.5": {
+      "published_at": "2026-11-14T03:26:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.5"
+    },
+    "v0.144.6": {
+      "published_at": "2026-11-14T09:05:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.144.6"
+    },
+    "v0.145.0": {
+      "published_at": "2026-11-14T10:16:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.0"
+    },
+    "v0.145.1": {
+      "published_at": "2026-11-14T11:25:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.1"
+    },
+    "v0.145.2": {
+      "published_at": "2026-11-14T12:07:30Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.2"
+    },
+    "v0.145.3": {
+      "published_at": "2026-11-14T12:50:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.3"
+    },
+    "v0.145.4": {
+      "published_at": "2026-11-14T13:42:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.4"
+    },
+    "v0.145.5": {
+      "published_at": "2026-11-14T20:54:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.5"
+    },
+    "v0.145.6": {
+      "published_at": "2026-11-15T00:11:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.145.6"
+    },
+    "v0.146.0": {
+      "published_at": "2026-11-15T01:45:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.146.0"
+    },
+    "v0.147.0": {
+      "published_at": "2026-11-15T04:44:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.147.0"
+    },
+    "v0.148.0": {
+      "published_at": "2026-11-15T05:52:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.0"
+    },
+    "v0.148.1": {
+      "published_at": "2026-11-16T06:20:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.1"
+    },
+    "v0.148.2": {
+      "published_at": "2026-11-16T06:26:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.2"
+    },
+    "v0.148.3": {
+      "published_at": "2026-11-17T03:48:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.3"
+    },
+    "v0.148.4": {
+      "published_at": "2026-11-17T05:38:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.4"
+    },
+    "v0.148.5": {
+      "published_at": "2026-11-17T07:15:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.5"
+    },
+    "v0.148.6": {
+      "published_at": "2026-11-17T07:26:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.6"
+    },
+    "v0.148.7": {
+      "published_at": "2026-11-17T12:07:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.7"
+    },
+    "v0.148.8": {
+      "published_at": "2026-11-17T18:55:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.8"
+    },
+    "v0.148.9": {
+      "published_at": "2026-11-17T21:39:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.148.9"
+    },
+    "v0.15.0": {
+      "published_at": "2026-02-16T00:53:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.15.0"
+    },
+    "v0.15.1": {
+      "published_at": "2026-02-16T01:03:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.15.1"
+    },
+    "v0.15.2": {
+      "published_at": "2026-02-16T01:36:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.15.2"
+    },
+    "v0.16.0": {
+      "published_at": "2026-02-16T02:29:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.16.0"
+    },
+    "v0.16.1": {
+      "published_at": "2026-02-16T03:30:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.16.1"
+    },
+    "v0.17.0": {
+      "published_at": "2026-02-16T04:37:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.17.0"
+    },
+    "v0.18.0": {
+      "published_at": "2026-02-16T05:27:37Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.18.0"
+    },
+    "v0.19.0": {
+      "published_at": "2026-02-16T06:05:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.19.0"
+    },
+    "v0.19.1": {
+      "published_at": "2026-02-16T06:22:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.19.1"
+    },
+    "v0.19.2": {
+      "published_at": "2026-02-16T06:41:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.19.2"
+    },
+    "v0.19.3": {
+      "published_at": "2026-02-16T06:51:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.19.3"
+    },
+    "v0.19.4": {
+      "published_at": "2026-02-16T07:06:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.19.4"
+    },
+    "v0.19.5": {
+      "published_at": "2026-02-16T07:36:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.19.5"
+    },
+    "v0.2.0": {
+      "published_at": "2026-02-13T22:36:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.2.0"
+    },
+    "v0.2.1": {
+      "published_at": "2026-02-14T00:03:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.2.1"
+    },
+    "v0.2.2": {
+      "published_at": "2026-02-14T02:07:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.2.2"
+    },
+    "v0.20.0": {
+      "published_at": "2026-02-16T08:14:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.20.0"
+    },
+    "v0.21.0": {
+      "published_at": "2026-02-16T11:25:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.21.0"
+    },
+    "v0.22.0": {
+      "published_at": "2026-02-16T22:01:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.22.0"
+    },
+    "v0.23.0": {
+      "published_at": "2026-02-16T23:34:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.0"
+    },
+    "v0.23.1": {
+      "published_at": "2026-02-17T00:36:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.1"
+    },
+    "v0.23.10": {
+      "published_at": "2026-02-17T07:57:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.10"
+    },
+    "v0.23.2": {
+      "published_at": "2026-02-17T02:25:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.2"
+    },
+    "v0.23.3": {
+      "published_at": "2026-02-17T03:04:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.3"
+    },
+    "v0.23.4": {
+      "published_at": "2026-02-17T03:27:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.4"
+    },
+    "v0.23.5": {
+      "published_at": "2026-02-17T04:05:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.5"
+    },
+    "v0.23.6": {
+      "published_at": "2026-02-17T04:14:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.6"
+    },
+    "v0.23.7": {
+      "published_at": "2026-02-17T05:12:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.7"
+    },
+    "v0.23.8": {
+      "published_at": "2026-02-17T06:52:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.8"
+    },
+    "v0.23.9": {
+      "published_at": "2026-02-17T07:03:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.23.9"
+    },
+    "v0.24.0": {
+      "published_at": "2026-02-17T08:18:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.24.0"
+    },
+    "v0.25.0": {
+      "published_at": "2026-02-17T09:57:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.0"
+    },
+    "v0.25.1": {
+      "published_at": "2026-02-17T20:51:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.1"
+    },
+    "v0.25.2": {
+      "published_at": "2026-02-17T22:15:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.2"
+    },
+    "v0.25.3": {
+      "published_at": "2026-02-17T22:24:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.3"
+    },
+    "v0.25.4": {
+      "published_at": "2026-02-17T23:10:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.4"
+    },
+    "v0.25.5": {
+      "published_at": "2026-02-17T23:24:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.25.5"
+    },
+    "v0.26.0": {
+      "published_at": "2026-02-17T23:47:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.26.0"
+    },
+    "v0.26.1": {
+      "published_at": "2026-02-18T00:13:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.26.1"
+    },
+    "v0.28.10": {
+      "published_at": "2026-02-18T22:26:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.28.10"
+    },
+    "v0.28.11": {
+      "published_at": "2026-02-18T22:38:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.28.11"
+    },
+    "v0.28.12": {
+      "published_at": "2026-02-18T23:05:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.28.12"
+    },
+    "v0.28.7": {
+      "published_at": "2026-02-18T09:51:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.28.7"
+    },
+    "v0.28.8": {
+      "published_at": "2026-02-18T10:24:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.28.8"
+    },
+    "v0.28.9": {
+      "published_at": "2026-02-18T21:40:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.28.9"
+    },
+    "v0.29.0": {
+      "published_at": "2026-02-19T04:10:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.0"
+    },
+    "v0.29.1": {
+      "published_at": "2026-02-19T08:02:43Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.1"
+    },
+    "v0.29.2": {
+      "published_at": "2026-02-19T08:32:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.2"
+    },
+    "v0.29.3": {
+      "published_at": "2026-02-19T17:48:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.3"
+    },
+    "v0.29.4": {
+      "published_at": "2026-02-19T17:56:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.4"
+    },
+    "v0.29.5": {
+      "published_at": "2026-02-20T06:20:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.5"
+    },
+    "v0.29.6": {
+      "published_at": "2026-02-20T06:59:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.29.6"
+    },
+    "v0.3.0": {
+      "published_at": "2026-02-14T04:12:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.3.0"
+    },
+    "v0.3.1": {
+      "published_at": "2026-02-14T04:18:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.3.1"
+    },
+    "v0.3.3": {
+      "published_at": "2026-02-14T06:01:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.3.3"
+    },
+    "v0.30.0": {
+      "published_at": "2026-02-20T08:03:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.30.0"
+    },
+    "v0.31.0": {
+      "published_at": "2026-02-20T08:54:43Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.31.0"
+    },
+    "v0.31.1": {
+      "published_at": "2026-02-20T19:36:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.31.1"
+    },
+    "v0.32.0": {
+      "published_at": "2026-02-20T20:39:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.32.0"
+    },
+    "v0.32.1": {
+      "published_at": "2026-02-20T21:24:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.32.1"
+    },
+    "v0.32.2": {
+      "published_at": "2026-02-20T21:46:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.32.2"
+    },
+    "v0.32.3": {
+      "published_at": "2026-02-20T22:26:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.32.3"
+    },
+    "v0.32.4": {
+      "published_at": "2026-02-20T22:55:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.32.4"
+    },
+    "v0.33.0": {
+      "published_at": "2026-02-21T00:34:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.33.0"
+    },
+    "v0.34.0": {
+      "published_at": "2026-02-21T02:58:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.34.0"
+    },
+    "v0.35.0": {
+      "published_at": "2026-02-21T03:14:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.0"
+    },
+    "v0.35.1": {
+      "published_at": "2026-02-21T07:03:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.1"
+    },
+    "v0.35.2": {
+      "published_at": "2026-02-21T07:24:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.2"
+    },
+    "v0.35.3": {
+      "published_at": "2026-02-21T09:29:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.3"
+    },
+    "v0.35.4": {
+      "published_at": "2026-02-21T09:45:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.4"
+    },
+    "v0.35.5": {
+      "published_at": "2026-02-21T10:04:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.5"
+    },
+    "v0.35.6": {
+      "published_at": "2026-02-21T10:16:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.6"
+    },
+    "v0.35.7": {
+      "published_at": "2026-02-21T10:24:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.7"
+    },
+    "v0.35.8": {
+      "published_at": "2026-02-21T11:08:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.35.8"
+    },
+    "v0.36.0": {
+      "published_at": "2026-02-21T11:33:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.0"
+    },
+    "v0.36.1": {
+      "published_at": "2026-02-21T23:03:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.1"
+    },
+    "v0.36.2": {
+      "published_at": "2026-02-21T23:30:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.2"
+    },
+    "v0.36.3": {
+      "published_at": "2026-02-21T23:33:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.3"
+    },
+    "v0.36.4": {
+      "published_at": "2026-02-21T23:49:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.4"
+    },
+    "v0.36.5": {
+      "published_at": "2026-02-22T00:12:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.5"
+    },
+    "v0.36.6": {
+      "published_at": "2026-02-22T02:11:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.6"
+    },
+    "v0.36.7": {
+      "published_at": "2026-02-22T02:27:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.36.7"
+    },
+    "v0.37.0": {
+      "published_at": "2026-02-22T02:30:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.0"
+    },
+    "v0.37.1": {
+      "published_at": "2026-02-22T03:01:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.1"
+    },
+    "v0.37.10": {
+      "published_at": "2026-02-23T10:26:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.10"
+    },
+    "v0.37.11": {
+      "published_at": "2026-02-23T11:54:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.11"
+    },
+    "v0.37.2": {
+      "published_at": "2026-02-22T03:08:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.2"
+    },
+    "v0.37.3": {
+      "published_at": "2026-02-22T03:24:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.3"
+    },
+    "v0.37.4": {
+      "published_at": "2026-02-22T07:04:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.4"
+    },
+    "v0.37.5": {
+      "published_at": "2026-02-22T07:52:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.5"
+    },
+    "v0.37.6": {
+      "published_at": "2026-02-22T09:31:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.6"
+    },
+    "v0.37.7": {
+      "published_at": "2026-02-22T09:45:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.7"
+    },
+    "v0.37.8": {
+      "published_at": "2026-02-22T10:43:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.8"
+    },
+    "v0.37.9": {
+      "published_at": "2026-02-22T11:12:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.37.9"
+    },
+    "v0.38.0": {
+      "published_at": "2026-02-23T12:47:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.0"
+    },
+    "v0.38.1": {
+      "published_at": "2026-02-23T13:51:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.1"
+    },
+    "v0.38.10": {
+      "published_at": "2026-02-23T17:02:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.10"
+    },
+    "v0.38.11": {
+      "published_at": "2026-02-23T17:30:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.11"
+    },
+    "v0.38.12": {
+      "published_at": "2026-02-23T18:21:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.12"
+    },
+    "v0.38.13": {
+      "published_at": "2026-02-23T19:08:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.13"
+    },
+    "v0.38.2": {
+      "published_at": "2026-02-23T14:16:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.2"
+    },
+    "v0.38.3": {
+      "published_at": "2026-02-23T14:31:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.3"
+    },
+    "v0.38.4": {
+      "published_at": "2026-02-23T14:57:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.4"
+    },
+    "v0.38.5": {
+      "published_at": "2026-02-23T15:18:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.5"
+    },
+    "v0.38.6": {
+      "published_at": "2026-02-23T15:36:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.6"
+    },
+    "v0.38.7": {
+      "published_at": "2026-02-23T15:50:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.7"
+    },
+    "v0.38.8": {
+      "published_at": "2026-02-23T16:05:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.8"
+    },
+    "v0.38.9": {
+      "published_at": "2026-02-23T16:21:37Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.38.9"
+    },
+    "v0.39.0": {
+      "published_at": "2026-02-23T19:39:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.39.0"
+    },
+    "v0.4.0": {
+      "published_at": "2026-02-14T07:16:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.4.0"
+    },
+    "v0.40.0": {
+      "published_at": "2026-02-23T21:24:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.40.0"
+    },
+    "v0.40.1": {
+      "published_at": "2026-02-23T21:33:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.40.1"
+    },
+    "v0.41.0": {
+      "published_at": "2026-02-23T23:19:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.41.0"
+    },
+    "v0.41.1": {
+      "published_at": "2026-02-24T17:35:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.41.1"
+    },
+    "v0.41.2": {
+      "published_at": "2026-02-24T22:19:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.41.2"
+    },
+    "v0.42.0": {
+      "published_at": "2026-02-25T07:51:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.42.0"
+    },
+    "v0.42.1": {
+      "published_at": "2026-02-25T10:45:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.42.1"
+    },
+    "v0.43.0": {
+      "published_at": "2026-02-25T11:46:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.43.0"
+    },
+    "v0.43.1": {
+      "published_at": "2026-02-25T12:39:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.43.1"
+    },
+    "v0.44.0": {
+      "published_at": "2026-02-25T12:53:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.0"
+    },
+    "v0.44.1": {
+      "published_at": "2026-02-25T13:08:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.1"
+    },
+    "v0.44.2": {
+      "published_at": "2026-02-25T13:32:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.2"
+    },
+    "v0.44.3": {
+      "published_at": "2026-02-25T14:17:30Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.3"
+    },
+    "v0.44.4": {
+      "published_at": "2026-02-25T16:21:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.4"
+    },
+    "v0.44.5": {
+      "published_at": "2026-02-25T17:32:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.5"
+    },
+    "v0.44.6": {
+      "published_at": "2026-02-25T21:48:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.44.6"
+    },
+    "v0.45.0": {
+      "published_at": "2026-02-26T04:40:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.45.0"
+    },
+    "v0.46.0": {
+      "published_at": "2026-02-26T05:37:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.46.0"
+    },
+    "v0.46.1": {
+      "published_at": "2026-02-28T23:43:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.46.1"
+    },
+    "v0.46.2": {
+      "published_at": "2026-03-01T00:22:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.46.2"
+    },
+    "v0.46.3": {
+      "published_at": "2026-03-01T00:32:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.46.3"
+    },
+    "v0.46.4": {
+      "published_at": "2026-03-01T00:57:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.46.4"
+    },
+    "v0.47.0": {
+      "published_at": "2026-03-07T10:09:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.0"
+    },
+    "v0.47.1": {
+      "published_at": "2026-03-07T11:03:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.1"
+    },
+    "v0.47.10": {
+      "published_at": "2026-03-07T22:58:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.10"
+    },
+    "v0.47.11": {
+      "published_at": "2026-05-03T00:11:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.11"
+    },
+    "v0.47.12": {
+      "published_at": "2026-05-03T00:35:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.12"
+    },
+    "v0.47.14": {
+      "published_at": "2026-05-03T01:25:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.14"
+    },
+    "v0.47.15": {
+      "published_at": "2026-05-03T02:00:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.15"
+    },
+    "v0.47.16": {
+      "published_at": "2026-05-03T02:22:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.16"
+    },
+    "v0.47.17": {
+      "published_at": "2026-05-03T03:27:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.17"
+    },
+    "v0.47.18": {
+      "published_at": "2026-05-03T04:05:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.18"
+    },
+    "v0.47.19": {
+      "published_at": "2026-05-03T04:30:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.19"
+    },
+    "v0.47.2": {
+      "published_at": "2026-03-07T11:27:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.2"
+    },
+    "v0.47.20": {
+      "published_at": "2026-05-03T05:41:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.20"
+    },
+    "v0.47.21": {
+      "published_at": "2026-05-03T06:07:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.21"
+    },
+    "v0.47.22": {
+      "published_at": "2026-05-04T04:09:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.22"
+    },
+    "v0.47.23": {
+      "published_at": "2026-05-04T04:34:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.23"
+    },
+    "v0.47.24": {
+      "published_at": "2026-05-04T05:12:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.24"
+    },
+    "v0.47.25": {
+      "published_at": "2026-05-04T08:43:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.25"
+    },
+    "v0.47.26": {
+      "published_at": "2026-05-04T09:22:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.26"
+    },
+    "v0.47.27": {
+      "published_at": "2026-05-04T09:58:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.27"
+    },
+    "v0.47.28": {
+      "published_at": "2026-05-16T20:20:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.28"
+    },
+    "v0.47.29": {
+      "published_at": "2026-05-16T20:48:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.29"
+    },
+    "v0.47.3": {
+      "published_at": "2026-03-07T12:04:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.3"
+    },
+    "v0.47.30": {
+      "published_at": "2026-05-16T21:01:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.30"
+    },
+    "v0.47.31": {
+      "published_at": "2026-05-16T21:24:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.31"
+    },
+    "v0.47.32": {
+      "published_at": "2026-05-16T22:53:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.32"
+    },
+    "v0.47.33": {
+      "published_at": "2026-05-17T00:13:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.33"
+    },
+    "v0.47.34": {
+      "published_at": "2026-05-17T00:48:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.34"
+    },
+    "v0.47.35": {
+      "published_at": "2026-05-17T03:07:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.35"
+    },
+    "v0.47.36": {
+      "published_at": "2026-05-17T05:03:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.36"
+    },
+    "v0.47.37": {
+      "published_at": "2026-05-17T06:25:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.37"
+    },
+    "v0.47.4": {
+      "published_at": "2026-03-07T12:21:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.4"
+    },
+    "v0.47.5": {
+      "published_at": "2026-03-07T12:40:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.5"
+    },
+    "v0.47.6": {
+      "published_at": "2026-03-07T12:42:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.6"
+    },
+    "v0.47.7": {
+      "published_at": "2026-03-07T21:06:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.7"
+    },
+    "v0.47.8": {
+      "published_at": "2026-03-07T21:46:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.8"
+    },
+    "v0.47.9": {
+      "published_at": "2026-03-07T22:30:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.47.9"
+    },
+    "v0.48.0": {
+      "published_at": "2026-05-17T11:12:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.0"
+    },
+    "v0.48.1": {
+      "published_at": "2026-05-18T22:22:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.1"
+    },
+    "v0.48.2": {
+      "published_at": "2026-05-18T23:05:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.2"
+    },
+    "v0.48.3": {
+      "published_at": "2026-05-18T23:55:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.3"
+    },
+    "v0.48.4": {
+      "published_at": "2026-05-19T04:10:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.4"
+    },
+    "v0.48.5": {
+      "published_at": "2026-05-19T06:53:39Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.5"
+    },
+    "v0.48.6": {
+      "published_at": "2026-05-19T08:26:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.6"
+    },
+    "v0.48.7": {
+      "published_at": "2026-05-20T23:32:30Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.7"
+    },
+    "v0.48.8": {
+      "published_at": "2026-05-20T23:40:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.48.8"
+    },
+    "v0.49.0": {
+      "published_at": "2026-05-22T04:59:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.49.0"
+    },
+    "v0.49.1": {
+      "published_at": "2026-05-22T19:54:30Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.49.1"
+    },
+    "v0.49.2": {
+      "published_at": "2026-05-23T01:09:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.49.2"
+    },
+    "v0.5.0": {
+      "published_at": "2026-02-14T08:27:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.5.0"
+    },
+    "v0.5.1": {
+      "published_at": "2026-02-14T21:42:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.5.1"
+    },
+    "v0.5.2": {
+      "published_at": "2026-02-14T22:02:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.5.2"
+    },
+    "v0.50.0": {
+      "published_at": "2026-05-23T06:29:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.50.0"
+    },
+    "v0.50.1": {
+      "published_at": "2026-05-23T08:01:30Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.50.1"
+    },
+    "v0.51.0": {
+      "published_at": "2026-05-23T21:05:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.51.0"
+    },
+    "v0.51.1": {
+      "published_at": "2026-05-23T22:10:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.51.1"
+    },
+    "v0.51.2": {
+      "published_at": "2026-05-23T23:38:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.51.2"
+    },
+    "v0.51.3": {
+      "published_at": "2026-05-25T00:31:29Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.51.3"
+    },
+    "v0.51.4": {
+      "published_at": "2026-05-25T00:59:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.51.4"
+    },
+    "v0.52.0": {
+      "published_at": "2026-05-25T03:55:30Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.52.0"
+    },
+    "v0.52.1": {
+      "published_at": "2026-05-25T22:45:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.52.1"
+    },
+    "v0.52.2": {
+      "published_at": "2026-05-26T03:23:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.52.2"
+    },
+    "v0.53.0": {
+      "published_at": "2026-05-26T04:22:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.53.0"
+    },
+    "v0.53.1": {
+      "published_at": "2026-05-26T06:30:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.53.1"
+    },
+    "v0.53.2": {
+      "published_at": "2026-05-26T17:44:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.53.2"
+    },
+    "v0.53.3": {
+      "published_at": "2026-05-26T23:53:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.53.3"
+    },
+    "v0.54.0": {
+      "published_at": "2026-05-27T01:02:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.54.0"
+    },
+    "v0.55.0": {
+      "published_at": "2026-05-28T00:36:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.55.0"
+    },
+    "v0.55.1": {
+      "published_at": "2026-05-28T01:58:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.55.1"
+    },
+    "v0.55.2": {
+      "published_at": "2026-05-28T02:19:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.55.2"
+    },
+    "v0.56.0": {
+      "published_at": "2026-05-28T02:44:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.56.0"
+    },
+    "v0.56.1": {
+      "published_at": "2026-05-28T04:33:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.56.1"
+    },
+    "v0.56.2": {
+      "published_at": "2026-05-28T04:44:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.56.2"
+    },
+    "v0.57.0": {
+      "published_at": "2026-05-28T04:50:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.57.0"
+    },
+    "v0.57.1": {
+      "published_at": "2026-05-28T04:55:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.57.1"
+    },
+    "v0.57.2": {
+      "published_at": "2026-05-28T06:02:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.57.2"
+    },
+    "v0.57.3": {
+      "published_at": "2026-05-28T06:22:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.57.3"
+    },
+    "v0.57.4": {
+      "published_at": "2026-05-29T00:16:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.57.4"
+    },
+    "v0.57.5": {
+      "published_at": "2026-05-29T01:02:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.57.5"
+    },
+    "v0.58.0": {
+      "published_at": "2026-05-30T19:00:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.58.0"
+    },
+    "v0.58.1": {
+      "published_at": "2026-05-30T19:39:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.58.1"
+    },
+    "v0.58.3": {
+      "published_at": "2026-06-17T22:41:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.58.3"
+    },
+    "v0.58.4": {
+      "published_at": "2026-06-17T23:37:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.58.4"
+    },
+    "v0.58.5": {
+      "published_at": "2026-06-18T03:19:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.58.5"
+    },
+    "v0.59.0": {
+      "published_at": "2026-06-18T05:57:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.0"
+    },
+    "v0.59.1": {
+      "published_at": "2026-06-18T07:31:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.1"
+    },
+    "v0.59.2": {
+      "published_at": "2026-06-18T18:36:32Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.2"
+    },
+    "v0.59.3": {
+      "published_at": "2026-06-18T19:37:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.3"
+    },
+    "v0.59.4": {
+      "published_at": "2026-06-20T04:24:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.4"
+    },
+    "v0.59.5": {
+      "published_at": "2026-06-20T08:25:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.5"
+    },
+    "v0.59.6": {
+      "published_at": "2026-06-20T08:42:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.59.6"
+    },
+    "v0.6.0": {
+      "published_at": "2026-02-14T22:47:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.0"
+    },
+    "v0.6.1": {
+      "published_at": "2026-02-14T23:17:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.1"
+    },
+    "v0.6.2": {
+      "published_at": "2026-02-14T23:47:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.2"
+    },
+    "v0.6.3": {
+      "published_at": "2026-02-15T00:17:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.3"
+    },
+    "v0.6.4": {
+      "published_at": "2026-02-15T00:33:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.4"
+    },
+    "v0.6.5": {
+      "published_at": "2026-02-15T01:35:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.5"
+    },
+    "v0.6.6": {
+      "published_at": "2026-02-15T02:15:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.6"
+    },
+    "v0.6.7": {
+      "published_at": "2026-02-15T02:37:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.7"
+    },
+    "v0.6.8": {
+      "published_at": "2026-02-15T02:55:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.8"
+    },
+    "v0.6.9": {
+      "published_at": "2026-02-15T02:59:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.6.9"
+    },
+    "v0.60.0": {
+      "published_at": "2026-06-20T21:20:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.0"
+    },
+    "v0.60.1": {
+      "published_at": "2026-06-21T01:39:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.1"
+    },
+    "v0.60.11": {
+      "published_at": "2026-06-26T18:39:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.11"
+    },
+    "v0.60.12": {
+      "published_at": "2026-06-26T19:23:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.12"
+    },
+    "v0.60.13": {
+      "published_at": "2026-06-27T05:05:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.13"
+    },
+    "v0.60.14": {
+      "published_at": "2026-06-27T06:14:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.14"
+    },
+    "v0.60.15": {
+      "published_at": "2026-06-30T07:20:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.15"
+    },
+    "v0.60.16": {
+      "published_at": "2026-07-06T15:05:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.16"
+    },
+    "v0.60.17": {
+      "published_at": "2026-07-07T01:33:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.17"
+    },
+    "v0.60.2": {
+      "published_at": "2026-06-21T07:19:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.2"
+    },
+    "v0.60.3": {
+      "published_at": "2026-06-23T18:06:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.3"
+    },
+    "v0.60.4": {
+      "published_at": "2026-06-23T18:56:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.4"
+    },
+    "v0.60.5": {
+      "published_at": "2026-06-24T06:51:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.5"
+    },
+    "v0.60.6": {
+      "published_at": "2026-06-24T07:42:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.6"
+    },
+    "v0.60.7": {
+      "published_at": "2026-06-24T07:55:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.7"
+    },
+    "v0.60.8": {
+      "published_at": "2026-06-24T08:41:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.8"
+    },
+    "v0.60.9": {
+      "published_at": "2026-06-24T09:35:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.60.9"
+    },
+    "v0.61.0": {
+      "published_at": "2026-07-07T01:58:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.61.0"
+    },
+    "v0.61.1": {
+      "published_at": "2026-07-07T07:17:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.61.1"
+    },
+    "v0.62.0": {
+      "published_at": "2026-07-07T07:39:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.0"
+    },
+    "v0.62.1": {
+      "published_at": "2026-07-07T07:53:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.1"
+    },
+    "v0.62.2": {
+      "published_at": "2026-07-07T08:15:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.2"
+    },
+    "v0.62.3": {
+      "published_at": "2026-07-07T18:15:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.3"
+    },
+    "v0.62.4": {
+      "published_at": "2026-07-07T18:48:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.4"
+    },
+    "v0.62.5": {
+      "published_at": "2026-07-07T19:20:43Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.5"
+    },
+    "v0.62.6": {
+      "published_at": "2026-07-08T00:47:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.6"
+    },
+    "v0.62.7": {
+      "published_at": "2026-07-08T07:03:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.62.7"
+    },
+    "v0.63.0": {
+      "published_at": "2026-07-08T07:30:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.0"
+    },
+    "v0.63.1": {
+      "published_at": "2026-07-09T00:26:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.1"
+    },
+    "v0.63.2": {
+      "published_at": "2026-07-09T00:49:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.2"
+    },
+    "v0.63.3": {
+      "published_at": "2026-07-09T02:01:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.3"
+    },
+    "v0.63.4": {
+      "published_at": "2026-07-09T05:21:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.4"
+    },
+    "v0.63.5": {
+      "published_at": "2026-07-11T03:55:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.5"
+    },
+    "v0.63.6": {
+      "published_at": "2026-07-11T06:03:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.6"
+    },
+    "v0.63.7": {
+      "published_at": "2026-07-11T18:59:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.63.7"
+    },
+    "v0.64.0": {
+      "published_at": "2026-07-11T22:51:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.64.0"
+    },
+    "v0.65.0": {
+      "published_at": "2026-07-13T02:00:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.65.0"
+    },
+    "v0.66.0": {
+      "published_at": "2026-07-13T03:50:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.0"
+    },
+    "v0.66.1": {
+      "published_at": "2026-07-13T04:35:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.1"
+    },
+    "v0.66.10": {
+      "published_at": "2026-07-15T22:43:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.10"
+    },
+    "v0.66.2": {
+      "published_at": "2026-07-13T10:42:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.2"
+    },
+    "v0.66.3": {
+      "published_at": "2026-07-13T11:17:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.3"
+    },
+    "v0.66.4": {
+      "published_at": "2026-07-14T00:30:39Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.4"
+    },
+    "v0.66.5": {
+      "published_at": "2026-07-15T17:09:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.5"
+    },
+    "v0.66.6": {
+      "published_at": "2026-07-15T18:41:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.6"
+    },
+    "v0.66.7": {
+      "published_at": "2026-07-15T19:34:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.7"
+    },
+    "v0.66.8": {
+      "published_at": "2026-07-15T20:41:20Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.8"
+    },
+    "v0.66.9": {
+      "published_at": "2026-07-15T21:23:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.66.9"
+    },
+    "v0.67.0": {
+      "published_at": "2026-07-16T05:27:37Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.67.0"
+    },
+    "v0.68.0": {
+      "published_at": "2026-07-16T07:12:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.68.0"
+    },
+    "v0.69.0": {
+      "published_at": "2026-07-16T08:03:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.69.0"
+    },
+    "v0.69.1": {
+      "published_at": "2026-07-17T02:27:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.69.1"
+    },
+    "v0.7.0": {
+      "published_at": "2026-02-15T03:41:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.7.0"
+    },
+    "v0.70.0": {
+      "published_at": "2026-07-17T04:12:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.70.0"
+    },
+    "v0.71.0": {
+      "published_at": "2026-07-17T07:33:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.71.0"
+    },
+    "v0.71.1": {
+      "published_at": "2026-07-17T08:25:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.71.1"
+    },
+    "v0.71.2": {
+      "published_at": "2026-07-17T17:33:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.71.2"
+    },
+    "v0.71.3": {
+      "published_at": "2026-07-17T23:58:22Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.71.3"
+    },
+    "v0.71.4": {
+      "published_at": "2026-07-18T00:16:01Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.71.4"
+    },
+    "v0.71.5": {
+      "published_at": "2026-07-20T20:01:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.71.5"
+    },
+    "v0.72.0": {
+      "published_at": "2026-07-20T20:41:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.0"
+    },
+    "v0.72.1": {
+      "published_at": "2026-07-20T21:21:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.1"
+    },
+    "v0.72.10": {
+      "published_at": "2026-07-21T04:24:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.10"
+    },
+    "v0.72.11": {
+      "published_at": "2026-07-21T05:24:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.11"
+    },
+    "v0.72.12": {
+      "published_at": "2026-07-21T06:16:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.12"
+    },
+    "v0.72.13": {
+      "published_at": "2026-07-21T07:27:58Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.13"
+    },
+    "v0.72.14": {
+      "published_at": "2026-07-21T19:04:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.14"
+    },
+    "v0.72.15": {
+      "published_at": "2026-07-21T19:44:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.15"
+    },
+    "v0.72.16": {
+      "published_at": "2026-07-21T21:01:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.16"
+    },
+    "v0.72.17": {
+      "published_at": "2026-07-21T22:08:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.17"
+    },
+    "v0.72.2": {
+      "published_at": "2026-07-20T22:44:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.2"
+    },
+    "v0.72.3": {
+      "published_at": "2026-07-20T23:04:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.3"
+    },
+    "v0.72.4": {
+      "published_at": "2026-07-20T23:40:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.4"
+    },
+    "v0.72.5": {
+      "published_at": "2026-07-21T00:42:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.5"
+    },
+    "v0.72.6": {
+      "published_at": "2026-07-21T01:14:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.6"
+    },
+    "v0.72.7": {
+      "published_at": "2026-07-21T01:39:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.7"
+    },
+    "v0.72.8": {
+      "published_at": "2026-07-21T02:57:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.8"
+    },
+    "v0.72.9": {
+      "published_at": "2026-07-21T03:23:15Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.72.9"
+    },
+    "v0.73.0": {
+      "published_at": "2026-07-21T23:20:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.73.0"
+    },
+    "v0.73.1": {
+      "published_at": "2026-07-22T00:09:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.73.1"
+    },
+    "v0.73.2": {
+      "published_at": "2026-07-22T00:43:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.73.2"
+    },
+    "v0.73.3": {
+      "published_at": "2026-07-22T02:52:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.73.3"
+    },
+    "v0.74.0": {
+      "published_at": "2026-07-22T17:42:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.74.0"
+    },
+    "v0.75.0": {
+      "published_at": "2026-07-22T19:12:55Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.75.0"
+    },
+    "v0.76.0": {
+      "published_at": "2026-07-22T20:31:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.76.0"
+    },
+    "v0.77.0": {
+      "published_at": "2026-07-22T21:30:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.77.0"
+    },
+    "v0.78.0": {
+      "published_at": "2026-07-22T23:35:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.78.0"
+    },
+    "v0.79.0": {
+      "published_at": "2026-07-23T00:38:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.79.0"
+    },
+    "v0.79.1": {
+      "published_at": "2026-07-23T02:02:23Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.79.1"
+    },
+    "v0.8.0": {
+      "published_at": "2026-02-15T04:20:05Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.8.0"
+    },
+    "v0.8.1": {
+      "published_at": "2026-02-15T05:46:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.8.1"
+    },
+    "v0.80.0": {
+      "published_at": "2026-07-23T18:50:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.80.0"
+    },
+    "v0.80.1": {
+      "published_at": "2026-07-23T22:12:16Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.80.1"
+    },
+    "v0.80.2": {
+      "published_at": "2026-07-23T23:28:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.80.2"
+    },
+    "v0.80.3": {
+      "published_at": "2026-07-24T00:13:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.80.3"
+    },
+    "v0.80.4": {
+      "published_at": "2026-07-24T01:26:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.80.4"
+    },
+    "v0.81.0": {
+      "published_at": "2026-07-24T03:30:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.81.0"
+    },
+    "v0.81.1": {
+      "published_at": "2026-07-24T04:19:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.81.1"
+    },
+    "v0.82.0": {
+      "published_at": "2026-07-24T06:57:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.82.0"
+    },
+    "v0.82.1": {
+      "published_at": "2026-07-24T08:05:51Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.82.1"
+    },
+    "v0.83.0": {
+      "published_at": "2026-07-25T23:46:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.83.0"
+    },
+    "v0.83.1": {
+      "published_at": "2026-07-26T03:28:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.83.1"
+    },
+    "v0.83.2": {
+      "published_at": "2026-07-26T05:48:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.83.2"
+    },
+    "v0.84.0": {
+      "published_at": "2026-07-26T06:56:25Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.84.0"
+    },
+    "v0.85.0": {
+      "published_at": "2026-07-26T09:23:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.85.0"
+    },
+    "v0.86.0": {
+      "published_at": "2026-07-27T07:55:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.86.0"
+    },
+    "v0.86.1": {
+      "published_at": "2026-07-28T05:29:38Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.86.1"
+    },
+    "v0.86.2": {
+      "published_at": "2026-07-28T06:02:49Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.86.2"
+    },
+    "v0.87.0": {
+      "published_at": "2026-07-28T08:50:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.87.0"
+    },
+    "v0.88.0": {
+      "published_at": "2026-07-28T10:40:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.88.0"
+    },
+    "v0.89.0": {
+      "published_at": "2026-07-31T06:22:50Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.89.0"
+    },
+    "v0.89.1": {
+      "published_at": "2026-07-31T07:08:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.89.1"
+    },
+    "v0.89.2": {
+      "published_at": "2026-07-31T09:10:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.89.2"
+    },
+    "v0.89.3": {
+      "published_at": "2026-07-31T18:09:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.89.3"
+    },
+    "v0.89.4": {
+      "published_at": "2026-07-31T21:15:52Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.89.4"
+    },
+    "v0.9.0": {
+      "published_at": "2026-02-15T05:55:48Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.9.0"
+    },
+    "v0.90.0": {
+      "published_at": "2026-08-01T08:44:44Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.90.0"
+    },
+    "v0.91.0": {
+      "published_at": "2026-08-01T09:36:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.91.0"
+    },
+    "v0.92.0": {
+      "published_at": "2026-08-01T22:36:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.92.0"
+    },
+    "v0.93.0": {
+      "published_at": "2026-08-02T02:46:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.93.0"
+    },
+    "v0.94.0": {
+      "published_at": "2026-08-02T05:02:54Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.94.0"
+    },
+    "v0.94.1": {
+      "published_at": "2026-08-02T06:50:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.94.1"
+    },
+    "v0.95.0": {
+      "published_at": "2026-08-02T08:53:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.95.0"
+    },
+    "v0.95.1": {
+      "published_at": "2026-08-03T00:27:04Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.95.1"
+    },
+    "v0.95.2": {
+      "published_at": "2026-08-03T05:55:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.95.2"
+    },
+    "v0.95.3": {
+      "published_at": "2026-08-03T07:06:42Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.95.3"
+    },
+    "v0.95.4": {
+      "published_at": "2026-08-03T08:49:27Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.95.4"
+    },
+    "v0.95.5": {
+      "published_at": "2026-08-03T21:02:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.95.5"
+    },
+    "v0.96.0": {
+      "published_at": "2026-08-03T22:25:10Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.0"
+    },
+    "v0.96.1": {
+      "published_at": "2026-08-03T23:44:06Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.1"
+    },
+    "v0.96.10": {
+      "published_at": "2026-08-06T04:06:21Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.10"
+    },
+    "v0.96.11": {
+      "published_at": "2026-08-06T04:42:59Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.11"
+    },
+    "v0.96.12": {
+      "published_at": "2026-08-06T05:23:41Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.12"
+    },
+    "v0.96.13": {
+      "published_at": "2026-08-06T07:24:03Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.13"
+    },
+    "v0.96.14": {
+      "published_at": "2026-08-06T23:41:14Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.14"
+    },
+    "v0.96.15": {
+      "published_at": "2026-08-07T07:35:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.15"
+    },
+    "v0.96.16": {
+      "published_at": "2026-08-11T05:26:45Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.16"
+    },
+    "v0.96.17": {
+      "published_at": "2026-08-11T06:12:31Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.17"
+    },
+    "v0.96.18": {
+      "published_at": "2026-08-11T06:46:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.18"
+    },
+    "v0.96.19": {
+      "published_at": "2026-08-11T08:00:47Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.19"
+    },
+    "v0.96.2": {
+      "published_at": "2026-08-04T01:18:35Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.2"
+    },
+    "v0.96.20": {
+      "published_at": "2026-08-11T08:16:53Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.20"
+    },
+    "v0.96.21": {
+      "published_at": "2026-08-11T09:15:19Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.21"
+    },
+    "v0.96.3": {
+      "published_at": "2026-08-04T02:08:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.3"
+    },
+    "v0.96.4": {
+      "published_at": "2026-08-04T08:19:12Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.4"
+    },
+    "v0.96.5": {
+      "published_at": "2026-08-06T00:33:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.5"
+    },
+    "v0.96.6": {
+      "published_at": "2026-08-06T00:47:13Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.6"
+    },
+    "v0.96.7": {
+      "published_at": "2026-08-06T02:36:57Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.7"
+    },
+    "v0.96.8": {
+      "published_at": "2026-08-06T02:51:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.8"
+    },
+    "v0.96.9": {
+      "published_at": "2026-08-06T03:54:36Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.96.9"
+    },
+    "v0.97.0": {
+      "published_at": "2026-08-11T20:17:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.97.0"
+    },
+    "v0.98.0": {
+      "published_at": "2026-08-11T22:15:28Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.98.0"
+    },
+    "v0.98.1": {
+      "published_at": "2026-08-12T03:25:40Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.98.1"
+    },
+    "v0.98.2": {
+      "published_at": "2026-08-12T17:50:46Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.98.2"
+    },
+    "v0.98.3": {
+      "published_at": "2026-08-12T21:49:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.98.3"
+    },
+    "v0.99.0": {
+      "published_at": "2026-08-13T09:35:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.0"
+    },
+    "v0.99.1": {
+      "published_at": "2026-08-13T11:07:07Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.1"
+    },
+    "v0.99.10": {
+      "published_at": "2026-09-03T06:50:09Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.10"
+    },
+    "v0.99.11": {
+      "published_at": "2026-09-04T07:52:18Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.11"
+    },
+    "v0.99.12": {
+      "published_at": "2026-09-05T10:08:33Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.12"
+    },
+    "v0.99.13": {
+      "published_at": "2026-09-08T20:23:24Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.13"
+    },
+    "v0.99.14": {
+      "published_at": "2026-09-08T23:28:26Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.14"
+    },
+    "v0.99.15": {
+      "published_at": "2026-09-09T02:17:08Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.15"
+    },
+    "v0.99.2": {
+      "published_at": "2026-08-13T19:31:39Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.2"
+    },
+    "v0.99.3": {
+      "published_at": "2026-08-13T21:00:34Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.3"
+    },
+    "v0.99.4": {
+      "published_at": "2026-08-13T23:47:37Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.4"
+    },
+    "v0.99.5": {
+      "published_at": "2026-08-27T06:49:56Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.5"
+    },
+    "v0.99.6": {
+      "published_at": "2026-08-28T05:42:00Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.6"
+    },
+    "v0.99.7": {
+      "published_at": "2026-08-28T23:52:11Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.7"
+    },
+    "v0.99.8": {
+      "published_at": "2026-09-01T20:49:02Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.8"
+    },
+    "v0.99.9": {
+      "published_at": "2026-09-02T05:39:17Z",
+      "url": "https://github.com/DecapodLabs/decapod/releases/tag/v0.99.9"
+    }
+  }
+}
