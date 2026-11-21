@@ -67,9 +67,9 @@ bind the newly accepted base. The macOS live-admission regression records
 its fixture-owned toolchain file by canonical path so the same checks run
 when the host temp directory is reached through a symlink.
 
-The reviewed inventory includes the accepted v0.158.1 package version fields in
+The reviewed inventory includes the accepted v0.158.2 package version fields in
 `Cargo.toml` and `Cargo.lock`. All 107 proof inputs match the accepted target at
-`6bb085a8`.
+`aa4d25da`.
 
 ## Live rejection specificity (#1748)
 
@@ -1551,7 +1551,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382`
+- Repository signal fingerprint: `3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2647,3 +2647,10 @@ GitHub Actions run 44861445770 passed all checks on `aa0497d91`, including both 
 On `91d8e8361`, GitHub Actions run 44868785435 passed the two broker probes, all eleven core targets, all three CLI targets, and 1,956 offline library cases. The accepted broker and onboarding changes at `f0cbb701` then advanced the base. Preserve those accepted source and test changes and execute the full check graph again on the reconciled encoding candidate.
 
 Standalone validation passed on `59526e792` before the v0.158.0 cut at `1bdb1e6e` advanced the base. The cut changes only release metadata. Reconcile it into the encoding candidate and run fresh GitHub Actions with all 22 encoding inputs and the accepted broker and onboarding fixes intact.
+
+## Scoped proof recovery diagnostics and lease advisory isolation (#1892)
+
+- **Advisory isolation**: `src/decapod/plugins/verify.rs` (`extract_from_validation_json`, `collect_structured_stderr_labels`, `collect_tokens_bounded_excluding_advisories`) excludes non-fatal `VALIDATION_LEASE_TTL_LOW:` stderr advisories from `SAFE_BLOCKER_LABELS` extraction so their warning prose never injects false-positive `VALIDATION_HISTORY_TASK_STALE` labels during `qa verify recover` / `qa verify regen`.
+- **Stage/scope accuracy and wrapper peeling**: When `project_gates` pass and `src/decapod/lib.rs` mirrors readiness blockers as `"publication_readiness: ..."` lines in `report.failures`, `extract_from_validation_json` preserves `stage = "readiness"` (or `"post_validation_readiness"`) and the readiness scope rather than misclassifying the failure as `project_gates`, while `strip_error_wrappers` peels nested `DecapodError` Display wrappers and up to 6 `<ALLOWLISTED_CODE>:` layers.
+- **Concrete precondition discrimination**: `src/decapod/core/trajectory/execution.rs::verify_execution_binding`, `src/decapod/core/task_journal.rs`, `src/decapod/core/todo.rs`, and `src/decapod/plugins/verify.rs` expose canonical subcodes for `EXECUTION_STATE_CHANGED` (`EXECUTION_POLICY_CHANGED`, `EXECUTION_TASK_CUSTODY_CHANGED`, `EXECUTION_MATERIAL_CHANGED`, `EXECUTION_PLAN_OR_INTENT_CHANGED`, `EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED`), all `VALIDATION_HISTORY_TASK_STALE` (`TASK_*`), all `VALIDATION_HISTORY_TASK_UNBOUND` (`TASK_*`), and `TASK_JOURNAL_INCOMPLETE_HISTORY` without weakening single-task custody fences or altering historical completion timestamps.
+- **Regressions**: `tests/unit/plugins/verify_tests.rs` (`scoped_validation_diagnostics_ignore_ttl_low_advisory_and_expose_execution_state_change`, `scoped_validation_diagnostics_distinguish_all_task_history_and_unbound_preconditions`) and `tests/unit/core/workunit_journal_tests.rs` (`lease_renewal_exposes_custody_subcode_and_workunit_checkpoint_refreshes_without_changing_head`).

@@ -758,6 +758,7 @@
       "trajectory:0369d7ba53eadf4c": "Candidate-assisted normal admission is not independent publication proof",
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
       "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
+      "trajectory:090ca62e2848cd74": "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
       "trajectory:14bb95d52b8efabf": "Fresh complete exact-candidate CI required after cloud test contract correction",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
@@ -772,6 +773,7 @@
       "trajectory:308bef2f77b39c87": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
       "trajectory:331b4335c37f48d2": "New source and its tests require first execution through prescribed validate. No candidate output is an independent label, no old private proof is imported, and collection-only command success is not scientific acceptance. F64 resource cap4096 is not measured full-context equivalence. Corpus23lineages/proxy labels/observed false-ready keep calibration unsatisfied. CUDA hardware and full production loader-companion routing are not verified by M1 component fallback.",
+      "trajectory:3a6dea5555de34d1": "Encoding profile is a bounded independent-decoder correction, not complete governance-envelope or authenticated conformance proof. Bazel change only declares actual fixture inputs; required recipes unchanged.",
       "trajectory:3a8b13174a745bf8": "Accepted target advanced through human merge #1697. Canonical Git merge preserves both reviewed feature sets; previous source evidence remains historical. New exact-source GitHub checks required; no local tests/builds or Buildkite collection.",
       "trajectory:3a8cce72f404c6a2": "Explicit latest user decision replaces only research qualification prerequisite, retains all deterministic and functional required active-model gates. Original task/custody/branch preserved; current remoteHEADfef84896/master7371ad25, clean. Prior12modelrequests all actual singletonreject; constructed baseline discloses nonexecution and unassessed trajectory so not a meaningful ready positive. Need faithful production-shaped known-outcome cases, shared code, unchanged model/calibration/tolerances, preserve failures and no cherry-picking.",
       "trajectory:3ce44b0c351b9137": "Existing exact-source branch create, fast-forward and reuse already need no operator receipt; this change adds explicit authorized retry guidance, not a policy bypass.",
@@ -854,7 +856,8 @@
       "trajectory:f000bb05667cb46e": "No actual four-target release artifact build is scheduled by ordinary source preflight;1049 latency improvement remains unmeasured",
       "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
-      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap."
+      "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
+      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
     }
   },
   "change": {
@@ -944,6 +947,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1891"
       ]
+    },
+    {
+      "id": "issue-1880-1582-integration",
+      "summary": "Integrate accepted v0.158.2 and refresh the exact source proof declaration and generated files",
+      "input_digest": "sha256:07864d0c202291cdcdd9cf24a0f980116a958a1985ade080ffbeac3b5a6f03c0",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1897"
+      ]
     }
   ],
   "intents": {
@@ -987,22 +998,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing verifier owns the two target checks and the proof inventory matches accepted source.",
-          "reviewed_code_fingerprint": "c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382",
+          "reason": "The existing verifier owns the target checks and all 107 proof inputs match the accepted release.",
+          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
           "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The checkpoint command and stable error code remain. The explanatory text includes the two revisions.",
-          "reviewed_code_fingerprint": "c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382",
-          "spec_material_hash": "c8ceedd9e73a2bd9d5547033169945327bb78537ce3538a202191a9605fd911f"
+          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic gives both revisions.",
+          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
+          "spec_material_hash": "937591303d30ce71df3eef6cc82e0040a81a0acc5187ef9027bdef5f5d2d885a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact-target and canonical-tool requirements remain in force with the same proof obligations.",
-          "reviewed_code_fingerprint": "c4423812b1c9f86171ec36a9afab8bf0bc4398cb9365fd6bc32719df50992382",
+          "reason": "The exact-target and canonical-tool policies retain the same enforcement and proof obligations.",
+          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -1014,7 +1025,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795245711Z"
+      "updated_at": "1795256213Z"
     },
     "trajectory": {
       "active_boundaries": [
