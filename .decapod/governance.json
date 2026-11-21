@@ -973,6 +973,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1898"
       ]
+    },
+    {
+      "id": "issue-1832-sync-1899",
+      "summary": "Reconcile with the accepted PR metadata fix and refresh current spec reviews",
+      "input_digest": "sha256:173769db8c5ce02b8dc4c3a638ca0ef19ea7a662a1bd515d8fe4482036104300",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1899"
+      ]
     }
   ],
   "intents": {
@@ -1014,22 +1022,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked the target and platform architecture after the accepted stale-base diagnostics merge. Target proof stays bound to its execution subject.",
-          "reviewed_code_fingerprint": "e5356a0760951d8bc94d4f0b152bb026632754667fd8c42806a7e64ef209136e",
-          "spec_material_hash": "a028063db936feae83b8ed5e2547bc755de6fd425d9b17b36b7874be158288e7"
+          "reason": "Reviewed the target and platform readiness architecture on the source tree that now includes the accepted publication metadata fix.",
+          "reviewed_code_fingerprint": "7d60a08bd4cdf14a6acd59bff749ae109489a0971dcbcc4333d5157774c0db40",
+          "spec_material_hash": "16907f358575a9e9c60904f2088cfbffc629eee142be3ef3ac05a2d2b528a9ed"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rechecked scope-specific proof and QA diagnostics on the integrated source tree. Repository-wide publication still requires unscoped validation.",
-          "reviewed_code_fingerprint": "e5356a0760951d8bc94d4f0b152bb026632754667fd8c42806a7e64ef209136e",
-          "spec_material_hash": "bb44e570b9a2ff963e4431cd8f742cdcd3034ae18bf42d27f403fd07e19615ac"
+          "reason": "Reviewed the combined publication contract. Metadata derivation preserves validation, and target-scoped proof still cannot authorize repository-wide publication or QA verification.",
+          "reviewed_code_fingerprint": "7d60a08bd4cdf14a6acd59bff749ae109489a0971dcbcc4333d5157774c0db40",
+          "spec_material_hash": "608b1a5cddb1cab9b318b6d6392abb04729694903a56a59b3ff360a5bc6a62a2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the target approval requirements after the base moved. Target proof cannot grant broader publication authority.",
-          "reviewed_code_fingerprint": "e5356a0760951d8bc94d4f0b152bb026632754667fd8c42806a7e64ef209136e",
+          "reason": "Reviewed the accepted trust boundary after the base moved. Target receipt handling preserves the required full-repository authority.",
+          "reviewed_code_fingerprint": "7d60a08bd4cdf14a6acd59bff749ae109489a0971dcbcc4333d5157774c0db40",
           "spec_material_hash": "0d6cfdb356d5d78d85b07fe889077511f1f9c125e9fb24069429c436650da873"
         }
       ],
@@ -1041,7 +1049,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795258718Z"
+      "updated_at": "1795261407Z"
     },
     "trajectory": {
       "active_boundaries": [
