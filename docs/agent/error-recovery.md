@@ -114,6 +114,31 @@ intentional reopen operation, not a prerequisite for this recovery path.
 If validation still fails after the exact proof-admission exemption, inspect its
 underlying blockers; resolve missing plans, native publication receipts, provider
 access or actual failing checks through their own supported recovery paths.
+Scoped recovery diagnostics (`qa verify recover --json` and
+`qa verify regen <id> --json`) distinguish:
+
+- `VALIDATION_LEASE_TTL_LOW` on `stderr` is an advisory warning when the active
+  lease TTL is shorter than the default readiness timeout budget; it is not a
+  failure blocker and does not indicate stale task history on its own.
+- `EXECUTION_STATE_CHANGED` with its concrete subcode (`EXECUTION_POLICY_CHANGED`,
+  `EXECUTION_TASK_CUSTODY_CHANGED`, `EXECUTION_MATERIAL_CHANGED`,
+  `EXECUTION_PLAN_OR_INTENT_CHANGED`, or
+  `EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED`): after recording an independent
+  policy approval (for example `#1738`) or extending an active claim with
+  `decapod todo renew` (which increments `lease_generation` on the active task),
+  refresh the bound workunit or trajectory execution checkpoint without rewriting
+  Git commits:
+  `decapod govern workunit checkpoint --task-id <active-task-id> --operation-id <unique-id>`.
+- `VALIDATION_HISTORY_TASK_STALE` and `VALIDATION_HISTORY_TASK_UNBOUND` subcodes
+  (`TASK_PROOF_PLAN_MALFORMED`, `TASK_PROOF_PLAN_EMPTY`,
+  `TASK_HISTORY_CHECKPOINT_MISSING`, `TASK_LIVE_JOURNAL_DRIFT`,
+  `TASK_LEASE_EXPIRED_OR_RELEASED`, `TASK_CHRONOLOGY_RESTORED_OR_GAPPED`,
+  `TASK_LIFECYCLE_CUSTODY_CHANGED`, `TASK_CUSTODY_REACQUIRED`,
+  `TASK_EXCLUSIVE_CUSTODY_REQUIRED`, `TASK_JOURNAL_INCOMPLETE_HISTORY`): single-task
+  validation custody only checks the active candidate task journal, so unrelated
+  uncheckpointed historical tasks flagged by `todo journal verify` do not block
+  recovery; use `decapod todo journal checkpoint` to checkpoint live state
+  non-destructively while preserving completion timestamps.
 
 ### `TODO_PROJECTION_MISSING`
 

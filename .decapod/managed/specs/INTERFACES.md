@@ -1552,7 +1552,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a40d11f284286ae69d882d26421eddc4ad711186120f22b8e68ac17b104a41af`
+- Repository signal fingerprint: `55cb573a4605ab58853ef93f9a864e1b2c5e290c2c4aaa7a48a4a8c0b18b0394`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2286,3 +2286,18 @@ and `fingerprint`. The release verifier recomputes both bindings and checks
 the refreshed entrypoint bytes against the classified release head.
 
 The release projection checker remains read-only and returns a failure for any unexpected projection. Under verified source-development policy, entrypoint versions may differ from the package or spec-manifest release while their committed bytes and fingerprints remain canonical. Even another well-formed, correctly fingerprinted header is rejected if it differs from that immutable release head. Foreign origin, altered payload, configuration/source/dependency changes and unknown manifest drift do not obtain an exception. Ordinary consumers continue to require the evaluating binary's exact release templates. No RPC schema, producer authority or required CI recipe is added or relaxed.
+
+## Versioned encoding-plane artifacts
+
+`docs/conformance/json-v1.md` defines encoding profile1.0.0, with a machine-readable vector schema at `assets/schemas/interop-json-vectors.schema.json` and pinned raw inputs at `tests/fixtures/interop_json_vectors.v1.json`. Both consumers receive the same original text, never expected answers or a reserialized input. `accepted` and `invalid_json` describe decoding only. The existing `interop.project` result still labels caller-supplied data and `canonical_state_verified=false`. Numeric decoding does not promise arbitrary precision, canonical numeric hashes or authorization.
+
+The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+## Scoped proof recovery diagnostics and workunit checkpoint refresh (#1892)
+
+- **`qa verify recover` / `qa verify regen` failure JSON & stderr (`src/decapod/plugins/verify.rs`)**:
+  - `SAFE_VALIDATION_SCOPES` includes `"repository_target_readiness"` and `"repository_local_git_target_readiness"`.
+  - `SAFE_BLOCKER_LABELS` and `strip_error_wrappers` expose concrete `EXECUTION_STATE_CHANGED`, `EXECUTION_*_CHANGED`, `VALIDATION_HISTORY_TASK_STALE`, `VALIDATION_HISTORY_TASK_UNBOUND`, `TASK_*`, `TASK_JOURNAL_INCOMPLETE_HISTORY`, `WORKUNIT_*`, and `VALIDATION_LEASE_TTL_INSUFFICIENT` codes ahead of `READINESS_BLOCKED`, while filtering `VALIDATION_LEASE_TTL_LOW:` advisory lines on `stderr`.
+  - Readiness blockers mirrored into `report.failures` (`"publication_readiness: ..."`) retain `stage = "readiness"` / `"post_validation_readiness"` and readiness scope when no non-readiness project gate failed.
+- **Actionable execution-binding recovery (`src/decapod/core/trajectory/execution.rs`, `src/decapod/core/todo.rs`, `docs/agent/error-recovery.md`)**:
+  - `verify_execution_binding` classifies `EXECUTION_STATE_CHANGED` into the changed dimension (`EXECUTION_POLICY_CHANGED`, `EXECUTION_TASK_CUSTODY_CHANGED`, `EXECUTION_MATERIAL_CHANGED`, `EXECUTION_PLAN_OR_INTENT_CHANGED`, `EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED`) and surfaces `decapod govern workunit checkpoint --task-id <id> --operation-id <id>` / `decapod govern trajectory checkpoint` so lease renewals or independent policy approvals can refresh active workunit custody without altering Git `HEAD` or historical `done` task completion timestamps.
