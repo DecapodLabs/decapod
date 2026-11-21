@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "6bb085a8512ed67a2b0043ec939df8c3351fee32",
+    "accepted_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -861,50 +861,104 @@
     }
   },
   "change": {
-    "id": "change_01M7YH0NASVKZK93T7RK1ER7A0",
-    "base_commit": "6bb085a8512ed67a2b0043ec939df8c3351fee32",
+    "id": "change_01M7Y1RKWEFCV1EW8XJF38D5JV",
+    "base_commit": "31f19a70e6be86803126f123b1cbe710cea6b743",
     "target_base": "origin/master"
   },
   "claims": {
-    "proof-recovery-diagnostics-1892": {
-      "statement": "Scoped validation failure extraction excludes non-blocking VALIDATION_LEASE_TTL_LOW stderr advisories, preserves readiness stage/scope when report.failures mirrors publication_readiness blockers, and exposes distinct canonical subcodes across EXECUTION_STATE_CHANGED, VALIDATION_HISTORY_TASK_STALE, and VALIDATION_HISTORY_TASK_UNBOUND without relaxing single-task custody fences.",
-      "falsifier": "Any VALIDATION_LEASE_TTL_LOW warning injects VALIDATION_HISTORY_TASK_STALE into scoped recovery labels, mirrored publication_readiness blockers report stage=project_gates instead of readiness, any task-history/execution-state failure drops its subcode behind READINESS_BLOCKED, or workunit lease renewal/checkpoint refresh mutates HEAD or done task completion timestamps.",
+    "macos-admission-fixture": {
+      "statement": "The live-admission test fixture works with both equivalent macOS temporary directory paths.",
+      "falsifier": "The existing live-admission test rejects the fixture-owned closure under either alias or canonical TMPDIR.",
       "status": "supported",
       "proof_refs": [
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
+    },
+    "stale-checkpoint-diagnostic": {
+      "statement": "A hosted checkpoint with a stale target reports the event base and observed ref revision and continues to refuse current publication material.",
+      "falsifier": "Moving the target permits current material verification or the error omits the expected and observed revisions.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/unit/core/workspace_publication_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "fix-1892-proof-recovery-diagnostics",
-      "summary": "Eliminate VALIDATION_LEASE_TTL_LOW false-positive task-stale label and disambiguate execution-binding and task-history recovery diagnostics (#1892)",
-      "input_digest": "sha256:6ce78c89df01514c7bf44ef8baf258086f7e3eb0453be17dd68cf737cd797040",
+      "id": "issue-1880-admission-followups",
+      "summary": "Verify the macOS canonical fixture path and distinguish stale checkpoint input from current publication material",
+      "input_digest": "sha256:4c3331d74ed81e0a819da3c708acce005d27068c26756884d1c30436a960c96c",
       "proof_refs": [
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "tests/unit/core/workspace_publication_tests.rs"
       ]
     },
     {
-      "id": "fix-1892-dockerfile-refresh",
-      "summary": "Refresh Decapod-managed Dockerfile release pin to 0.158.1 (#1892)",
-      "input_digest": "sha256:25cd3680533a2ed781039c682720e978deac3066649c2c09262a217cd7cde096",
+      "id": "issue-1880-accepted-v01570",
+      "summary": "Integrate accepted v0.157.0 and rerun the exact stale-base and macOS fixture regressions",
+      "input_digest": "sha256:30300528dbfcd0d796169871b2db0da4ac0f35f308ede058b6c27aadef2d9d21",
       "proof_refs": [
-        "tests/unit/plugins/verify_tests.rs"
+        "tests/unit/core/workspace_publication_tests.rs"
       ]
     },
     {
-      "id": "fix-1892-unset-agent-test-fixture",
-      "summary": "Use task_journal lease rotation in workunit unit test when DECAPOD_AGENT_ID is unset in CI (#1892)",
-      "input_digest": "sha256:8c3bcf388a644d008e4b8a8650bf24a89a029f6fc4d3ad6b6d9ad7229ddc7c33",
+      "id": "issue-1880-projections-v01570",
+      "summary": "Refresh the managed Dockerfile pin and specs manifest with the released v0.157.0 controller",
+      "input_digest": "sha256:0a0367e6bd16dd9d66c685f6caad3d7d79d6625daa98c8d48646fcdeb0bc2561",
       "proof_refs": [
-        "tests/unit/core/workunit_journal_tests.rs"
+        "https://github.com/DecapodLabs/decapod/actions/runs/44869042711"
+      ]
+    },
+    {
+      "id": "issue-1880-review-v01570-inventory",
+      "summary": "Reconcile the reviewed 107-file proof inventory to the two accepted v0.157.0 version fields",
+      "input_digest": "sha256:00c59cd2f6b0b53e1af425a2d27b087d9dffd6db0784a1aa9420d849bd390059",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1885"
+      ]
+    },
+    {
+      "id": "issue-1880-f0cbb701-integration",
+      "summary": "Integrate accepted target f0cbb701 and verify its 107 proof-input bytes are identical to the reviewed inventory",
+      "input_digest": "sha256:95b57c859e8a441f28341b2814e1f2d3fe8ba0679b1b31814e853b87d3a679c4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1887"
+      ]
+    },
+    {
+      "id": "issue-1880-v0158-integration",
+      "summary": "Integrate accepted v0.158.0 and reconcile generated files and the exact released proof inventory",
+      "input_digest": "sha256:ae100be98292a7c285ad6fd054f56067dcfb94ad8c1ee021aeb6ca32364fa90b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1889"
+      ]
+    },
+    {
+      "id": "issue-1880-77282b10-integration",
+      "summary": "Integrate accepted master and reuse the reviewed v0.158.0 proof inventory accepted in #1866",
+      "input_digest": "sha256:0901e0610374780b7b71a5c511338233edc4d7fc92bc7c46f80efb0fc772c1c4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1866"
+      ]
+    },
+    {
+      "id": "issue-1880-01581-integration",
+      "summary": "Integrate accepted v0.158.1 and refresh release projections and the 107-file proof inventory",
+      "input_digest": "sha256:33a69ff6fd7be1942f56504ed2163e44c0a08a4dfdc6b16eacf99e7acc0e919a",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1891"
+      ]
+    },
+    {
+      "id": "issue-1880-1582-integration",
+      "summary": "Integrate accepted v0.158.2 and refresh the exact source proof declaration and generated files",
+      "input_digest": "sha256:07864d0c202291cdcdd9cf24a0f980116a958a1985ade080ffbeac3b5a6f03c0",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1897"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M7YH0NASVKZK93T7RK1ER7A0": {
+    "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -914,14 +968,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+      "id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
-      "refined_intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "raw_intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
+      "refined_intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -934,7 +988,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "intent": "Fix the macOS admission fixture and verify current checkpoint behavior\n\nDecapod issue #1880 and the delayed GitHub checkpoint follow-up in #1763. Correct the test fixture and preserve live admission enforcement.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -944,104 +998,100 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Architecture unchanged by unset-agent test fixture update (#1892); refreshed generated spec fingerprint.",
-          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
+          "reason": "The existing verifier owns the target checks and all 107 proof inputs match the accepted release.",
+          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
           "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented SAFE_BLOCKER_LABELS/SAFE_VALIDATION_SCOPES additions, wrapper peeling, stderr advisory filtering, and actionable checkpoint remediation for #1892.",
-          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
+          "reason": "Existing checkpoint commands and stable error codes remain. The stale diagnostic gives both revisions.",
+          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
           "spec_material_hash": "937591303d30ce71df3eef6cc82e0040a81a0acc5187ef9027bdef5f5d2d885a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security boundaries unchanged by unset-agent test fixture update (#1892); refreshed generated spec fingerprint.",
-          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
+          "reason": "The exact-target and canonical-tool policies retain the same enforcement and proof obligations.",
+          "reviewed_code_fingerprint": "3889813b646a08edf854ccb700a47c21d44e6d5719398419bf4fdcb5684c3f99",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix proof recovery VALIDATION_HISTORY_TASK_STALE false positive and disambiguate task-history/execution-checkpoint preconditions (#1892)",
+      "title": "Fix the macOS admission fixture and verify current checkpoint behavior",
       "todo_ids": [
-        "bugs_01m7ygp2vgwy63ge"
+        "bugs_01m7y0ymbvm3n79c"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795252665Z"
+      "updated_at": "1795256213Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d6b597ec2a27cc4ae2b8fd3ed550db784ccb8a52b8fe347c6da93294480eb7d4",
+      "artifact_hash": "sha256:0025f25989aa3b876cb53b730d160baa9ec63e4ed986f404986a50c5cf839e5f",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "integrated-formatting",
           "status": "passed"
         },
         {
-          "name": "cargo_test_cli_contract_enforcement",
+          "name": "integrated-macos-aliased-tmpdir",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_task_journal",
+          "name": "integrated-macos-canonical-tmpdir",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_validation_history",
+          "name": "integrated-stale-checkpoint-diagnostic",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_verify",
+          "name": "macos-aliased-tmpdir",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_workunit",
+          "name": "macos-canonical-tmpdir",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_workunit_unset_agent",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_test_workunit_verified_proof_1660",
+          "name": "stale-checkpoint-diagnostic",
           "status": "passed"
         }
       ],
-      "current_phase": "verify",
+      "current_phase": "validation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+            "detail": "trajectory:branch_01M7Y1RM088RSG5RQVPD1TAGGE",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+            "detail": "trajectory:branch_01M7Y1RM088RSG5RQVPD1TAGGE",
             "event_id": "event:5",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -1050,42 +1100,25 @@
         "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03": {
+          "branch_01M7Y1RM088RSG5RQVPD1TAGGE": {
             "evidence_only": true,
-            "id": "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
-            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "id": "branch_01M7Y1RM088RSG5RQVPD1TAGGE",
+            "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
             "steps": [
               {
-                "action": "verify",
+                "action": "validation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/trajectory/execution.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/trajectory/execution.rs",
-                  "docs/agent/error-recovery.md",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)"
+                  "src/decapod/core/workspace.rs",
+                  "tests/unit/core/workspace_publication_tests.rs",
+                  "docs/book/src/reference/governance-artifacts.md",
+                  "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory."
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_test_lib_verify",
-                  "cargo_test_lib_workunit",
-                  "cargo_test_lib_task_journal",
-                  "cargo_test_lib_validation_history",
-                  "cargo_test_cli_contract_enforcement",
-                  "cargo_test_workunit_verified_proof_1660"
+                  "stale-checkpoint-diagnostic",
+                  "macos-aliased-tmpdir",
+                  "macos-canonical-tmpdir",
+                  "formatting"
                 ],
                 "scope": [
                   "root"
@@ -1094,14 +1127,16 @@
                 "validation_findings": []
               },
               {
-                "action": "verify",
+                "action": "validation",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "cargo test --locked --features supabase-cloud --lib workunit with unset DECAPOD_AGENT_ID passed 45/45; cargo clippy --locked --all-targets --all-features -- -D warnings passed (0 warnings)"
+                  "The three focused regressions passed against the integrated v0.157.0 source at target 146a00f4117ffbcdcc93a68ffef6419f78453056."
                 ],
                 "proof_refs": [
-                  "cargo_test_lib_workunit_unset_agent"
+                  "integrated-stale-checkpoint-diagnostic",
+                  "integrated-macos-aliased-tmpdir",
+                  "integrated-macos-canonical-tmpdir",
+                  "integrated-formatting"
                 ],
                 "scope": [
                   "root"
@@ -1116,41 +1151,28 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)",
-        "cargo test --locked --features supabase-cloud --lib workunit with unset DECAPOD_AGENT_ID passed 45/45; cargo clippy --locked --all-targets --all-features -- -D warnings passed (0 warnings)"
+        "The moved-target test refused current material with both revisions, and exact macOS fixture runs passed with both paths to the same directory.",
+        "The three focused regressions passed against the integrated v0.157.0 source at target 146a00f4117ffbcdcc93a68ffef6419f78453056."
       ],
-      "inspected_files": [
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/trajectory/execution.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/verify.rs"
-      ],
-      "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M7Y1RKWEFCV1EW8XJF38D5JV",
       "modified_files": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/error-recovery.md",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/trajectory/execution.rs",
-        "src/decapod/plugins/verify.rs",
-        "tests/unit/core/workunit_journal_tests.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "docs/book/src/reference/governance-artifacts.md",
+        "src/decapod/core/workspace.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ],
       "next_transitions": [
+        "Checkpoint the tested local change",
         "Refine plan and declare falsifiable checks",
-        "Verify checkpoints, material-specs, project-check, push, PR, GHA green, merge"
+        "Verify the committed integration and run authorized preflight"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+      "run_id": "branch_01M7Y1RM088RSG5RQVPD1TAGGE",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7ygp2vgwy63ge",
+      "task_id": "bugs_01m7y0ymbvm3n79c",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

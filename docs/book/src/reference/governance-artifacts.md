@@ -56,6 +56,13 @@ a fresh checkout, the immutable event-context verifier must reject the run
 rerunning it cannot establish the missing Git objects or replace its event
 identity with the branch's current tip.
 
+A pull-request checkpoint job also binds the event's accepted base. If its
+target ref resolves to a different commit when the job runs, publication
+material verification fails with `PUBLICATION_MATERIAL_BASE_CHANGED` and
+reports both revisions. The earlier checkpoint history is still evidence for
+its original commit range. Current admission needs a fresh event and proof
+against the current accepted base.
+
 For an existing pull request, preserve the current accepted branch history,
 make a substantive follow-up change in its claimed Decapod worktree, record a
 new checkpoint, and push a **fast-forward** commit. Inspect the resulting
