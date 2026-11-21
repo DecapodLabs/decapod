@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.160.0](https://github.com/DecapodLabs/decapod/compare/v0.159.0...v0.160.0) - 2026-11-21
+
+### Added
+
+- *(cloud)* implement Wave 2 (#1886, #1835, #1836)
+
+### Fixed
+
+- *(cloud)* broaden KEYSTORE_SERVICE cfg to Linux and Windows ([#1835](https://github.com/DecapodLabs/decapod/pull/1835))
+
+### Other
+
+- *(specs)* refresh release projections for evaluating v0.159.0 binary
+- *(proof)* reconcile reviewed_sources_digest for v0.159.0 ([#1902](https://github.com/DecapodLabs/decapod/pull/1902))
+- *(specs)* update Living Specs and governance artifacts for Wave 2 (#1836, #1835, #1886)
+- *(merge)* sync origin/master (#1901, #1902) into Wave 2 (#1836, #1835, #1886)
+
 ## [0.159.0](https://github.com/DecapodLabs/decapod/compare/v0.158.3...v0.159.0) - 2026-11-21
 
 ### Added
