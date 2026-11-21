@@ -247,6 +247,7 @@ fn write_canonical_local_config(repo: &Path) {
         selected_work: None,
         ci_attested: None,
         validation_buildkite_preflights: false,
+        validation_github_actions_preflights: false,
         required_profile: Some(ProfileDeclaration {
             id: repository_profile::REQUIRED_PROFILE.to_string(),
             reviewed_sources_digest: sources_digest,

@@ -71,28 +71,40 @@ impl ReviewedBuildkiteImporter {
         }
     }
 }
-struct PublicBuildkiteReader<'a>(Box<dyn provider::public_buildkite::PublicReader + 'a>);
+// A GitHub-only source plan never calls the Buildkite reader. Refuse any
+// unexpected call before contacting a provider.
+#[derive(Default)]
+struct PublicBuildkiteReader<'a>(Option<Box<dyn provider::public_buildkite::PublicReader + 'a>>);
 impl provider::public_buildkite::PublicReader for PublicBuildkiteReader<'_> {
     fn get(
         &mut self,
         request: &provider::public_buildkite::PublicRequest,
         budget: &provider::Budget<'_>,
     ) -> io::Result<Vec<u8>> {
-        self.0.get(request, budget)
+        self.0
+            .as_mut()
+            .ok_or_else(|| invalid("Buildkite reader is not configured"))?
+            .get(request, budget)
     }
     fn get_many(
         &mut self,
         requests: &[provider::public_buildkite::PublicRequest],
         budget: &provider::Budget<'_>,
     ) -> io::Result<Vec<Vec<u8>>> {
-        self.0.get_many(requests, budget)
+        self.0
+            .as_mut()
+            .ok_or_else(|| invalid("Buildkite reader is not configured"))?
+            .get_many(requests, budget)
     }
     fn get_custody_many(
         &mut self,
         requests: &[provider::public_buildkite::CustodyRead],
         budget: &provider::Budget<'_>,
     ) -> io::Result<Vec<provider::public_buildkite::CustodyResponse>> {
-        self.0.get_custody_many(requests, budget)
+        self.0
+            .as_mut()
+            .ok_or_else(|| invalid("Buildkite reader is not configured"))?
+            .get_custody_many(requests, budget)
     }
 }
 
@@ -111,7 +123,9 @@ pub struct SnapshotHost<'a, R: Runner> {
     verified_checks: BTreeMap<CheckKey, source_import::VerifiedCheck>,
     prepared_snapshot: Option<transport::PreparedSnapshot>,
     terminal_sources: Option<(automatic::SourceRunPlan, automatic::TerminalSourceRuns)>,
-    public_buildkite: Option<PublicBuildkiteReader<'a>>,
+    public_buildkite: PublicBuildkiteReader<'a>,
+    github_artifacts: BTreeMap<String, BTreeMap<String, u64>>,
+    artifact_directory: Option<PathBuf>,
     buildkite_contract: Option<ReviewedBuildkiteImporter>,
     evidence_directory: Option<PathBuf>,
     rust_worker_authorizer: Option<NativeAuthorizer<'a>>,
@@ -153,7 +167,9 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             verified_checks: BTreeMap::new(),
             prepared_snapshot: None,
             terminal_sources: None,
-            public_buildkite: None,
+            public_buildkite: PublicBuildkiteReader::default(),
+            github_artifacts: BTreeMap::new(),
+            artifact_directory: None,
             buildkite_contract: None,
             project_check: Box::new(project_check),
             evidence_directory: None,
@@ -168,12 +184,11 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
         self.rust_worker_authorizer = Some(Box::new(authorize));
         self
     }
-    /// GitHub raw ZIP handoff is outside Buildkite-only preflight. Buildkite
-    /// artifacts are collected automatically from their authenticated producer.
-    pub fn with_artifact_directory(self, _directory: PathBuf) -> io::Result<Self> {
-        Err(invalid(
-            "GITHUB_ARTIFACT_HANDOFF_NOT_APPLICABLE: preflight collects Buildkite artifacts automatically",
-        ))
+    /// Raw ZIPs supply bytes only. The existing GitHub importer independently
+    /// authenticates each archive and never falls back after a download failure.
+    pub fn with_artifact_directory(mut self, directory: PathBuf) -> io::Result<Self> {
+        self.artifact_directory = Some(directory);
+        Ok(self)
     }
     /// The importer setup is reviewed compiled policy, not caller JSON. The
     /// public reader preserves the host's typed read authorization callback.
@@ -183,7 +198,7 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
         contract: ReviewedBuildkiteImporter,
     ) -> io::Result<Self> {
         contract.validate()?;
-        self.public_buildkite = Some(PublicBuildkiteReader(Box::new(reader)));
+        self.public_buildkite = PublicBuildkiteReader(Some(Box::new(reader)));
         self.buildkite_contract = Some(contract);
         Ok(self)
     }
@@ -195,9 +210,16 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
         project: &CurrentProject,
         budget: &RuntimeBudget<'_>,
     ) -> io::Result<Vec<Blocker>> {
-        if !project.configuration.validation_buildkite_preflights {
+        if !project.configuration.uses_remote_preflight() {
             return Err(invalid(
-                "snapshot host requires the canonical true remote-preflight policy",
+                "snapshot host requires accepted remote preflight policy",
+            ));
+        }
+        if !project.configuration.validation_github_actions_preflights
+            && self.artifact_directory.is_some()
+        {
+            return Err(invalid(
+                "GITHUB_ARTIFACT_HANDOFF_NOT_APPLICABLE: preflight collects Buildkite artifacts automatically",
             ));
         }
         let provider_budget = provider::Budget::new(
@@ -308,16 +330,16 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             );
         } else {
             let plan = source_import::source_run_plan(project)?;
-            let reader = self.public_buildkite.as_mut().ok_or_else(|| invalid(
-                "BUILDKITE_PUBLIC_READER_REQUIRED: configure the reviewed typed public reader before collecting source proof"
-            ))?;
-            let contract = self
-                .buildkite_contract
-                .as_ref()
-                .ok_or_else(|| invalid("reviewed Buildkite importer contract is missing"))?;
-            // All provider calls and sleeps share the original deadline. The
-            // barrier fetches metadata only; custody is collected exactly once.
-            eprintln!("Buildkite validation: stage=provider_terminal_wait");
+            let github = project.configuration.validation_github_actions_preflights;
+            if !github && self.public_buildkite.0.is_none() {
+                return Err(invalid(
+                    "BUILDKITE_PUBLIC_READER_REQUIRED: configure the reviewed typed public reader before collecting source proof",
+                ));
+            }
+            let reader = &mut self.public_buildkite;
+            if !github {
+                eprintln!("Buildkite validation: stage=provider_terminal_wait");
+            }
             let provider_started = Instant::now();
             let terminal = automatic::wait_for_source_runs(
                 &mut self.runner,
@@ -326,14 +348,26 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                 &plan,
                 Duration::from_secs(5),
                 &provider_budget,
-            );
+            )?;
             let provider_terminal_wait_ms = provider_started.elapsed().as_millis();
-            eprintln!(
-                "Buildkite validation: stage=provider_terminal_wait elapsed_ms={provider_terminal_wait_ms}"
-            );
-            let terminal = terminal?;
+            if !github {
+                eprintln!(
+                    "Buildkite validation: stage=provider_terminal_wait elapsed_ms={provider_terminal_wait_ms}"
+                );
+            }
             let collection_started = Instant::now();
-            let buildkite = if let Some(policy) = &project.configuration.ci_attested {
+            let collection = if github {
+                source_import::github_sources(
+                    &self.options,
+                    &mut self.runner,
+                    &snapshot,
+                    project,
+                    &terminal,
+                    self.artifact_directory.as_deref(),
+                    &directory,
+                    &provider_budget,
+                )
+            } else if let Some(policy) = &project.configuration.ci_attested {
                 ci_attested::collect(
                     reader,
                     &snapshot,
@@ -344,6 +378,10 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                     &provider_budget,
                 )
             } else {
+                let contract = self
+                    .buildkite_contract
+                    .as_ref()
+                    .ok_or_else(|| invalid("reviewed Buildkite importer contract is missing"))?;
                 source_import::buildkite_sources(
                     reader,
                     contract,
@@ -353,14 +391,16 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
                     &directory,
                     &provider_budget,
                 )
-            };
+            }?;
             let custody_collection_ms = collection_started.elapsed().as_millis();
-            eprintln!(
-                "Buildkite validation: stage=custody_collection elapsed_ms={custody_collection_ms}"
-            );
-            let buildkite = buildkite?;
-            self.verified_checks = buildkite.checks;
-            blockers.extend(buildkite.blockers);
+            if !github {
+                eprintln!(
+                    "Buildkite validation: stage=custody_collection elapsed_ms={custody_collection_ms}"
+                );
+            }
+            self.verified_checks = collection.checks;
+            self.github_artifacts = collection.github_artifacts;
+            blockers.extend(collection.blockers);
             blockers.retain(|blocker| {
                 blocker
                     .check
@@ -369,18 +409,20 @@ impl<'a, R: Runner> SnapshotHost<'a, R> {
             });
             let recheck_started = Instant::now();
             terminal.recheck(&mut self.runner, reader, &snapshot, &plan, &provider_budget)?;
-            write_new(
-                &directory.join("buildkite-stage-timing.json"),
-                &serde_json::to_vec_pretty(&serde_json::json!({
-                    "schema": "decapod.buildkite-stage-timing.v1",
-                    "provider_terminal_wait_ms": provider_terminal_wait_ms,
-                    "custody_collection_ms": custody_collection_ms,
-                    "terminal_recheck_ms": recheck_started.elapsed().as_millis(),
-                    "source_head": snapshot.transport_head(),
-                    "measurement_only": true
-                }))
-                .map_err(io::Error::other)?,
-            )?;
+            if !github {
+                write_new(
+                    &directory.join("buildkite-stage-timing.json"),
+                    &serde_json::to_vec_pretty(&serde_json::json!({
+                        "schema": "decapod.buildkite-stage-timing.v1",
+                        "provider_terminal_wait_ms": provider_terminal_wait_ms,
+                        "custody_collection_ms": custody_collection_ms,
+                        "terminal_recheck_ms": recheck_started.elapsed().as_millis(),
+                        "source_head": snapshot.transport_head(),
+                        "measurement_only": true
+                    }))
+                    .map_err(io::Error::other)?,
+                )?;
+            }
             self.terminal_sources = Some((plan, terminal));
         }
         // Repeated validation reuses the real workspace branch and independently
@@ -460,7 +502,10 @@ impl<R: Runner> Host for SnapshotHost<'_, R> {
                 }
                 Ok(ExecutionSelection {
                     policy: ExecutionPolicy {
-                        buildkite_preflights: true,
+                        buildkite_preflights: project.configuration.validation_buildkite_preflights,
+                        github_actions_preflights: project
+                            .configuration
+                            .validation_github_actions_preflights,
                         executors: self
                             .verified_checks
                             .iter()
@@ -542,13 +587,17 @@ impl<R: Runner> Host for SnapshotHost<'_, R> {
             .terminal_sources
             .as_ref()
             .ok_or_else(|| invalid("complete terminal provider identity is missing"))?;
-        let reader = self
-            .public_buildkite
-            .as_mut()
-            .ok_or_else(|| invalid("public Buildkite reader is missing"))?;
+        if project.configuration.validation_github_actions_preflights {
+            source_import::recheck_github_artifacts(
+                &mut self.runner,
+                snapshot,
+                &self.github_artifacts,
+                &provider_budget,
+            )?;
+        }
         terminal.recheck(
             &mut self.runner,
-            reader,
+            &mut self.public_buildkite,
             snapshot,
             source_plan,
             &provider_budget,

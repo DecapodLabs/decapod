@@ -1012,9 +1012,12 @@ profile, policy, and execution evidence. CI-local validation has a narrower
 scope and cannot authorize publication. Candidate or authority changes can
 invalidate earlier proof.
 
-The native validation route and optional Buildkite route implement required
-check profiles. Buildkite is a provider of execution evidence. Its presence
-does not change the ownership of intent, policy, or proof requirements.
+The strict source profile retains the same required graph across native,
+Buildkite, and independently accepted GitHub Actions execution. For GitHub
+Actions, `SnapshotHost` binds the accepted dual-root executor and recollects
+the exact workflow attempts and measured artifacts from the immutable source
+branch. Provider choice changes the evidence carrier while the explicit source,
+target, and complete-check requirements remain authoritative.
 Provider details belong in [VALIDATION.md](VALIDATION.md).
 
 The controller's finite source adapters are separate from the configured
@@ -1213,7 +1216,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970`
+- Repository signal fingerprint: `b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

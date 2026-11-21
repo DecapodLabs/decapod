@@ -726,7 +726,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970`
+- Repository signal fingerprint: `b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1224,6 +1224,14 @@ with the existing governed operations.
 ## Recorded instructions and independently accepted requirements
 
 Keep the original request and ordered clarification history available across a cold handoff. A recorded revision identifies its observed or declared source. A provider account observation supports provenance without authenticating human approval. Pending decisions remain visible after reinitializing the same plan. Resolving a decision requires a fresh plan acceptance before the existing execution evidence can be used.
+
+## Independently accepted GitHub Actions preflight (#1890)
+
+A strict source publication can use GitHub Actions when the accepted target
+selects it. The carrier proves the same finite source and candidate build graph
+with source and target freshness, while an ordinary CI-local verdict remains
+diagnostic. Candidate changes cannot opt their own publication into a new
+carrier.
 
 ## Version-only release proof
 

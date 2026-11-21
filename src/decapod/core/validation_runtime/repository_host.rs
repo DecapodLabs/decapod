@@ -672,6 +672,7 @@ fn select_commands_for_platform(
         Ok(ExecutionSelection {
             policy: ExecutionPolicy {
                 buildkite_preflights: false,
+                github_actions_preflights: false,
                 executors,
             },
             bindings,
@@ -939,6 +940,7 @@ mod tests {
                 observed_path: None,
                 selected_work: None,
                 validation_buildkite_preflights: false,
+                validation_github_actions_preflights: false,
                 required_profile: Some(declaration),
                 commands,
                 repository_contract: Some(contract),
@@ -1136,6 +1138,7 @@ mod tests {
                 observed_path: None,
                 selected_work: None,
                 validation_buildkite_preflights: false,
+                validation_github_actions_preflights: false,
                 required_profile: Some(declaration),
                 commands,
                 repository_contract: Some(contract),

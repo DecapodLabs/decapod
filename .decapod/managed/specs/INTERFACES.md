@@ -1372,9 +1372,14 @@ Repeating validation with that controller, changing the declaration or building
 manually cannot repair this incompatibility. The current runtime does not
 bootstrap a replacement controller or accept a candidate's own readiness claim.
 
-`proof.validation_buildkite_preflights=false` selects native execution; `true`
-selects the optional Buildkite adapter for the same required profile. Unknown
-profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
+With neither provider flag, strict source preflight selects native execution.
+`proof.validation_buildkite_preflights=true` selects Buildkite.
+`proof.validation_github_actions_preflights=true` selects GitHub Actions when
+the same strict carrier is already accepted on the target. Both remote flags
+together, missing accepted dual-root support, and candidate-selected provider
+changes return errors. GitHub Actions artifact reads use already configured
+official GitHub access and bind the workflow path, logical job, matrix, run,
+attempt, and authenticated archive ID before accepting measured execution.
 The remote route pushes or reuses the exact existing workspace branch, executes
 its project checks remotely, and verifies authenticated build, attempt, artifact,
 and final source/target identities. It does not run duplicate local prerequisites,
@@ -1552,7 +1557,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970`
+- Repository signal fingerprint: `b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

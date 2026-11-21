@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "d62e30ad788b2fe743a81d164244d2a7b3220701",
+    "accepted_commit": "1bdb1e6e2163fbe3761e1ee3bfeb4501306fac26",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -858,42 +858,29 @@
     }
   },
   "change": {
-    "id": "terminal-broker-1882-1883",
-    "base_commit": "d62e30ad788b2fe743a81d164244d2a7b3220701",
+    "id": "change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
+    "base_commit": "1bdb1e6e2163fbe3761e1ee3bfeb4501306fac26",
     "target_base": "origin/master"
   },
   "claims": {
-    "archive-policy-denial": {
-      "statement": "An explicit local archive policy refusal is persisted as a terminal non-commit receipt.",
-      "falsifier": "A basic-trust request changes the task, reports UNKNOWN, supplies a commit marker, or executes again after same-ID replay. A crash must still report UNKNOWN.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/group_broker.rs"
-      ]
+    "accepted-github-source-carrier": {
+      "statement": "Only an independently accepted strict GitHub Actions policy can select the complete source graph and its verified workflow evidence.",
+      "falsifier": "A candidate selects an unaccepted or mixed carrier, drops an applicable obligation, loses candidate artifact identity, or accepts a changed attempt.",
+      "status": "open"
     }
   },
   "checkpoints": [
     {
-      "id": "terminal-broker-fixes",
-      "summary": "Keep macOS onboarding interactive with inherited PTYs and preserve definitive archive policy denials in the broker.",
-      "input_digest": "sha256:19aaea3f1b3077dec843a2e6825ca59d8449b2754fe7500eb503d04eefae093f",
+      "id": "github-actions-carrier",
+      "summary": "Add an independently accepted GitHub Actions carrier to the complete source-CI publication graph",
+      "input_digest": "sha256:2faf440b54ba17e8b740127dffac1da328297e87fb7f7758c27eb6c1471a5de6",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/group_broker.rs"
-      ]
-    },
-    {
-      "id": "reconcile-accepted-release-157",
-      "summary": "Integrate exact accepted v0.157.0 release and refresh release-bound managed projections while preserving the two original fixes.",
-      "input_digest": "sha256:d72829d9b8b5e3de5133d2de2f93801fce7eb3b16cfed408d730e7ec10f61ac9",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/group_broker.rs"
+        "Immutable CI context suite: 54 passed; local carrier suite started"
       ]
     }
   ],
   "intents": {
-    "intent:terminal-broker-1882-1883": {
+    "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -903,14 +890,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:terminal-broker-1882-1883",
+      "id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "finish this",
-      "refined_intent": "Fix and verify DecapodLabs/decapod #1882 and #1883, publish with required GitHub Actions, and close both issues with evidence.",
+      "raw_intent": "Decapod #1890 qualify publication without Buildkite\n\nIdentify exact native coverage, preserve accepted policy and publication authority, and make missing source-CI proof clear.",
+      "refined_intent": "Decapod #1890 qualify publication without Buildkite\n\nIdentify exact native coverage, preserve accepted policy and publication authority, and make missing source-CI proof clear.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -923,73 +910,65 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Complete #1882 and #1883. Keep interactive onboarding usable with inherited PTYs, and report definite task archive policy denial while retaining uncertain broker outcomes.",
+      "intent": "Bind exact required Decapod source graph, candidate and accepted target to authenticated GitHub Actions output only after the accepted target selects the new carrier.",
       "phases": [],
       "proof_hooks": [
-        "macOS real-process onboarding PTY tests, durable broker denial/replay and crash tests, and required GitHub Actions"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The authored inherited-PTY and archive-refusal contracts were reviewed against the accepted v0.157.0 merge.",
-          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
-          "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
+          "reason": "Describe the shared strict source graph and the independently accepted GitHub carrier.",
+          "reviewed_code_fingerprint": "b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e",
+          "spec_material_hash": "23f71033c0522d894cbb1ccc8c56344c1a4ec19f0788dcdc2d88e731f5057c17"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The authored terminal interaction and durable broker refusal contracts were reviewed against the accepted v0.157.0 merge.",
-          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
-          "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
+          "reason": "Specify the accepted configuration field and authenticated artifact, attempt and final freshness behavior.",
+          "reviewed_code_fingerprint": "b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e",
+          "spec_material_hash": "0e4557e32a8a5d85a050e99186b98372d2ed9f574e2eb6a8d376393cb21e3199"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The version transition and fixes preserve the user and broker authorization policy.",
-          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
+          "reason": "The designated GitHub carrier retains the existing accepted-base, official CLI, and authenticated execution boundaries.",
+          "reviewed_code_fingerprint": "b5b6476bf5dd707ef2b5086c04dc98ced7f9a7375f271804ebec9dfd410ac97e",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Repair terminal onboarding and archive denial reporting",
+      "title": "Use the independently accepted strict GitHub Actions source carrier",
       "todo_ids": [
-        "bugs_01m7y1t47e39c35f"
+        "fend_01m7ybaqd5wda0qr"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237255Z"
+      "updated_at": "1795242260Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bd2cc3e0d972fca2f67dab00fbd090ca8a303ccf0a8e8f39fa87e040094931a2",
+      "artifact_hash": "sha256:7144398eceaeb77cb9109d0b8b24e342fd7f648ba1fce8db126d4c3fc6f1e860",
       "checks": [
         {
-          "name": "archive_policy_denial",
+          "name": "formatting",
           "status": "passed"
         },
         {
-          "name": "broker_crash_uncertainty",
-          "status": "passed"
-        },
-        {
-          "name": "exact_compiled_onboarding",
+          "name": "github-carrier-regressions",
           "status": "partial"
         },
         {
-          "name": "native_timed_pty_probe",
+          "name": "immutable-ci-context",
           "status": "passed"
         },
         {
-          "name": "original_checkpoint_onboarding",
-          "status": "passed"
-        },
-        {
-          "name": "stale_base_rejected",
+          "name": "stale-accepted-base",
           "status": "passed"
         }
       ],
@@ -998,59 +977,53 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:terminal-broker-1882-1883",
+            "detail": "trajectory:branch_01M7YBJQ55NB2J86RPXSYN0R62",
             "event_id": "event:4",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:terminal-broker-1882-1883",
+            "detail": "trajectory:branch_01M7YBJQ55NB2J86RPXSYN0R62",
             "event_id": "event:5",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:terminal-broker-1882-1883",
-            "event_id": "event:6",
-            "intent_id": "intent:terminal-broker-1882-1883",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "terminal-broker-1882-1883": {
+          "branch_01M7YBJQ55NB2J86RPXSYN0R62": {
             "evidence_only": true,
-            "id": "terminal-broker-1882-1883",
-            "intent_id": "intent:terminal-broker-1882-1883",
+            "id": "branch_01M7YBJQ55NB2J86RPXSYN0R62",
+            "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
             "steps": [
               {
-                "action": "verification",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/broker.rs",
-                  "src/decapod/core/group_broker.rs",
-                  "tests/group_broker.rs",
-                  "The real broker returned a terminal NOT_COMMITTED receipt for a basic-trust archive request after returning through the child. Same-ID replay across broker lifetimes preserved the receipt and task status/revision and executed once. All original broker crash cases passed."
+                  ".decapod/config.toml",
+                  ".github/workflows/ci.yml",
+                  "src/decapod/core/validation_runtime/snapshot.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "tests/ci_event_context_policy.rs",
+                  "The deterministic workbranch verifier rejects the previous head after the accepted target advances and permits the newly reconciled exact head. Ordinary publication remains subject to the currently accepted carrier."
                 ],
                 "proof_refs": [
-                  "archive_policy_denial",
-                  "broker_crash_uncertainty"
+                  "stale-accepted-base"
                 ],
                 "scope": [
                   "root"
@@ -1062,38 +1035,20 @@
                 "action": "verification",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/onboarding.rs",
-                  "tests/cli_contracts.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/main.rs",
-                  "Sampled the earlier CLI hang inside a blocking read after Escape. The direct macOS termios probe passed arrow and lone-Escape input in ten independent PTYs per controlling-terminal mode. The final compiled regression is running."
+                  "All 54 immutable Git event-context checks passed with installed Python 3.14. Formatting and staged whitespace checks passed. The focused Rust carrier suite is in progress; the accepted repository carrier is unchanged and no publication proof exists."
                 ],
                 "proof_refs": [
-                  "native_timed_pty_probe",
-                  "exact_compiled_onboarding"
+                  "immutable-ci-context",
+                  "formatting",
+                  "github-carrier-regressions"
                 ],
                 "scope": [
-                  "root"
+                  ".decapod/managed/specs",
+                  "root",
+                  "src/decapod",
+                  "tests/ci_event_context_policy.rs"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "The original candidate passed six full macOS PTY runs and real broker regressions. Master advanced through release PR #1885 to 146a00f4117ffbcdcc93a68ffef6419f78453056; the former base proof returned PUBLICATION_MATERIAL_BASE_CHANGED. The integrated product code is unchanged and the release projections were regenerated with accepted v0.157.0 source. Fresh checks are required on the new source and target."
-                ],
-                "proof_refs": [
-                  "original_checkpoint_onboarding",
-                  "stale_base_rejected"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1101,37 +1056,34 @@
         }
       },
       "declared_commands": [],
-      "destination": "GitHub pull request",
+      "destination": "pull request",
       "evidence": [
-        "Sampled the earlier CLI hang inside a blocking read after Escape. The direct macOS termios probe passed arrow and lone-Escape input in ten independent PTYs per controlling-terminal mode. The final compiled regression is running.",
-        "The original candidate passed six full macOS PTY runs and real broker regressions. Master advanced through release PR #1885 to 146a00f4117ffbcdcc93a68ffef6419f78453056; the former base proof returned PUBLICATION_MATERIAL_BASE_CHANGED. The integrated product code is unchanged and the release projections were regenerated with accepted v0.157.0 source. Fresh checks are required on the new source and target.",
-        "The real broker returned a terminal NOT_COMMITTED receipt for a basic-trust archive request after returning through the child. Same-ID replay across broker lifetimes preserved the receipt and task status/revision and executed once. All original broker crash cases passed."
+        "All 54 immutable Git event-context checks passed with installed Python 3.14. Formatting and staged whitespace checks passed. The focused Rust carrier suite is in progress; the accepted repository carrier is unchanged and no publication proof exists.",
+        "The deterministic workbranch verifier rejects the previous head after the accepted target advances and permits the newly reconciled exact head. Ordinary publication remains subject to the currently accepted carrier."
       ],
       "inspected_files": [
-        "src/decapod/core/broker.rs",
-        "src/decapod/lib.rs"
+        ".decapod/config.toml",
+        ".github/workflows/ci.yml"
       ],
-      "intent_id": "intent:terminal-broker-1882-1883",
+      "intent_id": "intent:change_01M7YBJQ0CGZVZ4GVR1GTTS6H1",
       "modified_files": [
-        "src/decapod/core/group_broker.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/onboarding.rs",
-        "src/decapod/plugins/policy.rs",
-        "src/main.rs",
-        "tests/cli_contracts.rs",
-        "tests/group_broker.rs"
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime/snapshot.rs",
+        "tests/ci_event_context_policy.rs"
       ],
       "next_transitions": [
-        "Check the final compiled PTY cases and exact candidate GitHub Actions before opening the PR.",
-        "Run exact current-head PR checks before merge."
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "root"
+        ".decapod/managed/specs",
+        "root",
+        "src/decapod",
+        "tests/ci_event_context_policy.rs"
       ],
-      "run_id": "terminal-broker-1882-1883",
+      "run_id": "branch_01M7YBJQ55NB2J86RPXSYN0R62",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m7y1t47e39c35f",
+      "task_id": "fend_01m7ybaqd5wda0qr",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

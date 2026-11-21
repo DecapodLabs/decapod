@@ -420,7 +420,9 @@ pub fn inspect(
     let mut report = ReconciliationReport {
         schema_version: "1.0.0".into(),
         status: "needs_reconciliation".into(),
-        provider: if proof.validation_buildkite_preflights {
+        provider: if proof.validation_github_actions_preflights {
+            "github_actions_workbranch"
+        } else if proof.validation_buildkite_preflights {
             "buildkite_workbranch"
         } else {
             "native"
@@ -491,7 +493,7 @@ pub fn inspect(
         None => report.task("MISSING_REQUIRED_PROFILE", "Select and review a complete required profile", vec![".decapod/config.toml".into()],
             "Agent: reconcile existing build, test, CI and intended proof coverage, preserving separately scoped release requirements, then declare proof.required_profile.id and reviewed_sources_digest. Review complete coverage before updating a digest; checkpoint and run decapod validate to execute configured proof."),
         Some(profile) if profile.id == crate::core::repository_profile::REQUIRED_PROFILE => {
-            if proof.validation_buildkite_preflights {
+            if proof.uses_remote_preflight() {
                 report.task("REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED", "Select the repository-local proof route", vec![".decapod/config.toml".into()],
                     "The repository profile proves required local commands only; it cannot select Buildkite or attest hosted workflow execution.");
             }

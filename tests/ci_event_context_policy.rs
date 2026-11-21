@@ -1494,6 +1494,40 @@ fn workbranch_updates_compare_all_source_work_with_captured_target() {
 }
 
 #[test]
+fn workbranch_rejects_stale_ancestry_and_requires_the_reconciled_head() {
+    let repo = Repo::new();
+    let original_base = repo.head();
+    repo.git(&["checkout", "-qb", "agent/ci-fixture/task-123"]);
+    let original_head = repo.source();
+    assert_eq!(
+        resolve(&workbranch(&repo, &original_head)).unwrap().base,
+        original_base
+    );
+
+    repo.git(&["checkout", "-q", "--detach", &original_base]);
+    fs::write(repo.0.join("accepted.txt"), "advance the accepted target\n").unwrap();
+    let accepted = repo.commit("advance accepted target");
+    repo.git(&["update-ref", ACCEPTED, &accepted]);
+    repo.git(&["checkout", "-q", "agent/ci-fixture/task-123"]);
+    assert_eq!(repo.head(), original_head);
+    assert!(resolve(&workbranch(&repo, &original_head)).is_err());
+
+    repo.git(&[
+        "merge",
+        "-q",
+        "--no-ff",
+        "-m",
+        "incorporate accepted target",
+        &accepted,
+    ]);
+    let head = repo.head();
+    assert_ne!(head, original_head);
+    let context = resolve(&workbranch(&repo, &head)).unwrap();
+    assert_eq!((context.base, context.head), (accepted, head));
+    assert!(resolve(&workbranch(&repo, &original_head)).is_err());
+}
+
+#[test]
 fn workbranch_requires_exact_branch_and_accepted_source_identity() {
     for case in [
         "ref",
