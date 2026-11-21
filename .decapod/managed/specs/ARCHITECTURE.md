@@ -538,6 +538,12 @@ request values; absent caller metadata cannot fall back to the leader's values.
 The ordinary session and operation-policy checks still run in that child.
 Context conveys the caller's execution inputs, not a grant of trust or approval.
 
+The local `todo archive` command identifies a typed refusal from its policy
+gate before entering the task transaction. The broker's own child conveys that
+outcome through a reserved exit status. The parent records the denial using
+the existing durable dedupe envelope. Other failing child exits continue to
+leave the requested mutation's outcome uncertain.
+
 The active session password is transported only on the existing restricted local
 socket, without a debug representation, response echo or durable request storage.
 Dedupe stores only the result and a structured digest of arguments and non-secret
@@ -1207,7 +1213,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e`
+- Repository signal fingerprint: `8567c1ca2c6679aa25f5f2d0d235e10fb475e576e239c44f493ebb7887cd9fba`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1433,7 +1439,12 @@ encodings change; cloud PostgreSQL migration ownership stays with Propodus.
 ## Terminal setup over the managed cloud boundary
 
 `src/decapod/onboarding.rs` owns terminal sizing, presentation, keyboard input and
-terminal restoration. `lib.rs::{enrich_repo_context_interactive,customize_setup,
+terminal restoration. When both standard streams are terminals and opening
+`/dev/tty` fails, setup reads from a duplicate of the inherited input terminal
+and restores its saved mode on exit. Setup uses the terminal driver's timed
+read for key-sequence continuations, so an incomplete sequence cannot block
+after a PTY readiness notification.
+`lib.rs::{enrich_repo_context_interactive,customize_setup,
 review_setup}` collects a configuration draft; `prepare_init_directory_and_git`
 and `run_init_apply` execute only after interactive approval. Changed configuration
 is backed up privately before replacement. Preview and cancellation do not create
