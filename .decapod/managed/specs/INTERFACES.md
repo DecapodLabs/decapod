@@ -1551,7 +1551,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b`
+- Repository signal fingerprint: `3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (38 files), `docs/` (1 files), `src/` (250 files), `tests/` (258 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1590,6 +1590,12 @@ questions, contradictions, and pending spec decisions. The report describes
 recorded constraints. Explicit approval records declared authority.
 Plan initialization preserves pending spec decisions. Recording or resolving
 one of those decisions requires new plan approval.
+
+A plan with selected work records `accepted_selected_work_revision` on approval.
+If the accepted policy changes, or the plan predates the revision field,
+readiness reports `NEEDS_PLAN_APPROVAL` once current instruction blockers are
+resolved. Reapprove the plan and rerun affected proof. Plans without selected
+work continue to omit this field.
 
 The public plan CLI regressions live in the existing branch-enforced
 `tests/cli_contract_enforcement.rs::plan_governed_execution` module. Their

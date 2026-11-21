@@ -841,6 +841,14 @@
       "id": "quota-diagnostics-initial",
       "summary": "Expose live spend-cap status and typed policy denials",
       "input_digest": "sha256:042cae904ceec0306621aae37098f83063839da0c5316179ce968fdf31a9eef1"
+    },
+    {
+      "id": "cloud-quota-accepted-release",
+      "summary": "Preserve cloud quota status while adopting the accepted v0.156.1 baseline",
+      "input_digest": "sha256:6b40e4550db45f956de342cd7f73f082bb2012a967c22b35a378622c78798459",
+      "proof_refs": [
+        "Local focused quota classification and live/offline status tests"
+      ]
     }
   ],
   "intents": {
@@ -884,22 +892,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The quota summary uses the existing Dactyl account-status route and scoped session store.",
-          "reviewed_code_fingerprint": "25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b",
-          "spec_material_hash": "26fa92c2840e79ee87aba17e925bd36df2f414ba92467596a184fe5c71b4ab6e"
+          "reason": "Review the accepted patch release and approval verification while keeping the read-only cloud status boundary.",
+          "reviewed_code_fingerprint": "3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f",
+          "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents permanent quota and provider denials and the opt-in live account resource summary.",
-          "reviewed_code_fingerprint": "25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b",
-          "spec_material_hash": "d306566c7a6ee6426af8ab959169034635c91ffa5960f61becc8a987b6fa73d1"
+          "reason": "Keep the distinct quota denial classes and read-only live status contract with the current accepted release.",
+          "reviewed_code_fingerprint": "3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f",
+          "spec_material_hash": "a6099a12d87179f9f338122ec33b0e1a84f1f3a5afa18fb9f6b55cfbf631362b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Live status requires an active managed session and leaves authorization to the authenticated account boundary.",
-          "reviewed_code_fingerprint": "25101d4879bbb2c5b4fb70fd373a7ed8d433a309a7f8a1fe25b288b5b411e68b",
+          "reason": "Review the accepted patch release and approval verification while keeping the read-only cloud status boundary.",
+          "reviewed_code_fingerprint": "3c123a54e1e673bb0b70923cba29e4c4afadede01f84819b5b142d00ba9cb52f",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -911,7 +919,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795218571Z"
+      "updated_at": "1795221077Z"
     },
     "trajectory": {
       "active_boundaries": [
