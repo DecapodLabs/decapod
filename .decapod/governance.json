@@ -880,6 +880,11 @@
       "proof_refs": [
         "Seven focused Cloud and local boundary tests passed."
       ]
+    },
+    {
+      "id": "cloud-lease-v157-projections",
+      "summary": "Refresh the managed Docker pin and living specs for the v0.157.0 accepted base.",
+      "input_digest": "sha256:1058a0172d95203d3be2448fa476835d4fb22387e7e15147c1d6ac547145c3f0"
     }
   ],
   "intents": {
@@ -923,22 +928,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Cloud task operations still route through Dactyl; only the unsupported lease renewal result changes.",
-          "reviewed_code_fingerprint": "fe7f6b9d733f08eab29bd03223fabac690be2d42152435583353880ad97d0653",
+          "reason": "Accepted v0.157.0 changes release projections only for this branch, and Cloud task architecture stays Dactyl-backed.",
+          "reviewed_code_fingerprint": "848fa34b6d74fe3e62cc1189202e64390a69694b45f574c9faeb940e3e604ac0",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the explicit unsupported hosted lease renewal response and its preflight boundary.",
-          "reviewed_code_fingerprint": "fe7f6b9d733f08eab29bd03223fabac690be2d42152435583353880ad97d0653",
+          "reason": "The explicit unsupported hosted renewal response is documented, with the signal refreshed for the accepted v0.157.0 base.",
+          "reviewed_code_fingerprint": "848fa34b6d74fe3e62cc1189202e64390a69694b45f574c9faeb940e3e604ac0",
           "spec_material_hash": "84f66c8bd323be7afbfc9462ff222f13726e5dd609b442905ef1e30b634bf17d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No new authority, identity acceptance, SQL catalog entry, or storage fallback; the refusal is before the connector.",
-          "reviewed_code_fingerprint": "fe7f6b9d733f08eab29bd03223fabac690be2d42152435583353880ad97d0653",
+          "reason": "Refuse renewal before touching either backend. The release projection refresh changes no security behavior.",
+          "reviewed_code_fingerprint": "848fa34b6d74fe3e62cc1189202e64390a69694b45f574c9faeb940e3e604ac0",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -950,13 +955,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795236401Z"
+      "updated_at": "1795237681Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:98e9700f744e138581066f0cb0d3494e6aad2e0957d8b5ec00f6aab9131bd1e2",
+      "artifact_hash": "sha256:ce849250a3e9dc4a7bd8e2154d2ac80bbe03b5902a6dd64ac5028b6f86d162d7",
       "checks": [
         {
           "name": "cloud-cli-boundary",
@@ -968,6 +973,10 @@
         },
         {
           "name": "formatting",
+          "status": "passed"
+        },
+        {
+          "name": "hosted-renewal-focused",
           "status": "passed"
         }
       ],
@@ -999,10 +1008,17 @@
             "intent_id": "intent:change_01M7Y6C9B5Y1X2MXBYBZTN1430",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Y6C9EYAF40CT1AF8HZMGQT",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Y6C9B5Y1X2MXBYBZTN1430",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y6C9EYAF40CT1AF8HZMGQT": {
@@ -1048,6 +1064,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Seven focused tests passed on the v0.157.0 integration. GitHub standalone validation passed its code checks but flagged generated projections. Regenerated Dockerfile and living-spec metadata with the v0.157.0 source-evaluation binary."
+                ],
+                "proof_refs": [
+                  "hosted-renewal-focused"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "root",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/cloud_cli_boundary.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1057,6 +1092,7 @@
       "destination": "pull request",
       "evidence": [
         "Focused local suites passed all seven tests. No full publication proof was captured.",
+        "Seven focused tests passed on the v0.157.0 integration. GitHub standalone validation passed its code checks but flagged generated projections. Regenerated Dockerfile and living-spec metadata with the v0.157.0 source-evaluation binary.",
         "The released Cloud CLI renew path reads the task and reports success without a mutation. The adapter updates only a process-local cache. Propodus custody_bind has a separate repository, workspace, version and fencing contract."
       ],
       "inspected_files": [
