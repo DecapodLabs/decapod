@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v5",
-  "generated_at": "1795256028Z",
+  "generated_at": "1795256228Z",
   "repo_signal_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
   "declared_capabilities": [
     "agent-helper",
@@ -16,33 +16,33 @@
     "scheduled-jobs"
   ],
   "capability_definition_version": "1.0.0",
-  "config_input_hash": "7840ba1a34c5b7398b9af1f8779a4ce5b412f6220ec4247fc85ad8f8ed1d8e0a",
+  "config_input_hash": "aa0115ae1da1c39b23f3519f164951b7468c3f607875d2a50cdccf0442dc53f1",
   "spec_input_hash": "02dad8822a5ea6f346f99a74ba7f76b8852bf46b877540c238c26102059e4d86",
-  "decapod_release": "0.158.1",
+  "decapod_release": "0.158.2",
   "entrypoints": [
     {
       "path": "AGENTS.md",
-      "template_hash": "c57026f54ef1b4c05b4f7da0c88266a9afcd39b97a79f08296d0408aeca43276",
+      "template_hash": "f015c1d8915e2c6a0bbae38e8192da8049028e0472c2ef95c2a538d15529bcca",
       "content_hash": "2ad62662418b9175dd1e8dd6163923d341d3e057589be7a27eed3196e0b49639",
-      "fingerprint": "4e0bfd306bec20cfc640ca9d335b74880d3b1fe8e3941d3782a8972b8e4769c0"
+      "fingerprint": "852552777b0f8d56172766207475806591c88cc10e9d226b40728ce5ea805cf5"
     },
     {
       "path": "CLAUDE.md",
-      "template_hash": "63fdbf4e822969f38da618cfc4b67fda63e4ead2c076fb54b9c78f1545d59c1e",
+      "template_hash": "7d12a75f6b72d8174533614ef5285da599139d5b38140ebfd76d02b089cfd45d",
       "content_hash": "7fd3d0f0c975cd68c77fb5b41a75716848fcf40fc10ec46e2240526fe5a64785",
-      "fingerprint": "e9481e30f37c6afa34169fee38f781c890f52f0737e7ff542cb0acc56d221867"
+      "fingerprint": "eb848f12f7dbc34e49a9772a6f236e7fa66045c107696d0714096197a890e6a1"
     },
     {
       "path": "GEMINI.md",
-      "template_hash": "d410f24989e802bec830455607d22ee45865e0c540837023f50f74f4c9f05fee",
+      "template_hash": "bfdd0b5d48f4a0663a3fda4bc0e075761da5b8fdb85343847cb0cb483e6db7e0",
       "content_hash": "750b33b711ba029a4746de361a82a923dd32f3c94cc6456fe684ff3717218903",
-      "fingerprint": "d3af6461d5ec62698ead4bc1868f95f3c581dab988707f17a28058c45e0833fd"
+      "fingerprint": "4d6f09876dcf7207d51569e13293f10c528658804265ec71b914fdfe73ba51db"
     },
     {
       "path": "CODEX.md",
-      "template_hash": "6d908dfc1053ce2018ea83de536a9aee073cc938ec02c140c9f237045d7cf900",
+      "template_hash": "726a32a7d8be37c22cbae562fbe476f96bf20009b9b737bdbecfb871a338b9df",
       "content_hash": "44102828224c472331c272398f6be8658d102527f4e090133cc8fa43ed2cb552",
-      "fingerprint": "73270d88f6c10852068cb68c14824e1c46b3d6205f32a639fa23a3e82dacbe85"
+      "fingerprint": "880ade961544f2a5faff200804a84dd1db8afe0ce64381c7f5d12eb9062f186d"
     }
   ],
   "files": [

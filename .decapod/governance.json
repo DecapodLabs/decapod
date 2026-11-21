@@ -969,6 +969,14 @@
       "proof_refs": [
         "git_diff_check"
       ]
+    },
+    {
+      "id": "issue-1834-v01582-proof-inventory",
+      "summary": "Refresh spec reviews and reconcile the release-only source inventory against the byte-identical accepted base",
+      "input_digest": "sha256:7c2d07c8d99158b28685dc3e9a3be886bc277c0a03748a04ef4d78f3d151a754",
+      "proof_refs": [
+        "git_inventory_comparison"
+      ]
     }
   ],
   "intents": {
@@ -1010,23 +1018,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture with the accepted v0.158.0 source snapshot",
-          "reviewed_code_fingerprint": "65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b",
-          "spec_material_hash": "10d91f6dc0f8b854c396ef60c4b10d0a6750c529128277f3fba9724772f7b4c4"
+          "reason": "Reviewed the current architecture text and source together after merging the accepted release. The workspace publication module derives missing PR metadata during creation and preserves idempotent readback.",
+          "reviewed_code_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
+          "spec_material_hash": "2c203d575961974e1d5d7296f9b4a06099f48235755e9c1209b805b579feb3db"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces with the accepted v0.158.0 source snapshot",
-          "reviewed_code_fingerprint": "65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b",
-          "spec_material_hash": "11cc96f76553596785b069390c70d17fd8e04065cd086a64ce0c265eb177d1f2"
+          "reason": "Reviewed the accepted and candidate interface text with the current implementation and regression tests. PR creation derives metadata from the immutable authored range and preserves explicit input.",
+          "reviewed_code_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
+          "spec_material_hash": "a22fa4d1dc75bda5fe3bee835008075717fa46dd0deb324b968037a91e389024"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Deriving PR display metadata preserves publication authorization",
-          "reviewed_code_fingerprint": "65575c253c578e4d355018efd7e9517ab30835ce94cfca5053e8b95348b7530b",
-          "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
+          "reason": "The publication policy and remote validation authority are preserved. The metadata fallback uses the admitted Git object range and does not change authentication, trust or readiness checks.",
+          "reviewed_code_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
+          "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
       "state": "APPROVED",
@@ -1037,14 +1045,14 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795241758Z"
+      "updated_at": "1795256241Z"
     },
     "trajectory": {
       "active_boundaries": [
         "All changes are local. Configured Buildkite validation may push and is outside this start-work request.",
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:45ca31c4958ea87b776648c7f2316cba2b308eed01ad90d92b19f8ea6683a708",
+      "artifact_hash": "sha256:ba166ff4f94c54c3cb88c5937bff9598834832a2e14eaf056bfcaa144bd240de",
       "checks": [
         {
           "name": "accepted_release_inventory_comparison",
@@ -1094,10 +1102,17 @@
             "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7XDZTSZ9NGN9242JXXJ2HKK",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7XDZTPZ55X1AKM697A21WTK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.0.0",
         "trajectories": {
           "branch_01M7XDZTSZ9NGN9242JXXJ2HKK": {
@@ -1153,6 +1168,19 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "The v0.158.2 controller discovered 107 proof sources. The candidate and accepted aa4d25da1 match byte-for-byte. The reviewed digest at accepted 77282b10b was reproduced, and the only covered changes since that review are the accepted Decapod package version in Cargo.toml and Cargo.lock."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "src/decapod/core/workspace_publication.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1163,7 +1191,8 @@
       "evidence": [
         "41 tests passed in the final publication suite with a canonical macOS temporary directory.",
         "Focused Rust tests exercise Git commit discovery and mocked forge creation and readback.",
-        "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock."
+        "The released v0.156.0 scanner measured the same 105-source inventory on accepted ba21c8f16 and this candidate. The prior accepted digest differs only because the official release changed the decapod version in Cargo.toml and Cargo.lock.",
+        "The v0.158.2 controller discovered 107 proof sources. The candidate and accepted aa4d25da1 match byte-for-byte. The reviewed digest at accepted 77282b10b was reproduced, and the only covered changes since that review are the accepted Decapod package version in Cargo.toml and Cargo.lock."
       ],
       "inspected_files": [
         "src/decapod/core/workspace_publication.rs"
