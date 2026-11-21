@@ -893,6 +893,14 @@
       "proof_refs": [
         "tests/unit/plugins/verify_tests.rs"
       ]
+    },
+    {
+      "id": "fix-1892-unset-agent-test-fixture",
+      "summary": "Use task_journal lease rotation in workunit unit test when DECAPOD_AGENT_ID is unset in CI (#1892)",
+      "input_digest": "sha256:8c3bcf388a644d008e4b8a8650bf24a89a029f6fc4d3ad6b6d9ad7229ddc7c33",
+      "proof_refs": [
+        "tests/unit/core/workunit_journal_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -936,22 +944,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No product intent, component topology, runtime security boundary, or operational contract outside VALIDATION.md and INTERFACES.md changed for #1892; refreshed generated projections only.",
-          "reviewed_code_fingerprint": "807b75f205991cfd12908ccdbd4fd6c6a51bf574eb86edc69f0a9b06452ce122",
+          "reason": "Architecture unchanged by unset-agent test fixture update (#1892); refreshed generated spec fingerprint.",
+          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
           "spec_material_hash": "ca9a4e3c6727875ac36587000a82c513eb2946adcb0a27b0f1264e1eb8ddd0e8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Documented SAFE_BLOCKER_LABELS/SAFE_VALIDATION_SCOPES additions, wrapper peeling, stderr advisory filtering, and actionable checkpoint remediation for #1892.",
-          "reviewed_code_fingerprint": "807b75f205991cfd12908ccdbd4fd6c6a51bf574eb86edc69f0a9b06452ce122",
+          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
           "spec_material_hash": "937591303d30ce71df3eef6cc82e0040a81a0acc5187ef9027bdef5f5d2d885a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No product intent, component topology, runtime security boundary, or operational contract outside VALIDATION.md and INTERFACES.md changed for #1892; refreshed generated projections only.",
-          "reviewed_code_fingerprint": "807b75f205991cfd12908ccdbd4fd6c6a51bf574eb86edc69f0a9b06452ce122",
+          "reason": "Security boundaries unchanged by unset-agent test fixture update (#1892); refreshed generated spec fingerprint.",
+          "reviewed_code_fingerprint": "13e3bddc19f4d10d9944b3277fe9bc60e8f31fc21021b83dedba47f6378a7e4a",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -963,13 +971,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795249338Z"
+      "updated_at": "1795252665Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3b0ac0a9886efec1ca960260fca51e649b51e887c78c181edad8a53f6443e75a",
+      "artifact_hash": "sha256:d6b597ec2a27cc4ae2b8fd3ed550db784ccb8a52b8fe347c6da93294480eb7d4",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -1000,6 +1008,10 @@
           "status": "passed"
         },
         {
+          "name": "cargo_test_lib_workunit_unset_agent",
+          "status": "passed"
+        },
+        {
           "name": "cargo_test_workunit_verified_proof_1660",
           "status": "passed"
         }
@@ -1025,10 +1037,17 @@
             "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7YH0NASVKZK93T7RK1ER7A0",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7YH0NH5Z4Z4Z8H3YSSF6Q03": {
@@ -1073,6 +1092,22 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verify",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/unit/core/workunit_journal_tests.rs",
+                  "cargo test --locked --features supabase-cloud --lib workunit with unset DECAPOD_AGENT_ID passed 45/45; cargo clippy --locked --all-targets --all-features -- -D warnings passed (0 warnings)"
+                ],
+                "proof_refs": [
+                  "cargo_test_lib_workunit_unset_agent"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1081,7 +1116,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)"
+        "cargo test --lib verify (70/70 passed); task_journal, validation_history, workunit (45/45 passed); cli_contract_enforcement (26/26 passed); workunit_verified_proof_1660 (6/6 passed); cargo clippy --locked --all-targets --all-features -- -D warnings (0 warnings)",
+        "cargo test --locked --features supabase-cloud --lib workunit with unset DECAPOD_AGENT_ID passed 45/45; cargo clippy --locked --all-targets --all-features -- -D warnings passed (0 warnings)"
       ],
       "inspected_files": [
         "src/decapod/core/task_journal.rs",

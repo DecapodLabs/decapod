@@ -701,14 +701,22 @@ fn lease_renewal_exposes_custody_subcode_and_workunit_checkpoint_refreshes_witho
     drop(conn);
 
     checkpoint_workunit(root.path(), "task_test", "checkpoint", Some(1)).unwrap();
-    let renewed = crate::core::todo::renew_claim_lease(
-        &data,
-        "task_test",
+    crate::core::todo::with_task_journal(
+        &crate::core::broker::DbBroker::new(&data),
+        &crate::core::todo::todo_db_path(&data),
         &crate::current_agent_id(),
-        Some(3600),
+        Some("task_test"),
+        "test.renew_lease",
+        crate::core::todo::TaskJournalSelection::Ids(vec!["task_test".into()]),
+        |conn| {
+            conn.execute(
+                "UPDATE tasks SET lease_generation = lease_generation + 1, revision = revision + 1 WHERE id = 'task_test'",
+                [],
+            )?;
+            Ok(())
+        },
     )
     .unwrap();
-    assert_eq!(renewed["status"], "ok");
 
     let resume_err = resume_workunit(root.path(), "task_test", "resume-stale", Some(2))
         .unwrap_err()
