@@ -87,6 +87,8 @@ pub struct Diagnostic {
     pub next_action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authorization_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enrollment_url: Option<Box<str>>,
 }
 
 impl Diagnostic {
@@ -122,6 +124,7 @@ impl Diagnostic {
             failure_kind: kind,
             retryable: kind.retryable(),
             authorization_url: None,
+            enrollment_url: None,
             next_action: format!(
                 "{recovery}repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add to retry this operation.",
                 record.operation_id
@@ -139,6 +142,9 @@ impl std::fmt::Display for Diagnostic {
         )?;
         if let Some(url) = &self.authorization_url {
             write!(f, "; sign in: {url}")?;
+        }
+        if let Some(url) = &self.enrollment_url {
+            write!(f, "; enroll: {url}")?;
         }
         Ok(())
     }
@@ -218,12 +224,17 @@ fn invalid_token() -> DecapodError {
 pub fn failure_kind(error: &DecapodError) -> FailureKind {
     match error {
         DecapodError::CloudAuth(diagnostic) => match diagnostic.status {
-            CloudAuthStatus::OnboardingPending => FailureKind::OnboardingPending,
+            CloudAuthStatus::OnboardingPending | CloudAuthStatus::PendingFulfillment => {
+                FailureKind::OnboardingPending
+            }
             CloudAuthStatus::Unauthorized
             | CloudAuthStatus::UnauthorizedIdentity
             | CloudAuthStatus::RepositoryDenied
             | CloudAuthStatus::EntitlementDenied
             | CloudAuthStatus::PaymentPending
+            | CloudAuthStatus::PaymentRequired
+            | CloudAuthStatus::AdminApprovalRequired
+            | CloudAuthStatus::OrganizationAlreadyEnrolled
             | CloudAuthStatus::QuotaExceeded
             | CloudAuthStatus::OverageCapExhausted
             | CloudAuthStatus::ProviderDisabled
@@ -232,6 +243,8 @@ pub fn failure_kind(error: &DecapodError) -> FailureKind {
             | CloudAuthStatus::DeviceRevoked
             | CloudAuthStatus::KeyLost
             | CloudAuthStatus::MfaRequired
+            | CloudAuthStatus::RegistrationRequired
+            | CloudAuthStatus::ProviderLinkStepupRequired
             | CloudAuthStatus::RestartRequired => FailureKind::Authentication,
             CloudAuthStatus::Offline => FailureKind::Offline,
             CloudAuthStatus::ProviderUnavailable => FailureKind::Unavailable,
@@ -265,11 +278,10 @@ pub fn anyhow_failure(error: &anyhow::Error) -> (Outcome, FailureKind) {
 
 fn dactyl_failure_kind(error: &dactyl_db::DactylError) -> FailureKind {
     use dactyl_db::AdapterErrorKind as K;
-    if matches!(
-        error.adapter_code(),
-        Some("quota_exceeded" | "overage_cap_exhausted" | "provider_disabled")
-    ) {
-        return FailureKind::Authorization;
+    if let Some(code) = error.adapter_code()
+        && let Some(diagnostic) = crate::core::cloud_client::diagnostic_for_status_code(code, None)
+    {
+        return failure_kind(&DecapodError::CloudAuth(diagnostic));
     }
     match error.adapter_kind() {
         Some(K::Authentication) => FailureKind::Authentication,

@@ -207,7 +207,7 @@ pub(super) fn field(label: &str, helper: &str, default: &str) {
     }
 }
 
-pub(super) fn ready(path: &Path, dry_run: bool, repair_count: usize) {
+pub(super) fn ready(path: &Path, dry_run: bool, repair_count: usize, is_cloud: bool) {
     println!();
     println!(
         "  {}  {}",
@@ -236,6 +236,11 @@ pub(super) fn ready(path: &Path, dry_run: bool, repair_count: usize) {
         note(
             "For example: \"Read AGENTS.md, orient to this project, and help me build my next feature.\"",
         );
+        if is_cloud {
+            note(
+                "Decapod Cloud is connected. Enroll or pay at decapodlabs.ai/pricing if prompted — governed work resumes automatically with no Admin setup wizard.",
+            );
+        }
     }
     note("Required validation has not run.");
     if repair_count > 0 {

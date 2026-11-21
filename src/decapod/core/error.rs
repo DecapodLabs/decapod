@@ -19,6 +19,12 @@ pub enum CloudAuthStatus {
     OnboardingPending,
     /// The service requires account action; its reason is not inferred locally.
     ActionRequired,
+    RegistrationRequired,
+    ProviderLinkStepupRequired,
+    PaymentRequired,
+    PendingFulfillment,
+    AdminApprovalRequired,
+    OrganizationAlreadyEnrolled,
     /// A one-time request has an uncertain outcome and cannot be replayed.
     RestartRequired,
     Expired,
@@ -48,6 +54,8 @@ pub struct CloudAuthDiagnostic {
     pub next_action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authorization_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enrollment_url: Option<Box<str>>,
 }
 
 impl CloudAuthDiagnostic {
@@ -62,11 +70,17 @@ impl CloudAuthDiagnostic {
             message: message.into(),
             next_action: next_action.into(),
             authorization_url: None,
+            enrollment_url: None,
         }
     }
 
     pub fn with_authorization_url(mut self, url: impl Into<String>) -> Self {
         self.authorization_url = Some(url.into());
+        self
+    }
+
+    pub fn with_enrollment_url(mut self, url: impl Into<String>) -> Self {
+        self.enrollment_url = Some(url.into().into_boxed_str());
         self
     }
 }
@@ -186,6 +200,9 @@ impl fmt::Display for DecapodError {
                 )?;
                 if let Some(url) = &diagnostic.authorization_url {
                     write!(f, "; sign in: {url}")?;
+                }
+                if let Some(url) = &diagnostic.enrollment_url {
+                    write!(f, "; enroll: {url}")?;
                 }
                 write!(f, "; next action: {}", diagnostic.next_action)
             }

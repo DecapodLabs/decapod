@@ -331,8 +331,13 @@ impl DactylBridge {
                         {
                             // Resolve the physical connector inside Dactyl.
                             // Discovery is public and never receives this bearer.
-                            let mut connector = dactyl_db::CloudConnector::discover(uri)
-                                .map_err(crate::core::cloud_client::transport_error)?;
+                            let mut connector =
+                                dactyl_db::CloudConnector::discover(uri).map_err(|error| {
+                                    crate::core::cloud_client::transport_error_for_repository(
+                                        error,
+                                        Some(&repository.canonical_name),
+                                    )
+                                })?;
                             if let Ok(cwd) = std::env::current_dir()
                                 && let Some(signer) =
                                     crate::core::cloud_dpop::active_request_proof_signer(

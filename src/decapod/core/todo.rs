@@ -7986,14 +7986,16 @@ fn task_from_cloud_storage_task(task: &StorageTask) -> Task {
     }
 }
 
-fn cloud_error(error: anyhow::Error) -> error::DecapodError {
+fn cloud_error(error: anyhow::Error, repo_slug: Option<&str>) -> error::DecapodError {
     let error = match error.downcast::<error::DecapodError>() {
-        Ok(error::DecapodError::DactylError(error)) => return cloud_adapter_error(error),
+        Ok(error::DecapodError::DactylError(error)) => {
+            return cloud_adapter_error(error, repo_slug);
+        }
         Ok(error) => return error,
         Err(error) => error,
     };
     match error.downcast::<dactyl_db::DactylError>() {
-        Ok(error) => cloud_adapter_error(error),
+        Ok(error) => cloud_adapter_error(error, repo_slug),
         Err(_) => error::DecapodError::ValidationError(
             "Dactyl cloud todo operation failed (unclassified storage failure; no local fallback)"
                 .into(),
@@ -8001,7 +8003,10 @@ fn cloud_error(error: anyhow::Error) -> error::DecapodError {
     }
 }
 
-fn cloud_adapter_error(error: dactyl_db::DactylError) -> error::DecapodError {
+fn cloud_adapter_error(
+    error: dactyl_db::DactylError,
+    repo_slug: Option<&str>,
+) -> error::DecapodError {
     if matches!(
         error.adapter_kind(),
         Some(
@@ -8009,10 +8014,53 @@ fn cloud_adapter_error(error: dactyl_db::DactylError) -> error::DecapodError {
                 | dactyl_db::AdapterErrorKind::Authorization
         )
     ) {
-        crate::core::cloud_client::transport_error(error)
+        crate::core::cloud_client::transport_error_for_repository(error, repo_slug)
     } else {
         error::DecapodError::DactylError(error)
     }
+}
+
+fn cloud_todo_diagnostic_with_auth(
+    operation: &OperationRecord,
+    status: Outcome,
+    kind: cloud_todo_operation::FailureKind,
+    auth: &error::CloudAuthDiagnostic,
+) -> CloudTodoDiagnostic {
+    let mut diagnostic = CloudTodoDiagnostic::new(operation, status, kind);
+    if auth.status == crate::core::error::CloudAuthStatus::OnboardingPending {
+        diagnostic.authorization_url = auth.authorization_url.clone();
+    }
+    diagnostic.enrollment_url = auth.enrollment_url.clone();
+    // Auth message/recovery text can contain private adapter
+    // details. Only explicit validated handoff fields cross
+    // into the public task receipt; guidance stays fixed.
+    diagnostic.next_action = match auth.status {
+        crate::core::error::CloudAuthStatus::PaymentRequired => format!(
+            "Agent: share enrollment_url when present (no Admin setup wizard is required), wait for repository subscription checkout to complete, then repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
+            operation.operation_id
+        ),
+        crate::core::error::CloudAuthStatus::PendingFulfillment => format!(
+            "Agent: keep the saved cloud session (do not restart sign-in), wait briefly for fulfillment settlement, then retry `decapod cloud login --format json` and repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
+            operation.operation_id
+        ),
+        crate::core::error::CloudAuthStatus::AdminApprovalRequired => format!(
+            "Agent: organization admin status alone does not grant repository data access without an assigned paid seat; ask an organization administrator to assign a seat and approve access, then repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
+            operation.operation_id
+        ),
+        crate::core::error::CloudAuthStatus::OrganizationAlreadyEnrolled => format!(
+            "Agent: this organization is already enrolled in Decapod Cloud; ask an existing organization administrator for an invite or seat assignment instead of re-purchasing, then repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
+            operation.operation_id
+        ),
+        _ if auth.enrollment_url.is_some() => format!(
+            "Agent: share enrollment_url when present or ask the organization administrator to assign a paid seat (no Admin setup wizard is required), then repeat the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add.",
+            operation.operation_id
+        ),
+        _ => format!(
+            "Agent: share authorization_url when present, then run `decapod cloud login --format json` and follow its structured recovery. While sign-in is pending, retry login every 2 seconds for up to 5 minutes. Continue without waiting for another user message; preserve the saved connection if still pending. Resume the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add. The user does not need another CLI command.",
+            operation.operation_id
+        ),
+    };
+    diagnostic
 }
 
 pub trait CloudTodoStoreFactory {
@@ -8358,20 +8406,16 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
             if let (Some(operation), Some(journal)) = (&operation, journal) {
                 let kind = cloud_todo_operation::failure_kind(&error);
                 let _ = journal.finish(operation, Outcome::BlockedBeforeSubmit, Some(kind));
-                let mut diagnostic =
-                    CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind);
-                if let error::DecapodError::CloudAuth(auth) = &error {
-                    if auth.status == crate::core::error::CloudAuthStatus::OnboardingPending {
-                        diagnostic.authorization_url = auth.authorization_url.clone();
-                    }
-                    // Auth message/recovery text can contain private adapter
-                    // details. Only its explicit validated handoff crosses
-                    // into the public task receipt; guidance stays fixed.
-                    diagnostic.next_action = format!(
-                        "Agent: share authorization_url when present, then run `decapod cloud login --format json` and follow its structured recovery. While sign-in is pending, retry login every 2 seconds for up to 5 minutes. Continue without waiting for another user message; preserve the saved connection if still pending. Resume the original `decapod todo add` arguments with `--operation-id {}`. Do not issue a fresh add. The user does not need another CLI command.",
-                        operation.operation_id
-                    );
-                }
+                let diagnostic = if let error::DecapodError::CloudAuth(auth) = &error {
+                    cloud_todo_diagnostic_with_auth(
+                        operation,
+                        Outcome::BlockedBeforeSubmit,
+                        kind,
+                        auth,
+                    )
+                } else {
+                    CloudTodoDiagnostic::new(operation, Outcome::BlockedBeforeSubmit, kind)
+                };
                 return Err(error::DecapodError::CloudTodo(diagnostic));
             }
             return Err(error);
@@ -8451,7 +8495,10 @@ async fn run_cloud_todo_command_with_store_async(
             title_search,
             dir,
         } => {
-            let mut items = store.list_tasks().await.map_err(cloud_error)?;
+            let mut items = store
+                .list_tasks()
+                .await
+                .map_err(|error| cloud_error(error, Some(repo_id)))?;
             items.retain(|task| {
                 cloud_status_matches(status, &task.status)
                     && scope.as_deref().is_none_or(|value| value == task.scope)
@@ -8503,11 +8550,43 @@ async fn run_cloud_todo_command_with_store_async(
                 .map_err(|error| {
                     if let Some(operation) = operation {
                         let (outcome, kind) = cloud_todo_operation::anyhow_failure(&error);
-                        error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
-                            operation, outcome, kind,
-                        ))
+                        let mapped_auth = error
+                            .downcast_ref::<dactyl_db::DactylError>()
+                            .or_else(|| {
+                                error
+                                    .downcast_ref::<error::DecapodError>()
+                                    .and_then(|e| match e {
+                                        error::DecapodError::DactylError(d) => Some(d),
+                                        _ => None,
+                                    })
+                            })
+                            .and_then(|d| {
+                                d.adapter_code().and_then(|code| {
+                                    crate::core::cloud_client::diagnostic_for_status_code(
+                                        code,
+                                        Some(repo_id),
+                                    )
+                                })
+                            });
+                        let auth_ref = mapped_auth.as_ref().or_else(|| {
+                            error
+                                .downcast_ref::<error::DecapodError>()
+                                .and_then(|e| match e {
+                                    error::DecapodError::CloudAuth(auth) => Some(auth),
+                                    _ => None,
+                                })
+                        });
+                        if let Some(auth) = auth_ref {
+                            error::DecapodError::CloudTodo(cloud_todo_diagnostic_with_auth(
+                                operation, outcome, kind, auth,
+                            ))
+                        } else {
+                            error::DecapodError::CloudTodo(CloudTodoDiagnostic::new(
+                                operation, outcome, kind,
+                            ))
+                        }
                     } else {
-                        cloud_error(error)
+                        cloud_error(error, Some(repo_id))
                     }
                 })?;
             serde_json::json!({
@@ -8522,10 +8601,10 @@ async fn run_cloud_todo_command_with_store_async(
                 "item": task,
             })
         }
-        TodoCommand::Get { id } => cloud_get_task(root, store, id).await?,
+        TodoCommand::Get { id } => cloud_get_task(root, store, id, Some(repo_id)).await?,
         TodoCommand::Show { id, id_positional } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
-            cloud_get_task(root, store, &task_id).await?
+            cloud_get_task(root, store, &task_id, Some(repo_id)).await?
         }
         TodoCommand::Claim { id, agent, .. } => {
             let effective_actor = agent.as_deref().unwrap_or(&actor).to_string();
@@ -8535,7 +8614,7 @@ async fn run_cloud_todo_command_with_store_async(
             let task = store
                 .claim_task(id, effective_actor)
                 .await
-                .map_err(cloud_error)?;
+                .map_err(|error| cloud_error(error, Some(repo_id)))?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.claim",
@@ -8547,7 +8626,10 @@ async fn run_cloud_todo_command_with_store_async(
             })
         }
         TodoCommand::Release { id } => {
-            let task = store.release_task(id, actor).await.map_err(cloud_error)?;
+            let task = store
+                .release_task(id, actor)
+                .await
+                .map_err(|error| cloud_error(error, Some(repo_id)))?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.release",
@@ -8559,7 +8641,10 @@ async fn run_cloud_todo_command_with_store_async(
             })
         }
         TodoCommand::Yield { id, .. } => {
-            let task = store.release_task(id, actor).await.map_err(cloud_error)?;
+            let task = store
+                .release_task(id, actor)
+                .await
+                .map_err(|error| cloud_error(error, Some(repo_id)))?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.yield",
@@ -8582,7 +8667,7 @@ async fn run_cloud_todo_command_with_store_async(
                 let current = store
                     .get_task(&task_id)
                     .await
-                    .map_err(cloud_error)?
+                    .map_err(|error| cloud_error(error, Some(repo_id)))?
                     .ok_or_else(|| {
                         error::DecapodError::ValidationError(format!("Task {task_id} not found"))
                     })?;
@@ -8633,7 +8718,7 @@ async fn run_cloud_todo_command_with_store_async(
             let task = store
                 .complete_task(&task_id, actor, String::new())
                 .await
-                .map_err(cloud_error)?;
+                .map_err(|error| cloud_error(error, Some(repo_id)))?;
             serde_json::json!({
                 "ts": now_iso(),
                 "cmd": "todo.done",
@@ -8675,8 +8760,12 @@ async fn cloud_get_task(
     root: &Path,
     store: &dyn TodoStore,
     id: &str,
+    repo_slug: Option<&str>,
 ) -> Result<JsonValue, error::DecapodError> {
-    let item = store.get_task(id).await.map_err(cloud_error)?;
+    let item = store
+        .get_task(id)
+        .await
+        .map_err(|error| cloud_error(error, repo_slug))?;
     Ok(serde_json::json!({
         "ts": now_iso(),
         "cmd": "todo.get",

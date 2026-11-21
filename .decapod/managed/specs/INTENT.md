@@ -1,5 +1,14 @@
 # Intent
 
+## Pay-and-use Cloud onboarding and org-scoped project routing (#1877, #1896)
+
+Decapod Cloud enables a streamlined "select Cloud, sign in, pay, and use" flow without requiring a mandatory Admin setup wizard before repository enrollment:
+
+- **Direct repository enrollment via pricing URL (#1896)**: When a repository has not yet been subscribed (`payment_required` or `entitlement_required` / seat-required variants), Decapod surfaces `https://decapodlabs.ai/pricing?repo=<RFC3986-encoded-owner%2Frepo>` (falling back to `https://decapodlabs.ai/pricing` when no valid `<owner>/<repo>` slug is known) across CLI diagnostics, setup summaries, and JSON `enrollment_url` fields while preserving any active authenticated session. Once checkout succeeds and `backend_authorized = true` with `status = "active"`, governed operations resume automatically without an Admin setup wizard.
+- **Explicit non-error-loop onboarding states (#1896)**: `pending_fulfillment` / `payment_pending` preserves the saved session and instructs callers to retry rather than restarting sign-in; `admin_approval_required` distinguishes organization admin privileges from an assigned paid repository seat; `organization_already_enrolled` surfaces the immutable Cloud organization identifier so callers ask an existing administrator for an invite or seat rather than purchasing a duplicate subscription.
+- **Account auto-registration & organization disambiguation (#1877)**: `decapod cloud projects` / `project` operations register unregistered authenticated accounts (`registration_required`) via one-time account registration, surface `provider_link_stepup_required` explicitly when provider step-up is needed, and support `--org` on `cloud project use|create` to disambiguate duplicate project names across organizations.
+- **Zero silent SQLite fallback**: Cloud init (both initial and refresh paths) and Cloud onboarding blocks never create or fall back to `.decapod/data/decapod.db`.
+
 ## Applicable context and verifiable outcomes
 
 Decapod keeps the global Constitution and repository decisions durable. An agent requests a bounded projection for the current task. Explicit policy and current intent determine authority, while provenance distinguishes guidance, replaced decisions, and observed execution. The pilot records retain failed attempts and distinguish a functional result from admitted completion. (#1772, #1774, #657, #880, #1095, #879)
@@ -729,8 +738,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
+- Repository signal fingerprint: `9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

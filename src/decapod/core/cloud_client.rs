@@ -16,6 +16,46 @@ const LOCK_TIMEOUT: Duration = Duration::from_secs(3);
 #[cfg(feature = "supabase-cloud")]
 const REFRESH_LEAD_SECONDS: i64 = 60;
 const RESTART: &str = "Agent: preserve the interrupted task and operation ID, then run `decapod cloud login --restart` to start a fresh sign-in without replaying the interrupted exchange. Share its browser link with the user, resume the saved flow, and retry the original task. The user does not need another CLI command.";
+pub const CLOUD_PRICING_URL: &str = "https://decapodlabs.ai/pricing";
+
+fn valid_repo_segment(segment: &str) -> bool {
+    !segment.is_empty()
+        && segment != "."
+        && segment != ".."
+        && segment.len() <= 200
+        && segment
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.'))
+}
+
+fn encode_rfc3986(value: &str) -> String {
+    let mut encoded = String::with_capacity(value.len());
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'.' | b'_' | b'~') {
+            encoded.push(byte as char);
+        } else {
+            use std::fmt::Write;
+            let _ = write!(&mut encoded, "%{byte:02X}");
+        }
+    }
+    encoded
+}
+
+pub(crate) fn is_valid_repo_slug(slug: &str) -> bool {
+    let Some((owner, repo)) = slug.split_once('/') else {
+        return false;
+    };
+    valid_repo_segment(owner) && valid_repo_segment(repo)
+}
+
+/// Build the repository-scoped Decapod Cloud enrollment URL when `repo_slug` is
+/// a valid `<owner>/<repo>` slug; otherwise fall back to [`CLOUD_PRICING_URL`].
+pub fn pricing_enrollment_url(repo_slug: Option<&str>) -> String {
+    let Some(slug) = repo_slug.filter(|s| is_valid_repo_slug(s)) else {
+        return CLOUD_PRICING_URL.to_string();
+    };
+    format!("{CLOUD_PRICING_URL}?repo={}", encode_rfc3986(slug))
+}
 
 fn diagnostic(
     status: CloudAuthStatus,
@@ -25,6 +65,7 @@ fn diagnostic(
     DecapodError::CloudAuth(CloudAuthDiagnostic::new(status, message, next_action))
 }
 
+#[cfg(feature = "supabase-cloud")]
 fn restart_required() -> DecapodError {
     diagnostic(
         CloudAuthStatus::RestartRequired,
@@ -67,128 +108,184 @@ pub fn selected_origin() -> Result<String, DecapodError> {
     ))
 }
 
-pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
-    use dactyl_db::AdapterErrorKind;
-    let code = error.adapter_code();
-    let (status, message, action) = match code {
-        Some("mfa_step_up_required") => (
+pub(crate) fn diagnostic_for_status_code(
+    code: &str,
+    repo_slug: Option<&str>,
+) -> Option<CloudAuthDiagnostic> {
+    let enroll_url = pricing_enrollment_url(repo_slug);
+    let diagnostic = match code {
+        "mfa_step_up_required" => CloudAuthDiagnostic::new(
             CloudAuthStatus::MfaRequired,
             "Account-level AAL2 MFA step-up is required before device enrollment or privileged custody.",
             "Complete account MFA verification in the browser, then retry the command.",
         ),
-        Some("payment_pending") => (
-            CloudAuthStatus::PaymentPending,
-            "Payment confirmation is still pending for this repository entitlement.",
-            "Wait for billing settlement or ask the account owner to complete payment, then retry.",
+        "registration_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::RegistrationRequired,
+            "The service has not registered this account.",
+            "Complete account registration in Cloud Admin, then retry.",
         ),
-        Some("quota_exceeded") => (
+        "provider_link_stepup_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ProviderLinkStepupRequired,
+            "The service requires provider-link verification for this account.",
+            "Complete provider verification in Cloud Admin, then retry.",
+        ),
+        "code_host_link_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "The managed account needs a verified code-host link.",
+            "Complete account linking in the cloud portal, then retry.",
+        ),
+        "payment_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::PaymentRequired,
+            "This repository requires an active Decapod Cloud subscription before governed access can resume.",
+            format!(
+                "Open {enroll_url} to subscribe and enroll this repository (no Admin setup wizard is required), then retry your original command once checkout completes."
+            ),
+        )
+        .with_enrollment_url(enroll_url),
+        "pending_fulfillment" | "payment_pending" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::PendingFulfillment,
+            "Payment is complete and Decapod Cloud is finalizing repository fulfillment.",
+            "Keep the saved session (do not restart sign-in), wait briefly for webhook fulfillment to settle, and retry `decapod cloud login --format json` or your original command.",
+        ),
+        "admin_approval_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::AdminApprovalRequired,
+            "This account does not have an assigned paid repository seat; organization admin privileges alone do not grant repository data access.",
+            "Organization admin access and paid repository seats are separate. Ask an organization administrator to assign a paid seat and approve access for this repository, then retry.",
+        ),
+        "organization_already_enrolled" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::OrganizationAlreadyEnrolled,
+            "This organization is already enrolled under an existing immutable Cloud organization record.",
+            "Do not purchase a duplicate organization subscription. Ask an existing organization administrator for an invite or seat assignment for this repository, then retry.",
+        ),
+        "quota_exceeded" => CloudAuthDiagnostic::new(
             CloudAuthStatus::QuotaExceeded,
             "The cloud service declined the request because the included quota is exhausted.",
             "Ask a billing administrator to review the plan or eligible paid overages in Cloud Admin before trying again.",
         ),
-        Some("overage_cap_exhausted") => (
+        "overage_cap_exhausted" => CloudAuthDiagnostic::new(
             CloudAuthStatus::OverageCapExhausted,
             "The cloud service declined new billable usage because the spend cap was reached.",
             "Ask a billing administrator to review the current spend cap in Cloud Admin. Already admitted tasks can still use supported terminal operations.",
         ),
-        Some("provider_disabled") => (
+        "provider_disabled" => CloudAuthDiagnostic::new(
             CloudAuthStatus::ProviderDisabled,
             "This sign-in provider is disabled for the cloud deployment.",
             "Choose an enabled provider on the Cloud Admin sign-in page.",
         ),
-        Some("entitlement_denied") => (
+        "entitlement_denied" => CloudAuthDiagnostic::new(
             CloudAuthStatus::EntitlementDenied,
             "The service denied repository entitlement for this account.",
             "Ask the account owner to assign or restore a seat for this repository, then retry.",
         ),
-        Some("device_revoked") => (
+        "device_revoked" => CloudAuthDiagnostic::new(
             CloudAuthStatus::DeviceRevoked,
             "This enrolled device key has been revoked on the cloud service.",
             "Run `decapod cloud revoke` to clear local device state, then `decapod cloud login --restart` to enroll a fresh device key.",
         ),
-        Some(
-            "entitlement_required"
-            | "organization_seat_required"
-            | "seat_required"
-            | "seat_unassigned"
-            | "account_setup_required"
-            | "identity_link_required"
-            | "quote_confirmation_required"
-            | "billing_binding_required",
-        ) => (
+        "entitlement_required"
+        | "organization_seat_required"
+        | "seat_required"
+        | "seat_unassigned"
+        | "account_setup_required"
+        | "identity_link_required"
+        | "quote_confirmation_required"
+        | "billing_binding_required" => CloudAuthDiagnostic::new(
             CloudAuthStatus::ActionRequired,
             "The service has not confirmed the repository account entitlement.",
-            "Ask the account owner to resolve the service-reported account requirement, then retry. Payment or browser completion alone does not establish access.",
-        ),
-        Some("authorization_denied" | "repository_not_authorized") => (
+            format!(
+                "Complete repository enrollment at {enroll_url} if this repository is not yet enrolled, or ask your organization administrator to assign a seat (no Admin setup wizard is required), then retry. Payment or browser completion alone does not establish access."
+            ),
+        )
+        .with_enrollment_url(enroll_url),
+        "authorization_denied" | "repository_not_authorized" => CloudAuthDiagnostic::new(
             CloudAuthStatus::RepositoryDenied,
             "The service denied access to this repository.",
             "Run `decapod cloud projects` and explicitly select the intended project with `decapod cloud project use`, or ask its administrator to review access.",
         ),
-        Some("outcome_unknown") => return restart_required(),
-        Some("flow_expired" | "flow_not_found" | "invalid_flow_state") => (
+        "outcome_unknown" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::RestartRequired,
+            "A prior sign-in or refresh has an uncertain outcome. Its one-time request was not repeated.",
+            RESTART,
+        ),
+        "flow_expired" | "flow_not_found" | "invalid_flow_state" => CloudAuthDiagnostic::new(
             CloudAuthStatus::Expired,
             "The pending sign-in can no longer be completed.",
             RESTART,
         ),
-        Some("invalid_dpop_proof" | "dpop_replay") => (
+        "invalid_dpop_proof" | "dpop_replay" => CloudAuthDiagnostic::new(
             CloudAuthStatus::AuthRequired,
             "The service rejected the request DPoP proof or replay nonce.",
             "Retry the command with a fresh proof; if the device key was rotated or revoked, run `decapod cloud login --restart`.",
         ),
-        Some(
-            "invalid_token"
-            | "session_expired"
-            | "session_revoked"
-            | "session_not_found"
-            | "bad_jwt"
-            | "invalid_grant"
-            | "refresh_token_not_found"
-            | "refresh_token_already_used",
-        ) => (
+        "invalid_token"
+        | "session_expired"
+        | "session_revoked"
+        | "session_not_found"
+        | "bad_jwt"
+        | "invalid_grant"
+        | "refresh_token_not_found"
+        | "refresh_token_already_used" => CloudAuthDiagnostic::new(
             CloudAuthStatus::Revoked,
             "The service rejected the managed session.",
             RESTART,
         ),
-        _ => match error {
-            dactyl_db::DactylError::Adapter {
-                kind: AdapterErrorKind::Authentication,
-                ..
-            } => (
-                CloudAuthStatus::AuthRequired,
-                "The service requires a valid managed sign-in.",
-                RESTART,
-            ),
-            dactyl_db::DactylError::Adapter {
-                kind: AdapterErrorKind::Authorization,
-                ..
-            } => (
-                CloudAuthStatus::RepositoryDenied,
-                "The service denied this account operation.",
-                "Ask the account owner to review access, then retry.",
-            ),
-            dactyl_db::DactylError::Adapter {
-                kind: AdapterErrorKind::Quota,
-                ..
-            } => (
-                CloudAuthStatus::QuotaExceeded,
-                "The cloud service declined the request because the quota or payload limit was exceeded.",
-                "Ask a billing administrator to review the plan or eligible paid overages in Cloud Admin before trying again.",
-            ),
-            dactyl_db::DactylError::Adapter {
-                kind: AdapterErrorKind::Timeout | AdapterErrorKind::Transport,
-                ..
-            } => (
-                CloudAuthStatus::Offline,
-                "The cloud service could not be reached within the bounded request.",
-                "Restore connectivity and retry. No cloud data operation was retried or redirected to local storage.",
-            ),
-            _ => (
-                CloudAuthStatus::ProviderUnavailable,
-                "The cloud service did not return a supported successful response.",
-                "Retry after the service is available. Persisted one-time operations require explicit sign-in restart.",
-            ),
-        },
+        _ => return None,
+    };
+    Some(diagnostic)
+}
+
+pub fn transport_error(error: dactyl_db::DactylError) -> DecapodError {
+    transport_error_for_repository(error, None)
+}
+
+pub fn transport_error_for_repository(
+    error: dactyl_db::DactylError,
+    repo_slug: Option<&str>,
+) -> DecapodError {
+    use dactyl_db::AdapterErrorKind;
+    if let Some(code) = error.adapter_code()
+        && let Some(diagnostic) = diagnostic_for_status_code(code, repo_slug)
+    {
+        return DecapodError::CloudAuth(diagnostic);
+    }
+    let (status, message, action) = match error {
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Authentication,
+            ..
+        } => (
+            CloudAuthStatus::AuthRequired,
+            "The service requires a valid managed sign-in.",
+            RESTART,
+        ),
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Authorization,
+            ..
+        } => (
+            CloudAuthStatus::RepositoryDenied,
+            "The service denied this account operation.",
+            "Ask the account owner to review access, then retry.",
+        ),
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Quota,
+            ..
+        } => (
+            CloudAuthStatus::QuotaExceeded,
+            "The cloud service declined the request because the quota or payload limit was exceeded.",
+            "Ask a billing administrator to review the plan or eligible paid overages in Cloud Admin before trying again.",
+        ),
+        dactyl_db::DactylError::Adapter {
+            kind: AdapterErrorKind::Timeout | AdapterErrorKind::Transport,
+            ..
+        } => (
+            CloudAuthStatus::Offline,
+            "The cloud service could not be reached within the bounded request.",
+            "Restore connectivity and retry. No cloud data operation was retried or redirected to local storage.",
+        ),
+        _ => (
+            CloudAuthStatus::ProviderUnavailable,
+            "The cloud service did not return a supported successful response.",
+            "Retry after the service is available. Persisted one-time operations require explicit sign-in restart.",
+        ),
     };
     diagnostic(status, message, action)
 }
@@ -205,7 +302,7 @@ fn secrets(bootstrap: &Bootstrap) -> Result<dactyl_db::AuthenticationSecrets, De
 }
 
 #[cfg(feature = "supabase-cloud")]
-fn one_time_error(error: dactyl_db::DactylError) -> DecapodError {
+fn one_time_error(error: dactyl_db::DactylError, repo_slug: Option<&str>) -> DecapodError {
     if matches!(
         error.adapter_kind(),
         Some(
@@ -217,7 +314,7 @@ fn one_time_error(error: dactyl_db::DactylError) -> DecapodError {
     ) {
         restart_required()
     } else {
-        transport_error(error)
+        transport_error_for_repository(error, repo_slug)
     }
 }
 
@@ -355,7 +452,8 @@ fn acquire(
     restart: bool,
 ) -> Result<(dactyl_db::CloudConnector, SessionGuard), DecapodError> {
     let selected = selected_origin()?;
-    let mut connector = dactyl_db::CloudConnector::discover(&selected).map_err(transport_error)?;
+    let mut connector = dactyl_db::CloudConnector::discover(&selected)
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
     if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
         connector.origin(),
         &identity.canonical_name,
@@ -397,7 +495,7 @@ fn acquire(
                 }
                 Err(error) => {
                     persist_restart(&mut guard, state)?;
-                    return Err(one_time_error(error));
+                    return Err(one_time_error(error, Some(&identity.canonical_name)));
                 }
             }
         } else {
@@ -418,7 +516,7 @@ fn acquire(
             Ok(flow) => flow,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
-                return Err(one_time_error(error));
+                return Err(one_time_error(error, Some(&identity.canonical_name)));
             }
         };
         let expires_at = handoff_expiry(&flow.expires_at)?;
@@ -449,7 +547,9 @@ fn acquire(
             .to_owned();
         let status = connector
             .authentication_status(&flow_id, &private)
-            .map_err(transport_error)?;
+            .map_err(|error| {
+                transport_error_for_repository(error, Some(&identity.canonical_name))
+            })?;
         // The published connector returns only the validated flow status. The
         // saved flow is bound to this origin/repository/checkout; an authorized
         // repository read below remains the independent readiness requirement.
@@ -468,7 +568,7 @@ fn acquire(
             Ok(exchange) => exchange,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
-                return Err(one_time_error(error));
+                return Err(one_time_error(error, Some(&identity.canonical_name)));
             }
         };
         state.bootstrap.as_mut().expect("exchange bootstrap").code = Some(exchange);
@@ -498,7 +598,7 @@ fn acquire(
             Ok(session) => session,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
-                return Err(one_time_error(error));
+                return Err(one_time_error(error, Some(&identity.canonical_name)));
             }
         };
         state.session = Some(managed_session(session)?);
@@ -546,7 +646,10 @@ fn acquire(
                 if terminal_session_error(&error) {
                     persist_restart(&mut guard, state)?;
                 }
-                return Err(transport_error(error));
+                return Err(transport_error_for_repository(
+                    error,
+                    Some(&identity.canonical_name),
+                ));
             }
         };
         // Completion is service-confirmed and idempotent for this session.
@@ -593,7 +696,7 @@ pub fn connect(
                     if terminal_session_error(&error) {
                         persist_restart(&mut guard, state)?;
                     }
-                    transport_error(error)
+                    transport_error_for_repository(error, Some(&routed.canonical_name))
                 }
                 error @ DecapodError::CloudAuth(_) => error,
                 _ => diagnostic(
@@ -622,7 +725,13 @@ pub fn projects(
         .ok_or_else(restart_required)?
         .access_token
         .clone();
-    let result = crate::core::cloud_project::execute(&connector, &mut guard, &bearer, operation);
+    let result = crate::core::cloud_project::execute(
+        &connector,
+        &mut guard,
+        &bearer,
+        operation,
+        Some(&identity.canonical_name),
+    );
     account_result(&mut guard, result)
 }
 
@@ -937,7 +1046,7 @@ pub fn enroll_device_with_connector(
             bearer,
             None,
         )
-        .map_err(transport_error)?;
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
     let nonce = challenge
         .get("nonce")
         .and_then(|v| v.as_str())
@@ -980,7 +1089,7 @@ pub fn enroll_device_with_connector(
             bearer,
             None,
         )
-        .map_err(transport_error)?;
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
     if let Some(device_key_id) = response
         .get("device_key_id")
         .or_else(|| response.pointer("/device_key/id"))
@@ -1011,7 +1120,7 @@ pub fn request_mfa_step_up(
             bearer,
             None,
         )
-        .map_err(transport_error)
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))
 }
 
 pub fn revoke(

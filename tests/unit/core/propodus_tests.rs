@@ -818,3 +818,74 @@ fn cloud_client_transport_error_maps_quota_overage_and_provider_disabled_codes()
         }
     }
 }
+
+#[test]
+fn cloud_todo_diagnostic_and_failure_kind_propagate_p0_onboarding_states() {
+    use crate::core::cloud_todo_operation::{
+        Diagnostic, FailureKind, OperationRecord, Outcome, failure_kind, fingerprint,
+    };
+    use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
+
+    let kind_for = |status| {
+        failure_kind(&DecapodError::CloudAuth(CloudAuthDiagnostic::new(
+            status, "detail", "next",
+        )))
+    };
+
+    assert_eq!(
+        kind_for(CloudAuthStatus::PaymentRequired),
+        FailureKind::Authorization
+    );
+    assert_eq!(
+        kind_for(CloudAuthStatus::AdminApprovalRequired),
+        FailureKind::Authorization
+    );
+    assert_eq!(
+        kind_for(CloudAuthStatus::OrganizationAlreadyEnrolled),
+        FailureKind::Authorization
+    );
+    assert_eq!(
+        kind_for(CloudAuthStatus::PendingFulfillment),
+        FailureKind::OnboardingPending
+    );
+    assert_eq!(
+        kind_for(CloudAuthStatus::RegistrationRequired),
+        FailureKind::Authentication
+    );
+    assert_eq!(
+        kind_for(CloudAuthStatus::ProviderLinkStepupRequired),
+        FailureKind::Authentication
+    );
+
+    let record = OperationRecord::new(
+        fingerprint(
+            "https://service.example",
+            "DecapodLabs/decapod",
+            &serde_json::json!({"title": "Enroll"}),
+        ),
+        None,
+    )
+    .expect("operation record");
+    let mut diag = Diagnostic::new(
+        &record,
+        Outcome::BlockedBeforeSubmit,
+        FailureKind::Authorization,
+    );
+    diag.enrollment_url = Some("https://decapodlabs.ai/pricing?repo=DecapodLabs%2Fdecapod".into());
+
+    let text = diag.to_string();
+    assert!(text.contains("; enroll: https://decapodlabs.ai/pricing?repo=DecapodLabs%2Fdecapod"));
+    let json = serde_json::to_value(&diag).expect("diagnostic json");
+    assert_eq!(
+        json["enrollment_url"],
+        "https://decapodlabs.ai/pricing?repo=DecapodLabs%2Fdecapod"
+    );
+    assert_eq!(json["retryable"], false);
+
+    let pending_diag = Diagnostic::new(
+        &record,
+        Outcome::BlockedBeforeSubmit,
+        FailureKind::OnboardingPending,
+    );
+    assert!(pending_diag.retryable);
+}

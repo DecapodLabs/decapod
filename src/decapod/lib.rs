@@ -291,11 +291,25 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 let operation = match command {
                     CloudCommand::Projects => core::cloud_project::Operation::List,
                     CloudCommand::Project {
-                        command: CloudProjectCommand::Use { choice },
-                    } => core::cloud_project::Operation::Use(choice),
+                        command:
+                            CloudProjectCommand::Use {
+                                choice,
+                                organization_id,
+                            },
+                    } => core::cloud_project::Operation::Use {
+                        choice,
+                        organization_id,
+                    },
                     CloudCommand::Project {
-                        command: CloudProjectCommand::Create { name },
-                    } => core::cloud_project::Operation::Create(name),
+                        command:
+                            CloudProjectCommand::Create {
+                                name,
+                                organization_id,
+                            },
+                    } => core::cloud_project::Operation::Create {
+                        name,
+                        organization_id,
+                    },
                     _ => unreachable!("project operation"),
                 };
                 match core::cloud_client::projects(&project_root, &identity, operation) {
@@ -317,13 +331,15 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                                         "Selected project: {} ({}).",
                                         project.name, project.status
                                     );
+                                } else if let Some(organization) = &project.organization_id {
+                                    println!("{}. {} ({})", index + 1, project.name, organization);
                                 } else {
                                     println!("{}. {}", index + 1, project.name);
                                 }
                             }
                             if !output.selected {
                                 println!(
-                                    "Select a saved entry with `decapod cloud project use NUMBER`, or use its exact name."
+                                    "Select a saved entry by number or exact name. Add `--org` to disambiguate names."
                                 );
                             } else if output
                                 .projects
@@ -331,7 +347,10 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                                 .any(|p| p.backend_authorized == Some(false))
                             {
                                 println!(
-                                    "The service has not granted data access. Resolve account access in the cloud portal or with the project administrator, then retry."
+                                    "The service has not granted data access yet. Enroll this repository at {} or ask an organization administrator to assign a paid seat (no Admin setup wizard is required), then retry.",
+                                    core::cloud_client::pricing_enrollment_url(Some(
+                                        &identity.canonical_name
+                                    ))
                                 );
                             }
                         }
@@ -2140,7 +2159,7 @@ fn setup_review_rows(repo: &RepoContext, init: &InitWithCli) -> Vec<(&'static st
     if init.backend.is_cloud() {
         rows.push((
             "Cloud setup",
-            "Sign in if needed; the service confirms repository access".into(),
+            "Sign in and enroll at decapodlabs.ai/pricing if prompted; the service confirms repository access and resumes automatically (no Admin setup wizard)".into(),
         ));
     }
     let selected = config_from_init_with(init, repo.clone());
@@ -2271,7 +2290,7 @@ fn customize_setup(
                 )?;
                 init.backend = if storage == "Decapod Cloud" {
                     onboarding::note(
-                        "After you apply, follow the trusted sign-in link if needed. The service confirms repository access.",
+                        "After you apply, sign in and subscribe at decapodlabs.ai/pricing if prompted; once authorized, governed work resumes automatically with no Admin setup wizard.",
                     );
                     BackendType::Cloud
                 } else {
@@ -2496,6 +2515,7 @@ fn run_init_apply(
         if !init_with.dry_run
             && !init_with.backend.is_cloud()
             && !core::cloud_workspace::is_cloud_project(&target_dir)
+            && !repo_ctx.effective_backend().is_cloud()
         {
             // Existing projects upgrade autonomously on the same path as normal
             // governed commands. Legacy event files remain recovery inputs while
@@ -3262,7 +3282,10 @@ pub fn run() -> Result<(), error::DecapodError> {
                         "Continue with your coding agent. Describe what you want to build; your agent handles Decapod from here."
                     );
                     if config.repo.effective_backend().is_cloud() {
-                        println!("Your agent will guide you through browser sign-in when needed.");
+                        println!(
+                            "Your agent will guide you through browser sign-in and enrollment at {} when needed, then resume automatically without an Admin setup wizard.",
+                            core::cloud_client::CLOUD_PRICING_URL
+                        );
                     }
                 }
             }
@@ -3287,6 +3310,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                     &target_dir,
                     init_with.dry_run,
                     reconciliation.repair_tasks.len(),
+                    config.repo.effective_backend().is_cloud(),
                 );
             }
         }

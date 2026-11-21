@@ -877,6 +877,14 @@
       "id": "wave2-impl",
       "summary": "Implement Wave 2 (#1886, #1835, #1836) before syncing origin/master (#1901/#1902)",
       "input_digest": "sha256:09fd811fffca27ff04baf44e11cb7a689771e3a04b4103c7abe472395e558856"
+    },
+    {
+      "id": "merge-origin-master-v0159",
+      "summary": "Merge origin/master (#1901, #1902 v0.159.0) with Wave 2 (#1836, #1835, #1886)",
+      "input_digest": "sha256:9d1835ef810412ee789bf8eb37941dfc966299d4ffaa7888f01e0d961c6ec65a",
+      "proof_refs": [
+        "cargo test --locked --features supabase-cloud --lib (1970 passed; 8 ignored); core::migration (13 passed); 13 integration targets (115 passed; 4 ignored); clippy --all-targets --all-features (-D warnings); check --no-default-features (-D warnings); fmt --check"
+      ]
     }
   ],
   "intents": {
