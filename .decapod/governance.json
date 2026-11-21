@@ -928,6 +928,11 @@
       "id": "buildkite-fixture-issue-1833",
       "summary": "Verify the expected denial fixture under normal runner scheduling and retain exact redirect assertions",
       "input_digest": "sha256:e4282014b6b16cbe9b126ef0f6ff5baf9e6358d67d14e92294477651a9d9d4c6"
+    },
+    {
+      "id": "sync-v1570-issue-1833",
+      "summary": "Reconcile the accepted v0.157.0 release and refresh the measured repository projections",
+      "input_digest": "sha256:aec263832324860d8c51f53ccb5ea7620fb0d64f027835ba0995889477547a91"
     }
   ],
   "intents": {
@@ -968,22 +973,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the portable approval design with the hardened test fixture",
-          "reviewed_code_fingerprint": "9788ecb6bf288d5ef7c6ad22ca69f19897f4c69434845b6748dd19086ae016ba",
+          "reason": "Reviewed the branch architecture with the accepted v0.157.0 source snapshot",
+          "reviewed_code_fingerprint": "ba6b6100ebc73cdfb6720c77302f62e2b0d19b792fd1710b9a2781edbcacf940",
           "spec_material_hash": "5a1782b87e639eb1e7c9a234a1ee42d258a0d3da13c572af692e4b4c8ad999a7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the portable approval interface with the corrected fixture",
-          "reviewed_code_fingerprint": "9788ecb6bf288d5ef7c6ad22ca69f19897f4c69434845b6748dd19086ae016ba",
+          "reason": "Reviewed the branch interfaces with the accepted v0.157.0 source snapshot",
+          "reviewed_code_fingerprint": "ba6b6100ebc73cdfb6720c77302f62e2b0d19b792fd1710b9a2781edbcacf940",
           "spec_material_hash": "d713ec62df495847a45cf6197930af4c4ca1d65029541139cd3bb2c42da76a11"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The fixture requires an actual rejected redirect and still checks the exact attempt count",
-          "reviewed_code_fingerprint": "9788ecb6bf288d5ef7c6ad22ca69f19897f4c69434845b6748dd19086ae016ba",
+          "reason": "Reviewed the branch security contract with the accepted release snapshot",
+          "reviewed_code_fingerprint": "ba6b6100ebc73cdfb6720c77302f62e2b0d19b792fd1710b9a2781edbcacf940",
           "spec_material_hash": "e021296ad91c1dc89f885ce89c095260b63eefb84f656893db16fffa1add013b"
         }
       ],
@@ -995,7 +1000,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795234518Z"
+      "updated_at": "1795237497Z"
     },
     "trajectory": {
       "active_boundaries": [
