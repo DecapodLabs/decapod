@@ -930,6 +930,11 @@
       "id": "attack-gaps-interop-accepted-d62e30ad",
       "summary": "Integrate accepted context and outcome changes, preserve all native authority and encoding tests, and repin the measured reviewed source inventory",
       "input_digest": "sha256:14f58e23f7cd5332c3a7a72d94352769722a7c8d8aa9e5b8b42eb3bd1f7c9db5"
+    },
+    {
+      "id": "attack-gaps-interop-accepted-146a00f4",
+      "summary": "Integrate accepted v0.157.0 metadata, refresh the release projections, and retain the exact encoding fixtures for current-base verification",
+      "input_digest": "sha256:361ddb82adacd140471dedd22499d8f0ae9135f529b686f37566870fb880df60"
     }
   ],
   "intents": {
@@ -974,21 +979,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Preserve the accepted context and outcome architecture beside the independent encoding boundary.",
-          "reviewed_code_fingerprint": "4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c",
+          "reviewed_code_fingerprint": "cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc",
           "spec_material_hash": "11f12c1aab6a24c287e98dae300e034dbd6c0700070f5c2c20cef431b4fd7f04"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retain the accepted native interoperability interfaces and the versioned raw-input conformance artifacts.",
-          "reviewed_code_fingerprint": "4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c",
+          "reason": "Retain the accepted native interoperability interfaces and all 22 raw encoding vectors.",
+          "reviewed_code_fingerprint": "cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc",
           "spec_material_hash": "c34d5fe8d98b746104a6163a8354fe47b70551a63a1e5b5d0a895d4f7aaa3305"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Keep accepted authority, strict downgrade refusal and bounded decoding evidence in their existing scopes.",
-          "reviewed_code_fingerprint": "4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c",
+          "reason": "Preserve accepted authority checks and keep encoding evidence scoped to the measured decoding behavior.",
+          "reviewed_code_fingerprint": "cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -1000,7 +1005,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795231720Z"
+      "updated_at": "1795237163Z"
     },
     "trajectory": {
       "active_boundaries": [

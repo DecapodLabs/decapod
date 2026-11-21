@@ -1540,7 +1540,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4023ba0f49e7c0794b35e08c35cddd960a79303ae785a5fc83043e7816f8636c`
+- Repository signal fingerprint: `cca36b7b3a886b95000c4978ddfd4f3d794ccb021bf23e70d537029987a7d1fc`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2623,3 +2623,5 @@ The accepted downgrade fixture at `9408bec1` also verifies that the committed ca
 The v0.156.2 metadata cut at `31f19a70` advances the evaluator release for this branch. The encoding inputs, canonical downgrade fixture, and complete check graph carry forward. The v0.156.1 core result belongs to `61a57f71` and its accepted base. Run fresh GitHub Actions against the v0.156.2 target.
 
 The v0.156.2 PR job 136687113651 passed both broker probes and all eleven unfiltered core targets on `351115238`. The paired offline job passed 1,925 library cases. The separate CLI job still hit two existing aggregate deadlines. With accepted context and outcome changes at `d62e30ad`, preserve native interop and authority bytes from the target and run fresh checks on the reconciled encoding candidate.
+
+GitHub Actions run 44861445770 passed all checks on `aa0497d91`, including both CLI suites that had timed out and 1,956 offline library cases. The v0.157.0 cut at `146a00f41` changes only release metadata. Refresh the release projections and rerun the full check graph against that exact base with all 22 encoding inputs intact.
