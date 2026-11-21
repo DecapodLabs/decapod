@@ -941,6 +941,11 @@
       "id": "sync-1887-issue-1832",
       "summary": "Reconcile accepted master after the typed broker change",
       "input_digest": "sha256:04ccbbeb8f29677ab1be341ae38740ad2e2274b5c5cc0886b866cffb4d294d90"
+    },
+    {
+      "id": "sync-v1580-issue-1832",
+      "summary": "Reconcile the accepted v0.158.0 release and refresh the measured repository projections",
+      "input_digest": "sha256:13b9556362eaa46be81c54d2a2b2d70d0f84dda29411b499022f8ce0add2dae4"
     }
   ],
   "intents": {
@@ -982,22 +987,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture after accepting the upstream broker changes",
-          "reviewed_code_fingerprint": "cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5",
+          "reason": "Reviewed the branch architecture with the accepted v0.158.0 source snapshot",
+          "reviewed_code_fingerprint": "986a3bc41876105697971fe40f71bc2a87fbacb65fa8f65446ddd1aa9ceaf859",
           "spec_material_hash": "bed87e35669f128c49f2a64958bb274bcb3935123eacae7e404d3500d760886c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces against the new accepted target",
-          "reviewed_code_fingerprint": "cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5",
+          "reason": "Reviewed the branch interfaces with the accepted v0.158.0 source snapshot",
+          "reviewed_code_fingerprint": "986a3bc41876105697971fe40f71bc2a87fbacb65fa8f65446ddd1aa9ceaf859",
           "spec_material_hash": "9f14bd1fea8a30431239d9160429a2cba3b32c2dc41992dba5abb433929ab428"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the publication security contract against the new accepted target",
-          "reviewed_code_fingerprint": "cb0b591f1dd737b325dac317330334f6b1849482021f2374c376a3316afe63e5",
+          "reason": "Reviewed the branch security contract with the accepted release snapshot",
+          "reviewed_code_fingerprint": "986a3bc41876105697971fe40f71bc2a87fbacb65fa8f65446ddd1aa9ceaf859",
           "spec_material_hash": "7d1b1c1950585d420d4ee6a0a138eb9665f8ba3a17de33af5715d494553849d3"
         }
       ],
@@ -1009,7 +1014,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795240567Z"
+      "updated_at": "1795241756Z"
     },
     "trajectory": {
       "active_boundaries": [
