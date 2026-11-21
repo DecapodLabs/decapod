@@ -388,6 +388,7 @@ mod live_admission {
             // Use an owned closure file; never alter the installed interpreter.
             let closure = fixture._storage.path().join("runtime-closure");
             std::fs::write(&closure, "reviewed auxiliary runtime bytes\n").unwrap();
+            let closure = closure.canonicalize().unwrap();
             for execution in fixture
                 .proof
                 .repository_contract
@@ -1742,6 +1743,26 @@ fn provider_material_checks_require_clean_exact_commits_and_current_spec_reviews
     assert!(verify_provider_publication_material(dir.path(), "master", &head, "master").is_err());
     assert!(verify_provider_publication_material(dir.path(), &base, "HEAD", "master").is_err());
     assert!(verify_provider_publication_material(dir.path(), &head, &head, "master").is_err());
+    git(
+        dir.path(),
+        &["update-ref", "refs/remotes/origin/master", &head],
+    );
+    let stale = verify_provider_publication_material(dir.path(), &base, &head, "master")
+        .unwrap_err()
+        .to_string();
+    assert!(
+        stale.contains("PUBLICATION_MATERIAL_BASE_CHANGED"),
+        "{stale}"
+    );
+    assert!(stale.contains(&format!("event base {base}")), "{stale}");
+    assert!(
+        stale.contains(&format!("origin/master resolves to {head}")),
+        "{stale}"
+    );
+    git(
+        dir.path(),
+        &["update-ref", "-d", "refs/remotes/origin/master"],
+    );
     write(dir.path(), "uncommitted.txt", "material not in H");
     assert!(
         verify_provider_publication_material(dir.path(), &base, &head, "master")

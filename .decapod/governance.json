@@ -985,6 +985,14 @@
       "proof_refs": [
         "https://buildkite.com/decapodlabs/decapod/builds/15332"
       ]
+    },
+    {
+      "id": "issue-1834-sync-1898",
+      "summary": "Reconcile validated PR metadata work with the newly accepted stale-base diagnostics and refreshed spec reviews",
+      "input_digest": "sha256:5e5ecbaf494b46f80a3ac930bd5b02c1e9d62cb29213ba289ec2bbf22f7f41e3",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1898"
+      ]
     }
   ],
   "intents": {
@@ -1026,22 +1034,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the current architecture text and source together after merging the accepted release. The workspace publication module derives missing PR metadata during creation and preserves idempotent readback.",
-          "reviewed_code_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
+          "reason": "Rechecked publication architecture after the accepted stale-base diagnostics merge. Metadata resolution still happens inside creation after the unchanged admission boundary.",
+          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
           "spec_material_hash": "2c203d575961974e1d5d7296f9b4a06099f48235755e9c1209b805b579feb3db"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the accepted and candidate interface text with the current implementation and regression tests. PR creation derives metadata from the immutable authored range and preserves explicit input.",
-          "reviewed_code_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
+          "reason": "Reviewed the metadata interface and combined tests after the base moved. Existing matching PRs keep their metadata and explicit input is preserved.",
+          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
           "spec_material_hash": "a22fa4d1dc75bda5fe3bee835008075717fa46dd0deb324b968037a91e389024"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The publication policy and remote validation authority are preserved. The metadata fallback uses the admitted Git object range and does not change authentication, trust or readiness checks.",
-          "reviewed_code_fingerprint": "cb64404280109ff257c4dd1aa3de9464c63e0a1af1626959dcaaa653da63c68b",
+          "reason": "The merged diagnostics preserve the accepted protection and exact-candidate admission. The metadata changes retain the same trust boundaries.",
+          "reviewed_code_fingerprint": "32cacdd390410bdad26f25733e6c0598b4fb36fb12dc1cf5e787756c4f20b11c",
           "spec_material_hash": "3fb95d3e7fa6d7f6757aec87c33cea94b82e249aa9c322bae9b8fd14d9cb60bd"
         }
       ],
@@ -1053,7 +1061,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795256241Z"
+      "updated_at": "1795258655Z"
     },
     "trajectory": {
       "active_boundaries": [
