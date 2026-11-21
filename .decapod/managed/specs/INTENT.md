@@ -729,7 +729,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `af7d0b4c443699947e754c0dc26a2f4c33b0d55344e79e21ba99607b359f3da9`
+- Repository signal fingerprint: `01b7dda3bfd3b51356c6bfc4cac812f8b19fde88576f0fa486792dfa01d2b764`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -900,6 +900,8 @@ Propodus Supabase remains a separately gated migration (Propodus #71).
 Human setup follows Project, Preferences and Review, with recommended defaults,
 focused customization and an explicit apply/edit/cancel decision. Interactive
 setup creates no project, Git, governance or cloud sign-in state before approval.
+People using an inherited terminal should still be able to cancel with Escape
+when a process cannot open its controlling-terminal device.
 Existing settings and full proof definitions survive refresh, with private
 backups before changed config replacement. Local operation needs no account.
 

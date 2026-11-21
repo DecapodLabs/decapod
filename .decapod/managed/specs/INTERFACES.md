@@ -1560,7 +1560,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `af7d0b4c443699947e754c0dc26a2f4c33b0d55344e79e21ba99607b359f3da9`
+- Repository signal fingerprint: `01b7dda3bfd3b51356c6bfc4cac812f8b19fde88576f0fa486792dfa01d2b764`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1877,6 +1877,7 @@ Enter and Escape work in supported terminals; redirected output and `--proof`
 retain unattended behavior. Preview writes nothing; cancellation before apply
 does not create a new directory or initiate cloud authentication. Reinitialization
 preserves existing backend, isolation and structured proof settings.
+An inherited terminal supports the same keys when `/dev/tty` is unavailable.
 
 The cloud review describes account sign-in and service-confirmed repository
 access. It accepts no seat roster, provider credential or local price declaration.
@@ -2018,6 +2019,9 @@ cannot replace an existing UNKNOWN or committed result with NOT_COMMITTED. The
 real execution-boundary regression checks both outcomes and both retry timings,
 including the unchanged stored result and commit marker. No new operation runs
 when the same-ID outcome is already recorded.
+An explicit policy refusal before a local `todo archive` transaction returns
+`NOT_COMMITTED` with `BROKER_POLICY_DENIED`, the policy diagnostic, and no
+commit marker or retry delay. A same-ID request returns the stored denial.
 The foreground acceptance window follows the originating request budget, and
 existing per-command limits and UNKNOWN/replay handling remain in force.
 
