@@ -878,6 +878,14 @@
       "proof_refs": [
         "accepted-release-metadata-only"
       ]
+    },
+    {
+      "id": "publisher-v1580-base",
+      "summary": "Integrate the current v0.158.0 base and refresh managed pins",
+      "input_digest": "sha256:2ea6a11ee0a1d72cf85d643bdbe1e12c0c7494d785896d614d4a21dbc7d4c8bd",
+      "proof_refs": [
+        "accepted-release-conflicts-resolved"
+      ]
     }
   ],
   "intents": {
@@ -923,22 +931,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retains the documented per-capture measurement behavior on the accepted release base.",
-          "reviewed_code_fingerprint": "950b219db522ddaca7ccb7060f088df1a895c145ce62f56c794be7190ad35d42",
-          "spec_material_hash": "8ca6f633deaa1ad0632c359d2f88759d7966981950efcdcd4e73b9f07f318482"
+          "reason": "Retains shared tool measurement while preserving the accepted base architecture.",
+          "reviewed_code_fingerprint": "1fa42884cb45c39713f5067fab31171fa40a95a48e1e288bfaf43a49b149132c",
+          "spec_material_hash": "2e872f1f4c2f9d9091fdaa04eb2df5b86c6b92605c3a094853786bfb85f47354"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Retains the exact per-check binding and scope contract on the new release base.",
-          "reviewed_code_fingerprint": "950b219db522ddaca7ccb7060f088df1a895c145ce62f56c794be7190ad35d42",
-          "spec_material_hash": "9642e0c745c51e16bffde6fe6aa46d027fb28baec9fab7ee7bab8138942c7bec"
+          "reason": "Preserves check identity and capture bounds on the v0.158.0 base.",
+          "reviewed_code_fingerprint": "1fa42884cb45c39713f5067fab31171fa40a95a48e1e288bfaf43a49b149132c",
+          "spec_material_hash": "d579b00ddb7bbb74ec86f3a7969ec13d80359744d92063a79b835d7544ed4d32"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The release base changes Cargo metadata and changelog; publication authority and security invariants are unchanged.",
-          "reviewed_code_fingerprint": "950b219db522ddaca7ccb7060f088df1a895c145ce62f56c794be7190ad35d42",
+          "reason": "Preserves the accepted security text and keeps authority and digest checks unchanged by the merge.",
+          "reviewed_code_fingerprint": "1fa42884cb45c39713f5067fab31171fa40a95a48e1e288bfaf43a49b149132c",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -950,14 +958,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237664Z"
+      "updated_at": "1795241816Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:64efe0af084dc8f9eb619537dd785be53e033efbfa37e00ffd65d35daca11db4",
+      "artifact_hash": "sha256:e85c170d3a034d7840c7a06a8c76e348b0f36832975b69a1c531fab394f96b1e",
       "checks": [
+        {
+          "name": "accepted-release-conflicts-resolved",
+          "status": "passed"
+        },
         {
           "name": "accepted-release-metadata-only",
           "status": "passed"
@@ -995,10 +1007,17 @@
             "intent_id": "intent:change_01M7Y285K6VEWRB8V3MK8NYRV4",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M7Y285Q0GCYPX5XYNT1Q78X4",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M7Y285K6VEWRB8V3MK8NYRV4",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y285Q0GCYPX5XYNT1Q78X4": {
@@ -1041,6 +1060,25 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Integrated accepted master 1bdb1e6e. Native reconciler resolved governance. Both authored spec passages were retained on the accepted spec baseline. Generated pins from v0.158.0 accepted source."
+                ],
+                "proof_refs": [
+                  "accepted-release-conflicts-resolved"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed",
+                  ".decapod/managed/specs",
+                  "src/decapod/core/native_proof.rs"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1050,6 +1088,7 @@
       "destination": "pull request",
       "evidence": [
         "Compared accepted v0.156.2 base d62e30ad7 with new master 146a00f41. The three changed files are CHANGELOG.md, Cargo.lock, and Cargo.toml. Current managed pins came from the digest-verified v0.157.0 release workflow binary.",
+        "Integrated accepted master 1bdb1e6e. Native reconciler resolved governance. Both authored spec passages were retained on the accepted spec baseline. Generated pins from v0.158.0 accepted source.",
         "Targeted verify fixture retains exact per-check digests, charges shared input bytes once, fails with exceeded byte budget, and observes same-length changed input on the next capture."
       ],
       "inspected_files": [],
