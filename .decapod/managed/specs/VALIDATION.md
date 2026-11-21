@@ -67,6 +67,11 @@ bind the newly accepted base. The macOS live-admission regression records
 its fixture-owned toolchain file by canonical path so the same checks run
 when the host temp directory is reached through a symlink.
 
+The reviewed proof inventory accounts for the v0.157.0 version entries in
+`Cargo.toml` and `Cargo.lock`. All 107 inventoried inputs match accepted
+`master` at `146a00f4`. The required checks, adapters, and toolchain retain
+their existing declarations.
+
 ## Live rejection specificity (#1748)
 
 The disposable GitHub acceptance requires the invalid payload's actual failure,

@@ -876,6 +876,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/44869042711"
       ]
+    },
+    {
+      "id": "issue-1880-review-v01570-inventory",
+      "summary": "Reconcile the reviewed 107-file proof inventory to the two accepted v0.157.0 version fields",
+      "input_digest": "sha256:00c59cd2f6b0b53e1af425a2d27b087d9dffd6db0784a1aa9420d849bd390059",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1885"
+      ]
     }
   ],
   "intents": {
@@ -919,21 +927,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The existing provider material verifier still owns the target check before and after inspection.",
+          "reason": "The same verifier owns the before-and-after target checks, and the v0.157.0 inventory changes only the accepted package version fields.",
           "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The existing checkpoint command and typed error code are preserved. The explanatory diagnostic identifies both revisions.",
+          "reason": "The existing commands and stable checkpoint error code are preserved. The diagnostic reports the two observed revisions.",
           "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
           "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact target comparison and canonical tool admission rules are preserved. The fixture supplies its own file by canonical path.",
+          "reason": "The exact-target and canonical-tool requirements remain enforced. The proof inventory retains all existing obligations and adapters.",
           "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
@@ -946,7 +954,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795236870Z"
+      "updated_at": "1795240226Z"
     },
     "trajectory": {
       "active_boundaries": [
