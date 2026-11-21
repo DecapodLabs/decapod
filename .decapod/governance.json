@@ -929,6 +929,15 @@
         "tests/unit/core/propodus_tests.rs",
         "tests/unit/core/workspace_publication_tests.rs"
       ]
+    },
+    {
+      "id": "p0-pay-and-use-sources-1900",
+      "summary": "Update reviewed_sources_digest for accepted v0.158.3 Cargo.toml/Cargo.lock bump (#1900)",
+      "input_digest": "sha256:7e2f0550e518cb7b077c3d114b04a8b9999cbfdfc27d08ff5856d1bed3190953",
+      "proof_refs": [
+        "tests/common/cloud_managed_scenarios.rs",
+        "tests/unit/core/cloud_project_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -986,21 +995,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-verified P0 Cloud architecture (#1877, #1896) alongside #1899 workspace_publication updates and v0.158.3.",
+          "reason": "Re-verified P0 Cloud architecture (#1877, #1896) with v0.158.3 reviewed source inventory.",
           "reviewed_code_fingerprint": "9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb",
           "spec_material_hash": "212ec25a1d1f39cd8e4c5f3e04e3a366cff864ff2c1116c145b8d21518effd53"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-verified P0 Cloud interfaces (#1877, #1896) after merging origin/master v0.158.3 (#1899, #1900).",
+          "reason": "Re-verified P0 Cloud interfaces (#1877, #1896) with v0.158.3 reviewed source inventory.",
           "reviewed_code_fingerprint": "9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb",
           "spec_material_hash": "3713c77f6522d20a86465eb3c439fc3ad17fc69e6aceee7ea11917563d303f3e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Re-verified P0 Cloud security invariants (#1877, #1896) against origin/master v0.158.3.",
+          "reason": "Re-verified P0 Cloud security invariants (#1877, #1896) with v0.158.3 reviewed source inventory.",
           "reviewed_code_fingerprint": "9a8c85549ec9fb1bc71566d1dfcf5a8292c2bb5522f8e50ca539b4e2eecdb5fb",
           "spec_material_hash": "1796408b1406d50bbea59bc6b4b3e56d9a1583d2a264743571d73fd31fdc5e33"
         }
@@ -1013,7 +1022,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795262017Z"
+      "updated_at": "1795262225Z"
     },
     "trajectory": {
       "active_boundaries": [
