@@ -881,6 +881,15 @@
         "tests/cli_contracts.rs",
         "tests/group_broker.rs"
       ]
+    },
+    {
+      "id": "reconcile-accepted-release-157",
+      "summary": "Integrate exact accepted v0.157.0 release and refresh release-bound managed projections while preserving the two original fixes.",
+      "input_digest": "sha256:d72829d9b8b5e3de5133d2de2f93801fce7eb3b16cfed408d730e7ec10f61ac9",
+      "proof_refs": [
+        "tests/cli_contracts.rs",
+        "tests/group_broker.rs"
+      ]
     }
   ],
   "intents": {
@@ -924,22 +933,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document inherited PTY fallback, driver-bounded Escape continuation and durable archive refusal.",
-          "reviewed_code_fingerprint": "8567c1ca2c6679aa25f5f2d0d235e10fb475e576e239c44f493ebb7887cd9fba",
+          "reason": "The authored inherited-PTY and archive-refusal contracts were reviewed against the accepted v0.157.0 merge.",
+          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
           "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document inherited terminal key handling and the observable archive denial and replay contract.",
-          "reviewed_code_fingerprint": "8567c1ca2c6679aa25f5f2d0d235e10fb475e576e239c44f493ebb7887cd9fba",
+          "reason": "The authored terminal interaction and durable broker refusal contracts were reviewed against the accepted v0.157.0 merge.",
+          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
           "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The trust and approval checks, caller/session custody and private transport are preserved when reporting the explicit denial.",
-          "reviewed_code_fingerprint": "8567c1ca2c6679aa25f5f2d0d235e10fb475e576e239c44f493ebb7887cd9fba",
+          "reason": "The version transition and fixes preserve the user and broker authorization policy.",
+          "reviewed_code_fingerprint": "67f75d8f1e4ea9e32daea2837d0830d1603fca503b0e783631337c4561f97970",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -951,13 +960,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795234973Z"
+      "updated_at": "1795237255Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:2bb08c0361ee2abddbf34107646c52c8a747424a9b8ffa466715c4c5b50e1a63",
+      "artifact_hash": "sha256:bd2cc3e0d972fca2f67dab00fbd090ca8a303ccf0a8e8f39fa87e040094931a2",
       "checks": [
         {
           "name": "archive_policy_denial",
@@ -973,6 +982,14 @@
         },
         {
           "name": "native_timed_pty_probe",
+          "status": "passed"
+        },
+        {
+          "name": "original_checkpoint_onboarding",
+          "status": "passed"
+        },
+        {
+          "name": "stale_base_rejected",
           "status": "passed"
         }
       ],
@@ -1004,10 +1021,17 @@
             "intent_id": "intent:terminal-broker-1882-1883",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:terminal-broker-1882-1883",
+            "event_id": "event:6",
+            "intent_id": "intent:terminal-broker-1882-1883",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "terminal-broker-1882-1883": {
@@ -1055,6 +1079,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "The original candidate passed six full macOS PTY runs and real broker regressions. Master advanced through release PR #1885 to 146a00f4117ffbcdcc93a68ffef6419f78453056; the former base proof returned PUBLICATION_MATERIAL_BASE_CHANGED. The integrated product code is unchanged and the release projections were regenerated with accepted v0.157.0 source. Fresh checks are required on the new source and target."
+                ],
+                "proof_refs": [
+                  "original_checkpoint_onboarding",
+                  "stale_base_rejected"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1064,6 +1104,7 @@
       "destination": "GitHub pull request",
       "evidence": [
         "Sampled the earlier CLI hang inside a blocking read after Escape. The direct macOS termios probe passed arrow and lone-Escape input in ten independent PTYs per controlling-terminal mode. The final compiled regression is running.",
+        "The original candidate passed six full macOS PTY runs and real broker regressions. Master advanced through release PR #1885 to 146a00f4117ffbcdcc93a68ffef6419f78453056; the former base proof returned PUBLICATION_MATERIAL_BASE_CHANGED. The integrated product code is unchanged and the release projections were regenerated with accepted v0.157.0 source. Fresh checks are required on the new source and target.",
         "The real broker returned a terminal NOT_COMMITTED receipt for a basic-trust archive request after returning through the child. Same-ID replay across broker lifetimes preserved the receipt and task status/revision and executed once. All original broker crash cases passed."
       ],
       "inspected_files": [
@@ -1081,7 +1122,8 @@
         "tests/group_broker.rs"
       ],
       "next_transitions": [
-        "Check the final compiled PTY cases and exact candidate GitHub Actions before opening the PR."
+        "Check the final compiled PTY cases and exact candidate GitHub Actions before opening the PR.",
+        "Run exact current-head PR checks before merge."
       ],
       "repo_scope": [
         "root"
