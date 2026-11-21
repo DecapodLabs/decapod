@@ -998,6 +998,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1898"
       ]
+    },
+    {
+      "id": "issue-1833-sync-1899",
+      "summary": "Reconcile with the accepted PR metadata fix and refresh current spec reviews",
+      "input_digest": "sha256:13a7b8fbdf7bed5f4ba45a0445100ae838bafa01803495045c8eb7a4db8e22df",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1899"
+      ]
     }
   ],
   "intents": {
@@ -1038,22 +1046,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rechecked portable approval architecture after the accepted diagnostics merge. Validation binds remote proof to accepted policy material.",
-          "reviewed_code_fingerprint": "fe6811beb6318d272fa4efed4b5826cc7905c9876fd6cc3f0446331229f34c21",
-          "spec_material_hash": "050fc14d019c6db178041f0c865cfac841fc3edbd57db31c77247dd802f9ee89"
+          "reason": "Reviewed portable transition validation on the source tree that now includes the accepted publication metadata fix.",
+          "reviewed_code_fingerprint": "891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524",
+          "spec_material_hash": "ca93de113cc6ec9d235d19099c6a6dd87e651f0b05b2036cc4657a44f97e9a68"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rechecked signed CI approvals and Cloud lookup on the integrated source tree. Both continue to use the accepted transition identity.",
-          "reviewed_code_fingerprint": "fe6811beb6318d272fa4efed4b5826cc7905c9876fd6cc3f0446331229f34c21",
-          "spec_material_hash": "1091dbdf5fbedba9071d4377acd8a03dfec87677a51149efaf670dada525c2a5"
+          "reason": "Reviewed the combined publication and policy approval interfaces, including the accepted base and current transition binding.",
+          "reviewed_code_fingerprint": "891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524",
+          "spec_material_hash": "6fe65c2c6a58b185868b3943ad7b890751bfd743f07347870d751f8fd1eba381"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed authority and evidence custody on the new base. Approval trust remains independent of candidate material.",
-          "reviewed_code_fingerprint": "fe6811beb6318d272fa4efed4b5826cc7905c9876fd6cc3f0446331229f34c21",
+          "reason": "Reviewed approval custody after the base moved. Accepted signer trust and authenticated Cloud decisions remain independent of candidate metadata.",
+          "reviewed_code_fingerprint": "891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524",
           "spec_material_hash": "32dba93180f287c01c3c1be42e700899ea621f9286a415ca2a8c492fc55b68c4"
         }
       ],
@@ -1065,7 +1073,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795258737Z"
+      "updated_at": "1795261423Z"
     },
     "trajectory": {
       "active_boundaries": [

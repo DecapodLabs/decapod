@@ -307,6 +307,14 @@ evidence directory without rewriting historical successful proof. An admitted
 result's existing warnings field states that admission does not authorize merge.
 The wire shape of the existing publication result is unchanged.
 
+When creating a GitHub PR, `workspace publish` and RPC publication accept
+explicit titles and descriptions. For an omitted title, the publisher reads
+the exact verified base-to-head range and requires one Conventional Commit
+subject among its non-merge commits. A missing or ambiguous subject produces
+`PR_TITLE_REQUIRED` with `--title` guidance before PR creation. An omitted
+description uses that commit's body when present or a list of branch-only
+commit subjects. A matching existing PR is reused without deriving metadata.
+
 ## Escalation admissibility (#1690–#1692)
 
 Continuations may supply an omitted authority command and narrow an omitted
@@ -1552,7 +1560,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fe6811beb6318d272fa4efed4b5826cc7905c9876fd6cc3f0446331229f34c21`
+- Repository signal fingerprint: `891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

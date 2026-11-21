@@ -570,6 +570,9 @@ Tasks, claims, sessions, and isolated workspaces establish who owns the work
 and where it may run. Concurrent agents must not silently acquire one another's
 assignments or overwrite the main checkout. Existing issue trackers may remain
 the organizational record; Decapod coordinates accepted repository execution.
+When agents publish a GitHub PR, the change title and description come from
+explicit input or the branch's authored commits. Ambiguous commit history
+requires an explicit title so reviewers can identify the intended change.
 
 Completed work must remain tied to the task that was actually verified.
 Changes to task intent or custody cannot inherit a prior passing result; the
@@ -726,7 +729,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fe6811beb6318d272fa4efed4b5826cc7905c9876fd6cc3f0446331229f34c21`
+- Repository signal fingerprint: `891555532b6e45b1cd1151f60f27a3cbf43fd56ae3e607215c75ade50ea8e524`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
