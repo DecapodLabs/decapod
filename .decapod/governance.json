@@ -882,6 +882,14 @@
       "proof_refs": [
         "Exact-head spec review recovery after integrating d62e30ad7"
       ]
+    },
+    {
+      "id": "decapod-1837-20261120-v0157",
+      "summary": "Integrate v0.157.0 and reconcile its two versioned Cargo inputs in the reviewed provider inventory",
+      "input_digest": "sha256:9c74e202d3d1b5415f38866dfd599afcc553d172d7a2188425969c425f690a79",
+      "proof_refs": [
+        "Accepted Decapod PR #1885 and exact 107-file source inventory comparison"
+      ]
     }
   ],
   "intents": {
@@ -925,22 +933,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The current task journal remains the authoritative lease store and workunit proof still binds custody.",
-          "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
+          "reason": "The accepted release changed version metadata and preserves the existing architecture.",
+          "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
           "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the lease heartbeat flag and generation fence after the accepted base change.",
-          "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
+          "reason": "Task-lease heartbeat and ordinary renewal contracts.",
+          "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
           "spec_material_hash": "46806bcd86ccd502d3930471ba7d0b847d258b579267fe7f08a489dd6b8dc972"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The heartbeat uses current same-holder and generation checks within the existing journal authorization.",
-          "reviewed_code_fingerprint": "aa9429c1426ce29711ad14fbe4503af56910d1115edff1d054ea50ea75a77ba4",
+          "reason": "The accepted release changed version metadata and preserves the current security boundaries.",
+          "reviewed_code_fingerprint": "1c632955d57a7bea65e6caed4736d3091206ca0172dd4b63c8601c8c4364ab6c",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -952,7 +960,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795235365Z"
+      "updated_at": "1795236815Z"
     },
     "trajectory": {
       "active_boundaries": [
