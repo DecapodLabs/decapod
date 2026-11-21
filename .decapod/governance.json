@@ -45,6 +45,16 @@
         "statement": "Generated entrypoints enter claimed isolated worktree before orientation and preserve orientation before implementation.",
         "status": "open"
       },
+      "claim:bounded-applicable-active-context": {
+        "falsifier": "Repeated irrelevant text outranks a binding, a stale decision becomes operative, or an oversized response reaches the caller.",
+        "proof_refs": [
+          "tests/context_capsule_rpc.rs",
+          "tests/unit/core/docs_tests.rs",
+          "tests/unit/plugins/knowledge_tests.rs"
+        ],
+        "statement": "Existing context owners prefer explicit applicability, retain binding obligations and project bounded current scoped knowledge with inspectable reasons.",
+        "status": "open"
+      },
       "claim:bounded-escalation-admissibility": {
         "falsifier": "A paraphrase, forged/stale source or cross-task continuation clears a gap; an actual required approval is inferred; a renamed subject resets the budget; reflection grants native verification/publication; or the loop persists beyond its bounded journal.",
         "proof_refs": [
@@ -166,6 +176,15 @@
         "statement": "Invalid config versions deny mutation while schema references remain accessible; unaccepted root RBAC proposals cannot self-authorize and accepted scoped grants remain usable and revocable.",
         "status": "open"
       },
+      "claim:constitution-admission-public-evidence": {
+        "falsifier": "A corpus-only self-promotion works, dangling references build, ordinary advisory research is suppressed, or authorship testimony becomes a public fact.",
+        "proof_refs": [
+          "tests/constitution_claims.rs",
+          "tests/constitution_scaffolding.rs"
+        ],
+        "statement": "The native compression path rejects metadata-only authority and unsupported enforcement claims while admitting useful advisory research. The chronology separates source evidence and testimony.",
+        "status": "open"
+      },
       "claim:consumer-local-proof": {
         "falsifier": "Real non-Cargo failure passes, stale contract or target passes, or strict profile can downgrade",
         "proof_refs": [
@@ -180,6 +199,15 @@
           "tests/unit/plugins/container_tests.rs"
         ],
         "statement": "Container completion never publishes failed or local-only runs, PR requests use the common governed publisher, branch foldback rejects non-fast-forward updates, and cleanup retains index-hidden work plus refs added or changed beyond the returned branch.",
+        "status": "open"
+      },
+      "claim:cooperative-boundary-outcome-limits": {
+        "falsifier": "A caller chooses an arbitrary executable, exit success becomes completion authority, or an unobserved outcome qualifies as independently useful work.",
+        "proof_refs": [
+          "tests/unit/core/native_boundary_tests.rs",
+          "tests/unit/core/outcome_comparison_tests.rs"
+        ],
+        "statement": "The native adapter delegates fixed operations to existing owners and the flight recorder preserves explicit limits of compact outcome evidence.",
         "status": "open"
       },
       "claim:created-context": {
@@ -884,6 +912,14 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/pull/1885"
       ]
+    },
+    {
+      "id": "issue-1880-f0cbb701-integration",
+      "summary": "Integrate accepted target f0cbb701 and verify its 107 proof-input bytes are identical to the reviewed inventory",
+      "input_digest": "sha256:95b57c859e8a441f28341b2814e1f2d3fe8ba0679b1b31814e853b87d3a679c4",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/pull/1887"
+      ]
     }
   ],
   "intents": {
@@ -927,22 +963,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The same verifier owns the before-and-after target checks, and the v0.157.0 inventory changes only the accepted package version fields.",
-          "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
-          "spec_material_hash": "1d13b0daa10b1829739de0bb1207a378fe2e7a98e31d144ed305658c395e9b59"
+          "reason": "The same verifier owns the target checks and the inventory matches the integrated release.",
+          "reviewed_code_fingerprint": "76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a",
+          "spec_material_hash": "f49c5f7b68673cc014c0e6596a6c0eca4115ebf5be8270b459a6ac204db8e63f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The existing commands and stable checkpoint error code are preserved. The diagnostic reports the two observed revisions.",
-          "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
-          "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
+          "reason": "Existing checkpoint commands and error codes are preserved and the diagnostic reports both revisions.",
+          "reviewed_code_fingerprint": "76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a",
+          "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The exact-target and canonical-tool requirements remain enforced. The proof inventory retains all existing obligations and adapters.",
-          "reviewed_code_fingerprint": "6783bc35bb6ddf7f1570c66769b0b02b1992be04af8403b5f8ce597ff0d3dff0",
+          "reason": "The exact-target and canonical-tool requirements remain enforced and all proof obligations remain declared.",
+          "reviewed_code_fingerprint": "76a8f4613c96506309043d0fb3a397934b06e3b9dcf9e96cf3b3fc66d177911a",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -954,7 +990,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795240226Z"
+      "updated_at": "1795240299Z"
     },
     "trajectory": {
       "active_boundaries": [

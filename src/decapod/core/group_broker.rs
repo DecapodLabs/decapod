@@ -14,6 +14,8 @@ use std::process::Command;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 const BROKER_INTERNAL_ENV: &str = "DECAPOD_GROUP_BROKER_INTERNAL";
+/// Private exit from the broker's own Decapod child after a typed policy refusal.
+pub const PRE_MUTATION_POLICY_DENIAL_EXIT: i32 = 77;
 const BROKER_DISABLE_ENV: &str = "DECAPOD_GROUP_BROKER_DISABLE";
 const BROKER_IDLE_SECS_ENV: &str = "DECAPOD_GROUP_BROKER_IDLE_SECS";
 const BROKER_REQUEST_ID_ENV: &str = "DECAPOD_GROUP_BROKER_REQUEST_ID";
@@ -612,7 +614,7 @@ fn execute_request(
     let code = code_opt.unwrap_or(1);
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    let result_envelope = serde_json::json!({
+    let mut result_envelope = serde_json::json!({
         "request_id": request.request_id,
         "payload_hash": request.payload_hash,
         "exit_code": code,
@@ -620,30 +622,24 @@ fn execute_request(
         "stderr": stderr,
     });
 
-    let status = if code_opt.is_none() {
-        "UNKNOWN"
-    } else if code == 0 {
-        "COMMITTED"
-    } else {
+    let status = match code_opt {
+        Some(PRE_MUTATION_POLICY_DENIAL_EXIT) => {
+            result_envelope["error"] = serde_json::json!("BROKER_POLICY_DENIED");
+            "NOT_COMMITTED"
+        }
+        Some(0) => "COMMITTED",
         // A failing command can have committed part of a multi-step operation.
-        "UNKNOWN"
+        _ => "UNKNOWN",
     };
 
     emit_phase_hook("post_exec_pre_ack", &request.request_id);
     let response = BrokerResponse {
         protocol_version: server_protocol_version(),
         status: status.to_string(),
-        commit_marker: Some(format!(
-            "{}:{}",
-            time::now_epoch_z(),
-            crate::core::ulid::new_ulid()
-        )),
-        result_envelope: result_envelope.clone(),
-        retry_after_ms_hint: if status == "COMMITTED" {
-            None
-        } else {
-            Some(5000)
-        },
+        commit_marker: (status != "NOT_COMMITTED")
+            .then(|| format!("{}:{}", time::now_epoch_z(), crate::core::ulid::new_ulid())),
+        result_envelope,
+        retry_after_ms_hint: (status == "UNKNOWN").then_some(5000),
     };
     dedupe_store(broker_root, request, &response)?;
     Ok(response)
