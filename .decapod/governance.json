@@ -887,6 +887,14 @@
       "proof_refs": [
         "accepted-release-metadata-only"
       ]
+    },
+    {
+      "id": "release-checks-v1580-base",
+      "summary": "Integrate the v0.158.0 accepted base and refresh managed pins",
+      "input_digest": "sha256:4ad4d1aaaf4d7f5db78b417008d2baf43248fa8a35f13f593669a84ea542a97e",
+      "proof_refs": [
+        "accepted-release-conflicts-resolved"
+      ]
     }
   ],
   "intents": {
@@ -932,22 +940,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Retains the protected release check scheduling behavior on the new release base.",
-          "reviewed_code_fingerprint": "4ab40d909c22a6a4e19b2d556fe92e2232340e8efb7f3db8c259a583b9cf069a",
-          "spec_material_hash": "590a40c443b266cc2bcbb86cc241b40138b4df612f3ceaefa375e304d1b33cd8"
+          "reason": "Retains the protected release check scheduling on the current accepted base.",
+          "reviewed_code_fingerprint": "1870d477b2c5c1c8d0d61e3ed259f23fcbfd32d2c21e23c6cce1d74c4ef94889",
+          "spec_material_hash": "27bc32cb6838efd3520712d477b256eae7a5e1e08cdbab00864c6ba82bf7926a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The release check context names remain stable.",
-          "reviewed_code_fingerprint": "4ab40d909c22a6a4e19b2d556fe92e2232340e8efb7f3db8c259a583b9cf069a",
-          "spec_material_hash": "fbc81faf4980cfba973ddd501fdb0287784e9174f3fffbef0ee7aa3505d57789"
+          "reason": "Preserves the stable status contexts and accepted context binding.",
+          "reviewed_code_fingerprint": "1870d477b2c5c1c8d0d61e3ed259f23fcbfd32d2c21e23c6cce1d74c4ef94889",
+          "spec_material_hash": "095257a7e6148bdbf99568d9d7c7780157c80e7507ab032f4567081200f054a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The metadata-only accepted base change leaves the existing update and independent review authority unchanged.",
-          "reviewed_code_fingerprint": "4ab40d909c22a6a4e19b2d556fe92e2232340e8efb7f3db8c259a583b9cf069a",
+          "reason": "Accepted authoring and independent review rules remain in force.",
+          "reviewed_code_fingerprint": "1870d477b2c5c1c8d0d61e3ed259f23fcbfd32d2c21e23c6cce1d74c4ef94889",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -959,14 +967,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795237825Z"
+      "updated_at": "1795241968Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c129030a942b659f43c6fa1f5e95505792159c1051a4299025910ab7c962191a",
+      "artifact_hash": "sha256:0243a694dfb66c2633451ad4a84ff5f51425f8598520fbdc230c34a8a5f041b0",
       "checks": [
+        {
+          "name": "accepted-release-conflicts-resolved",
+          "status": "passed"
+        },
         {
           "name": "accepted-release-metadata-only",
           "status": "passed"
@@ -1027,10 +1039,17 @@
             "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M7Y2QFVHR2Z0QWV098HQ6WC4",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M7Y2QFNZT0A0YWAR2CVCK97M",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7Y2QFVHR2Z0QWV098HQ6WC4": {
@@ -1103,6 +1122,29 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Integrated accepted master 1bdb1e6e. Native reconciler resolved governance. Preserved both authored release-check passages on the accepted spec baseline. Generated pins from exact accepted v0.158.0 source."
+                ],
+                "proof_refs": [
+                  "accepted-release-conflicts-resolved"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed",
+                  ".decapod/managed/specs",
+                  ".github/workflows/ci.yml",
+                  "assets/tools/source_ci_profile.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "tests/release_metadata_policy.rs",
+                  "tests/source_ci_profile_policy.rs"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1112,6 +1154,7 @@
       "destination": "pull request",
       "evidence": [
         "All 36 release metadata policy checks passed; actionlint passed; compiled workflow digest independently matches the exact CI bytes.",
+        "Integrated accepted master 1bdb1e6e. Native reconciler resolved governance. Preserved both authored release-check passages on the accepted spec baseline. Generated pins from exact accepted v0.158.0 source.",
         "The diff from d62e30ad7 to accepted 146a00f41 is limited to CHANGELOG.md, Cargo.lock, and Cargo.toml. Used the checksum-verified v0.157.0 tag workflow binary to refresh managed release pins.",
         "actionlint passed; 56 profile cases passed under canonical macOS TMPDIR, three Linux x86_64 runner checks require GitHub execution."
       ],
