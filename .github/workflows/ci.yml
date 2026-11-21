@@ -266,7 +266,6 @@ jobs:
   supabase-consumer:
     name: Supabase consumer (offline fixtures)
     needs: release-metadata
-    if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -739,7 +738,8 @@ jobs:
     name: Tests (${{ matrix.target }})
     needs: release-metadata
     runs-on: ubuntu-latest
-    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
+    # Expand the matrix on release cuts so GitHub reports the required Core check.
+    if: needs.release-metadata.outputs.pr_like == 'true'
     strategy:
       fail-fast: false
       max-parallel: 4

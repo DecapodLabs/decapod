@@ -1540,7 +1540,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e`
+- Repository signal fingerprint: `a8bab50ce5692850a8ad64ff5724189c98005cf6de73b6854dd2d61361685ea3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1702,6 +1702,11 @@ Optional inference, numerical qualification and hosted authorization need their
 own actual evidence; source tests do not establish them.
 
 ## Immutable CI and version-only release command proof (#1397)
+
+The release-cut profile regression checks that version-only Cargo metadata selects
+the existing Core recipe and offline Supabase checks. GitHub Actions must record
+both named results for the release candidate's exact revisions. Independent
+review and protected ref update authority remain part of the merge contract.
 
 `ci_event_context_policy` preserves its existing accepted-carrier tests, including
 regular committed configuration custody. Its original local run exposed the

@@ -872,7 +872,7 @@ fn selectors_preserve_unanchored_source_patterns_and_exact_migration_path() {
 }
 
 #[test]
-fn release_only_keeps_build_validation_constitution_and_docs_obligations() {
+fn release_only_keeps_required_checks_and_release_obligations() {
     let jobs = inventory(&full_paths(), true);
     let active: BTreeSet<_> = jobs
         .iter()
@@ -885,6 +885,8 @@ fn release_only_keeps_build_validation_constitution_and_docs_obligations() {
             ("ci.yml", "release-metadata"),
             ("ci.yml", "health"),
             ("ci.yml", "setup"),
+            ("ci.yml", "test"),
+            ("ci.yml", "supabase-consumer"),
             ("ci.yml", "musl-publication"),
             ("constitution-sync.yml", "validate-constitution"),
             ("decapod-validate.yml", "validate"),
@@ -904,6 +906,20 @@ fn release_only_keeps_build_validation_constitution_and_docs_obligations() {
     ));
     assert!(!selected(find_check("fmt").unwrap(), &[], true));
     assert!(selected(find_check("docs-build").unwrap(), &[], true));
+
+    let release = paths(&["CHANGELOG.md", "Cargo.lock", "Cargo.toml"]);
+    let core = find_check("selective-core").unwrap();
+    let consumer = find_check("supabase-consumer").unwrap();
+    assert!(selected(core, &release, true));
+    assert!(selected(consumer, &release, true));
+    assert_eq!(commands(core, &release).unwrap().len(), 3);
+    assert!(!commands(consumer, &release).unwrap().is_empty());
+    for job_id in ["test", "supabase-consumer"] {
+        assert!(
+            !job(CI, job_id).contains("needs.release-metadata.outputs.release_only"),
+            "release classification must not suppress {job_id}"
+        );
+    }
 }
 
 #[test]
@@ -2380,7 +2396,10 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
                     .any(|job| { job.applicable && job.checks.contains(&check.id) }),
                 "test recipe must be in the required inventory: {path}"
             );
-            assert!(!selected(check, &changed, true));
+            assert_eq!(
+                selected(check, &changed, true),
+                check.selection == profile::Selection::Core
+            );
         }
     }
     for path in ["docs/agent/README.md", "tests/unrelated_example.rs"] {

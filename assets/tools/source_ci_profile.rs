@@ -122,6 +122,7 @@ pub const CHECKS: &[Check] = &[
     Check {
         selection: Selection::Core,
         matrix: Some("core"),
+        skipped_for_release_only: false,
         ..check!("selective-core", "test", &["bazelisk"])
     },
     Check {
@@ -134,11 +135,14 @@ pub const CHECKS: &[Check] = &[
         matrix: Some("cli"),
         ..check!("selective-cli", "test", &["bazelisk"])
     },
-    check!(
-        "supabase-consumer",
-        "supabase-consumer",
-        &["cargo", "rustc:1.96.1"]
-    ),
+    Check {
+        skipped_for_release_only: false,
+        ..check!(
+            "supabase-consumer",
+            "supabase-consumer",
+            &["cargo", "rustc:1.96.1"]
+        )
+    },
     check!(
         "workspace-lifecycle-docker",
         "workspace-lifecycle-docker",
@@ -450,6 +454,7 @@ fn shared_test_inputs(path: &str) -> bool {
 
 fn core_test_inputs(path: &str) -> bool {
     shared_test_inputs(path)
+        || matches!(path, "Cargo.toml" | "Cargo.lock")
         || [
             "todo_enforcement",
             "validate_termination",
@@ -1152,7 +1157,7 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
         "migration-script-tests",
     ] {
         let applicable = match job {
-            "release-metadata" | "health" | "setup" => true,
+            "release-metadata" | "health" | "setup" | "supabase-consumer" => true,
             "migration-script-tests" => !release_only && migration_changed(paths),
             _ => !release_only,
         };
@@ -1170,7 +1175,7 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
         );
     }
     for target in ["core", "plugins", "cli"] {
-        add("ci.yml", "test", Some(target), !release_only);
+        add("ci.yml", "test", Some(target), true);
     }
     for shard in [
         "gatling-0",
