@@ -838,6 +838,11 @@
       "id": "isolate-podman-fixture-writer",
       "summary": "Write the mock Podman executable in a child process and wait before launch",
       "input_digest": "sha256:51a88736a3d9c2b2d696f7f7606a009be285239c15030d4ca8b2d854eae89ba5"
+    },
+    {
+      "id": "align-podman-fixture-1562",
+      "summary": "Reconcile the fixture candidate with accepted v0.156.2 and its generated material",
+      "input_digest": "sha256:cee9d92bcb504775a33279d12002c0caf02ca144ec21825d1f8ff55b9da95648"
     }
   ],
   "intents": {
@@ -883,22 +888,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only a unit-test fixture writer changes. Production architecture is unchanged.",
-          "reviewed_code_fingerprint": "d4bb089d7d39de7e68ce20a895b787f34ff071aaddbbd3ff0dc3d2c0543d22ab",
+          "reason": "The accepted release and the unit fixture writer retain the current implementation architecture.",
+          "reviewed_code_fingerprint": "deb6eb32a261dade8bd193c4a8bd4af0d347d46ea7cc12ac70a75f9e1e4d06fa",
           "spec_material_hash": "067a633b9253e56004a85b6cb64205de23293ac1e1e2c65a3a5016753c2adf8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The headless launcher and its argument, standard input, and output assertions retain their existing interface.",
-          "reviewed_code_fingerprint": "d4bb089d7d39de7e68ce20a895b787f34ff071aaddbbd3ff0dc3d2c0543d22ab",
+          "reason": "The launch interface and all captured argument and process assertions remain intact.",
+          "reviewed_code_fingerprint": "deb6eb32a261dade8bd193c4a8bd4af0d347d46ea7cc12ac70a75f9e1e4d06fa",
           "spec_material_hash": "b2a2d49cadc0d154ffed9be3918384124ea1b0b9d2031b5cb6474a98a03a18e1"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only a temporary test fixture writer changes. Production security behavior is unchanged.",
-          "reviewed_code_fingerprint": "d4bb089d7d39de7e68ce20a895b787f34ff071aaddbbd3ff0dc3d2c0543d22ab",
+          "reason": "The fixture-only writer makes no production security changes.",
+          "reviewed_code_fingerprint": "deb6eb32a261dade8bd193c4a8bd4af0d347d46ea7cc12ac70a75f9e1e4d06fa",
           "spec_material_hash": "9c831867b7ba10361436871740035ad1b7793ffb6d90df7d1c01fa8ec3e585ec"
         }
       ],
@@ -910,13 +915,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795223877Z"
+      "updated_at": "1795226223Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b305ea59bc58d640838d6c9150b8f79b19fc32034c16b91aa1bd727462b57736",
+      "artifact_hash": "sha256:4eec8f9792c19ad2e92ef23f0e79e8adc61b7b409e2f775e91e2b98f8e9bed15",
       "checks": [
         {
           "name": "fixture-formatting",
@@ -925,6 +930,14 @@
         {
           "name": "prior-actions-podman-fixture",
           "status": "failed"
+        },
+        {
+          "name": "prior-actions-source-base",
+          "status": "failed"
+        },
+        {
+          "name": "prior-actions-standalone",
+          "status": "passed"
         }
       ],
       "current_phase": "verifying",
@@ -948,10 +961,17 @@
             "intent_id": "intent:change_01M7XTN9CF3BNEA59Z9QQH5SPE",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M7XTN9GGN8YGXRRY8DNV8T7X",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M7XTN9CF3BNEA59Z9QQH5SPE",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M7XTN9GGN8YGXRRY8DNV8T7X": {
@@ -977,6 +997,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verifying",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Run 44849492916 rejected the old accepted target before executing tests. Merged accepted 31f19a70 and used the checksum-verified official v0.156.2 tag workflow artifact. Parallel-fixture execution requires new Actions evidence."
+                ],
+                "proof_refs": [
+                  "prior-actions-source-base",
+                  "prior-actions-standalone"
+                ],
+                "scope": [
+                  ".decapod/governance.json",
+                  ".decapod/managed/specs",
+                  "tests/unit/plugins/container_tests.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -985,7 +1023,8 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "GitHub Actions job 136648909385 hit ETXTBSY in the Podman fixture. The new writer exits before the fixture runs. Exact-head Actions verification is pending."
+        "GitHub Actions job 136648909385 hit ETXTBSY in the Podman fixture. The new writer exits before the fixture runs. Exact-head Actions verification is pending.",
+        "Run 44849492916 rejected the old accepted target before executing tests. Merged accepted 31f19a70 and used the checksum-verified official v0.156.2 tag workflow artifact. Parallel-fixture execution requires new Actions evidence."
       ],
       "inspected_files": [],
       "intent_id": "intent:change_01M7XTN9CF3BNEA59Z9QQH5SPE",
