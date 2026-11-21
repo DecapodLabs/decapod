@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.158.1](https://github.com/DecapodLabs/decapod/compare/v0.158.0...v0.158.1) - 2026-11-21
+
+### Fixed
+
+- *(tests)* exercise the committed downgrade fixture
+
+### Other
+
+- Merge accepted v0.158.0 into encoding conformance
+- Merge accepted broker and onboarding fixes into encoding conformance
+- Merge accepted v0.157.0 into encoding conformance
+- Merge accepted context and outcome contracts into encoding conformance
+- Merge accepted v0.156.2 into encoding conformance
+- Merge accepted downgrade fixture into encoding conformance
+- Merge accepted v0.156.1 into encoding conformance
+- Merge accepted approval verification into encoding conformance
+- Merge accepted contract recovery into encoding conformance
+- *(merge)* sync encoding conformance with accepted v0.155.1
+- *(merge)* sync accepted master 9b6a33b0e (v0.155.0, #1866)
+- *(merge)* sync encoding conformance with accepted v0.155.0
+- *(interop)* integrate v0.154.0 and supported identity probe
+- *(interop)* integrate accepted instruction readiness
+- *(interop)* reconcile accepted observer coverage contract
+- *(interop)* pin independent raw JSON interpretation vectors
+
 ## [0.158.0](https://github.com/DecapodLabs/decapod/compare/v0.157.0...v0.158.0) - 2026-11-21
 
 ### Fixed
