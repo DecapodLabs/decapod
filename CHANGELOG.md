@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.158.0](https://github.com/DecapodLabs/decapod/compare/v0.157.0...v0.158.0) - 2026-11-21
+
+### Fixed
+
+- *(core)* restore terminal setup and report archive refusals
+
+### Other
+
+- *(governance)* reconcile accepted v0.157.0 release
+
 ## [0.157.0](https://github.com/DecapodLabs/decapod/compare/v0.156.2...v0.157.0) - 2026-11-21
 
 ### Added
