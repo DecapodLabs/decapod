@@ -885,6 +885,14 @@
         "tests/unit/core/workunit_journal_tests.rs",
         "tests/unit/plugins/verify_tests.rs"
       ]
+    },
+    {
+      "id": "fix-1892-dockerfile-refresh",
+      "summary": "Refresh Decapod-managed Dockerfile release pin to 0.158.1 (#1892)",
+      "input_digest": "sha256:25cd3680533a2ed781039c682720e978deac3066649c2c09262a217cd7cde096",
+      "proof_refs": [
+        "tests/unit/plugins/verify_tests.rs"
+      ]
     }
   ],
   "intents": {
