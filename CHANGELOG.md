@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.157.0](https://github.com/DecapodLabs/decapod/compare/v0.156.2...v0.157.0) - 2026-11-21
+
+### Added
+
+- *(context)* bound applicable context and outcome evidence
+
+### Fixed
+
+- *(ci)* run governed context fixtures in Bazel
+- *(ci)* exercise the committed strict-profile downgrade
+- *(validate)* remove repeated contract and schema probes
+- *(rpc)* preserve mentor reflection before authoring
+- *(docs)* link Constitution chronology to repository evidence
+
+### Other
+
+- *(governance)* align context work with v0.156.2
+- *(governance)* align context work with v0.156.1
+- *(governance)* reconcile accepted selected-work approval
+- *(governance)* align context work with v0.156.0
+- *(governance)* reconcile accepted instruction lineage
+- *(governance)* reconcile v0.155.1 for CI
+- *(governance)* reconcile v0.155.0 before CI push
+- *(governance)* align CI repair with v0.154.0
+- *(governance)* integrate accepted instruction readiness
+- *(governance)* reconcile accepted master for CI
+
 ### Added
 
 - Bounded, source-labeled Constitution and scoped knowledge context with auditable corrections.

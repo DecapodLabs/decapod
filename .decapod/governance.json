@@ -915,6 +915,11 @@
       "id": "sync-1864-issue-1834",
       "summary": "Reconcile accepted master after the context and native host changes",
       "input_digest": "sha256:a1c4806f97ce5e2326a0ae36596cce5a91330ff8e0d1687825900e46e461d827"
+    },
+    {
+      "id": "sync-v1570-issue-1834",
+      "summary": "Reconcile the accepted v0.157.0 release and refresh the measured repository projections",
+      "input_digest": "sha256:c4a171fd7a8cb921e72cd70b58c6f3e86dfed492e981ca15f7cca167851a9a32"
     }
   ],
   "intents": {
@@ -956,22 +961,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reviewed the branch architecture after accepting the upstream host and context changes",
-          "reviewed_code_fingerprint": "fbb7b0fd15476c499255e62439d2defc0a51ddaeafd36163b9278e438d2a5f35",
+          "reason": "Reviewed the branch architecture with the accepted v0.157.0 source snapshot",
+          "reviewed_code_fingerprint": "af7d0b4c443699947e754c0dc26a2f4c33b0d55344e79e21ba99607b359f3da9",
           "spec_material_hash": "67b2755210f72d5ed2b8520b416c295c7bae52eca6f50809d56a4b6d6851052a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reviewed the branch interfaces against the new accepted target",
-          "reviewed_code_fingerprint": "fbb7b0fd15476c499255e62439d2defc0a51ddaeafd36163b9278e438d2a5f35",
+          "reason": "Reviewed the branch interfaces with the accepted v0.157.0 source snapshot",
+          "reviewed_code_fingerprint": "af7d0b4c443699947e754c0dc26a2f4c33b0d55344e79e21ba99607b359f3da9",
           "spec_material_hash": "2a896fa27b5d8860ea61309d53ac2b3ea1e8d5a1bf5b32ae97757c204637f043"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed the publication security contract against the new accepted target",
-          "reviewed_code_fingerprint": "fbb7b0fd15476c499255e62439d2defc0a51ddaeafd36163b9278e438d2a5f35",
+          "reason": "Deriving PR display metadata preserves existing security checks",
+          "reviewed_code_fingerprint": "af7d0b4c443699947e754c0dc26a2f4c33b0d55344e79e21ba99607b359f3da9",
           "spec_material_hash": "3f740979149383d0f6b3ffae2318e530368a22095a9abb0ba8108044b1773c93"
         }
       ],
@@ -983,7 +988,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795232530Z"
+      "updated_at": "1795237495Z"
     },
     "trajectory": {
       "active_boundaries": [
