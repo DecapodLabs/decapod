@@ -102,7 +102,9 @@ struct Service {
     read_error: Option<&'static str>,
     slow_refresh: bool,
     account: String,
+    account_status: &'static str,
     projects: Vec<(String, String)>,
+    project_organizations: BTreeMap<String, String>,
     project_allowed: bool,
     registrations: BTreeMap<String, String>,
     lose_registration_once: bool,
@@ -172,17 +174,31 @@ impl Service {
             }
             ACCOUNT_STATUS => {
                 assert!(request.headers.contains_key("authorization"));
-                if let Some(project) = request.body["project_id"].as_str() {
+                if self.account_status != "registered" {
+                    json!({"version":1,"account_id":self.account,"status":self.account_status,"backend_authorized":false})
+                } else if let Some(project) = request.body["project_id"].as_str() {
                     let exists = self.projects.iter().any(|(id, _)| id == project);
                     let allowed = exists && self.project_allowed;
-                    json!({"version":1,"account_id":self.account,"project_id":project,"status":if allowed{"active"}else if exists{"entitlement_required"}else{"admin_approval_required"},"backend_authorized":allowed})
+                    json!({"version":1,"account_id":self.account,"project_id":project,
+                      "organization_id":self.project_organizations.get(project),
+                      "status":if allowed{"active"}else if exists{"entitlement_required"}else{"admin_approval_required"},"backend_authorized":allowed})
                 } else {
                     json!({"version":1,"account_id":self.account,"status":"registered","backend_authorized":false,
+                      "organizations":self.project_organizations.values().map(|id|json!({"id":id})).collect::<Vec<_>>(),
                       "projects":self.projects.iter().map(|(id,name)|json!({"project_id":id,"name":name})).collect::<Vec<_>>()})
                 }
             }
             ACCOUNT_REGISTER => {
                 assert!(request.headers.contains_key("authorization"));
+                if request.body["operation"] == "account" {
+                    assert_eq!(request.body, json!({"version":1,"operation":"account"}));
+                    self.account_status = "registered";
+                    return Some((
+                        200,
+                        json!({"version":1,"account_id":self.account,
+                      "status":"registered","backend_authorized":false}),
+                    ));
+                }
                 let operation = request.body["request_id"].as_str().unwrap().to_owned();
                 let name = request.body["project_name"].as_str().unwrap().to_owned();
                 let id = self
@@ -192,6 +208,10 @@ impl Service {
                     .clone();
                 if self.register_associated && !self.projects.iter().any(|(p, _)| p == &id) {
                     self.projects.push((id.clone(), name));
+                    if let Some(organization) = request.body["organization_id"].as_str() {
+                        self.project_organizations
+                            .insert(id.clone(), organization.into());
+                    }
                 }
                 if self.lose_registration_once {
                     self.lose_registration_once = false;
@@ -261,7 +281,9 @@ impl Fixture {
             read_error: None,
             slow_refresh: false,
             account: ACCOUNT.into(),
+            account_status: "registered",
             projects: Vec::new(),
+            project_organizations: BTreeMap::new(),
             project_allowed: true,
             registrations: BTreeMap::new(),
             lose_registration_once: false,
@@ -1057,6 +1079,105 @@ fn managed_project_selection_routes_the_next_native_data_request() {
         PROJECT
     );
     f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_directory_registers_the_current_account_and_reports_stepup() {
+    let f = Fixture::new("example/project-registration");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().account_status = "registration_required";
+    let registered = f.run(&["cloud", "projects", "--format", "json"]);
+    assert!(registered.status.success());
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert_eq!(f.count(ACCOUNT_STATUS), 2);
+
+    f.service.lock().unwrap().account_status = "provider_link_stepup_required";
+    let stepup = f.run(&["cloud", "projects", "--format", "json"]);
+    assert!(!stepup.status.success());
+    let output = [stepup.stdout, stepup.stderr].concat();
+    let text = String::from_utf8_lossy(&output);
+    assert!(text.contains("provider_link_stepup_required"));
+    assert!(text.contains("Cloud Admin"));
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn managed_project_selection_uses_server_organization_for_duplicate_names() {
+    let f = Fixture::new("example/project-organization");
+    f.proof();
+    f.seed(false);
+    {
+        let mut service = f.service.lock().unwrap();
+        service.projects = vec![
+            ("source-one/shared".into(), "Team repository".into()),
+            ("source-two/shared".into(), "Team repository".into()),
+        ];
+        service.project_organizations = BTreeMap::from([
+            ("source-one/shared".into(), "org-west".into()),
+            ("source-two/shared".into(), "org-east".into()),
+        ]);
+    }
+    let listed = f.run(&["cloud", "projects", "--format", "json"]);
+    let view: Value = serde_json::from_slice(&listed.stdout).unwrap();
+    assert!(listed.status.success());
+    assert_eq!(view["projects"][0]["organization_id"], "org-west");
+    assert_eq!(view["projects"][1]["organization_id"], "org-east");
+    assert!(
+        !f.run(&["cloud", "project", "use", "Team repository"])
+            .status
+            .success()
+    );
+    let selected = f.run(&[
+        "cloud",
+        "project",
+        "use",
+        "Team repository",
+        "--org",
+        "org-east",
+        "--format",
+        "json",
+    ]);
+    assert!(selected.status.success());
+    let result: Value = serde_json::from_slice(&selected.stdout).unwrap();
+    assert_eq!(result["projects"][0]["project_id"], "source-two/shared");
+    assert_eq!(result["projects"][0]["organization_id"], "org-east");
+    assert!(
+        !f.run(&["cloud", "project", "use", "1", "--org", "org-east"])
+            .status
+            .success()
+    );
+}
+
+#[test]
+fn managed_project_creation_cannot_replay_an_unresolved_request_in_another_org() {
+    let f = Fixture::new("example/project-create-org");
+    f.proof();
+    f.seed(false);
+    f.service.lock().unwrap().lose_registration_once = true;
+    let create = |org| {
+        f.run(&[
+            "cloud",
+            "project",
+            "create",
+            "Team repository",
+            "--org",
+            org,
+        ])
+    };
+    assert!(!create("org-east").status.success());
+    assert!(!create("org-west").status.success());
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+    assert!(create("org-east").status.success());
+    let requests = f.requests.lock().unwrap();
+    let registered: Vec<_> = requests
+        .iter()
+        .filter(|r| r.path == ACCOUNT_REGISTER)
+        .collect();
+    assert_eq!(registered.len(), 2);
+    assert_eq!(registered[0].body, registered[1].body);
+    assert_eq!(registered[1].body["organization_id"], "org-east");
 }
 
 #[test]

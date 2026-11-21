@@ -1552,8 +1552,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5480afc00cd775958772bc4ad86e7c62eb1f7955f9e1fb1e516a4dbaf77ec36e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (265 files)
+- Repository signal fingerprint: `d588ea8a1d92b1a9b3a8573d0736e8d9225c8fd5e03577fe6d069c450d8400b2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (252 files), `tests/` (266 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1887,6 +1887,18 @@ Only the kernel optional workunit-completion rule can become inapplicable when t
 Task binding on a managed `agent/<actor>/<topic>` branch reads task identifiers from the topic. A task-shaped actor name does not declare another task. Legacy unnamespaced and `agent/<task>` branches and multiple task identifiers in a topic retain their existing matching and mismatch checks.
 
 ## Explicit managed project routing
+
+The CLI submits account-only registration when account status reports
+`registration_required`. It re-reads status for the same authenticated account
+before selecting or creating a project. Provider-link verification returns a
+dedicated diagnostic directing the user to Cloud Admin.
+
+The project directory exposes project and organization IDs. For a service that
+lists organizations separately, the CLI reads each missing association through
+the existing project-status endpoint. `--org` limits project use or creation to
+the exact organization, and the server confirms the association before selection.
+An unresolved creation binds its request ID to the original account, project name
+and organization. Older saved records without an organization remain readable.
 
 `cloud projects` and `cloud project use|create` consume the existing version-one account status/register channel. A saved numbered choice references the exact prior directory for its managed account. Creation persists an immutable UUID/name before the request and retains the response reference after success; ambiguous outcomes reconcile the same UUID. Selected project status must echo its project and managed account before use. Text output shows names/status; credentials and routing records remain outside repository configuration.
 
