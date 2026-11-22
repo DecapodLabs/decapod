@@ -18,6 +18,12 @@ pub struct DecapodProjectConfig {
     pub context: DeclaredContextConfig,
     #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
     pub workspace: WorkspaceConfigSection,
+    /// Optional top-level shorthand for `[governance.db_maintenance]` (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"

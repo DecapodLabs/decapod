@@ -1907,3 +1907,479 @@ fn two_concurrent_agents_diagnose_and_resolve_lock_contention_with_custody_isola
         "ok"
     );
 }
+
+#[test]
+fn governed_db_maintenance_wal_checkpoint_aliases_and_top_level_maintenance_config() {
+    let fixture = GovernedRepoFixture::new();
+    let alpha = fixture.spawn_claimed_agent("agent-wal", "wal-maint");
+
+    // 1. Default-deny: wal-checkpoint, diagnose, lock-inspect, integrity-check all fail closed.
+    for args in [
+        vec!["data", "db", "maintain", "wal-checkpoint"],
+        vec!["data", "db", "maintain", "diagnose"],
+        vec!["data", "db", "maintain", "lock-inspect"],
+        vec!["data", "db", "maintain", "integrity-check"],
+    ] {
+        let denied = fixture
+            .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+            .args(&args)
+            .output()
+            .expect("denied maint alias");
+        assert!(
+            !denied.status.success(),
+            "expected default deny for {args:?}"
+        );
+        assert!(
+            String::from_utf8_lossy(&denied.stderr).contains("POLICY_OPT_IN_DISABLED"),
+            "expected POLICY_OPT_IN_DISABLED for {args:?}: {}",
+            String::from_utf8_lossy(&denied.stderr)
+        );
+    }
+
+    // 2. Enable via top-level `[maintenance]` shorthand without `db.wal.checkpoint` -> wal-checkpoint denied,
+    //    while `diagnose`, `lock-inspect`, and `integrity-check` succeed!
+    let cfg_path = fixture.repo_root.join(".decapod/config.toml");
+    let orig_cfg = fs::read_to_string(&cfg_path).unwrap();
+    fs::write(
+        &cfg_path,
+        format!(
+            "{}\n\n[maintenance]\nenabled = true\nallowed = [\"db.inspect\", \"db.verify\", \"db.lock.diagnose\"]\n",
+            orig_cfg.trim_end()
+        ),
+    )
+    .unwrap();
+
+    let not_allowed = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "wal-checkpoint"])
+        .output()
+        .unwrap();
+    assert!(!not_allowed.status.success());
+    assert!(
+        String::from_utf8_lossy(&not_allowed.stderr).contains("CAPABILITY_NOT_ALLOWLISTED"),
+        "expected CAPABILITY_NOT_ALLOWLISTED: {}",
+        String::from_utf8_lossy(&not_allowed.stderr)
+    );
+
+    for args in [
+        vec!["data", "db", "maintain", "diagnose"],
+        vec!["data", "db", "maintain", "lock-inspect"],
+        vec!["data", "db", "maintain", "integrity-check"],
+    ] {
+        let ok = fixture
+            .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+            .args(&args)
+            .output()
+            .unwrap();
+        assert!(
+            ok.status.success(),
+            "{args:?} failed: {}",
+            String::from_utf8_lossy(&ok.stderr)
+        );
+    }
+
+    // 3. Opt into `db.wal.checkpoint` via `[maintenance]` -> CLI + RPC succeed in PASSIVE mode.
+    fs::write(
+        &cfg_path,
+        format!(
+            "{}\n\n[maintenance]\nenabled = true\nallowed = [\"db.inspect\", \"db.verify\", \"db.lock.diagnose\", \"db.wal.checkpoint\"]\n",
+            orig_cfg.trim_end()
+        ),
+    )
+    .unwrap();
+
+    let wal_cli = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "wal-checkpoint",
+            "--timeout-ms",
+            "500",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        wal_cli.status.success(),
+        "wal-checkpoint cli failed: {}",
+        String::from_utf8_lossy(&wal_cli.stderr)
+    );
+    let wal_json: serde_json::Value = serde_json::from_slice(&wal_cli.stdout).unwrap();
+    assert_eq!(wal_json["status"], "ok");
+    assert_eq!(wal_json["mode"], "passive");
+    assert_eq!(wal_json["automatic_repair"], false);
+
+    let wal_rpc = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "rpc",
+            "--op",
+            "data.database.wal_checkpoint",
+            "--params",
+            r#"{"timeout_ms":250}"#,
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        wal_rpc.status.success(),
+        "wal-checkpoint rpc failed: {}{}",
+        String::from_utf8_lossy(&wal_rpc.stdout),
+        String::from_utf8_lossy(&wal_rpc.stderr)
+    );
+    let wal_rpc_json: serde_json::Value = serde_json::from_slice(&wal_rpc.stdout).unwrap();
+    assert_eq!(wal_rpc_json["success"], true);
+    assert_eq!(wal_rpc_json["result"]["mode"], "passive");
+
+    // 4. Ambiguous dual configuration (`[governance.db_maintenance]` AND `[maintenance]`) fails closed!
+    fs::write(
+        &cfg_path,
+        format!(
+            "{}\n\n[governance.db_maintenance]\nenabled = true\n\n[maintenance]\nenabled = true\n",
+            orig_cfg.trim_end()
+        ),
+    )
+    .unwrap();
+    let ambiguous = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .unwrap();
+    assert!(!ambiguous.status.success());
+    assert!(
+        String::from_utf8_lossy(&ambiguous.stderr).contains("AMBIGUOUS_MAINTENANCE_POLICY"),
+        "expected AMBIGUOUS_MAINTENANCE_POLICY: {}",
+        String::from_utf8_lossy(&ambiguous.stderr)
+    );
+}
+
+#[test]
+fn governed_db_maintenance_enforces_backend_mismatch_backup_retry_idempotency_and_unrelated_datastore_isolation()
+ {
+    use fs2::FileExt;
+    let fixture = GovernedRepoFixture::new();
+    let alpha = fixture.spawn_claimed_agent("agent-iso", "iso-maint");
+    fixture.set_canonical_db_maintenance(Some("enabled = true"));
+
+    // 1. BACKEND_MISMATCH: worktree changes `backend = "cloud"` while canonical master is `local`.
+    let wt_cfg_path = alpha.worktree_dir.join(".decapod/config.toml");
+    let wt_cfg_orig = fs::read_to_string(&wt_cfg_path).unwrap();
+    let wt_cfg_cloud = wt_cfg_orig.replace("backend = \"local\"", "backend = \"cloud\"");
+    let wt_cfg_cloud = if wt_cfg_cloud == wt_cfg_orig {
+        wt_cfg_orig.replace("[repo]\n", "[repo]\nbackend = \"cloud\"\n")
+    } else {
+        wt_cfg_cloud
+    };
+    fs::write(&wt_cfg_path, &wt_cfg_cloud).unwrap();
+
+    let mismatch = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args(["data", "db", "maintain", "verify"])
+        .output()
+        .unwrap();
+    assert!(!mismatch.status.success());
+    assert!(
+        String::from_utf8_lossy(&mismatch.stderr).contains("BACKEND_MISMATCH"),
+        "expected BACKEND_MISMATCH, got: {}",
+        String::from_utf8_lossy(&mismatch.stderr)
+    );
+    fs::write(&wt_cfg_path, &wt_cfg_orig).unwrap();
+
+    // 2. db.backup mutator-retry idempotency / anti-replay: running `lock retry --target backup`
+    //    with an `operation_id` succeeds once, and replaying the same `operation_id` fails closed
+    //    with `OPERATION_REPLAY_REJECTED` without overwriting or duplicating the backup!
+    let backup_dest = alpha.worktree_dir.join(".decapod/backups/retry-idem.db");
+    let first = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "lock",
+            "retry",
+            "--target",
+            "backup",
+            "--destination",
+            backup_dest.to_str().unwrap(),
+            "--operation-id",
+            "op-backup-retry-idem-1",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        first.status.success(),
+        "first backup retry failed: {}",
+        String::from_utf8_lossy(&first.stderr)
+    );
+    assert!(backup_dest.is_file());
+    let backup_bytes_before = fs::read(&backup_dest).unwrap();
+
+    let replay = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "lock",
+            "retry",
+            "--target",
+            "backup",
+            "--destination",
+            backup_dest.to_str().unwrap(),
+            "--operation-id",
+            "op-backup-retry-idem-1",
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        !replay.status.success(),
+        "duplicate mutator retry operation_id must fail closed"
+    );
+    assert!(
+        String::from_utf8_lossy(&replay.stderr).contains("OPERATION_REPLAY_REJECTED"),
+        "expected OPERATION_REPLAY_REJECTED, got: {}",
+        String::from_utf8_lossy(&replay.stderr)
+    );
+    assert_eq!(fs::read(&backup_dest).unwrap(), backup_bytes_before);
+
+    // 3. Unrelated datastore non-blocking: holding an exclusive advisory lock on a separate
+    //    SQLite database does NOT block `db.backup` on canonical `decapod.db`.
+    let unrelated_lock_path = fixture.repo_root.join(".decapod/data/unrelated.db.lock");
+    let unrelated_lock = fs::OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(false)
+        .open(&unrelated_lock_path)
+        .unwrap();
+    unrelated_lock.lock_exclusive().unwrap();
+
+    let backup_iso = alpha.worktree_dir.join(".decapod/backups/isolated-ok.db");
+    let ok_backup = fixture
+        .decapod_cmd(&alpha.worktree_dir, &alpha.agent_id, Some(&alpha.password))
+        .args([
+            "data",
+            "db",
+            "maintain",
+            "backup",
+            "--destination",
+            backup_iso.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        ok_backup.status.success(),
+        "unrelated datastore lock must not block db.backup: {}",
+        String::from_utf8_lossy(&ok_backup.stderr)
+    );
+    assert!(backup_iso.is_file());
+    let _ = FileExt::unlock(&unrelated_lock);
+}
+
+#[cfg(unix)]
+#[test]
+fn legacy_todo_nonempty_export_quarantine_and_opt_in_import_without_silent_overwrites() {
+    // --- Case A + B: conflicting non-empty legacy store -> export, reject import, quarantine cleanly ---
+    let (fixture, agent, canonical_before) = legacy_recovery_fixture(true);
+    let root = fixture.repo_root.join(".decapod/data");
+    let legacy = root.join("todo.db");
+    let canonical_db = root.join("decapod.db");
+
+    // Pick an existing canonical task ID so we can create 1 conflict + 1 legacy-only task.
+    let existing_id: String = {
+        let conn = decapod::core::db::Connection::open_with_options(
+            &canonical_db,
+            AccessMode::ReadOnly,
+            std::time::Duration::from_secs(2),
+        )
+        .unwrap();
+        conn.query_row("SELECT id FROM tasks ORDER BY id LIMIT 1", [], |r| r.get(0))
+            .unwrap()
+    };
+
+    // Mutate legacy todo.db to have BOTH a conflicting task (same ID, different title) AND a missing legacy task.
+    {
+        let db = open_local(&legacy, AccessMode::ReadWrite);
+        db.write(
+            "UPDATE tasks SET title = 'CONFLICTING LEGACY TITLE' WHERE id = ?1",
+            &[dactyl_db::Parameter::Text(existing_id.clone())],
+        )
+        .unwrap();
+        db.write(
+            "INSERT INTO tasks (id, hash, title, description, tags, owner, status, created_at, updated_at, dir_path, scope, priority, category, component, assigned_to, intent_anchor, revision)
+             VALUES ('code_01legacyonly999', 'leg999', 'Legacy Only Task', 'desc', '', '', 'open', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', '.', 'root', 'medium', '', '', '', '', 0)",
+            &[],
+        )
+        .unwrap();
+    }
+    let legacy_conflict_bytes = fs::read(&legacy).unwrap();
+
+    // 1. Export bundle non-destructively
+    let export_dir = private_recovery_directory();
+    let export_path = export_dir.path().join("legacy-export.json");
+    let exported = legacy_recovery_command(
+        &fixture,
+        &agent,
+        &["--export", export_path.to_str().unwrap()],
+    );
+    assert!(
+        exported.status.success(),
+        "export failed: {}",
+        String::from_utf8_lossy(&exported.stderr)
+    );
+    let exp_report = legacy_recovery_report(&exported);
+    assert_eq!(exp_report["classification"], "divergent");
+    assert_eq!(exp_report["export_written"], true);
+    assert_eq!(exp_report["can_quarantine"], true);
+    assert_eq!(exp_report["can_import_missing"], false);
+    assert!(export_path.is_file());
+    let export_doc: serde_json::Value =
+        serde_json::from_slice(&fs::read(&export_path).unwrap()).unwrap();
+    assert!(
+        export_doc["logical_summary"]["conflicting_task_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v == &existing_id)
+    );
+    assert!(
+        export_doc["logical_summary"]["legacy_only_task_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v == "code_01legacyonly999")
+    );
+    // Neither DB changed during export!
+    assert_eq!(fs::read(&legacy).unwrap(), legacy_conflict_bytes);
+    assert_eq!(fs::read(&canonical_db).unwrap(), canonical_before);
+
+    // 2. Attempting --import-missing on conflicting store FAILS CLOSED without modifying either store!
+    let q_token = exp_report["quarantine_review_sha256"].as_str().unwrap();
+    let conflict_import = legacy_recovery_command(
+        &fixture,
+        &agent,
+        &["--expected-review", q_token, "--import-missing"],
+    );
+    assert!(!conflict_import.status.success());
+    assert!(
+        String::from_utf8_lossy(&conflict_import.stderr).contains("LEGACY_TODO_CONFLICT_BLOCKED"),
+        "expected LEGACY_TODO_CONFLICT_BLOCKED: {}",
+        String::from_utf8_lossy(&conflict_import.stderr)
+    );
+    assert_eq!(fs::read(&legacy).unwrap(), legacy_conflict_bytes);
+    assert_eq!(fs::read(&canonical_db).unwrap(), canonical_before);
+
+    // 3. Explicit --quarantine preserves original archive, retires todo.db, leaves decapod.db byte-identical!
+    let quarantined = legacy_recovery_command(
+        &fixture,
+        &agent,
+        &["--expected-review", q_token, "--quarantine"],
+    );
+    assert!(
+        quarantined.status.success(),
+        "quarantine failed: {}",
+        String::from_utf8_lossy(&quarantined.stderr)
+    );
+    let q_report = legacy_recovery_report(&quarantined);
+    assert_eq!(q_report["operation"], "quarantine");
+    assert_eq!(q_report["operation_phase"], "committed");
+    assert!(!legacy.exists());
+    assert_eq!(
+        fs::read(root.join("todo.db.legacy-recovery-v1.archive")).unwrap(),
+        legacy_conflict_bytes
+    );
+    assert_eq!(fs::read(&canonical_db).unwrap(), canonical_before);
+
+    // Ordinary todo operations resume cleanly after quarantine!
+    let list_after = fixture
+        .decapod_cmd(&agent.worktree_dir, &agent.agent_id, Some(&agent.password))
+        .args(["todo", "list"])
+        .output()
+        .unwrap();
+    assert!(
+        list_after.status.success(),
+        "todo list after quarantine failed: {}",
+        String::from_utf8_lossy(&list_after.stderr)
+    );
+
+    // --- Case C: non-conflicting legacy store with missing task -> explicit --import-missing ---
+    let (fixture2, agent2, _) = legacy_recovery_fixture(true);
+    let root2 = fixture2.repo_root.join(".decapod/data");
+    let legacy2 = root2.join("todo.db");
+    {
+        let db = open_local(&legacy2, AccessMode::ReadWrite);
+        db.write(
+            "INSERT INTO tasks (id, hash, title, description, tags, owner, status, created_at, updated_at, dir_path, scope, priority, category, component, assigned_to, intent_anchor, revision)
+             VALUES ('code_01legimport777', 'imp777', 'Recovered Legacy Task', 'recovered description', '', '', 'open', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z', '.', 'root', 'high', '', '', '', '', 0)",
+            &[],
+        )
+        .unwrap();
+    }
+    let legacy2_bytes = fs::read(&legacy2).unwrap();
+
+    let rev2 = legacy_recovery_command(&fixture2, &agent2, &[]);
+    assert!(!rev2.status.success()); // default reconcile still blocks divergent!
+    let rev2_json = legacy_recovery_report(&rev2);
+    assert_eq!(rev2_json["classification"], "divergent");
+    assert_eq!(rev2_json["can_import_missing"], true);
+    let imp_token = rev2_json["quarantine_review_sha256"].as_str().unwrap();
+
+    let imported = legacy_recovery_command(
+        &fixture2,
+        &agent2,
+        &["--expected-review", imp_token, "--import-missing"],
+    );
+    assert!(
+        imported.status.success(),
+        "import-missing failed: {}",
+        String::from_utf8_lossy(&imported.stderr)
+    );
+    let imp_json = legacy_recovery_report(&imported);
+    assert_eq!(imp_json["operation"], "import_missing");
+    assert_eq!(imp_json["operation_phase"], "committed");
+    assert!(
+        imp_json["imported_task_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|v| v == "code_01legimport777")
+    );
+    assert!(!legacy2.exists());
+    assert_eq!(
+        fs::read(root2.join("todo.db.legacy-recovery-v1.archive")).unwrap(),
+        legacy2_bytes
+    );
+
+    // Canonical task journal MUST still verify cleanly after import, and todo list shows the imported task!
+    let verify_j = fixture2
+        .decapod_cmd(
+            &agent2.worktree_dir,
+            &agent2.agent_id,
+            Some(&agent2.password),
+        )
+        .args(["todo", "journal", "verify"])
+        .output()
+        .unwrap();
+    assert!(
+        verify_j.status.success(),
+        "journal verify after import failed: {}",
+        String::from_utf8_lossy(&verify_j.stderr)
+    );
+    let list2 = fixture2
+        .decapod_cmd(
+            &agent2.worktree_dir,
+            &agent2.agent_id,
+            Some(&agent2.password),
+        )
+        .args(["todo", "list", "--format", "json"])
+        .output()
+        .unwrap();
+    assert!(list2.status.success());
+    assert!(String::from_utf8_lossy(&list2.stdout).contains("code_01legimport777"));
+
+    // Idempotent repeat returns already_committed without duplicating tasks!
+    let repeat = legacy_recovery_command(
+        &fixture2,
+        &agent2,
+        &["--expected-review", imp_token, "--import-missing"],
+    );
+    assert!(repeat.status.success());
+    assert_eq!(legacy_recovery_report(&repeat)["already_committed"], true);
+}

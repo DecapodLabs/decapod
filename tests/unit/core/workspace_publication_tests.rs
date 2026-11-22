@@ -1860,3 +1860,71 @@ fn publication_material_cli_is_explicit_and_requires_target_binding() {
         })
     ));
 }
+
+#[test]
+fn target_pr_resolution_reuses_exact_pr_and_rejects_mismatch_or_absent_pr() {
+    let proof = proof();
+    let pr_json = pr(&proof);
+    let files_json = files(&proof);
+
+    // 1. Matching --pr #7 reuses the existing open PR and reports reused = true.
+    let mut step = 0usize;
+    let (url, reused) = ensure_and_verify_pr_with_target(
+        &mut |args| {
+            step += 1;
+            match step {
+                1 => {
+                    assert!(args.contains(&"repos/owner/repo/pulls"));
+                    Ok(bytes(serde_json::json!([[{"number": 7}]])))
+                }
+                2 | 4 => Ok(bytes(pr_json.clone())),
+                3 => Ok(bytes(files_json.clone())),
+                _ => panic!("unexpected gh call {step}: {args:?}"),
+            }
+        },
+        "owner/repo",
+        "feature",
+        "master",
+        &proof,
+        Some(7),
+        &mut || Ok(()),
+        || panic!("must not create new PR when reusing existing --pr #7"),
+    )
+    .expect("exact --pr #7 reuse succeeds");
+    assert_eq!(url, "https://github.com/owner/repo/pull/7");
+    assert!(reused);
+
+    // 2. Requesting --pr #99 when branch already has open PR #7 fails closed with PR_TARGET_MISMATCH.
+    let err = ensure_and_verify_pr_with_target(
+        &mut |_args| Ok(bytes(serde_json::json!([[{"number": 7}]]))),
+        "owner/repo",
+        "feature",
+        "master",
+        &proof,
+        Some(99),
+        &mut || Ok(()),
+        || panic!("must not create PR on mismatch"),
+    )
+    .unwrap_err();
+    assert!(
+        err.to_string().contains("PR_TARGET_MISMATCH"),
+        "expected PR_TARGET_MISMATCH, got: {err}"
+    );
+
+    // 3. Requesting --pr #7 when NO open PR exists fails closed rather than creating a duplicate PR.
+    let err_absent = ensure_and_verify_pr_with_target(
+        &mut |_args| Ok(bytes(serde_json::json!([[]]))),
+        "owner/repo",
+        "feature",
+        "master",
+        &proof,
+        Some(7),
+        &mut || Ok(()),
+        || panic!("must not create PR when explicit --pr #7 is absent"),
+    )
+    .unwrap_err();
+    assert!(
+        err_absent.to_string().contains("PR_TARGET_MISMATCH"),
+        "expected PR_TARGET_MISMATCH, got: {err_absent}"
+    );
+}

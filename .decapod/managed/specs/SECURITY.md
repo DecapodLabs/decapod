@@ -1,5 +1,12 @@
 # Security
 
+## Maintenance RBAC boundaries, non-destructive legacy recovery, read-only analysis isolation, and non-forced publish guards (#1568, #1657, #1279, #1071, #1064, #1047)
+
+- **Maintenance capability scoping & conflict rejection (`src/decapod/core/db_maintenance.rs`)**: `db.wal.checkpoint` is excluded from `DEFAULT_SAFE_ALLOWLIST`, requires explicit opt-in from canonical main-repository config, uses `PRAGMA wal_checkpoint(PASSIVE)` with a 5000ms ceiling (never `TRUNCATE`/`RESTART` or sidecar deletion), and refuses dual `[governance.db_maintenance]` + `[maintenance]` declarations (`AMBIGUOUS_MAINTENANCE_POLICY`). Worktree backend tampering continues failing closed with `BACKEND_MISMATCH`; Cloud backends remain denied (`CLOUD_PRINCIPAL_UNVERIFIED`) pending Propodus `#88`.
+- **Fail-closed legacy TODO recovery (`src/decapod/core/legacy_todo_recovery.rs`)**: Live `todo.db` is never opened directly by SQLite; exports refuse overwriting existing files (`create_new(true)` with private permissions); `--import-missing` refuses any conflicting task ID (`LEGACY_TODO_CONFLICT_BLOCKED`) and archives original bytes before transactional journaled insertion; `--quarantine` never touches `decapod.db`; both require canonical `todo.legacy.reconcile` RBAC and active local session authentication.
+- **Zero-mutation read-only analysis & hostile input containment (`src/decapod/core/analyze.rs`)**: Dispatched before store/session/lock code so `.decapod/data/decapod.db` SHA-256 and Git status remain byte-identical. Never follows symlinks, excludes sensitive files (`.env*`, `id_rsa`, `*.pem`, `*.key`, credentials) without reading them, scans untrusted instruction files with `agent_eval::evaluate_prompt` without executing repository code or hooks, and redacts all output via `core::trace::redact`.
+- **Non-forced publication & pre-build non-substitution (`src/decapod/core/workspace.rs`, `src/decapod/core/pre_build_validate.rs`)**: `workspace publish` rejects `--branch`/`--pr` mismatches, mixed implementation diffs under `--mode governance-only`, and diverged remote heads (`REMOTE_BRANCH_DIVERGED` decision gate — never force-pushes). `validate --pre-build` performs zero writes and unconditionally reports `publication_ready = false` and `proof_ready = false`.
+
 ## Multi-tenant Cloud isolation and non-overridable organization policy enforcement (#1895, #877)
 
 - **Tenant & seat isolation without SQLite fallback (`#1895`)**: Cloud sessions remain bound to explicit `(origin, repository, project/org)` context and verified server access. Decapod never receives backend DB names, URLs, or credentials, fails closed on cross-org/stale scopes, seat revocation, paid-seat absence (`#215`), cross-repo `operation_id` replay, or network cuts, and never initializes or modifies `.decapod/data/decapod.db` as a fallback.
@@ -895,8 +902,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (275 files)
+- Repository signal fingerprint: `1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

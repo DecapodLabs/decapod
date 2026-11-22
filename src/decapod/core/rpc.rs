@@ -491,6 +491,31 @@ pub struct DatabaseLockReleaseOwnParams {
     pub actor: Option<String>,
 }
 
+fn default_wal_checkpoint_timeout_ms() -> u64 {
+    500
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseWalCheckpointParams {
+    #[serde(default = "default_wal_checkpoint_timeout_ms")]
+    pub timeout_ms: u64,
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+impl Default for DatabaseWalCheckpointParams {
+    fn default() -> Self {
+        Self {
+            timeout_ms: default_wal_checkpoint_timeout_ms(),
+            operation_id: None,
+            expected_policy_sha256: None,
+            actor: None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct DatabaseAuditParams {
@@ -1285,6 +1310,12 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
             Capability {
                 name: "data.database.lock.release_own".to_string(),
                 description: "Governed db.lock.release_own safe relinquish of an idle current-process lease".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "data.database.wal_checkpoint".to_string(),
+                description: "Governed db.wal.checkpoint bounded non-destructive SQLite PASSIVE WAL checkpoint".to_string(),
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
