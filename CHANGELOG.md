@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.163.0](https://github.com/DecapodLabs/decapod/compare/v0.162.1...v0.163.0) - 2026-11-22
+
+### Added
+
+- *(governance)* obligation ledger, clarity/STE validator, historical exceptions, and formal obligations
+- *(cloud)* implement #1878 DPoP E2E gateway and dactyl-db 0.19.0 Cloud Admin wiring
+- *(houseboat)* add Houseboat engine (#852-#859), Darkmatter contract ([#1711](https://github.com/DecapodLabs/decapod/pull/1711)), TS/Pi SDK ([#1277](https://github.com/DecapodLabs/decapod/pull/1277)), and recovery/storage suites
+- *(interop)* add 4-plane envelope, MCP/A2A adapters, capability/skill/rule registries & conformance (#870-#878, #1715-#1725, #1733, #1735)
+- *(observe)* add read-only observability projections and harden HTTP RPC transport
+- *(governance,workspace,analyze)* add maintenance wal-checkpoint, legacy recovery, readonly analyze & workspace diagnostics
+
+### Fixed
+
+- *(interop)* avoid literal legacy namespace token in registry.rs harness hints
+
+### Other
+
+- *(cloud)* pin dactyl-db =0.19.0 and checksum in release_dependency_policy
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w6-1878/feat_01m81s3sm3jet4vj-dpop-e2e
+- *(merge)* reconcile PR #1922 with origin/master (782e9ce19, v0.162.1)
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w6-interop/code_01m81gnkzncv9qsk-interop
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w6-proj/secu_01m81fz0x05nhj39-projections
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w6-1878/feat_01m81s3sm3jet4vj-dpop-e2e
+- *(workspace)* align workspace_interlock README assertion with init badge default
+- reconcile origin/master (v0.162.1) into PR #1918
+
 ## [0.162.1](https://github.com/DecapodLabs/decapod/compare/v0.162.0...v0.162.1) - 2026-11-22
 
 ### Added
