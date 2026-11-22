@@ -49,6 +49,9 @@ pub struct ProjectProofConfig {
     /// ordinary GitHub Actions PR runs are independent of this validation flow.
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
+    /// Collect measured GitHub Actions source-CI proof under accepted target policy.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub validation_github_actions_preflights: bool,
     /// Explicitly reviewed complete-suite declaration; init never approves its digest.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub required_profile: Option<crate::core::readiness_profile::ProfileDeclaration>,
@@ -58,6 +61,12 @@ pub struct ProjectProofConfig {
     pub rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[serde(default)]
     pub commands: Vec<ProofDef>,
+}
+
+impl ProjectProofConfig {
+    pub(crate) fn uses_remote_preflight(&self) -> bool {
+        self.validation_buildkite_preflights || self.validation_github_actions_preflights
+    }
 }
 
 /// Resolved proof commands bound to an explicit repository-local authority.
@@ -504,7 +513,8 @@ pub fn schema() -> serde_json::Value {
                     "id": "string (supported complete required profile)",
                     "reviewed_sources_digest": "sha256 string (explicitly reviewed inventory; never auto-blessed by init)"
                 },
-                "validation_buildkite_preflights": "bool (default: false; false = native Decapod full required proof, true = Buildkite temporary-snapshot full required proof; neither disables proof)",
+                "validation_buildkite_preflights": "bool (default: false; false = native Decapod full required proof when no remote carrier is selected, true = Buildkite temporary-snapshot full required proof; neither disables proof)",
+                "validation_github_actions_preflights": "bool (default: false; selects authenticated GitHub Actions full strict source proof only when independently accepted; mutually exclusive with Buildkite)",
                 "commands": [{
                     "name": "string (required)",
                     "command": "string (required)",

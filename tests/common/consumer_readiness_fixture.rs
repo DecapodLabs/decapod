@@ -212,6 +212,7 @@ impl Fixture {
             observed_path: None,
             selected_work: None,
             validation_buildkite_preflights: false,
+            validation_github_actions_preflights: false,
             required_profile: Some(ProfileDeclaration {
                 id: repository_profile::REQUIRED_PROFILE.into(),
                 reviewed_sources_digest: sources.digest().unwrap(),

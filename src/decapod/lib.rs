@@ -1774,6 +1774,7 @@ fn init_with_from_config(
         existing_observed_path: config.proof.observed_path.clone(),
         existing_rust_workers: config.proof.rust_workers.clone(),
         existing_ci_attested: config.proof.ci_attested.clone(),
+        existing_github_actions_preflights: config.proof.validation_github_actions_preflights,
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
         existing_rbac: config.governance.rbac.clone(),
         existing_db_maintenance: config.governance.db_maintenance.clone(),
@@ -1889,6 +1890,7 @@ fn preserve_unspecified_init_options(
     init.existing_selected_work = existing.existing_selected_work;
     init.existing_observed_path = existing.existing_observed_path;
     init.existing_ci_attested = existing.existing_ci_attested;
+    init.existing_github_actions_preflights = existing.existing_github_actions_preflights;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_rbac = existing.existing_rbac;
     init.existing_db_maintenance = existing.existing_db_maintenance;
@@ -1987,6 +1989,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             repository_contract: init.existing_repository_contract.clone(),
             rust_workers: init.existing_rust_workers.clone(),
             ci_attested: init.existing_ci_attested.clone(),
+            validation_github_actions_preflights: init.existing_github_actions_preflights,
             commands: proof_commands,
         },
         custody: CustodyConfig {
@@ -3100,6 +3103,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_observed_path: None,
                             existing_rust_workers: None,
                             existing_ci_attested: None,
+                            existing_github_actions_preflights: false,
                             existing_allow_basic_shared_claims: false,
                             existing_rbac: crate::cli::GovernanceRbac::default(),
                             existing_db_maintenance:
@@ -7131,7 +7135,7 @@ fn run_validate_command(
     }
     let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
-        .validation_buildkite_preflights;
+        .uses_remote_preflight();
     scope.dispatch(
         enabled,
         validate_cli,
@@ -7618,6 +7622,7 @@ fn readiness_snapshot_runner(
     options: &core::validation_runtime::Options,
     repository: &core::snapshot_provider::Repository,
     public_handoff: bool,
+    requires_github_artifacts: bool,
 ) -> Result<ReadinessSnapshotRunner, error::DecapodError> {
     use core::external_action;
     use core::snapshot_provider::{OfficialCli, PublicGithubReads};
@@ -7629,6 +7634,15 @@ fn readiness_snapshot_runner(
     // Prefer an installed official client for repository identity and Buildkite
     // discovery locators. Actions artifact download is not part of this backend.
     // A request/auth failure never changes clients or falls back to public reads.
+    if requires_github_artifacts {
+        let gh = readiness_installed_tool(&options.root, "gh")?;
+        return Ok(ReadinessSnapshotRunner::Configured(OfficialCli::new(
+            options.git.clone(),
+            gh,
+            None,
+            authorize,
+        )?));
+    }
     if !public_handoff && let Ok(gh) = readiness_installed_tool(&options.root, "gh") {
         return Ok(ReadinessSnapshotRunner::Configured(OfficialCli::new(
             options.git.clone(),
@@ -7678,14 +7692,14 @@ fn run_current_workbranch_readiness_with(
                 "TARGET_SCOPE_UNSUPPORTED: --target is only supported for repo.pr-readiness.v1 local proof".into(),
             ));
         }
-        if invocation.target.is_some() && config.proof.validation_buildkite_preflights {
+        if invocation.target.is_some() && config.proof.uses_remote_preflight() {
             return Err(error::DecapodError::ValidationError(
-                "TARGET_SCOPE_UNSUPPORTED: --target cannot be used with validation_buildkite_preflights = true".into(),
+                "TARGET_SCOPE_UNSUPPORTED: --target cannot be used with a remote preflight".into(),
             ));
         }
-        if invocation.has_snapshot_arguments() && !config.proof.validation_buildkite_preflights {
+        if invocation.has_snapshot_arguments() && !config.proof.uses_remote_preflight() {
             return Err(error::DecapodError::ValidationError(
-                "READINESS_PROVIDER_MISMATCH: snapshot arguments require proof.validation_buildkite_preflights = true; native validation cannot silently switch providers".into(),
+                "READINESS_PROVIDER_MISMATCH: snapshot arguments require an accepted remote preflight; native validation cannot silently switch providers".into(),
             ));
         }
         if config.proof.required_profile.is_none() {
@@ -7705,7 +7719,7 @@ fn run_current_workbranch_readiness_with(
                 profile.id
             )));
         }
-        if config.proof.validation_buildkite_preflights
+        if config.proof.uses_remote_preflight()
             && config
                 .proof
                 .required_profile
@@ -7713,10 +7727,10 @@ fn run_current_workbranch_readiness_with(
                 .is_some_and(|profile| profile.id == core::repository_profile::REQUIRED_PROFILE)
         {
             return Err(error::DecapodError::ValidationError(
-                "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repo.pr-readiness.v1 proves the reviewed local repository commands; Buildkite execution needs its own supported provider contract".into(),
+                "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repo.pr-readiness.v1 proves the reviewed local repository commands; hosted execution needs its own supported provider contract".into(),
             ));
         }
-        if config.proof.validation_buildkite_preflights {
+        if config.proof.uses_remote_preflight() {
             core::workspace::verify_readiness_transport_prerequisites(workspace_root)?;
         } else {
             core::workspace::verify_current_publication_prerequisites(workspace_root)?;
@@ -7771,13 +7785,13 @@ fn run_current_workbranch_readiness_with(
         let prerequisite = |_budget: &runtime::RuntimeBudget<'_>| {
             // Remote source project-check rows must be authenticated with the
             // complete provider suite; this is not a claimed local pass.
-            Ok(if config.proof.validation_buildkite_preflights {
+            Ok(if config.proof.uses_remote_preflight() {
                 core::readiness_profile::ProjectPrerequisites::ProviderRequired
             } else {
                 core::readiness_profile::ProjectPrerequisites::Passed
             })
         };
-        if config.proof.validation_buildkite_preflights {
+        if config.proof.uses_remote_preflight() {
             use runtime::snapshot::{SnapshotHost, SnapshotMode};
             let repository = core::snapshot_provider::Repository::new(
                 &repository.owner,
@@ -7792,6 +7806,7 @@ fn run_current_workbranch_readiness_with(
                         &repository,
                         config.proof.required_profile.as_ref(),
                     ),
+                config.proof.validation_github_actions_preflights,
             )?;
             if let Some(observed_s) = &invocation.snapshot_adopt {
                 let handoff = runtime::snapshot::adopt_host_handoff(
@@ -7850,23 +7865,25 @@ fn run_current_workbranch_readiness_with(
                 prerequisite,
             )?
             .with_rust_worker_authorizer(authorize);
-            let read_store = store_root.clone();
-            let buildkite = core::snapshot_provider::public_buildkite::CurlPublicReader::new(
-                readiness_installed_tool(workspace_root, "curl")?,
-                move |request, executable| {
-                    let seal = request.authorize_read()?;
-                    core::external_action::authorize_public_buildkite_read(
-                        &read_store,
-                        executable,
-                        &seal,
-                    )
-                    .map_err(std::io::Error::other)
-                },
-            )?;
-            host = host.with_public_buildkite_reader(
-                buildkite,
-                runtime::snapshot::ReviewedBuildkiteImporter::reviewed(),
-            )?;
+            if config.proof.validation_buildkite_preflights {
+                let read_store = store_root.clone();
+                let buildkite = core::snapshot_provider::public_buildkite::CurlPublicReader::new(
+                    readiness_installed_tool(workspace_root, "curl")?,
+                    move |request, executable| {
+                        let seal = request.authorize_read()?;
+                        core::external_action::authorize_public_buildkite_read(
+                            &read_store,
+                            executable,
+                            &seal,
+                        )
+                        .map_err(std::io::Error::other)
+                    },
+                )?;
+                host = host.with_public_buildkite_reader(
+                    buildkite,
+                    runtime::snapshot::ReviewedBuildkiteImporter::reviewed(),
+                )?;
+            }
             if let Some(path) = &invocation.provider_artifacts {
                 host = host.with_artifact_directory(path.clone())?;
             }
@@ -8024,7 +8041,7 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
     };
     if !crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
-        .validation_buildkite_preflights
+        .uses_remote_preflight()
     {
         let project = run_validation_bounded_with_receipt(
             &store,
@@ -8073,7 +8090,7 @@ pub(crate) fn cleanup_published_readiness_snapshot(
     options.timeout = std::time::Duration::from_secs(60);
     let repository =
         core::snapshot_provider::Repository::new(&repository.owner, &repository.repository)?;
-    let mut runner = readiness_snapshot_runner(&options, &repository, true)?;
+    let mut runner = readiness_snapshot_runner(&options, &repository, true, false)?;
     let mut signal_guard = core::bounded_process::SignalCancellationGuard::new()?;
     let result = core::validation_runtime::snapshot::cleanup_handoff(
         &options,
@@ -11955,7 +11972,7 @@ fn run_workspace_command(
             let workspace_root = project_root;
             if !crate::cli::DecapodProjectConfig::load(workspace_root)?
                 .proof
-                .validation_buildkite_preflights
+                .uses_remote_preflight()
             {
                 let governance_root = find_governance_root(project_root);
                 let project_store = Store {
@@ -13165,7 +13182,7 @@ mod rpc_handlers {
         }
         let enabled = crate::cli::DecapodProjectConfig::load(ctx.project_root)?
             .proof
-            .validation_buildkite_preflights;
+            .uses_remote_preflight();
         scope.dispatch(
             enabled,
             ctx,

@@ -181,7 +181,7 @@ impl CurrentEvidenceInputs {
             inputs: inputs.clone(),
             native_bindings,
             toolchains,
-            remote_bindings: selection.policy.buildkite_preflights.then(|| {
+            remote_bindings: selection.policy.uses_remote_preflight().then(|| {
                 selection
                     .bindings
                     .iter()

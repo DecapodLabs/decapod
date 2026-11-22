@@ -433,8 +433,8 @@ pub(crate) fn admission(
     work.validate()?;
     if accepted.required_profile.as_ref().map(|p| p.id.as_str())
         != Some(crate::core::repository_profile::REQUIRED_PROFILE)
-        || candidate.validation_buildkite_preflights
-        || accepted.validation_buildkite_preflights
+        || candidate.uses_remote_preflight()
+        || accepted.uses_remote_preflight()
     {
         return Err(invalid(
             "SELECTED_REQUIREMENTS_PROFILE_UNSUPPORTED: selected DB roots require the repository-local native adapter; hosted/cloud authority is not inferred",

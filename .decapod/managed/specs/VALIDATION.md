@@ -1016,12 +1016,18 @@ real bounded CI-local checks. Reports state `scope=ci_local` and
 submit another suite, or accept snapshot transport arguments. Provider environment
 flags alone cannot authorize publication.
 
-Native execution and optional Buildkite execution enforce the same complete
-required profile. The canonical `proof.validation_buildkite_preflights` setting
-selects the route. The Buildkite route executes its prerequisites remotely and
-reports local project checks as `not_run_provider_owned`. It pushes or reuses the
-exact existing workspace-branch commit and collects authenticated execution
-artifacts. GitHub Actions results neither satisfy nor block that selected profile.
+Native execution, optional Buildkite execution, and independently accepted GitHub
+Actions execution enforce the same complete `decapod.pr-readiness.v1` required
+profile (`readiness_profile::required_source_catalog_for_provider`). The canonical
+`proof.validation_buildkite_preflights` and `proof.validation_github_actions_preflights`
+settings (mutually exclusive) select the remote carrier when matched on the accepted
+target. Remote carriers execute prerequisites remotely and report local project
+checks as `not_run_provider_owned`. The Buildkite route pushes or reuses the exact
+existing workspace-branch commit and collects authenticated execution artifacts;
+GitHub Actions results neither satisfy nor block a Buildkite-selected profile, and
+repository-local `repo.pr-readiness.v1` / selected-root profiles reject both remote
+preflight flags (`REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED`,
+`SELECTED_REQUIREMENTS_PROFILE_UNSUPPORTED`).
 
 The checked workspace-publication path binds its push request to the exact
 repository, workspace, candidate and branch. This validation-owned request does
@@ -1609,7 +1615,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
+- Repository signal fingerprint: `077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
