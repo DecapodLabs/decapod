@@ -1,5 +1,14 @@
 # Security
 
+## Snapshot policy enforcement, heartbeat custody invariants, and freshness measurement bounds (#1881, #1837, #1884)
+
+- **Snapshot authorization & symlink guards (`src/decapod/core/workspace.rs`)**:
+  `container_snapshot_policy_blocker` consults `db_maintenance::resolve_canonical_policy` before any container image build so unauthorized actors cannot build containers or receive snapshot launch hints (`test_workspace_ensure_container_reports_default_backup_denial_before_build`). Authorized launch commands verify `! -L .decapod` and `! -L .decapod/backups` before creating mode-`700` `.decapod/backups/container-store.XXXXXX` and clean up the temporary directory on `EXIT`/`HUP`/`INT`/`TERM`.
+- **Non-widening lease heartbeat (`src/decapod/core/todo.rs`, `src/decapod/core/task_journal.rs`)**:
+  `heartbeat_claim_lease` enforces `todo.claim.exclusive` policy, active exclusive holder equality (`assigned_to == current_agent_id`), expected `lease_generation`, and non-expired lease (`previous_secs > now`), and never shortens an existing deadline. `check_heartbeat_step` verifies `at < old && old < next` and exact projection equality except `lease_expires_at`; any non-heartbeat task/custody/status change still invalidates `check_validation_binding` (`TASK_ADVANCED_DURING_VALIDATION`), and explicit `todo renew` without `--heartbeat` still increments `lease_generation` and invalidates prior proof (`real_lease_renewal_invalidates_proof_from_the_previous_generation`).
+- **Single-capture tool digest reuse (`src/decapod/core/native_proof.rs`)**:
+  `measure_readonly_toolchains` restricts path-hash reuse strictly to a single `capture_readonly_identity` call after verifying canonical path identity and `native_executable`, while checking `budget.remaining()` for every binding; execution checks and subsequent captures continue reading live tool bytes (`readonly_identity_reuses_shared_tool_bytes_within_one_capture`).
+
 ## Portable transition approval verification and target-map non-self-authorization (#1833, #1832)
 
 - **Untrusted candidate isolation (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/validation_rules.rs`)**:
@@ -850,7 +859,7 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52`
+- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

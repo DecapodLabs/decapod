@@ -1,5 +1,17 @@
 # Interfaces
 
+## Container snapshot precheck, `--heartbeat` lease extension, and shared measurement contracts (#1881, #1837, #1884, #1838)
+
+- **Interactive container workspace precheck (`src/decapod/core/workspace.rs`)**:
+  - `decapod workspace ensure --container` fails early into `status: "pending"` with `BlockerKind::Unauthorized` (`WORKSPACE_CONTAINER_SNAPSHOT_DENIED (<code>): <detail>`) when canonical `db.backup` policy is disabled/denied, without invoking `docker`/`podman build`.
+  - When backup is permitted, the emitted launch command stages `decapod.db` inside `.decapod/backups/container-store.XXXXXX` (`mkdir -p -m 700`) and mounts it read-only to `/tmp/decapod-store.db`.
+- **`decapod todo renew --heartbeat` (`src/decapod/core/todo.rs::TodoCommand::Renew`)**:
+  - Adds `--heartbeat` boolean flag to `decapod todo renew --id <ID> [--lease-seconds <N>]`. Extends `lease_expires_at` only if `now + lease_secs > previous_secs` while keeping `lease_generation` and `revision` unchanged; returns `LEASE_HEARTBEAT_STALE` if inactive, wrong holder, or generation mismatched.
+  - `DECAPOD_VALIDATE_LEASE_TTL=warn` emits `VALIDATION_LEASE_TTL_LOW` hinting `decapod todo renew --heartbeat --id <task_id> --lease-seconds <secs> before running validation`; `DECAPOD_VALIDATE_LEASE_TTL=renew` triggers `heartbeat_claim_lease`.
+  - Cloud-mode `TodoCommand::Renew` (including `--heartbeat`) continues rejecting early in `check_cloud_todo_preflight` with `CLOUD_LEASE_RENEW_UNSUPPORTED`.
+- **Read-only freshness identity (`src/decapod/core/native_proof.rs::capture_readonly_identity`)**:
+  Preserves identical digest format (`measured_toolchain_inputs`), byte budget enforcement, deadline, and cancellation behavior while hashing each distinct file path once per capture call.
+
 ## Portable policy-transition carriers and target-scoped diagnostics (#1833, #1832)
 
 - **Signed CI approval carrier (`docs/agent/repository-readiness.md`, `src/decapod/core/repository_policy_approval.rs`)**:
@@ -1611,7 +1623,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52`
+- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

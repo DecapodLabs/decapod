@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "efc05d7926fa9a5a53cda773b5bfbec1ce685142",
+    "accepted_commit": "295f0af391b7eb86fb57e3f0dcad324cef691433",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -864,67 +864,86 @@
       "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
-      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
+      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions.",
+      "trajectory:fd7299e932697c34": "Linux GitHub Actions Tests (core) executes the full Linux source_ci_profile_policy suite; Buildkite is explicitly waived by operator."
     }
   },
   "change": {
-    "id": "change_01M80D05GWEF6FNEE0456V15K5",
-    "base_commit": "efc05d7926fa9a5a53cda773b5bfbec1ce685142",
+    "id": "change_01m80ex82zgnq661",
+    "base_commit": "295f0af391b7eb86fb57e3f0dcad324cef691433",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:deployment-target-transitions-1832": {
-      "statement": "Deployment target map changes require exact repo.pr-readiness.v1 transition approval, platform helpers are unified, and target-only proof emits TARGET_SCOPED_PROOF_REJECTED on full-repo publication or verification.",
-      "falsifier": "An unapproved target addition or shared_inputs edit passes preserve_accepted, or workspace publish / qa verify suppresses TARGET_SCOPED_PROOF_REJECTED when only target-scoped proof exists for HEAD.",
+    "claim-1837-lease-heartbeat": {
+      "statement": "#1837 todo renew --heartbeat extends lease expiration while preserving lease_generation and trajectory/validation custody",
+      "falsifier": "decapod todo renew --heartbeat bumps lease_generation or breaks cloud preflight or reflection/task_journal/validation_history custody invariants",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/todo.rs",
         "src/decapod/core/validation_history.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/unit/core/validation_history_archive_tests.rs"
       ]
     },
-    "claim:portable-policy-transition-1833": {
-      "statement": "Portable repo.pr-readiness.v1 transition approvals verify exact base/head/digest transitions in local, ci_local signed-carrier, and Cloud modes without trusting candidate config or tracked policy stores.",
-      "falsifier": "A fresh CI clone or Cloud validation admits an unapproved, expired, wrong-key, or candidate-signer transition, or fails to admit a validly signed/Cloud-approved exact transition.",
+    "claim-1838-podman-fixture": {
+      "statement": "#1838 container_tests isolates Podman fixture writes via child /bin/sh process",
+      "falsifier": "container_tests Podman fixture creation encounters host ETXTBSY / fd leakage across parallel runs",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/repository_policy_approval.rs",
-        "src/decapod/core/validation_rules.rs",
-        "tests/consumer_readiness.rs"
+        "tests/unit/plugins/container_tests.rs"
+      ]
+    },
+    "claim-1881-snapshot-precheck": {
+      "statement": "#1881 container workspace snapshot precheck validates policy gates before creating backups under .decapod/backups",
+      "falsifier": "container_snapshot_policy_blocker allows dirty/unmerged snapshot backup creation or leaves untracked backup residue outside .decapod/backups",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/workspace.rs",
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/workspace_tests.rs"
+      ]
+    },
+    "claim-1884-tool-measurement": {
+      "statement": "#1884 native proof publication freshness uses bounded shared measure_readonly_toolchains measurement",
+      "falsifier": "measure_readonly_toolchains exceeds bounds or fails native_proof freshness checks",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/native_proof.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-1833-1832-v1",
-      "summary": "Integrate #1833 portable policy approvals and #1832 deployment target transitions on v0.160.0",
-      "input_digest": "sha256:c4797449e780beffe1904e85b8d275136757d42aef959b2bce7140854941f882",
+      "id": "chk-ops-1881-1837-1884-1838-v1",
+      "summary": "Integrate #1881 snapshot precheck, #1837 custody-preserving lease heartbeat, #1884 bounded shared native tool measurement, and #1838 Podman fixture writer isolation onto v0.160.0 (295f0af39)",
+      "input_digest": "sha256:75f482d447b07dbcdcabbfabe0d3a8d4e4a8853ca0caf3f9108ff0996149a4bf",
       "proof_refs": [
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "src/decapod/core/native_proof.rs",
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/validation_history_archive_tests.rs",
+        "tests/unit/core/workspace_tests.rs",
+        "tests/unit/plugins/container_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80D05GWEF6FNEE0456V15K5": {
+    "intent:branch_01m80ex82zgnq661": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "never bypass policy or force-push; Buildkite waived locally"
       ],
       "constraints": [
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80D05GWEF6FNEE0456V15K5",
+      "id": "intent:branch_01m80ex82zgnq661",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Integrate #1833 and #1832 readiness policy transitions on v0.160.0",
-      "refined_intent": "Integrate #1833 and #1832 readiness policy transitions on v0.160.0",
+      "raw_intent": "Publish non-draft PR B integrating #1881, #1837, #1884, and Refs #1838 onto Decapod v0.160.0 (295f0af39)",
+      "refined_intent": "Integrate source/test fixes, reconcile v0.160.0 Wave 2 conflicts, verify targeted tests + clippy + fmt + check, refresh Living Specs and governance proof",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -937,7 +956,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Integrate #1833 and #1832 readiness policy transitions on v0.160.0",
+      "intent": "Integrate #1881 container snapshot policy precheck, #1837 custody-preserving lease heartbeat, #1884 bounded shared native tool measurement, and Refs #1838 child-isolated Podman fixture writer onto v0.160.0 (295f0af39)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -947,47 +966,47 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document repository_policy_approval.rs, validation_rules CI verification, preserve_accepted targets check, and current_target_only_diagnostic",
-          "reviewed_code_fingerprint": "40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52",
-          "spec_material_hash": "e3292a8a3ad7411978b16ed809b5c19649c762f5cc2b8949cf119f5c1ca8a957"
+          "reason": "Documented #1881 container backup quarantine, #1837 lease heartbeat custody, #1884 native tool measurement, and #1838 Podman fixture writer isolation",
+          "reviewed_code_fingerprint": "ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07",
+          "spec_material_hash": "57c9c364be42a5c06f396bf11659418f76e048da50687180cb891ace1d7c5d8c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document DECAPOD_REPO_TRANSITION_APPROVAL, DECAPOD_REPO_TRANSITION_DECISION_ID, repository-policy-signers.json, and TARGET_SCOPED_PROOF_REJECTED",
-          "reviewed_code_fingerprint": "40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52",
-          "spec_material_hash": "537fb01a9811e959f0a2c39e3f6507fe224b388a3d89954b2af9408fcbdc4207"
+          "reason": "Documented #1881 container snapshot policy gate, #1837 todo renew --heartbeat contract, and #1884 measure_readonly_toolchains",
+          "reviewed_code_fingerprint": "ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07",
+          "spec_material_hash": "20db1ecda5feecd6b1d27a5757261a35fcdc1482b9b0e39fe1ad23bd75f7fbf6"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document CI trusted base resolution, tracked store refusal, Cloud decision binding, and target map non-self-authorization",
-          "reviewed_code_fingerprint": "40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52",
-          "spec_material_hash": "22e4b9cb14e2ce910956e0ea59c12147cf7f3c1d6645e28c11dc07be82afcf18"
+          "reason": "Documented #1881 unmerged/dirty container policy rejection and #1837 lease generation custody enforcement",
+          "reviewed_code_fingerprint": "ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07",
+          "spec_material_hash": "66d279c3bccf9a82392cc49cd26761f96920b8152cb18966c630b21d0a179be5"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Integrate #1833 and #1832 readiness policy transitions on v0.160.0",
+      "title": "Integrate #1881, #1837, #1884, #1838 operational fixes on v0.160.0",
       "todo_ids": [
-        "code_01m80cm518wkhbww"
+        "bugs_01m80ex82zgnq661"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795311127Z"
+      "updated_at": "1795314732Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "never bypass policy or force-push; Buildkite waived locally"
       ],
-      "artifact_hash": "sha256:4223afc5f93257b186115938e5c8bbbc807e58b58805458993ff018b613289a6",
+      "artifact_hash": "sha256:ffeb27a072aed65b172ffe6ef4e19a1c849c7a57d377246911819084f1852851",
       "checks": [
         {
           "name": "cargo_check_no_default_features",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy_all_targets_all_features",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
@@ -995,7 +1014,39 @@
           "status": "passed"
         },
         {
-          "name": "integration_consumer_readiness",
+          "name": "cloud_cli_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "consumer_readiness",
+          "status": "passed"
+        },
+        {
+          "name": "core_cloud_workspace_tests_serial",
+          "status": "passed"
+        },
+        {
+          "name": "core_todo_tests",
+          "status": "passed"
+        },
+        {
+          "name": "core_workspace_tests",
+          "status": "passed"
+        },
+        {
+          "name": "native_proof",
+          "status": "passed"
+        },
+        {
+          "name": "plugins_container_tests",
+          "status": "passed"
+        },
+        {
+          "name": "plugins_verify_tests",
+          "status": "passed"
+        },
+        {
+          "name": "reflection",
           "status": "passed"
         },
         {
@@ -1003,19 +1054,15 @@
           "status": "partial"
         },
         {
-          "name": "unit_public_buildkite",
+          "name": "task_journal",
           "status": "passed"
         },
         {
-          "name": "unit_repository_profile",
+          "name": "todo_enforcement",
           "status": "passed"
         },
         {
-          "name": "unit_validation_history",
-          "status": "passed"
-        },
-        {
-          "name": "unit_validation_rules",
+          "name": "validation_history",
           "status": "passed"
         }
       ],
@@ -1024,20 +1071,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80D05GWEF6FNEE0456V15K5",
+            "intent_id": "intent:branch_01m80ex82zgnq661",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80D05GWEF6FNEE0456V15K5",
+            "intent_id": "intent:branch_01m80ex82zgnq661",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80D05M8PQA4GKXZ6PWB2R7A",
+            "detail": "trajectory:branch_01m80ex82zgnq661",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80D05GWEF6FNEE0456V15K5",
+            "intent_id": "intent:branch_01m80ex82zgnq661",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1046,56 +1093,68 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80D05M8PQA4GKXZ6PWB2R7A": {
+          "branch_01m80ex82zgnq661": {
             "evidence_only": true,
-            "id": "branch_01M80D05M8PQA4GKXZ6PWB2R7A",
-            "intent_id": "intent:change_01M80D05GWEF6FNEE0456V15K5",
+            "id": "branch_01m80ex82zgnq661",
+            "intent_id": "intent:branch_01m80ex82zgnq661",
             "steps": [
               {
                 "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/repository_policy_approval.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/validation_runtime.rs",
                   "src/decapod/core/workspace.rs",
-                  "src/decapod/lib.rs",
-                  ".decapod/config.toml",
-                  "docs/agent/repository-readiness.md",
-                  "src/decapod/core/repository_policy_approval.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/mentor/reflection.rs",
+                  "src/decapod/core/trajectory/execution.rs",
                   "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "tests/todo_enforcement.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  "tests/unit/core/validation_history_archive_tests.rs",
+                  "tests/unit/plugins/container_tests.rs",
                   "src/decapod/core/workspace.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/unit/core/repository_profile_tests.rs",
-                  "cargo fmt --all -- --check passed; clippy --all-targets --all-features -- -D warnings passed; check --no-default-features passed; repository_profile 25/25, validation_rules 17/17, validation_history 34/34, public_buildkite 91/91 (1 ignored), consumer_readiness 40/40; source_ci_profile_policy 55/59 on macOS (4 Linux-only/macOS-temp-symlink fixtures); Buildkite waived by operator."
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/mentor/reflection.rs",
+                  "src/decapod/core/trajectory/execution.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "tests/todo_enforcement.rs",
+                  "tests/unit/core/workspace_tests.rs",
+                  "tests/unit/core/validation_history_archive_tests.rs",
+                  "tests/unit/plugins/container_tests.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "fmt, clippy --all-targets --all-features -- -D warnings, check --no-default-features, and all targeted PR B + consumer_readiness tests passed; source_ci_profile_policy 55 passed / 4 Linux-x86_64 or /var symlink host-specific tests failed on macos-aarch64"
                 ],
                 "proof_refs": [
                   "cargo_fmt",
-                  "cargo_clippy_all_targets_all_features",
+                  "cargo_clippy",
                   "cargo_check_no_default_features",
-                  "unit_repository_profile",
-                  "unit_validation_rules",
-                  "unit_validation_history",
-                  "unit_public_buildkite",
-                  "integration_consumer_readiness",
+                  "plugins_container_tests",
+                  "core_workspace_tests",
+                  "core_cloud_workspace_tests_serial",
+                  "native_proof",
+                  "task_journal",
+                  "reflection",
+                  "validation_history",
+                  "core_todo_tests",
+                  "plugins_verify_tests",
+                  "todo_enforcement",
+                  "cloud_cli_boundary",
+                  "consumer_readiness",
                   "source_ci_profile_policy_macos"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Linux GitHub Actions Tests (core) executes the full Linux source_ci_profile_policy suite; Buildkite is explicitly waived by operator."
-                ]
+                "validation_findings": []
               }
             ]
           }
@@ -1104,48 +1163,50 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "cargo fmt --all -- --check passed; clippy --all-targets --all-features -- -D warnings passed; check --no-default-features passed; repository_profile 25/25, validation_rules 17/17, validation_history 34/34, public_buildkite 91/91 (1 ignored), consumer_readiness 40/40; source_ci_profile_policy 55/59 on macOS (4 Linux-only/macOS-temp-symlink fixtures); Buildkite waived by operator."
+        "fmt, clippy --all-targets --all-features -- -D warnings, check --no-default-features, and all targeted PR B + consumer_readiness tests passed; source_ci_profile_policy 55 passed / 4 Linux-x86_64 or /var symlink host-specific tests failed on macos-aarch64"
       ],
       "inspected_files": [
-        "src/decapod/core/repository_policy_approval.rs",
-        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/mentor/reflection.rs",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
-        "src/decapod/lib.rs"
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/validation_history_archive_tests.rs",
+        "tests/unit/core/workspace_tests.rs",
+        "tests/unit/plugins/container_tests.rs"
       ],
-      "intent_id": "intent:change_01M80D05GWEF6FNEE0456V15K5",
+      "intent_id": "intent:branch_01m80ex82zgnq661",
       "modified_files": [
-        ".decapod/config.toml",
-        "docs/agent/repository-readiness.md",
-        "src/decapod/core/repository_policy_approval.rs",
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/snapshot_provider/public_buildkite/tests.rs",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/mentor/reflection.rs",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/trajectory/execution.rs",
         "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime.rs",
         "src/decapod/core/workspace.rs",
-        "src/decapod/lib.rs",
-        "src/decapod/plugins/policy.rs",
-        "src/decapod/plugins/verify.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/repository_profile_tests.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/validation_history_archive_tests.rs",
+        "tests/unit/core/workspace_tests.rs",
+        "tests/unit/plugins/container_tests.rs"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M80D05M8PQA4GKXZ6PWB2R7A",
+      "run_id": "branch_01m80ex82zgnq661",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m80cm518wkhbww",
+      "task_id": "bugs_01m80ex82zgnq661",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Linux GitHub Actions Tests (core) executes the full Linux source_ci_profile_policy suite; Buildkite is explicitly waived by operator."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

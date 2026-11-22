@@ -108,18 +108,15 @@ pub(crate) fn capture_validation_binding(
 /// How `validate` reacts when the active claim lease is shorter than the
 /// validation budget.
 ///
-/// Renewing a lease increments `lease_generation`, which rotates task custody
-/// and invalidates workunit execution checkpoints (`EXECUTION_STATE_CHANGED`).
-/// Validation therefore never renews implicitly: the default is a read-only
-/// advisory, and renewal is an explicit operator opt-in.
+/// The default is a read-only advisory. The explicit renew mode can extend
+/// the active claim deadline through a same-generation heartbeat.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ValidationLeaseTtlMode {
     /// Read-only: report an advisory and continue without mutating custody.
     Warn,
     /// Read-only: fail fast with `VALIDATION_LEASE_TTL_INSUFFICIENT`.
     Strict,
-    /// Explicit opt-in: renew the claiming agent's lease before capture. This
-    /// rotates custody, so any existing workunit checkpoint must be refreshed.
+    /// Explicit opt-in to same-holder heartbeat before capture.
     Renew,
 }
 
@@ -169,7 +166,7 @@ pub(crate) fn ensure_validation_lease_ttl(
     let now_ts = now_iso();
     let now_secs = parse_epoch_z(&now_ts).unwrap_or_else(now_unix_secs);
     let required_secs = min_remaining_secs.clamp(1, MAX_CLAIM_LEASE_SECS);
-    let (status, remaining_secs) = broker.with_conn(
+    let (status, remaining_secs, lease_generation) = broker.with_conn(
         &todo_db_path(store_root),
         "decapod",
         None,
@@ -216,14 +213,14 @@ pub(crate) fn ensure_validation_lease_ttl(
                 .as_deref()
                 .and_then(fleet_coord::parse_epoch_z)
                 .unwrap_or(0);
-            Ok((status, expires_secs.saturating_sub(now_secs)))
+            Ok((status, expires_secs.saturating_sub(now_secs), lease_generation))
         },
     )?;
     if remaining_secs >= required_secs {
         return Ok(ValidationLeaseTtl::Sufficient { remaining_secs });
     }
     let renew_hint = format!(
-        "run `decapod todo renew --id {task_id} --lease-seconds {required_secs}` and refresh any workunit/governance checkpoint before running validation; e.g. `decapod govern workunit checkpoint --task-id {task_id} --operation-id <id>`"
+        "run `decapod todo renew --heartbeat --id {task_id} --lease-seconds {required_secs}` before running validation"
     );
     match mode {
         ValidationLeaseTtlMode::Warn => {
@@ -248,16 +245,10 @@ pub(crate) fn ensure_validation_lease_ttl(
         ValidationLeaseTtlMode::Renew => {}
     }
     let renew_secs = required_secs.clamp(DEFAULT_CLAIM_LEASE_SECS, MAX_CLAIM_LEASE_SECS);
-    let renewed = renew_claim_lease(store_root, task_id, &agent_id, Some(renew_secs))?;
-    if renewed.get("status").and_then(|v| v.as_str()) != Some("ok") {
-        let detail = renewed["result"]["message"]
-            .as_str()
-            .or_else(|| renewed["message"].as_str())
-            .unwrap_or("unable to extend active claim lease");
-        return Err(error::DecapodError::ValidationError(format!(
+    heartbeat_claim_lease(store_root, task_id, &agent_id, Some(renew_secs), Some(lease_generation))
+        .map_err(|detail| error::DecapodError::ValidationError(format!(
             "VALIDATION_LEASE_TTL_INSUFFICIENT: remaining task claim lease ({remaining_secs}s) for '{task_id}' is shorter than validation budget ({required_secs}s) and explicit renewal failed: {detail}"
-        )));
-    }
+        )))?;
     Ok(ValidationLeaseTtl::Renewed {
         lease_secs: renew_secs,
     })
@@ -437,6 +428,23 @@ pub fn capture_execution_custody(
     task_id: &str,
     actor: &str,
 ) -> Result<JsonValue, error::DecapodError> {
+    capture_execution_custody_inner(root, task_id, actor, false)
+}
+
+pub(crate) fn capture_execution_custody_binding(
+    root: &Path,
+    task_id: &str,
+    actor: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    capture_execution_custody_inner(root, task_id, actor, true)
+}
+
+fn capture_execution_custody_inner(
+    root: &Path,
+    task_id: &str,
+    actor: &str,
+    bind_checkpoint: bool,
+) -> Result<JsonValue, error::DecapodError> {
     if DbBroker::new(root).is_cloud() {
         return Err(error::DecapodError::NotImplemented("execution custody requires the supported local lease contract; cloud mode never falls back locally".into()));
     }
@@ -445,7 +453,7 @@ pub fn capture_execution_custody(
         error::DecapodError::ValidationError("task database path is not UTF-8".into())
     })?)?;
     bound_execution_custody_reads(&conn)?;
-    task_journal::check_execution_authority(&conn, task_id)?;
+    let heartbeat_anchor = task_journal::check_execution_authority(&conn, task_id)?;
     type ExecutionCustodyRow = (
         String,
         i64,
@@ -484,9 +492,16 @@ pub fn capture_execution_custody(
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
         )));
     }
+    // Keep the digest compatible with checkpoints captured before the first
+    // heartbeat. The active-custody test above always checks the actual expiry.
+    let bound_expiry = if bind_checkpoint {
+        heartbeat_anchor.or(expiry)
+    } else {
+        expiry
+    };
     Ok(
         serde_json::json!({"task_id":task_id,"status":status,"revision":revision,"assignee":assignee,
-        "lease_generation":generation,"lease_expires_at":expiry,"lease_lifecycle":lifecycle,
+        "lease_generation":generation,"lease_expires_at":bound_expiry,"lease_lifecycle":lifecycle,
         "intent_anchor":anchor,"scope":scope,"dir_path":dir_path,"dependency_readiness":dependencies}),
     )
 }
@@ -906,6 +921,9 @@ pub enum TodoCommand {
         /// Lease duration in seconds from now (default 1800, max 86400).
         #[clap(long)]
         lease_seconds: Option<u64>,
+        /// Extend the active lease without rotating custody or shortening the deadline.
+        #[clap(long)]
+        heartbeat: bool,
     },
     /// Yield exclusive lease capacity without archiving the task (preserves generation history).
     Yield {
@@ -5153,6 +5171,105 @@ fn list_active_exclusive_claims(
     Ok(out)
 }
 
+fn heartbeat_claim_lease(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+    lease_seconds: Option<u64>,
+    expected_generation: Option<i64>,
+) -> Result<JsonValue, error::DecapodError> {
+    if authoring::is_missing_or_unknown_actor(agent_id) || agent_id != crate::current_agent_id() {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    let broker = DbBroker::new(root);
+    if broker.is_cloud() {
+        return Err(error::DecapodError::NotImplemented(
+            "The cloud service does not expose a task-lease heartbeat.".into(),
+        ));
+    }
+    let lease_secs = lease_seconds
+        .unwrap_or(DEFAULT_CLAIM_LEASE_SECS)
+        .clamp(1, MAX_CLAIM_LEASE_SECS);
+    with_task_journal(
+        &broker,
+        &todo_db_path(root),
+        agent_id,
+        None,
+        "todo.heartbeat",
+        TaskJournalSelection::Ids(vec![id.to_owned()]),
+        |conn| {
+            enforce_operation_policy(root, conn, "todo.claim.exclusive", agent_id, id, None)?;
+            type HeartbeatTaskRow = (String, Option<String>, Option<String>, i64, Option<String>);
+            let row: Option<HeartbeatTaskRow> = conn
+                .query_row(
+                    "SELECT status, assigned_to, lease_expires_at, COALESCE(lease_generation, 0), lease_lifecycle FROM tasks WHERE id = ?1",
+                    [id],
+                    |row| {
+                        Ok((
+                            row.get(0)?,
+                            row.get(1)?,
+                            row.get(2)?,
+                            row.get(3)?,
+                            row.get(4)?,
+                        ))
+                    },
+                )
+                .optional()?;
+            let stale = || {
+                error::DecapodError::ValidationError(
+                "LEASE_HEARTBEAT_STALE: heartbeat requires the requesting agent's active exclusive claim at the expected generation".into()
+            )
+            };
+            let (status, holder, previous, generation, lifecycle) = row.ok_or_else(stale)?;
+            let ts = now_iso();
+            let now = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
+            let previous_secs = previous
+                .as_deref()
+                .and_then(fleet_coord::parse_epoch_z)
+                .ok_or_else(stale)?;
+            if !matches!(status.as_str(), "open" | "in_progress")
+                || holder.as_deref() != Some(agent_id)
+                || generation <= 0
+                || expected_generation.is_some_and(|expected| expected != generation)
+                || !LeaseLifecycle::parse(lifecycle.as_deref()).holds_exclusive_custody()
+                || previous_secs <= now
+            {
+                return Err(stale());
+            }
+            let extended = now.saturating_add(lease_secs) > previous_secs;
+            let expires_at = if extended {
+                let expires_at = fleet_coord::lease_expires_at(now, lease_secs);
+                conn.execute(
+                    "UPDATE tasks SET lease_expires_at = ?1 WHERE id = ?2",
+                    crate::core::db::params![expires_at, id],
+                )?;
+                let event = TodoEvent {
+                    ts: ts.clone(),
+                    event_id: crate::core::ulid::new_ulid(),
+                    event_type: "task.lease_heartbeat".to_string(),
+                    status: "success".to_string(),
+                    task_id: Some(id.to_owned()),
+                    payload: serde_json::json!({
+                        "previous_lease_expires_at": previous,
+                        "lease_expires_at": expires_at,
+                        "lease_generation": generation,
+                    }),
+                    actor: agent_id.to_owned(),
+                };
+                append_event(conn, &event)?;
+                insert_event(conn, &event)?;
+                expires_at
+            } else {
+                previous.ok_or_else(stale)?
+            };
+            Ok(serde_json::json!({
+                "ts": ts, "cmd": "todo.heartbeat", "status": "ok", "id": id,
+                "result": {"lease_expires_at": expires_at, "lease_generation": generation, "extended": extended },
+            }))
+        },
+    )
+}
+
 pub fn renew_claim_lease(
     root: &Path,
     id: &str,
@@ -9192,11 +9309,16 @@ pub fn run_todo_cli_with_cloud_factory_in_workspace<F: CloudTodoStoreFactory>(
             id,
             agent,
             lease_seconds,
+            heartbeat,
         } => {
             let default_agent =
                 env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
             let agent_id = agent.as_deref().unwrap_or(&default_agent);
-            renew_claim_lease(root, id, agent_id, *lease_seconds)?
+            if *heartbeat {
+                heartbeat_claim_lease(root, id, agent_id, *lease_seconds, None)?
+            } else {
+                renew_claim_lease(root, id, agent_id, *lease_seconds)?
+            }
         }
         TodoCommand::Yield { id, agent, reason } => {
             let default_agent =
