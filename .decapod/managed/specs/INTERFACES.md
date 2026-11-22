@@ -1724,8 +1724,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (281 files), `tests/` (280 files)
+- Repository signal fingerprint: `8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (281 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2474,3 +2474,16 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **`[governance].publication_deny_identifiers` (`src/decapod/cli.rs`)**: Optional string array in `.decapod/config.toml` (omitted when empty) listing literal identifiers blocked from authored commit messages and non-config diffs during `decapod validate`; private operator strings remain in untracked `.decapod/data/publication-deny.txt`.
 - **`[init].readme_badge` (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Boolean flag defaulting to `true`; when enabled, `decapod init` idempotently writes/updates the installed-version Decapod badge in `README.md` (unless `README.md` is missing, listed in `[governance].protected_paths`, or already links `assets/badge/decapod-governed.svg`).
 - **Static SVG badge (`assets/badge/decapod-governed.svg`, `README.md`)**: Accessible flat SVG badge (`role="img"`, `aria-label="Decapod: governed"`) linked and documented in `README.md`.
+
+## Houseboat CLI, Darkmatter Read-Only Snapshot, and TypeScript/Pi Interfaces
+
+- **CLI (`decapod houseboat ...` wired in `src/decapod/cli.rs` & `src/decapod/lib.rs`)**:
+  - `decapod houseboat status`: emits `decapod.houseboat.v1` JSON listing active Houseboat engine subsystems and issue mappings.
+  - `decapod houseboat verify-darkmatter-snapshot --file <path>`: validates a `decapod.darkmatter-readonly-snapshot.v1` fixture for read-only flags, repository-bounded relative paths, cryptographic evidence digests, and intent-to-evidence traceability.
+  - `decapod houseboat storage-benchmark --tasks <n>`: runs a local SQLite task/lease/compaction/GC/reclaim workload in an isolated temp directory and emits `decapod.storage-compaction-benchmark.v1` JSON with explicit `hosted_backend_status = "unavailable_local_only"` and `unknown_fields`.
+  - `decapod houseboat verify-mooring [--file <path>] [--now-epoch <u64>]`: evaluates a `decapod.mooring-contract.v1` contract at a read boundary and prints the structured `MooringVerdict`.
+- **Darkmatter Read-Only Contract (`docs/architecture/darkmatter-readonly-contract.md`, `tests/fixtures/darkmatter_readonly_snapshot.v1.json`)**:
+  - Schema `decapod.darkmatter-readonly-snapshot.v1` mandates `read_only = true`, `mutation_endpoints_exposed = false`, `ui_generated_proof_allowed = false`, and repository-relative paths only.
+- **TypeScript Binding & Pi Extension (`bindings/typescript/`, `packages/pi-decapod/`)**:
+  - `DecapodClient` (`bindings/typescript/src/index.ts`): concurrent, `AbortSignal`-cancellable wrapper around `decapod` CLI/RPC with per-instance `cwd`, `agentId`, and `sessionPassword` isolation and zero `process.exit` calls.
+  - `createPiDecapodExtension` (`packages/pi-decapod/src/index.ts`): captures raw human prompts separately from agent interpretation across model/harness switches, enforces preparation/pre-mutation/validation-admission gates without equating plan drafting to human approval, and classifies unobserved direct host writes as `outside_native_enforcement`.

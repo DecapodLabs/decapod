@@ -138,22 +138,6 @@ fn run_rpc(dir: &Path, op: &str, params: &str, password: &str) -> std::process::
     )
 }
 
-fn run_validate(dir: &Path, password: &str, projections: bool) -> std::process::Output {
-    let mut args = vec!["validate", "--format", "json"];
-    if projections {
-        args.push("--projections");
-    }
-    run_decapod(
-        dir,
-        &args,
-        &[
-            ("DECAPOD_AGENT_ID", "unknown"),
-            ("DECAPOD_SESSION_PASSWORD", password),
-            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
-        ],
-    )
-}
-
 // Positive projection fixtures do not contain complete source/release proof.
 fn run_project_check(dir: &Path, password: &str, projections: bool) -> std::process::Output {
     let mut args = vec!["govern", "project-check", "--format", "json"];
@@ -219,6 +203,27 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
         String::from_utf8_lossy(&normal.stderr)
     );
 
+    // Commit the initial native journal within the disposable test fixture before
+    // mutating source and opening a fresh trajectory (#880 Comment 9).
+    for git_args in [
+        &["config", "user.name", "Projection Test"][..],
+        &["config", "user.email", "projection@example.invalid"][..],
+        &["add", "-A"][..],
+        &["commit", "-m", "commit initial fixture journal"][..],
+    ] {
+        let out = Command::new("git")
+            .current_dir(&dir)
+            .args(git_args)
+            .output()
+            .expect("git commit fixture");
+        assert!(
+            out.status.success(),
+            "git {:?} failed: {}",
+            git_args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
     // Now mutate a tracked file so the fingerprint changes, making the capsule stale
     // Create a src/lib.rs file which is a tracked path
     let src_dir = dir.join("src");
@@ -246,6 +251,36 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
         String::from_utf8_lossy(&specs_refresh.stderr)
     );
 
+    // Start a fresh trajectory for the mutated repo epoch before re-running project-check.
+    let new_traj = run_decapod(
+        &dir,
+        &[
+            "govern",
+            "trajectory",
+            "init",
+            "--run-id",
+            "stale_capsule_followup",
+            "--original-intent",
+            "verify stale context capsule detection",
+            "--derived-intent",
+            "verify stale context capsule detection",
+            "--boundary",
+            "projection_consistency_fixture",
+            "--scope",
+            "root",
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", "unknown"),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        new_traj.status.success(),
+        "trajectory init failed: {}",
+        String::from_utf8_lossy(&new_traj.stderr)
+    );
+
     // Normal validate should still pass (capsule hash is still valid for its original fingerprint)
     let normal = run_project_check(&dir, &password, false);
     assert!(
@@ -254,8 +289,8 @@ fn projection_validation_catches_stale_context_capsule_while_normal_passes() {
         String::from_utf8_lossy(&normal.stderr)
     );
 
-    // Validate with --projections should fail (fingerprint is now stale)
-    let projections = run_validate(&dir, &password, true);
+    // Project-check with --projections should fail (fingerprint is now stale)
+    let projections = run_project_check(&dir, &password, true);
     assert!(
         !projections.status.success(),
         "validate --projections should fail with stale context capsule; stdout:\n{}",
@@ -324,11 +359,28 @@ fn projection_validation_rejects_manifest_capability_and_hash_drift() {
     );
     assert!(refresh.status.success());
 
-    set_capabilities(&dir, &["control-plane"]);
-    let result = run_validate(&dir, &password, true);
+    // Directly drift declared_capabilities in the generated manifest while keeping
+    // config_input_hash intact so project-check exercises projection drift rather
+    // than config-change auto-refresh (#880 Comment 9).
+    let manifest_path = dir.join(".decapod/managed/specs/.manifest.json");
+    let mut manifest: serde_json::Value =
+        serde_json::from_str(&fs::read_to_string(&manifest_path).expect("read manifest"))
+            .expect("parse manifest");
+    manifest["declared_capabilities"] = serde_json::json!(["drifted-capability"]);
+    fs::write(
+        &manifest_path,
+        serde_json::to_string_pretty(&manifest).expect("serialize drifted manifest"),
+    )
+    .expect("write drifted manifest");
+
+    let result = run_project_check(&dir, &password, true);
     assert!(!result.status.success());
     let output = String::from_utf8_lossy(&result.stdout);
-    assert!(output.contains("config_input_hash") || output.contains("declared_capabilities"));
+    assert!(
+        output.contains("config_input_hash") || output.contains("declared_capabilities"),
+        "expected manifest drift finding; stdout:\n{output}\nstderr:\n{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
 }
 
 #[test]
@@ -340,7 +392,7 @@ fn projection_validation_rejects_missing_capsule_provenance_and_hash() {
     capsule["capsule_hash"] = serde_json::Value::String("tampered".to_string());
     write_context_capsule(&dir, &capsule);
 
-    let result = run_validate(&dir, &password, true);
+    let result = run_project_check(&dir, &password, true);
     assert!(!result.status.success());
     let output = String::from_utf8_lossy(&result.stdout);
     assert!(output.contains("config_input_hash"));
@@ -613,7 +665,7 @@ fn persistent_state_activates_executable_migration_gate() {
     );
 
     // File presence alone is not proof: no human-governed command is configured.
-    let projections = run_validate(&dir, &password, true);
+    let projections = run_project_check(&dir, &password, true);
     assert!(
         !projections.status.success(),
         "validate --projections should fail without migration artifacts; stdout:\n{}",
@@ -658,7 +710,7 @@ fn persistent_state_activates_executable_migration_gate() {
         String::from_utf8_lossy(&refresh.stderr)
     );
 
-    let projections2 = run_validate(&dir, &password, true);
+    let projections2 = run_project_check(&dir, &password, true);
     assert!(
         !projections2.status.success(),
         "validate --projections should still fail without a proof command; stdout:\n{}",
@@ -695,7 +747,7 @@ fn persistent_state_activates_executable_migration_gate() {
     );
 
     set_migration_validation(&dir, "false", &[]);
-    let projections4 = run_validate(&dir, &password, true);
+    let projections4 = run_project_check(&dir, &password, true);
     assert!(!projections4.status.success());
     assert!(String::from_utf8_lossy(&projections4.stdout).contains("exited with"));
 }

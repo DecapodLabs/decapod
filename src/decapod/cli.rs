@@ -2651,6 +2651,10 @@ pub(crate) enum Command {
     #[clap(name = "integration")]
     Integration(IntegrationCli),
 
+    /// Houseboat core engine: fleet coordination, mooring, resilience, budgets, benchmarks & read-only contracts
+    #[clap(name = "houseboat")]
+    Houseboat(crate::core::houseboat::HouseboatCli),
+
     /// Bounded local stdio MCP JSON-RPC 2.0 adapter and schema/config exporter (#872)
     #[clap(name = "mcp")]
     Mcp(McpCli),

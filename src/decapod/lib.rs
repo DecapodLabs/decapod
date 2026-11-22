@@ -3301,6 +3301,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Integration(integration_cli) => {
             return run_integration_command(integration_cli);
         }
+        Command::Houseboat(houseboat_cli) => {
+            return core::houseboat::run_houseboat_command(&houseboat_cli);
+        }
         Command::Observe(observe_cli) => {
             return run_observe_command(observe_cli);
         }
@@ -4420,6 +4423,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Todo(_)
         | Command::System(_)
         | Command::Integration(_)
+        | Command::Houseboat(_)
         | Command::Observe(_)
         | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
@@ -4737,6 +4741,7 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Trace(_)
         | Command::System(_)
         | Command::Integration(_)
+        | Command::Houseboat(_)
         | Command::Mcp(_)
         | Command::A2a(_)
         | Command::Observe(_) => false,

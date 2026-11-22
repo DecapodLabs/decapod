@@ -1368,8 +1368,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (281 files), `tests/` (280 files)
+- Repository signal fingerprint: `8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (281 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1982,3 +1982,18 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **Public-boundary privacy preflight (`src/decapod/core/validation_runtime/publication_privacy.rs`)**: Wired into `validation_runtime::run` before adapter selection, scanning authored commit messages and diffs (`<accepted_base>..HEAD` and `<accepted_base>...HEAD`) against optional local private deny rules (`.decapod/data/publication-deny.txt`) and repo-configured `[governance].publication_deny_identifiers`.
 - **Headless macOS Podman VM startup (`src/decapod/plugins/container.rs`)**: `verify_headless_podman_machine_args` and `start_podman_machine_quietly` enforce that automatic/diagnostic startup paths never pass `--log-level=debug`/`trace` or `--gui` and scrub `PODMAN_LOG_LEVEL`/`CONTAINERS_LOG_LEVEL`.
 - **Decapod README badge (`src/decapod/cli.rs`, `src/decapod/lib.rs`, `assets/badge/decapod-governed.svg`, `README.md`)**: `InitConfigSection.readme_badge` defaults to `true` (`decapod init` idempotently syncs the versioned badge into unprotected `README.md` files unless opted out via `readme_badge = false`), and `assets/badge/decapod-governed.svg` provides a static accessible SVG badge linked from `README.md`.
+
+## Houseboat Core Modules, Darkmatter Contract, and TypeScript/Pi Bindings
+
+- **`src/decapod/core/mooring.rs` (`#855`)**: Implements `CollaborationContract`, `ArtifactProvenance`, `DisengagementRecord`, `MooringEnforcementRequest`, `MooringVerdict`, and `MooringRegistry`. Explicit forbidden operations override allowed operations; data boundaries reject path traversal; external artifact import/publish verifies both `content_sha256` and `wrapper_sha256` against verified obligations so wrapper-metadata tampering cannot bypass verification; revocation and disengagement are idempotent and recorded in `audit_trail`.
+- **`src/decapod/core/houseboat.rs` (`#852`-`#854`, `#856`-`#859`, `#657`, `#1367`, `#1630`, `#1711`)**:
+  - `FleetCoordGraph` (`#852`): typed edge graph (`FleetEdgeKind`), Kahn cycle detector on `DependsOn`/`DerivesFrom`, admission evaluation, and `evaluate_combined_merge_gate` against `CombinedReconciliationProof`.
+  - `WorkspaceLifecycleMachine`, `HabitatManifest`, and `detect_leaked_resources` (`#853`): deterministic state transitions (`Provisioning -> Active -> Canceling/Abandoned -> Teardown -> Recovered/Terminated`), dirty-worktree non-force preservation, reproducible input-hash manifests, and leak classification across containers, mounts, services, temporary credentials, and orphan worktrees.
+  - `DriftPolicyConfig`, `evaluate_seaworthiness`, and `SeaworthinessRemediationLoop` (`#854`): project-configurable severities and warning thresholds, semver/sunset checks for toolchains and deprecated APIs, and bounded proposal-only remediation preserving confidence and uncertainty notes.
+  - `DurableJournal` and `reconcile_machine_journals` (`#856`): SHA-256 hash-chained journal spanning `Todo`, `Workunit`, `Capsule`, `Lease`, and `Proof` domains with idempotent replay, uncommitted-tail preservation, checkpoints, and conflict-surfacing multi-machine sync.
+  - `MotionAdjudicator` (`#857`): evaluates `WorkunitMotionSnapshot` for premature implementation, out-of-scope edits, stalled retry loops, and authority/motion projection divergence, emitting bounded recovery proposals that preserve proof gates.
+  - `classify_dependencies`, `recover_partial_write`, and `evaluate_exit_degraded` (`#858`): separates critical failures (`OperationalState::StoppedRecoverable`) from optional losses (`DegradedMode::{CloudUnavailable, ContainerUnavailable, ProviderUnavailable, ToolingUnavailable}`), handles idempotent staging recovery, and enforces repository health + recovery evidence before leaving degraded mode.
+  - `ResourceBudgetLedger` (`#859`): principal-level ceiling + per-child limit enforcement, monotonic fence tokens, `ReservationState::UncertainHold` immune to expiry auto-refund, authoritative `reconcile_outcome`, and `BudgetForecast` with explicit assumptions and confidence.
+  - `KnowledgeAttestation` (`#657`), `reconcile_after_crash` (`#1367`), `run_local_storage_compaction_benchmark` (`#1630`), and `validate_darkmatter_snapshot` (`#1711`).
+- **Consumer & harness surfaces (`#1711`, `#1277`)**: `docs/architecture/darkmatter-readonly-contract.md` + `tests/fixtures/darkmatter_readonly_snapshot.v1.json` specify the read-only cockpit contract; `bindings/typescript/` (`@decapodlabs/decapod-client`) and `packages/pi-decapod/` (`@decapodlabs/pi-decapod`) implement pure-TypeScript process/RPC bindings and Pi lifecycle hooks verified with `tsc --noEmit` and `node --test`.
+- **Verification**: `tests/houseboat_engine.rs` exercises all Houseboat subsystems, real SQLite compaction/recovery/downgrade refusal, offline multi-provider/non-Rust/monorepo/version-skew init matrix (`#1024`), Darkmatter CLI fixture verification, and a 3-worktree combined-candidate negative control (`#1763`).

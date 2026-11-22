@@ -869,75 +869,50 @@
     }
   },
   "change": {
-    "id": "change_01M81GTZ010E8CRS51DQ0T3RMW",
+    "id": "change_01M81MJK527WN5XVM6DRP7XAQE",
     "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:agent-interop-envelope-and-conformance": {
-      "statement": "Four-plane governance envelope v1 (#870), observed-conformance receipts and two-way dispatcher/authorization drift detection (#871), and expanded adversarial conformance vectors (#1733) enforce authority isolation, replay/freshness checks, tampered-environment detection, and summary-fiction rejection with agreement across independent consumers.",
-      "falsifier": "An untrusted producer, replayed/stale/tampered envelope, authority-widening child grant, summary-only digest list without raw receipts, or dispatcher-vs-guard drift is accepted as verified or grants local authority, or two independent consumers disagree on verdict or reason class.",
+    "claim:houseboat-core-engine-and-contracts": {
+      "statement": "Houseboat core engine modules (#852-#859), Darkmatter read-only snapshot contract (#1711), pure-TS/Pi bindings (#1277), local SQLite compaction benchmark/recovery (#1630), write-time knowledge attestation (#657), offline init reconciliation matrix (#1024), crash unknown-outcome reconciliation (#1367), and 3-worktree combined-candidate negative control (#1763) enforce fail-closed governance invariants locally without modifying forbidden/sibling files or claiming hosted/live external proof.",
+      "falsifier": "Any Houseboat invariant fails open (cyclic fleet graph, dirty worktree non-force drop, wrapper-tampered mooring artifact, silent LWW journal merge, auto-refunded uncertain budget hold, 6+6 or 3x4 oversubscription, secret accepted in knowledge attestation, stale-repo crash resume, path-escaping Darkmatter snapshot, or 3-worktree semantic violation admitted), or cargo fmt/clippy/tests/TS typecheck fail.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/agent_interop.rs",
-        "tests/agent_interop_conformance.rs",
-        "tests/fixtures/agent_interop_reference_consumer.py",
-        "tests/fixtures/agent_interop_vectors.v1.json"
-      ]
-    },
-    "claim:capability-skill-manifest-rule-overlap": {
-      "statement": "Offline capability registry (#1715), deterministic skill discovery and bounded context bundle compiler (#1716), canonical manifest compiler with source maps and conflict detection (#1717), safe markdown fragment composition (#1718), harness packaging (#875), machine-readable 8-domain rule taxonomy (#1724), rule metadata/precedence evaluator (#1725), and 6-state semantic task-scope overlap classifier (#878) operate deterministically offline while rejecting prompt injection, privilege escalation, policy conflicts, and false serialization.",
-      "falsifier": "An unlicensed/cyclic registry entry, prompt-injection or privilege-escalating markdown fragment, contradictory manifest policy, invalid rule metadata, or conflicting task-scope invariant is accepted, or safe overlap is falsely serialized or clean-merge semantic failure passes combined integration.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/agent_interop/registry.rs",
-        "src/decapod/core/agent_interop/rules.rs",
-        "tests/agent_interop_conformance.rs"
-      ]
-    },
-    "claim:mcp-a2a-bounded-adapters": {
-      "statement": "Bounded stdio MCP JSON-RPC 2.0 server (#872) and bounded A2A Agent Card and handoff validator (#873) expose only executable governance capabilities, redact secrets/hidden rubrics, preserve local kernel authority gates, and exit cleanly without leaving background daemons.",
-      "falsifier": "Oversized/malformed/duplicate-key MCP frames, unsupported protocol versions, secret/path-traversal resource reads, unauthorized tool mutations, or stale/conflicting A2A handoffs succeed or import remote authority.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/agent_interop/a2a.rs",
-        "src/decapod/core/agent_interop/mcp.rs",
-        "tests/agent_interop_conformance.rs"
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-agent-interop-shard4",
-      "summary": "Implement modular agent_interop engine (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735): 4-plane envelope v1, observed conformance receipts, drift check, bounded MCP/A2A adapters, offline capability/skill/manifest/composition/rule/overlap engines, 26-vector independent consumer conformance, docs, and living specs.",
-      "input_digest": "sha256:3a73023816d06325fc36d3e06c876806862021d6ea275a2909a2153ccd9f5e77",
+      "id": "houseboat-shard6-complete",
+      "summary": "Implement Houseboat Core Engine (#852-#859), Mooring Contracts, Darkmatter Read-Only Contract (#1711), TypeScript/Pi SDK (#1277), Local Storage Compaction Benchmarks & Recovery (#1630), Knowledge Write-Time Attestation (#657), Offline Init Matrix (#1024), Crash Reconciliation (#1367), #880 Projection Consistency Fixture Repair, 3-Worktree Negative Control (#1763), Living Specs, and Dockerfile 0.162.0 Pin",
+      "input_digest": "sha256:0349fe5801eedd25cbe8ec8f85ace4a02ea2591a3000946a6216d0ac20344742",
       "proof_refs": [
-        "tests/agent_interop_conformance.rs",
-        "tests/fixtures/agent_interop_reference_consumer.py",
-        "tests/fixtures/agent_interop_vectors.v1.json"
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ]
     },
     {
-      "id": "chk-interop-merge-01621",
-      "summary": "Merge origin/master (6ab03efcb v0.162.1) into PR #1921 preserving observe.* and agent_interop/mcp/a2a surfaces, regenerated docs/agent/command-contracts.md and specs with worktree binary, and verified all 66 targeted unit/conformance/doc tests.",
-      "input_digest": "sha256:ed7b90a4f636f28a110bd2abc9d3245621251198264fd2165c052b6fe560af09",
+      "id": "houseboat-reconcile-782e9ce19",
+      "summary": "Reconcile PR #1922 with origin/master (782e9ce19, v0.162.1): preserved all merged PRs (#1917-#1926/#1920/#1921), rebuilt command-contracts.md with worktree binary, refreshed specs/manifest, verified fmt/clippy/all Rust & TS tests",
+      "input_digest": "sha256:61fa171d73eabcca4e0dadaaf76195fabec2fe974bc65e556dbc8c78f0966dc8",
       "proof_refs": [
-        "tests/agent_interop_conformance.rs",
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
         "tests/doc_alignment.rs",
-        "tests/interop_conformance.rs"
-      ]
-    },
-    {
-      "id": "chk-fix-legacy-namespace-gate",
-      "summary": "Replace literal dot-codex/dot-claude tokens in registry.rs with concat! to satisfy Namespace Purge Gate while preserving exact harness config path hints.",
-      "input_digest": "sha256:7bdf8b1629d10964ec6b33f79d8011516df56bd9d7e461e55f41fcec537a706e",
-      "proof_refs": [
-        "tests/agent_interop_conformance.rs"
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M81GTZ010E8CRS51DQ0T3RMW": {
+    "intent:change_01M81MJK527WN5XVM6DRP7XAQE": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -947,14 +922,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+      "id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
-      "refined_intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
+      "raw_intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
+      "refined_intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -967,14 +942,9 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
+      "intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
       "phases": [],
       "proof_hooks": [
-        "cargo fmt --all -- --check",
-        "cargo clippy --all-targets -- -D warnings",
-        "cargo test --lib agent_interop",
-        "cargo test --lib core::interop",
-        "cargo test --test agent_interop_conformance",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -982,57 +952,41 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md and refreshed specs after removing literal legacy dot-namespace token in registry.rs.",
-          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
-          "spec_material_hash": "8e0e480a2479e9d9069024381c8eefddf5421a70de722bd22a4131dd709eb4e2"
+          "reason": "Merged origin/master (782e9ce19) preserving Houseboat core engine, mooring, Darkmatter contract, and TS/Pi SDK architecture sections",
+          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
+          "spec_material_hash": "0b8615bb8853bb0b2e5ba7de74bbfa4298c4cc5d5187f4c89d5657e70d084b86"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Verified INTERFACES.md matches current candidate binary after registry.rs namespace-gate fix.",
-          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
-          "spec_material_hash": "a61545e206fa0021cb3ceb7e49100b0351f0cba3a68e88f7fac09b7592cd4ac9"
+          "reason": "Merged origin/master (782e9ce19) preserving decapod houseboat CLI, Darkmatter snapshot schema, and TypeScript/Pi client interfaces",
+          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
+          "spec_material_hash": "f1e8853c2683881d3ff4a6771b9d404c9758fad7c23b3b2b96935e3354b3edec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified SECURITY.md unchanged after registry.rs namespace-gate fix; all local authority and redaction boundaries preserved.",
-          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
+          "reason": "Preserved origin/master (782e9ce19) security updates and refreshed codebase attestation; Houseboat/mooring/Darkmatter/TS surfaces maintain fail-closed custody",
+          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
           "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
+      "title": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
       "todo_ids": [
-        "code_01m81gnkzncv9qsk"
+        "code_01m81me586f0pmvj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795369163Z"
+      "updated_at": "1795371971Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b4ee527fba0b92bcdadf24ec0d2ba9a7bd7945011ad153b510f3576c532679b2",
+      "artifact_hash": "sha256:89c7b2c127ce38f25d9dde7008316ea2304216cb9f6417eb16b45cbdb8239a95",
       "checks": [
-        {
-          "name": "advertised_rpc_sessions_1",
-          "status": "passed"
-        },
-        {
-          "name": "agent_interop_conformance_8",
-          "status": "passed"
-        },
-        {
-          "name": "agent_interop_unit_5",
-          "status": "passed"
-        },
-        {
-          "name": "assets_schema_contract_4",
-          "status": "passed"
-        },
         {
           "name": "cargo_clippy_all_targets",
           "status": "passed"
@@ -1042,15 +996,23 @@
           "status": "passed"
         },
         {
-          "name": "core_interop_unit_25",
+          "name": "fleet_coord_16_tests",
           "status": "passed"
         },
         {
-          "name": "interop_conformance_discovery_1",
+          "name": "houseboat_engine_13_tests",
           "status": "passed"
         },
         {
-          "name": "rpc_golden_vectors_6",
+          "name": "init_reconciliation_4_tests",
+          "status": "passed"
+        },
+        {
+          "name": "projection_consistency_7_tests",
+          "status": "passed"
+        },
+        {
+          "name": "ts_binding_and_pi_extension_5_tests",
           "status": "passed"
         }
       ],
@@ -1059,20 +1021,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M81GTZ3EYNYEARANGQDE3N98",
+            "detail": "trajectory:branch_01M81MJK865YSJPN770C1V71FJ",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1081,42 +1043,36 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M81GTZ3EYNYEARANGQDE3N98": {
+          "branch_01M81MJK865YSJPN770C1V71FJ": {
             "evidence_only": true,
-            "id": "branch_01M81GTZ3EYNYEARANGQDE3N98",
-            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+            "id": "branch_01M81MJK865YSJPN770C1V71FJ",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/houseboat.rs",
+                  "src/decapod/core/mooring.rs",
+                  "src/decapod/core/mod.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/core/agent_interop.rs",
-                  "src/decapod/core/agent_interop/mcp.rs",
-                  "src/decapod/core/agent_interop/a2a.rs",
-                  "src/decapod/core/agent_interop/registry.rs",
-                  "src/decapod/core/agent_interop/rules.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "tests/agent_interop_conformance.rs",
-                  "tests/fixtures/agent_interop_vectors.v1.json",
-                  "tests/fixtures/agent_interop_reference_consumer.py"
+                  "tests/houseboat_engine.rs",
+                  "tests/projection_consistency.rs",
+                  "docs/architecture/darkmatter-readonly-contract.md",
+                  "docs/datastore-v2/compaction-benchmarks-v0.162.0.md",
+                  "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
+                  "bindings/typescript/src/index.ts",
+                  "packages/pi-decapod/src/index.ts"
                 ],
                 "proof_refs": [
                   "cargo_fmt",
                   "cargo_clippy_all_targets",
-                  "agent_interop_unit_5",
-                  "core_interop_unit_25",
-                  "advertised_rpc_sessions_1",
-                  "agent_interop_conformance_8",
-                  "interop_conformance_discovery_1",
-                  "rpc_golden_vectors_6",
-                  "assets_schema_contract_4"
+                  "houseboat_engine_13_tests",
+                  "projection_consistency_7_tests",
+                  "init_reconciliation_4_tests",
+                  "fleet_coord_16_tests",
+                  "ts_binding_and_pi_extension_5_tests"
                 ],
                 "scope": [
                   "root"
@@ -1131,26 +1087,21 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [
-        "src/decapod/cli.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs"
-      ],
-      "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
       "modified_files": [
+        "bindings/typescript/src/index.ts",
+        "docs/architecture/darkmatter-readonly-contract.md",
+        "docs/datastore-v2/compaction-benchmarks-v0.162.0.md",
+        "packages/pi-decapod/src/index.ts",
         "src/decapod/cli.rs",
-        "src/decapod/core/agent_interop.rs",
-        "src/decapod/core/agent_interop/a2a.rs",
-        "src/decapod/core/agent_interop/mcp.rs",
-        "src/decapod/core/agent_interop/registry.rs",
-        "src/decapod/core/agent_interop/rules.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
+        "src/decapod/core/houseboat.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/mooring.rs",
         "src/decapod/lib.rs",
-        "tests/agent_interop_conformance.rs",
-        "tests/fixtures/agent_interop_reference_consumer.py",
-        "tests/fixtures/agent_interop_vectors.v1.json"
+        "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1158,10 +1109,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M81GTZ3EYNYEARANGQDE3N98",
+      "run_id": "branch_01M81MJK865YSJPN770C1V71FJ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m81gnkzncv9qsk",
+      "task_id": "code_01m81me586f0pmvj",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
