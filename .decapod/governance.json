@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,66 +869,31 @@
     }
   },
   "change": {
-    "id": "change_01M80X6REQ2PT4R77GAB3CS078",
-    "base_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "id": "change_01M81GVP259BP6901VVKDVBH0R",
+    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim_1895_parity": {
-      "statement": "Decapod #1895 provides a versioned local vs cloud logical operation/evidence parity matrix and proves multi-org isolated DB tenancy without local SQLite fallback",
-      "falsifier": "Cloud mode falls back to .decapod/data/decapod.db, leaks cross-org/unassigned-repo data, allows admin-without-seat read/write, or claims unimplemented parity",
+    "gov-ledger-clarity-formal-authority": {
+      "statement": "Obligation ledger, stagnation detection, clarity/STE validator, escalation admissibility, opt-in accepted-policy main_merge, offline Ed25519 historical exceptions (history_proven=false), semantic plan/claims integrity, and opt-in formal obligations enforce fail-closed governance deterministically.",
+      "falsifier": "Pre-escalation wording remains in entrypoints or constitution; candidate main_merge=true self-authorizes; historical exceptions set history_proven=true; theater diffs or placeholder claims pass; paraphrased prose resets stagnation; ste-strict clarity passes ambiguous text; or formal admitted holes/fabricated transcripts pass.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "tests/cloud_tenancy_parity_1895.rs"
-      ]
-    },
-    "claim_877_overlay": {
-      "statement": "Decapod #877 enforces 4-layer constitution authority precedence (embedded -> org overlay -> repo OVERRIDE.md -> task projection) with explicit provenance and fail-closed non_overridable conflict checks",
-      "falsifier": "Project OVERRIDE.md silently weakens non_overridable org controls, tampered/stale overlays pass silent, org-private policy leaks into portable bundles, or provenance is missing",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/org_overlay.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "tests/constitution_claims.rs",
+        "tests/obligation_ledger_tests.rs",
+        "tests/policy_self_authorization_1776.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1895-877-impl",
-      "summary": "Implement #1895 multi-org cloud parity matrix/tests and #877 4-layer org constitution overlays with Living Specs and verified proofs",
-      "input_digest": "sha256:1b5c4c342c5db062d7c7714a45256e26a65a1397d886ad322e431b924c3f7859",
-      "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
-      ]
-    },
-    {
-      "id": "cp-1895-877-spec-reviews",
-      "summary": "Record canonical Living Spec reviews for ARCHITECTURE.md, INTERFACES.md, and SECURITY.md (#1895, #877)",
-      "input_digest": "sha256:1297632cbe7d3af4671cf86082b024fb8a85954ed5c5c96c40a10e10382f9eca",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "cp-1895-877-merge-master",
-      "summary": "Reconcile origin/master acb44b422 (PR #1914) with #1895 and #877, docs, Living Specs, and post-merge verification",
-      "input_digest": "sha256:743de10daefed35e965261e75bf321747b57a01cb65dfc1dfebd1c1001bb888f",
-      "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
-      ]
+      "id": "chk-gov-ledger-shard5-1",
+      "summary": "Shard 5 gov-ledger: #1691 escalation admissibility, #1468 opt-in main_merge, #1569 offline historical exceptions, #1093 semantic plan/claims integrity, #1083/#1084 obligation ledger & stagnation, #1097/#1365 clarity/STE validator, #1726/#1729/#1761/#1762/#1768 completion/approval/grader/conservation, #1907 opt-in formal obligations, and #1095/#1772/#1774/#1796 offline harnesses",
+      "input_digest": "sha256:591521aa9406c06317fc47ea2c0ab3eb65cba4d358fdd032c5f896ee7403a24c"
     }
   ],
   "intents": {
-    "intent:change_01M80X6REQ2PT4R77GAB3CS078": {
+    "intent:change_01M81GVP259BP6901VVKDVBH0R": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -938,14 +903,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+      "id": "intent:change_01M81GVP259BP6901VVKDVBH0R",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
-      "refined_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "raw_intent": "Decapod gov-ledger: obligation ledger, clarity/STE linter, #1691/#1569/#1468/#1093, trusted-grader & formal adapters",
+      "refined_intent": "Decapod gov-ledger: obligation ledger, clarity/STE linter, #1691/#1569/#1468/#1093, trusted-grader & formal adapters",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -958,7 +923,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "intent": "Decapod gov-ledger: obligation ledger, clarity/STE linter, #1691/#1569/#1468/#1093, trusted-grader & formal adapters",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -968,203 +933,136 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "5b80a9a3e3f82b7beb67cfa7b5a3680cf267d4c460835b1f8967a39ae875e544"
+          "reason": "Documented #1691 escalation-admissibility templates/constitution, #1468 accepted-policy main_merge, #1569 offline Ed25519 historical exceptions, #1093 semantic governance integrity, obligation_ledger.rs, artifact_clarity.rs, and formal_obligations.rs.",
+          "reviewed_code_fingerprint": "6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840",
+          "spec_material_hash": "a1556752188fa153f1124f420724b6b38c4e3e7463dfb6038b097ddeeb68ed0a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "dc76d2b2df887f463347f1706febfe811015c3ebfaf27923ea4288650ec06b63"
+          "reason": "Documented decapod validate --clarity --profile CLI, [governance].main_merge config contract, offline historical-exception carrier, and Rust core ledger/clarity/formal APIs.",
+          "reviewed_code_fingerprint": "6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840",
+          "spec_material_hash": "e709ba910eef8e67e5735bc74ce74d870e13d32c2c83d14bb38fb7defc552aee"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
+          "reason": "Updated security boundary docs for #1468 fail-closed default main_merge with POLICY_SELF_AUTHORIZATION_REJECTED, #1569 offline Ed25519 historical exceptions preserving history_proven=false, and #1907 pinned formal-checker attestation.",
+          "reviewed_code_fingerprint": "6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840",
+          "spec_material_hash": "7b59fc1828b37c01d1820945c67be4b873a1ee9aa86d86916462ef479a105d02"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "title": "Decapod gov-ledger: obligation ledger, clarity/STE linter, #1691/#1569/#1468/#1093, trusted-grader & formal adapters",
       "todo_ids": [
-        "feat_01m80wsps229vtve"
+        "code_01m81gp7n28cm7sm"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795334627Z"
+      "updated_at": "1795351168Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ba5edcac4d768d9c28921817e42720991f60d272bf0865e2f3d3b74985bd96d2",
+      "artifact_hash": "sha256:c09308d9a8aea3a43d1228561104b036b74af56f8443e03e42fbeab6640c045b",
       "checks": [
         {
-          "name": "capability_contract_drift",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
-          "name": "check_no_default_features",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "cli_contracts",
+          "name": "constitution_claims",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_features",
+          "name": "entrypoint_integrity_unit",
           "status": "passed"
         },
         {
-          "name": "cloud_supabase_boundary",
+          "name": "governance_document_unit",
           "status": "passed"
         },
         {
-          "name": "cloud_tenancy_parity_1895",
+          "name": "obligation_ledger_tests",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "interop_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "lib_targeted_47",
-          "status": "passed"
-        },
-        {
-          "name": "org_constitution_overlay_877",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_25_integration_suites",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_fmt_clippy_nofeat",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_lib_134",
-          "status": "passed"
-        },
-        {
-          "name": "rpc_golden_vectors",
+          "name": "policy_self_authorization_1776",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81GVP259BP6901VVKDVBH0R",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81GVP259BP6901VVKDVBH0R",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
+            "detail": "trajectory:branch_01M81GVP5EFFFZC9E1YCZ3DR80",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81GVP259BP6901VVKDVBH0R",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80X6RJV40ZZKZV0T1YX0STS": {
+          "branch_01M81GVP5EFFFZC9E1YCZ3DR80": {
             "evidence_only": true,
-            "id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "id": "branch_01M81GVP5EFFFZC9E1YCZ3DR80",
+            "intent_id": "intent:change_01M81GVP259BP6901VVKDVBH0R",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_project.rs",
-                  "src/decapod/core/cloud_client.rs",
                   "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/cloud_parity_matrix.rs",
-                  "src/decapod/core/org_overlay.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/constitution_cli.rs",
-                  "src/decapod/core/context_capsule.rs",
-                  "src/decapod/core/context_bundle.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/docs_cli.rs",
+                  "assets/constitution.json",
                   "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_tenancy_parity_1895.rs",
-                  "tests/org_constitution_overlay_877.rs",
-                  "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/effective_grant.rs",
+                  "src/decapod/core/assets.rs",
+                  "assets/constitution.json",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/governance_document/historical_exception.rs",
+                  "src/decapod/core/governance_document/semantic_integrity.rs",
+                  "src/decapod/core/obligation_ledger.rs",
+                  "src/decapod/core/artifact_clarity.rs",
+                  "src/decapod/core/formal_obligations.rs",
+                  "tests/obligation_ledger_tests.rs",
+                  "tests/policy_self_authorization_1776.rs"
                 ],
                 "proof_refs": [
-                  "fmt_check",
-                  "check_no_default_features",
-                  "clippy_all_targets_features",
-                  "lib_targeted_47",
-                  "cloud_tenancy_parity_1895",
-                  "org_constitution_overlay_877",
-                  "cloud_supabase_boundary",
-                  "cli_contracts",
-                  "doc_alignment",
-                  "interop_conformance",
-                  "capability_contract_drift",
-                  "rpc_golden_vectors"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "obligation_ledger_tests",
+                  "policy_self_authorization_1776",
+                  "constitution_claims",
+                  "entrypoint_integrity_unit",
+                  "governance_document_unit"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites."
-                ],
-                "proof_refs": [
-                  "post_merge_fmt_clippy_nofeat",
-                  "post_merge_lib_134",
-                  "post_merge_25_integration_suites"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1173,35 +1071,27 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites.",
-        "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/validate.rs"
-      ],
-      "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
-      "modified_files": [
-        "docs/agent/command-contracts.md",
+        "assets/constitution.json",
         "src/decapod/cli.rs",
         "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/constitution_cli.rs",
-        "src/decapod/core/context_bundle.rs",
-        "src/decapod/core/context_capsule.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/org_overlay.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/lib.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "src/decapod/core/effective_grant.rs",
+        "src/decapod/core/governance_document.rs"
+      ],
+      "intent_id": "intent:change_01M81GVP259BP6901VVKDVBH0R",
+      "modified_files": [
+        "assets/constitution.json",
+        "src/decapod/cli.rs",
+        "src/decapod/core/artifact_clarity.rs",
+        "src/decapod/core/assets.rs",
+        "src/decapod/core/formal_obligations.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/governance_document/historical_exception.rs",
+        "src/decapod/core/governance_document/semantic_integrity.rs",
+        "src/decapod/core/obligation_ledger.rs",
+        "tests/obligation_ledger_tests.rs",
+        "tests/policy_self_authorization_1776.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1209,10 +1099,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
+      "run_id": "branch_01M81GVP5EFFFZC9E1YCZ3DR80",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80wsps229vtve",
+      "task_id": "code_01m81gp7n28cm7sm",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

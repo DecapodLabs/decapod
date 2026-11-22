@@ -1,5 +1,16 @@
 # Interfaces
 
+## Mechanical clarity CLI, accepted-policy `main_merge`, historical exceptions, and ledger APIs (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907)
+
+- **Clarity validation CLI (`src/decapod/cli.rs::ValidateCli`, `src/decapod/lib.rs::run_validate_command`, `src/decapod/core/artifact_clarity.rs`)**:
+  - `decapod validate --clarity [--profile ste-lite|ste-strict|custom] [--format text|json]` evaluates durable governance artifacts (`.decapod/governance.json` excluding human prompt fields and `.decapod/managed/specs/*.md`) deterministically and outputs `decapod.artifact-clarity.v1` (`formal_asd_ste100_compliance: false`, `deterministic: true`, `findings[]`). Exits non-zero (`CLARITY_VALIDATION_FAILED`) on error-severity findings.
+- **Configuration contract (`src/decapod/cli.rs::GovernanceConfig`, `src/decapod/core/docs_cli.rs`)**:
+  - Adds `[governance].main_merge` (`bool`, default `false`, omitted when false). Candidate-branch opt-in beyond accepted base policy fails closed with `POLICY_SELF_AUTHORIZATION_REJECTED`.
+- **Offline historical exception carrier (`src/decapod/core/governance_document/historical_exception.rs`)**:
+  - Accepted base trust root `.decapod/historical-exception-signers.json` (`decapod.historical-exception-signers.v1`) and `DECAPOD_HISTORICAL_EXCEPTION_DECISION` (`decapod.historical-exception.v1`), producing `decapod.historical-exception-judgment.v1` with `history_proven: false`.
+- **Rust core interfaces (`src/decapod/core/obligation_ledger.rs`, `src/decapod/core/formal_obligations.rs`, `src/decapod/core/governance_document/semantic_integrity.rs`)**:
+  - Exposes typed deterministic evaluators `derive_obligation_ledger` (`decapod.obligation-ledger.v1`), `StagnationTracker`, `verify_outcome_claim_anchor`, `build_completion_report_4d` (`decapod.completion-report-4d.v1`), `ApprovalLedger`, `evaluate_trusted_grader` (`decapod.trusted-grader-report.v1`), `evaluate_root_conservation`, `evaluate_main_merge_authorization`, `validate_semantic_governance_integrity`, `detect_governance_theater_diff`, `verify_formal_obligation` (`decapod.formal-obligation.v1` / `decapod.formal-obligation-verdict.v1`), and `CapacityAccountingState`.
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1672,8 +1683,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

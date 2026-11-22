@@ -1,5 +1,12 @@
 # Intent
 
+## Obligation ledger, clarity/STE validation, escalation admissibility, offline historical exceptions, and opt-in formal obligations (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907; Refs #1095, #1772, #1774, #1796)
+
+- **Escalation admissibility in canonical entrypoints and embedded constitution (`#1691`)**: Aligns `src/decapod/core/assets.rs` (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) and `assets/constitution.json` (all 16 routing-pass sites and `interfaces/PROCEDURAL_NORMS`) so freshly initialized agents investigate ordinary uncertainty locally via bounded reflection (`decapod govern plan reflect`) and escalate to a human only when escalation admission confirms irreducible ambiguity, conflicting requirements, or missing authority.
+- **Opt-in accepted-policy `governance.main_merge = true` (`#1468`)**: Supports explicit human-authored `governance.main_merge = true` in `.decapod/config.toml` while keeping the default `false` (omitted when serialized), rejecting candidate-branch self-authorization (`POLICY_SELF_AUTHORIZATION_REJECTED`), and failing closed on target or candidate movement after validation.
+- **Offline verifiable historical-exception authority and semantic governance integrity (`#1569`, `#1093`)**: Replaces hardcoded `"exception_authorized": false` in `src/decapod/core/governance_document.rs` with offline Ed25519 verification against accepted-base `.decapod/historical-exception-signers.json` while strictly preserving `history_proven = false` for all exceptions, and enforces semantic `plan`/`claims` integrity checks (`todo_ids`, substantive intent/purpose, executable `proof_hooks`, governing `authority.source_issue`, and whitespace/timestamp theater-diff detection).
+- **Derived obligation ledger, stagnation detection, outcome claims, 4D completion, canonical approvals, trusted grader, root conservation, clarity/STE validator, and opt-in formal obligations**: Adds `src/decapod/core/obligation_ledger.rs`, `src/decapod/core/artifact_clarity.rs` (`decapod validate --clarity --profile ste-lite|ste-strict|custom`, explicitly disclaiming formal ASD-STE100 certification), and `src/decapod/core/formal_obligations.rs` (disabled by default; Lean/Kani/Verus transcript & hole verification plus finite-capacity conservation state machine), alongside deterministic offline benchmark/telemetry harnesses referencing `#1095`, `#1772`, `#1774`, and `#1796` whose live paired real-agent or maintainer reviews remain external.
+
 ## Multi-organization Cloud parity (#1895) and organization constitution overlays (#877)
 
 - **Multi-organization Cloud parity without local SQLite fallback (`#1895`)**: Proves through an explicit versioned operation and evidence parity matrix (`decapod.cloud-parity-matrix.v1` / `decapod.cloud-parity-report.v1`) and a 2-organization / 2-database / 2-repo-per-org / 2-human integration harness (`tests/cloud_tenancy_parity_1895.rs`) that `backend = "cloud"` preserves Decapod logical semantics (ordered task/event/CAS claims, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit-and-policy-bound evidence capture, and `#215` separation of org-admin views from paid per-repo seats) across organization switches, mid-session seat revocation, and network cuts without exposing physical database identifiers to Decapod or creating `.decapod/data/decapod.db`. Blanket Cloud parity is never claimed: unsupported Cloud operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) are explicitly enumerated and fail closed (`CLOUD_LEASE_RENEW_UNSUPPORTED`, etc.) rather than falling back to SQLite.
@@ -807,8 +814,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

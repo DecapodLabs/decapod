@@ -1,5 +1,15 @@
 # Architecture
 
+## Governance ledger, clarity validator, historical exceptions, and formal obligation cores (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907)
+
+- **Escalation-admissibility templates & constitution (`src/decapod/core/assets.rs`, `assets/constitution.json`)**: `template_agents()` and `agent_entrypoint_body()` align Golden Rules 1, 3, and 9, Pre-Inference Governance, and Operating Notes with bounded reflection/escalation admission (`#1691`), and `assets/constitution.json` updates all 16 routing-pass directives plus `interfaces/PROCEDURAL_NORMS` while leaving historical entrypoint fixtures intact.
+- **Accepted-policy `main_merge` & anti-widening gates (`src/decapod/cli.rs`, `src/decapod/core/effective_grant.rs`, `src/decapod/core/validate.rs`, `src/decapod/lib.rs`)**: `GovernanceConfig.main_merge` defaults to `false` (`skip_serializing_if = "is_false"`), is preserved during init refresh (`existing_main_merge`), and is guarded against candidate widening in `effective_grant::check_candidate_policy_widening`, `validate::validate_project_config_downgrade_check`, and `lib.rs::run_validate_command` (`POLICY_SELF_AUTHORIZATION_REJECTED`).
+- **Offline historical exceptions & semantic integrity (`src/decapod/core/governance_document/historical_exception.rs`, `src/decapod/core/governance_document/semantic_integrity.rs`, `src/decapod/core/governance_document.rs`)**: `verify_historical_exceptions` verifies Ed25519 signatures via `ring::signature::ED25519` strictly against accepted-base `.decapod/historical-exception-signers.json` (rejecting candidate trust roots, replay, revocation, expiry, commit/tree/obligation drift, and conflicting authority) while keeping `history_proven = false`. `validate_semantic_governance_integrity` and `detect_governance_theater_diff` enforce substantive `plan`/`claims` bindings beyond `todo_ids`.
+- **Modular obligation ledger, clarity validator, and formal obligation adapter (`src/decapod/core/obligation_ledger.rs`, `src/decapod/core/artifact_clarity.rs`, `src/decapod/core/formal_obligations.rs`)**:
+  - `obligation_ledger.rs`: `derive_obligation_ledger` (`#1084`, conservation/consistency/proof + async effect states), `StagnationTracker` (`#1083`, prose-immune governed fingerprint + compaction serialization + provider-wait distinction), `verify_outcome_claim_anchor` (`#1729`), `build_completion_report_4d` (`#1726`), `ApprovalLedger::authorize_and_consume` (`#1761`), `evaluate_trusted_grader` (`#1762`), `evaluate_root_conservation` (`#1768`), `evaluate_main_merge_authorization` (`#1468`), and offline harnesses for `#1095`, `#1772`, `#1774`, and `#1796`.
+  - `artifact_clarity.rs`: Zero-LLM deterministic mechanical clarity & controlled-English validator (`ste-lite`, `ste-strict`, `custom`) with canonical Decapod terminology table (`#1097`, `#1365`), skipping code spans/fences and human prompts while setting `formal_asd_ste100_compliance = false`.
+  - `formal_obligations.rs`: Opt-in (`enabled = false` default) Lean/Kani/Verus transcript and hole verifier (`verify_formal_obligation`, `compute_runner_attestation`) plus `CapacityAccountingState` proving conservation across allocate/arm/settle/abort/indeterminate/timeout/restart/reconcile transitions (`#1907`).
+
 ## Multi-organization Cloud parity matrix and organization overlay stack (#1895, #877)
 
 - **Parity matrix & tenant isolation verification (`#1895`)**: `src/decapod/core/cloud_parity_matrix.rs` defines the versioned `decapod.cloud-parity-matrix.v1` inventory comparing `local` SQLite and `cloud` storage/governance behavior across task/event/CAS ordering, custody and leases, authorization-scoped transitions, commit/policy-bound evidence, and Cloud-unsupported operations. It exposes CLI (`decapod capabilities parity`) and read-only RPC (`interop.cloud_parity`) projections without touching local SQLite. `tests/cloud_tenancy_parity_1895.rs` exercises these invariants against a local simulated Cloud gateway backed by two isolated backend stores; live hosted Dactyl/Supabase/Propodus clusters remain outside offline cargo test execution.
@@ -1325,8 +1335,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -2072,6 +2072,7 @@ fn init_with_from_config(
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_github_actions_preflights: config.proof.validation_github_actions_preflights,
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
+        existing_main_merge: config.governance.main_merge,
         existing_rbac: config.governance.rbac.clone(),
         existing_db_maintenance: config.governance.db_maintenance.clone(),
         existing_laya: config.laya.clone(),
@@ -2188,6 +2189,7 @@ fn preserve_unspecified_init_options(
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_github_actions_preflights = existing.existing_github_actions_preflights;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
+    init.existing_main_merge = existing.existing_main_merge;
     init.existing_rbac = existing.existing_rbac;
     init.existing_db_maintenance = existing.existing_db_maintenance;
     init.existing_laya = existing.existing_laya;
@@ -2274,6 +2276,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             protected_paths,
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
+            main_merge: init.existing_main_merge,
             rbac: init.existing_rbac.clone(),
             db_maintenance: init.existing_db_maintenance.clone(),
         },
@@ -3407,6 +3410,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_ci_attested: None,
                             existing_github_actions_preflights: false,
                             existing_allow_basic_shared_claims: false,
+                            existing_main_merge: false,
                             existing_rbac: crate::cli::GovernanceRbac::default(),
                             existing_db_maintenance:
                                 crate::core::db_maintenance::DbMaintenanceConfig::default(),
@@ -7396,6 +7400,48 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if validate_cli.clarity {
+        let report = core::artifact_clarity::validate_workspace_clarity(
+            workspace_root,
+            validate_cli.profile.as_deref(),
+        )
+        .map_err(error::DecapodError::ValidationError)?;
+        if validate_cli.format == "json" {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        } else {
+            println!(
+                "Clarity validation ({}): {} file(s), {} error(s), {} warning(s), {} info",
+                report.profile,
+                report.files_checked,
+                report.error_count,
+                report.warning_count,
+                report.info_count
+            );
+            for finding in &report.findings {
+                println!(
+                    "  [{:?}] {}:{}:{} {} — {} ({})",
+                    finding.severity,
+                    finding.source_path,
+                    finding.line,
+                    finding.column,
+                    finding.rule_id,
+                    finding.explanation,
+                    finding.suggested_remediation
+                );
+            }
+        }
+        if !report.passed {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLARITY_VALIDATION_FAILED: {} error finding(s) under profile '{}'",
+                report.error_count, report.profile
+            )));
+        }
+        return Ok(());
+    }
     if scope.requires_publication_proof() && !validate_cli.bypass_validation {
         core::validation_runtime::require_full_readiness_environment()?;
     }
@@ -7462,9 +7508,23 @@ fn run_validate_command(
         }
         return Ok(());
     }
-    let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
-        .proof
-        .uses_remote_preflight();
+    let candidate_cfg = crate::cli::DecapodProjectConfig::load(workspace_root)?;
+    if candidate_cfg.governance.main_merge {
+        let (_, accepted_cfg, _) =
+            crate::core::db_maintenance::resolve_accepted_project_config(workspace_root).map_err(
+                |(code, msg)| {
+                    error::DecapodError::ValidationError(format!(
+                        "POLICY_SELF_AUTHORIZATION_REJECTED: cannot verify accepted base policy for governance.main_merge = true ({code}: {msg})"
+                    ))
+                },
+            )?;
+        if !accepted_cfg.governance.main_merge {
+            return Err(error::DecapodError::ValidationError(
+                "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.main_merge = true beyond accepted policy (#1468)".to_string(),
+            ));
+        }
+    }
+    let enabled = candidate_cfg.proof.uses_remote_preflight();
     scope.dispatch(
         enabled,
         validate_cli,

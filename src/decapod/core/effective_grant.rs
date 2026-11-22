@@ -2435,6 +2435,14 @@ fn detect_candidate_policy_widening(
         });
     }
 
+    if !acc_gov.main_merge && cand_gov.main_merge {
+        return Some(GrantRejectionReason::CandidatePolicyWideningRejected {
+            detail:
+                "candidate .decapod/config.toml cannot enable main_merge beyond accepted policy"
+                    .into(),
+        });
+    }
+
     if cand_gov.rbac.actor_roles != acc_gov.rbac.actor_roles
         && (!cand_gov.rbac.actor_roles.is_empty() || !acc_gov.rbac.actor_roles.is_empty())
     {

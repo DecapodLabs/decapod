@@ -212,8 +212,12 @@ canonical enforcement across the remaining privilege and schema surfaces:
    from lowering `severity` or relaxing (increasing) `evidence_max_age_seconds`.
 
 Already-enforced controls covered by actual-binary regression in `tests/policy_self_authorization_1776.rs`
-include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, `main_merge`
-unknown-field `INVALID_CONFIG_SCHEMA`, `[governance].allow_basic_shared_claims`,
+include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, default-deny
+`[governance].main_merge` (`POLICY_SELF_AUTHORIZATION_REJECTED` when candidate-authored
+beyond accepted base policy, `#1468`), unknown-key `INVALID_CONFIG_SCHEMA`,
+`[governance].allow_basic_shared_claims`,
+offline Ed25519 historical-exception verification preserving `history_proven = false` (`#1569`),
+and opt-in pinned formal-checker attestation rejecting admitted holes and fabricated transcripts (`#1907`),
 `POLICY_SNAPSHOT_STALE` TOCTOU rejection across base-policy rotation, stale-target/proof
 invalidation on `validate` + `todo done --validated`, bounded accepted rotation and
 revocation with intact `data db audit` history, and pre-config read-only repair via
@@ -895,8 +899,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -5,6 +5,7 @@
 
 pub mod agent_eval;
 pub mod ansi;
+pub mod artifact_clarity;
 pub mod assets;
 pub mod assurance;
 pub mod atomic;
@@ -52,6 +53,7 @@ pub mod events;
 pub mod external_action;
 pub mod fleet_coord;
 pub mod flight_recorder;
+pub mod formal_obligations;
 pub mod fs_permissions;
 pub mod gatekeeper;
 pub mod governance_artifacts;
@@ -70,6 +72,7 @@ pub mod mentor;
 pub mod migration;
 pub mod native_proof;
 pub mod obligation;
+pub mod obligation_ledger;
 pub mod org_overlay;
 pub mod output;
 pub mod path_policy;
