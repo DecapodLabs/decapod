@@ -156,6 +156,75 @@ fn retire_decision_provider(config: &mut toml::Value) -> Result<(), error::Decap
     Ok(())
 }
 
+fn decapod_readme_badge_markdown(version: &str) -> String {
+    format!(
+        "[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v{version}-dc2626)](https://github.com/DecapodLabs/decapod)"
+    )
+}
+
+fn render_readme_with_badge(content: &str, version: &str) -> String {
+    const BADGE_URL_PREFIX: &str = "https://img.shields.io/badge/🦀%20Decapod-v";
+    const BADGE_URL_PREFIX_ENCODED: &str = "https://img.shields.io/badge/%F0%9F%A6%80%20Decapod-v";
+    if content.contains("assets/badge/decapod-governed.svg") {
+        return content.to_owned();
+    }
+    let badge_line = decapod_readme_badge_markdown(version);
+    let mut lines: Vec<String> = content.lines().map(str::to_owned).collect();
+    if let Some(existing) = lines
+        .iter_mut()
+        .find(|line| line.contains(BADGE_URL_PREFIX) || line.contains(BADGE_URL_PREFIX_ENCODED))
+    {
+        *existing = badge_line;
+    } else if let Some(heading_idx) = lines.iter().position(|line| line.starts_with("# ")) {
+        let insert_at = heading_idx + 1;
+        lines.insert(insert_at, String::new());
+        lines.insert(insert_at + 1, badge_line);
+        if lines
+            .get(insert_at + 2)
+            .is_some_and(|next| !next.is_empty())
+        {
+            lines.insert(insert_at + 2, String::new());
+        }
+    } else {
+        lines.insert(0, badge_line);
+        if lines.get(1).is_some_and(|next| !next.is_empty()) {
+            lines.insert(1, String::new());
+        }
+    }
+    let mut rendered = lines.join("\n");
+    if content.ends_with('\n') || !rendered.ends_with('\n') {
+        rendered.push('\n');
+    }
+    rendered
+}
+
+fn sync_readme_badge(
+    target_dir: &Path,
+    protected_paths: &[String],
+    version: &str,
+) -> Result<(), error::DecapodError> {
+    if protected_paths
+        .iter()
+        .any(|p| p.trim_start_matches("./") == "README.md")
+    {
+        return Ok(());
+    }
+    let readme_path = target_dir.join("README.md");
+    let meta = match std::fs::symlink_metadata(&readme_path) {
+        Ok(meta) if meta.is_file() => meta,
+        Ok(_) => return Ok(()),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(err) => return Err(error::DecapodError::IoError(err)),
+    };
+    let _ = meta;
+    let existing = std::fs::read_to_string(&readme_path).map_err(error::DecapodError::IoError)?;
+    let updated = render_readme_with_badge(&existing, version);
+    if updated != existing {
+        std::fs::write(&readme_path, updated).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
 fn write_project_config(
     target_dir: &Path,
     config: &DecapodProjectConfig,
@@ -2074,6 +2143,11 @@ fn init_with_from_config(
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
         existing_rbac: config.governance.rbac.clone(),
         existing_db_maintenance: config.governance.db_maintenance.clone(),
+        existing_publication_deny_identifiers: config
+            .governance
+            .publication_deny_identifiers
+            .clone(),
+        existing_readme_badge: Some(config.init.readme_badge),
         existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
@@ -2190,6 +2264,8 @@ fn preserve_unspecified_init_options(
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_rbac = existing.existing_rbac;
     init.existing_db_maintenance = existing.existing_db_maintenance;
+    init.existing_publication_deny_identifiers = existing.existing_publication_deny_identifiers;
+    init.existing_readme_badge = existing.existing_readme_badge;
     init.existing_laya = existing.existing_laya;
 }
 
@@ -2266,6 +2342,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         init: InitConfigSection {
             specs: init.specs,
             ci: init.ci,
+            readme_badge: init.existing_readme_badge.unwrap_or(true),
             diagram_style: init.diagram_style,
             entrypoints,
         },
@@ -2276,6 +2353,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
             rbac: init.existing_rbac.clone(),
             db_maintenance: init.existing_db_maintenance.clone(),
+            publication_deny_identifiers: init.existing_publication_deny_identifiers.clone(),
         },
         proof: proof::ProjectProofConfig {
             selected_work: init.existing_selected_work.clone(),
@@ -3453,6 +3531,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_rbac: crate::cli::GovernanceRbac::default(),
                             existing_db_maintenance:
                                 crate::core::db_maintenance::DbMaintenanceConfig::default(),
+                            existing_publication_deny_identifiers: Vec::new(),
+                            existing_readme_badge: None,
                             existing_laya: crate::core::laya_readiness::Configuration::default(),
                             laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
@@ -3562,6 +3642,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
+            if !init_with.dry_run && config.init.readme_badge {
+                sync_readme_badge(
+                    &target_dir,
+                    &config.governance.protected_paths,
+                    env!("CARGO_PKG_VERSION"),
+                )?;
+            }
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized

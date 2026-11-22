@@ -1332,8 +1332,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (261 files), `tests/` (275 files)
+- Repository signal fingerprint: `6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1938,3 +1938,11 @@ The encoding profile and independently retained agent-run coverage remain separa
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+## Release-only inventory transitions, CI ergonomics, headless Podman, and badge (#1838, #1417, #1023)
+
+- **Release-only `repo.pr-readiness.v1` qualification (`src/decapod/core/repository_profile.rs`)**: `verify_accepted_transition` invokes `qualifies_release_only_inventory_transition` when `commands_preserved == true` and `candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`. It computes the exact Git-tree `SourceInventory` digest at `accepted_base_sha` using the shared discovery roots and bounds from `src/decapod/core/init_reconciliation/mod.rs` (including the `rust-toolchain.toml` symlink alias rule and `MAX_ENTRIES`/`MAX_DEPTH`/`MAX_FILE_BYTES`/`MAX_TOTAL_BYTES`), verifies zero reviewed-source changes on the candidate relative to `accepted_base_sha`, walks up to 16 first-parent ancestors (`git rev-list --first-parent --max-count 16`), and qualifies only when the sole reviewed-source change between the matching ancestor and `accepted_base_sha` is a strict SemVer `X.Y.Z` bump of root `[package].version` in `Cargo.toml` and the matching root `[[package]]` entry in `Cargo.lock` (when present).
+- **Pending target-movement preflight check (`src/decapod/core/snapshot_provider/automatic.rs`)**: `wait_for_source_runs` periodically calls `verify_pending_accepted_target` (`ACCEPTED_TARGET_RECHECK_INTERVAL = 60s`) to fail fast with `STALE_ACCEPTED_BASE` when the remote accepted branch advances mid-run.
+- **Public-boundary privacy preflight (`src/decapod/core/validation_runtime/publication_privacy.rs`)**: Wired into `validation_runtime::run` before adapter selection, scanning authored commit messages and diffs (`<accepted_base>..HEAD` and `<accepted_base>...HEAD`) against optional local private deny rules (`.decapod/data/publication-deny.txt`) and repo-configured `[governance].publication_deny_identifiers`.
+- **Headless macOS Podman VM startup (`src/decapod/plugins/container.rs`)**: `verify_headless_podman_machine_args` and `start_podman_machine_quietly` enforce that automatic/diagnostic startup paths never pass `--log-level=debug`/`trace` or `--gui` and scrub `PODMAN_LOG_LEVEL`/`CONTAINERS_LOG_LEVEL`.
+- **Decapod README badge (`src/decapod/cli.rs`, `src/decapod/lib.rs`, `assets/badge/decapod-governed.svg`, `README.md`)**: `InitConfigSection.readme_badge` defaults to `true` (`decapod init` idempotently syncs the versioned badge into unprotected `README.md` files unless opted out via `readme_badge = false`), and `assets/badge/decapod-governed.svg` provides a static accessible SVG badge linked from `README.md`.

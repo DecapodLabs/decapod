@@ -919,6 +919,18 @@
         "tests/sqlite_maintenance.rs",
         "tests/unit/core/workspace_publication_tests.rs"
       ]
+    },
+    {
+      "id": "chk-merge-v01621-reconcile",
+      "summary": "Reconcile PR #1918 with origin/master v0.162.1 (863311461), refresh 0.162.1 Dockerfile/specs/reviews, and verify fmt, clippy, and targeted tests",
+      "input_digest": "sha256:23b5a462ac757bd51fad1637efe4e5824a4b84b65574eb95407f03dda8287bc4",
+      "proof_refs": [
+        "cargo_clippy_all_targets",
+        "cargo_fmt_check",
+        "tests/analyze_readonly.rs",
+        "tests/sqlite_maintenance.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -962,23 +974,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented db_maintenance wal_checkpoint & [maintenance] resolution, legacy_todo_recovery logical snapshot inspection/export/quarantine/journaled import, OperationClass::AnalyzeReadOnly early dispatch, workspace publish planning, and pre_build_validate",
-          "reviewed_code_fingerprint": "a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a",
-          "spec_material_hash": "d6dabeac834dc58dc958219e0cd558c344f171a793d8665573a61a9c217bd6c1"
+          "reason": "Reconciled with origin/master v0.162.1; documented db_maintenance wal_checkpoint & [maintenance] resolution, legacy_todo_recovery logical snapshot inspection/export/quarantine/journaled import, OperationClass::AnalyzeReadOnly early dispatch, workspace publish planning, and pre_build_validate",
+          "reviewed_code_fingerprint": "6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6",
+          "spec_material_hash": "9ee28d9c72481a201ad55226ee42e7a643c0aae2d9d6f585c5b30cd2babf4f3c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented db.wal.checkpoint/CLI aliases, legacy TODO --export/--quarantine/--import-missing, decapod analyze --read-only, workspace effective-state --format json, workspace publish --pr/--branch/--mode/--dry-run, and validate --pre-build",
-          "reviewed_code_fingerprint": "a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a",
-          "spec_material_hash": "f41e06f8f0a4948a626efacb8bc3bc924eecc4862a60ae7d0260b98497b121d3"
+          "reason": "Reconciled with origin/master v0.162.1; documented db.wal.checkpoint/CLI aliases, legacy TODO --export/--quarantine/--import-missing, decapod analyze --read-only, workspace effective-state --format json, workspace publish --pr/--branch/--mode/--dry-run, and validate --pre-build",
+          "reviewed_code_fingerprint": "6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6",
+          "spec_material_hash": "8f1891081c4006b74a2d0f61217b231d958b928028b00224df57e71f3f623af3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented opt-in PASSIVE WAL checkpoint & AMBIGUOUS_MAINTENANCE_POLICY fail-closed checks, non-overwriting legacy recovery conflict blocking, zero-mutation analyze symlink/sensitive/prompt-safety isolation, non-forced publish divergence gate, and pre_build non-substitution",
-          "reviewed_code_fingerprint": "a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a",
-          "spec_material_hash": "2079438660d9c699c7745c7ff44947a3b617b238ce93a72b07cb8184886c1995"
+          "reason": "Reconciled with origin/master v0.162.1; documented opt-in PASSIVE WAL checkpoint & AMBIGUOUS_MAINTENANCE_POLICY fail-closed checks, non-overwriting legacy recovery conflict blocking, zero-mutation analyze symlink/sensitive/prompt-safety isolation, non-forced publish divergence gate, and pre_build non-substitution",
+          "reviewed_code_fingerprint": "6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6",
+          "spec_material_hash": "12884bd42c780c94b716c20466ebb2b2c1dca74c25b11a327ac9c1598d86e793"
         }
       ],
       "state": "APPROVED",
@@ -989,7 +1001,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795350733Z"
+      "updated_at": "1795354606Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -2429,6 +2429,22 @@ fn detect_candidate_policy_widening(
         });
     }
 
+    let acc_deny: BTreeSet<&str> = acc_gov
+        .publication_deny_identifiers
+        .iter()
+        .map(String::as_str)
+        .collect();
+    let cand_deny: BTreeSet<&str> = cand_gov
+        .publication_deny_identifiers
+        .iter()
+        .map(String::as_str)
+        .collect();
+    if !acc_deny.is_subset(&cand_deny) {
+        return Some(GrantRejectionReason::CandidatePolicyWideningRejected {
+            detail: "candidate .decapod/config.toml removed accepted governance.publication_deny_identifiers entries".into(),
+        });
+    }
+
     if !acc_gov.allow_basic_shared_claims && cand_gov.allow_basic_shared_claims {
         return Some(GrantRejectionReason::CandidatePolicyWideningRejected {
             detail: "candidate .decapod/config.toml cannot enable allow_basic_shared_claims beyond accepted policy".into(),
