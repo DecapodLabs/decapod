@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.161.0](https://github.com/DecapodLabs/decapod/compare/v0.160.0...v0.161.0) - 2026-11-22
+
+### Added
+
+- *(governance)* narrow effective operation grants ([#1905](https://github.com/DecapodLabs/decapod/pull/1905)) and clean agent guidance ([#1893](https://github.com/DecapodLabs/decapod/pull/1893))
+- *(contracts)* detect drift in composed service capabilities ([#1906](https://github.com/DecapodLabs/decapod/pull/1906))
+- *(validation)* verify accepted GitHub Actions preflights
+- *(readiness)* integrate portable policy approvals ([#1833](https://github.com/DecapodLabs/decapod/pull/1833)) and target transitions ([#1832](https://github.com/DecapodLabs/decapod/pull/1832))
+
+### Fixed
+
+- *(ops)* integrate #1881, #1837, #1884, and #1838 operational fixes
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905
+- Merge remote-tracking branch 'origin/master' into agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905
+- *(merge)* sync #1906 onto origin/master (8c2f55246)
+- *(governance)* approve governed plan for #1905 and #1893
+- Merge origin/master (a934da95a, #1911) into #1890
+- *(agent)* sync generated config-schema.md after merging #1908
+- *(governance)* record SECURITY.md review and post-merge checks for #1890
+- Merge origin/master (295f0af39, #1908) into #1890
+- *(agent)* sync config-schema.md after merging origin/master ([#1906](https://github.com/DecapodLabs/decapod/pull/1906))
+- *(merge)* merge origin/master (295f0af39) and reconcile #1906 governance
+- *(governance)* record publication spec reviews for #1906
+
 ## [0.160.0](https://github.com/DecapodLabs/decapod/compare/v0.159.0...v0.160.0) - 2026-11-21
 
 ### Added
