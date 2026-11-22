@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
+    "accepted_commit": "e3948d62f1f832a46c933b70066ee0d46627f123",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,82 +869,32 @@
     }
   },
   "change": {
-    "id": "change_01M81G4A6TVHKVX8YA6JPRPKCR",
-    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
+    "id": "change_01M81YH82VJW6C6QTCJP437JP5",
+    "base_commit": "e3948d62f1f832a46c933b70066ee0d46627f123",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1071-1064-1047-workspace-prebuild": {
-      "statement": "decapod workspace effective-state --format json exposes top-level dirty_files and ordered next_actions read-only; workspace publish supports --pr, --branch, --mode governance-only, and zero-mutation --dry-run with divergence decision gates; validate --pre-build runs fast structural checks reporting scope=pre_build and publication_ready=false.",
-      "falsifier": "effective-state mutates state, publish --dry-run mutates git/remote or allows mixed files in governance-only mode or skips divergence decision gate, or validate --pre-build claims publication_ready=true.",
+    "gov-ledger-clarity-formal-authority": {
+      "statement": "Obligation ledger, stagnation detection, clarity/STE validator, escalation admissibility, opt-in accepted-policy main_merge, offline Ed25519 historical exceptions (history_proven=false), semantic plan/claims integrity, and opt-in formal obligations enforce fail-closed governance deterministically.",
+      "falsifier": "Pre-escalation wording remains in entrypoints or constitution; candidate main_merge=true self-authorizes; historical exceptions set history_proven=true; theater diffs or placeholder claims pass; paraphrased prose resets stagnation; ste-strict clarity passes ambiguous text; or formal admitted holes/fabricated transcripts pass.",
       "status": "supported",
       "proof_refs": [
-        "tests/analyze_readonly.rs"
-      ]
-    },
-    "claim-1279-analyze-readonly": {
-      "statement": "decapod analyze --read-only executes under OperationClass::AnalyzeReadOnly before startup/migrations/sessions, leaving uninitialized and initialized repositories (including decapod.db SHA-256 and git status) byte-identical while enforcing bounds, symlink/sensitive exclusions, prompt safety, and draft-only source-grounded inferences.",
-      "falsifier": "decapod analyze creates .decapod/, sessions, or locks, alters decapod.db SHA-256, follows escaping symlinks, leaks .env secrets, or hallucinates network architecture for local CLI/IPC repos.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/analyze_readonly.rs"
-      ]
-    },
-    "claim-1568-wal-checkpoint-rbac": {
-      "statement": "Local agent DB maintenance supports opt-in db.wal.checkpoint (PASSIVE), CLI aliases (diagnose, lock-inspect, integrity-check, wal-checkpoint), top-level [maintenance] alias with ambiguity rejection, BACKEND_MISMATCH denial, db.backup retry idempotency, and unrelated datastore isolation.",
-      "falsifier": "Any unopted or disallowed maintenance command succeeds, dual config sections silently merge, worktree backend switch succeeds, backup retry duplicates/overwrites, or unrelated lock blocks canonical backup.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/sqlite_maintenance.rs"
-      ]
-    },
-    "claim-1657-legacy-todo-recovery": {
-      "statement": "decapod todo journal reconcile-legacy inspects non-empty legacy todo.db snapshots, exports deterministic JSON (--export), archives/quarantines without touching decapod.db (--quarantine), and imports only non-conflicting missing tasks with verified task-journal checkpoints (--import-missing), failing closed on conflicts while preserving #1683 zero-byte handling.",
-      "falsifier": "Export modifies either DB, --import-missing overwrites conflicting tasks or breaks task journal verification, or --quarantine mutates decapod.db.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/sqlite_maintenance.rs"
+        "tests/constitution_claims.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/obligation_ledger_tests.rs",
+        "tests/policy_self_authorization_1776.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-maint-rbac-legacy-analyze-workspace",
-      "summary": "Implement #1568 wal-checkpoint/aliases/isolation tests, #1657 non-empty legacy TODO export/quarantine/import-missing, #1279 zero-mutation decapod analyze --read-only, #1071 workspace effective-state --format json, #1064 publish --pr/--branch/--mode/--dry-run, and #1047 validate --pre-build",
-      "input_digest": "sha256:2a171e7b67946a7860f9a55bd1499ae7ce8261c48b4e7ea1b8d400a2469fb02e",
-      "proof_refs": [
-        "cargo_clippy_all_targets",
-        "cargo_fmt_check",
-        "tests/analyze_readonly.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/unit/core/workspace_publication_tests.rs"
-      ]
-    },
-    {
-      "id": "chk-merge-v01621-reconcile",
-      "summary": "Reconcile PR #1918 with origin/master v0.162.1 (863311461), refresh 0.162.1 Dockerfile/specs/reviews, and verify fmt, clippy, and targeted tests",
-      "input_digest": "sha256:23b5a462ac757bd51fad1637efe4e5824a4b84b65574eb95407f03dda8287bc4",
-      "proof_refs": [
-        "cargo_clippy_all_targets",
-        "cargo_fmt_check",
-        "tests/analyze_readonly.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/unit/core/workspace_publication_tests.rs"
-      ]
-    },
-    {
-      "id": "chk-fix-workspace-interlock-readme-badge",
-      "summary": "Compare isolated worktree README.md against post-init committed README.md in tests/workspace_interlock.rs",
-      "input_digest": "sha256:b892e4f51045a79ca45cca5b79f2a650278b3a6ff8cd14e94659d5cae0e919eb",
-      "proof_refs": [
-        "cargo_clippy_all_targets",
-        "cargo_fmt_check",
-        "tests/workspace_interlock.rs"
-      ]
+      "id": "chk-gov-ledger-shard5-clean",
+      "summary": "Clean checkpointed Shard 5 commit on origin/master v0.162.1 (e3948d62f) with #1691 entrypoint_correctness alignment and candidate-refreshed manifest.",
+      "input_digest": "sha256:efe59ca94ea287b15ba07bca2c5b419f25bca6bcd2306b54c7ccb281807d38fa"
     }
   ],
   "intents": {
-    "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR": {
+    "intent:change_01M81YH82VJW6C6QTCJP437JP5": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -954,14 +904,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
+      "id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
-      "refined_intent": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
+      "raw_intent": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
+      "refined_intent": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -974,7 +924,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
+      "intent": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -984,71 +934,75 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated workspace_interlock test for PR #1917 README badge default; architecture unchanged",
-          "reviewed_code_fingerprint": "1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad",
-          "spec_material_hash": "9ee28d9c72481a201ad55226ee42e7a643c0aae2d9d6f585c5b30cd2babf4f3c"
+          "reason": "Documented #1691 escalation-admissibility templates/constitution, #1468 accepted-policy main_merge, #1569 offline Ed25519 historical exceptions, #1093 semantic governance integrity, obligation_ledger.rs, artifact_clarity.rs, and formal_obligations.rs on clean checkpointed recovery branch.",
+          "reviewed_code_fingerprint": "3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250",
+          "spec_material_hash": "12e1c85a281d342b5c744af1d33967bc8d130a7c28e535d6c3c01eca63a16183"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated workspace_interlock test for PR #1917 README badge default; interfaces unchanged",
-          "reviewed_code_fingerprint": "1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad",
-          "spec_material_hash": "8f1891081c4006b74a2d0f61217b231d958b928028b00224df57e71f3f623af3"
+          "reason": "Documented decapod validate --clarity --profile CLI, [governance].main_merge config contract, offline historical-exception carrier, and Rust core ledger/clarity/formal APIs on clean checkpointed recovery branch.",
+          "reviewed_code_fingerprint": "3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250",
+          "spec_material_hash": "b1b892a2b5eef8efdece0f6e771bd9c360a389c52bc37c09993c04ba2cbc416e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated workspace_interlock test for PR #1917 README badge default; security unchanged",
-          "reviewed_code_fingerprint": "1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad",
-          "spec_material_hash": "12884bd42c780c94b716c20466ebb2b2c1dca74c25b11a327ac9c1598d86e793"
+          "reason": "Updated security boundary docs for #1468 fail-closed default main_merge with POLICY_SELF_AUTHORIZATION_REJECTED, #1569 offline Ed25519 historical exceptions preserving history_proven=false, and #1907 pinned formal-checker attestation.",
+          "reviewed_code_fingerprint": "3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250",
+          "spec_material_hash": "94cea1a8cb792f6240b7a1f4f71bb3e578aa4f9385c49730e5b5bb0b04c2dbd5"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
+      "title": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
       "todo_ids": [
-        "code_01m81fywj63agqge"
+        "code_01m81yfryyfgymzq"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795356603Z"
+      "updated_at": "1795361981Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:46333e562a1da675660fad7173c0afe07547b3499dd583caa07dc41e3c13859b",
+      "artifact_hash": "sha256:232cbadea6abd679c140186998c8fd9b0ce23f1dd3b01e791ea5b99e36661e85",
       "checks": [
         {
-          "name": "cargo_clippy_all_targets",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt_check",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "test_analyze_readonly_8",
+          "name": "constitution_claims",
           "status": "passed"
         },
         {
-          "name": "test_cli_unit_17",
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "test_db_maintenance_unit_6",
+          "name": "entrypoint_correctness",
           "status": "passed"
         },
         {
-          "name": "test_sqlite_maintenance_19",
+          "name": "entrypoint_integrity_unit",
           "status": "passed"
         },
         {
-          "name": "test_trajectory_docs_5",
+          "name": "governance_document_unit",
           "status": "passed"
         },
         {
-          "name": "test_workspace_publication_target_pr",
+          "name": "obligation_ledger_tests",
+          "status": "passed"
+        },
+        {
+          "name": "policy_self_authorization_1776",
           "status": "passed"
         }
       ],
@@ -1057,20 +1011,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
+            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
+            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M81G4AA8MC2CY33J9FB37HP0",
+            "detail": "trajectory:branch_01M81YH86835P1B1NB2Q9DZDWT",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
+            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1079,36 +1033,41 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M81G4AA8MC2CY33J9FB37HP0": {
+          "branch_01M81YH86835P1B1NB2Q9DZDWT": {
             "evidence_only": true,
-            "id": "branch_01M81G4AA8MC2CY33J9FB37HP0",
-            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
+            "id": "branch_01M81YH86835P1B1NB2Q9DZDWT",
+            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/legacy_todo_recovery.rs",
-                  "src/decapod/core/analyze.rs",
-                  "src/decapod/core/pre_build_validate.rs",
-                  "src/decapod/core/workspace_diagnostic.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/assets.rs",
+                  "assets/constitution.json",
+                  "tests/entrypoint_correctness.rs",
+                  "src/decapod/core/assets.rs",
+                  "assets/constitution.json",
                   "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "tests/analyze_readonly.rs",
-                  "tests/sqlite_maintenance.rs"
+                  "src/decapod/core/governance_document.rs",
+                  "src/decapod/core/governance_document/historical_exception.rs",
+                  "src/decapod/core/governance_document/semantic_integrity.rs",
+                  "src/decapod/core/obligation_ledger.rs",
+                  "src/decapod/core/artifact_clarity.rs",
+                  "src/decapod/core/formal_obligations.rs",
+                  "tests/obligation_ledger_tests.rs",
+                  "tests/policy_self_authorization_1776.rs",
+                  "tests/entrypoint_correctness.rs"
                 ],
                 "proof_refs": [
-                  "cargo_fmt_check",
-                  "cargo_clippy_all_targets",
-                  "test_analyze_readonly_8",
-                  "test_sqlite_maintenance_19",
-                  "test_db_maintenance_unit_6",
-                  "test_workspace_publication_target_pr",
-                  "test_cli_unit_17",
-                  "test_trajectory_docs_5"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "obligation_ledger_tests",
+                  "policy_self_authorization_1776",
+                  "constitution_claims",
+                  "doc_alignment",
+                  "entrypoint_correctness",
+                  "entrypoint_integrity_unit",
+                  "governance_document_unit"
                 ],
                 "scope": [
                   "root"
@@ -1123,20 +1082,25 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
+      "inspected_files": [
+        "assets/constitution.json",
+        "src/decapod/core/assets.rs",
+        "tests/entrypoint_correctness.rs"
+      ],
+      "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
       "modified_files": [
+        "assets/constitution.json",
         "src/decapod/cli.rs",
-        "src/decapod/core/analyze.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/legacy_todo_recovery.rs",
-        "src/decapod/core/pre_build_validate.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/core/workspace_diagnostic.rs",
-        "src/decapod/core/workspace_publication.rs",
-        "src/decapod/lib.rs",
-        "tests/analyze_readonly.rs",
-        "tests/sqlite_maintenance.rs"
+        "src/decapod/core/artifact_clarity.rs",
+        "src/decapod/core/assets.rs",
+        "src/decapod/core/formal_obligations.rs",
+        "src/decapod/core/governance_document.rs",
+        "src/decapod/core/governance_document/historical_exception.rs",
+        "src/decapod/core/governance_document/semantic_integrity.rs",
+        "src/decapod/core/obligation_ledger.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/obligation_ledger_tests.rs",
+        "tests/policy_self_authorization_1776.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1144,10 +1108,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M81G4AA8MC2CY33J9FB37HP0",
+      "run_id": "branch_01M81YH86835P1B1NB2Q9DZDWT",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m81fywj63agqge",
+      "task_id": "code_01m81yfryyfgymzq",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

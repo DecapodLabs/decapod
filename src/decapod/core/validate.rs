@@ -3864,6 +3864,11 @@ pub fn validate_project_config_downgrade_check(
         crate::core::db_maintenance::resolve_accepted_project_config(repo_root).map_err(
             |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
         )?;
+    if !accepted_cfg.governance.main_merge && candidate.governance.main_merge {
+        return Err(error::DecapodError::ValidationError(
+            "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.main_merge = true beyond accepted policy (#1468)".to_string(),
+        ));
+    }
     check_org_overlay_candidate_downgrade(&accepted_cfg, &candidate)
 }
 
