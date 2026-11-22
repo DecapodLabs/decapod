@@ -609,14 +609,16 @@ impl From<&Invocation> for ToolchainInputs {
     }
 }
 fn measured_toolchain(invocation: &Invocation, budget: &mut Budget<'_>) -> io::Result<String> {
-    measured_toolchain_inputs(&ToolchainInputs::from(invocation), budget)
+    measured_toolchain_inputs(&ToolchainInputs::from(invocation), |path| {
+        budget.hash_file(path)
+    })
 }
 fn measured_toolchain_inputs(
     inputs: &ToolchainInputs,
-    budget: &mut Budget<'_>,
+    mut hash_file: impl FnMut(&Path) -> io::Result<String>,
 ) -> io::Result<String> {
     let mut files = BTreeMap::new();
-    files.insert("program".to_string(), budget.hash_file(&inputs.program)?);
+    files.insert("program".to_string(), hash_file(&inputs.program)?);
     for (name, path) in &inputs.files {
         if name.trim().is_empty()
             || name == "program"
@@ -627,7 +629,7 @@ fn measured_toolchain_inputs(
                 "invalid independently reviewed toolchain inventory",
             ));
         }
-        files.insert(name.clone(), budget.hash_file(path)?);
+        files.insert(name.clone(), hash_file(path)?);
     }
     if inputs.following_programs.is_empty() {
         // Preserve existing single-command toolchain identities and labels.
@@ -636,7 +638,7 @@ fn measured_toolchain_inputs(
         let programs: Vec<_> = inputs
             .following_programs
             .iter()
-            .map(|program| budget.hash_file(program))
+            .map(|program| hash_file(program))
             .collect::<io::Result<_>>()?;
         json_digest(&(files, programs))
     }
@@ -1567,26 +1569,42 @@ pub(crate) fn capture_readonly_identity(
         git_output_limit: limits.git_output_limit,
     };
     capture_identity_with_toolchains(inputs, &mut budget, |budget| {
-        let mut measured = BTreeMap::new();
-        for (key, tools) in toolchains {
-            if tools.files.len() > 4096 || tools.following_programs.len() > 1024 {
-                return Err(invalid("read-only toolchain inventory exceeds file bound"));
-            }
-            for path in std::iter::once(&tools.program).chain(tools.following_programs.iter()) {
-                if !path.is_absolute() || path.canonicalize()? != *path {
-                    return Err(invalid("read-only program identity is not canonical"));
-                }
-                native_executable(path)?;
-            }
-            if measured
-                .insert(key.clone(), measured_toolchain_inputs(tools, budget)?)
-                .is_some()
-            {
-                return Err(invalid("duplicate read-only toolchain check"));
-            }
-        }
-        Ok(measured)
+        measure_readonly_toolchains(toolchains, budget)
     })
+}
+
+fn measure_readonly_toolchains(
+    toolchains: &[(CheckKey, ToolchainInputs)],
+    budget: &mut Budget<'_>,
+) -> io::Result<BTreeMap<CheckKey, String>> {
+    let mut measured = BTreeMap::new();
+    // Shared paths describe a single observation within this capture. Execution
+    // checks and subsequent captures each measure the live files again.
+    let mut files = BTreeMap::<PathBuf, String>::new();
+    for (key, tools) in toolchains {
+        if tools.files.len() > 4096 || tools.following_programs.len() > 1024 {
+            return Err(invalid("read-only toolchain inventory exceeds file bound"));
+        }
+        for path in std::iter::once(&tools.program).chain(tools.following_programs.iter()) {
+            if !path.is_absolute() || path.canonicalize()? != *path {
+                return Err(invalid("read-only program identity is not canonical"));
+            }
+            native_executable(path)?;
+        }
+        let digest = measured_toolchain_inputs(tools, |path| {
+            budget.remaining()?;
+            if let Some(digest) = files.get(path) {
+                return Ok(digest.clone());
+            }
+            let digest = budget.hash_file(path)?;
+            files.insert(path.to_path_buf(), digest.clone());
+            Ok(digest)
+        })?;
+        if measured.insert(key.clone(), digest).is_some() {
+            return Err(invalid("duplicate read-only toolchain check"));
+        }
+    }
+    Ok(measured)
 }
 
 fn capture_snapshot(
@@ -1710,6 +1728,58 @@ mod tests {
         v.extend_from_slice(&2_u16.to_le_bytes()); // e_type = ET_EXEC
         v.extend_from_slice(&0x3E_u16.to_le_bytes()); // e_machine = EM_X86_64
         v
+    }
+
+    #[test]
+    fn readonly_identity_reuses_shared_tool_bytes_within_one_capture() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut executable_header = [0; 32];
+        fs::File::open(std::env::current_exe().unwrap())
+            .unwrap()
+            .read_exact(&mut executable_header)
+            .unwrap();
+        let program = write_tool(&dir, "program", &executable_header);
+        let dependency = write_tool(&dir, "dependency", b"first");
+        let check = |job: &str| CheckKey {
+            provider: Provider::Native,
+            workflow: "native".into(),
+            job: job.into(),
+            matrix: BTreeMap::new(),
+            profile: "proof".into(),
+        };
+        let build = ToolchainInputs {
+            program: program.clone(),
+            files: BTreeMap::from([("dependency".into(), dependency.clone())]),
+            following_programs: vec![program.clone()],
+        };
+        let verify = ToolchainInputs {
+            following_programs: Vec::new(),
+            ..build.clone()
+        };
+        let cancel = Cancellation::default();
+        let budget = |max_bytes| Budget {
+            deadline: Instant::now() + Duration::from_secs(10),
+            cancel: &cancel,
+            remaining_bytes: max_bytes,
+            git_program: PathBuf::new(),
+            git_output_limit: 1,
+        };
+        let bindings = vec![(check("build"), build), (check("verify"), verify)];
+        let measured = measure_readonly_toolchains(&bindings, &mut budget(37)).unwrap();
+        for (key, tools) in &bindings {
+            let mut independent = budget(128);
+            assert_eq!(
+                measured[key],
+                measured_toolchain_inputs(tools, |path| independent.hash_file(path)).unwrap()
+            );
+        }
+        assert_ne!(measured[&check("build")], measured[&check("verify")]);
+        assert!(measure_readonly_toolchains(&bindings, &mut budget(36)).is_err());
+
+        fs::write(dependency, b"other").unwrap();
+        let changed = measure_readonly_toolchains(&bindings, &mut budget(37)).unwrap();
+        assert_ne!(measured[&check("build")], changed[&check("build")]);
+        assert_ne!(measured[&check("verify")], changed[&check("verify")]);
     }
 
     #[test]

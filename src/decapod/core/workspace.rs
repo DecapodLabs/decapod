@@ -8,6 +8,7 @@
 use crate::core::bounded_process::{BUILD_TIMEOUT, BoundedCommand, CONTROL_TIMEOUT};
 use crate::core::container_runtime;
 use crate::core::db;
+use crate::core::db_maintenance::{self, CapabilityDecision, DbMaintenanceCapability};
 use crate::core::entrypoint_integrity;
 use crate::core::error::DecapodError;
 use crate::core::path_policy;
@@ -921,6 +922,14 @@ pub fn ensure_workspace(
 
     // 2. Ensure container (if requested)
     if config.use_container {
+        if let Some(blocker) = container_snapshot_policy_blocker(&worktree_path) {
+            status = get_workspace_status(&worktree_path)?;
+            status.can_work = false;
+            status.required_actions.push(blocker.resolve_hint.clone());
+            status.blockers.push(blocker);
+            status.root_isolation = Some(source_inventory);
+            return Ok(status);
+        }
         let mut ownership =
             crate::core::workspace_lifecycle::acquire_registered(&main_repo, &worktree_path)?;
         let runtime = container_runtime::find_container_runtime()?;
@@ -1332,6 +1341,28 @@ fn build_workspace_image(
     Ok(())
 }
 
+fn container_snapshot_policy_blocker(worktree: &Path) -> Option<Blocker> {
+    let (code, detail) = match db_maintenance::resolve_canonical_policy(worktree) {
+        Ok(policy) => {
+            let (decision, code, detail) = db_maintenance::evaluate_capability_decision(
+                &policy,
+                DbMaintenanceCapability::Backup,
+                None,
+            );
+            if decision == CapabilityDecision::Allowed {
+                return None;
+            }
+            (code, detail)
+        }
+        Err(error) => error,
+    };
+    Some(Blocker {
+        kind: BlockerKind::Unauthorized,
+        message: format!("WORKSPACE_CONTAINER_SNAPSHOT_DENIED ({code}): {detail}"),
+        resolve_hint: "Ask a repository maintainer to review the canonical database backup grant before retrying container preparation.".to_string(),
+    })
+}
+
 /// Build a repeatable launch hint without opening the host's live WAL in the VM.
 /// Shell quoting and runtime mount parsing are separate boundaries: reject path
 /// delimiters that Docker/Podman would otherwise reinterpret inside mount flags.
@@ -1360,11 +1391,11 @@ fn container_workspace_launch_command(
     let store_root = mount_path(&store_root)?;
     // mktemp runs when the hint is executed, not when it is printed. Each
     // invocation owns a fresh directory, even if the same hint is run twice.
-    let snapshot_template = worktree.join("target/decapod-container-store.XXXXXX");
+    let snapshot_template = worktree.join(".decapod/backups/container-store.XXXXXX");
     let snapshot_template = mount_path(&snapshot_template)?;
     let cleanup = "result_code=$?; trap - EXIT; rm -f -- \"$snapshot_dir/decapod.db\"; rmdir -- \"$snapshot_dir\"; exit \"$result_code\"";
     Ok(format!(
-        "( cd {workspace} && mkdir -p target || exit; snapshot_dir=$(mktemp -d {snapshot_template}) || exit; trap {cleanup} EXIT; trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM; decapod data database backup --destination \"$snapshot_dir/decapod.db\" && {runtime} run --rm -it --label org.decapod.managed=workspace --label {workspace_label} --label {invocation_label} -e DECAPOD_CONTAINER=1 -v {repo_mount} --mount \"type=bind,src=$snapshot_dir/decapod.db,dst=/tmp/decapod-store.db,readonly\" --tmpfs {store_tmpfs} -w {workspace} {image} sh -lc {seed_command} )",
+        "( cd {workspace} && test ! -L .decapod && test ! -L .decapod/backups && mkdir -p -m 700 .decapod/backups || exit; snapshot_dir=$(mktemp -d {snapshot_template}) || exit; trap {cleanup} EXIT; trap 'exit 129' HUP; trap 'exit 130' INT; trap 'exit 143' TERM; decapod data database backup --destination \"$snapshot_dir/decapod.db\" && {runtime} run --rm -it --label org.decapod.managed=workspace --label {workspace_label} --label {invocation_label} -e DECAPOD_CONTAINER=1 -v {repo_mount} --mount \"type=bind,src=$snapshot_dir/decapod.db,dst=/tmp/decapod-store.db,readonly\" --tmpfs {store_tmpfs} -w {workspace} {image} sh -lc {seed_command} )",
         workspace = shell_quote(workspace),
         snapshot_template = shell_quote(snapshot_template),
         cleanup = shell_quote(cleanup),

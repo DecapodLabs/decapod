@@ -864,7 +864,8 @@
       "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
-      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
+      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions.",
+      "trajectory:fd7299e932697c34": "Linux GitHub Actions Tests (core) executes the full Linux source_ci_profile_policy suite; Buildkite is explicitly waived by operator."
     }
   },
   "change": {
@@ -927,6 +928,17 @@
         "docs/agent/config-schema.md",
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "pr1890-merge-a934da95a",
+      "summary": "Merge origin/master (a934da95a, PR B #1911) into #1890 and verify specs, tests, and docs",
+      "input_digest": "sha256:8c7d74155a8383d7d4350e0d71828e71194d0096c98694aeb1d490d4349163cc",
+      "proof_refs": [
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "tests/todo_enforcement.rs",
+        "tests/unit/core/proof_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -970,23 +982,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1833+#1832 (295f0af39)",
-          "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
-          "spec_material_hash": "883b5a130e6e8f78da30589e96839ebdd4ce459e4b352a2ab807a08ef3c77359"
+          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1911 (a934da95a)",
+          "reviewed_code_fingerprint": "077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758",
+          "spec_material_hash": "0529ef1f0a6d4adf776d5e7a5d48585aed75552a415f09a8799f32da970020db"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1833+#1832 (295f0af39)",
-          "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
-          "spec_material_hash": "dc938eb998aea2045109af673b9bb07afb3ca23ced424138afe68884a64850df"
+          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1911 (a934da95a)",
+          "reviewed_code_fingerprint": "077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758",
+          "spec_material_hash": "e192c5deae6029359c3c3e08e029b98fdf6c83d6e456d413d235e24ef104be0a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Relative to merged origin/master (295f0af39), #1890 introduces no security spec prose changes beyond refreshed codebase attestation",
-          "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
-          "spec_material_hash": "22e4b9cb14e2ce910956e0ea59c12147cf7f3c1d6645e28c11dc07be82afcf18"
+          "reason": "Relative to merged origin/master (a934da95a), #1890 introduces no security spec prose changes beyond refreshed codebase attestation",
+          "reviewed_code_fingerprint": "077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758",
+          "spec_material_hash": "66d279c3bccf9a82392cc49cd26761f96920b8152cb18966c630b21d0a179be5"
         }
       ],
       "state": "APPROVED",
@@ -997,13 +1009,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795315732Z"
+      "updated_at": "1795316371Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:dd7ee1436dafb44bf62fd83e431c8bac3ebb763e3caf73269ea0e5e30c99f6fd",
+      "artifact_hash": "sha256:294fe2a02a938b2b1c5c2c4601ad9bd57da24cda7258a7c1be9d37eef5d8e32e",
       "checks": [
         {
           "name": "cargo_check_no_default_features",
@@ -1086,6 +1098,38 @@
           "status": "passed"
         },
         {
+          "name": "post_merge_a934da95a_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_native_proof",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_no_default_features",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_proof",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_readiness_profile",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_a934da95a_todo_enforcement",
+          "status": "passed"
+        },
+        {
           "name": "post_merge_doc_alignment",
           "status": "passed"
         },
@@ -1137,10 +1181,17 @@
             "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M80D5B47FTAS15P667YQJ709": {
@@ -1243,6 +1294,28 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Merged origin/master (a934da95a / PR B #1911): fmt=0, clippy=0, no-default-features=0, readiness_profile, proof, native_proof, todo_enforcement, doc_alignment all passed."
+                ],
+                "proof_refs": [
+                  "post_merge_a934da95a_fmt",
+                  "post_merge_a934da95a_clippy",
+                  "post_merge_a934da95a_no_default_features",
+                  "post_merge_a934da95a_readiness_profile",
+                  "post_merge_a934da95a_proof",
+                  "post_merge_a934da95a_native_proof",
+                  "post_merge_a934da95a_todo_enforcement",
+                  "post_merge_a934da95a_doc_alignment"
+                ],
+                "scope": [
+                  "issue-1890"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1252,6 +1325,7 @@
       "destination": "pull request",
       "evidence": [
         "Merged origin/master (295f0af39 / PR A #1908): fmt=0, clippy=0, no-default-features=0, proof 124/124, consumer_readiness 40/40, readiness_profile, validation_rules, repository_profile all passed.",
+        "Merged origin/master (a934da95a / PR B #1911): fmt=0, clippy=0, no-default-features=0, readiness_profile, proof, native_proof, todo_enforcement, doc_alignment all passed.",
         "Regenerated docs/agent/config-schema.md via source-built decapod docs build to include merged #1833/#1832 repository-readiness.md sections; doc_alignment 5/5 passed.",
         "cargo fmt --all -- --check: 0; cargo clippy --all-targets --all-features -- -D warnings: 0; cargo check --no-default-features: 0; proof 124/124; ci_event_context_policy 54/54 (python3.14); doc_alignment 5/5; readiness_profile 50/50; validation_runtime 88/88 (2 ignored); snapshot_provider 211/211 (1 ignored); validation_scope 9/9; concurrent_worktree_1469 3/3; gate_skip_1659 5/5; workunit_1660 6/6; source_ci_profile_policy 55/59 (4 macOS host/linux-platform fixture checks)"
       ],

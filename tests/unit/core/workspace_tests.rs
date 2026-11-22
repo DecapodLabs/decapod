@@ -735,9 +735,9 @@ exit "$RUNTIME_EXIT"
         "test-invocation",
     )
     .unwrap();
-    let target = workspace.join("target");
-    std::fs::create_dir_all(&target).unwrap();
-    let unrelated = target.join("decapod-container-store-existing.db");
+    let backups = workspace.join(".decapod/backups");
+    std::fs::create_dir_all(&backups).unwrap();
+    let unrelated = backups.join("existing.db");
     std::fs::write(&unrelated, "keep me").unwrap();
     for (backup_exit, runtime_exit, expected) in
         [(0, 0, 0), (0, 37, 37), (23, 0, 23), (0, 143, 143)]
@@ -769,7 +769,7 @@ exit "$RUNTIME_EXIT"
         );
         assert_eq!(std::fs::read_to_string(&unrelated).unwrap(), "keep me");
         assert_eq!(
-            std::fs::read_dir(&target).unwrap().count(),
+            std::fs::read_dir(&backups).unwrap().count(),
             1,
             "only the unrelated snapshot remains"
         );

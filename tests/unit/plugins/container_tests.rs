@@ -187,19 +187,24 @@ fn podman_machine_start_captures_output_without_reading_terminal_input() {
     let root = tempdir().expect("tempdir");
     let args_file = root.path().join("args");
     let fake_runtime = root.path().join("podman");
-    fs::write(
-        &fake_runtime,
-        format!(
-            "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\nif IFS= read -r line; then exit 42; fi\nprintf 'captured\\n'\n",
-            args_file.display()
-        ),
-    )
-    .expect("write fake podman");
-    let mut permissions = fs::metadata(&fake_runtime)
-        .expect("fake podman metadata")
-        .permissions();
-    permissions.set_mode(0o755);
-    fs::set_permissions(&fake_runtime, permissions).expect("chmod fake podman");
+    let script = format!(
+        "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\nif IFS= read -r line; then exit 42; fi\nprintf 'captured\\n'\n",
+        args_file.display()
+    );
+    // Keep the writable descriptor out of the parent so parallel forks cannot inherit it.
+    let written = Command::new("/bin/sh")
+        .args(["-c", "printf '%s' \"$1\" > \"$2\"", "write-podman-fixture"])
+        .arg(script)
+        .arg(&fake_runtime)
+        .output()
+        .expect("write fake podman in a child process");
+    assert!(
+        written.status.success(),
+        "write fake podman: {}",
+        String::from_utf8_lossy(&written.stderr)
+    );
+    fs::set_permissions(&fake_runtime, fs::Permissions::from_mode(0o755))
+        .expect("chmod fake podman");
 
     let output = start_podman_machine_quietly(fake_runtime.to_str().expect("runtime path"))
         .expect("start fake podman");

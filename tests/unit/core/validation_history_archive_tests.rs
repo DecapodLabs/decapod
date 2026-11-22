@@ -319,7 +319,7 @@ fn native_and_provider_capture_archive_and_lookup_survive_evidence_directory_del
 }
 
 #[test]
-fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explicit() {
+fn capture_task_binding_with_budget_can_extend_a_lease_without_rotating_custody() {
     let _agent_guard = crate::core::todo::test_current_agent_id_guard("archive-boundary-agent");
     let (_temp, repo, store, _base) = fixture();
     let now_secs = crate::core::time::now_epoch_z()
@@ -330,6 +330,8 @@ fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explic
     let shortened = todo::renew_claim_lease(&store.root, TASK, &agent_id, Some(60)).unwrap();
     assert_eq!(shortened.get("status").and_then(|v| v.as_str()), Some("ok"));
     let shortened = todo::capture_validation_binding(&store.root, TASK).unwrap();
+    let custody_before =
+        todo::capture_execution_custody_binding(&store.root, TASK, &agent_id).unwrap();
 
     // Mode parsing: unknown/absent values never mutate custody.
     assert_eq!(
@@ -414,7 +416,7 @@ fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explic
         shortened
     );
 
-    // Explicit renew: the operator opts into rotating custody.
+    // Explicit renew extends the deadline of the current generation.
     assert!(matches!(
         todo::ensure_validation_lease_ttl(
             &store.root,
@@ -426,7 +428,13 @@ fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explic
         todo::ValidationLeaseTtl::Renewed { lease_secs: 1800 }
     ));
     let renewed = todo::capture_validation_binding(&store.root, TASK).unwrap();
-    assert!(renewed.lease_generation > shortened.lease_generation);
+    assert_eq!(renewed.lease_generation, shortened.lease_generation);
+    assert_eq!(renewed.revision, shortened.revision);
+    assert_ne!(renewed.checkpoint_digest, shortened.checkpoint_digest);
+    assert_eq!(
+        todo::capture_execution_custody_binding(&store.root, TASK, &agent_id).unwrap(),
+        custody_before
+    );
     let refreshed_exp_raw: Option<String> = DbBroker::new(&store.root)
         .with_conn(
             &todo::todo_db_path(&store.root),
@@ -434,6 +442,7 @@ fn capture_task_binding_with_budget_never_rotates_custody_unless_renew_is_explic
             None,
             "test.validation_history.read_lease",
             |conn| {
+                todo::check_validation_binding_on_conn(conn, &shortened, false)?;
                 conn.query_row(
                     "SELECT lease_expires_at FROM tasks WHERE id = ?1",
                     db::params![TASK],

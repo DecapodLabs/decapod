@@ -525,6 +525,7 @@ where
 struct Journal {
     heads: BTreeMap<String, Checkpoint>,
     history: BTreeMap<String, BTreeSet<String>>,
+    heartbeat_anchors: BTreeMap<String, String>,
     records: usize,
 }
 
@@ -1106,6 +1107,9 @@ where
                 {
                     return Err(invalid("checkpoint chain missing observed baseline"));
                 }
+                if checkpoint.operation == "todo.heartbeat" {
+                    return Err(invalid("lease heartbeat requires a prior task checkpoint"));
+                }
             }
             Some(previous) => {
                 if checkpoint.kind != CheckpointKind::Transition
@@ -1127,6 +1131,15 @@ where
                         checkpoint.task_id
                     )));
                 }
+                if checkpoint.operation == "todo.heartbeat" {
+                    let original_expiry = check_heartbeat_step(previous, &checkpoint)?;
+                    journal
+                        .heartbeat_anchors
+                        .entry(checkpoint.task_id.clone())
+                        .or_insert_with(|| original_expiry.to_owned());
+                } else if checkpoint.projection.task != previous.projection.task {
+                    journal.heartbeat_anchors.remove(&checkpoint.task_id);
+                }
             }
         }
         journal
@@ -1138,6 +1151,36 @@ where
         journal.records += 1;
     }
     Ok(journal)
+}
+
+/// A heartbeat extends only the current active holder's deadline.
+fn check_heartbeat_step<'a>(
+    prior: &'a Checkpoint,
+    current: &Checkpoint,
+) -> Result<&'a str, DecapodError> {
+    use super::fleet_coord::parse_epoch_z;
+    let task = &prior.projection.task;
+    let old_expiry = task.lease_expires_at.as_deref().unwrap_or_default();
+    let mut expected = prior.projection.clone();
+    expected.task.lease_expires_at = current.projection.task.lease_expires_at.clone();
+    let valid_times = (|| {
+        let old = parse_epoch_z(old_expiry)?;
+        let next = parse_epoch_z(expected.task.lease_expires_at.as_deref()?)?;
+        let at = parse_epoch_z(current.ts.as_deref()?)?;
+        Some(at < old && old < next)
+    })() == Some(true);
+    if !valid_times
+        || !matches!(task.status.as_str(), "open" | "in_progress")
+        || task.assigned_to.as_deref() != Some(current.actor.as_str())
+        || task.lease_generation.unwrap_or(0) <= 0
+        || !super::LeaseLifecycle::parse(task.lease_lifecycle.as_deref()).holds_exclusive_custody()
+        || current.projection != expected
+    {
+        return Err(invalid(
+            "lease heartbeat changed task custody or failed to extend an active deadline",
+        ));
+    }
+    Ok(old_expiry)
 }
 
 #[allow(dead_code)]
@@ -1313,11 +1356,6 @@ pub(super) fn check_validation_binding(
             "VALIDATION_HISTORY_TASK_STALE: TASK_LIVE_JOURNAL_DRIFT: live task differs from its journal",
         ));
     }
-    if !allow_lifecycle_progress && head.record_digest != binding.checkpoint_digest {
-        return Err(invalid(
-            "VALIDATION_HISTORY_TASK_STALE: TASK_CHANGED_DURING_VALIDATION: task changed during validation",
-        ));
-    }
     if !allow_lifecycle_progress {
         // Time can revoke live validation custody without changing a journal
         // row. Historical consumption intentionally does not require a live
@@ -1345,12 +1383,15 @@ pub(super) fn check_validation_binding(
             load_component_text_on_conn(conn, cref)
         })?;
         if let Some(prior) = previous.as_ref() {
-            if !allow_lifecycle_progress {
+            if checkpoint.operation == "todo.heartbeat" {
+                check_heartbeat_step(prior, &checkpoint)?;
+            } else if !allow_lifecycle_progress {
                 return Err(invalid(
                     "VALIDATION_HISTORY_TASK_STALE: TASK_ADVANCED_DURING_VALIDATION: task advanced during validation",
                 ));
+            } else {
+                check_validation_lifecycle_step(binding, prior, &checkpoint)?;
             }
-            check_validation_lifecycle_step(binding, prior, &checkpoint)?;
         } else {
             if checkpoint.record_digest != binding.checkpoint_digest {
                 continue;
@@ -1555,6 +1596,12 @@ fn append_checkpoint(
     events::append_on_conn(conn, events::TODO, &envelope)?;
 
     let mut hydrated = wire_checkpoint;
+    if operation == "todo.heartbeat" {
+        let previous = previous.ok_or_else(|| invalid("lease heartbeat requires prior custody"))?;
+        let mut full_checkpoint = hydrated.clone();
+        full_checkpoint.projection = projection.clone();
+        check_heartbeat_step(previous, &full_checkpoint)?;
+    }
     hydrated.projection = projection.clone();
     journal
         .history
@@ -1661,7 +1708,7 @@ fn report(conn: &Connection, journal: &Journal) -> Result<serde_json::Value, Dec
 pub(super) fn check_execution_authority(
     conn: &Connection,
     task_id: &str,
-) -> Result<(), DecapodError> {
+) -> Result<Option<String>, DecapodError> {
     transfer::ensure_not_exported(conn, task_id)?;
     let raw: Option<String> = conn
         .query_row(
@@ -1677,7 +1724,7 @@ pub(super) fn check_execution_authority(
     ids.sort();
     ids.dedup();
     let current = capture_selected(conn, &ids)?;
-    let journal = read_journal(conn, Some(&ids))?;
+    let mut journal = read_journal(conn, Some(&ids))?;
     check_complete_suffix(conn, &journal, watermark(conn)?, None)?;
     for (id, head) in &journal.heads {
         if current.get(id).map(digest).transpose()?.as_deref()
@@ -1688,7 +1735,7 @@ pub(super) fn check_execution_authority(
             )));
         }
     }
-    Ok(())
+    Ok(journal.heartbeat_anchors.remove(task_id))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

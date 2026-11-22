@@ -448,7 +448,9 @@ fn resolve_reflection_actor() -> Result<String, DecapodError> {
 fn custody(root: &Path, task_id: &str) -> Result<String, DecapodError> {
     let store = find_governance_root(root).join(".decapod/data");
     let actor = resolve_reflection_actor()?;
-    digest(&todo::capture_execution_custody(&store, task_id, &actor)?)
+    digest(&todo::capture_execution_custody_binding(
+        &store, task_id, &actor,
+    )?)
 }
 
 fn validate_request(root: &Path, request: &Request) -> Result<(), DecapodError> {

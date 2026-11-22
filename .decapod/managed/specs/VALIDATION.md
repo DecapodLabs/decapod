@@ -1,5 +1,28 @@
 # Validation
 
+## Operational reliability fixes verification (#1881, #1837, #1884, #1838)
+
+Verified on `origin/master` (`295f0af39`, `v0.160.0` + PR `#1908`) inside isolated worktree `agent/swarm-readiness-b/bugs_01m80ex82zgnq661-ops-1881-1837-1884-1838`:
+
+- **Formatting, lints, and feature matrix**:
+  - `cargo fmt --all -- --check`: passed.
+  - `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings; added `HeartbeatTaskRow` type alias in `src/decapod/core/todo.rs` for Rust `1.96` `clippy::type_complexity`).
+  - `cargo check --no-default-features`: passed.
+- **Unit & integration suites (`--locked`)**:
+  - `--lib plugins::container::tests`: `65 passed; 0 failed` (covers `podman_machine_start_captures_output_without_reading_terminal_input` child-isolated fixture writer for `#1838`).
+  - `--lib core::workspace::tests`: `40 passed; 0 failed` (covers `container_launch_snapshot_lifecycle_is_repeatable_and_failure_safe` using `.decapod/backups`).
+  - `--lib core::cloud_workspace::tests -- --test-threads=1`: `3 passed; 0 failed` (note: parallel `host_cloud_relay_enforces_container_admission_scope_and_allowlist` hit transient `Broken pipe` / `Socket is not connected` under concurrent `--lib workspace` load before passing serially `3/3`).
+  - `--lib native_proof`: `6 passed; 0 failed` (covers `readonly_identity_reuses_shared_tool_bytes_within_one_capture` for `#1884`).
+  - `--lib task_journal`: `74 passed; 0 failed`.
+  - `--lib reflection`: `33 passed; 0 failed`.
+  - `--lib validation_history`: `34 passed; 0 failed` (covers `capture_task_binding_with_budget_can_extend_a_lease_without_rotating_custody` for `#1837`).
+  - `--lib core::todo::tests`: `10 passed; 0 failed`.
+  - `--lib plugins::verify::tests`: `14 passed; 0 failed`.
+  - `--test todo_enforcement`: `6 passed; 0 failed` (covers `test_workspace_ensure_container_reports_default_backup_denial_before_build` and `test_workspace_ensure_container_creates_coordination_todo` for `#1881`).
+  - `--test cloud_cli_boundary`: `2 passed; 0 failed` (preserves Wave 2 `CLOUD_LEASE_RENEW_UNSUPPORTED`).
+  - `--test consumer_readiness`: `40 passed; 0 failed`.
+  - `--test source_ci_profile_policy` on macOS (`macos-aarch64`): `55 passed; 4 failed` (4 Linux-only `supabase-consumer`/`fmt` platform checks and `/var`->`/private/var` temp path symlink in `provider_carrier_executes_immutable_r_and_wrapper_preserves_fixed_context_and_failure`, unrelated to this PR; full Linux CI and waived Buildkite remain separate external gates).
+
 ## Portable policy transition approvals & target-map unification verification (#1833, #1832)
 
 Verified on `origin/master` (`efc05d792`, `v0.160.0`) inside isolated worktree `agent/swarm-readiness-a/code_01m80cm518wkhbww-policy-1833-1832`:
@@ -1592,7 +1615,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c`
+- Repository signal fingerprint: `077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

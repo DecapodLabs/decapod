@@ -494,8 +494,7 @@ pub(crate) fn capture_task_binding_with_budget(
         .and_then(Value::as_str)
         .filter(|id| !id.is_empty())
         .ok_or_else(|| invalid("full validation requires a task-bound trajectory"))?;
-    // Never rotate custody implicitly: renewing bumps `lease_generation`, which
-    // invalidates workunit execution checkpoints. Default is a read-only advisory.
+    // Warn by default. An explicitly enabled heartbeat only extends the deadline.
     let mode = todo::ValidationLeaseTtlMode::from_env_value(
         std::env::var("DECAPOD_VALIDATE_LEASE_TTL").ok().as_deref(),
     );

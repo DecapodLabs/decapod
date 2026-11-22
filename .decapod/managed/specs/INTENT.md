@@ -1,5 +1,14 @@
 # Intent
 
+## Operational reliability fixes: snapshot policy precheck, custody-preserving heartbeat, shared tool measurement, and Podman fixture isolation (#1881, #1837, #1884, #1838)
+
+Integrates four targeted operational and CI-stability fixes on `v0.160.0` (`295f0af39`):
+
+- **Container snapshot policy precheck & private staging (#1881)**: `decapod workspace ensure --container` validates canonical `db.backup` maintenance authorization before invoking container image builds (`WORKSPACE_CONTAINER_SNAPSHOT_DENIED` pending workspace when denied) and stages authorized backup snapshots under mode-`700` `.decapod/backups/container-store.XXXXXX` instead of `target/`.
+- **Custody-preserving lease heartbeat (#1837)**: Decouples same-holder task lease deadline extension (`decapod todo renew --heartbeat`, `DECAPOD_VALIDATE_LEASE_TTL=renew`) from `lease_generation` rotation so long validation runs extend active deadlines without invalidating pre-existing workunit execution custody bindings (`capture_execution_custody_binding`). Plain `decapod todo renew` without `--heartbeat` retains custody-rotating semantics, and Cloud workspaces preserve `CLOUD_LEASE_RENEW_UNSUPPORTED`.
+- **Bounded repeated-toolchain freshness measurement (#1884)**: Reuses per-path cryptographic measurements across multiple checks within a single `native_proof::capture_readonly_identity` freshness pass so multi-check repositories stay within strict byte budgets while preserving full check identity digests, deadlines, and cancellation checks.
+- **Podman fixture writer isolation (`Refs #1838`)**: Isolates executable fixture creation in `podman_machine_start_captures_output_without_reading_terminal_input` to a waited child `/bin/sh` process so parallel test forks cannot inherit writable descriptors (`ETXTBSY`).
+
 ## Portable repository policy transition approvals and deployment-target admission (#1833, #1832)
 
 Extends `repo.pr-readiness.v1` governed policy transitions so reviewed source-inventory and command-contract upgrades verify across local checkouts, fresh CI clones (`ci_local`), and Decapod Cloud (`dactyl-db`), while closing target-map self-authorization and incomplete target-proof diagnostics:
@@ -772,7 +781,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c`
+- Repository signal fingerprint: `077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

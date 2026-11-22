@@ -1,5 +1,16 @@
 # Architecture
 
+## Operational reliability fixes (#1881, #1837, #1884, #1838)
+
+- **Pre-build backup policy gate & `.decapod/backups` staging (`src/decapod/core/workspace.rs`)**:
+  Local `ensure_workspace` invokes `container_snapshot_policy_blocker` (`db_maintenance::resolve_canonical_policy` + `evaluate_capability_decision(DbMaintenanceCapability::Backup)`) before `acquire_registered` / `build_workspace_image`, returning a `pending` `WorkspaceStatus` with `BlockerKind::Unauthorized` (`WORKSPACE_CONTAINER_SNAPSHOT_DENIED`) when denied. Authorized `container_workspace_launch_command` creates `.decapod/backups/container-store.XXXXXX` with symlink refusal (`test ! -L .decapod && test ! -L .decapod/backups`) and `mkdir -m 700`, cleaning the temporary directory on exit/signals.
+- **Same-generation task heartbeat (`src/decapod/core/todo.rs`, `src/decapod/core/task_journal.rs`, `src/decapod/core/trajectory/execution.rs`, `src/decapod/core/mentor/reflection.rs`, `src/decapod/core/validation_history.rs`)**:
+  `todo::heartbeat_claim_lease` journals `"todo.heartbeat"` (`task.lease_heartbeat`) without incrementing `revision` or `lease_generation` when the current active holder extends `lease_expires_at` (`now + lease_secs > previous_secs`), and `ensure_validation_lease_ttl` (`ValidationLeaseTtlMode::Renew`) delegates to `heartbeat_claim_lease` bound to the observed `lease_generation`. `task_journal::check_heartbeat_step` validates strict monotonic extension (`at < old && old < next`) with identical remaining projection fields, records `heartbeat_anchors`, and permits `"todo.heartbeat"` transitions inside `check_validation_binding` while preserving `#1892` stale subcodes (`TASK_ADVANCED_DURING_VALIDATION`) for all non-heartbeat transitions. `todo::capture_execution_custody_binding` (used by `trajectory/execution.rs::capture_once` and `mentor/reflection.rs::custody`) binds to the pre-heartbeat `heartbeat_anchor` expiry while still verifying live expiration.
+- **Shared read-only toolchain hashing (`src/decapod/core/native_proof.rs`)**:
+  `measure_readonly_toolchains` parameterizes `measured_toolchain_inputs` over a `FnMut(&Path) -> io::Result<String>` closure and caches `PathBuf -> digest` within a single `capture_readonly_identity` invocation while keeping independent execution checks live-measured.
+- **Child-isolated Podman fixture (`tests/unit/plugins/container_tests.rs`)**:
+  Writes the executable fixture in a waited `/bin/sh` child before `chmod 0o755`, preventing inherited writable file descriptors across parallel test threads.
+
 ## Portable policy-transition carriers and unified target-map checks (#1833, #1832)
 
 - **Portable approval verification (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**:
@@ -1282,7 +1293,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c`
+- Repository signal fingerprint: `077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
