@@ -1403,7 +1403,7 @@ fn canonicalize_with_nonexistent_tail(path: &Path) -> PathBuf {
     out
 }
 
-fn zeroize_bytes(buf: &mut [u8]) {
+pub(crate) fn zeroize_bytes(buf: &mut [u8]) {
     for b in buf.iter_mut() {
         unsafe { std::ptr::write_volatile(b, 0) };
     }

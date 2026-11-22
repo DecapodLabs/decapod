@@ -1,5 +1,24 @@
 # Validation
 
+## First-class `decapod cloud` admin CLI/RPC verification (#1896, #1836, #1835, #1877)
+
+Verified on `origin/master` (`a53f2eb7d`, `v0.161.0`) inside isolated worktree `agent/swarm-cloud-admin/feat_01m80wt1ty67gx2n-cloud-admin-cli`:
+
+- **Formatting, feature matrix, lints & documentation sync (`--locked`)**:
+  - `cargo fmt --all -- --check`: passed.
+  - `cargo check --no-default-features`: passed (0 warnings).
+  - `cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings; verified `DecapodError` stays within the `clippy::result_large_err` 128-byte ceiling via 1-byte `Option<CloudAuthErrorCode>`).
+  - `cargo run --locked --features supabase-cloud -- docs build`: synchronized `docs/agent/command-contracts.md` (`decapod cloud` contract section + `Operation: Cloud{Orgs,Members,Invites,Identity,Billing}`).
+- **Unit & integration suites (`--locked --features supabase-cloud`)**:
+  - `--lib cloud_`: `87 passed; 0 failed` (`1920 filtered out`), including `core::cloud_admin::tests::*` (secret redaction/zeroization, strict HTTPS portal URL validation, URL fragment masking, UUID/bounded-ID validation) and `core::cloud_client::cloud_admin_client_tests::*` (mutating vs read `outcome_unknown` separation, AAL2 `mfa_step_up_required` vs `admin_required`, admin diagnostic codes).
+  - `--lib advertised_rpc_sessions_match_the_actual_entry_guards` (`1/1`), `--lib core::interop` (`25/25`), and `--lib propodus` (`18/18`): passed.
+  - `--test cloud_admin_boundary`: `6 passed; 0 failed` (loopback HTTP E2E coverage across CLI and RPC `--op`/`--stdin` for `orgs` `#215` role/seat separation + header warnings, `members` slot-to-UUID resolution + pending-slot fail-closed + `assign`/`revoke-seat`/`transfer-ownership`/`project-settings`, `mfa_step_up_required` + single-send `outcome_unknown` non-retry, `invites` & `identity` `--secret-stdin` + argv secret rejection + zero-paid-seats notice + fragment redaction, strict `https://` billing portal validation, `overage_cap_exhausted` `spend_cap_warning`, and asserted `.decapod/data/decapod.db` / `todo.db` non-creation).
+  - `--test cli_contracts`: `134 passed; 0 failed; 1 ignored` (including `cloud_admin_help_secrets_and_rpc_capabilities_stay_in_sync`).
+  - Existing Cloud/interop regression suites: `cloud_supabase_boundary` (`52/52`), `cloud_cli_boundary` (`2/2`), `cloud_command_path` (`1/1`), `cloud_dactyl_boundary` (`1/1`), `cloud_todo_resume_wire` (`3/3`), `propodus_contract` (`6/6`), `release_dependency_policy` (`4/4`), `doc_alignment` (`5/5`), `interop_conformance` (`12/12`), `capability_contract_drift` (`3/3`), and `rpc_golden_vectors` (`6/6`).
+- **Observed host/pre-existing gaps**:
+  - Live hosted Propodus/Stripe end-to-end runs remain unexecuted locally (`supabase_service` hosted checks require live deployment credentials). Buildkite validation was waived by operator instruction; hosted GitHub Actions CI remains pending PR execution.
+  - Pre-existing unrelated checks on this checkout: `integration_sharding_policy` passed `22/23` (`relocated_gatling_shards_route_exact_filters_and_preserve_runfiles` failed on macOS `/var` -> `/private/var` temp symlink); legacy `cloud_backend_storage` (`DECAPOD_CLOUD_DATASTORE=neon`) failed `5/9` on pre-existing `provider_unavailable` vs `offline` and origin-error text assertions untouched by this PR.
+
 ## Effective operation grants and guidance hygiene verification (#1905, #1893)
 
 Verified on `origin/master` (`485a35148`, `v0.160.0` + PR `#1908` + PR `#1911` + PR `#1909` + PR `#1912`) inside isolated worktree `agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905`:
@@ -1655,8 +1674,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

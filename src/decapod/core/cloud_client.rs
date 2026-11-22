@@ -7,7 +7,7 @@ use crate::core::backend::{BackendRoute, CloudDatastore};
 #[cfg(feature = "supabase-cloud")]
 use crate::core::cloud_session::{Bootstrap, Phase, Session, SessionGuard};
 use crate::core::cloud_session::{SessionState, SessionStore};
-use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
+use crate::core::error::{CloudAuthDiagnostic, CloudAuthErrorCode, CloudAuthStatus, DecapodError};
 use crate::core::repo_identity::RepositoryIdentity;
 use std::path::Path;
 use std::time::Duration;
@@ -118,6 +118,76 @@ pub(crate) fn diagnostic_for_status_code(
             CloudAuthStatus::MfaRequired,
             "Account-level AAL2 MFA step-up is required before device enrollment or privileged custody.",
             "Complete account MFA verification in the browser, then retry the command.",
+        )
+        .with_error_code(CloudAuthErrorCode::MfaStepUpRequired),
+        "admin_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::Unauthorized,
+            "Organization administrator privileges are required for this operation.",
+            "Ask an organization administrator to perform this action, then retry.",
+        )
+        .with_error_code(CloudAuthErrorCode::AdminRequired),
+        "owner_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::Unauthorized,
+            "Organization owner privileges are required to transfer ownership or modify owner custody.",
+            "Ask the current organization owner to perform this action, then retry.",
+        )
+        .with_error_code(CloudAuthErrorCode::OwnerRequired),
+        "provider_quarantined" | "quarantined_provider_link" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "This OAuth provider identity link is currently quarantined and requires explicit confirmation or revocation.",
+            "Run `decapod cloud identity resolve-quarantine --provider <google|github|gitlab> --decision <confirm|revoke>` before continuing.",
+        )
+        .with_error_code(
+            CloudAuthErrorCode::from_code_str(code)
+                .unwrap_or(CloudAuthErrorCode::ProviderQuarantined),
+        ),
+        "custody_conflict" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "Cloud organization or member custody changed concurrently.",
+            "Refresh live organization/member state (`decapod cloud orgs`, `decapod cloud members list`) and retry with the current revision.",
+        )
+        .with_error_code(CloudAuthErrorCode::CustodyConflict),
+        "owner_protected" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::Unauthorized,
+            "Organization owner membership or seat is protected until ownership is explicitly transferred.",
+            "Use `decapod cloud members transfer-ownership` before revoking the current owner.",
+        )
+        .with_error_code(CloudAuthErrorCode::OwnerProtected),
+        "member_not_found" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "The target member or seat slot was not found in this organization.",
+            "Run `decapod cloud members list` to inspect current slot and member UUIDs.",
+        )
+        .with_error_code(CloudAuthErrorCode::MemberNotFound),
+        "invitation_expired" | "invitation_not_found" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::Expired,
+            "The workspace invitation was not found, has already been consumed, or has expired.",
+            "Run `decapod cloud invites list` to check pending invitations or request a new invite.",
+        )
+        .with_error_code(
+            CloudAuthErrorCode::from_code_str(code)
+                .unwrap_or(CloudAuthErrorCode::InvitationNotFound),
+        ),
+        "project_not_found" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "The target cloud repository project was not found or is not accessible to this organization.",
+            "Run `decapod cloud projects` to verify the exact project identifier.",
+        )
+        .with_error_code(CloudAuthErrorCode::ProjectNotFound),
+        "seat_revoked" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::EntitlementDenied,
+            "This paid repository seat was revoked.",
+            "Ask an organization administrator to assign an active slot via `decapod cloud members assign`.",
+        )
+        .with_error_code(CloudAuthErrorCode::SeatRevoked),
+        "billing_not_configured" | "billing_unavailable" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ProviderUnavailable,
+            "Cloud billing or portal configuration is unavailable for this organization.",
+            "Check organization subscription enrollment or retry once billing integration is configured.",
+        )
+        .with_error_code(
+            CloudAuthErrorCode::from_code_str(code)
+                .unwrap_or(CloudAuthErrorCode::BillingUnavailable),
         ),
         "registration_required" => CloudAuthDiagnostic::new(
             CloudAuthStatus::RegistrationRequired,
@@ -291,6 +361,111 @@ pub fn transport_error_for_repository(
 }
 
 #[cfg(feature = "supabase-cloud")]
+fn bearer_aal2_claim(token: &str) -> Option<bool> {
+    let mut parts = token.split('.');
+    let _header = parts.next()?;
+    let payload = parts.next()?;
+    let _sig = parts.next()?;
+    if parts.next().is_some() {
+        return None;
+    }
+    let decoded = crate::core::cloud_dpop::base64url_decode(payload).ok()?;
+    let json: serde_json::Value = serde_json::from_slice(&decoded).ok()?;
+    if let Some(aal) = json.get("aal").and_then(|v| v.as_str()) {
+        Some(aal.eq_ignore_ascii_case("aal2"))
+    } else {
+        // JWTs without an `aal` claim have not established AAL2 step-up.
+        Some(false)
+    }
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub(crate) fn admin_transport_error(
+    error: dactyl_db::DactylError,
+    repo_slug: Option<&str>,
+    mutating: bool,
+    aal2_gated: bool,
+    bearer: Option<&str>,
+) -> DecapodError {
+    use dactyl_db::{AdapterErrorKind, MutationOutcome};
+
+    if error.mutation_outcome() == MutationOutcome::Uncertain
+        || (mutating
+            && (error.adapter_code() == Some("outcome_unknown")
+                || matches!(
+                    error.adapter_kind(),
+                    Some(
+                        AdapterErrorKind::Transport
+                            | AdapterErrorKind::Timeout
+                            | AdapterErrorKind::Unavailable
+                    )
+                )))
+    {
+        return DecapodError::CloudAuth(
+            CloudAuthDiagnostic::new(
+                CloudAuthStatus::OutcomeUnknown,
+                "The cloud admin mutation failed after sending or returned an uncertain outcome; Decapod did not retry it automatically.",
+                "Inspect live server state (`decapod cloud orgs`, `decapod cloud members list`, `decapod cloud invites list`) before retrying so the change is not applied twice.",
+            )
+            .with_error_code(CloudAuthErrorCode::OutcomeUnknown),
+        );
+    }
+
+    if let Some(code) = error.adapter_code()
+        && let Some(diagnostic) = diagnostic_for_status_code(code, repo_slug)
+    {
+        return DecapodError::CloudAuth(diagnostic);
+    }
+
+    if error.adapter_kind() == Some(AdapterErrorKind::Authorization)
+        && error.adapter_code().is_none()
+    {
+        if aal2_gated && bearer.and_then(bearer_aal2_claim) != Some(true) {
+            return DecapodError::CloudAuth(
+                CloudAuthDiagnostic::new(
+                    CloudAuthStatus::MfaRequired,
+                    "This privileged cloud admin mutation requires account-level AAL2 MFA step-up (`mfa_step_up_required`) or organization administrator authorization.",
+                    "Complete AAL2 MFA verification in Cloud Admin (or verify organization admin/owner permissions) and retry.",
+                )
+                .with_error_code(CloudAuthErrorCode::MfaStepUpRequired),
+            );
+        }
+        return DecapodError::CloudAuth(
+            CloudAuthDiagnostic::new(
+                CloudAuthStatus::Unauthorized,
+                "Organization administrator or owner authorization is required for this cloud admin operation.",
+                "Ask an organization administrator or owner to grant permission or perform this operation.",
+            )
+            .with_error_code(CloudAuthErrorCode::AdminRequired),
+        );
+    }
+
+    if error.adapter_kind() == Some(AdapterErrorKind::Conflict) && error.adapter_code().is_none() {
+        return DecapodError::CloudAuth(
+            CloudAuthDiagnostic::new(
+                CloudAuthStatus::ActionRequired,
+                "The cloud service rejected this operation due to a state conflict (such as a stale membership revision, protected owner, or duplicate pending invite).",
+                "Refresh live state (`decapod cloud orgs`, `decapod cloud members list`, `decapod cloud invites list`) and retry with current identifiers/revision.",
+            )
+            .with_error_code(CloudAuthErrorCode::Conflict),
+        );
+    }
+
+    if error.adapter_kind() == Some(AdapterErrorKind::NotFound) && error.adapter_code().is_none() {
+        return DecapodError::CloudAuth(
+            CloudAuthDiagnostic::new(
+                CloudAuthStatus::ActionRequired,
+                "The requested cloud organization, member, invitation, link intent, or project was not found.",
+                "List live cloud resources first (`decapod cloud orgs`, `decapod cloud members list`, `decapod cloud invites list`) and retry with an existing UUID.",
+            )
+            .with_error_code(CloudAuthErrorCode::NotFound),
+        );
+    }
+
+    transport_error_for_repository(error, repo_slug)
+}
+
+#[cfg(feature = "supabase-cloud")]
 fn secrets(bootstrap: &Bootstrap) -> Result<dactyl_db::AuthenticationSecrets, DecapodError> {
     // The registry API supports private persistence through its Serde contract.
     // Restore the caller-owned record; Dactyl validates it before transport.
@@ -451,9 +626,28 @@ fn acquire(
     identity: &RepositoryIdentity,
     restart: bool,
 ) -> Result<(dactyl_db::CloudConnector, SessionGuard), DecapodError> {
+    let (connector, guard, _meta) = acquire_with_metadata(project_root, identity, restart)?;
+    Ok((connector, guard))
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn acquire_with_metadata(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    restart: bool,
+) -> Result<
+    (
+        dactyl_db::CloudConnector,
+        SessionGuard,
+        dactyl_db::CloudResponseMetadata,
+    ),
+    DecapodError,
+> {
     let selected = selected_origin()?;
-    let mut connector = dactyl_db::CloudConnector::discover(&selected)
-        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
+    let (mut connector, discover_meta) =
+        dactyl_db::CloudConnector::discover_with_metadata(&selected).map_err(|error| {
+            transport_error_for_repository(error, Some(&identity.canonical_name))
+        })?;
     if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
         connector.origin(),
         &identity.canonical_name,
@@ -663,7 +857,35 @@ fn acquire(
     if session.expires_at <= now() || state.phase != Phase::Ready {
         return Err(restart_required());
     }
-    Ok((connector, guard))
+    Ok((connector, guard, discover_meta))
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub(crate) fn with_admin_session<T, F>(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    f: F,
+) -> Result<T, DecapodError>
+where
+    F: FnOnce(
+        &dactyl_db::CloudConnector,
+        &SessionGuard,
+        &str,
+        Vec<crate::core::propodus::CloudMetadataWarning>,
+    ) -> Result<T, DecapodError>,
+{
+    let (connector, mut guard, discover_meta) =
+        acquire_with_metadata(project_root, identity, false)?;
+    let bearer = guard
+        .state()
+        .session
+        .as_ref()
+        .ok_or_else(restart_required)?
+        .access_token
+        .clone();
+    let initial_warnings = crate::core::propodus::warnings_from_cloud_metadata(&discover_meta);
+    let result = f(&connector, &guard, &bearer, initial_warnings);
+    account_result(&mut guard, result)
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -874,7 +1096,7 @@ pub fn status_live(
         result["spend_cap_status"] = serde_json::json!(spend_status);
         result["spend_cap_warning"] = serde_json::json!(matches!(
             spend_status,
-            "warning" | "exhausted" | "cap_reached"
+            "warning" | "overage_cap_exhausted" | "exhausted" | "cap_reached"
         ));
     }
     if !warnings.is_empty() {
@@ -1330,4 +1552,103 @@ pub fn revoke(
         "warnings": warnings,
         "status": "revoked",
     }))
+}
+
+#[cfg(all(test, feature = "supabase-cloud"))]
+mod cloud_admin_client_tests {
+    use super::*;
+    use dactyl_db::{AdapterErrorKind, DactylError};
+
+    fn fake_jwt(payload_json: serde_json::Value) -> String {
+        let header = crate::core::cloud_dpop::base64url_encode(br#"{"alg":"HS256","typ":"JWT"}"#);
+        let payload =
+            crate::core::cloud_dpop::base64url_encode(payload_json.to_string().as_bytes());
+        format!("{header}.{payload}.sig")
+    }
+
+    #[test]
+    fn admin_transport_error_distinguishes_outcome_unknown_between_mutations_and_reads() {
+        let err = DactylError::Adapter {
+            kind: AdapterErrorKind::Timeout,
+            code: None,
+            message: "remote state uncertain: timed out".into(),
+        };
+        let mut_err = admin_transport_error(err, Some("owner/repo"), true, true, Some("dpc_at_x"));
+        match mut_err {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::OutcomeUnknown);
+                assert_eq!(diag.error_code_str(), Some("outcome_unknown"));
+            }
+            other => panic!("expected CloudAuth OutcomeUnknown, got {other:?}"),
+        }
+
+        let read_transport = DactylError::Adapter {
+            kind: AdapterErrorKind::Timeout,
+            code: None,
+            message: "cloud authentication timed out".into(),
+        };
+        let read_err =
+            admin_transport_error(read_transport, Some("owner/repo"), false, false, None);
+        match read_err {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::Offline);
+            }
+            other => panic!("expected CloudAuth Offline for read, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn admin_transport_error_surfaces_mfa_step_up_vs_admin_required_on_aal2_ops() {
+        let aal1_jwt = fake_jwt(serde_json::json!({ "sub": "u1", "aal": "aal1" }));
+        let err_403 = DactylError::Adapter {
+            kind: AdapterErrorKind::Authorization,
+            code: None,
+            message: "cloud authentication request was rejected".into(),
+        };
+        let mfa_diag =
+            admin_transport_error(err_403, Some("owner/repo"), true, true, Some(&aal1_jwt));
+        match mfa_diag {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::MfaRequired);
+                assert_eq!(diag.error_code_str(), Some("mfa_step_up_required"));
+            }
+            other => panic!("expected MfaRequired, got {other:?}"),
+        }
+
+        let aal2_jwt = fake_jwt(serde_json::json!({ "sub": "u1", "aal": "aal2" }));
+        let err_403_admin = DactylError::Adapter {
+            kind: AdapterErrorKind::Authorization,
+            code: None,
+            message: "cloud authentication request was rejected".into(),
+        };
+        let admin_diag = admin_transport_error(
+            err_403_admin,
+            Some("owner/repo"),
+            true,
+            true,
+            Some(&aal2_jwt),
+        );
+        match admin_diag {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::Unauthorized);
+                assert_eq!(diag.error_code_str(), Some("admin_required"));
+            }
+            other => panic!("expected Unauthorized admin_required, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn diagnostic_for_status_code_maps_admin_and_mfa_codes() {
+        let mfa = diagnostic_for_status_code("mfa_step_up_required", None).unwrap();
+        assert_eq!(mfa.status, CloudAuthStatus::MfaRequired);
+        assert_eq!(mfa.error_code_str(), Some("mfa_step_up_required"));
+
+        let owner = diagnostic_for_status_code("owner_required", None).unwrap();
+        assert_eq!(owner.status, CloudAuthStatus::Unauthorized);
+        assert_eq!(owner.error_code_str(), Some("owner_required"));
+
+        let quar = diagnostic_for_status_code("provider_quarantined", None).unwrap();
+        assert_eq!(quar.status, CloudAuthStatus::ActionRequired);
+        assert_eq!(quar.error_code_str(), Some("provider_quarantined"));
+    }
 }

@@ -1,5 +1,12 @@
 # Operations
 
+## Operating Decapod Cloud orgs, members, invites, identity, and billing (#1896, #1836, #1835, #1877)
+
+- **Inspect organization admin vs paid seat access (`decapod cloud orgs`, `cloud.orgs`)**: Run `decapod cloud orgs [--format json]` after `decapod cloud login` to inspect verified organizations (`cloud_org_id`, `admin`, `paid_repo_count`, `paid_repo_seat_assigned`). An admin without an assigned paid repository seat cannot read/write hosted repo data until assigning a seat via `decapod cloud members assign --project-id <id> --slot <n>`.
+- **Handle AAL2 MFA step-up and post-send uncertainty cleanly**: On `mfa_step_up_required` (`status: "mfa_required"`), complete browser AAL2 MFA verification before retrying privileged `members`, `invites`, `identity`, or `billing portal` mutations. On `outcome_unknown` (`status: "outcome_unknown"`), never blindly replay the mutation; run read-only `decapod cloud orgs`, `decapod cloud members list`, or `decapod cloud invites list` to inspect live server state first.
+- **Pipe one-time invite and link secrets strictly over stdin**: Supply `invitation_secret` to `decapod cloud invites accept --invitation-id <uuid> --secret-stdin` or `stepup_secret` to `decapod cloud identity confirm-link --intent-id <uuid> --secret-stdin` exclusively over piped stdin (`printf '%s\n' "$SECRET" | decapod ... --secret-stdin`), or via `decapod rpc --stdin`. CLI secret flags and RPC `--params` argv secrets are rejected.
+- **Inspect billing portal & live spend caps (`decapod cloud billing`)**: `decapod cloud billing portal [--organization-id <id>]` returns a verified `https://` billing portal URL (`http://`, embedded userinfo, fragments, and credential query parameters are rejected). `decapod cloud billing limits [--project-id <id>]` and `decapod cloud status --live` surface live `spend_cap_status` and trigger `spend_cap_warning = true` for `"overage_cap_exhausted"` alongside `"warning"`, `"exhausted"`, and `"cap_reached"`.
+
 ## Inspecting composed capability contracts & offline usability (#1906)
 
 - **Inspect current repo contract & offline posture**: Run `decapod capabilities contracts [--dir <path>] [--format text|json]` (or RPC `interop.capability_contracts`) to check composed capability status without mutating state or requiring Cloud credentials. Local offline repositories remain `local_offline_usable = true` and unaffected when no Cloud binding is configured.
@@ -481,8 +488,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

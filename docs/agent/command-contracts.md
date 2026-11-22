@@ -20,6 +20,13 @@ This document defines the normative operational contracts for the Decapod CLI.
 ## `decapod cloud`
 - **Intent:** Optional Decapod Cloud credential and project commands
 
+### Decapod Cloud Onboarding & Administration (`decapod cloud ...` / `cloud.*` RPC)
+
+- **Control-plane surface:** `decapod cloud {orgs,members,invites,identity,billing}` and matching JSON RPC ops (`cloud.orgs`, `cloud.members`, `cloud.invites`, `cloud.identity`, `cloud.billing`) route strictly through Dactyl `AccountOperation::{Register, Status, Manage, Portal}` without touching or creating `.decapod/data/decapod.db` or `todo.db`.
+- **Orthogonal roles & zero-seat invites (#215):** `orgs` explicitly surfaces `admin` vs `paid_repo_seat_assigned` and `paid_repo_count`; `invites create` / `accept` state explicitly that workspace membership grants zero paid repository seats until an admin assigns a seat via `cloud members assign`.
+- **Secret handling:** `invites accept --secret-stdin` and `identity confirm-link --secret-stdin` read secrets strictly from stdin (zero secret CLI flags); RPC secret operations reject `--params` argv secrets and require `decapod rpc --stdin`. All secrets and URL fragments are redacted from `Debug`, stderr, error diagnostics, and RPC receipts.
+- **URL, AAL2 MFA & post-send semantics:** `billing portal` strictly enforces an `https://` origin with zero embedded userinfo/fragments/credential query parameters; privileged mutations propagate typed `mfa_step_up_required` (`MfaRequired`) and post-send `outcome_unknown` (`OutcomeUnknown`, never blindly replayed) diagnostics, plus `billing limits` / `status --live` `spend_cap_warning` (including `overage_cap_exhausted`).
+
 ## `decapod constitution`
 - **Intent:** Embedded Constitution Graph queries and lookups
 
@@ -288,6 +295,11 @@ Live validation and readback remain owned by `workspace publish`.
 ### Operation: `InteropCapabilityContracts`
 ### Operation: `StateResolve`
 ### Operation: `StateDiff`
+### Operation: `CloudOrgs`
+### Operation: `CloudMembers`
+### Operation: `CloudInvites`
+### Operation: `CloudIdentity`
+### Operation: `CloudBilling`
 
 # Runtime Checkpoints and Recovery
 

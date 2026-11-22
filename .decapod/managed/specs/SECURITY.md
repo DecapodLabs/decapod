@@ -1,5 +1,16 @@
 # Security
 
+## Decapod Cloud admin secret custody, URL validation, and SQLite isolation (#1896, #1836, #1835, #1877)
+
+- **Zero secret leakage & volatile zeroization (`src/decapod/core/cloud_admin.rs::RedactedSecret`)**:
+  `RedactedSecret` trims trailing `\r\n`, rejects empty/whitespace-only or `> 4096`-byte inputs without echoing values, prints `[REDACTED]` in `Debug`/`Display`, omits `Serialize`, and overwrites heap buffers via `cloud_dpop::zeroize_bytes` on drop. `redact_url_fragment` and `redact_json_value` scrub secret fields (`*secret*`, `*token*`, `*password*`, `*credential*`, `authorization`, `apikey`) and `#...` fragments from errors, stderr warnings, and RPC trace/receipt records.
+- **Stdin-only secret transport (`cli.rs`, `lib.rs::parse_rpc_request`)**:
+  `CloudInvitesCommand::Accept` and `CloudIdentityCommand::ConfirmLink` define only `--secret-stdin` (no secret argv flags exist on CLI). `reject_argv_cloud_admin_secrets` blocks secrets passed via `decapod rpc --op cloud.{invites,identity} --params` CLI arguments before dispatch or tracing, requiring `decapod rpc --stdin`.
+- **Strict HTTPS billing portal & invitation URL checks (`validate_https_portal_url`, `validate_https_url_basic`)**:
+  `billing portal` enforces explicit `https://` scheme, valid DNS/IPv6 authority, and absence of control/whitespace characters, `@` userinfo, `#` fragments, and credential query keys (`token`, `access_token`, `refresh_token`, `id_token`, `secret`, `client_secret`, `invitation_secret`, `stepup_secret`, `session_secret`, `password`, `pwd`, `api_key`, `apikey`, `private_key`, `bearer`, `auth`, `signature`). `invites create` and `identity prepare-link` validate returned `invitation_url` / authorization URLs as valid `https://` origins without userinfo while redacting fragments on rejection.
+- **Single-send uncertain outcome containment & zero SQLite touch**:
+  `cloud_admin::account_call` never automatically replays failed mutations; post-send `MutationOutcome::Uncertain` / transport/timeout/unavailable errors on mutating calls emit `CloudAuthStatus::OutcomeUnknown`. Early CLI (`Command::Cloud`) and RPC (`run_cloud_admin_rpc`) paths bypass SQLite startup and local `.decapod/data/decapod.db` / `todo.db` creation. Gap noted: under `dactyl-db 0.18.0`, HTTP 403 error codes outside Dactyl's `public_error_code` allowlist (`mfa_step_up_required` vs `admin_required`) rely on `bearer_aal2_claim` inspection for disambiguation until Dactyl `0.19.0` forwards those explicit codes.
+
 ## Effective operation grant anti-widening and TOCTOU invariants (#1905, #1893)
 
 - **Strict monotonic narrowing & denial precedence (`src/decapod/core/effective_grant.rs`)**:
@@ -879,8 +890,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

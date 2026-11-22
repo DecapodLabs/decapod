@@ -1,5 +1,13 @@
 # Intent
 
+## First-class Decapod Cloud onboarding & administrative CLI/RPC over Dactyl 0.18.0 (#1896, #1836, #1835, #1877)
+
+Extends `decapod cloud` and JSON RPC with first-class organization, member/seat, invitation, OAuth provider identity, and billing control-plane operations strictly over `dactyl_db::AccountOperation::{Register, Status, Manage, Portal}` without touching local SQLite or waiting on an unreleased `dactyl-db` version:
+
+- **Orthogonal org-admin vs paid-repo-seat visibility (`#215`, `#1896`)**: `decapod cloud orgs` / `cloud.orgs` list verified organizations (`organization_id`, `cloud_org_id`, `slug`, `admin`, `paid_repo_count`, `paid_repo_seat_assigned`, `org_admin_without_paid_seat`) and explicitly surface that organization governance privileges grant zero repository data access without an assigned paid repository seat.
+- **Full organization custody, invite, identity, and billing control (`#1877`, `#1835`, `#1836`)**: Exposes `decapod cloud members` (`list`, `assign`, `revoke-seat`, `revoke-member`, `transfer-ownership`, `project-settings`), `decapod cloud invites` (`list`, `create`, `cancel`, `accept`), `decapod cloud identity` (`prepare-link`, `confirm-link`, `resolve-quarantine`, `revoke-link`), and `decapod cloud billing` (`portal`, `limits`), plus advancing `#1836` in `cloud_client::status_live` and `cloud_admin::billing` so `overage_cap_exhausted` sets `spend_cap_warning = true` and `CloudResponseMetadata` deprecation/sunset/diagnostic headers propagate cleanly.
+- **Fail-closed secret custody, URL validation & non-retry diagnostics**: Enforces stdin-only one-time secrets (`--secret-stdin` CLI flag, zero secret CLI argv flags, `--stdin`-only JSON for RPC secret operations, `RedactedSecret` zeroization + `[REDACTED]` `Debug`/`Display`/trace/error handling), strict `https://` zero-credential portal URL validation, typed AAL2 `mfa_step_up_required` (`MfaRequired`) diagnostics, and single-send `outcome_unknown` (`OutcomeUnknown`) surfacing on post-send mutation uncertainty without `.decapod/data/decapod.db` creation.
+
 ## Narrowing effective operation grants and agent guidance hygiene (#1905, #1893)
 
 - **Monotonically narrowing effective operation grants (`#1905`)**: Ensures every governed operation evaluates a deterministic, non-persisted `EffectiveOperationGrant` (`decapod.effective-grant.v1`) formed by intersecting accepted repository policy, server-verified Cloud access (`VerifiedCloudScope`), actor trust and active task custody, live scoped policy approvals, parent-to-child delegation bounds, and exact operation/parameter/path/resource/prestate bindings. Authority can only narrow across delegation: child requests, copied parent grants, candidate-branch policy edits, forged approval tokens, or `PlanState::Approved` can never widen scope, override explicit denials, or bypass human approval or cumulative shared-parent budget accounting across sibling subtasks. Request admission (`GrantDecision`) remains distinct from observed consequence (`ExecutionOutcomeKind::DecapodMediatedApplied` vs `WitnessedExternal`).
@@ -794,8 +802,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
