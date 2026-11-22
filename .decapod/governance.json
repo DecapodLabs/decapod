@@ -926,6 +926,14 @@
         "tests/cloud_admin_boundary.rs",
         "tests/cloud_dpop_e2e_1878.rs"
       ]
+    },
+    {
+      "id": "chk-dpop-1878-release-dep-policy-019",
+      "summary": "Update tests/release_dependency_policy.rs to pin dactyl-db =0.19.0 and matching crates.io checksum",
+      "input_digest": "sha256:08d1a9b1b242830c99e29b739caa0fcd533e989dc14263d42de1bf0b0fe05525",
+      "proof_refs": [
+        "tests/release_dependency_policy.rs"
+      ]
     }
   ],
   "intents": {
@@ -969,22 +977,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled origin/master (9453ebe97) with #1878 DPoP E2E gateway and dactyl-db 0.19.0 Cloud Admin wiring",
-          "reviewed_code_fingerprint": "c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4",
+          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; architecture prose already reflects #1878 DPoP E2E and dactyl-db 0.19.0",
+          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
           "spec_material_hash": "1136777d9a864b1ad24a13eb87507c9a6c695e5bbe8eaa3904aba8932c75fa79"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled origin/master (9453ebe97) with #1878 + dactyl-db 0.19.0 cloud CLI/RPC contracts and error taxonomy",
-          "reviewed_code_fingerprint": "c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4",
+          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; interface prose already reflects #1878 and dactyl-db 0.19.0 contracts",
+          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
           "spec_material_hash": "95a10a300478a56bcb6c0178d83d5d5fa0d68e542542d220a0c25eae0058e8cb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled origin/master (9453ebe97) with #1878 DPoP sidecar custody, container signer /cloud-control allowlist, and dactyl-db 0.19.0 boundaries",
-          "reviewed_code_fingerprint": "c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4",
+          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; security prose already reflects #1878 DPoP custody and dactyl-db 0.19.0 lockfile integrity",
+          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
           "spec_material_hash": "81a91ba784970d5006af60593a71899a8576e9da7f143cf5b315c63714ad3664"
         }
       ],
@@ -996,13 +1004,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795373883Z"
+      "updated_at": "1795376453Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:245cd761ce2e8713c120b2e8ebbc2cf5c561a27a045c55565ad7ee94cc15eba1",
+      "artifact_hash": "sha256:7a137467a1b3a857cb4b004bdfec3b3f988ed624f69df937f3ed950195fe9502",
       "checks": [
         {
           "name": "bazel-cargo-inputs-policy",
@@ -1018,6 +1026,14 @@
         },
         {
           "name": "cargo-fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
@@ -1059,6 +1075,10 @@
         {
           "name": "interop-conformance",
           "status": "passed"
+        },
+        {
+          "name": "release_dependency_policy",
+          "status": "passed"
         }
       ],
       "current_phase": "verify",
@@ -1082,10 +1102,17 @@
             "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M81S9CD71FHEA712TH1V283Z": {
@@ -1146,6 +1173,23 @@
                 "validation_findings": [
                   "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
                 ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/release_dependency_policy.rs"
+                ],
+                "proof_refs": [
+                  "release_dependency_policy",
+                  "cargo_fmt",
+                  "cargo_clippy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1183,7 +1227,8 @@
         "src/decapod/lib.rs",
         "tests/cli_contracts.rs",
         "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
+        "tests/cloud_dpop_e2e_1878.rs",
+        "tests/release_dependency_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
