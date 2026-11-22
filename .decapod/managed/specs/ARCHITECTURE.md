@@ -1093,9 +1093,17 @@ profile, policy, and execution evidence. CI-local validation has a narrower
 scope and cannot authorize publication. Candidate or authority changes can
 invalidate earlier proof.
 
-The native validation route and optional Buildkite route implement required
-check profiles. Buildkite is a provider of execution evidence. Its presence
-does not change the ownership of intent, policy, or proof requirements.
+The strict source profile (`decapod.pr-readiness.v1`) retains the same required
+check graph across native execution, Buildkite (`validation_buildkite_preflights`),
+and independently accepted GitHub Actions execution
+(`validation_github_actions_preflights`). In `src/decapod/core/validation_runtime.rs`,
+`ProofConfiguration::verify_source_ci_authority` verifies candidate against accepted
+target policy before `required_source_catalog_for_provider` selects
+`Provider::Buildkite` or `Provider::GithubActions`, and `SnapshotHost` /
+`snapshot::source_import` bind the accepted dual-root executor and recollect
+measured workflow attempts and authenticated archives from the immutable source
+branch. Provider choice changes only the evidence carrier while explicit source,
+target, and complete-check requirements remain authoritative.
 Provider details belong in [VALIDATION.md](VALIDATION.md).
 
 The controller's finite source adapters are separate from the configured
@@ -1294,7 +1302,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Repository signal fingerprint: `2a59ab3c7c7971e01af8b8ea38c5292f77194d9e4a02c6d273508848fc31d7a7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

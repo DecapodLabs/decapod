@@ -40,12 +40,12 @@ impl ValidationScope {
     /// select partial CI scope; they cannot mint full publication readiness.
     pub(crate) fn dispatch<T, R>(
         self,
-        buildkite_enabled: bool,
+        remote_preflight: bool,
         input: T,
         local: impl FnOnce(T) -> R,
         remote: impl FnOnce(T) -> R,
     ) -> R {
-        if self.requires_publication_proof() && buildkite_enabled {
+        if self.requires_publication_proof() && remote_preflight {
             remote(input)
         } else {
             local(input)
@@ -183,7 +183,7 @@ mod tests {
             .split_once("pub(crate) fn enforce_workbranch_readiness_before_push(")
             .unwrap()
             .0;
-        assert!(readiness.contains("if config.proof.validation_buildkite_preflights {\n            core::workspace::verify_readiness_transport_prerequisites(workspace_root)?;\n        } else {\n            core::workspace::verify_current_publication_prerequisites(workspace_root)?;\n        }"));
+        assert!(readiness.contains("if config.proof.uses_remote_preflight() {\n            core::workspace::verify_readiness_transport_prerequisites(workspace_root)?;\n        } else {\n            core::workspace::verify_current_publication_prerequisites(workspace_root)?;\n        }"));
         let boundary = readiness
             .find("core::workspace::verify_readiness_transport_prerequisites")
             .unwrap();
@@ -242,7 +242,7 @@ mod tests {
             .unwrap()
             .0;
         assert!(publish.contains("if !crate::cli::DecapodProjectConfig::load(workspace_root)?"));
-        assert!(publish.contains(".validation_buildkite_preflights"));
+        assert!(publish.contains(".uses_remote_preflight()"));
         assert!(publish.contains("run_current_workbranch_readiness_with("));
         let command = source
             .split_once("fn run_workspace_command(")
@@ -255,6 +255,6 @@ mod tests {
             .unwrap()
             .0;
         assert!(command.contains("if !crate::cli::DecapodProjectConfig::load(workspace_root)?"));
-        assert!(command.contains(".validation_buildkite_preflights"));
+        assert!(command.contains(".uses_remote_preflight()"));
     }
 }

@@ -415,6 +415,7 @@ fn bindings(catalog: &RequiredCatalog) -> (ExecutionPolicy, BTreeMap<CheckKey, E
         .collect();
     let policy = ExecutionPolicy {
         buildkite_preflights: false,
+        github_actions_preflights: false,
         executors: map.keys().map(|k| (k.clone(), Provider::Native)).collect(),
     };
     (policy, map)
@@ -1330,4 +1331,74 @@ fn controller_mismatch_is_distinct_only_after_complete_inventory_review() {
             Err(PlanningFailure::MissingSource(_))
         ));
     }
+}
+
+#[test]
+fn github_source_ci_keeps_all_reviewed_obligations_and_requires_its_own_bindings() {
+    let (declaration, sources, facts, _) = inputs();
+    let baseline = required_source_catalog(Some(&declaration), &sources, &facts).unwrap();
+    let github = required_source_catalog_for_provider(
+        Some(&declaration),
+        &sources,
+        &facts,
+        None,
+        Provider::GithubActions,
+    )
+    .unwrap();
+    let logical_graph = |catalog: &RequiredCatalog| {
+        let rows: Vec<_> = catalog
+            .obligations()
+            .iter()
+            .map(|obligation| {
+                let mut key = obligation.key.clone();
+                key.provider = Provider::Native;
+                (key, obligation.role)
+            })
+            .collect();
+        let excluded: Vec<_> = catalog
+            .exclusions()
+            .iter()
+            .map(|exclusion| {
+                let mut key = exclusion.key.clone();
+                key.provider = Provider::Native;
+                (key, exclusion.rule.clone())
+            })
+            .collect();
+        (rows, excluded)
+    };
+    assert_eq!(logical_graph(&baseline), logical_graph(&github));
+    assert_ne!(
+        baseline.source_inventory_digest,
+        github.source_inventory_digest
+    );
+
+    let (mut policy, mut bindings) = bindings(&github);
+    policy.github_actions_preflights = true;
+    for (key, binding) in &mut bindings {
+        binding.executor = Provider::GithubActions;
+        policy
+            .executors
+            .insert(key.clone(), Provider::GithubActions);
+    }
+    let compiled = compile_plan(
+        github.clone(),
+        &policy,
+        &bindings,
+        &identity(),
+        &d("policy"),
+    )
+    .unwrap();
+    assert!(compiled.provider_prerequisites_required);
+    assert!(!compiled.plan.buildkite_enabled);
+    let key = github.obligations().first().unwrap().key.clone();
+    bindings.remove(&key);
+    assert!(matches!(
+        compile_plan(github.clone(), &policy, &bindings, &identity(), &d("policy")),
+        Err(PlanningFailure::MissingBinding(missing)) if missing == key
+    ));
+    policy.buildkite_preflights = true;
+    assert!(matches!(
+        compile_plan(github, &policy, &bindings, &identity(), &d("policy")),
+        Err(PlanningFailure::InvalidPlan(_))
+    ));
 }

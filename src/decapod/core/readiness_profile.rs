@@ -405,6 +405,8 @@ pub struct ExecutionBinding {
 #[derive(Debug, Clone, Serialize)]
 pub struct ExecutionPolicy {
     pub buildkite_preflights: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub github_actions_preflights: bool,
     pub executors: BTreeMap<CheckKey, Provider>,
 }
 
@@ -467,6 +469,12 @@ impl std::error::Error for PlanningFailure {}
 fn hash(value: &impl Serialize) -> Result<String, PlanningFailure> {
     evidence::digest(value).map_err(|_| PlanningFailure::Serialization)
 }
+impl ExecutionPolicy {
+    pub(crate) fn uses_remote_preflight(&self) -> bool {
+        self.buildkite_preflights || self.github_actions_preflights
+    }
+}
+
 pub(crate) fn valid_digest(digest: &str) -> bool {
     digest.strip_prefix("sha256:").is_some_and(|d| {
         d.len() == 64
@@ -538,6 +546,27 @@ pub fn required_source_catalog_with_executor(
     facts: &ApplicabilityFacts,
     executor: Option<&AcceptedExecutor>,
 ) -> Result<RequiredCatalog, PlanningFailure> {
+    required_source_catalog_for_provider(
+        declaration,
+        discovered,
+        facts,
+        executor,
+        Provider::Buildkite,
+    )
+}
+
+pub(crate) fn required_source_catalog_for_provider(
+    declaration: Option<&ProfileDeclaration>,
+    discovered: &SourceInventory,
+    facts: &ApplicabilityFacts,
+    executor: Option<&AcceptedExecutor>,
+    provider: Provider,
+) -> Result<RequiredCatalog, PlanningFailure> {
+    if !matches!(provider, Provider::Buildkite | Provider::GithubActions) {
+        return Err(PlanningFailure::InvalidPlan(
+            "unsupported source CI carrier".into(),
+        ));
+    }
     let declaration = declaration.ok_or(PlanningFailure::MissingProfile)?;
     if declaration.id != REQUIRED_PROFILE {
         return Err(PlanningFailure::UnknownProfile(declaration.id.clone()));
@@ -663,40 +692,38 @@ pub fn required_source_catalog_with_executor(
                 )
             };
             // Preserve every applicable logical check and matrix instance once.
-            // Buildkite imports the authored workflow contract; normal GitHub PR
-            // execution remains a separate post-publication CI policy.
-            for provider in [Provider::Buildkite] {
-                let mut provider_key = key.clone();
-                provider_key.provider = provider;
-                if !applicable {
-                    exclusions.push(ProvenExclusion {
-                        key: provider_key,
-                        rule: format!("{}:{id}:selected=false", source::SCHEMA),
-                    });
-                    continue;
-                }
-                let role = if matches!(id, "workflow-owned" | "health" | "standalone-validation")
-                    && matches!(job.job, "health" | "validate")
-                {
-                    InvocationRole::ProjectPrerequisites
-                } else {
-                    InvocationRole::SourceCheck
-                };
-                obligations.push(Obligation {
-                    definition_digest: hash(&(&source_digest, &provider_key, &definition, &role))?,
+            // The accepted preflight carrier places the same graph on one provider.
+            let mut provider_key = key;
+            provider_key.provider = provider;
+            if !applicable {
+                exclusions.push(ProvenExclusion {
                     key: provider_key,
-                    kind: CheckKind::SourceCi,
-                    role,
+                    rule: format!("{}:{id}:selected=false", source::SCHEMA),
                 });
+                continue;
             }
+            let role = if matches!(id, "workflow-owned" | "health" | "standalone-validation")
+                && matches!(job.job, "health" | "validate")
+            {
+                InvocationRole::ProjectPrerequisites
+            } else {
+                InvocationRole::SourceCheck
+            };
+            obligations.push(Obligation {
+                definition_digest: hash(&(&source_digest, &provider_key, &definition, &role))?,
+                key: provider_key,
+                kind: CheckKind::SourceCi,
+                role,
+            });
         }
     }
-    let key = key(
+    let mut key = key(
         "ci.yml",
         "candidate-build",
         BTreeMap::new(),
         "fresh-candidate-build",
     );
+    key.provider = provider;
     obligations.push(Obligation {
         definition_digest: hash(&(&source_digest, &key, "actual artifact required"))?,
         key,
@@ -766,6 +793,11 @@ pub fn compile_plan(
     governance_policy_digest: &str,
 ) -> Result<CompiledProfile, PlanningFailure> {
     let configuration_digest = current.configuration_digest.as_str();
+    if policy.buildkite_preflights && policy.github_actions_preflights {
+        return Err(PlanningFailure::InvalidPlan(
+            "conflicting remote preflight providers".into(),
+        ));
+    }
     if catalog.obligations.is_empty() {
         return Err(PlanningFailure::EmptyCatalog);
     }
@@ -793,7 +825,10 @@ pub fn compile_plan(
             || binding.role != obligation.role
             || binding.definition_digest != obligation.definition_digest
             || binding.executor != *executor
-            || (!policy.buildkite_preflights && *executor != Provider::Native)
+            || (!policy.uses_remote_preflight() && *executor != Provider::Native)
+            || (policy.github_actions_preflights
+                && (*executor != Provider::GithubActions
+                    || obligation.key.provider != Provider::GithubActions))
             || (policy.buildkite_preflights
                 && matches!(
                     obligation.kind,
@@ -816,11 +851,16 @@ pub fn compile_plan(
             requirement: Requirement::Execute,
         });
     }
-    let provider_prerequisites_required = policy.buildkite_preflights
+    let required_provider = if policy.github_actions_preflights {
+        Provider::GithubActions
+    } else {
+        Provider::Buildkite
+    };
+    let provider_prerequisites_required = policy.uses_remote_preflight()
         && catalog.obligations.iter().any(|row| {
             row.role == InvocationRole::ProjectPrerequisites
                 && row.kind == CheckKind::SourceCi
-                && row.key.provider == Provider::Buildkite
+                && row.key.provider == required_provider
         });
     let executors: Vec<_> = policy.executors.iter().collect();
     let plan = ExpectedPlan {
@@ -829,7 +869,7 @@ pub fn compile_plan(
             &catalog.profile_id,
             configuration_digest,
             governance_policy_digest,
-            policy.buildkite_preflights,
+            policy.uses_remote_preflight(),
             executors,
         ))?,
         source_inventory_digest: catalog.source_inventory_digest,
@@ -963,8 +1003,7 @@ pub fn freeze(
     }
     if prerequisites != ProjectPrerequisites::Passed
         && !(prerequisites == ProjectPrerequisites::ProviderRequired
-            && profile.provider_prerequisites_required
-            && profile.plan.buildkite_enabled)
+            && profile.provider_prerequisites_required)
     {
         return Err(LifecycleFailure::PrerequisitesFailed);
     }

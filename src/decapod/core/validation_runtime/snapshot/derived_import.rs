@@ -43,11 +43,11 @@ pub(super) fn github_derived_releases(
         .collect();
     if obligations.is_empty() {
         return Ok(SourceCollection {
-            checks: BTreeMap::new(),
             blockers: vec![Blocker::new(
                 "DERIVED_RELEASE_CATALOG_MISSING",
                 "required derivative release catalog is empty",
             )],
+            ..SourceCollection::default()
         });
     }
     let imported = collect(
@@ -64,10 +64,9 @@ pub(super) fn github_derived_releases(
     match imported {
         Ok(checks) => Ok(SourceCollection {
             checks,
-            blockers: Vec::new(),
+            ..SourceCollection::default()
         }),
         Err(error) => Ok(SourceCollection {
-            checks: BTreeMap::new(),
             blockers: obligations
                 .iter()
                 .map(|o| Blocker {
@@ -76,6 +75,7 @@ pub(super) fn github_derived_releases(
                     check: Some(o.key.clone()),
                 })
                 .collect(),
+            ..SourceCollection::default()
         }),
     }
 }
