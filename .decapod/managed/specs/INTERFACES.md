@@ -1,5 +1,14 @@
 # Interfaces
 
+## Composed capability contract CLI & RPC interfaces (#1906)
+
+- **Read-only CLI (`decapod capabilities contracts`, `src/decapod/cli.rs::CapabilitiesCommand::Contracts`, `src/decapod/lib.rs::run_capabilities_command`)**:
+  `decapod capabilities contracts [--fixture] [--contract <PATH>] [--dir <PATH>] [--format text|json]` inspects composed service capability contracts without startup migrations, SQLite initialization, session acquisition, or network calls. `--fixture` executes the deterministic `Decapod -> Dactyl -> Propodus` compatibility suite (`decapod.capability-compatibility-fixture.v1`), and `--contract <PATH>` evaluates a candidate `decapod.capability-contract.v1` JSON file against accepted project policy (`decapod.capability-inspection.v1`). Existing `decapod capabilities [--format json|text]` output remains unchanged.
+- **Read-only RPC (`interop.capability_contracts`, `src/decapod/core/interop.rs`, `src/decapod/core/rpc.rs::InteropCapabilityContractsParams`)**:
+  Registered in `interop::RPC_OPS` with `read_only = true`, `session_required = false`, and bypassed worktree/mandate mutations in `src/decapod/lib.rs`. Accepts `{ fixture?: bool, contract?: object }`, returning `InteropCapabilityContractsResult` with `input_origin` (`"repository_pinned_contracts"` or `"caller_supplied"`) and `canonical_state_verified = false`.
+- **Schema contract (`assets/schemas/capability-contract.schema.json`)**:
+  Draft 2020-12 strict schema (`additionalProperties = false`, `$id = https://decapod.dev/schemas/capability-contract-1.0.0.schema.json`) enforced by `tests/assets_schema_contract.rs`.
+
 ## Cloud Wave 2 CLI, error diagnostics, and hosted workspace interfaces (#1836, #1835, #1886)
 
 - **`decapod cloud` subcommands (`src/decapod/cli.rs::CloudCommand`)**:
@@ -1601,8 +1610,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
+- Repository signal fingerprint: `96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

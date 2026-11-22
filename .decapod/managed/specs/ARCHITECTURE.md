@@ -1,5 +1,14 @@
 # Architecture
 
+## Composed service capability contracts & validation boundary (#1906)
+
+- **Versioned schema & core evaluator (`assets/schemas/capability-contract.schema.json`, `src/decapod/core/capability_contract.rs`)**:
+  Defines `CapabilityContract` (`decapod.capability-contract.v1`), `ServiceInterfaceDescriptor`, `AcceptedCapabilityPolicy`, `EvidenceObservation`, `CompositeExecutionTrace`, and `CompatibilityReport` (`decapod.capability-compatibility-report.v1`). `validate_contract_schema` and `evaluate_composed_capability` enforce required schema/error/auth/idempotency/negative-case/provenance invariants, compare Dactyl and Propodus interface descriptors against pinned Decapod expectations, and verify candidate contracts against `AcceptedCapabilityPolicy` (`repo_accepted_policy` from main/host baseline).
+- **Composite consequence evaluator (`evaluate_consequence_trace`)**:
+  Distinguishes `CompositeConsequenceState::{Prepared, Observed, Held, Compensated}`, enforces prestate CAS checks (`PrestateDriftAfterPreparation`), aggregate shared-capacity checks (`SharedInvariantViolation`), async settlement (`UnresolvedAsyncConsequence`), severed-ack containment (`SeveredAckBlindReplayAttempt`), and admissible compensation (`task.release` with `FaultErasedByCompensation` / `UnsupportedCompensation` guards).
+- **Multi-repository fixture & validation gate (`run_compatibility_fixture_suite`, `src/decapod/core/validate.rs::validate_composed_capability_contract`)**:
+  `run_compatibility_fixture_suite` exercises negative and repaired traces for every falsifier in `#1906`. `validate_composed_capability_contract` leaves local repositories without `.decapod/contracts/capability_contract.json` unaffected while failing closed (`CAPABILITY_CONTRACT_DRIFT`) when an explicit contract file drifts from accepted host policy, drops required negative cases, or self-certifies.
+
 ## Cloud Wave 2 control-plane, keystore custody, and Cloud workspace runtime (#1836, #1835, #1886)
 
 - **Quota/cap taxonomy, spend inspection & metadata warnings (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_todo_operation.rs`, `src/decapod/core/propodus.rs`)**:
@@ -1265,8 +1274,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
+- Repository signal fingerprint: `96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

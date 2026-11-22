@@ -1,5 +1,14 @@
 # Security
 
+## Capability contract trust boundaries & tamper resistance (#1906)
+
+- **Accepted policy precedence (`AcceptedCapabilityPolicy`)**:
+  Agent-edited local contract copies cannot weaken `auth_scope`, drop `required_error_classes` or `required_negative_case_ids`, disable `blind_replay_forbidden`, or disable `readback_required`; `check_against_accepted_policy` and `validate_repo_contract_boundary` compare against the main/host baseline (`repo_accepted_policy`) and fail closed with `AgentEditedContractCopyDrift` / `DroppedNegativeCase`.
+- **Evidence provenance & no blind replay**:
+  Evidence from untrusted producers, stale revisions, or `uncertain` / `pending` prior attempts cannot be reused as current proof (`EvidenceProducerUntrusted`, `EvidenceStale`, `EvidenceUncertainNotProof`). Blind replay after a severed acknowledgement is rejected (`SeveredAckBlindReplayAttempt`) and compensation is blocked until authoritative idempotent readback resolves uncertainty or a mutually supported corrective op runs while retaining the original fault.
+- **Read-only inspection isolation**:
+  `decapod capabilities contracts` and `interop.capability_contracts` never trust caller-supplied contracts as canonical authority (`canonical_state_verified = false`), perform zero network calls, and never write `.decapod/data/decapod.db` or session state.
+
 ## Cloud Wave 2 keystore custody, DPoP logout isolation, and fail-closed container relay (#1836, #1835, #1886)
 
 - **Cross-platform OS keystore & non-secret inventory (`src/decapod/core/cloud_dpop.rs`)**:
@@ -841,8 +850,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
+- Repository signal fingerprint: `96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
