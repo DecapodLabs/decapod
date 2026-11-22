@@ -895,8 +895,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1515,3 +1515,9 @@ Actual official0.153.2 rejected an unpaired surrogate that the prior Python deco
 The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
 
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
+
+## Release-only inventory qualification and publication privacy controls (#1838)
+
+- **Fail-closed release-only boundary (`src/decapod/core/repository_profile.rs`)**: `qualifies_release_only_inventory_transition` never waives command/execution/coverage review (`commands_preserved` and exact `reviewed_commands_digest` equality remain required) and never permits candidate-authored edits to `Cargo.toml`, `Cargo.lock`, workflows, or other inventoried sources. Both line-level exact-diff checks and `toml::Value` AST roundtrips verify that only `[package].version` (`new > old` strict SemVer `X.Y.Z`) and the root `[[package]]` entry in `Cargo.lock` (with no `source` or `checksum`) changed between the bounded first-parent ancestor and `accepted_base_sha`. Any deviation, downgrade, dependency change, workflow edit, missing ancestor, or symlink/size-cap violation fails closed to `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+- **Redacted public-boundary privacy lint (`src/decapod/core/validation_runtime/publication_privacy.rs`, `src/decapod/core/effective_grant.rs`)**: Local deny rules in private `.decapod/data/publication-deny.txt` (enforced via `fs_permissions::open_private_file`) and repo-configured `[governance].publication_deny_identifiers` (protected against candidate removal in `effective_grant.rs`) are matched literally against commit messages and non-deletion diffs. Findings fail closed with `PUBLICATION_PRIVATE_IDENTIFIER` referencing only the rule index/line and never echoing the matched secret/identifier back into logs.
+- **Headless hypervisor boundary (`src/decapod/plugins/container.rs`)**: `start_podman_machine_quietly` scrubs `PODMAN_LOG_LEVEL` and `CONTAINERS_LOG_LEVEL` and rejects `--log-level=debug`/`--log-level=trace`/`--gui` so automatic workspace/validation startup cannot spawn a `vfkit` GUI window or steal desktop focus on macOS (#1417).
