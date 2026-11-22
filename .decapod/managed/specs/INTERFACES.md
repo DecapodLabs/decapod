@@ -11,6 +11,14 @@
 - **Rust core interfaces (`src/decapod/core/obligation_ledger.rs`, `src/decapod/core/formal_obligations.rs`, `src/decapod/core/governance_document/semantic_integrity.rs`)**:
   - Exposes typed deterministic evaluators `derive_obligation_ledger` (`decapod.obligation-ledger.v1`), `StagnationTracker`, `verify_outcome_claim_anchor`, `build_completion_report_4d` (`decapod.completion-report-4d.v1`), `ApprovalLedger`, `evaluate_trusted_grader` (`decapod.trusted-grader-report.v1`), `evaluate_root_conservation`, `evaluate_main_merge_authorization`, `validate_semantic_governance_integrity`, `detect_governance_theater_diff`, `verify_formal_obligation` (`decapod.formal-obligation.v1` / `decapod.formal-obligation-verdict.v1`), and `CapacityAccountingState`.
 
+## Maintenance WAL checkpoint, legacy TODO logical recovery, read-only analyze, workspace effective-state/publish planning, and pre-build validate (#1568, #1657, #1279, #1071, #1064, #1047)
+
+- **Database maintenance CLI & RPC (`src/decapod/cli.rs::DatabaseMaintainCommand`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**: Adds `decapod data db maintain wal-checkpoint [--timeout-ms <0..=5000>]` (and RPC `data.database.wal_checkpoint` with `DatabaseWalCheckpointParams`), `lock-inspect` (`db.lock.diagnose`), plus visible aliases `diagnose` (`inspect`) and `integrity-check` (`verify`). Accepts `[maintenance]` alongside `[governance.db_maintenance]` in `.decapod/config.toml`.
+- **Legacy TODO recovery CLI (`src/decapod/core/todo.rs::TodoJournalCommand::ReconcileLegacy`)**: Extends `decapod todo journal reconcile-legacy` with `--export <PATH>`, `--quarantine`, and `--import-missing` (mutually exclusive with `--prepare-only` and requiring `--expected-review <sha256>` for mutating actions). Review responses expose `quarantine_review_sha256`, `logical_summary`, `can_quarantine`, and `can_import_missing`.
+- **Read-only analysis CLI (`src/decapod/cli.rs::Command::Analyze`, `AnalyzeCli`)**: Adds `decapod analyze [--read-only] [--format text|json] [--max-files N] [--max-bytes N] [--timeout-ms N] [--draft-spec] [PATH]` returning `decapod.analyze-readonly.v1` JSON or concise text with zero repository/SQLite/session mutations.
+- **Workspace effective-state & publication planning CLI (`src/decapod/cli.rs::WorkspaceCommand`, `WorkspacePublishMode`)**: Adds `visible_alias = "effective-state"` and `--format text|json` to `WorkspaceCommand::Diagnose`, plus `--pr <N>`, `--branch <NAME>`, `--mode full|governance-only`, and `--dry-run` (`decapod.workspace-publish-plan.v1`) on `WorkspaceCommand::Publish` (and `pr_reused` + `mode` on `PublishResult`).
+- **Pre-build validate CLI (`src/decapod/cli.rs::ValidateCli::pre_build`)**: Adds `decapod validate --pre-build [--format text|json]` returning `decapod.pre-build-validate.v1` with `scope: "pre_build"`, `read_only: true`, `publication_ready: false`, and `proof_ready: false`.
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1683,8 +1691,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (275 files)
+- Repository signal fingerprint: `1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (267 files), `tests/` (277 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2427,3 +2435,9 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
   - Readiness blockers mirrored into `report.failures` (`"publication_readiness: ..."`) retain `stage = "readiness"` / `"post_validation_readiness"` and readiness scope when no non-readiness project gate failed.
 - **Actionable execution-binding recovery (`src/decapod/core/trajectory/execution.rs`, `src/decapod/core/todo.rs`, `docs/agent/error-recovery.md`)**:
   - `verify_execution_binding` classifies `EXECUTION_STATE_CHANGED` into the changed dimension (`EXECUTION_POLICY_CHANGED`, `EXECUTION_TASK_CUSTODY_CHANGED`, `EXECUTION_MATERIAL_CHANGED`, `EXECUTION_PLAN_OR_INTENT_CHANGED`, `EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED`) and surfaces `decapod govern workunit checkpoint --task-id <id> --operation-id <id>` / `decapod govern trajectory checkpoint` so lease renewals or independent policy approvals can refresh active workunit custody without altering Git `HEAD` or historical `done` task completion timestamps.
+
+## Configuration and badge surfaces (#1838, #1023)
+
+- **`[governance].publication_deny_identifiers` (`src/decapod/cli.rs`)**: Optional string array in `.decapod/config.toml` (omitted when empty) listing literal identifiers blocked from authored commit messages and non-config diffs during `decapod validate`; private operator strings remain in untracked `.decapod/data/publication-deny.txt`.
+- **`[init].readme_badge` (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Boolean flag defaulting to `true`; when enabled, `decapod init` idempotently writes/updates the installed-version Decapod badge in `README.md` (unless `README.md` is missing, listed in `[governance].protected_paths`, or already links `assets/badge/decapod-governed.svg`).
+- **Static SVG badge (`assets/badge/decapod-governed.svg`, `README.md`)**: Accessible flat SVG badge (`role="img"`, `aria-label="Decapod: governed"`) linked and documented in `README.md`.

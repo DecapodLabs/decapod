@@ -156,6 +156,75 @@ fn retire_decision_provider(config: &mut toml::Value) -> Result<(), error::Decap
     Ok(())
 }
 
+fn decapod_readme_badge_markdown(version: &str) -> String {
+    format!(
+        "[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v{version}-dc2626)](https://github.com/DecapodLabs/decapod)"
+    )
+}
+
+fn render_readme_with_badge(content: &str, version: &str) -> String {
+    const BADGE_URL_PREFIX: &str = "https://img.shields.io/badge/🦀%20Decapod-v";
+    const BADGE_URL_PREFIX_ENCODED: &str = "https://img.shields.io/badge/%F0%9F%A6%80%20Decapod-v";
+    if content.contains("assets/badge/decapod-governed.svg") {
+        return content.to_owned();
+    }
+    let badge_line = decapod_readme_badge_markdown(version);
+    let mut lines: Vec<String> = content.lines().map(str::to_owned).collect();
+    if let Some(existing) = lines
+        .iter_mut()
+        .find(|line| line.contains(BADGE_URL_PREFIX) || line.contains(BADGE_URL_PREFIX_ENCODED))
+    {
+        *existing = badge_line;
+    } else if let Some(heading_idx) = lines.iter().position(|line| line.starts_with("# ")) {
+        let insert_at = heading_idx + 1;
+        lines.insert(insert_at, String::new());
+        lines.insert(insert_at + 1, badge_line);
+        if lines
+            .get(insert_at + 2)
+            .is_some_and(|next| !next.is_empty())
+        {
+            lines.insert(insert_at + 2, String::new());
+        }
+    } else {
+        lines.insert(0, badge_line);
+        if lines.get(1).is_some_and(|next| !next.is_empty()) {
+            lines.insert(1, String::new());
+        }
+    }
+    let mut rendered = lines.join("\n");
+    if content.ends_with('\n') || !rendered.ends_with('\n') {
+        rendered.push('\n');
+    }
+    rendered
+}
+
+fn sync_readme_badge(
+    target_dir: &Path,
+    protected_paths: &[String],
+    version: &str,
+) -> Result<(), error::DecapodError> {
+    if protected_paths
+        .iter()
+        .any(|p| p.trim_start_matches("./") == "README.md")
+    {
+        return Ok(());
+    }
+    let readme_path = target_dir.join("README.md");
+    let meta = match std::fs::symlink_metadata(&readme_path) {
+        Ok(meta) if meta.is_file() => meta,
+        Ok(_) => return Ok(()),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(err) => return Err(error::DecapodError::IoError(err)),
+    };
+    let _ = meta;
+    let existing = std::fs::read_to_string(&readme_path).map_err(error::DecapodError::IoError)?;
+    let updated = render_readme_with_badge(&existing, version);
+    if updated != existing {
+        std::fs::write(&readme_path, updated).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
 fn write_project_config(
     target_dir: &Path,
     config: &DecapodProjectConfig,
@@ -2075,6 +2144,11 @@ fn init_with_from_config(
         existing_main_merge: config.governance.main_merge,
         existing_rbac: config.governance.rbac.clone(),
         existing_db_maintenance: config.governance.db_maintenance.clone(),
+        existing_publication_deny_identifiers: config
+            .governance
+            .publication_deny_identifiers
+            .clone(),
+        existing_readme_badge: Some(config.init.readme_badge),
         existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
@@ -2192,6 +2266,8 @@ fn preserve_unspecified_init_options(
     init.existing_main_merge = existing.existing_main_merge;
     init.existing_rbac = existing.existing_rbac;
     init.existing_db_maintenance = existing.existing_db_maintenance;
+    init.existing_publication_deny_identifiers = existing.existing_publication_deny_identifiers;
+    init.existing_readme_badge = existing.existing_readme_badge;
     init.existing_laya = existing.existing_laya;
 }
 
@@ -2268,6 +2344,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         init: InitConfigSection {
             specs: init.specs,
             ci: init.ci,
+            readme_badge: init.existing_readme_badge.unwrap_or(true),
             diagram_style: init.diagram_style,
             entrypoints,
         },
@@ -2279,6 +2356,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             main_merge: init.existing_main_merge,
             rbac: init.existing_rbac.clone(),
             db_maintenance: init.existing_db_maintenance.clone(),
+            publication_deny_identifiers: init.existing_publication_deny_identifiers.clone(),
         },
         proof: proof::ProjectProofConfig {
             selected_work: init.existing_selected_work.clone(),
@@ -2315,6 +2393,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             organization_overlay: None,
         },
         workspace: crate::cli::WorkspaceConfigSection::default(),
+        maintenance: Default::default(),
         laya: init.existing_laya.clone(),
     }
 }
@@ -3094,6 +3173,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     let parsed_cli = Cli::from_arg_matches(&command_line).unwrap_or_else(|error| error.exit());
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
+        Command::Analyze(analyze_cli) => return core::analyze::run_analyze_cli(analyze_cli),
+        Command::Validate(validate_cli) if validate_cli.pre_build => {
+            let root = std::env::current_dir()?;
+            return core::pre_build_validate::run(&root, &validate_cli.format);
+        }
         Command::ProjectCheckWorker(validate_cli) => {
             if validate_cli.bypass_validation
                 || validate_cli.snapshot_prepare
@@ -3135,13 +3219,45 @@ pub fn run() -> Result<(), error::DecapodError> {
             command:
                 WorkspaceCommand::Diagnose {
                     json,
+                    format,
                     offline,
                     pr,
                     operation,
                 },
         }) => {
             let root = std::env::current_dir()?;
-            return core::workspace_diagnostic::run(&root, &operation, pr, offline, json);
+            let machine = json || format == "json";
+            return core::workspace_diagnostic::run(&root, &operation, pr, offline, machine);
+        }
+        Command::Workspace(WorkspaceCli {
+            command:
+                WorkspaceCommand::Publish {
+                    title,
+                    description,
+                    pr,
+                    branch,
+                    mode,
+                    dry_run: true,
+                    ..
+                },
+        }) => {
+            let root = std::env::current_dir()?;
+            let plan = workspace::plan_workspace_publish(
+                &root,
+                &workspace::PublishOptions {
+                    title,
+                    description,
+                    target_pr: pr,
+                    target_branch: branch,
+                    mode,
+                    dry_run: true,
+                },
+            )?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&plan).map_err(io::Error::other)?
+            );
+            return Ok(());
         }
         Command::Data(DataCli {
             command: DataCommand::Schema(schema_cli),
@@ -3220,11 +3336,16 @@ pub fn run() -> Result<(), error::DecapodError> {
                     error::DecapodError::ValidationError(format!("{code}: {message}"))
                 })?;
             }
-            let report = todo::reconcile_legacy_todo(
+            let report = todo::reconcile_legacy_todo_with_options(
                 &main_root.join(".decapod/data"),
                 &actor,
-                request.expected_review,
-                request.prepare_only,
+                todo::LegacyRecoveryOptions {
+                    expected_review: request.expected_review,
+                    prepare_only: request.prepare_only,
+                    quarantine: request.quarantine,
+                    import_missing: request.import_missing,
+                    export_path: request.export,
+                },
             )?;
             println!(
                 "{}",
@@ -3414,6 +3535,8 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_rbac: crate::cli::GovernanceRbac::default(),
                             existing_db_maintenance:
                                 crate::core::db_maintenance::DbMaintenanceConfig::default(),
+                            existing_publication_deny_identifiers: Vec::new(),
+                            existing_readme_badge: None,
                             existing_laya: crate::core::laya_readiness::Configuration::default(),
                             laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
@@ -3523,6 +3646,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
+            if !init_with.dry_run && config.init.readme_badge {
+                sync_readme_badge(
+                    &target_dir,
+                    &config.governance.protected_paths,
+                    env!("CARGO_PKG_VERSION"),
+                )?;
+            }
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized
@@ -4111,6 +4241,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Activate
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
@@ -4144,6 +4275,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         | Command::Constitution(_)
         | Command::Docs(_)
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Validate(_)
         | Command::Session(_) => true,
         Command::Workspace(ws_cli) => matches!(
@@ -4252,6 +4384,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         Command::Init(_)
         | Command::Activate
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Validate(_)
@@ -4283,6 +4416,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Eval(_)
+            | Command::Analyze(_)
             | Command::Activate
             | Command::Constitution(_)
             | Command::Docs(_)
@@ -4302,6 +4436,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Eval(_)
+            | Command::Analyze(_)
             | Command::Activate
             | Command::Constitution(_)
             | Command::Docs(_)
@@ -4540,6 +4675,7 @@ fn requires_session_token(command: &Command) -> bool {
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
         Command::Init(_)
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Session(_)
         | Command::Activate
         | Command::Constitution(_)
@@ -10809,6 +10945,7 @@ fn is_governed_db_maintenance_rpc_op(op: &str) -> bool {
             | "data.database.lock.diagnose"
             | "data.database.lock.retry"
             | "data.database.lock.release_own"
+            | "data.database.wal_checkpoint"
             | "data.database.audit"
     )
 }
@@ -11093,6 +11230,36 @@ fn run_governed_database_cli(
                 vec![],
                 |policy, _| db_maintenance::run_maintain_verify(policy),
             )?,
+            DatabaseMaintainCommand::LockInspect {
+                timeout_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.diagnose",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={timeout_ms}")],
+                |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, timeout_ms),
+            )?,
+            DatabaseMaintainCommand::WalCheckpoint {
+                timeout_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.wal.checkpoint",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={timeout_ms}")],
+                |policy, _| db_maintenance::run_maintain_wal_checkpoint(policy, timeout_ms),
+            )?,
             DatabaseMaintainCommand::Backup {
                 destination,
                 operation_id,
@@ -11240,6 +11407,7 @@ fn run_governed_database_rpc(
         DatabaseAuditParams, DatabaseBackupParams, DatabaseCapabilitiesParams,
         DatabaseLockDiagnoseParams, DatabaseLockReleaseOwnParams, DatabaseLockRetryParams,
         DatabaseMaintainInspectParams, DatabaseRecoverParams, DatabaseVerifyParams,
+        DatabaseWalCheckpointParams,
     };
 
     let outcome: Result<serde_json::Value, error::DecapodError> = (|| match request.op.as_str() {
@@ -11406,6 +11574,19 @@ fn run_governed_database_rpc(
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
+            )
+        }
+        "data.database.wal_checkpoint" => {
+            let params: DatabaseWalCheckpointParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.wal.checkpoint",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={}", params.timeout_ms)],
+                |policy, _| db_maintenance::run_maintain_wal_checkpoint(policy, params.timeout_ms),
             )
         }
         other => Err(error::DecapodError::ValidationError(format!(
@@ -12301,11 +12482,13 @@ fn run_workspace_command(
     match cli.command {
         WorkspaceCommand::Diagnose {
             json,
+            format,
             offline,
             pr,
             operation,
         } => {
-            core::workspace_diagnostic::run(project_root, &operation, pr, offline, json)?;
+            let machine = json || format == "json";
+            core::workspace_diagnostic::run(project_root, &operation, pr, offline, machine)?;
         }
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
@@ -12363,11 +12546,31 @@ fn run_workspace_command(
         WorkspaceCommand::Publish {
             title,
             description,
+            pr,
+            branch,
+            mode,
+            dry_run,
             snapshot_resume,
             provider_artifacts,
         } => {
-            core::validation_runtime::require_full_readiness_environment()?;
             let workspace_root = project_root;
+            let options = workspace::PublishOptions {
+                title,
+                description,
+                target_pr: pr,
+                target_branch: branch,
+                mode,
+                dry_run,
+            };
+            if dry_run {
+                let plan = workspace::plan_workspace_publish(workspace_root, &options)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&plan).map_err(io::Error::other)?
+                );
+                return Ok(());
+            }
+            core::validation_runtime::require_full_readiness_environment()?;
             if !crate::cli::DecapodProjectConfig::load(workspace_root)?
                 .proof
                 .uses_remote_preflight()
@@ -12403,20 +12606,19 @@ fn run_workspace_command(
                 provider_artifacts,
                 target: None,
             };
-            let result = workspace::publish_workspace_with_readiness(
-                workspace_root,
-                title,
-                description,
-                &invocation,
-            )?;
+            let result =
+                workspace::publish_workspace_with_options(workspace_root, options, &invocation)?;
             println!(
                 "{}",
                 serde_json::json!({
                     "status": "ok",
+                    "dry_run": false,
+                    "mode": result.mode,
                     "branch": result.branch,
                     "commit_hash": result.commit_hash,
                     "remote_url": result.remote_url,
                     "pr_url": result.pr_url,
+                    "pr_reused": result.pr_reused,
                     "remote_verified": result.remote_verified,
                     "pr_verified": result.pr_verified,
                     "warnings": result.warnings,

@@ -890,6 +890,11 @@
       "id": "chk-gov-ledger-shard5-1",
       "summary": "Shard 5 gov-ledger: #1691 escalation admissibility, #1468 opt-in main_merge, #1569 offline historical exceptions, #1093 semantic plan/claims integrity, #1083/#1084 obligation ledger & stagnation, #1097/#1365 clarity/STE validator, #1726/#1729/#1761/#1762/#1768 completion/approval/grader/conservation, #1907 opt-in formal obligations, and #1095/#1772/#1774/#1796 offline harnesses",
       "input_digest": "sha256:591521aa9406c06317fc47ea2c0ab3eb65cba4d358fdd032c5f896ee7403a24c"
+    },
+    {
+      "id": "chk-gov-ledger-merge-01621",
+      "summary": "Reconciled PR #1919 onto origin/master v0.162.1 (e3948d62f), synced docs/agent via worktree binary, updated 0.162.1 entrypoints & Dockerfile, refreshed specs, and passed fmt/clippy/tests.",
+      "input_digest": "sha256:dfdfecf187508701423167271a1ecd5d2ea0b863570d90390912e7a3870c1f11"
     }
   ],
   "intents": {
@@ -933,23 +938,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #1691 escalation-admissibility templates/constitution, #1468 accepted-policy main_merge, #1569 offline Ed25519 historical exceptions, #1093 semantic governance integrity, obligation_ledger.rs, artifact_clarity.rs, and formal_obligations.rs.",
-          "reviewed_code_fingerprint": "6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840",
-          "spec_material_hash": "a1556752188fa153f1124f420724b6b38c4e3e7463dfb6038b097ddeeb68ed0a"
+          "reason": "Merged origin/master (v0.162.1, PR #1917 + #1918) preserving both sides' architecture sections plus Shard 5 #1691/#1468/#1569/#1093/obligation_ledger/artifact_clarity/formal_obligations.",
+          "reviewed_code_fingerprint": "1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f",
+          "spec_material_hash": "12e1c85a281d342b5c744af1d33967bc8d130a7c28e535d6c3c01eca63a16183"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod validate --clarity --profile CLI, [governance].main_merge config contract, offline historical-exception carrier, and Rust core ledger/clarity/formal APIs.",
-          "reviewed_code_fingerprint": "6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840",
-          "spec_material_hash": "e709ba910eef8e67e5735bc74ce74d870e13d32c2c83d14bb38fb7defc552aee"
+          "reason": "Merged origin/master (v0.162.1, PR #1917 + #1918) preserving both sides' CLI/RPC contracts plus decapod validate --clarity --profile and [governance].main_merge.",
+          "reviewed_code_fingerprint": "1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f",
+          "spec_material_hash": "b1b892a2b5eef8efdece0f6e771bd9c360a389c52bc37c09993c04ba2cbc416e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated security boundary docs for #1468 fail-closed default main_merge with POLICY_SELF_AUTHORIZATION_REJECTED, #1569 offline Ed25519 historical exceptions preserving history_proven=false, and #1907 pinned formal-checker attestation.",
-          "reviewed_code_fingerprint": "6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840",
-          "spec_material_hash": "7b59fc1828b37c01d1820945c67be4b873a1ee9aa86d86916462ef479a105d02"
+          "reason": "Merged origin/master (v0.162.1) preserving security boundaries plus #1468 fail-closed main_merge, #1569 offline historical exceptions (history_proven=false), and #1907 pinned formal-checker attestation.",
+          "reviewed_code_fingerprint": "1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f",
+          "spec_material_hash": "94cea1a8cb792f6240b7a1f4f71bb3e578aa4f9385c49730e5b5bb0b04c2dbd5"
         }
       ],
       "state": "APPROVED",
@@ -960,7 +965,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795351168Z"
+      "updated_at": "1795359382Z"
     },
     "trajectory": {
       "active_boundaries": [

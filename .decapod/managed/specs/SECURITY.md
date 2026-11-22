@@ -1,5 +1,12 @@
 # Security
 
+## Maintenance RBAC boundaries, non-destructive legacy recovery, read-only analysis isolation, and non-forced publish guards (#1568, #1657, #1279, #1071, #1064, #1047)
+
+- **Maintenance capability scoping & conflict rejection (`src/decapod/core/db_maintenance.rs`)**: `db.wal.checkpoint` is excluded from `DEFAULT_SAFE_ALLOWLIST`, requires explicit opt-in from canonical main-repository config, uses `PRAGMA wal_checkpoint(PASSIVE)` with a 5000ms ceiling (never `TRUNCATE`/`RESTART` or sidecar deletion), and refuses dual `[governance.db_maintenance]` + `[maintenance]` declarations (`AMBIGUOUS_MAINTENANCE_POLICY`). Worktree backend tampering continues failing closed with `BACKEND_MISMATCH`; Cloud backends remain denied (`CLOUD_PRINCIPAL_UNVERIFIED`) pending Propodus `#88`.
+- **Fail-closed legacy TODO recovery (`src/decapod/core/legacy_todo_recovery.rs`)**: Live `todo.db` is never opened directly by SQLite; exports refuse overwriting existing files (`create_new(true)` with private permissions); `--import-missing` refuses any conflicting task ID (`LEGACY_TODO_CONFLICT_BLOCKED`) and archives original bytes before transactional journaled insertion; `--quarantine` never touches `decapod.db`; both require canonical `todo.legacy.reconcile` RBAC and active local session authentication.
+- **Zero-mutation read-only analysis & hostile input containment (`src/decapod/core/analyze.rs`)**: Dispatched before store/session/lock code so `.decapod/data/decapod.db` SHA-256 and Git status remain byte-identical. Never follows symlinks, excludes sensitive files (`.env*`, `id_rsa`, `*.pem`, `*.key`, credentials) without reading them, scans untrusted instruction files with `agent_eval::evaluate_prompt` without executing repository code or hooks, and redacts all output via `core::trace::redact`.
+- **Non-forced publication & pre-build non-substitution (`src/decapod/core/workspace.rs`, `src/decapod/core/pre_build_validate.rs`)**: `workspace publish` rejects `--branch`/`--pr` mismatches, mixed implementation diffs under `--mode governance-only`, and diverged remote heads (`REMOTE_BRANCH_DIVERGED` decision gate — never force-pushes). `validate --pre-build` performs zero writes and unconditionally reports `publication_ready = false` and `proof_ready = false`.
+
 ## Multi-tenant Cloud isolation and non-overridable organization policy enforcement (#1895, #877)
 
 - **Tenant & seat isolation without SQLite fallback (`#1895`)**: Cloud sessions remain bound to explicit `(origin, repository, project/org)` context and verified server access. Decapod never receives backend DB names, URLs, or credentials, fails closed on cross-org/stale scopes, seat revocation, paid-seat absence (`#215`), cross-repo `operation_id` replay, or network cuts, and never initializes or modifies `.decapod/data/decapod.db` as a fallback.
@@ -899,8 +906,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6f76209b754f1e9125b529e5f257e5dcdfdf50f71e2331a93f0b85455bc9e840`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (275 files)
+- Repository signal fingerprint: `1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (267 files), `tests/` (277 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1519,3 +1526,9 @@ Actual official0.153.2 rejected an unpaired surrogate that the prior Python deco
 The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
 
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
+
+## Release-only inventory qualification and publication privacy controls (#1838)
+
+- **Fail-closed release-only boundary (`src/decapod/core/repository_profile.rs`)**: `qualifies_release_only_inventory_transition` never waives command/execution/coverage review (`commands_preserved` and exact `reviewed_commands_digest` equality remain required) and never permits candidate-authored edits to `Cargo.toml`, `Cargo.lock`, workflows, or other inventoried sources. Both line-level exact-diff checks and `toml::Value` AST roundtrips verify that only `[package].version` (`new > old` strict SemVer `X.Y.Z`) and the root `[[package]]` entry in `Cargo.lock` (with no `source` or `checksum`) changed between the bounded first-parent ancestor and `accepted_base_sha`. Any deviation, downgrade, dependency change, workflow edit, missing ancestor, or symlink/size-cap violation fails closed to `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+- **Redacted public-boundary privacy lint (`src/decapod/core/validation_runtime/publication_privacy.rs`, `src/decapod/core/effective_grant.rs`)**: Local deny rules in private `.decapod/data/publication-deny.txt` (enforced via `fs_permissions::open_private_file`) and repo-configured `[governance].publication_deny_identifiers` (protected against candidate removal in `effective_grant.rs`) are matched literally against commit messages and non-deletion diffs. Findings fail closed with `PUBLICATION_PRIVATE_IDENTIFIER` referencing only the rule index/line and never echoing the matched secret/identifier back into logs.
+- **Headless hypervisor boundary (`src/decapod/plugins/container.rs`)**: `start_podman_machine_quietly` scrubs `PODMAN_LOG_LEVEL` and `CONTAINERS_LOG_LEVEL` and rejects `--log-level=debug`/`--log-level=trace`/`--gui` so automatic workspace/validation startup cannot spawn a `vfkit` GUI window or steal desktop focus on macOS (#1417).

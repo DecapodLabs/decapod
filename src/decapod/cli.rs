@@ -70,6 +70,10 @@ pub(crate) struct ValidateCli {
     /// Scope `repo.pr-readiness.v1` local proof to a reviewed deployment target slice.
     #[clap(long, value_name = "TARGET")]
     pub target: Option<String>,
+    /// Run fast local pre-build structural and completeness checks without building or running tests (#1047).
+    /// Reports scope=pre_build and publication_ready=false; never substitutes for full validation.
+    #[clap(long = "pre-build")]
+    pub pre_build: bool,
     /// Run the deterministic mechanical clarity validator (#1097, #1365) on durable governance artifacts.
     #[clap(long)]
     pub clarity: bool,
@@ -135,6 +139,18 @@ pub(crate) struct WorkspaceCli {
     pub command: WorkspaceCommand,
 }
 
+/// Publication mode for `decapod workspace publish` (#1064).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, clap::ValueEnum)]
+#[serde(rename_all = "kebab-case")]
+pub enum WorkspacePublishMode {
+    /// Publish the governed workspace's full approved change set.
+    #[default]
+    Full,
+    /// Publish governance and living-spec artifacts only (refuses mixed implementation diffs).
+    #[clap(name = "governance-only")]
+    GovernanceOnly,
+}
+
 #[derive(Subcommand, Debug)]
 pub(crate) enum WorkspaceCommand {
     /// Ensure an isolated workspace exists (create if needed)
@@ -148,10 +164,14 @@ pub(crate) enum WorkspaceCommand {
     },
     /// Show current workspace status
     Status,
-    /// Inspect effective authority and workspace prerequisites without mutation
+    /// Inspect effective authority and workspace prerequisites without mutation (#1071)
+    #[clap(visible_alias = "effective-state")]
     Diagnose {
         #[clap(long)]
         json: bool,
+        /// Output format: text or json (equivalent to --json when set to json).
+        #[clap(long, default_value = "text", value_parser = ["text", "json"])]
+        format: String,
         #[clap(long)]
         offline: bool,
         #[clap(long)]
@@ -159,7 +179,7 @@ pub(crate) enum WorkspaceCommand {
         #[clap(long, default_value = "workspace.publish")]
         operation: String,
     },
-    /// Publish workspace changes as a patch/PR bundle
+    /// Publish workspace changes as a patch/PR bundle (#1064)
     Publish {
         /// Title for the change
         #[clap(long)]
@@ -167,6 +187,18 @@ pub(crate) enum WorkspaceCommand {
         /// Description for the change
         #[clap(long)]
         description: Option<String>,
+        /// Explicit target PR number to verify and reuse (same-branch, non-forced contract).
+        #[clap(long)]
+        pr: Option<u64>,
+        /// Explicit target branch name assertion (must match current workspace branch).
+        #[clap(long)]
+        branch: Option<String>,
+        /// Publication scope mode: full approved change set or governance-only artifacts.
+        #[clap(long, value_enum, default_value_t = WorkspacePublishMode::Full)]
+        mode: WorkspacePublishMode,
+        /// Compute and return the exact publication plan without mutating git, remote, or PRs.
+        #[clap(long = "dry-run")]
+        dry_run: bool,
         /// Reverify the exact validated workspace branch commit immediately before PR creation.
         #[clap(long, value_name = "HANDOFF")]
         snapshot_resume: Option<std::path::PathBuf>,
@@ -495,6 +527,12 @@ pub(crate) struct InitWithCli {
     /// Preserve project-opted database maintenance policy during init refresh.
     #[clap(skip)]
     pub existing_db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
+    /// Preserve configured public-boundary publication deny identifiers during init refresh.
+    #[clap(skip)]
+    pub existing_publication_deny_identifiers: Vec<String>,
+    /// Preserve `[init].readme_badge` preference across init refreshes (default true).
+    #[clap(skip)]
+    pub existing_readme_badge: Option<bool>,
     /// Preserve reviewed post-proof Laya configuration during init refresh.
     #[clap(skip)]
     pub existing_laya: crate::core::laya_readiness::Configuration,
@@ -550,6 +588,12 @@ pub struct DecapodProjectConfig {
     pub context: DeclaredContextConfig,
     #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
     pub workspace: WorkspaceConfigSection,
+    /// Optional top-level shorthand for `[governance.db_maintenance]` (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
@@ -594,6 +638,10 @@ pub struct InitConfigSection {
     pub specs: bool,
     #[serde(default = "default_true")]
     pub ci: bool,
+    /// Whether `decapod init` manages the versioned Decapod badge in `README.md` (#1023).
+    /// Defaults to `true`; users can set `readme_badge = false` in `.decapod/config.toml`.
+    #[serde(default = "default_true")]
+    pub readme_badge: bool,
     pub diagram_style: InitDiagramStyle,
     pub entrypoints: Vec<String>,
 }
@@ -651,6 +699,11 @@ pub struct GovernanceConfig {
         skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
     )]
     pub db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
+    /// Optional repo-configured literal identifiers forbidden from authored
+    /// publication commits/diffs (#1838). For private or sensitive strings that
+    /// must stay out of tracked config, use `.decapod/data/publication-deny.txt`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub publication_deny_identifiers: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -1016,6 +1069,26 @@ fn default_container_workspaces_true() -> bool {
 }
 
 impl DecapodProjectConfig {
+    /// Resolve the single authoritative `[governance.db_maintenance]` or top-level
+    /// `[maintenance]` section. Fails closed if both are configured simultaneously.
+    pub fn effective_db_maintenance(
+        &self,
+    ) -> Result<crate::core::db_maintenance::DbMaintenanceConfig, (&'static str, String)> {
+        let has_gov = !self.governance.db_maintenance.is_default();
+        let has_top = !self.maintenance.is_default();
+        if has_gov && has_top {
+            return Err((
+                "AMBIGUOUS_MAINTENANCE_POLICY",
+                "both [governance.db_maintenance] and [maintenance] are configured; keep a single canonical maintenance policy section".to_string(),
+            ));
+        }
+        if has_top {
+            Ok(self.maintenance.clone())
+        } else {
+            Ok(self.governance.db_maintenance.clone())
+        }
+    }
+
     pub(crate) fn parse(content: &str) -> Result<Self, crate::error::DecapodError> {
         toml::from_str(content).map_err(|error| {
             crate::error::DecapodError::Config(format!(
@@ -1043,6 +1116,7 @@ impl Default for DecapodProjectConfig {
             init: InitConfigSection {
                 specs: true,
                 ci: true,
+                readme_badge: true,
                 diagram_style: InitDiagramStyle::Ascii,
                 entrypoints: vec![
                     "AGENTS.md".to_string(),
@@ -1058,6 +1132,7 @@ impl Default for DecapodProjectConfig {
             tracker: TrackerConfig::default(),
             context: DeclaredContextConfig::default(),
             workspace: WorkspaceConfigSection::default(),
+            maintenance: crate::core::db_maintenance::DbMaintenanceConfig::default(),
             laya: crate::core::laya_readiness::Configuration::default(),
         }
     }
@@ -2245,6 +2320,7 @@ pub(crate) struct DatabaseMaintainCli {
 #[derive(Subcommand, Debug)]
 pub(crate) enum DatabaseMaintainCommand {
     /// Governed `db.inspect` (Dactyl inventory + non-destructive lock snapshot).
+    #[clap(visible_alias = "diagnose")]
     Inspect {
         #[clap(long)]
         operation_id: Option<String>,
@@ -2254,7 +2330,34 @@ pub(crate) enum DatabaseMaintainCommand {
         actor: Option<String>,
     },
     /// Governed `db.verify` (read-only Dactyl SQLite integrity probe).
+    #[clap(visible_alias = "integrity-check")]
     Verify {
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.lock.diagnose` (non-destructive lock & sidecar inspection).
+    #[clap(name = "lock-inspect")]
+    LockInspect {
+        /// Bounded lock probe timeout in milliseconds (0..=5000).
+        #[clap(long, default_value_t = 0)]
+        timeout_ms: u64,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        expected_policy_sha256: Option<String>,
+        #[clap(long)]
+        actor: Option<String>,
+    },
+    /// Governed `db.wal.checkpoint` (bounded non-destructive SQLite PASSIVE WAL checkpoint).
+    #[clap(name = "wal-checkpoint")]
+    WalCheckpoint {
+        /// Bounded lock/busy timeout in milliseconds (0..=5000).
+        #[clap(long, default_value_t = 500)]
+        timeout_ms: u64,
         #[clap(long)]
         operation_id: Option<String>,
         #[clap(long)]
@@ -2443,6 +2546,10 @@ pub(crate) enum Command {
     /// Evaluate an untrusted agent prompt before any repository or tool action.
     #[clap(name = "eval")]
     Eval(AgentEvalCli),
+
+    /// Lower-level zero-mutation read-only repository analysis mode (#1279).
+    #[clap(name = "analyze")]
+    Analyze(AnalyzeCli),
 
     /// Activate local control plane state and run startup migrations
     #[clap(name = "activate")]
@@ -2955,6 +3062,30 @@ pub(crate) struct InferBudgetCli {
     /// Format output: json | text
     #[clap(long, default_value = "json")]
     pub format: String,
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct AnalyzeCli {
+    /// Target directory to analyze (defaults to current working directory).
+    pub path: Option<PathBuf>,
+    /// Explicitly assert zero-mutation read-only analysis mode (always enforced).
+    #[clap(long = "read-only")]
+    pub read_only: bool,
+    /// Output format: text or json.
+    #[clap(long, default_value = "text", value_parser = ["text", "json"])]
+    pub format: String,
+    /// Maximum number of files inspected during bounded traversal (1..=50000).
+    #[clap(long, default_value_t = 2_000)]
+    pub max_files: usize,
+    /// Maximum cumulative file bytes read during bounded traversal.
+    #[clap(long, default_value_t = 4 * 1024 * 1024)]
+    pub max_bytes: u64,
+    /// Wall-clock analysis timeout in milliseconds (100..=60000).
+    #[clap(long, default_value_t = 15_000)]
+    pub timeout_ms: u64,
+    /// Emit an advisory draft capability/spec report in output without writing files.
+    #[clap(long = "draft-spec")]
+    pub draft_spec: bool,
 }
 
 #[derive(clap::Args, Debug)]

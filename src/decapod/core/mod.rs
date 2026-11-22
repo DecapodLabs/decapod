@@ -4,6 +4,7 @@
 //! and shared primitives live here.
 
 pub mod agent_eval;
+pub mod analyze;
 pub mod ansi;
 pub mod artifact_clarity;
 pub mod assets;
@@ -77,6 +78,7 @@ pub mod org_overlay;
 pub mod output;
 pub mod path_policy;
 pub mod pool;
+pub mod pre_build_validate;
 pub mod project_specs;
 pub mod projection;
 pub mod projection_budget;

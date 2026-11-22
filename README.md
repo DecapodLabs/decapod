@@ -15,6 +15,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/DecapodLabs/decapod"><img alt="Decapod: governed" src="assets/badge/decapod-governed.svg"></a>
   <a href="https://github.com/DecapodLabs/decapod/actions"><img alt="CI" src="https://github.com/DecapodLabs/decapod/actions/workflows/ci.yml/badge.svg"></a>
   <a href="https://crates.io/crates/decapod"><img alt="crates.io" src="https://img.shields.io/crates/v/decapod.svg"></a>
   <a href="https://github.com/DecapodLabs/decapod/blob/master/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
@@ -132,6 +133,20 @@ Conflicts that require a decision remain visible so they can be resolved explici
 [Documentation](https://decapodlabs.github.io/decapod/) · [Agent API](docs/agent/api-index.md) · [Agent contract](AGENTS.md)
 
 [Research paper](https://github.com/DecapodLabs/accountable-agentic-execution/blob/main/paper/Accountable_Agentic_Execution.pdf) · [Research site](https://decapodlabs.github.io/accountable-agentic-execution/)
+
+## Badge
+
+`decapod init` enables a version-pinned Decapod badge in `README.md` by default (`[init].readme_badge = true` in `.decapod/config.toml`; set `readme_badge = false` to opt out):
+
+```markdown
+[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v0.162.0-dc2626)](https://github.com/DecapodLabs/decapod)
+```
+
+For a self-hosted static badge without external badge services, link [`assets/badge/decapod-governed.svg`](assets/badge/decapod-governed.svg):
+
+```markdown
+[![Decapod: governed](https://raw.githubusercontent.com/DecapodLabs/decapod/master/assets/badge/decapod-governed.svg)](https://github.com/DecapodLabs/decapod)
+```
 
 ## Contributing
 

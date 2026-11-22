@@ -449,6 +449,17 @@ pub(crate) fn verify_accepted_transition(
             "STALE_COMMAND_CONTRACT: review commands, execution inputs and source coverage before updating the digest",
         ));
     }
+    if commands_preserved
+        && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest
+        && qualifies_release_only_inventory_transition(
+            checkout_root,
+            accepted_base_sha,
+            &accepted_decl.reviewed_sources_digest,
+            &candidate_decl.reviewed_sources_digest,
+        )
+    {
+        return Ok(());
+    }
     let transition_id = repo_policy_transition_id(
         accepted_base_sha,
         candidate_head_sha,
@@ -495,6 +506,580 @@ pub(crate) fn verify_accepted_transition(
         transition_approval::SIGNED_APPROVAL_ENV,
         transition_approval::CLOUD_DECISION_ENV,
     )))
+}
+
+const RELEASE_ONLY_HISTORY_DEPTH: &str = "16";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GitTreeEntry {
+    mode: String,
+    oid: String,
+    size: usize,
+}
+
+#[derive(Debug, Clone)]
+struct GitTreeInventory {
+    inventory: SourceInventory,
+    entries: BTreeMap<String, GitTreeEntry>,
+}
+
+fn is_regular_git_mode(mode: &str) -> bool {
+    mode == "100644" || mode == "100755"
+}
+
+fn is_valid_inventory_path(path: &str) -> bool {
+    !path.is_empty()
+        && path != ".decapod/config.toml"
+        && !path.contains(['\\', ':'])
+        && !path.chars().any(char::is_control)
+        && Path::new(path)
+            .components()
+            .all(|part| matches!(part, Component::Normal(_)))
+}
+
+fn source_discovery_roots() -> BTreeSet<&'static str> {
+    super::init_reconciliation::SOURCE_DIRECTORIES
+        .iter()
+        .copied()
+        .chain(super::init_reconciliation::SOURCE_FILES.iter().copied())
+        .chain(
+            super::readiness_profile::catalog_source_paths()
+                .iter()
+                .copied(),
+        )
+        .collect()
+}
+
+fn source_root_ancestors(roots: &BTreeSet<&str>) -> Vec<String> {
+    let mut ancestors = BTreeSet::new();
+    for root in roots {
+        let mut cursor = *root;
+        while let Some((parent, _)) = cursor.rsplit_once('/') {
+            ancestors.insert(parent.to_owned());
+            cursor = parent;
+        }
+    }
+    ancestors.into_iter().collect()
+}
+
+fn relative_depth_under_roots(path: &str, roots: &BTreeSet<&str>) -> Option<usize> {
+    if roots.contains(path) {
+        return Some(0);
+    }
+    let mut best: Option<usize> = None;
+    for root in roots {
+        if let Some(tail) = path
+            .strip_prefix(root)
+            .and_then(|rest| rest.strip_prefix('/'))
+        {
+            let depth = tail.split('/').count();
+            best = Some(best.map_or(depth, |current| current.min(depth)));
+        }
+    }
+    best
+}
+
+fn compute_git_tree_source_inventory(
+    checkout_root: &Path,
+    rev: &str,
+    blob_cache: &mut BTreeMap<String, (usize, String)>,
+) -> Option<GitTreeInventory> {
+    use super::init_reconciliation::{
+        MAX_DEPTH, MAX_ENTRIES, MAX_FILE_BYTES, MAX_TOTAL_BYTES, TOOLCHAIN_ALIAS, TOOLCHAIN_TARGET,
+    };
+    use sha2::{Digest, Sha256};
+
+    let roots = source_discovery_roots();
+    if roots.contains(".decapod/config.toml") {
+        return None;
+    }
+
+    // Reject any symlink or submodule ancestor above discovery roots.
+    // Group by component depth so no ancestor/descendant pair appears in the
+    // same `git ls-tree` call (which would cause Git to list child entries).
+    let ancestors = source_root_ancestors(&roots);
+    let mut ancestors_by_depth: BTreeMap<usize, Vec<&str>> = BTreeMap::new();
+    for ancestor in &ancestors {
+        let depth = ancestor.matches('/').count();
+        ancestors_by_depth
+            .entry(depth)
+            .or_default()
+            .push(ancestor.as_str());
+    }
+    for group in ancestors_by_depth.values() {
+        let mut ancestor_args: Vec<&str> = vec!["ls-tree", "-z", rev, "--"];
+        ancestor_args.extend(group.iter().copied());
+        let ancestor_raw = transition_approval::git_object(checkout_root, &ancestor_args).ok()?;
+        for record in ancestor_raw.split(|b| *b == 0).filter(|r| !r.is_empty()) {
+            let text = std::str::from_utf8(record).ok()?;
+            let (header, _) = text.split_once('\t')?;
+            let mode = header.split_whitespace().next()?;
+            if mode != "040000" {
+                return None;
+            }
+        }
+    }
+
+    let mut tree_args: Vec<&str> = vec!["ls-tree", "-r", "-l", "-z", rev, "--"];
+    tree_args.extend(roots.iter().copied());
+    let tree_raw = transition_approval::git_object(checkout_root, &tree_args).ok()?;
+
+    let mut entries = BTreeMap::new();
+    let mut visited_dirs = BTreeSet::new();
+    let mut total_bytes: usize = 0;
+
+    for record in tree_raw.split(|b| *b == 0).filter(|r| !r.is_empty()) {
+        let text = std::str::from_utf8(record).ok()?;
+        let (header, path) = text.split_once('\t')?;
+        if !is_valid_inventory_path(path) {
+            return None;
+        }
+        let mut parts = header.split_whitespace();
+        let mode = parts.next()?;
+        let obj_type = parts.next()?;
+        let oid = parts.next()?;
+        let size_str = parts.next()?;
+        if parts.next().is_some() || obj_type != "blob" {
+            return None;
+        }
+        let is_alias = mode == "120000" && path == TOOLCHAIN_ALIAS;
+        if !is_regular_git_mode(mode) && !is_alias {
+            return None;
+        }
+        let depth = relative_depth_under_roots(path, &roots)?;
+        if depth > MAX_DEPTH {
+            return None;
+        }
+        let size: usize = size_str.parse().ok()?;
+        if size > MAX_FILE_BYTES {
+            return None;
+        }
+        total_bytes = total_bytes.checked_add(size)?;
+        if total_bytes > MAX_TOTAL_BYTES {
+            return None;
+        }
+
+        // Count intermediate directories visited under matching discovery roots.
+        for root in &roots {
+            if let Some(tail) = path
+                .strip_prefix(root)
+                .and_then(|rest| rest.strip_prefix('/'))
+            {
+                visited_dirs.insert((*root).to_owned());
+                let mut acc = (*root).to_owned();
+                let components: Vec<&str> = tail.split('/').collect();
+                for dir in &components[..components.len().saturating_sub(1)] {
+                    acc.push('/');
+                    acc.push_str(dir);
+                    visited_dirs.insert(acc.clone());
+                }
+            }
+        }
+
+        entries.insert(
+            path.to_owned(),
+            GitTreeEntry {
+                mode: mode.to_owned(),
+                oid: oid.to_owned(),
+                size,
+            },
+        );
+        if entries.len().saturating_add(visited_dirs.len()) > MAX_ENTRIES {
+            return None;
+        }
+    }
+
+    let mut files = BTreeMap::new();
+    for (path, entry) in &entries {
+        if entry.mode == "120000" {
+            if path != TOOLCHAIN_ALIAS {
+                return None;
+            }
+            let target_entry = entries.get(TOOLCHAIN_TARGET)?;
+            if !is_regular_git_mode(&target_entry.mode) {
+                return None;
+            }
+            let link_bytes =
+                transition_approval::git_object(checkout_root, &["cat-file", "blob", &entry.oid])
+                    .ok()?;
+            if link_bytes.len() != entry.size || link_bytes != TOOLCHAIN_TARGET.as_bytes() {
+                return None;
+            }
+            files.insert(
+                path.clone(),
+                format!("sha256:{:x}", Sha256::digest(&link_bytes)),
+            );
+            continue;
+        }
+        let digest = if let Some((cached_size, cached_digest)) = blob_cache.get(&entry.oid) {
+            if *cached_size != entry.size {
+                return None;
+            }
+            cached_digest.clone()
+        } else {
+            let bytes =
+                transition_approval::git_object(checkout_root, &["cat-file", "blob", &entry.oid])
+                    .ok()?;
+            if bytes.len() != entry.size || bytes.len() > MAX_FILE_BYTES {
+                return None;
+            }
+            let digest = format!("sha256:{:x}", Sha256::digest(&bytes));
+            blob_cache.insert(entry.oid.clone(), (bytes.len(), digest.clone()));
+            digest
+        };
+        files.insert(path.clone(), digest);
+    }
+
+    Some(GitTreeInventory {
+        inventory: SourceInventory { files },
+        entries,
+    })
+}
+
+fn parse_strict_semver(version: &str) -> Option<(u64, u64, u64)> {
+    let mut parts = version.split('.');
+    let major = parts.next()?;
+    let minor = parts.next()?;
+    let patch = parts.next()?;
+    if parts.next().is_some() {
+        return None;
+    }
+    let parse_component = |part: &str| -> Option<u64> {
+        if part.is_empty()
+            || !part.bytes().all(|b| b.is_ascii_digit())
+            || (part.len() > 1 && part.starts_with('0'))
+        {
+            return None;
+        }
+        part.parse::<u64>().ok()
+    };
+    Some((
+        parse_component(major)?,
+        parse_component(minor)?,
+        parse_component(patch)?,
+    ))
+}
+
+fn parse_version_assignment_line(line: &str) -> Option<(&str, &str, &str)> {
+    let first_quote = line.find('"')?;
+    let prefix = &line[..=first_quote];
+    let rest = &line[first_quote + 1..];
+    let second_quote = rest.find('"')?;
+    let version = &rest[..second_quote];
+    let suffix = &rest[second_quote..];
+    let before_quote = line[..first_quote].trim();
+    let key = before_quote.strip_suffix('=')?.trim();
+    if key != "version" {
+        return None;
+    }
+    // Suffix starts with the closing quote; disallow trailing comments or tokens.
+    if !suffix[1..].trim().is_empty() {
+        return None;
+    }
+    Some((prefix, version, suffix))
+}
+
+fn parse_release_only_cargo_toml_bump(
+    old_toml: &str,
+    new_toml: &str,
+) -> Option<(String, String, String)> {
+    let old_lines: Vec<&str> = old_toml.split_inclusive('\n').collect();
+    let new_lines: Vec<&str> = new_toml.split_inclusive('\n').collect();
+    if old_lines.len() != new_lines.len() {
+        return None;
+    }
+    let mut diff_index = None;
+    for (idx, (old_line, new_line)) in old_lines.iter().zip(&new_lines).enumerate() {
+        if old_line != new_line {
+            if diff_index.is_some() {
+                return None;
+            }
+            diff_index = Some(idx);
+        }
+    }
+    let diff_idx = diff_index?;
+
+    let mut current_section: Option<&str> = None;
+    for line in &old_lines[..diff_idx] {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if trimmed.starts_with("[[") {
+            current_section = None;
+        } else if let Some(inner) = trimmed.strip_prefix('[').and_then(|s| s.strip_suffix(']')) {
+            current_section = Some(inner.trim());
+        }
+    }
+    if current_section != Some("package") {
+        return None;
+    }
+
+    let (old_prefix, old_ver, old_suffix) = parse_version_assignment_line(old_lines[diff_idx])?;
+    let (new_prefix, new_ver, new_suffix) = parse_version_assignment_line(new_lines[diff_idx])?;
+    if old_prefix != new_prefix || old_suffix != new_suffix {
+        return None;
+    }
+    if parse_strict_semver(new_ver)? <= parse_strict_semver(old_ver)? {
+        return None;
+    }
+
+    let mut old_doc: toml::Value = toml::from_str(old_toml).ok()?;
+    let new_doc: toml::Value = toml::from_str(new_toml).ok()?;
+    let pkg_name = old_doc.get("package")?.get("name")?.as_str()?.to_owned();
+    if pkg_name.is_empty() || new_doc.get("package")?.get("name")?.as_str()? != pkg_name {
+        return None;
+    }
+    if old_doc.get("package")?.get("version")?.as_str()? != old_ver
+        || new_doc.get("package")?.get("version")?.as_str()? != new_ver
+    {
+        return None;
+    }
+    old_doc
+        .get_mut("package")?
+        .as_table_mut()?
+        .insert("version".into(), toml::Value::String(new_ver.to_owned()));
+    if old_doc != new_doc {
+        return None;
+    }
+
+    Some((pkg_name, old_ver.to_owned(), new_ver.to_owned()))
+}
+
+fn is_release_only_cargo_lock_bump(
+    old_lock: &str,
+    new_lock: &str,
+    pkg_name: &str,
+    old_ver: &str,
+    new_ver: &str,
+) -> bool {
+    let old_lines: Vec<&str> = old_lock.split_inclusive('\n').collect();
+    let new_lines: Vec<&str> = new_lock.split_inclusive('\n').collect();
+    if old_lines.len() != new_lines.len() {
+        return false;
+    }
+    let mut diff_index = None;
+    for (idx, (old_line, new_line)) in old_lines.iter().zip(&new_lines).enumerate() {
+        if old_line != new_line {
+            if diff_index.is_some() {
+                return false;
+            }
+            diff_index = Some(idx);
+        }
+    }
+    let Some(diff_idx) = diff_index else {
+        return false;
+    };
+    let Some((old_prefix, parsed_old, old_suffix)) =
+        parse_version_assignment_line(old_lines[diff_idx])
+    else {
+        return false;
+    };
+    let Some((new_prefix, parsed_new, new_suffix)) =
+        parse_version_assignment_line(new_lines[diff_idx])
+    else {
+        return false;
+    };
+    if old_prefix != new_prefix
+        || old_suffix != new_suffix
+        || parsed_old != old_ver
+        || parsed_new != new_ver
+    {
+        return false;
+    }
+
+    let (Ok(mut old_doc), Ok(new_doc)) = (
+        toml::from_str::<toml::Value>(old_lock),
+        toml::from_str::<toml::Value>(new_lock),
+    ) else {
+        return false;
+    };
+    let (Some(old_pkgs), Some(new_pkgs)) = (
+        old_doc.get("package").and_then(toml::Value::as_array),
+        new_doc.get("package").and_then(toml::Value::as_array),
+    ) else {
+        return false;
+    };
+    if old_pkgs.len() != new_pkgs.len() {
+        return false;
+    }
+    let mut diff_pkg = None;
+    for (idx, (old_pkg, new_pkg)) in old_pkgs.iter().zip(new_pkgs).enumerate() {
+        if old_pkg != new_pkg {
+            if diff_pkg.is_some() {
+                return false;
+            }
+            diff_pkg = Some(idx);
+        }
+    }
+    let Some(pkg_idx) = diff_pkg else {
+        return false;
+    };
+    let (Some(old_pkg), Some(new_pkg)) =
+        (old_pkgs[pkg_idx].as_table(), new_pkgs[pkg_idx].as_table())
+    else {
+        return false;
+    };
+    if old_pkg.get("name").and_then(toml::Value::as_str) != Some(pkg_name)
+        || new_pkg.get("name").and_then(toml::Value::as_str) != Some(pkg_name)
+        || old_pkg.contains_key("source")
+        || new_pkg.contains_key("source")
+        || old_pkg.contains_key("checksum")
+        || new_pkg.contains_key("checksum")
+        || old_pkg.get("version").and_then(toml::Value::as_str) != Some(old_ver)
+        || new_pkg.get("version").and_then(toml::Value::as_str) != Some(new_ver)
+    {
+        return false;
+    }
+    if let Some(pkg_table) = old_doc
+        .get_mut("package")
+        .and_then(toml::Value::as_array_mut)
+        .and_then(|pkgs| pkgs.get_mut(pkg_idx))
+        .and_then(toml::Value::as_table_mut)
+    {
+        pkg_table.insert("version".into(), toml::Value::String(new_ver.to_owned()));
+    } else {
+        return false;
+    }
+    old_doc == new_doc
+}
+
+fn read_bounded_utf8_blob(checkout_root: &Path, entry: &GitTreeEntry) -> Option<String> {
+    if !is_regular_git_mode(&entry.mode) || entry.size > super::init_reconciliation::MAX_FILE_BYTES
+    {
+        return None;
+    }
+    let bytes =
+        transition_approval::git_object(checkout_root, &["cat-file", "blob", &entry.oid]).ok()?;
+    if bytes.len() != entry.size {
+        return None;
+    }
+    String::from_utf8(bytes).ok()
+}
+
+fn is_release_only_cargo_bump(
+    checkout_root: &Path,
+    prior: &GitTreeInventory,
+    base: &GitTreeInventory,
+) -> bool {
+    if prior.entries.len() != base.entries.len() || !prior.entries.keys().eq(base.entries.keys()) {
+        return false;
+    }
+    for (path, base_entry) in &base.entries {
+        if path != "Cargo.toml" && path != "Cargo.lock" {
+            let Some(prior_entry) = prior.entries.get(path) else {
+                return false;
+            };
+            if prior_entry.mode != base_entry.mode
+                || prior_entry.oid != base_entry.oid
+                || prior.inventory.files.get(path) != base.inventory.files.get(path)
+            {
+                return false;
+            }
+        }
+    }
+
+    let (Some(prior_toml_entry), Some(base_toml_entry)) = (
+        prior.entries.get("Cargo.toml"),
+        base.entries.get("Cargo.toml"),
+    ) else {
+        return false;
+    };
+    if prior_toml_entry.mode != base_toml_entry.mode || prior_toml_entry.oid == base_toml_entry.oid
+    {
+        return false;
+    }
+    let (Some(old_toml), Some(new_toml)) = (
+        read_bounded_utf8_blob(checkout_root, prior_toml_entry),
+        read_bounded_utf8_blob(checkout_root, base_toml_entry),
+    ) else {
+        return false;
+    };
+    let Some((pkg_name, old_ver, new_ver)) =
+        parse_release_only_cargo_toml_bump(&old_toml, &new_toml)
+    else {
+        return false;
+    };
+
+    if let (Some(prior_lock_entry), Some(base_lock_entry)) = (
+        prior.entries.get("Cargo.lock"),
+        base.entries.get("Cargo.lock"),
+    ) {
+        if prior_lock_entry.mode != base_lock_entry.mode
+            || prior_lock_entry.oid == base_lock_entry.oid
+        {
+            return false;
+        }
+        let (Some(old_lock), Some(new_lock)) = (
+            read_bounded_utf8_blob(checkout_root, prior_lock_entry),
+            read_bounded_utf8_blob(checkout_root, base_lock_entry),
+        ) else {
+            return false;
+        };
+        if !is_release_only_cargo_lock_bump(&old_lock, &new_lock, &pkg_name, &old_ver, &new_ver) {
+            return false;
+        }
+    }
+
+    true
+}
+
+/// Qualify an automatic `repo.pr-readiness.v1` source-inventory transition when
+/// the candidate introduces zero reviewed-source changes relative to
+/// `accepted_base_sha`, and `accepted_base_sha` itself advanced from a bounded
+/// first-parent ancestor matching `accepted_sources_digest` solely via a strict
+/// SemVer release version bump in root `Cargo.toml` (and matching root package
+/// entry in `Cargo.lock`, when present).
+pub(crate) fn qualifies_release_only_inventory_transition(
+    checkout_root: &Path,
+    accepted_base_sha: &str,
+    accepted_sources_digest: &str,
+    candidate_sources_digest: &str,
+) -> bool {
+    if accepted_sources_digest == candidate_sources_digest {
+        return false;
+    }
+    let mut blob_cache = BTreeMap::new();
+    let Some(base_tree) =
+        compute_git_tree_source_inventory(checkout_root, accepted_base_sha, &mut blob_cache)
+    else {
+        return false;
+    };
+    if base_tree.inventory.digest().ok().as_deref() != Some(candidate_sources_digest) {
+        return false;
+    }
+
+    let Ok(rev_list_raw) = transition_approval::git_object(
+        checkout_root,
+        &[
+            "rev-list",
+            "--first-parent",
+            "--max-count",
+            RELEASE_ONLY_HISTORY_DEPTH,
+            accepted_base_sha,
+        ],
+    ) else {
+        return false;
+    };
+    let Ok(rev_list) = std::str::from_utf8(&rev_list_raw) else {
+        return false;
+    };
+
+    for prior_sha in rev_list.lines().map(str::trim).filter(|s| !s.is_empty()) {
+        if prior_sha == accepted_base_sha {
+            continue;
+        }
+        let Some(prior_tree) =
+            compute_git_tree_source_inventory(checkout_root, prior_sha, &mut blob_cache)
+        else {
+            continue;
+        };
+        if prior_tree.inventory.digest().ok().as_deref() == Some(accepted_sources_digest) {
+            return is_release_only_cargo_bump(checkout_root, &prior_tree, &base_tree);
+        }
+    }
+
+    false
 }
 fn relative(path: &str) -> bool {
     !path.is_empty()

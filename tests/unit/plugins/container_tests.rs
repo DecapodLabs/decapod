@@ -165,10 +165,32 @@ fn podman_spec_does_not_force_host_uid_mapping() {
     );
 }
 
+#[cfg(unix)]
+fn write_executable_fixture(path: &Path, script: &str) {
+    use std::os::unix::fs::PermissionsExt;
+
+    // Keep the writable descriptor out of the parent test process so parallel
+    // forks cannot inherit it and trigger Linux ETXTBSY (#1838).
+    let written = Command::new("/bin/sh")
+        .args(["-c", "printf '%s' \"$1\" > \"$2\"", "write-exec-fixture"])
+        .arg(script)
+        .arg(path)
+        .output()
+        .expect("write executable fixture in child process");
+    assert!(
+        written.status.success(),
+        "write executable fixture {}: {}",
+        path.display(),
+        String::from_utf8_lossy(&written.stderr)
+    );
+    fs::set_permissions(path, fs::Permissions::from_mode(0o755)).expect("chmod executable fixture");
+}
+
 #[test]
 fn podman_machine_start_is_quiet_headless_and_noninteractive() {
+    let args = podman_machine_start_args();
     assert_eq!(
-        podman_machine_start_args(),
+        args,
         [
             "machine",
             "start",
@@ -177,34 +199,69 @@ fn podman_machine_start_is_quiet_headless_and_noninteractive() {
             "--update-connection=false"
         ]
     );
+    verify_headless_podman_machine_args(&args).expect("default args must remain headless");
+    for forbidden in [
+        vec!["machine", "start", "--log-level=debug"],
+        vec!["machine", "start", "--log-level", "debug"],
+        vec!["machine", "start", "-l", "debug"],
+        vec!["machine", "start", "--log-level=trace"],
+        vec!["machine", "start", "--gui"],
+    ] {
+        assert!(
+            verify_headless_podman_machine_args(&forbidden).is_err(),
+            "expected headless guard to reject {forbidden:?}"
+        );
+    }
+}
+
+#[test]
+fn vfkit_headless_invariant_rejects_gui_and_display_input_devices() {
+    let headless_vfkit = [
+        "--cpus",
+        "8",
+        "--memory",
+        "12288",
+        "--device",
+        "virtio-blk,path=/tmp/machine.raw",
+        "--device",
+        "virtio-rng",
+        "--device",
+        "virtio-vsock,port=1025,socketURL=/tmp/machine.sock,listen",
+        "--device",
+        "virtio-serial,logFilePath=/tmp/machine.log",
+        "--device",
+        "virtio-net,unixSocketPath=/tmp/gvproxy.sock",
+        "--timesync",
+        "vsockPort=1234",
+    ];
+    verify_headless_vfkit_args(&headless_vfkit).expect("headless vfkit args must pass");
+
+    for gui_args in [
+        vec!["--cpus", "4", "--gui"],
+        vec!["--device", "virtio-gpu,width=1920,height=1080"],
+        vec!["--device", "virtio-input,keyboard"],
+        vec!["--device", "virtio-input,pointing"],
+    ] {
+        assert!(
+            verify_headless_vfkit_args(&gui_args).is_err(),
+            "expected headless vfkit check to reject {gui_args:?}"
+        );
+    }
 }
 
 #[cfg(unix)]
 #[test]
 fn podman_machine_start_captures_output_without_reading_terminal_input() {
-    use std::os::unix::fs::PermissionsExt;
-
     let root = tempdir().expect("tempdir");
     let args_file = root.path().join("args");
+    let env_file = root.path().join("env");
     let fake_runtime = root.path().join("podman");
     let script = format!(
-        "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\nif IFS= read -r line; then exit 42; fi\nprintf 'captured\\n'\n",
-        args_file.display()
+        "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\nprintf 'PODMAN=%s\\nCONTAINERS=%s\\n' \"${{PODMAN_LOG_LEVEL:-}}\" \"${{CONTAINERS_LOG_LEVEL:-}}\" > '{}'\nif IFS= read -r line; then exit 42; fi\nprintf 'captured\\n'\n",
+        args_file.display(),
+        env_file.display()
     );
-    // Keep the writable descriptor out of the parent so parallel forks cannot inherit it.
-    let written = Command::new("/bin/sh")
-        .args(["-c", "printf '%s' \"$1\" > \"$2\"", "write-podman-fixture"])
-        .arg(script)
-        .arg(&fake_runtime)
-        .output()
-        .expect("write fake podman in a child process");
-    assert!(
-        written.status.success(),
-        "write fake podman: {}",
-        String::from_utf8_lossy(&written.stderr)
-    );
-    fs::set_permissions(&fake_runtime, fs::Permissions::from_mode(0o755))
-        .expect("chmod fake podman");
+    write_executable_fixture(&fake_runtime, &script);
 
     let output = start_podman_machine_quietly(fake_runtime.to_str().expect("runtime path"))
         .expect("start fake podman");
@@ -223,6 +280,16 @@ fn podman_machine_start_captures_output_without_reading_terminal_input() {
             "--update-connection=false"
         ]
     );
+    assert_eq!(
+        fs::read_to_string(env_file).expect("read env"),
+        "PODMAN=\nCONTAINERS=\n"
+    );
+
+    let diag = format_machine_start_diagnostic(Some(&output));
+    assert!(diag.contains("podman machine start (headless):"));
+    assert!(diag.contains("captured"));
+    assert!(!diag.contains("--log-level=debug"));
+    assert!(!diag.contains("--gui"));
 }
 
 #[test]
@@ -393,8 +460,6 @@ primary_languages = ["Python"]
 #[cfg(unix)]
 #[test]
 fn local_generated_image_builds_generated_dockerfile_from_repo_context() {
-    use std::os::unix::fs::PermissionsExt;
-
     let root = std::env::temp_dir().join(format!(
         "decapod-local-image-{}",
         crate::core::ulid::new_ulid().to_lowercase()
@@ -402,17 +467,13 @@ fn local_generated_image_builds_generated_dockerfile_from_repo_context() {
     fs::create_dir_all(&root).expect("mkdir repo");
     let fake_runtime = root.join("fake-runtime");
     let args_file = root.join("runtime-args.txt");
-    fs::write(
+    write_executable_fixture(
         &fake_runtime,
-        format!(
+        &format!(
             "#!/bin/sh\nprintf '%s\\n' \"$@\" > '{}'\n",
             args_file.display()
         ),
-    )
-    .expect("write fake runtime");
-    let mut perms = fs::metadata(&fake_runtime).expect("metadata").permissions();
-    perms.set_mode(0o755);
-    fs::set_permissions(&fake_runtime, perms).expect("chmod");
+    );
 
     let image = ensure_local_generated_workspace_image(fake_runtime.to_str().unwrap(), &root)
         .expect("local image");
@@ -1893,7 +1954,6 @@ fn container_pr_rejects_changed_or_detached_head_before_publisher() {
 #[test]
 fn override_healing_probes_a_runtime_only_for_a_disabled_marker() {
     use crate::core::bounded_process::BoundedCommand;
-    use std::os::unix::fs::PermissionsExt;
     const CHILD_ROOT: &str = "DECAPOD_TEST_CONTAINER_HEAL_SCOPE";
     const PROBE_LOG: &str = "DECAPOD_TEST_CONTAINER_PROBE_LOG";
     if let Some(root) = std::env::var_os(CHILD_ROOT) {
@@ -1920,15 +1980,13 @@ fn override_healing_probes_a_runtime_only_for_a_disabled_marker() {
         fs::create_dir_all(&root).unwrap();
         fs::create_dir_all(&bin).unwrap();
         let runtime = bin.join("podman");
-        fs::write(
+        write_executable_fixture(
             &runtime,
             r#"#!/bin/sh
 printf '%s\n' "$*" >> "$DECAPOD_TEST_CONTAINER_PROBE_LOG"
 exit 0
 "#,
-        )
-        .unwrap();
-        fs::set_permissions(&runtime, fs::Permissions::from_mode(0o755)).unwrap();
+        );
         let path = override_file_path(&root);
         if scenario != "missing" {
             fs::create_dir_all(path.parent().unwrap()).unwrap();

@@ -730,11 +730,72 @@ fn podman_machine_start_args() -> [&'static str; 5] {
     ]
 }
 
+/// Enforce the macOS/cross-platform headless VM startup invariant (#1417):
+/// Podman's `applehv` provider adds `--gui` and virtual display/input devices
+/// when debug logging is enabled, so automatic/diagnostic startup paths must
+/// never pass debug/trace log levels or GUI flags.
+fn verify_headless_podman_machine_args(args: &[&str]) -> Result<(), String> {
+    let mut iter = args.iter().copied();
+    while let Some(arg) = iter.next() {
+        let lower = arg.to_ascii_lowercase();
+        if lower == "--gui" {
+            return Err("headless podman machine start forbids --gui".into());
+        }
+        if let Some(level) = lower
+            .strip_prefix("--log-level=")
+            .or_else(|| lower.strip_prefix("-l="))
+            && matches!(level, "debug" | "trace")
+        {
+            return Err(format!(
+                "headless podman machine start forbids debug/trace log level ({arg})"
+            ));
+        }
+        if matches!(lower.as_str(), "--log-level" | "-l")
+            && let Some(next) = iter.next()
+            && matches!(next.to_ascii_lowercase().as_str(), "debug" | "trace")
+        {
+            return Err(format!(
+                "headless podman machine start forbids debug/trace log level ({arg} {next})"
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Verify a `vfkit` command line remains strictly headless (no `--gui` window
+/// or virtual display/input devices that steal macOS focus, #1417).
+#[cfg(test)]
+fn verify_headless_vfkit_args(args: &[&str]) -> Result<(), String> {
+    for arg in args {
+        let lower = arg.to_ascii_lowercase();
+        if lower == "--gui" {
+            return Err("vfkit arguments contain --gui".into());
+        }
+        if lower.contains("virtio-gpu")
+            || lower.contains("virtio-input")
+            || lower.contains("virtio-keyboard")
+            || lower.contains("virtio-pointing")
+            || lower.contains("apple-pointing")
+            || lower.contains("keyboard")
+            || lower.contains("pointing")
+        {
+            return Err(format!(
+                "vfkit arguments contain display/input device: {arg}"
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn start_podman_machine_quietly(
     runtime: &str,
 ) -> Result<std::process::Output, error::DecapodError> {
+    let args = podman_machine_start_args();
+    verify_headless_podman_machine_args(&args).map_err(error::DecapodError::ValidationError)?;
     Command::new(runtime)
-        .args(podman_machine_start_args())
+        .args(args)
+        .env_remove("PODMAN_LOG_LEVEL")
+        .env_remove("CONTAINERS_LOG_LEVEL")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
