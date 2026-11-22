@@ -1,5 +1,5 @@
-//! Loopback HTTP boundary proofs for `decapod cloud {orgs,members,invites,identity,billing}`
-//! and matching `cloud.*` JSON RPC operations over Dactyl `0.18.0`.
+//! Loopback HTTP boundary proofs for `decapod cloud {orgs,members,invites,identity,billing,admins,recovery,policies,upgrades,project enroll}`
+//! and matching `cloud.*` JSON RPC operations over Dactyl `0.19.0`.
 //!
 //! These proofs establish:
 //! - zero `.decapod/data/decapod.db` or `todo.db` creation under `backend = "cloud"`,
@@ -1183,9 +1183,9 @@ mod cloud_admin_proofs {
                     }),
                 ),
             ),
-            // limits with overage_cap_exhausted
+            // limits with overage_cap_exhausted via dactyl-db 0.19.0 AccountOperation::ResourceLimits
             (
-                "/account-status",
+                "/resource-limits",
                 MockReply::json(
                     200,
                     json!({
@@ -1304,6 +1304,309 @@ mod cloud_admin_proofs {
         let live_json: Value = serde_json::from_slice(&status_live.stdout).unwrap();
         assert_eq!(live_json["spend_cap_status"], "overage_cap_exhausted");
         assert_eq!(live_json["spend_cap_warning"], true);
+        assert_no_sqlite_created(root.path());
+    }
+
+    #[test]
+    fn dactyl_019_six_account_operations_and_problem_codes_route_cleanly_without_sqlite() {
+        let member_uuid = "22222222-2222-4222-8222-222222222222";
+        let root = setup_cloud_repo();
+        let machine = TempDir::new().unwrap();
+        let server = MockServer::start_sequence(vec![
+            // 1. RepositoryEnroll via CLI `cloud project enroll`
+            (
+                "/repository-enroll",
+                MockReply::json(
+                    200,
+                    json!({
+                        "version": 1,
+                        "organization_id": "org-uuid-1",
+                        "project_id": "example/supabase-proof",
+                        "status": "enrolled",
+                        "enrollment_url": "https://api.decapodlabs.ai/decapod/example/supabase-proof"
+                    }),
+                ),
+            ),
+            // 2. ResourceLimits legacy 404 fallback: Dactyl tries decapod-onboarding then propodus-onboarding,
+            // then cloud_admin falls back cleanly to /account-status.
+            (
+                "/decapod-onboarding/resource-limits",
+                MockReply::json(404, json!({"error": {"code": "not_found"}})),
+            ),
+            (
+                "/propodus-onboarding/resource-limits",
+                MockReply::json(404, json!({"error": {"code": "not_found"}})),
+            ),
+            (
+                "/account-status",
+                MockReply::json(
+                    200,
+                    json!({
+                        "version": 1,
+                        "backend_authorized": true,
+                        "resource_limits": {
+                            "window_month": "2026-11",
+                            "paid_overages": {"status": "healthy"}
+                        }
+                    }),
+                ),
+            ),
+            // 3. OrgAdmins grant via CLI `cloud admins grant`
+            (
+                "/org-admins",
+                MockReply::json(
+                    200,
+                    json!({"version": 1, "status": "admin_granted", "admin_revision": 4}),
+                ),
+            ),
+            // 4. OrgRecovery initiate via RPC `cloud.recovery`
+            (
+                "/org-recovery",
+                MockReply::json(
+                    200,
+                    json!({"version": 1, "recovery_id": "rec_01", "status": "recovery_initiated"}),
+                ),
+            ),
+            // 5. PolicyTemplates apply via CLI `cloud policies apply`
+            (
+                "/policy-templates",
+                MockReply::json(
+                    200,
+                    json!({"version": 1, "template_id": "strict-gov", "status": "applied"}),
+                ),
+            ),
+            // 6. OrgUpgrades request via RPC `cloud.upgrades`
+            (
+                "/org-upgrades",
+                MockReply::json(
+                    200,
+                    json!({"version": 1, "upgrade_id": "upg_01", "status": "upgrade_requested"}),
+                ),
+            ),
+            // 7. Tenant upgrade concurrency conflict (#139/#132): version_conflict forwarded by Dactyl 0.19.0
+            (
+                "/org-upgrades",
+                MockReply::json(
+                    409,
+                    json!({"error": {"code": "version_conflict", "message": "stale upgrade revision"}}),
+                ),
+            ),
+            // 8. Org session/grant narrowing (#134): grant_revoked forwarded by Dactyl 0.19.0
+            (
+                "/policy-templates",
+                MockReply::json(
+                    403,
+                    json!({"error": {"code": "grant_revoked", "message": "grant revoked"}}),
+                ),
+            ),
+            // 9. Paid repo seat denial (#136): seat_revoked forwarded by Dactyl 0.19.0
+            (
+                "/repository-enroll",
+                MockReply::json(
+                    403,
+                    json!({"error": {"code": "seat_revoked", "message": "seat revoked"}}),
+                ),
+            ),
+        ]);
+        seed_bearer(root.path(), machine.path(), &server.origin, managed::ACCESS);
+
+        // 1. RepositoryEnroll
+        let enroll_cli = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "cloud",
+                "--format",
+                "json",
+                "project",
+                "enroll",
+                "--organization-id",
+                "org-uuid-1",
+                "--plan-tier",
+                "team",
+            ],
+            None,
+        );
+        assert!(
+            enroll_cli.status.success(),
+            "{}",
+            String::from_utf8_lossy(&enroll_cli.stderr)
+        );
+        let enroll_json: Value = serde_json::from_slice(&enroll_cli.stdout).unwrap();
+        assert_eq!(enroll_json["schema_version"], "decapod.cloud.enroll.v1");
+        assert_eq!(enroll_json["status"], "enrolled");
+
+        // 2. ResourceLimits fallback
+        let limits_fallback = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "cloud",
+                "--format",
+                "json",
+                "billing",
+                "limits",
+                "--project-id",
+                "example/supabase-proof",
+            ],
+            None,
+        );
+        assert!(limits_fallback.status.success());
+        let lf_json: Value = serde_json::from_slice(&limits_fallback.stdout).unwrap();
+        assert_eq!(lf_json["spend_cap_status"], "healthy");
+
+        // 3. OrgAdmins grant
+        let admins_cli = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "cloud",
+                "--format",
+                "json",
+                "admins",
+                "grant",
+                "--organization-id",
+                "org-uuid-1",
+                "--member-account-id",
+                member_uuid,
+                "--expected-revision",
+                "3",
+            ],
+            None,
+        );
+        assert!(admins_cli.status.success());
+        let admins_json: Value = serde_json::from_slice(&admins_cli.stdout).unwrap();
+        assert_eq!(admins_json["schema_version"], "decapod.cloud.admins.v1");
+        assert!(
+            admins_json["access_model_note"]
+                .as_str()
+                .unwrap()
+                .contains("#215")
+        );
+
+        // 4. OrgRecovery via RPC
+        let recovery_rpc = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "rpc",
+                "--op",
+                "cloud.recovery",
+                "--params",
+                r#"{"operation":"initiate","organization_id":"org-uuid-1","reason":"owner key lost"}"#,
+            ],
+            None,
+        );
+        assert!(recovery_rpc.status.success());
+        let rec_json: Value = serde_json::from_slice(&recovery_rpc.stdout).unwrap();
+        assert_eq!(rec_json["result"]["recovery_id"], "rec_01");
+
+        // 5. PolicyTemplates apply
+        let policy_cli = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "cloud",
+                "--format",
+                "json",
+                "policies",
+                "apply",
+                "--organization-id",
+                "org-uuid-1",
+                "--template-id",
+                "strict-gov",
+                "--revision",
+                "2",
+            ],
+            None,
+        );
+        assert!(policy_cli.status.success());
+        let pol_json: Value = serde_json::from_slice(&policy_cli.stdout).unwrap();
+        assert_eq!(pol_json["schema_version"], "decapod.cloud.policies.v1");
+        assert_eq!(pol_json["status"], "applied");
+
+        // 6. OrgUpgrades request via RPC
+        let upgrade_rpc = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "rpc",
+                "--op",
+                "cloud.upgrades",
+                "--params",
+                r#"{"operation":"request","organization_id":"org-uuid-1","target_tier":"enterprise"}"#,
+            ],
+            None,
+        );
+        assert!(upgrade_rpc.status.success());
+        let upg_json: Value = serde_json::from_slice(&upgrade_rpc.stdout).unwrap();
+        assert_eq!(upg_json["result"]["upgrade_id"], "upg_01");
+
+        // 7. Tenant upgrade concurrency conflict (#139/#132)
+        let tenant_err = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "cloud",
+                "--format",
+                "json",
+                "upgrades",
+                "status",
+                "--organization-id",
+                "org-uuid-1",
+            ],
+            None,
+        );
+        assert!(!tenant_err.status.success());
+        let tenant_diag: Value = serde_json::from_slice(&tenant_err.stdout).unwrap();
+        assert_eq!(tenant_diag["error_code"], "version_conflict");
+
+        // 8. Grant narrowing (#134)
+        let grant_err = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "cloud",
+                "--format",
+                "json",
+                "policies",
+                "list",
+                "--organization-id",
+                "org-uuid-1",
+            ],
+            None,
+        );
+        assert!(!grant_err.status.success());
+        let grant_diag: Value = serde_json::from_slice(&grant_err.stdout).unwrap();
+        assert_eq!(grant_diag["status"], "repository_denied");
+        assert_eq!(grant_diag["error_code"], "grant_revoked");
+
+        // 9. Paid seat denial (#136)
+        let seat_err = run_decapod(
+            root.path(),
+            machine.path(),
+            &server.origin,
+            &[
+                "rpc",
+                "--op",
+                "cloud.enroll",
+                "--params",
+                r#"{"organization_id":"org-uuid-1"}"#,
+            ],
+            None,
+        );
+        assert!(!seat_err.status.success());
+        let seat_diag: Value = serde_json::from_slice(&seat_err.stdout).unwrap();
+        assert_eq!(seat_diag["error"]["code"], "seat_revoked");
+
         assert_no_sqlite_created(root.path());
     }
 }

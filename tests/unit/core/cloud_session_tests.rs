@@ -629,3 +629,53 @@ fn debug_output_redacts_every_credential_and_bootstrap_secret() {
     }
     assert!(output.contains("REDACTED"));
 }
+
+#[cfg(feature = "supabase-cloud")]
+#[test]
+fn device_session_sidecar_enforces_scope_and_clears_on_restart() {
+    let fixture = Fixture::new();
+    let store = fixture.store();
+    let mut guard = store.lock(Duration::ZERO).unwrap();
+    guard.replace(ready()).unwrap();
+
+    assert!(guard.device_session(REPOSITORY).unwrap().is_none());
+
+    let dpop_session = Session {
+        access_token: "dpc_at_unit_test_1".into(),
+        refresh_token: Some("dpc_rt_unit_test_1".into()),
+        expires_at: 1_900_000_000,
+    };
+    guard
+        .replace_device_session(REPOSITORY, dpop_session.clone())
+        .unwrap();
+    assert_eq!(
+        guard.device_session(REPOSITORY).unwrap().as_ref(),
+        Some(&dpop_session)
+    );
+    assert!(
+        guard
+            .device_session("DecapodLabs/different")
+            .unwrap()
+            .is_none()
+    );
+
+    // Copying device_session.json across stores with different bindings fails closed.
+    let other = SessionStore::for_project_in(
+        &fixture.machine,
+        "https://other.example.test",
+        REPOSITORY,
+        &fixture.project,
+    )
+    .unwrap();
+    let other_guard = other.lock(Duration::ZERO).unwrap();
+    fs::copy(
+        store.directory.join("device_session.json"),
+        other.directory.join("device_session.json"),
+    )
+    .unwrap();
+    assert!(other_guard.device_session(REPOSITORY).is_err());
+
+    guard.clear_for_restart().unwrap();
+    assert!(guard.device_session(REPOSITORY).unwrap().is_none());
+    assert!(!store.directory.join("device_session.json").exists());
+}

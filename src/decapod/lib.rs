@@ -347,6 +347,31 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                 Err(error) => Err(error),
             }
         }
+        CloudCommand::Project {
+            command:
+                CloudProjectCommand::Enroll {
+                    project_id,
+                    organization_id,
+                    plan_tier,
+                },
+        } => {
+            let op = core::cloud_admin::CloudRepositoryEnrollOp {
+                organization_id,
+                project_id,
+                plan_tier,
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::enroll_repository(root, identity, op)
+            })?;
+            if format != "json" {
+                println!(
+                    "Cloud repository enrollment: project_id={} status={}",
+                    report["project_id"].as_str().unwrap_or("unknown"),
+                    report["status"].as_str().unwrap_or("enrolled")
+                );
+            }
+            Ok(())
+        }
         CloudCommand::Projects | CloudCommand::Project { .. } => {
             #[cfg(not(feature = "supabase-cloud"))]
             {
@@ -813,6 +838,161 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
                         report["spend_cap_warning"].as_bool().unwrap_or(false),
                     );
                 }
+            }
+            Ok(())
+        }
+        CloudCommand::Admins { command } => {
+            let op = match command {
+                CloudAdminsCommand::List { organization_id } => {
+                    core::cloud_admin::CloudOrgAdminsOp::List { organization_id }
+                }
+                CloudAdminsCommand::Grant {
+                    organization_id,
+                    member_account_id,
+                    expected_revision,
+                } => core::cloud_admin::CloudOrgAdminsOp::Grant {
+                    organization_id,
+                    member_account_id,
+                    expected_revision,
+                },
+                CloudAdminsCommand::Revoke {
+                    organization_id,
+                    member_account_id,
+                    expected_revision,
+                } => core::cloud_admin::CloudOrgAdminsOp::Revoke {
+                    organization_id,
+                    member_account_id,
+                    expected_revision,
+                },
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::org_admins(root, identity, op)
+            })?;
+            if format != "json" {
+                println!(
+                    "Cloud org admins `{}`: status={}",
+                    report["operation"].as_str().unwrap_or("admins"),
+                    report["status"].as_str().unwrap_or("ok")
+                );
+            }
+            Ok(())
+        }
+        CloudCommand::Recovery { command } => {
+            let op = match command {
+                CloudRecoveryCommand::Status { organization_id } => {
+                    core::cloud_admin::CloudOrgRecoveryOp::Status { organization_id }
+                }
+                CloudRecoveryCommand::Initiate {
+                    organization_id,
+                    reason,
+                } => core::cloud_admin::CloudOrgRecoveryOp::Initiate {
+                    organization_id,
+                    reason,
+                },
+                CloudRecoveryCommand::Approve {
+                    organization_id,
+                    recovery_id,
+                } => core::cloud_admin::CloudOrgRecoveryOp::Approve {
+                    organization_id,
+                    recovery_id,
+                },
+                CloudRecoveryCommand::Cancel {
+                    organization_id,
+                    recovery_id,
+                } => core::cloud_admin::CloudOrgRecoveryOp::Cancel {
+                    organization_id,
+                    recovery_id,
+                },
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::org_recovery(root, identity, op)
+            })?;
+            if format != "json" {
+                println!(
+                    "Cloud org recovery `{}`: status={}",
+                    report["operation"].as_str().unwrap_or("recovery"),
+                    report["status"].as_str().unwrap_or("ok")
+                );
+            }
+            Ok(())
+        }
+        CloudCommand::Policies { command } => {
+            let op = match command {
+                CloudPoliciesCommand::List { organization_id } => {
+                    core::cloud_admin::CloudPolicyTemplatesOp::List { organization_id }
+                }
+                CloudPoliciesCommand::Get {
+                    organization_id,
+                    template_id,
+                } => core::cloud_admin::CloudPolicyTemplatesOp::Get {
+                    organization_id,
+                    template_id,
+                },
+                CloudPoliciesCommand::Apply {
+                    organization_id,
+                    template_id,
+                    revision,
+                } => core::cloud_admin::CloudPolicyTemplatesOp::Apply {
+                    organization_id,
+                    template_id,
+                    revision,
+                },
+                CloudPoliciesCommand::Delete {
+                    organization_id,
+                    template_id,
+                } => core::cloud_admin::CloudPolicyTemplatesOp::Delete {
+                    organization_id,
+                    template_id,
+                },
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::policy_templates(root, identity, op)
+            })?;
+            if format != "json" {
+                println!(
+                    "Cloud policy templates `{}`: status={}",
+                    report["operation"].as_str().unwrap_or("policies"),
+                    report["status"].as_str().unwrap_or("ok")
+                );
+            }
+            Ok(())
+        }
+        CloudCommand::Upgrades { command } => {
+            let op = match command {
+                CloudUpgradesCommand::Status { organization_id } => {
+                    core::cloud_admin::CloudOrgUpgradesOp::Status { organization_id }
+                }
+                CloudUpgradesCommand::Request {
+                    organization_id,
+                    target_tier,
+                } => core::cloud_admin::CloudOrgUpgradesOp::Request {
+                    organization_id,
+                    target_tier,
+                },
+                CloudUpgradesCommand::Apply {
+                    organization_id,
+                    upgrade_id,
+                } => core::cloud_admin::CloudOrgUpgradesOp::Apply {
+                    organization_id,
+                    upgrade_id,
+                },
+                CloudUpgradesCommand::Cancel {
+                    organization_id,
+                    upgrade_id,
+                } => core::cloud_admin::CloudOrgUpgradesOp::Cancel {
+                    organization_id,
+                    upgrade_id,
+                },
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::org_upgrades(root, identity, op)
+            })?;
+            if format != "json" {
+                println!(
+                    "Cloud org upgrades `{}`: status={}",
+                    report["operation"].as_str().unwrap_or("upgrades"),
+                    report["status"].as_str().unwrap_or("ok")
+                );
             }
             Ok(())
         }
@@ -4354,6 +4534,11 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "cloud.invites"
                     | "cloud.identity"
                     | "cloud.billing"
+                    | "cloud.enroll"
+                    | "cloud.admins"
+                    | "cloud.recovery"
+                    | "cloud.policies"
+                    | "cloud.upgrades"
             )
         ),
         _ => false,
@@ -4603,6 +4788,11 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "cloud.invites"
             | "cloud.identity"
             | "cloud.billing"
+            | "cloud.enroll"
+            | "cloud.admins"
+            | "cloud.recovery"
+            | "cloud.policies"
+            | "cloud.upgrades"
     )
 }
 
@@ -4701,6 +4891,11 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "cloud.invites"
             | "cloud.identity"
             | "cloud.billing"
+            | "cloud.enroll"
+            | "cloud.admins"
+            | "cloud.recovery"
+            | "cloud.policies"
+            | "cloud.upgrades"
     )
 }
 
@@ -9560,6 +9755,11 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "cloud.invites"
             | "cloud.identity"
             | "cloud.billing"
+            | "cloud.enroll"
+            | "cloud.admins"
+            | "cloud.recovery"
+            | "cloud.policies"
+            | "cloud.upgrades"
     )
 }
 
@@ -15758,7 +15958,16 @@ fn unsuccessful_validate_rpc_is_nonzero_without_changing_other_rpc_exit_semantic
 fn is_cloud_admin_rpc_op(op: &str) -> bool {
     matches!(
         op,
-        "cloud.orgs" | "cloud.members" | "cloud.invites" | "cloud.identity" | "cloud.billing"
+        "cloud.orgs"
+            | "cloud.members"
+            | "cloud.invites"
+            | "cloud.identity"
+            | "cloud.billing"
+            | "cloud.enroll"
+            | "cloud.admins"
+            | "cloud.recovery"
+            | "cloud.policies"
+            | "cloud.upgrades"
     )
 }
 
@@ -16035,6 +16244,143 @@ fn execute_cloud_admin_rpc(
                 }
             };
             core::cloud_admin::billing(&project_root, &identity, op)
+        }
+        "cloud.enroll" => {
+            let params: core::rpc::CloudEnrollParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let op = core::cloud_admin::CloudRepositoryEnrollOp {
+                organization_id: params.organization_id,
+                project_id: params.project_id,
+                plan_tier: params.plan_tier,
+            };
+            core::cloud_admin::enroll_repository(&project_root, &identity, op)
+        }
+        "cloud.admins" => {
+            let params: core::rpc::CloudAdminsParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "list" => core::cloud_admin::CloudOrgAdminsOp::List {
+                    organization_id: params.organization_id,
+                },
+                "grant" => core::cloud_admin::CloudOrgAdminsOp::Grant {
+                    organization_id: params.organization_id,
+                    member_account_id: req_str(params.member_account_id, "member_account_id")?,
+                    expected_revision: params.expected_revision,
+                },
+                "revoke" => core::cloud_admin::CloudOrgAdminsOp::Revoke {
+                    organization_id: params.organization_id,
+                    member_account_id: req_str(params.member_account_id, "member_account_id")?,
+                    expected_revision: params.expected_revision,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.admins` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::org_admins(&project_root, &identity, op)
+        }
+        "cloud.recovery" => {
+            let params: core::rpc::CloudRecoveryParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "status" => core::cloud_admin::CloudOrgRecoveryOp::Status {
+                    organization_id: params.organization_id,
+                },
+                "initiate" => core::cloud_admin::CloudOrgRecoveryOp::Initiate {
+                    organization_id: params.organization_id,
+                    reason: params.reason,
+                },
+                "approve" => core::cloud_admin::CloudOrgRecoveryOp::Approve {
+                    organization_id: params.organization_id,
+                    recovery_id: req_str(params.recovery_id, "recovery_id")?,
+                },
+                "cancel" => core::cloud_admin::CloudOrgRecoveryOp::Cancel {
+                    organization_id: params.organization_id,
+                    recovery_id: req_str(params.recovery_id, "recovery_id")?,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.recovery` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::org_recovery(&project_root, &identity, op)
+        }
+        "cloud.policies" => {
+            let params: core::rpc::CloudPoliciesParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "list" => core::cloud_admin::CloudPolicyTemplatesOp::List {
+                    organization_id: params.organization_id,
+                },
+                "get" => core::cloud_admin::CloudPolicyTemplatesOp::Get {
+                    organization_id: params.organization_id,
+                    template_id: req_str(params.template_id, "template_id")?,
+                },
+                "apply" => core::cloud_admin::CloudPolicyTemplatesOp::Apply {
+                    organization_id: params.organization_id,
+                    template_id: req_str(params.template_id, "template_id")?,
+                    revision: params.revision,
+                },
+                "delete" => core::cloud_admin::CloudPolicyTemplatesOp::Delete {
+                    organization_id: params.organization_id,
+                    template_id: req_str(params.template_id, "template_id")?,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.policies` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::policy_templates(&project_root, &identity, op)
+        }
+        "cloud.upgrades" => {
+            let params: core::rpc::CloudUpgradesParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "status" => core::cloud_admin::CloudOrgUpgradesOp::Status {
+                    organization_id: params.organization_id,
+                },
+                "request" => core::cloud_admin::CloudOrgUpgradesOp::Request {
+                    organization_id: params.organization_id,
+                    target_tier: req_str(params.target_tier, "target_tier")?,
+                },
+                "apply" => core::cloud_admin::CloudOrgUpgradesOp::Apply {
+                    organization_id: params.organization_id,
+                    upgrade_id: req_str(params.upgrade_id, "upgrade_id")?,
+                },
+                "cancel" => core::cloud_admin::CloudOrgUpgradesOp::Cancel {
+                    organization_id: params.organization_id,
+                    upgrade_id: req_str(params.upgrade_id, "upgrade_id")?,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.upgrades` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::org_upgrades(&project_root, &identity, op)
         }
         other => Err(error::DecapodError::ValidationError(format!(
             "Unknown cloud admin RPC operation `{other}`."

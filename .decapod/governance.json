@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
+    "accepted_commit": "8633114615665b8de10043a01b961c1b841e211d",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,50 +869,75 @@
     }
   },
   "change": {
-    "id": "change_01M81MJK527WN5XVM6DRP7XAQE",
-    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
+    "id": "change_01M81S9CA1R9HQV3PJB35WZJSK",
+    "base_commit": "8633114615665b8de10043a01b961c1b841e211d",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:houseboat-core-engine-and-contracts": {
-      "statement": "Houseboat core engine modules (#852-#859), Darkmatter read-only snapshot contract (#1711), pure-TS/Pi bindings (#1277), local SQLite compaction benchmark/recovery (#1630), write-time knowledge attestation (#657), offline init reconciliation matrix (#1024), crash unknown-outcome reconciliation (#1367), and 3-worktree combined-candidate negative control (#1763) enforce fail-closed governance invariants locally without modifying forbidden/sibling files or claiming hosted/live external proof.",
-      "falsifier": "Any Houseboat invariant fails open (cyclic fleet graph, dirty worktree non-force drop, wrapper-tampered mooring artifact, silent LWW journal merge, auto-refunded uncertain budget hold, 6+6 or 3x4 oversubscription, secret accepted in knowledge attestation, stale-repo crash resume, path-escaping Darkmatter snapshot, or 3-worktree semantic violation admitted), or cargo fmt/clippy/tests/TS typecheck fail.",
+    "claim:dactyl-019-cloud-admin": {
+      "statement": "Decapod upgrades cleanly to dactyl-db =0.19.0 (with url pinned at 2.5.9 and MODULE.bazel.lock synchronized), wires all 6 new AccountOperations (RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades), maps 0.19.0 problem/grant/seat/lifecycle codes, and stages explicit opt-in FIRST_PARTY_CLOUD_ORIGIN without touching local SQLite.",
+      "falsifier": "Any of the 6 new AccountOperations fails to route through its Dactyl 0.19.0 endpoint, fails to preserve zero-SQLite or HTTPS/secret boundaries, breaks Bazel cargo_inputs_policy, leaks physical origin URLs in local cloud status, or drops existing CLI/RPC/Cloud contracts.",
       "status": "supported",
       "proof_refs": [
-        "bindings/typescript/test/client.test.ts",
-        "packages/pi-decapod/test/pi_extension.test.ts",
-        "tests/houseboat_engine.rs",
-        "tests/projection_consistency.rs"
+        "src/decapod/core/cloud_client.rs",
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs"
+      ]
+    },
+    "claim:dpop-e2e-gateway-1878": {
+      "statement": "Operational Cloud connect, query, batch, control, refresh, container signing, and logout execute end-to-end with sender-constrained RFC 9449 DPoP proofs and repository-bound device session sidecars without downgrading human-bearer admin calls or creating SQLite stores.",
+      "falsifier": "Any operational Cloud call downgrades to unsigned Bearer in strict DPoP mode, leaks or reuses a revoked/replayed device session, sends DPoP headers to human-bearer /account-status, permits container signing of /device-enroll or admin endpoints, or initializes .decapod/data/decapod.db.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_dpop_e2e_1878.rs",
+        "tests/unit/core/cloud_dpop_tests.rs",
+        "tests/unit/core/cloud_session_tests.rs",
+        "tests/unit/core/container_signer_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "houseboat-shard6-complete",
-      "summary": "Implement Houseboat Core Engine (#852-#859), Mooring Contracts, Darkmatter Read-Only Contract (#1711), TypeScript/Pi SDK (#1277), Local Storage Compaction Benchmarks & Recovery (#1630), Knowledge Write-Time Attestation (#657), Offline Init Matrix (#1024), Crash Reconciliation (#1367), #880 Projection Consistency Fixture Repair, 3-Worktree Negative Control (#1763), Living Specs, and Dockerfile 0.162.0 Pin",
-      "input_digest": "sha256:0349fe5801eedd25cbe8ec8f85ace4a02ea2591a3000946a6216d0ac20344742",
+      "id": "chk-dpop-1878-dactyl-019",
+      "summary": "Port #1878 DPoP E2E device gateway lifecycle and wire dactyl-db =0.19.0 Cloud Admin operations",
+      "input_digest": "sha256:b9b0ee8366fe52395cf5e9e191165951a93081a787ebcb9ea2478391b6ae442a",
       "proof_refs": [
-        "bindings/typescript/test/client.test.ts",
-        "packages/pi-decapod/test/pi_extension.test.ts",
-        "tests/houseboat_engine.rs",
-        "tests/projection_consistency.rs"
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/cloud_dpop_e2e_1878.rs"
       ]
     },
     {
-      "id": "houseboat-reconcile-782e9ce19",
-      "summary": "Reconcile PR #1922 with origin/master (782e9ce19, v0.162.1): preserved all merged PRs (#1917-#1926/#1920/#1921), rebuilt command-contracts.md with worktree binary, refreshed specs/manifest, verified fmt/clippy/all Rust & TS tests",
-      "input_digest": "sha256:61fa171d73eabcca4e0dadaaf76195fabec2fe974bc65e556dbc8c78f0966dc8",
+      "id": "chk-dpop-1878-dactyl-019-reconciled",
+      "summary": "Reconciled origin/master (PR #1918), refreshed specs/docs/manifest, and verified #1878 + dactyl-db 0.19.0",
+      "input_digest": "sha256:e89a76002170c26cce7fe8adddbf8ccacfb208eee911eeba52a6876d0ddabe29",
       "proof_refs": [
-        "bindings/typescript/test/client.test.ts",
-        "packages/pi-decapod/test/pi_extension.test.ts",
-        "tests/doc_alignment.rs",
-        "tests/houseboat_engine.rs",
-        "tests/projection_consistency.rs"
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/cloud_dpop_e2e_1878.rs"
+      ]
+    },
+    {
+      "id": "chk-dpop-1878-reconcile-9453ebe97",
+      "summary": "Reconcile origin/master (9453ebe97, Wave 6 PRs #1917-#1926) with #1878 DPoP E2E and dactyl-db =0.19.0",
+      "input_digest": "sha256:6ea497b0e7a79eec33c8843965fd39b5364c61a91549a7007d8660653c19c095",
+      "proof_refs": [
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/cloud_dpop_e2e_1878.rs"
+      ]
+    },
+    {
+      "id": "chk-dpop-1878-release-dep-policy-019",
+      "summary": "Update tests/release_dependency_policy.rs to pin dactyl-db =0.19.0 and matching crates.io checksum",
+      "input_digest": "sha256:08d1a9b1b242830c99e29b739caa0fcd533e989dc14263d42de1bf0b0fe05525",
+      "proof_refs": [
+        "tests/release_dependency_policy.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M81MJK527WN5XVM6DRP7XAQE": {
+    "intent:change_01M81S9CA1R9HQV3PJB35WZJSK": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -922,14 +947,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
+      "id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
-      "refined_intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
+      "raw_intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "refined_intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -942,7 +967,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
+      "intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -952,43 +977,59 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master (782e9ce19) preserving Houseboat core engine, mooring, Darkmatter contract, and TS/Pi SDK architecture sections",
-          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
-          "spec_material_hash": "0b8615bb8853bb0b2e5ba7de74bbfa4298c4cc5d5187f4c89d5657e70d084b86"
+          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; architecture prose already reflects #1878 DPoP E2E and dactyl-db 0.19.0",
+          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
+          "spec_material_hash": "1136777d9a864b1ad24a13eb87507c9a6c695e5bbe8eaa3904aba8932c75fa79"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master (782e9ce19) preserving decapod houseboat CLI, Darkmatter snapshot schema, and TypeScript/Pi client interfaces",
-          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
-          "spec_material_hash": "f1e8853c2683881d3ff4a6771b9d404c9758fad7c23b3b2b96935e3354b3edec"
+          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; interface prose already reflects #1878 and dactyl-db 0.19.0 contracts",
+          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
+          "spec_material_hash": "95a10a300478a56bcb6c0178d83d5d5fa0d68e542542d220a0c25eae0058e8cb"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved origin/master (782e9ce19) security updates and refreshed codebase attestation; Houseboat/mooring/Darkmatter/TS surfaces maintain fail-closed custody",
-          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
-          "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
+          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; security prose already reflects #1878 DPoP custody and dactyl-db 0.19.0 lockfile integrity",
+          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
+          "spec_material_hash": "81a91ba784970d5006af60593a71899a8576e9da7f143cf5b315c63714ad3664"
         }
       ],
-      "state": "APPROVED",
+      "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
+      "title": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
       "todo_ids": [
-        "code_01m81me586f0pmvj"
+        "feat_01m81s3sm3jet4vj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795371971Z"
+      "updated_at": "1795376453Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:89c7b2c127ce38f25d9dde7008316ea2304216cb9f6417eb16b45cbdb8239a95",
+      "artifact_hash": "sha256:7a137467a1b3a857cb4b004bdfec3b3f988ed624f69df937f3ed950195fe9502",
       "checks": [
         {
-          "name": "cargo_clippy_all_targets",
+          "name": "bazel-cargo-inputs-policy",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-check-no-default-features",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-clippy",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
@@ -996,88 +1037,158 @@
           "status": "passed"
         },
         {
-          "name": "fleet_coord_16_tests",
+          "name": "cli-contracts",
           "status": "passed"
         },
         {
-          "name": "houseboat_engine_13_tests",
+          "name": "cloud-admin-boundary",
           "status": "passed"
         },
         {
-          "name": "init_reconciliation_4_tests",
+          "name": "cloud-dpop-e2e-1878",
           "status": "passed"
         },
         {
-          "name": "projection_consistency_7_tests",
+          "name": "cloud-supabase-boundary",
           "status": "passed"
         },
         {
-          "name": "ts_binding_and_pi_extension_5_tests",
+          "name": "cloud-unit-tests",
+          "status": "passed"
+        },
+        {
+          "name": "cloud-wave-parity",
+          "status": "passed"
+        },
+        {
+          "name": "cloud-workspace-validation-1886",
+          "status": "passed"
+        },
+        {
+          "name": "container-signer-unit-tests",
+          "status": "passed"
+        },
+        {
+          "name": "doc-alignment",
+          "status": "passed"
+        },
+        {
+          "name": "interop-conformance",
+          "status": "passed"
+        },
+        {
+          "name": "release_dependency_policy",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verify",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
+            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
+            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M81MJK865YSJPN770C1V71FJ",
+            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
+            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M81MJK865YSJPN770C1V71FJ": {
+          "branch_01M81S9CD71FHEA712TH1V283Z": {
             "evidence_only": true,
-            "id": "branch_01M81MJK865YSJPN770C1V71FJ",
-            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
+            "id": "branch_01M81S9CD71FHEA712TH1V283Z",
+            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verify",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/houseboat.rs",
-                  "src/decapod/core/mooring.rs",
-                  "src/decapod/core/mod.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_admin.rs",
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/container_signer.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_admin.rs",
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/cloud_session.rs",
+                  "src/decapod/core/container_signer.rs",
+                  "src/decapod/core/dactyl.rs",
+                  "src/decapod/core/error.rs",
                   "src/decapod/cli.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/interop.rs",
                   "src/decapod/lib.rs",
-                  "tests/houseboat_engine.rs",
-                  "tests/projection_consistency.rs",
-                  "docs/architecture/darkmatter-readonly-contract.md",
-                  "docs/datastore-v2/compaction-benchmarks-v0.162.0.md",
-                  "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
-                  "bindings/typescript/src/index.ts",
-                  "packages/pi-decapod/src/index.ts"
+                  "docs/agent/command-contracts.md",
+                  "tests/cloud_dpop_e2e_1878.rs",
+                  "tests/cloud_admin_boundary.rs",
+                  "tests/cli_contracts.rs",
+                  "cargo fmt --check, clippy -D warnings, --no-default-features, bazelisk //:cargo_inputs_policy, --lib cloud_ (93/93), container_signer (2/2), core::interop (25/25), advertised_rpc_sessions (1/1), cloud_dpop_e2e_1878 (2/2), cloud_admin_boundary (7/7), cloud_supabase_boundary (52/52), cloud_wave_parity (5/5), cloud_workspace_validation_1886 (4/4), cli_contracts (134/134), doc_alignment (5/5), interop_conformance (12/12) all passed"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_all_targets",
-                  "houseboat_engine_13_tests",
-                  "projection_consistency_7_tests",
-                  "init_reconciliation_4_tests",
-                  "fleet_coord_16_tests",
-                  "ts_binding_and_pi_extension_5_tests"
+                  "cargo-fmt",
+                  "cargo-clippy",
+                  "cargo-check-no-default-features",
+                  "bazel-cargo-inputs-policy",
+                  "cloud-unit-tests",
+                  "container-signer-unit-tests",
+                  "cloud-dpop-e2e-1878",
+                  "cloud-admin-boundary",
+                  "cloud-supabase-boundary",
+                  "cloud-wave-parity",
+                  "cloud-workspace-validation-1886",
+                  "cli-contracts",
+                  "doc-alignment",
+                  "interop-conformance"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
+                "validation_findings": [
+                  "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "tests/release_dependency_policy.rs"
+                ],
+                "proof_refs": [
+                  "release_dependency_policy",
+                  "cargo_fmt",
+                  "cargo_clippy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1086,22 +1197,38 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
+      "evidence": [
+        "cargo fmt --check, clippy -D warnings, --no-default-features, bazelisk //:cargo_inputs_policy, --lib cloud_ (93/93), container_signer (2/2), core::interop (25/25), advertised_rpc_sessions (1/1), cloud_dpop_e2e_1878 (2/2), cloud_admin_boundary (7/7), cloud_supabase_boundary (52/52), cloud_wave_parity (5/5), cloud_workspace_validation_1886 (4/4), cli_contracts (134/134), doc_alignment (5/5), interop_conformance (12/12) all passed"
+      ],
+      "inspected_files": [
+        "src/decapod/core/cloud_admin.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/container_signer.rs",
+        "src/decapod/core/dactyl.rs"
+      ],
+      "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
       "modified_files": [
-        "bindings/typescript/src/index.ts",
-        "docs/architecture/darkmatter-readonly-contract.md",
-        "docs/datastore-v2/compaction-benchmarks-v0.162.0.md",
-        "packages/pi-decapod/src/index.ts",
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "docs/agent/command-contracts.md",
         "src/decapod/cli.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/core/mooring.rs",
+        "src/decapod/core/cloud_admin.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/cloud_session.rs",
+        "src/decapod/core/container_signer.rs",
+        "src/decapod/core/dactyl.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/rpc.rs",
         "src/decapod/lib.rs",
-        "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
-        "tests/houseboat_engine.rs",
-        "tests/projection_consistency.rs"
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/cloud_dpop_e2e_1878.rs",
+        "tests/release_dependency_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1109,12 +1236,14 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M81MJK865YSJPN770C1V71FJ",
+      "run_id": "branch_01M81S9CD71FHEA712TH1V283Z",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m81me586f0pmvj",
+      "task_id": "feat_01m81s3sm3jet4vj",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
+      ]
     }
   },
   "legacy_digests": {

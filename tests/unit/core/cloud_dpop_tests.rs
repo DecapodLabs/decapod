@@ -349,3 +349,41 @@ fn cross_platform_keystore_backends_support_os_custody_and_strict_file_fallback(
     assert!(!inv_json.contains("private_key"));
     assert!(!inv_json.contains("\"d\""));
 }
+
+#[test]
+fn device_dpop_signer_with_audience_and_token_prefix_helpers() {
+    use dactyl_db::{AuthScheme, RequestProofInput, RequestProofSigner};
+
+    assert!(is_dpop_access_token("dpc_at_abc123"));
+    assert!(!is_dpop_access_token("eyJhbGciOi"));
+    assert!(is_dpop_refresh_token("dpc_rt_xyz789"));
+    assert!(!is_dpop_refresh_token("rt_plain"));
+
+    let key = DeviceKeyMaterial::generate(DeviceKeyStorageBackend::PrivateFile0600).expect("key");
+    let expected_jkt = key.jkt.clone();
+    let url = "https://cloud.example.invalid/functions/v1/decapod-onboarding/device-enroll";
+    let signer = DeviceDpopSigner::with_audience(key, "https://cloud.example.invalid");
+    signer.observe_nonce(url, "enroll-challenge-nonce");
+    let ath = dpop_access_token_hash("human-jwt-bearer").expect("ath");
+    let input = RequestProofInput::new("POST", url, Some(&ath), None);
+    let proof = signer.sign_request(&input).expect("sign with audience");
+    assert_eq!(proof.scheme(), AuthScheme::DPoP);
+    let jwt = signer.sign_dpop_jwt(&input).expect("sign DPoP JWT");
+
+    let verified = verify_dpop_proof(
+        &jwt,
+        "POST",
+        url,
+        Some("human-jwt-bearer"),
+        Some("enroll-challenge-nonce"),
+        Some("https://cloud.example.invalid"),
+        current_unix_seconds(),
+    )
+    .expect("verified DPoP JWT");
+    assert_eq!(verified.jkt, expected_jkt);
+    assert_eq!(
+        verified.aud.as_deref(),
+        Some("https://cloud.example.invalid")
+    );
+    assert_eq!(verified.nonce.as_deref(), Some("enroll-challenge-nonce"));
+}

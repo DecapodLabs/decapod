@@ -1,9 +1,10 @@
 //! First-class Decapod Cloud onboarding, organization, member, invitation,
-//! identity, and billing administration over Dactyl `0.18.0`.
+//! identity, billing, repository enrollment, admin custody, recovery, policy
+//! template, and tenant upgrade administration over Dactyl `0.19.0`.
 //!
 //! All control-plane calls route strictly through
-//! `dactyl_db::AccountOperation::{Register, Status, Manage, Portal}` using the
-//! repository-scoped cloud session custody (`cloud_client` + `cloud_session`).
+//! `dactyl_db::AccountOperation::{Register, Status, Manage, Portal, RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades}`
+//! using the repository-scoped cloud session custody (`cloud_client` + `cloud_session`).
 //! Local SQLite stores (`decapod.db` / `todo.db`) are never opened or created.
 
 use crate::core::error::DecapodError;
@@ -30,6 +31,11 @@ pub const CLOUD_MEMBERS_SCHEMA_VERSION: &str = "decapod.cloud.members.v1";
 pub const CLOUD_INVITES_SCHEMA_VERSION: &str = "decapod.cloud.invites.v1";
 pub const CLOUD_IDENTITY_SCHEMA_VERSION: &str = "decapod.cloud.identity.v1";
 pub const CLOUD_BILLING_SCHEMA_VERSION: &str = "decapod.cloud.billing.v1";
+pub const CLOUD_ENROLL_SCHEMA_VERSION: &str = "decapod.cloud.enroll.v1";
+pub const CLOUD_ADMINS_SCHEMA_VERSION: &str = "decapod.cloud.admins.v1";
+pub const CLOUD_RECOVERY_SCHEMA_VERSION: &str = "decapod.cloud.recovery.v1";
+pub const CLOUD_POLICIES_SCHEMA_VERSION: &str = "decapod.cloud.policies.v1";
+pub const CLOUD_UPGRADES_SCHEMA_VERSION: &str = "decapod.cloud.upgrades.v1";
 
 pub const ORTHOGONAL_SEAT_ACCESS_NOTE: &str = "Organization admin privileges and paid repository seats are orthogonal (#215): admin=true alone does not grant repository data access without an assigned paid repository seat.";
 pub const INVITE_ZERO_PAID_SEATS_NOTE: &str = "Workspace membership grants zero paid repository seats. After acceptance, an organization administrator must explicitly run `decapod cloud members assign --project-id <id> --slot <n>`.";
@@ -243,6 +249,88 @@ pub enum CloudIdentityOp {
 pub enum CloudBillingOp {
     Portal { organization_id: Option<String> },
     Limits { project_id: Option<String> },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CloudRepositoryEnrollOp {
+    pub organization_id: Option<String>,
+    pub project_id: Option<String>,
+    pub plan_tier: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CloudOrgAdminsOp {
+    List {
+        organization_id: Option<String>,
+    },
+    Grant {
+        organization_id: Option<String>,
+        member_account_id: String,
+        expected_revision: Option<u64>,
+    },
+    Revoke {
+        organization_id: Option<String>,
+        member_account_id: String,
+        expected_revision: Option<u64>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CloudOrgRecoveryOp {
+    Status {
+        organization_id: Option<String>,
+    },
+    Initiate {
+        organization_id: Option<String>,
+        reason: Option<String>,
+    },
+    Approve {
+        organization_id: Option<String>,
+        recovery_id: String,
+    },
+    Cancel {
+        organization_id: Option<String>,
+        recovery_id: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CloudPolicyTemplatesOp {
+    List {
+        organization_id: Option<String>,
+    },
+    Get {
+        organization_id: Option<String>,
+        template_id: String,
+    },
+    Apply {
+        organization_id: Option<String>,
+        template_id: String,
+        revision: Option<u64>,
+    },
+    Delete {
+        organization_id: Option<String>,
+        template_id: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CloudOrgUpgradesOp {
+    Status {
+        organization_id: Option<String>,
+    },
+    Request {
+        organization_id: Option<String>,
+        target_tier: String,
+    },
+    Apply {
+        organization_id: Option<String>,
+        upgrade_id: String,
+    },
+    Cancel {
+        organization_id: Option<String>,
+        upgrade_id: String,
+    },
 }
 
 /// Read a one-time secret exclusively from stdin, zeroizing temporary buffers.
@@ -1498,20 +1586,43 @@ pub fn billing(
                                 .canonical_name
                             }
                         };
-                        let response = account_call(
+                        let mut provenance: Option<Value> = None;
+                        let response = match account_call_with_provenance(
                             connector,
                             bearer,
-                            dactyl_db::AccountOperation::Status,
+                            dactyl_db::AccountOperation::ResourceLimits,
                             &json!({
                                 "version": 1,
                                 "project_id": target_project_id,
-                                "operation": "resource_limits",
                             }),
                             repo,
                             false,
                             false,
                             &mut warnings,
-                        )?;
+                            &mut provenance,
+                        ) {
+                            Ok(resp) => resp,
+                            Err(DecapodError::CloudAuth(ref diag))
+                                if diag.error_code_str() == Some("not_found") =>
+                            {
+                                account_call_with_provenance(
+                                    connector,
+                                    bearer,
+                                    dactyl_db::AccountOperation::Status,
+                                    &json!({
+                                        "version": 1,
+                                        "project_id": target_project_id,
+                                        "operation": "resource_limits",
+                                    }),
+                                    repo,
+                                    false,
+                                    false,
+                                    &mut warnings,
+                                    &mut provenance,
+                                )?
+                            }
+                            Err(err) => return Err(err),
+                        };
                         let resources = response
                             .get("resource_limits")
                             .filter(|v| v.is_object())
@@ -1532,7 +1643,7 @@ pub fn billing(
                                 "warning" | "overage_cap_exhausted" | "exhausted" | "cap_reached"
                             )
                         });
-                        json!({
+                        let mut out = json!({
                             "schema_version": CLOUD_BILLING_SCHEMA_VERSION,
                             "operation": "limits",
                             "project_id": target_project_id,
@@ -1540,9 +1651,798 @@ pub fn billing(
                             "resource_limits": resources,
                             "spend_cap_status": spend_cap_status,
                             "spend_cap_warning": spend_cap_warning,
+                        });
+                        attach_provenance(&mut out, provenance);
+                        out
+                    }
+                };
+                attach_warnings(&mut result, warnings);
+                Ok(result)
+            },
+        )
+    }
+}
+
+pub fn enroll_repository(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    op: CloudRepositoryEnrollOp,
+) -> Result<Value, DecapodError> {
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        let _ = (project_root, identity, op);
+        crate::core::cloud_client::selected_origin()?;
+        unreachable!("cloud origin requires supabase-cloud feature");
+    }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        crate::core::cloud_client::with_admin_session(
+            project_root,
+            identity,
+            |connector, _guard, bearer, mut warnings| {
+                let repo = Some(identity.canonical_name.as_str());
+                let target_project = match op.project_id {
+                    Some(pid) => validate_project_id_str(&pid)?,
+                    None => identity.canonical_name.clone(),
+                };
+                let mut body = json!({
+                    "version": 1,
+                    "project_id": target_project,
+                });
+                if let Some(org_id) = op.organization_id {
+                    body["organization_id"] = json!(validate_org_id_str(&org_id)?);
+                }
+                if let Some(tier) = op.plan_tier {
+                    body["plan_tier"] = json!(validate_bounded_id(&tier, "plan_tier")?);
+                }
+                let mut provenance: Option<Value> = None;
+                let response = account_call_with_provenance(
+                    connector,
+                    bearer,
+                    dactyl_db::AccountOperation::RepositoryEnroll,
+                    &body,
+                    repo,
+                    true,
+                    true,
+                    &mut warnings,
+                    &mut provenance,
+                )?;
+                for key in ["checkout_url", "enrollment_url", "portal_url"] {
+                    if let Some(raw_url) = response.get(key).and_then(Value::as_str) {
+                        validate_https_portal_url(raw_url)?;
+                    }
+                }
+                let safe = redact_json_value(&response);
+                let mut result = json!({
+                    "schema_version": CLOUD_ENROLL_SCHEMA_VERSION,
+                    "operation": "repository_enroll",
+                    "project_id": target_project,
+                    "organization_id": safe.get("organization_id").cloned().unwrap_or(Value::Null),
+                    "status": safe.get("status").cloned().unwrap_or_else(|| json!("enrolled")),
+                    "response": safe,
+                });
+                attach_provenance(&mut result, provenance);
+                attach_warnings(&mut result, warnings);
+                Ok(result)
+            },
+        )
+    }
+}
+
+pub fn org_admins(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    op: CloudOrgAdminsOp,
+) -> Result<Value, DecapodError> {
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        let _ = (project_root, identity, op);
+        crate::core::cloud_client::selected_origin()?;
+        unreachable!("cloud origin requires supabase-cloud feature");
+    }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        crate::core::cloud_client::with_admin_session(
+            project_root,
+            identity,
+            |connector, _guard, bearer, mut warnings| {
+                let repo = Some(identity.canonical_name.as_str());
+                let mut provenance: Option<Value> = None;
+                let mut result = match op {
+                    CloudOrgAdminsOp::List { organization_id } => {
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgAdmins,
+                            &json!({
+                                "version": 1,
+                                "action": "list",
+                                "organization_id": org_id,
+                            }),
+                            repo,
+                            false,
+                            false,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_ADMINS_SCHEMA_VERSION,
+                            "operation": "list",
+                            "organization_id": org_id,
+                            "admins": safe.get("admins").cloned().unwrap_or_else(|| json!([])),
+                            "admin_revision": safe.get("admin_revision").cloned().unwrap_or(Value::Null),
+                            "access_model_note": ORTHOGONAL_SEAT_ACCESS_NOTE,
+                        })
+                    }
+                    CloudOrgAdminsOp::Grant {
+                        organization_id,
+                        member_account_id,
+                        expected_revision,
+                    } => {
+                        let member_id = validate_uuid(&member_account_id, "member_account_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let mut body = json!({
+                            "version": 1,
+                            "action": "grant",
+                            "organization_id": org_id,
+                            "member_account_id": member_id,
+                        });
+                        if let Some(rev) = expected_revision {
+                            if rev == 0 {
+                                return Err(DecapodError::ValidationError(
+                                    "`--expected-revision` must be >= 1.".into(),
+                                ));
+                            }
+                            body["expected_revision"] = json!(rev);
+                        }
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgAdmins,
+                            &body,
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_ADMINS_SCHEMA_VERSION,
+                            "operation": "grant",
+                            "organization_id": org_id,
+                            "member_account_id": member_id,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("admin_granted")),
+                            "access_model_note": ORTHOGONAL_SEAT_ACCESS_NOTE,
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgAdminsOp::Revoke {
+                        organization_id,
+                        member_account_id,
+                        expected_revision,
+                    } => {
+                        let member_id = validate_uuid(&member_account_id, "member_account_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let mut body = json!({
+                            "version": 1,
+                            "action": "revoke",
+                            "organization_id": org_id,
+                            "member_account_id": member_id,
+                        });
+                        if let Some(rev) = expected_revision {
+                            if rev == 0 {
+                                return Err(DecapodError::ValidationError(
+                                    "`--expected-revision` must be >= 1.".into(),
+                                ));
+                            }
+                            body["expected_revision"] = json!(rev);
+                        }
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgAdmins,
+                            &body,
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_ADMINS_SCHEMA_VERSION,
+                            "operation": "revoke",
+                            "organization_id": org_id,
+                            "member_account_id": member_id,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("admin_revoked")),
+                            "access_model_note": ORTHOGONAL_SEAT_ACCESS_NOTE,
+                            "response": safe,
                         })
                     }
                 };
+                attach_provenance(&mut result, provenance);
+                attach_warnings(&mut result, warnings);
+                Ok(result)
+            },
+        )
+    }
+}
+
+pub fn org_recovery(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    op: CloudOrgRecoveryOp,
+) -> Result<Value, DecapodError> {
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        let _ = (project_root, identity, op);
+        crate::core::cloud_client::selected_origin()?;
+        unreachable!("cloud origin requires supabase-cloud feature");
+    }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        crate::core::cloud_client::with_admin_session(
+            project_root,
+            identity,
+            |connector, _guard, bearer, mut warnings| {
+                let repo = Some(identity.canonical_name.as_str());
+                let mut provenance: Option<Value> = None;
+                let mut result = match op {
+                    CloudOrgRecoveryOp::Status { organization_id } => {
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgRecovery,
+                            &json!({
+                                "version": 1,
+                                "action": "status",
+                                "organization_id": org_id,
+                            }),
+                            repo,
+                            false,
+                            false,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_RECOVERY_SCHEMA_VERSION,
+                            "operation": "status",
+                            "organization_id": org_id,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("idle")),
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgRecoveryOp::Initiate {
+                        organization_id,
+                        reason,
+                    } => {
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let mut body = json!({
+                            "version": 1,
+                            "action": "initiate",
+                            "organization_id": org_id,
+                        });
+                        if let Some(r) = reason {
+                            let trimmed = r.trim();
+                            if trimmed.is_empty()
+                                || trimmed.chars().count() > 500
+                                || trimmed.chars().any(char::is_control)
+                            {
+                                return Err(DecapodError::ValidationError(
+                                    "Recovery `--reason` must be 1..=500 non-control characters."
+                                        .into(),
+                                ));
+                            }
+                            body["reason"] = json!(trimmed);
+                        }
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgRecovery,
+                            &body,
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_RECOVERY_SCHEMA_VERSION,
+                            "operation": "initiate",
+                            "organization_id": org_id,
+                            "recovery_id": safe.get("recovery_id").cloned().unwrap_or(Value::Null),
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("recovery_initiated")),
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgRecoveryOp::Approve {
+                        organization_id,
+                        recovery_id,
+                    } => {
+                        let rec_id = validate_bounded_id(&recovery_id, "recovery_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgRecovery,
+                            &json!({
+                                "version": 1,
+                                "action": "approve",
+                                "organization_id": org_id,
+                                "recovery_id": rec_id,
+                            }),
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_RECOVERY_SCHEMA_VERSION,
+                            "operation": "approve",
+                            "organization_id": org_id,
+                            "recovery_id": rec_id,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("recovery_approved")),
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgRecoveryOp::Cancel {
+                        organization_id,
+                        recovery_id,
+                    } => {
+                        let rec_id = validate_bounded_id(&recovery_id, "recovery_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgRecovery,
+                            &json!({
+                                "version": 1,
+                                "action": "cancel",
+                                "organization_id": org_id,
+                                "recovery_id": rec_id,
+                            }),
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_RECOVERY_SCHEMA_VERSION,
+                            "operation": "cancel",
+                            "organization_id": org_id,
+                            "recovery_id": rec_id,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("recovery_cancelled")),
+                            "response": safe,
+                        })
+                    }
+                };
+                attach_provenance(&mut result, provenance);
+                attach_warnings(&mut result, warnings);
+                Ok(result)
+            },
+        )
+    }
+}
+
+pub fn policy_templates(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    op: CloudPolicyTemplatesOp,
+) -> Result<Value, DecapodError> {
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        let _ = (project_root, identity, op);
+        crate::core::cloud_client::selected_origin()?;
+        unreachable!("cloud origin requires supabase-cloud feature");
+    }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        crate::core::cloud_client::with_admin_session(
+            project_root,
+            identity,
+            |connector, _guard, bearer, mut warnings| {
+                let repo = Some(identity.canonical_name.as_str());
+                let mut provenance: Option<Value> = None;
+                let mut result = match op {
+                    CloudPolicyTemplatesOp::List { organization_id } => {
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::PolicyTemplates,
+                            &json!({
+                                "version": 1,
+                                "action": "list",
+                                "organization_id": org_id,
+                            }),
+                            repo,
+                            false,
+                            false,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_POLICIES_SCHEMA_VERSION,
+                            "operation": "list",
+                            "organization_id": org_id,
+                            "templates": safe.get("templates").cloned().unwrap_or_else(|| json!([])),
+                        })
+                    }
+                    CloudPolicyTemplatesOp::Get {
+                        organization_id,
+                        template_id,
+                    } => {
+                        let tid = validate_bounded_id(&template_id, "template_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::PolicyTemplates,
+                            &json!({
+                                "version": 1,
+                                "action": "get",
+                                "organization_id": org_id,
+                                "template_id": tid,
+                            }),
+                            repo,
+                            false,
+                            false,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_POLICIES_SCHEMA_VERSION,
+                            "operation": "get",
+                            "organization_id": org_id,
+                            "template_id": tid,
+                            "template": safe.get("template").cloned().unwrap_or(safe),
+                        })
+                    }
+                    CloudPolicyTemplatesOp::Apply {
+                        organization_id,
+                        template_id,
+                        revision,
+                    } => {
+                        let tid = validate_bounded_id(&template_id, "template_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let mut body = json!({
+                            "version": 1,
+                            "action": "apply",
+                            "organization_id": org_id,
+                            "template_id": tid,
+                        });
+                        if let Some(rev) = revision {
+                            if rev == 0 {
+                                return Err(DecapodError::ValidationError(
+                                    "`--revision` must be >= 1.".into(),
+                                ));
+                            }
+                            body["revision"] = json!(rev);
+                        }
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::PolicyTemplates,
+                            &body,
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_POLICIES_SCHEMA_VERSION,
+                            "operation": "apply",
+                            "organization_id": org_id,
+                            "template_id": tid,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("applied")),
+                            "response": safe,
+                        })
+                    }
+                    CloudPolicyTemplatesOp::Delete {
+                        organization_id,
+                        template_id,
+                    } => {
+                        let tid = validate_bounded_id(&template_id, "template_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::PolicyTemplates,
+                            &json!({
+                                "version": 1,
+                                "action": "delete",
+                                "organization_id": org_id,
+                                "template_id": tid,
+                            }),
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_POLICIES_SCHEMA_VERSION,
+                            "operation": "delete",
+                            "organization_id": org_id,
+                            "template_id": tid,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("deleted")),
+                            "response": safe,
+                        })
+                    }
+                };
+                attach_provenance(&mut result, provenance);
+                attach_warnings(&mut result, warnings);
+                Ok(result)
+            },
+        )
+    }
+}
+
+pub fn org_upgrades(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    op: CloudOrgUpgradesOp,
+) -> Result<Value, DecapodError> {
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        let _ = (project_root, identity, op);
+        crate::core::cloud_client::selected_origin()?;
+        unreachable!("cloud origin requires supabase-cloud feature");
+    }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        crate::core::cloud_client::with_admin_session(
+            project_root,
+            identity,
+            |connector, _guard, bearer, mut warnings| {
+                let repo = Some(identity.canonical_name.as_str());
+                let mut provenance: Option<Value> = None;
+                let mut result = match op {
+                    CloudOrgUpgradesOp::Status { organization_id } => {
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgUpgrades,
+                            &json!({
+                                "version": 1,
+                                "action": "status",
+                                "organization_id": org_id,
+                            }),
+                            repo,
+                            false,
+                            false,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_UPGRADES_SCHEMA_VERSION,
+                            "operation": "status",
+                            "organization_id": org_id,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("current")),
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgUpgradesOp::Request {
+                        organization_id,
+                        target_tier,
+                    } => {
+                        let tier = validate_bounded_id(&target_tier, "target_tier")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgUpgrades,
+                            &json!({
+                                "version": 1,
+                                "action": "request",
+                                "organization_id": org_id,
+                                "target_tier": tier,
+                            }),
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_UPGRADES_SCHEMA_VERSION,
+                            "operation": "request",
+                            "organization_id": org_id,
+                            "target_tier": tier,
+                            "upgrade_id": safe.get("upgrade_id").cloned().unwrap_or(Value::Null),
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("upgrade_requested")),
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgUpgradesOp::Apply {
+                        organization_id,
+                        upgrade_id,
+                    } => {
+                        let uid = validate_bounded_id(&upgrade_id, "upgrade_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgUpgrades,
+                            &json!({
+                                "version": 1,
+                                "action": "apply",
+                                "organization_id": org_id,
+                                "upgrade_id": uid,
+                            }),
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_UPGRADES_SCHEMA_VERSION,
+                            "operation": "apply",
+                            "organization_id": org_id,
+                            "upgrade_id": uid,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("upgrade_applied")),
+                            "response": safe,
+                        })
+                    }
+                    CloudOrgUpgradesOp::Cancel {
+                        organization_id,
+                        upgrade_id,
+                    } => {
+                        let uid = validate_bounded_id(&upgrade_id, "upgrade_id")?;
+                        let org_id = resolve_org_id(
+                            connector,
+                            bearer,
+                            organization_id.as_deref(),
+                            None,
+                            repo,
+                            &mut warnings,
+                        )?;
+                        let response = account_call_with_provenance(
+                            connector,
+                            bearer,
+                            dactyl_db::AccountOperation::OrgUpgrades,
+                            &json!({
+                                "version": 1,
+                                "action": "cancel",
+                                "organization_id": org_id,
+                                "upgrade_id": uid,
+                            }),
+                            repo,
+                            true,
+                            true,
+                            &mut warnings,
+                            &mut provenance,
+                        )?;
+                        let safe = redact_json_value(&response);
+                        json!({
+                            "schema_version": CLOUD_UPGRADES_SCHEMA_VERSION,
+                            "operation": "cancel",
+                            "organization_id": org_id,
+                            "upgrade_id": uid,
+                            "status": safe.get("status").cloned().unwrap_or_else(|| json!("upgrade_cancelled")),
+                            "response": safe,
+                        })
+                    }
+                };
+                attach_provenance(&mut result, provenance);
                 attach_warnings(&mut result, warnings);
                 Ok(result)
             },
@@ -1562,6 +2462,33 @@ fn account_call(
     aal2_gated: bool,
     warnings: &mut Vec<CloudMetadataWarning>,
 ) -> Result<Value, DecapodError> {
+    let mut ignored_provenance = None;
+    account_call_with_provenance(
+        connector,
+        bearer,
+        operation,
+        body,
+        repo_slug,
+        mutating,
+        aal2_gated,
+        warnings,
+        &mut ignored_provenance,
+    )
+}
+
+#[cfg(feature = "supabase-cloud")]
+#[allow(clippy::too_many_arguments)]
+fn account_call_with_provenance(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    operation: dactyl_db::AccountOperation,
+    body: &Value,
+    repo_slug: Option<&str>,
+    mutating: bool,
+    aal2_gated: bool,
+    warnings: &mut Vec<CloudMetadataWarning>,
+    provenance_out: &mut Option<Value>,
+) -> Result<Value, DecapodError> {
     let mut req_meta = dactyl_db::CloudResponseMetadata::default();
     let response = connector
         .account_request_with_metadata(operation, body, bearer, None, None, &mut req_meta)
@@ -1577,6 +2504,15 @@ fn account_call(
     warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
         &req_meta,
     ));
+    if let Some(prov) = req_meta.provenance() {
+        *provenance_out = Some(json!({
+            "origin_bound": prov.origin_bound(),
+            "tls_authenticated": prov.tls_authenticated(),
+            "request_id": prov.request_id(),
+            "decision_ref": prov.decision_ref(),
+            "reason_code": prov.reason_code(),
+        }));
+    }
     if response.get("version").is_some_and(|v| v != &json!(1)) {
         return Err(DecapodError::CloudAuth(CloudAuthDiagnostic::new(
             CloudAuthStatus::ProviderUnavailable,
@@ -1595,6 +2531,15 @@ fn account_call(
         return Err(DecapodError::CloudAuth(diag));
     }
     Ok(response)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn attach_provenance(result: &mut Value, provenance: Option<Value>) {
+    if let Some(prov) = provenance
+        && let Some(obj) = result.as_object_mut()
+    {
+        obj.insert("provenance".to_owned(), prov);
+    }
 }
 
 #[cfg(feature = "supabase-cloud")]

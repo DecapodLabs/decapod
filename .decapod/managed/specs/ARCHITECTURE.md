@@ -1,5 +1,12 @@
 # Architecture
 
+## DPoP device session gateway & `dactyl-db 0.19.0` Cloud Admin architecture (#1878)
+
+- **Repository-scoped DPoP sidecar custody & operational session upgrade (`src/decapod/core/cloud_session.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_dpop.rs`, `src/decapod/core/dactyl.rs`)**:
+  `SessionGuard` persists a separate, binding-verified `device_session.json` (`DeviceSessionRecord`) alongside human `state.json` via `device_session`, `replace_device_session`, and `clear_device_session` (cleared on `clear_for_restart` and matching `record_rejected_credential`). `cloud_client::resolve_operational_session` upgrades authenticated human sessions during `connect` and `connect_control`: reusing valid cached `dpc_at_` sidecars, rotating expiring `dpc_rt_` tokens via `refresh_device_session_with_connector` (`AccountOperation::DeviceRefresh`), exchanging sessions with existing Ed25519 keys via `exchange_device_session_raw` (`AccountOperation::DeviceSession`), or performing challenge-response enrollment via `enroll_device_raw` (`AccountOperation::{DeviceChallenge, DeviceEnroll}` with `DeviceDpopSigner::from_arc_with_audience`). `DactylBridge` activates `.with_device_gateway()` and `cloud_dpop::request_proof_signer_for_bearer` whenever a `dpc_at_` bearer or `DECAPOD_CONTAINER_SIGNER_SOCKET` is present, while `with_admin_session`, `projects`, `status_live`, and `devices` enable `.with_device_gateway()` so Dactyl `0.19.0`'s `RequestAuthPolicy::human_bearer()` keeps human-bearer admin calls free of DPoP headers and rejects `dpc_at_` tokens preflight.
+- **`dactyl-db 0.19.0` six new `AccountOperation`s, staged custom origin & provenance (`src/decapod/core/cloud_admin.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/error.rs`, `src/decapod/core/container_signer.rs`)**:
+  `cloud_admin` adds `enroll_repository` (`AccountOperation::RepositoryEnroll`), upgrades `billing limits` to `AccountOperation::ResourceLimits` (with graceful `NotFound` fallback to legacy `AccountOperation::Status`), and adds `org_admins` (`OrgAdmins`), `org_recovery` (`OrgRecovery`), `policy_templates` (`PolicyTemplates`), and `org_upgrades` (`OrgUpgrades`). `account_call_with_provenance` attaches bounded non-secret `EffectProvenance` summaries (`origin_bound`, `tls_authenticated`, `request_id`, `decision_ref`, `reason_code`) from `CloudResponseMetadata::provenance()`. `cloud_client` adds opt-in `DECAPOD_CLOUD_FIRST_PARTY_ORIGIN=1` (`FIRST_PARTY_CLOUD_ORIGIN`), `canonical_auth_url`, `canonical_repository_url`, `list_device_keys_with_connector` (`DeviceKeys`), `list_device_sessions_with_connector` (`DeviceSessions`), and expands `CloudAuthErrorCode` + `diagnostic_for_status_code` for Dactyl `0.19.0` problem, DPoP, grant-narrowing, paid-seat, concurrency, and tenant-lifecycle codes. `container_signer::is_container_allowed_cloud_operation` admits `/cloud-control` alongside `/cloud-query` and `/cloud-batch` while continuing to deny every onboarding, device, billing, and admin endpoint.
+
 ## Modular agent interoperability engine (`src/decapod/core/agent_interop.rs`, #870–#878, #1715–#1718, #1724, #1725, #1733, #1735)
 
 - **Four-plane envelope, replay/authority isolation, drift & observed receipts (`src/decapod/core/agent_interop.rs`)**:
@@ -1368,8 +1375,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (281 files)
+- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

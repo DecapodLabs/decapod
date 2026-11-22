@@ -1,5 +1,12 @@
 # Intent
 
+## End-to-end DPoP device gateway lifecycle and `dactyl-db = "0.19.0"` Cloud Admin wiring (#1878, #1835, #1836, #1896, #1895, #1859, #1369)
+
+Completes sender-constrained RFC 9449 DPoP operational transport end-to-end across Decapod Cloud and upgrades the storage/onboarding control plane to `dactyl-db = "=0.19.0"` without breaking human-bearer admin custody or touching local SQLite:
+
+- **End-to-end DPoP device enrollment, sidecar session rotation, gateway routing, and container signing (`#1878`)**: Upgrades operational `connect` / `connect_control` calls from human Bearer sessions to repository-scoped `dpc_at_`/`dpc_rt_` DPoP device sessions backed by locally custodied Ed25519 keys, handles `401 use_dpop_nonce` challenges and proactive `REFRESH_LEAD_SECONDS` rotation over `/device-refresh`, routes data and proof-control RPCs through `/functions/v1/decapod-onboarding/cloud-{query,batch,control}`, extends the host container signer socket allowlist to `/cloud-control` while continuing to deny all device/billing/admin endpoints, and preserves human Bearer authentication on `/account-status` and Cloud Admin endpoints.
+- **Full `dactyl-db 0.19.0` Cloud Admin & transport integration**: Wires all six new `AccountOperation` variants (`RepositoryEnroll`, `ResourceLimits` with graceful legacy 404 fallback, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, `OrgUpgrades`), propagates `dactyl-db 0.19.0` problem codes (`#132`), DPoP nonce/key/audience lifecycle codes (`#133`), org session/grant narrowing codes (`#134`), paid repository seat enforcement (`#136`), explicit opt-in staged `FIRST_PARTY_CLOUD_ORIGIN` (`https://api.decapodlabs.ai`, `#138`) with verified `canonical_auth_url` / `canonical_repository_url` helpers, tenant upgrade/lifecycle diagnostics (`#139`), and validated `EffectProvenance` metadata (`#140`).
+
 ## Agent interoperability, bounded MCP/A2A adapters, offline capability/skill/rule registries, and independent conformance (#870, #871, #872, #873, #875, #878, #1715, #1716, #1717, #1718, #1724, #1725, #1733, #1735)
 
 - **Versioned four-plane governance envelope & independent-consumer conformance (`#870`, `#871`, `#1733`, `#1735`)**: Introduces a transport-neutral `decapod.governance-envelope:v1` contract (`src/decapod/core/agent_interop.rs`, `assets/schemas/agent-interop-envelope-v1.schema.json`, `docs/conformance/governance-envelope-v1.md`) composing four independently versioned planes (`intent`, `authority`, `evidence`, `outcome`) with strict authority isolation (`imported_authority_granted = false`), replay/tenant/recipient fencing, delegation narrowing, decision-time 4-disposition projection (`admit`, `repair_required`, `authority_required`, `reject`), two-way dispatcher-vs-manifest-vs-session-guard drift detection, and observed-conformance receipts bound to binary SHA, source commit, schema/profile version, transport, accepted producer trust class, freshness TTL, and verified raw receipt bytes. Twenty-six pinned vectors (`tests/fixtures/agent_interop_vectors.v1.json`) — including summary-fiction rejection (claimed 64-hex digests without raw receipt bytes), tampered execution environments, stale commits/bases/leases, and process-vs-outcome integrity — execute across Decapod, an independent raw-JSON Rust verifier, and a standalone Python standard-library consumer (`tests/fixtures/agent_interop_reference_consumer.py`) with zero verdict or reason-class drift.
@@ -836,8 +843,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (281 files)
+- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

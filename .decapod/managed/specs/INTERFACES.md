@@ -1,5 +1,20 @@
 # Interfaces
 
+## DPoP device gateway & `dactyl-db 0.19.0` Cloud Admin CLI/RPC contracts (#1878)
+
+- **Expanded `decapod cloud` CLI subcommands (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
+  - `decapod cloud project enroll [--project-id <id>] [--organization-id <id>] [--plan-tier <tier>]` (`decapod.cloud.enroll.v1`, `AccountOperation::RepositoryEnroll`).
+  - `decapod cloud billing limits [--project-id <id>]` routes through `AccountOperation::ResourceLimits` first (falling back on 404 to legacy `AccountOperation::Status`).
+  - `decapod cloud admins {list|grant|revoke}` (`decapod.cloud.admins.v1`, `AccountOperation::OrgAdmins`, explicitly reiterating `#215` admin-vs-paid-seat orthogonality).
+  - `decapod cloud recovery {status|initiate|approve|cancel}` (`decapod.cloud.recovery.v1`, `AccountOperation::OrgRecovery`).
+  - `decapod cloud policies {list|get|apply|delete}` (`decapod.cloud.policies.v1`, `AccountOperation::PolicyTemplates`).
+  - `decapod cloud upgrades {status|request|apply|cancel}` (`decapod.cloud.upgrades.v1`, `AccountOperation::OrgUpgrades`).
+  - `decapod cloud status` adds non-secret boolean `first_party_origin_staged` without exposing physical origin URIs; explicit opt-in `DECAPOD_CLOUD_FIRST_PARTY_ORIGIN=1` selects `FIRST_PARTY_CLOUD_ORIGIN` (`https://api.decapodlabs.ai`).
+- **Expanded JSON RPC & capabilities contracts (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/core/docs_cli.rs`, `docs/agent/command-contracts.md`)**:
+  Registers `cloud.{enroll,admins,recovery,policies,upgrades}` with `session_required = false`, typed `Cloud{Enroll,Admins,Recovery,Policies,Upgrades}Params`, matching `Capability` and `cloud` subsystem `ops` (`project.enroll`, `enroll`, `admins`, `recovery`, `policies`, `upgrades`), and aligned early-dispatch guards without touching local SQLite.
+- **Typed `CloudAuthErrorCode` expansion (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**:
+  Adds typed `snake_case` error codes for DPoP (`use_dpop_nonce`, `invalid_dpop_proof`, `dpop_aud_mismatch`, `dpop_replay`, `dpop_nonce_mismatch`, `dpop_clock_skew`, `dpop_ath_mismatch`, `dpop_htu_mismatch`, `dpop_htm_mismatch`, `dpop_jkt_mismatch`, `invalid_binding`, `dpop_proof_required`, `missing_dpop_proof`, `stolen_bearer`, `device_revoked`, `device_key_expired`, `device_not_enrolled`, `refresh_reuse_detected`, `expired_credential`), org session/grant narrowing (`grant_revoked`, `grant_expired`, `scope_denied`, `repo_access_denied`), paid seats (`paid_seat_required`, `seat_capacity_exceeded`, `organization_already_enrolled`, `admin_approval_required`), tenant lifecycle (`tenant_upgrade_required`, `tenant_upgrading`, `tenant_suspended`, `tenant_archived`, `org_recovery_required`, `policy_template_conflict`), and provenance/concurrency (`provenance_origin_mismatch`, `idempotency_conflict`, `idempotency_in_progress`, `version_conflict`, `transaction_aborted`).
+
 ## Agent interoperability CLI, RPC, schema, and independent conformance surfaces (#870–#878, #1715–#1718, #1724, #1725, #1733, #1735)
 
 - **Bounded transport CLI subcommands (`src/decapod/cli.rs::{McpCli, A2aCli}`, `src/decapod/lib.rs::{run_mcp_command, run_a2a_command}`)**:
@@ -1724,8 +1739,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (281 files)
+- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

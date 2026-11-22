@@ -351,9 +351,10 @@ fn is_container_allowed_cloud_operation(method: &str, path: &str) -> bool {
     }
     let normalized = path.trim();
     // Containers may sign normal scoped query/batch data & proof transitions,
-    // never device enrollment, revocation, session minting, or billing endpoints.
+    // never device enrollment, revocation, session minting, org/policy admin, or billing endpoints.
     normalized.ends_with("/cloud-query")
         || normalized.ends_with("/cloud-batch")
+        || normalized.ends_with("/cloud-control")
         || normalized.ends_with("/rpc/dactyl_query_v1")
         || normalized.ends_with("/rpc/dactyl_batch_v1")
         || normalized.ends_with("/rpc/propodus_proof_acceptance_v1")

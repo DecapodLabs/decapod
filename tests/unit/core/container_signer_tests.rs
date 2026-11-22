@@ -196,3 +196,82 @@ fn container_signer_enforces_scope_capability_separation_and_revocation() {
     assert_eq!(filtered.len(), 2);
     let _ = (now_live, DeviceKeyStorageBackend::PrivateFile0600);
 }
+
+#[test]
+fn container_signer_allows_cloud_control_gateway_path_and_denies_019_admin_ops() {
+    let tmp = TempDir::new().expect("tempdir");
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).expect("create repo dir");
+    let now = 1_780_000_000;
+    let key_store = DeviceKeyStore::with_root_dir(
+        "https://cloud.example.invalid",
+        "DecapodLabs/decapod",
+        &repo,
+        &tmp.path().join("keys"),
+    )
+    .expect("keystore")
+    .with_os_keychain(false);
+    let key = key_store.load_or_create().expect("key");
+    let policy = ContainerSignerPolicy {
+        allowed_repository: "DecapodLabs/decapod".to_string(),
+        allowed_origin: "https://cloud.example.invalid".to_string(),
+        allowed_agent_id: "container-agent-1".to_string(),
+        credentials: crate::core::container_signer::WorkspaceCredentialsConfig {
+            propodus_cloud: Some("signer-broker".to_string()),
+            ..Default::default()
+        },
+        session_expires_at: now + 300,
+        revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        device_key_store: Some(key_store),
+        access_token_digest: None,
+    };
+
+    let resp = policy.sign_request(
+        &ContainerSignRequest {
+            capability: SignerCapabilityKind::PropodusCloud,
+            repository: "DecapodLabs/decapod".to_string(),
+            agent_id: "container-agent-1".to_string(),
+            method: "POST".to_string(),
+            url: "https://cloud.example.invalid/functions/v1/decapod-onboarding/cloud-control"
+                .to_string(),
+            nonce: Some("nonce-1".to_string()),
+            aud: Some("https://cloud.example.invalid".to_string()),
+            access_token_sha256: Some("ath_test".to_string()),
+        },
+        now,
+        Some(&key),
+    );
+    assert!(resp.ok, "unexpected failure: {:?}", resp.code);
+    assert!(resp.dpop_proof.is_some());
+
+    // All 6 dactyl-db 0.19.0 human-bearer admin AccountOperations MUST be denied inside containers.
+    for denied_path in [
+        "repository-enroll",
+        "resource-limits",
+        "org-admins",
+        "org-recovery",
+        "policy-templates",
+        "org-upgrades",
+    ] {
+        let denied = policy.sign_request(
+            &ContainerSignRequest {
+                capability: SignerCapabilityKind::PropodusCloud,
+                repository: "DecapodLabs/decapod".to_string(),
+                agent_id: "container-agent-1".to_string(),
+                method: "POST".to_string(),
+                url: format!(
+                    "https://cloud.example.invalid/functions/v1/decapod-onboarding/{denied_path}"
+                ),
+                nonce: None,
+                aud: Some("https://cloud.example.invalid".to_string()),
+                access_token_sha256: Some("ath_test".to_string()),
+            },
+            now,
+            Some(&key),
+        );
+        assert!(
+            !denied.ok,
+            "container signer must deny privileged admin endpoint `{denied_path}`"
+        );
+    }
+}

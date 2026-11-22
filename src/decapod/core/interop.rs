@@ -572,7 +572,37 @@ rpc_catalog![
         op: "cloud.billing",
         read_only: false,
         session_required: false,
-        description: "Mint verified HTTPS billing portal sessions and inspect live usage and spend-cap limits",
+        description: "Mint verified HTTPS billing portal sessions and inspect live usage and spend-cap limits via ResourceLimits",
+    },
+    OpMeta {
+        op: "cloud.enroll",
+        read_only: false,
+        session_required: false,
+        description: "Enroll a repository project into Decapod Cloud via AccountOperation::RepositoryEnroll",
+    },
+    OpMeta {
+        op: "cloud.admins",
+        read_only: false,
+        session_required: false,
+        description: "List, grant, and revoke orthogonal cloud organization administrators via AccountOperation::OrgAdmins",
+    },
+    OpMeta {
+        op: "cloud.recovery",
+        read_only: false,
+        session_required: false,
+        description: "Inspect, initiate, approve, and cancel cloud organization custody recovery via AccountOperation::OrgRecovery",
+    },
+    OpMeta {
+        op: "cloud.policies",
+        read_only: false,
+        session_required: false,
+        description: "List, inspect, apply, and delete cloud organization policy templates via AccountOperation::PolicyTemplates",
+    },
+    OpMeta {
+        op: "cloud.upgrades",
+        read_only: false,
+        session_required: false,
+        description: "Inspect, request, apply, and cancel cloud organization tenant upgrades via AccountOperation::OrgUpgrades",
     },
 ];
 
