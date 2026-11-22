@@ -1,5 +1,13 @@
 # Intent
 
+## Composed service capability contract drift detection (#1906)
+
+Makes cross-service capability contracts independently inspectable before governed admission so agents never rely on stale prose, guessed transports, self-reported badges, or HTTP 200-shaped client responses:
+
+- **Focused `Decapod -> Dactyl -> Propodus` contract slice**: Models authorized Cloud task claim + readback (`cloud.task.claim_and_readback.v1`) as a versioned repo-native contract (`decapod.capability-contract.v1`) binding producer, consumer, owner, accepted source revision, input/output/error schemas, transport binding, auth scope, preconditions, side effects, idempotency, uncertain-outcome rules, dependencies, required negative cases, and evidence provenance (`src/decapod/core/capability_contract.rs`, `assets/schemas/capability-contract.schema.json`).
+- **Four explicit composite consequence states**: Separates `prepared` (eligible, no effect yet), `observed` (owner poststate + independent readback confirmed), `held` (containment with `goal_completed = false` on prestate drift, shared-capacity collision, pending async work, severed ack, or blocked blind replay), and `compensated` (supported corrective operation verified with original fault retained in historical evidence).
+- **Local offline repository isolation**: Repositories without Cloud binding (`backend = "local"`) evaluate offline contracts (`local.task.offline.v1`) with zero Cloud or network dependency (`local_offline_usable = true`), reporting Cloud-only contracts as `unsupported` without impairing local governance or backlog workflows.
+
 ## Operational reliability fixes: snapshot policy precheck, custody-preserving heartbeat, shared tool measurement, and Podman fixture isolation (#1881, #1837, #1884, #1838)
 
 Integrates four targeted operational and CI-stability fixes on `v0.160.0` (`295f0af39`):
@@ -781,8 +789,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

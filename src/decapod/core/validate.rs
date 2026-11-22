@@ -4422,6 +4422,38 @@ fn validate_context_capsule_policy_contract(
     Ok(())
 }
 
+fn validate_composed_capability_contract(
+    ctx: &ValidationContext,
+    working_root: &Path,
+    main_root: &Path,
+) -> Result<(), error::DecapodError> {
+    info("Composed Capability Contract Drift Gate", ctx);
+    match crate::core::capability_contract::validate_repo_contract_boundary(working_root, main_root)
+    {
+        Ok(None) => {
+            pass(
+                "No composed capability contract override declared; local offline mode unaffected",
+                ctx,
+            );
+        }
+        Ok(Some(report)) => {
+            pass(
+                &format!(
+                    "Composed capability contract '{}' validated (status={}, syntactically_compatible={})",
+                    report.capability_id,
+                    report.status.as_str(),
+                    report.syntactically_compatible
+                ),
+                ctx,
+            );
+        }
+        Err(err) => {
+            fail(&err.to_string(), ctx);
+        }
+    }
+    Ok(())
+}
+
 /// Fail closed if known legacy event JSONL files remain live under `.decapod/data/`.
 /// Runtime authority is solely `decapod.db`; residual files must be imported+retired.
 fn validate_legacy_jsonl_retired(
@@ -8388,6 +8420,13 @@ pub fn run_validation(
             ctx,
             "validate_context_capsule_policy_contract",
             validate_context_capsule_policy_contract(ctx, working_root)
+        );
+        gate!(
+            s,
+            timings,
+            ctx,
+            "validate_composed_capability_contract",
+            validate_composed_capability_contract(ctx, working_root, main_root)
         );
         gate!(
             s,

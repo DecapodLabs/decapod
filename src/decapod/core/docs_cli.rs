@@ -699,6 +699,9 @@ Live validation and readback remain owned by `workspace publish`."#
                 "integration" => {
                     writeln!(file, "\n{}", integration_removal_contract())?;
                 }
+                "capabilities" => {
+                    writeln!(file, "\n{}", capability_contracts_command_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -1272,4 +1275,13 @@ The versioned physical recovery command supports empty input/exact canonical
 copies only, requires an active local session for apply, and never establishes
 task completion or publication readiness. Actor labels and policy files remain
 in the local host's trust domain; protect them independently when needed."#
+}
+
+fn capability_contracts_command_contract() -> &'static str {
+    r#"### `decapod capabilities contracts`
+
+- **Intent:** Deterministic, read-only inspection of composed service capability contracts (`Decapod -> Dactyl -> Propodus`) for schema, operation, auth scope, revision, policy-copy, prestate, shared-invariant, and two-step fault/severed-ack drift before governed admission.
+- **Usage:** `decapod capabilities contracts [--fixture] [--contract <PATH>] [--dir <PATH>] [--format text|json]` (also via RPC `interop.capability_contracts`).
+- **Offline isolation:** Never requires network calls or Cloud credentials; unrelated local offline repositories remain unaffected and usable (`local_offline_usable=true`, Cloud capability marked `unsupported`).
+- **Validation gate:** When `.decapod/contracts/capability_contract.json` exists, `decapod validate` checks it against accepted host policy and fails closed on drift, dropped negative cases, or self-certification (`SELF_VERIFICATION_REJECTED`)."#
 }

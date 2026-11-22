@@ -869,97 +869,100 @@
     }
   },
   "change": {
-    "id": "change_01M80D5B0PC9CHKAV12YE3QRZF",
+    "id": "change_01M80CX8ZCMVFW60F3Z54K3BJ7",
     "base_commit": "efc05d7926fa9a5a53cda773b5bfbec1ce685142",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:github-actions-source-ci-carrier": {
-      "statement": "Independently accepted GitHub Actions preflight enforces the complete strict source-CI catalog and dual-root executor without allowing candidate self-authorization.",
-      "falsifier": "Candidate configuration switches strict carrier without target policy acceptance, omits required jobs/matrix/archives, accepts Buildkite+GHA together, or lacks dual-root executor.",
-      "status": "open",
+    "claim:composed-capability-contract-drift": {
+      "statement": "Composed Decapod -> Dactyl -> Propodus capability contracts detect schema, operation, auth scope, revision, policy-copy, prestate, shared-invariant, and unresolved-async/severed-ack drift deterministically without self-certification, blind replay, false goal_completed=true, or Cloud dependency in local offline repositories.",
+      "falsifier": "A removed/undeclared field or error class, renamed operation/auth scope, client/service contract revision mismatch, agent-edited contract copy or dropped negative case, self-certified descriptor, prestate drift after preparation, concurrent shared-invariant violation, unresolved async or severed-ack two-step fault sets currently_verified or goal_completed=true, triggers blind replay, erases the original fault on compensation, or renders a local offline repository unusable.",
+      "status": "supported",
       "proof_refs": [
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/ci_event_context_policy.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "assets/schemas/capability-contract.schema.json",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "pr1890-carrier-v0160",
-      "summary": "Integrate #1890 accepted GitHub Actions preflight carrier onto v0.160.0 with proof schema alignment and Living Specs",
-      "input_digest": "sha256:592454962a7edd59292b70f803210ccabec56d132b2e28f3a501dd04002afcfd",
+      "id": "chk:1906-capability-contracts-v1",
+      "summary": "Implement #1906 composed service capability contract schema, drift checker, 4 consequence states, 21-scenario compatibility fixture, CLI/RPC/validate gate, docs sync, and Living Specs",
+      "input_digest": "sha256:b7ea21a6e1577e7d7bdfdcf1356d7a71964ad62dc54e18667965b9baa2e3a3c6",
       "proof_refs": [
-        "src/decapod/core/proof.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "tests/ci_event_context_policy.rs",
-        "tests/unit/core/proof_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "assets/schemas/capability-contract.schema.json",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
       ]
     },
     {
-      "id": "pr1890-merge-295f0af39",
-      "summary": "Merge origin/master (295f0af39, PR A #1908) into #1890 and re-verify readiness/policy/proof tests",
-      "input_digest": "sha256:276c729d27bc735dc8429690af6b8f2937b435c2ea556ef2b27e0b9434aae6fe",
+      "id": "chk:1906-spec-review-v2",
+      "summary": "Record current-content spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md on c1cf7efcc",
+      "input_digest": "sha256:83e84a4986638871465c8f1cc98fae0d2cd93037e829a31fdb40a7da74e6f847",
       "proof_refs": [
-        "src/decapod/core/repository_policy_approval.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/proof_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
       ]
     },
     {
-      "id": "pr1890-spec-review-fixup",
-      "summary": "Record unchanged-with-reason review for SECURITY.md relative to 295f0af39 and post-merge checks",
-      "input_digest": "sha256:5ed75c17679655f6b9a55d0513204f6c450a5368297e496acf6c19c29269a814",
+      "id": "chk:1906-merge-origin-master-295f0af39",
+      "summary": "Reconcile merge with origin/master (295f0af39, PR A #1908), refresh specs, and record updated publication spec reviews",
+      "input_digest": "sha256:59aecd65d46f77839bc01ab59a1954d2c95db965c5a53e38fd5456fea8eacbd0",
       "proof_refs": [
-        "src/decapod/core/validation_runtime.rs",
-        "tests/consumer_readiness.rs",
-        "tests/unit/core/proof_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
       ]
     },
     {
-      "id": "pr1890-docs-sync-295f0af39",
-      "summary": "Sync generated docs/agent/config-schema.md after merging #1833+#1832 (295f0af39) and pass docs_sync/doc_alignment",
-      "input_digest": "sha256:337d8bab71566de36ac3b8289f10e543c6b7becc9d96fcd93f436722d7920e15",
+      "id": "chk:1906-docs-sync-v3",
+      "summary": "Sync docs/agent/config-schema.md generated by decapod docs build after origin/master merge and re-verify checkpoints and docs_sync",
+      "input_digest": "sha256:30dbcf9577074f51b50cd2f23aad5c6cfdf5d48cce2f675b2909e6b41fc3cfec",
       "proof_refs": [
-        "docs/agent/config-schema.md",
-        "tests/doc_alignment.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "docs/agent/command-contracts.md",
+        "docs/agent/config-schema.md"
       ]
     },
     {
-      "id": "pr1890-merge-a934da95a",
-      "summary": "Merge origin/master (a934da95a, PR B #1911) into #1890 and verify specs, tests, and docs",
-      "input_digest": "sha256:8c7d74155a8383d7d4350e0d71828e71194d0096c98694aeb1d490d4349163cc",
+      "id": "chk:1906-merge-origin-master-8c2f55246",
+      "summary": "Reconcile merge with origin/master (8c2f55246, post PR B #1911 and PR C1 #1909), refresh specs, and record updated publication spec reviews",
+      "input_digest": "sha256:e292752dd123e46df46d71376f4c46bbd6b011775d45668e6a017700c3662854",
       "proof_refs": [
-        "src/decapod/core/native_proof.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "tests/todo_enforcement.rs",
-        "tests/unit/core/proof_tests.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80D5B0PC9CHKAV12YE3QRZF": {
+    "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "issue-1890"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+      "id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Publish PR C1 (#1890): verify accepted GitHub Actions preflights on v0.160.0",
-      "refined_intent": "Publish PR C1 (#1890): verify accepted GitHub Actions preflights on v0.160.0",
+      "raw_intent": "Implement #1906 composed service capability drift detection",
+      "refined_intent": "Implement #1906 composed service capability drift detection",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -972,177 +975,123 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish PR C1 (#1890): verify accepted GitHub Actions preflights on v0.160.0",
+      "intent": "Implement versioned repo-native capability contract schema, deterministic composition drift checker, 4 composite consequence states, Decapod -> Dactyl -> Propodus compatibility fixture with negative/repaired traces for all #1906 falsifiers, CLI/RPC inspection surfaces, and offline local isolation.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --locked",
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
+        "decapod govern project-check --refresh-specs --format json"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1911 (a934da95a)",
-          "reviewed_code_fingerprint": "077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758",
-          "spec_material_hash": "0529ef1f0a6d4adf776d5e7a5d48585aed75552a415f09a8799f32da970020db"
+          "reason": "Updated ARCHITECTURE.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified composed Decapod -> Dactyl -> Propodus contract evaluator, consequence trace states, and validate.rs gate.",
+          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
+          "spec_material_hash": "8d1ca544b61aaed3766f55d670cb5983b120b7f0a78a38760868f26086197dbb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1911 (a934da95a)",
-          "reviewed_code_fingerprint": "077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758",
-          "spec_material_hash": "e192c5deae6029359c3c3e08e029b98fdf6c83d6e456d413d235e24ef104be0a"
+          "reason": "Updated INTERFACES.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified decapod capabilities contracts CLI, interop.capability_contracts RPC, and capability-contract.schema.json.",
+          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
+          "spec_material_hash": "57088bf57c361c02d2cd35aed3cbf9d661629d9793553ba74be0b1fec514a52f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Relative to merged origin/master (a934da95a), #1890 introduces no security spec prose changes beyond refreshed codebase attestation",
-          "reviewed_code_fingerprint": "077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758",
-          "spec_material_hash": "66d279c3bccf9a82392cc49cd26761f96920b8152cb18966c630b21d0a179be5"
+          "reason": "Updated SECURITY.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified fail-closed policy baseline, evidence provenance, and severed-ack replay refusal boundaries.",
+          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
+          "spec_material_hash": "6f47e6f8cc1af2b5a30ac702ef16c5bd4a3deebb15c4d81b86ad6cbac66221bd"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Publish PR C1 (#1890): verify accepted GitHub Actions preflights on v0.160.0",
+      "title": "Detect drift in composed service capabilities before governed admission (#1906)",
       "todo_ids": [
-        "cicd_01m80cvdx8apsk0p"
+        "feat_01m80ckft9ab64f9"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795316371Z"
+      "updated_at": "1795319005Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:294fe2a02a938b2b1c5c2c4601ad9bd57da24cda7258a7c1be9d37eef5d8e32e",
+      "artifact_hash": "sha256:a9c600205d40b1840e9f25b7ff15afa4b3161b81d3cc02da390a4bc224d3d9ea",
       "checks": [
         {
-          "name": "cargo_check_no_default_features",
+          "name": "assets_schema_contract_4_of_4",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy",
+          "name": "capability_contract_drift_3_of_3",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "capability_contract_unit_7_of_7",
           "status": "passed"
         },
         {
-          "name": "ci_event_context_policy",
+          "name": "check_no_default_features",
           "status": "passed"
         },
         {
-          "name": "concurrent_worktree_integration_1469",
+          "name": "clippy_all_targets_features",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
+          "name": "cloud_dactyl_boundary_1_of_1",
           "status": "passed"
         },
         {
-          "name": "gate_skip_override_readiness_1659",
+          "name": "constitution_claims_4_of_4",
           "status": "passed"
         },
         {
-          "name": "lib_proof",
+          "name": "contract_conformance_12_of_12",
           "status": "passed"
         },
         {
-          "name": "lib_readiness_profile",
+          "name": "doc_alignment_5_of_5",
           "status": "passed"
         },
         {
-          "name": "lib_snapshot_provider",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "lib_validation_runtime",
-          "status": "passed"
-        },
-        {
-          "name": "lib_validation_scope",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_consumer_readiness",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_no_default_features",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_proof",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_readiness_profile",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_repository_profile",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_295f0af39_validation_rules",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_native_proof",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_no_default_features",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_proof",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_readiness_profile",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_a934da95a_todo_enforcement",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_docs_build",
-          "status": "passed"
-        },
-        {
-          "name": "source_ci_profile_policy_macos",
+          "name": "integration_sharding_policy_macos_22_of_23",
           "status": "partial"
         },
         {
-          "name": "workunit_verified_proof_1660",
+          "name": "interop_conformance_12_of_12",
+          "status": "passed"
+        },
+        {
+          "name": "propodus_contract_6_of_6",
+          "status": "passed"
+        },
+        {
+          "name": "rpc_golden_vectors_6_of_6",
+          "status": "passed"
+        },
+        {
+          "name": "source_ci_profile_policy_macos_55_of_59",
+          "status": "partial"
+        },
+        {
+          "name": "spec_conformance_15_of_15",
+          "status": "passed"
+        },
+        {
+          "name": "specs_refresh_docs_base_master_6_of_7",
+          "status": "partial"
+        },
+        {
+          "name": "substrate_integrity_9_of_9",
           "status": "passed"
         }
       ],
@@ -1151,232 +1100,159 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
+            "detail": "trajectory:branch_01M80CX932HS4KF7SV32G5QAWD",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80D5B47FTAS15P667YQJ709": {
+          "branch_01M80CX932HS4KF7SV32G5QAWD": {
             "evidence_only": true,
-            "id": "branch_01M80D5B47FTAS15P667YQJ709",
-            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "id": "branch_01M80CX932HS4KF7SV32G5QAWD",
+            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
             "steps": [
               {
                 "action": "verification",
+                "command": "cargo fmt --all -- --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/proof.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/rpc.rs",
                   "src/decapod/core/docs_cli.rs",
-                  "tests/unit/core/proof_tests.rs",
                   "src/decapod/cli.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/intent_reconcile/selected.rs",
-                  "src/decapod/core/proof.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/readiness_profile/tests.rs",
-                  "src/decapod/core/snapshot_provider/automatic.rs",
-                  "src/decapod/core/snapshot_provider/automatic/tests.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/core/validation_runtime/repository_host.rs",
-                  "src/decapod/core/validation_runtime/snapshot.rs",
-                  "src/decapod/core/validation_runtime/snapshot/derived_import.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "src/decapod/core/validation_runtime/tests.rs",
-                  "src/decapod/core/workspace.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/validation_scope.rs",
-                  "tests/ci_event_context_policy.rs",
-                  "tests/common/consumer_readiness_fixture.rs",
-                  "tests/concurrent_worktree_integration_1469.rs",
-                  "tests/gate_skip_override_readiness_1659.rs",
-                  "tests/unit/core/proof_tests.rs",
-                  "tests/workunit_verified_proof_1660.rs",
-                  "cargo fmt --all -- --check: 0; cargo clippy --all-targets --all-features -- -D warnings: 0; cargo check --no-default-features: 0; proof 124/124; ci_event_context_policy 54/54 (python3.14); doc_alignment 5/5; readiness_profile 50/50; validation_runtime 88/88 (2 ignored); snapshot_provider 211/211 (1 ignored); validation_scope 9/9; concurrent_worktree_1469 3/3; gate_skip_1659 5/5; workunit_1660 6/6; source_ci_profile_policy 55/59 (4 macOS host/linux-platform fixture checks)"
+                  "assets/tools/docs_sync.rs",
+                  "tests/assets_schema_contract.rs",
+                  "assets/schemas/capability-contract.schema.json",
+                  "docs/agent/command-contracts.md",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/capability_contract.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/lib.rs",
+                  "tests/assets_schema_contract.rs",
+                  "tests/capability_contract_drift.rs",
+                  "tests/unit/core/capability_contract_tests.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SEMANTICS.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "task-505: fmt, clippy -D warnings, check --no-default-features, capability_contract unit 7/7, capability_contract_drift 3/3 passed after final edit; task-500: capabilities contracts fixture 21/21 passed, docs build +8 lines"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "cargo_check_no_default_features",
-                  "lib_proof",
-                  "lib_readiness_profile",
-                  "lib_validation_runtime",
-                  "lib_snapshot_provider",
-                  "lib_validation_scope",
-                  "ci_event_context_policy",
-                  "doc_alignment",
-                  "concurrent_worktree_integration_1469",
-                  "gate_skip_override_readiness_1659",
-                  "workunit_verified_proof_1660",
-                  "source_ci_profile_policy_macos"
+                  "fmt",
+                  "clippy_all_targets_features",
+                  "check_no_default_features",
+                  "capability_contract_unit_7_of_7",
+                  "capability_contract_drift_3_of_3",
+                  "assets_schema_contract_4_of_4",
+                  "contract_conformance_12_of_12",
+                  "doc_alignment_5_of_5",
+                  "rpc_golden_vectors_6_of_6",
+                  "spec_conformance_15_of_15",
+                  "propodus_contract_6_of_6",
+                  "cloud_dactyl_boundary_1_of_1",
+                  "constitution_claims_4_of_4",
+                  "interop_conformance_12_of_12",
+                  "substrate_integrity_9_of_9",
+                  "source_ci_profile_policy_macos_55_of_59",
+                  "integration_sharding_policy_macos_22_of_23",
+                  "specs_refresh_docs_base_master_6_of_7"
                 ],
                 "scope": [
-                  "issue-1890"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Merged origin/master (295f0af39 / PR A #1908): fmt=0, clippy=0, no-default-features=0, proof 124/124, consumer_readiness 40/40, readiness_profile, validation_rules, repository_profile all passed."
-                ],
-                "proof_refs": [
-                  "post_merge_295f0af39_fmt",
-                  "post_merge_295f0af39_clippy",
-                  "post_merge_295f0af39_no_default_features",
-                  "post_merge_295f0af39_repository_profile",
-                  "post_merge_295f0af39_validation_rules",
-                  "post_merge_295f0af39_readiness_profile",
-                  "post_merge_295f0af39_proof",
-                  "post_merge_295f0af39_consumer_readiness"
-                ],
-                "scope": [
-                  "issue-1890"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "docs/agent/config-schema.md",
-                  "Regenerated docs/agent/config-schema.md via source-built decapod docs build to include merged #1833/#1832 repository-readiness.md sections; doc_alignment 5/5 passed."
-                ],
-                "proof_refs": [
-                  "post_merge_docs_build",
-                  "post_merge_doc_alignment"
-                ],
-                "scope": [
-                  "issue-1890"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:7",
-                "observations": [
-                  "Merged origin/master (a934da95a / PR B #1911): fmt=0, clippy=0, no-default-features=0, readiness_profile, proof, native_proof, todo_enforcement, doc_alignment all passed."
-                ],
-                "proof_refs": [
-                  "post_merge_a934da95a_fmt",
-                  "post_merge_a934da95a_clippy",
-                  "post_merge_a934da95a_no_default_features",
-                  "post_merge_a934da95a_readiness_profile",
-                  "post_merge_a934da95a_proof",
-                  "post_merge_a934da95a_native_proof",
-                  "post_merge_a934da95a_todo_enforcement",
-                  "post_merge_a934da95a_doc_alignment"
-                ],
-                "scope": [
-                  "issue-1890"
-                ],
-                "sequence": 7,
-                "validation_findings": []
+                "validation_findings": [
+                  "Linux-x86_64 CI checks wait for GitHub Actions PR execution; Buildkite waived per operator instruction; macOS host shows 4 platform/var-symlink failures in source_ci_profile_policy and 1 /var-symlink failure in integration_sharding_policy; origin/master has pre-existing specs_refresh_docs::readiness_guidance_keeps_branch_push_separate_from_pr failure"
+                ]
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "CLIPPY_CONF_DIR=.config cargo clippy --locked --all-targets --all-features -- -D warnings",
+        "cargo check --locked --no-default-features",
+        "cargo fmt --all -- --check",
+        "cargo test --locked --lib core::capability_contract",
+        "cargo test --locked --test capability_contract_drift",
+        "decapod capabilities contracts --fixture --format text"
+      ],
       "destination": "pull request",
       "evidence": [
-        "Merged origin/master (295f0af39 / PR A #1908): fmt=0, clippy=0, no-default-features=0, proof 124/124, consumer_readiness 40/40, readiness_profile, validation_rules, repository_profile all passed.",
-        "Merged origin/master (a934da95a / PR B #1911): fmt=0, clippy=0, no-default-features=0, readiness_profile, proof, native_proof, todo_enforcement, doc_alignment all passed.",
-        "Regenerated docs/agent/config-schema.md via source-built decapod docs build to include merged #1833/#1832 repository-readiness.md sections; doc_alignment 5/5 passed.",
-        "cargo fmt --all -- --check: 0; cargo clippy --all-targets --all-features -- -D warnings: 0; cargo check --no-default-features: 0; proof 124/124; ci_event_context_policy 54/54 (python3.14); doc_alignment 5/5; readiness_profile 50/50; validation_runtime 88/88 (2 ignored); snapshot_provider 211/211 (1 ignored); validation_scope 9/9; concurrent_worktree_1469 3/3; gate_skip_1659 5/5; workunit_1660 6/6; source_ci_profile_policy 55/59 (4 macOS host/linux-platform fixture checks)"
+        "task-505: fmt, clippy -D warnings, check --no-default-features, capability_contract unit 7/7, capability_contract_drift 3/3 passed after final edit; task-500: capabilities contracts fixture 21/21 passed, docs build +8 lines"
       ],
       "inspected_files": [
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/proof.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "tests/unit/core/proof_tests.rs"
-      ],
-      "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
-      "modified_files": [
-        "docs/agent/config-schema.md",
+        "assets/tools/docs_sync.rs",
         "src/decapod/cli.rs",
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "src/decapod/core/intent_reconcile/selected.rs",
-        "src/decapod/core/proof.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/automatic.rs",
-        "src/decapod/core/snapshot_provider/automatic/tests.rs",
-        "src/decapod/core/validation_history.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/core/validation_runtime/repository_host.rs",
-        "src/decapod/core/validation_runtime/snapshot.rs",
-        "src/decapod/core/validation_runtime/snapshot/derived_import.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "src/decapod/core/validation_runtime/tests.rs",
-        "src/decapod/core/workspace.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/validate.rs",
         "src/decapod/lib.rs",
-        "src/decapod/validation_scope.rs",
-        "tests/ci_event_context_policy.rs",
-        "tests/common/consumer_readiness_fixture.rs",
-        "tests/concurrent_worktree_integration_1469.rs",
-        "tests/gate_skip_override_readiness_1659.rs",
-        "tests/unit/core/proof_tests.rs",
-        "tests/workunit_verified_proof_1660.rs"
+        "tests/assets_schema_contract.rs"
+      ],
+      "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+      "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/SEMANTICS.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "assets/schemas/capability-contract.schema.json",
+        "docs/agent/command-contracts.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/capability_contract.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/lib.rs",
+        "tests/assets_schema_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
       ],
       "next_transitions": [
-        "Checkpoint, commit, verify-checkpoints, project-check, and open PR C1 (#1890)",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "issue-1890"
+        "root"
       ],
-      "run_id": "branch_01M80D5B47FTAS15P667YQJ709",
+      "run_id": "branch_01M80CX932HS4KF7SV32G5QAWD",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m80cvdx8apsk0p",
+      "task_id": "feat_01m80ckft9ab64f9",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Linux-x86_64 CI checks wait for GitHub Actions PR execution; Buildkite waived per operator instruction; macOS host shows 4 platform/var-symlink failures in source_ci_profile_policy and 1 /var-symlink failure in integration_sharding_policy; origin/master has pre-existing specs_refresh_docs::readiness_guidance_keeps_branch_push_separate_from_pr failure"
+      ]
     }
   },
   "legacy_digests": {

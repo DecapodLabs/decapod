@@ -3881,6 +3881,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "interop.manifest"
                     | "interop.negotiate"
                     | "interop.project"
+                    | "interop.capability_contracts"
             )
         ),
         _ => false,
@@ -4101,6 +4102,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "interop.capability_contracts"
     )
 }
 
@@ -4177,6 +4179,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "interop.capability_contracts"
     )
 }
 
@@ -8816,6 +8819,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "interop.capability_contracts"
     )
 }
 
@@ -14079,6 +14083,78 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_interop_capability_contracts(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: InteropCapabilityContractsParams =
+            match serde_json::from_value(ctx.request.params.clone()) {
+                Ok(p) => p,
+                Err(e) => {
+                    return Ok(error_response(
+                        ctx.request.id.clone(),
+                        ctx.request.op.clone(),
+                        ctx.request.params.clone(),
+                        "invalid_params".to_string(),
+                        format!("Invalid params: {e}"),
+                        None,
+                        ctx.mandates.clone(),
+                    ));
+                }
+            };
+        let (inspection, input_origin) = match params.contract {
+            Some(raw_contract) => {
+                let parsed: crate::core::capability_contract::CapabilityContract =
+                    match serde_json::from_value(raw_contract) {
+                        Ok(contract) => contract,
+                        Err(e) => {
+                            return Ok(error_response(
+                                ctx.request.id.clone(),
+                                ctx.request.op.clone(),
+                                ctx.request.params.clone(),
+                                "invalid_params".to_string(),
+                                format!("Invalid capability contract payload: {e}"),
+                                None,
+                                ctx.mandates.clone(),
+                            ));
+                        }
+                    };
+                (
+                    crate::core::capability_contract::inspect_supplied_contract(
+                        ctx.project_root,
+                        parsed,
+                        params.fixture,
+                    )?,
+                    "caller_supplied".to_string(),
+                )
+            }
+            None => (
+                crate::core::capability_contract::inspect_repo_capabilities(
+                    ctx.project_root,
+                    None,
+                    params.fixture,
+                )?,
+                "repository_pinned_contracts".to_string(),
+            ),
+        };
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(InteropCapabilityContractsResult {
+                    inspection,
+                    input_origin,
+                    canonical_state_verified: false,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_state_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: state::StateResolveParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
@@ -14431,6 +14507,9 @@ fn run_rpc_command(
         "interop.manifest" => rpc_handlers::handle_interop_manifest(&rpc_ctx)?,
         "interop.negotiate" => rpc_handlers::handle_interop_negotiate(&rpc_ctx)?,
         "interop.project" => rpc_handlers::handle_interop_project(&rpc_ctx)?,
+        "interop.capability_contracts" => {
+            rpc_handlers::handle_interop_capability_contracts(&rpc_ctx)?
+        }
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         _ => error_response(
@@ -14534,6 +14613,76 @@ fn maybe_bind_capsule_to_workunit_state_ref(
 /// Run capabilities command
 fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodError> {
     use crate::core::rpc::generate_capabilities;
+
+    if let Some(CapabilitiesCommand::Contracts {
+        fixture,
+        contract,
+        dir,
+        format,
+    }) = cli.command
+    {
+        let target_dir = match dir {
+            Some(path) => path,
+            None => std::env::current_dir().map_err(error::DecapodError::IoError)?,
+        };
+        let root = find_decapod_project_root(&target_dir).unwrap_or(target_dir);
+        let inspection = crate::core::capability_contract::inspect_repo_capabilities(
+            &root,
+            contract.as_deref(),
+            fixture,
+        )?;
+        if format == "json" {
+            println!("{}", serde_json::to_string_pretty(&inspection).unwrap());
+        } else {
+            println!("Capability Contracts ({})", inspection.schema_version);
+            println!("Backend: {}", inspection.repository_backend);
+            println!("Local offline usable: {}", inspection.local_offline_usable);
+            println!(
+                "Capability: {} (revision {})",
+                inspection.report.capability_id, inspection.report.contract_revision
+            );
+            println!("Status: {}", inspection.report.status.as_str());
+            println!(
+                "Syntactically compatible: {}",
+                inspection.report.syntactically_compatible
+            );
+            println!(
+                "Observed behavior verified: {}",
+                inspection.report.observed_behavior_verified
+            );
+            if !inspection.report.findings.is_empty() {
+                println!("Findings:");
+                for finding in &inspection.report.findings {
+                    println!(
+                        "  - [{}] {} ({}) {}",
+                        finding.code, finding.dimension, finding.source_pointer, finding.detail
+                    );
+                }
+            }
+            if let Some(suite) = &inspection.fixture {
+                println!(
+                    "Compatibility fixture: {}/{} scenarios passed",
+                    suite.passed_scenarios, suite.total_scenarios
+                );
+                for scenario in &suite.scenarios {
+                    println!(
+                        "  - {} [{}] status={} goal_completed={:?} passed={}",
+                        scenario.scenario_id,
+                        scenario.phase,
+                        scenario.report.status.as_str(),
+                        scenario
+                            .report
+                            .consequence
+                            .as_ref()
+                            .map(|c| c.goal_completed),
+                        scenario.passed
+                    );
+                }
+            }
+            println!("Note: {}", inspection.authority_note);
+        }
+        return Ok(());
+    }
 
     let report = generate_capabilities();
 

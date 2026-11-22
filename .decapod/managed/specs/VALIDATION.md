@@ -1,5 +1,22 @@
 # Validation
 
+## Composed service capability contract verification (#1906)
+
+Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-1906` merged with `origin/master` (`8c2f55246`, `v0.160.0`):
+
+- Formatting, lint, and feature-matrix compilation (after final edit):
+  - `cargo fmt --all -- --check`: passed.
+  - `CLIPPY_CONF_DIR=.config cargo clippy --locked --all-targets --all-features -- -D warnings`: passed.
+  - `cargo check --locked --no-default-features`: passed.
+- Composed capability contract unit and integration tests (after final edit):
+  - `cargo test --locked --lib core::capability_contract`: `7 passed; 0 failed` (schema constants, self-verification rejection, self-reported observation rejection, HTTP 200 not masking Dactyl field/error drift, four distinct composite consequence states, fault-retention enforcement on compensation, and 21-scenario multi-repo compatibility fixture).
+  - `cargo test --locked --test capability_contract_drift`: `3 passed; 0 failed` (CLI `capabilities contracts --fixture --format json`, RPC `interop.capability_contracts` input rejection, local offline repo usability, and `govern project-check` failing closed on `CAPABILITY_CONTRACT_DRIFT`).
+  - `decapod capabilities contracts --fixture --format text`: `21/21` scenarios passed (`declared`, `observed`, `currently_verified`, `incompatible`, `unsupported`, `stale`, and `prepared`/`observed`/`held`/`compensated` trace separation).
+  - `decapod docs build`: synchronized `docs/agent/command-contracts.md` (`+8` insertions for `decapod capabilities contracts` and `Operation: InteropCapabilityContracts`).
+- Core repository conformance and boundary suites:
+  - `assets_schema_contract`: `4 passed; 0 failed`; `contract_conformance`: `12 passed; 0 failed`; `doc_alignment`: `5 passed; 0 failed`; `rpc_golden_vectors`: `6 passed; 0 failed`; `consumer_readiness`: `40 passed; 0 failed`; `propodus_contract`: `6 passed; 0 failed`; `cloud_dactyl_boundary`: `1 passed; 0 failed`; `constitution_claims`: `4 passed; 0 failed`; `substrate_integrity`: `9 passed; 0 failed`.
+  - Pre-existing/host-platform caveats on macOS (`macos-aarch64`): `source_ci_profile_policy` (`55 passed; 4 failed` on `linux-x86_64` and `/var` temp canonicalization checks) and `integration_sharding_policy` (`22 passed; 1 failed` on `/var` temp canonicalization `relocated_gatling_shards_route_exact_filters_and_preserve_runfiles`).
+
 ## Operational reliability fixes verification (#1881, #1837, #1884, #1838)
 
 Verified on `origin/master` (`295f0af39`, `v0.160.0` + PR `#1908`) inside isolated worktree `agent/swarm-readiness-b/bugs_01m80ex82zgnq661-ops-1881-1837-1884-1838`:
@@ -1615,8 +1632,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `077d8c1e52f94393f69fe00c299456720b4a62f2efb6472f24fed33976832758`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
