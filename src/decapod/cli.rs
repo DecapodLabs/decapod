@@ -2651,9 +2651,82 @@ pub(crate) enum Command {
     #[clap(name = "integration")]
     Integration(IntegrationCli),
 
+    /// Bounded local stdio MCP JSON-RPC 2.0 adapter and schema/config exporter (#872)
+    #[clap(name = "mcp")]
+    Mcp(McpCli),
+
+    /// Bounded A2A Agent Card and task/handoff envelope validator (#873)
+    #[clap(name = "a2a")]
+    A2a(A2aCli),
+
     /// Strictly read-only observability projections and optional authenticated loopback HTTP server
     #[clap(name = "observe")]
     Observe(ObserveCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct McpCli {
+    #[clap(subcommand)]
+    pub command: McpCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum McpCommand {
+    /// Serve the bounded local stdio MCP JSON-RPC 2.0 adapter (exits cleanly on EOF/one-shot/shutdown)
+    Serve {
+        /// Handle a single JSON-RPC request frame and exit cleanly (test-safe)
+        #[clap(long)]
+        one_shot: bool,
+        /// Optional maximum number of request frames to process before exiting
+        #[clap(long)]
+        max_requests: Option<usize>,
+        /// Maximum incoming frame size in bytes
+        #[clap(long, default_value_t = 262_144)]
+        max_frame_bytes: usize,
+        /// Framing mode: auto, jsonl, or content-length
+        #[clap(long, default_value = "auto", value_parser = ["auto", "jsonl", "content-length"])]
+        framing: String,
+    },
+    /// Export deterministic MCP tool and resource schemas
+    Schema {
+        /// Output format: json or text
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+    },
+    /// Generate conflict-safe host MCP server configuration
+    Config {
+        /// Repository root directory (defaults to current working directory)
+        #[clap(long)]
+        root: Option<PathBuf>,
+        /// Executable path override (defaults to current decapod binary path)
+        #[clap(long)]
+        executable: Option<PathBuf>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct A2aCli {
+    #[clap(subcommand)]
+    pub command: A2aCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum A2aCommand {
+    /// Print the truthful A2A Agent Card describing only executable governance skills
+    Card {
+        /// Output format: json or text
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+    },
+    /// Validate a bounded A2A task/handoff envelope against local repository context
+    Handoff {
+        /// Path to JSON file containing `{ "envelope": ..., "local_context": ... }`
+        #[clap(long, conflicts_with = "json")]
+        input: Option<PathBuf>,
+        /// Inline JSON containing `{ "envelope": ..., "local_context": ... }`
+        #[clap(long, conflicts_with = "input")]
+        json: Option<String>,
+    },
 }
 
 #[derive(clap::Args, Debug)]

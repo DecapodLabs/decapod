@@ -443,6 +443,48 @@ rpc_catalog![
         description: "Versioned Local vs Cloud logical operation and evidence parity matrix inspection (read-only, never grants authority)",
     },
     OpMeta {
+        op: "interop.envelope.verify",
+        read_only: true,
+        session_required: false,
+        description: "Verify a 4-plane Governance Envelope v1 under local trust policy without importing authority (read-only)",
+    },
+    OpMeta {
+        op: "interop.drift.check",
+        read_only: true,
+        session_required: false,
+        description: "Two-way dispatcher-vs-manifest-vs-session-guard drift check (#871, read-only)",
+    },
+    OpMeta {
+        op: "interop.registry.query",
+        read_only: true,
+        session_required: false,
+        description: "Query offline capability registry entries and graph validation (#1715, read-only)",
+    },
+    OpMeta {
+        op: "interop.skills.select",
+        read_only: true,
+        session_required: false,
+        description: "Deterministically select admissible skills and compile bounded context bundle (#1716, read-only)",
+    },
+    OpMeta {
+        op: "interop.rules.evaluate",
+        read_only: true,
+        session_required: false,
+        description: "Evaluate typed coding-rule metadata, conflict precedence, and injection rejection (#1725, read-only)",
+    },
+    OpMeta {
+        op: "interop.rules.taxonomy",
+        read_only: true,
+        session_required: false,
+        description: "Export machine-readable 8-domain coding-rule taxonomy and gap analysis matrix (#1724, read-only)",
+    },
+    OpMeta {
+        op: "interop.overlap.classify",
+        read_only: true,
+        session_required: false,
+        description: "Classify concurrent task-scope overlap across 6 semantic states (#878, read-only)",
+    },
+    OpMeta {
         op: "constitution.overlay.status",
         read_only: true,
         session_required: false,
@@ -612,29 +654,69 @@ pub fn builtin_manifest() -> InteropManifest {
         },
         description: "Full clap CLI surface mirroring the governed operations".to_string(),
     });
+    // Bounded transport adapters implemented in src/decapod/core/agent_interop.rs (#872/#873).
+    // Evidence remains truthfully `not_run` until an observed conformance receipt is projected.
+    capabilities.push(InteropCapability {
+        id: "transport:mcp".to_string(),
+        surface: "transport".to_string(),
+        implementation_status: ImplementationStatus::Implemented,
+        owner_component: "src/decapod/core/agent_interop/mcp.rs".to_string(),
+        implementation: Some(ImplementationMapping {
+            op: "mcp.serve".to_string(),
+            module: "src/decapod/core/agent_interop/mcp.rs".to_string(),
+            entrypoints: vec!["cli:decapod mcp serve".to_string(), "cli:decapod mcp schema".to_string()],
+            read_only: false,
+            session_required: false,
+        }),
+        evidence: CapabilityEvidence {
+            conformance_test: "agent_interop_conformance::mcp_stdio_roundtrip_and_guards".to_string(),
+            state: VerificationState::NotRun,
+            evidence_ref: Some("tests/agent_interop_conformance.rs::mcp_stdio_roundtrip_and_guards".to_string()),
+        },
+        description: "Bounded local stdio MCP JSON-RPC 2.0 server adapter and schema/config exporter (issue #872)".to_string(),
+    });
+    capabilities.push(InteropCapability {
+        id: "transport:a2a".to_string(),
+        surface: "transport".to_string(),
+        implementation_status: ImplementationStatus::Implemented,
+        owner_component: "src/decapod/core/agent_interop/a2a.rs".to_string(),
+        implementation: Some(ImplementationMapping {
+            op: "a2a.card".to_string(),
+            module: "src/decapod/core/agent_interop/a2a.rs".to_string(),
+            entrypoints: vec![
+                "cli:decapod a2a card".to_string(),
+                "cli:decapod a2a handoff".to_string(),
+            ],
+            read_only: true,
+            session_required: false,
+        }),
+        evidence: CapabilityEvidence {
+            conformance_test: "agent_interop_conformance::a2a_agent_card_and_handoff_validation"
+                .to_string(),
+            state: VerificationState::NotRun,
+            evidence_ref: Some(
+                "tests/agent_interop_conformance.rs::a2a_agent_card_and_handoff_validation"
+                    .to_string(),
+            ),
+        },
+        description:
+            "Bounded A2A Agent Card and governed task/handoff envelope validator (issue #873)"
+                .to_string(),
+    });
     // Explicitly unsupported transports — never advertised as available.
-    for (id, desc) in [
-        (
-            "transport:mcp",
-            "Native MCP server adapter (issue #872, not implemented in this build)",
-        ),
-        ("transport:acp", "ACP transport adapter (not implemented)"),
-        ("transport:a2a", "A2A transport adapter (not implemented)"),
-    ] {
-        capabilities.push(InteropCapability {
-            id: id.to_string(),
-            surface: "transport".to_string(),
-            implementation_status: ImplementationStatus::IntentionallyNotUsed,
-            owner_component: "none".to_string(),
-            implementation: None,
-            evidence: CapabilityEvidence {
-                conformance_test: String::new(),
-                state: VerificationState::NotRun,
-                evidence_ref: None,
-            },
-            description: desc.to_string(),
-        });
-    }
+    capabilities.push(InteropCapability {
+        id: "transport:acp".to_string(),
+        surface: "transport".to_string(),
+        implementation_status: ImplementationStatus::IntentionallyNotUsed,
+        owner_component: "none".to_string(),
+        implementation: None,
+        evidence: CapabilityEvidence {
+            conformance_test: String::new(),
+            state: VerificationState::NotRun,
+            evidence_ref: None,
+        },
+        description: "ACP transport adapter (not implemented)".to_string(),
+    });
     InteropManifest {
         schema_version: INTEROP_MANIFEST_SCHEMA_VERSION.to_string(),
         profile_id: INTEROP_PROFILE_ID.to_string(),

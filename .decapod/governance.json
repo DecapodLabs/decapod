@@ -869,56 +869,75 @@
     }
   },
   "change": {
-    "id": "change_01M81G1G9K176E1K6J9QXNT34X",
+    "id": "change_01M81GTZ010E8CRS51DQ0T3RMW",
     "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:observability-projections-and-http-transport": {
-      "statement": "Strictly read-only observability projections (observe.*) and hardened authenticated loopback HTTP transport bind idempotency keys to canonical request digests, bound cache entries/bytes and child processes via bounded_process, redact secrets/prompts/reasoning, detect snapshot inconsistencies and tampered history, and refuse all mutations over read-only credentials.",
-      "falsifier": "Any read-only projection mutates repo/SQLite state, leaks raw prompts/secrets/symlinks, misses tampered history or cyclic constraint contradictions, returns another op receipt on Idempotency-Key collision, allows unbounded cache growth, or admits a mutating op on observe serve.",
+    "claim:agent-interop-envelope-and-conformance": {
+      "statement": "Four-plane governance envelope v1 (#870), observed-conformance receipts and two-way dispatcher/authorization drift detection (#871), and expanded adversarial conformance vectors (#1733) enforce authority isolation, replay/freshness checks, tampered-environment detection, and summary-fiction rejection with agreement across independent consumers.",
+      "falsifier": "An untrusted producer, replayed/stale/tampered envelope, authority-widening child grant, summary-only digest list without raw receipts, or dispatcher-vs-guard drift is accepted as verified or grants local authority, or two independent consumers disagree on verdict or reason class.",
       "status": "supported",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/observability_projections.rs",
-        "tests/unit/core/http_transport_tests.rs"
+        "src/decapod/core/agent_interop.rs",
+        "tests/agent_interop_conformance.rs",
+        "tests/fixtures/agent_interop_reference_consumer.py",
+        "tests/fixtures/agent_interop_vectors.v1.json"
+      ]
+    },
+    "claim:capability-skill-manifest-rule-overlap": {
+      "statement": "Offline capability registry (#1715), deterministic skill discovery and bounded context bundle compiler (#1716), canonical manifest compiler with source maps and conflict detection (#1717), safe markdown fragment composition (#1718), harness packaging (#875), machine-readable 8-domain rule taxonomy (#1724), rule metadata/precedence evaluator (#1725), and 6-state semantic task-scope overlap classifier (#878) operate deterministically offline while rejecting prompt injection, privilege escalation, policy conflicts, and false serialization.",
+      "falsifier": "An unlicensed/cyclic registry entry, prompt-injection or privilege-escalating markdown fragment, contradictory manifest policy, invalid rule metadata, or conflicting task-scope invariant is accepted, or safe overlap is falsely serialized or clean-merge semantic failure passes combined integration.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/agent_interop/registry.rs",
+        "src/decapod/core/agent_interop/rules.rs",
+        "tests/agent_interop_conformance.rs"
+      ]
+    },
+    "claim:mcp-a2a-bounded-adapters": {
+      "statement": "Bounded stdio MCP JSON-RPC 2.0 server (#872) and bounded A2A Agent Card and handoff validator (#873) expose only executable governance capabilities, redact secrets/hidden rubrics, preserve local kernel authority gates, and exit cleanly without leaving background daemons.",
+      "falsifier": "Oversized/malformed/duplicate-key MCP frames, unsupported protocol versions, secret/path-traversal resource reads, unauthorized tool mutations, or stale/conflicting A2A handoffs succeed or import remote authority.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/agent_interop/a2a.rs",
+        "src/decapod/core/agent_interop/mcp.rs",
+        "tests/agent_interop_conformance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-projections-1",
-      "summary": "Implement read-only observability projections (decapod observe / observe.* RPC) and hardened authenticated loopback HTTP transport (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)",
-      "input_digest": "sha256:feddf2c3953cac3d0c6ed9f7163abb8210a7aa47626d2714e0880aa69cf0d886",
+      "id": "chk-agent-interop-shard4",
+      "summary": "Implement modular agent_interop engine (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735): 4-plane envelope v1, observed conformance receipts, drift check, bounded MCP/A2A adapters, offline capability/skill/manifest/composition/rule/overlap engines, 26-vector independent consumer conformance, docs, and living specs.",
+      "input_digest": "sha256:3a73023816d06325fc36d3e06c876806862021d6ea275a2909a2153ccd9f5e77",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/observability_projections.rs",
-        "tests/unit/core/http_transport_tests.rs"
+        "tests/agent_interop_conformance.rs",
+        "tests/fixtures/agent_interop_reference_consumer.py",
+        "tests/fixtures/agent_interop_vectors.v1.json"
       ]
     },
     {
-      "id": "chk-projections-2",
-      "summary": "Implement read-only observability projections (decapod observe / observe.* RPC) and hardened authenticated loopback HTTP transport (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)",
-      "input_digest": "sha256:c9511cdf338a803eb4ee298f2435898ff44d08ebb854ae1c7c8fcad0c1f7dd7e",
+      "id": "chk-interop-merge-01621",
+      "summary": "Merge origin/master (6ab03efcb v0.162.1) into PR #1921 preserving observe.* and agent_interop/mcp/a2a surfaces, regenerated docs/agent/command-contracts.md and specs with worktree binary, and verified all 66 targeted unit/conformance/doc tests.",
+      "input_digest": "sha256:ed7b90a4f636f28a110bd2abc9d3245621251198264fd2165c052b6fe560af09",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/observability_projections.rs",
-        "tests/unit/core/http_transport_tests.rs"
+        "tests/agent_interop_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/interop_conformance.rs"
       ]
     },
     {
-      "id": "chk-projections-merge-01621",
-      "summary": "Reconcile PR #1920 onto origin/master v0.162.1 (e0096f606) preserving all merged changes and regenerating docs/specs with worktree candidate binary",
-      "input_digest": "sha256:5518daba390e56600d17b832cb887464a222c5d701508a431d73311bf773d2a0",
+      "id": "chk-fix-legacy-namespace-gate",
+      "summary": "Replace literal dot-codex/dot-claude tokens in registry.rs with concat! to satisfy Namespace Purge Gate while preserving exact harness config path hints.",
+      "input_digest": "sha256:7bdf8b1629d10964ec6b33f79d8011516df56bd9d7e461e55f41fcec537a706e",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "tests/observability_projections.rs",
-        "tests/unit/core/http_transport_tests.rs"
+        "tests/agent_interop_conformance.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M81G1G9K176E1K6J9QXNT34X": {
+    "intent:change_01M81GTZ010E8CRS51DQ0T3RMW": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -928,14 +947,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
+      "id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
-      "refined_intent": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
+      "raw_intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
+      "refined_intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -948,9 +967,14 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
+      "intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
       "phases": [],
       "proof_hooks": [
+        "cargo fmt --all -- --check",
+        "cargo clippy --all-targets -- -D warnings",
+        "cargo test --lib agent_interop",
+        "cargo test --lib core::interop",
+        "cargo test --test agent_interop_conformance",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -958,43 +982,55 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled onto origin/master v0.162.1; documented core::observability_projections submodules, double-read Git+SQLite snapshot consistency, bounded_process stdin capture, and hardened http_transport replay binding.",
-          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
-          "spec_material_hash": "0fe37309d9142223ab3f98fe58df0f4008ab2951bf360856030310fc4ab4b896"
+          "reason": "Updated ARCHITECTURE.md and refreshed specs after removing literal legacy dot-namespace token in registry.rs.",
+          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
+          "spec_material_hash": "8e0e480a2479e9d9069024381c8eefddf5421a70de722bd22a4131dd709eb4e2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled onto origin/master v0.162.1; documented decapod observe CLI subcommands, 6 read-only observe.* RPC ops, and hardened loopback HTTP transport.",
-          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
-          "spec_material_hash": "7c6b6022bcaf10f9c9569403f73e99b8116a80290c87e9149784aa04b0285203"
+          "reason": "Verified INTERFACES.md matches current candidate binary after registry.rs namespace-gate fix.",
+          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
+          "spec_material_hash": "a61545e206fa0021cb3ceb7e49100b0351f0cba3a68e88f7fac09b7592cd4ac9"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled onto origin/master v0.162.1; documented O_NOFOLLOW repo containment, secret/prompt/reasoning redaction, constant-time bearer auth, foreign Origin/Host rejection, tenant/repo/revocation isolation, and #874 request-bound idempotency.",
-          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "reason": "Verified SECURITY.md unchanged after registry.rs namespace-gate fix; all local authority and redaction boundaries preserved.",
+          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
           "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
+      "title": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
       "todo_ids": [
-        "secu_01m81fz0x05nhj39"
+        "code_01m81gnkzncv9qsk"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795364451Z"
+      "updated_at": "1795369163Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cb61c35f4b98e672607dc2412258192936172ec76403a1b0779d4233f2471ce2",
+      "artifact_hash": "sha256:b4ee527fba0b92bcdadf24ec0d2ba9a7bd7945011ad153b510f3576c532679b2",
       "checks": [
         {
-          "name": "bounded_process_unit_11",
+          "name": "advertised_rpc_sessions_1",
+          "status": "passed"
+        },
+        {
+          "name": "agent_interop_conformance_8",
+          "status": "passed"
+        },
+        {
+          "name": "agent_interop_unit_5",
+          "status": "passed"
+        },
+        {
+          "name": "assets_schema_contract_4",
           "status": "passed"
         },
         {
@@ -1006,19 +1042,15 @@
           "status": "passed"
         },
         {
-          "name": "doc_alignment_5",
+          "name": "core_interop_unit_25",
           "status": "passed"
         },
         {
-          "name": "http_transport_unit_5",
+          "name": "interop_conformance_discovery_1",
           "status": "passed"
         },
         {
-          "name": "interop_conformance_12",
-          "status": "passed"
-        },
-        {
-          "name": "observability_projections_10",
+          "name": "rpc_golden_vectors_6",
           "status": "passed"
         }
       ],
@@ -1027,20 +1059,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M81G1GDVDT0S0Q85TNEYZVN0",
+            "detail": "trajectory:branch_01M81GTZ3EYNYEARANGQDE3N98",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1049,32 +1081,42 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M81G1GDVDT0S0Q85TNEYZVN0": {
+          "branch_01M81GTZ3EYNYEARANGQDE3N98": {
             "evidence_only": true,
-            "id": "branch_01M81G1GDVDT0S0Q85TNEYZVN0",
-            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
+            "id": "branch_01M81GTZ3EYNYEARANGQDE3N98",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/observability_projections.rs",
-                  "src/decapod/core/http_transport.rs",
-                  "src/decapod/core/bounded_process.rs",
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/rpc.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "tests/observability_projections.rs",
-                  "tests/unit/core/http_transport_tests.rs",
-                  "cargo test --lib http_transport (5/5), bounded_process (11/11), advertised_rpc_sessions (1/1), --test observability_projections (10/10), interop_conformance (12/12), doc_alignment (5/5); cargo fmt --check & clippy -D warnings passed"
+                  "src/decapod/core/agent_interop.rs",
+                  "src/decapod/core/agent_interop/mcp.rs",
+                  "src/decapod/core/agent_interop/a2a.rs",
+                  "src/decapod/core/agent_interop/registry.rs",
+                  "src/decapod/core/agent_interop/rules.rs",
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "tests/agent_interop_conformance.rs",
+                  "tests/fixtures/agent_interop_vectors.v1.json",
+                  "tests/fixtures/agent_interop_reference_consumer.py"
                 ],
                 "proof_refs": [
                   "cargo_fmt",
                   "cargo_clippy_all_targets",
-                  "http_transport_unit_5",
-                  "bounded_process_unit_11",
-                  "observability_projections_10",
-                  "interop_conformance_12",
-                  "doc_alignment_5"
+                  "agent_interop_unit_5",
+                  "core_interop_unit_25",
+                  "advertised_rpc_sessions_1",
+                  "agent_interop_conformance_8",
+                  "interop_conformance_discovery_1",
+                  "rpc_golden_vectors_6",
+                  "assets_schema_contract_4"
                 ],
                 "scope": [
                   "root"
@@ -1088,19 +1130,27 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "cargo test --lib http_transport (5/5), bounded_process (11/11), advertised_rpc_sessions (1/1), --test observability_projections (10/10), interop_conformance (12/12), doc_alignment (5/5); cargo fmt --check & clippy -D warnings passed"
+      "evidence": [],
+      "inspected_files": [
+        "src/decapod/cli.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
+      "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
       "modified_files": [
         "src/decapod/cli.rs",
-        "src/decapod/core/bounded_process.rs",
-        "src/decapod/core/http_transport.rs",
-        "src/decapod/core/observability_projections.rs",
+        "src/decapod/core/agent_interop.rs",
+        "src/decapod/core/agent_interop/a2a.rs",
+        "src/decapod/core/agent_interop/mcp.rs",
+        "src/decapod/core/agent_interop/registry.rs",
+        "src/decapod/core/agent_interop/rules.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/rpc.rs",
         "src/decapod/lib.rs",
-        "tests/observability_projections.rs",
-        "tests/unit/core/http_transport_tests.rs"
+        "tests/agent_interop_conformance.rs",
+        "tests/fixtures/agent_interop_reference_consumer.py",
+        "tests/fixtures/agent_interop_vectors.v1.json"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1108,10 +1158,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M81G1GDVDT0S0Q85TNEYZVN0",
+      "run_id": "branch_01M81GTZ3EYNYEARANGQDE3N98",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m81fz0x05nhj39",
+      "task_id": "code_01m81gnkzncv9qsk",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

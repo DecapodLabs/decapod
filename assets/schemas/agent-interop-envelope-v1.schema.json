@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapodlabs.ai/schemas/agent-interop-envelope-v1.schema.json",
+  "title": "Decapod Agent Governance Envelope v1",
+  "description": "Transport-neutral, four-plane governance envelope for interoperable agent evidence exchange (#870/#1733). Conformance never grants local mutation, completion, or publication authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile_id",
+    "profile_version",
+    "plane_versions",
+    "intent",
+    "authority",
+    "evidence",
+    "outcome",
+    "envelope_sha256"
+  ],
+  "properties": {
+    "profile_id": {
+      "const": "decapod.governance-envelope"
+    },
+    "profile_version": {
+      "const": "v1"
+    },
+    "plane_versions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent", "authority", "evidence", "outcome"],
+      "properties": {
+        "intent": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "authority": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "evidence": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+        "outcome": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository_id",
+        "tenant_id",
+        "task_id",
+        "run_id",
+        "op_id",
+        "actor_id",
+        "recipient_id",
+        "replay_domain",
+        "lease_generation",
+        "original_human_request_sha256",
+        "agent_interpretation_summary",
+        "human_request_independently_observed"
+      ],
+      "properties": {
+        "repository_id": { "type": "string", "minLength": 1 },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "run_id": { "type": "string", "minLength": 1 },
+        "op_id": { "type": "string", "minLength": 1 },
+        "actor_id": { "type": "string", "minLength": 1 },
+        "recipient_id": { "type": "string", "minLength": 1 },
+        "replay_domain": { "type": "string", "minLength": 1 },
+        "lease_generation": { "type": "integer", "minimum": 0 },
+        "original_human_request_sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+        "agent_interpretation_summary": { "type": "string" },
+        "human_request_independently_observed": { "type": "boolean" }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested_operation",
+        "actual_parameters_canonical",
+        "authenticated_human_approval",
+        "plan_approved_by_agent",
+        "issued_at_epoch",
+        "expires_at_epoch"
+      ],
+      "properties": {
+        "requested_operation": { "type": "string", "minLength": 1 },
+        "actual_parameters_canonical": { "type": "string" },
+        "claimed_approved_operation": { "type": ["string", "null"] },
+        "claimed_approved_parameters_canonical": { "type": ["string", "null"] },
+        "authenticated_human_approval": { "type": "boolean" },
+        "plan_approved_by_agent": { "type": "boolean" },
+        "issued_at_epoch": { "type": "integer", "minimum": 0 },
+        "expires_at_epoch": { "type": "integer", "minimum": 0 },
+        "delegation": { "type": ["object", "null"] },
+        "mandatory_extensions": { "type": "array", "items": { "type": "string" } },
+        "optional_extensions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer_id",
+        "producer_trust_class",
+        "source_tree_sha",
+        "head_commit_sha",
+        "base_commit_sha",
+        "proof_plan_epoch",
+        "independent_effect_observed"
+      ],
+      "properties": {
+        "producer_id": { "type": "string", "minLength": 1 },
+        "producer_trust_class": {
+          "type": "string",
+          "enum": ["independent_executor", "trusted_ci", "self_declared", "untrusted"]
+        },
+        "source_tree_sha": { "type": "string", "minLength": 1 },
+        "head_commit_sha": { "type": "string", "minLength": 1 },
+        "base_commit_sha": { "type": "string", "minLength": 1 },
+        "proof_plan_epoch": { "type": "integer", "minimum": 0 },
+        "claimed_receipt_digests": { "type": "array", "items": { "type": "string" } },
+        "raw_receipts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["receipt_id", "claimed_sha256", "raw_bytes_utf8"],
+            "properties": {
+              "receipt_id": { "type": "string" },
+              "claimed_sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" },
+              "raw_bytes_utf8": { "type": "string" }
+            }
+          }
+        },
+        "self_generated_checksum_only": { "type": "boolean" },
+        "newer_suite_failed": { "type": "boolean" },
+        "environment_tamper_signals": { "type": "array", "items": { "type": "string" } },
+        "history_events": { "type": "array" },
+        "expected_terminal_seq": { "type": ["integer", "null"] },
+        "independent_effect_observed": { "type": "boolean" }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "claim_kind",
+        "declared_status",
+        "observed_status",
+        "process_path_authorized",
+        "behavioral_passed"
+      ],
+      "properties": {
+        "claim_kind": {
+          "type": "string",
+          "enum": ["attempt", "effect", "precommit_containment", "goal_completion"]
+        },
+        "declared_status": { "type": "string" },
+        "observed_status": { "type": "string" },
+        "observed_assertions": { "type": ["integer", "null"], "minimum": 0 },
+        "observed_http_status": { "type": ["integer", "null"], "minimum": 100, "maximum": 599 },
+        "process_path_authorized": { "type": "boolean" },
+        "behavioral_passed": { "type": "boolean" },
+        "target_uri_or_path": { "type": ["string", "null"] }
+      }
+    },
+    "envelope_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

@@ -1,5 +1,18 @@
 # Architecture
 
+## Modular agent interoperability engine (`src/decapod/core/agent_interop.rs`, #870–#878, #1715–#1718, #1724, #1725, #1733, #1735)
+
+- **Four-plane envelope, replay/authority isolation, drift & observed receipts (`src/decapod/core/agent_interop.rs`)**:
+  - `GovernanceEnvelopeV1` (`PlaneVersions`, `IntentPlane`, `AuthorityPlane`, `EvidencePlane`, `OutcomePlane`) is evaluated by `import_external_envelope` against `LocalTrustPolicy` and `ReplayLedger`, enforcing major plane version checks, unknown mandatory extension refusal, safe sorted omission of unknown optional extensions, envelope SHA-256 verification, URL/path ambiguity rejection, cross-repo/tenant/recipient isolation, replay/retired-run protection, raw receipt byte verification (rejecting summary fiction and mutated bytes), producer trust checks, freshness (head/base/tree/epoch/lease/expiry/newer failure), delegation narrowing, exact approval parameter binding, environment-tamper & contiguous history checks, and process-vs-outcome separation. `imported_authority_granted` is unconditionally `false`.
+  - `project_decision_disposition` provides a read-only projection onto `DecisionDisposition::{Admit, RepairRequired, AuthorityRequired, Reject}` while preserving `EvaluationTransportState::{Invalid, Unknown, Unavailable}` distinct from admission and refusing scope-widening repairs.
+  - `check_dispatcher_authorization_drift` audits `interop::builtin_manifest()` against `interop::RPC_OPS`, actual `rpc_op_bypasses_session` entry guards, and read-only profile allowlists in both directions. `project_manifest_with_receipt` binds `ObservedConformanceReceipt` to binary SHA, source commit, schema/profile version, transport, producer trust class, raw evidence digests, and TTL before promoting capabilities from `NotRun` to `Verified`/`Failed` (or `Stale` on mismatch/expiry).
+- **Bounded transport adapters (`src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/agent_interop/a2a.rs`)**:
+  - `mcp::McpServer` runs a finite stdio JSON-RPC 2.0 loop (`serve_stdio`) supporting JSONL and `Content-Length` framing, unique-key JSON parsing (`core::json::unique_value`), strict frame/response byte caps, MCP protocol version negotiation (`2025-03-26`, `2024-11-05`), secret/rubric/traversal denial on `resources/read`, read-only vs session/worktree-gated `tools/call`, and conflict-safe host config merge/removal (`generate_mcp_host_config`, `merge_mcp_host_config`, `remove_mcp_host_config`).
+  - `a2a::{builtin_agent_card, validate_a2a_handoff}` advertises only executable local governance skills with explicit `A2aConformanceLayers` separation and validates `A2aHandoffEnvelope` against `LocalHandoffContext` without importing remote authority.
+- **Offline registry, skill compiler, manifest compiler, composition, rule evaluator & overlap classifier (`src/decapod/core/agent_interop/registry.rs`, `src/decapod/core/agent_interop/rules.rs`)**:
+  - `registry::CapabilityRegistry` validates SPDX licenses, verified provenance, SHA-256 content digests, prompt-injection cleanliness (`scan_markdown_for_injection`), and acyclic dependency/conflict graphs offline. `select_skills_and_compile_bundle` enforces relevance thresholds, conflict precedence, and `token_budget`, paired with `evaluate_skill_ab_fixture`. `compile_harness_manifests` runs `detect_contract_policy_conflicts` before emitting reproducible entrypoints and `SourceMapEntry` records. `compose_fragments` enforces `PrecedenceTier` ordering, blocks invisible bidi/zero-width and injection patterns, and requires human review on authority/tool expansion. `harness_compatibility_matrix` and `generate_harness_package` cover all 6 harnesses honestly with `live_host_verified: false`.
+  - `rules::coding_rule_taxonomy_matrix` covers all 8 required domains plus documented rejected proposals with zero third-party product names. `evaluate_rule_applicability` enforces `RuleArtifactKind::CanonicalSource`, `RuleAuthorityTier` precedence, policy immutability, expiry, injection/escalation rejection, and honest `no_rule_justified` empty selection. `classify_task_overlap` and `evaluate_combined_integration` implement all 6 semantic overlap states and deny publication when a clean textual merge fails combined integration proof.
+
 ## Read-only observability projections and hardened HTTP transport (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)
 
 - **Observability projection core (`src/decapod/core/observability_projections.rs` and submodules)**:
@@ -1355,8 +1368,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (276 files), `tests/` (278 files)
+- Repository signal fingerprint: `a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (281 files), `tests/` (280 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -4,6 +4,7 @@
 //! and shared primitives live here.
 
 pub mod agent_eval;
+pub mod agent_interop;
 pub mod analyze;
 pub mod ansi;
 pub mod artifact_clarity;
