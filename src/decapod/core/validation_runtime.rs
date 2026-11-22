@@ -63,6 +63,8 @@ pub struct ProofConfiguration {
     pub ci_attested: Option<CiAttestedPolicy>,
     #[serde(default)]
     pub validation_buildkite_preflights: bool,
+    #[serde(default)]
+    pub validation_github_actions_preflights: bool,
     pub required_profile: Option<ProfileDeclaration>,
     #[serde(default)]
     pub commands: Vec<super::proof::ProofDef>,
@@ -71,6 +73,49 @@ pub struct ProofConfiguration {
     #[serde(default)]
     pub rust_workers: Option<rust_worker::Configuration>,
 }
+impl ProofConfiguration {
+    pub(crate) fn uses_remote_preflight(&self) -> bool {
+        self.validation_buildkite_preflights || self.validation_github_actions_preflights
+    }
+
+    fn verify_source_ci_authority(&self, accepted: &Self) -> io::Result<()> {
+        if self.validation_github_actions_preflights
+            != accepted.validation_github_actions_preflights
+        {
+            return Err(invalid(
+                "GITHUB_SOURCE_CI_POLICY_NOT_ACCEPTED: GitHub Actions preflight must be independently selected on the accepted target",
+            ));
+        }
+        if accepted
+            .required_profile
+            .as_ref()
+            .is_some_and(|policy| policy.id == profile::REQUIRED_PROFILE)
+            && self.validation_buildkite_preflights != accepted.validation_buildkite_preflights
+        {
+            return Err(invalid(
+                "SOURCE_CI_PROVIDER_NOT_ACCEPTED: preserve the accepted strict source-CI carrier",
+            ));
+        }
+        if self.validation_github_actions_preflights
+            && (self.validation_buildkite_preflights
+                || accepted.validation_buildkite_preflights
+                || self.ci_attested.is_some()
+                || accepted.ci_attested.is_some()
+                || [self, accepted].iter().any(|policy| {
+                    policy
+                        .required_profile
+                        .as_ref()
+                        .is_none_or(|p| p.id != profile::REQUIRED_PROFILE)
+                }))
+        {
+            return Err(invalid(
+                "GITHUB_SOURCE_CI_POLICY_UNSUPPORTED: GitHub Actions preflight requires the strict source-CI profile and cannot be combined with Buildkite",
+            ));
+        }
+        Ok(())
+    }
+}
+
 pub use snapshot::ci_attested::Policy as CiAttestedPolicy;
 /// Parse only the canonical tracked project field. No environment fallback,
 /// receipt-selected profile or auto-reconciliation is permitted.
@@ -694,6 +739,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             &["show", &format!("{base}:{CONFIG}")],
         )?)?
     };
+    configuration.verify_source_ci_authority(&accepted)?;
     rust_worker::preserve_accepted(
         configuration.rust_workers.as_ref(),
         accepted.rust_workers.as_ref(),
@@ -762,9 +808,9 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
         .map_err(io::Error::other)?;
     }
     let (executor, catalog, target_scope) = if repository_local {
-        if configuration.validation_buildkite_preflights {
+        if configuration.uses_remote_preflight() {
             return Err(invalid(
-                "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repository-local proof cannot select Buildkite or claim hosted CI execution",
+                "REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED: repository-local proof cannot select a remote preflight or claim hosted CI execution",
             ));
         }
         // A candidate cannot downgrade Decapod's accepted strict contract by
@@ -820,13 +866,23 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             options,
             budget,
             &base,
-            configuration.validation_buildkite_preflights,
+            configuration.uses_remote_preflight(),
         )?;
-        let catalog = profile::required_source_catalog_with_executor(
+        if configuration.validation_github_actions_preflights && executor.is_none() {
+            return Err(invalid(
+                "GITHUB_SOURCE_CI_EXECUTOR_UNAVAILABLE: the accepted target must provide the reviewed dual-root executor",
+            ));
+        }
+        let catalog = profile::required_source_catalog_for_provider(
             configuration.required_profile.as_ref(),
             &sources,
             &facts,
             executor.as_ref(),
+            if configuration.validation_github_actions_preflights {
+                evidence::Provider::GithubActions
+            } else {
+                evidence::Provider::Buildkite
+            },
         )
         .map_err(|error| io::Error::new(io::ErrorKind::InvalidData, error))?;
         executor_contract::verify_carrier_modes(options, budget, &head)?;
@@ -945,7 +1001,7 @@ fn bind_remote_toolchains(
     identity: &mut evidence::MaterialIdentity,
     selection: &ExecutionSelection,
 ) -> io::Result<()> {
-    if selection.policy.buildkite_preflights {
+    if selection.policy.uses_remote_preflight() {
         // Remote binding digests are frozen from independently authenticated,
         // policy-checked preparation before substantive execution is accepted.
         // The provider adapter verifies the same measured closure after checks.
@@ -1143,7 +1199,7 @@ fn run(
     // Missing local setup remains a post-proof abstention, not proof authority.
     let laya_installation = super::laya_readiness::capture_installation(&laya_config);
     if prerequisites == ProjectPrerequisites::ProviderRequired
-        && !project.configuration.validation_buildkite_preflights
+        && !project.configuration.uses_remote_preflight()
     {
         return Err(invalid("PROJECT_PREREQUISITES_PROVIDER_MISMATCH"));
     }
@@ -1211,11 +1267,9 @@ fn run(
         }
         Err(_) => return Err(invalid("empty adapter selection failure")),
     };
-    if selection.policy.buildkite_preflights
-        != project.configuration.validation_buildkite_preflights
-    {
+    if selection.policy.uses_remote_preflight() != project.configuration.uses_remote_preflight() {
         return Err(invalid(
-            "execution route differs from canonical proof.validation_buildkite_preflights",
+            "execution route differs from the accepted preflight policy",
         ));
     }
     let state = publication_state(options, &project, &selection, &mut budget)?;
@@ -1604,7 +1658,7 @@ fn run(
     let verdict_bytes = serde_json::to_vec_pretty(report).map_err(io::Error::other)?;
     // A receipt describes completed proof; it is never imported as authority.
     // Publish verdict and receipt together outside the frozen candidate.
-    if report.ready && !selection.policy.buildkite_preflights {
+    if report.ready && !selection.policy.uses_remote_preflight() {
         let mut receipt = serde_json::json!({
             "schema_version": "1.0.0",
             "kind": "native_readiness_receipt",
@@ -1724,7 +1778,7 @@ pub fn execute_native(
     evidence_directory: &Path,
     budget: &RuntimeBudget<'_>,
 ) -> io::Result<ExecutedSuite> {
-    if selection.policy.buildkite_preflights {
+    if selection.policy.uses_remote_preflight() {
         return Err(invalid("remote policy cannot use native-only execution"));
     }
     let limits = native_proof::snapshot::SnapshotLimits {
@@ -1865,7 +1919,7 @@ pub fn missing_adapters(project: &CurrentProject) -> Vec<Blocker> {
             InvocationRole::DerivedRelease => "wire real derivative generation, every configured target, package/archive/artifact verification and measured toolchains",
             InvocationRole::CandidateBuild => "build the current candidate and measure the produced executable/package bytes",
             InvocationRole::ProjectPrerequisites => "execute the reviewed source project-check instance; an outer/legacy receipt is not execution evidence",
-            _ if project.configuration.validation_buildkite_preflights => "authenticate this exact source-provider job/matrix and measure actual execution toolchain/log/artifact inputs",
+            _ if project.configuration.uses_remote_preflight() => "authenticate this exact source-provider job/matrix and measure actual execution toolchain/log/artifact inputs",
             _ => "supply the exact reviewed native equivalent, including required platform and complete measured toolchain closure",
         };
         Blocker::missing(obligation.key.clone(), detail)
@@ -2461,8 +2515,8 @@ impl Host for NativeHost<'_> {
         let mut slice_ids = BTreeSet::new();
         let mut measured_closures = BTreeMap::<String, String>::new();
         for obligation in project.catalog.obligations() {
-            if project.configuration.validation_buildkite_preflights {
-                blockers.push(Blocker::missing(obligation.key.clone(), "SNAPSHOT_HOST_REQUIRED: use the authenticated Buildkite current-workbranch host; CLI credentials are not account-rights discovery"));
+            if project.configuration.uses_remote_preflight() {
+                blockers.push(Blocker::missing(obligation.key.clone(), "SNAPSHOT_HOST_REQUIRED: use the independently configured current-workbranch host; CLI credentials are not account-rights discovery"));
                 continue;
             }
             let id = if obligation.role == InvocationRole::CandidateBuild {
@@ -2546,6 +2600,7 @@ impl Host for NativeHost<'_> {
             return Ok(ExecutionSelection {
                 policy: ExecutionPolicy {
                     buildkite_preflights: false,
+                    github_actions_preflights: false,
                     executors,
                 },
                 bindings,

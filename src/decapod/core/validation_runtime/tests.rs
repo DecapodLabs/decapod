@@ -484,6 +484,12 @@ fn accepted_executor_rejects_unknown_workflow_provider_action_and_script() {
 fn native_validation_does_not_silently_use_remote_accepted_executor() {
     let fixture = accepted_executor_fixture();
     change_candidate_helpers(&fixture, false);
+    assert_admission_blocked(&fixture, false, "SOURCE_CI_PROVIDER_NOT_ACCEPTED");
+
+    let fixture = accepted_executor_fixture();
+    review_and_commit(&fixture, false, "independently accepted native carrier");
+    accept_current_base(&fixture);
+    change_candidate_helpers(&fixture, false);
     assert_admission_blocked(&fixture, false, "CONTROLLER_CONTRACT_UNSUPPORTED");
 }
 
@@ -2301,4 +2307,52 @@ fn native_completion_publishes_both_files_together_and_preserves_existing_bundle
         fs::read(completed.join("native-readiness-receipt.json")).unwrap(),
         receipt
     );
+}
+
+#[test]
+fn github_source_ci_requires_an_independent_strict_policy() {
+    let strict = ProfileDeclaration {
+        id: profile::REQUIRED_PROFILE.into(),
+        reviewed_sources_digest: hash(b"reviewed source"),
+    };
+    let native = ProofConfiguration {
+        required_profile: Some(strict),
+        ..ProofConfiguration::default()
+    };
+    let buildkite = ProofConfiguration {
+        validation_buildkite_preflights: true,
+        ..native.clone()
+    };
+    let github = ProofConfiguration {
+        validation_github_actions_preflights: true,
+        ..native.clone()
+    };
+    assert!(github.verify_source_ci_authority(&github).is_ok());
+    for accepted in [&native, &buildkite] {
+        let error = github.verify_source_ci_authority(accepted).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("GITHUB_SOURCE_CI_POLICY_NOT_ACCEPTED")
+        );
+    }
+    assert!(native.verify_source_ci_authority(&github).is_err());
+    assert!(native.verify_source_ci_authority(&buildkite).is_err());
+    for invalid in [
+        ProofConfiguration {
+            validation_buildkite_preflights: true,
+            ..github.clone()
+        },
+        ProofConfiguration {
+            required_profile: None,
+            ..github.clone()
+        },
+    ] {
+        let error = invalid.verify_source_ci_authority(&invalid).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("GITHUB_SOURCE_CI_POLICY_UNSUPPORTED")
+        );
+    }
 }

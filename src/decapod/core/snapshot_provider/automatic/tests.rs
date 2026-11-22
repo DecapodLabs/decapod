@@ -559,6 +559,37 @@ fn buildkite_only_barrier_uses_no_actions_and_rechecks_native_build_identity() {
     );
 }
 #[test]
+fn github_source_ci_barrier_rechecks_attempt_without_buildkite_reads() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = Gh::default();
+    let mut bk = Bk::default();
+    let mut plan = plan();
+    plan.buildkite_pipelines.clear();
+    let terminal = wait_for_source_runs(
+        &mut gh,
+        &mut bk,
+        &snapshot(),
+        &plan,
+        Duration::from_secs(1),
+        &b,
+    )
+    .unwrap();
+    assert_eq!(terminal.github.len(), plan.github_workflows.len());
+    assert!(terminal.buildkite.is_empty());
+    terminal
+        .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+        .unwrap();
+    gh.attempt = 2;
+    assert!(
+        terminal
+            .recheck(&mut gh, &mut bk, &snapshot(), &plan, &b)
+            .is_err()
+    );
+    assert_eq!(bk.calls, 0);
+}
+
+#[test]
 fn empty_provider_plan_is_rejected_without_external_reads() {
     let c = Cancellation::default();
     let b = budget(&c);

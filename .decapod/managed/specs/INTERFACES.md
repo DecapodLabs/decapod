@@ -1421,9 +1421,22 @@ Repeating validation with that controller, changing the declaration or building
 manually cannot repair this incompatibility. The current runtime does not
 bootstrap a replacement controller or accept a candidate's own readiness claim.
 
-`proof.validation_buildkite_preflights=false` selects native execution; `true`
-selects the optional Buildkite adapter for the same required profile. Unknown
-profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
+Without either remote preflight flag, strict source preflight selects native
+execution (`ProjectProofConfig::uses_remote_preflight() == false`).
+`proof.validation_buildkite_preflights=true` selects Buildkite, and
+`proof.validation_github_actions_preflights=true` selects authenticated GitHub
+Actions execution when that strict carrier is independently accepted on the
+target (`ProofConfiguration::verify_source_ci_authority`). Setting both remote
+flags together, combining GitHub Actions preflight with `ci_attested` or
+`repo.pr-readiness.v1`, missing accepted dual-root support
+(`GITHUB_SOURCE_CI_EXECUTOR_UNAVAILABLE`), or candidate-selected carrier drift
+(`GITHUB_SOURCE_CI_POLICY_NOT_ACCEPTED`, `SOURCE_CI_PROVIDER_NOT_ACCEPTED`) fails
+closed. GitHub Actions collection uses configured official GitHub access and
+binds workflow path, logical job, matrix, run, attempt, and archive identity
+before admitting measured execution; `init_reconciliation::inspect` and
+`intent_reconcile::selected::admission` treat both remote flags uniformly via
+`uses_remote_preflight()`. Unknown profiles, unavailable adapters, and unreconciled
+source contracts fail explicitly.
 The remote route pushes or reuses the exact existing workspace branch, executes
 its project checks remotely, and verifies authenticated build, attempt, artifact,
 and final source/target identities. It does not run duplicate local prerequisites,
@@ -1601,7 +1614,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Repository signal fingerprint: `b9fdf78ee583a46b743beae555c55bcc4b17247ef425e4ba6ef1044c1c030682`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

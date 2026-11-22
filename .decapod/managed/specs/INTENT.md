@@ -764,7 +764,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
+- Repository signal fingerprint: `b9fdf78ee583a46b743beae555c55bcc4b17247ef425e4ba6ef1044c1c030682`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1262,6 +1262,10 @@ with the existing governed operations.
 ## Recorded instructions and independently accepted requirements
 
 Keep the original request and ordered clarification history available across a cold handoff. A recorded revision identifies its observed or declared source. A provider account observation supports provenance without authenticating human approval. Pending decisions remain visible after reinitializing the same plan. Resolving a decision requires a fresh plan acceptance before the existing execution evidence can be used.
+
+## Independently accepted GitHub Actions preflight (#1890)
+
+A strict `decapod.pr-readiness.v1` source publication can use GitHub Actions (`[proof].validation_github_actions_preflights = true`) only when the accepted target independently selects that carrier and retains the reviewed dual-root executor. The carrier enforces the same complete finite source-CI and candidate-build graph (`readiness_profile::required_source_catalog_for_provider` with `evidence::Provider::GithubActions`) and source/target freshness checks, while CI-local `validate` remains diagnostic (`scope=ci_local`, `publication_ready=false`). Candidate configuration changes cannot opt a branch into a different strict source-CI carrier (`GITHUB_SOURCE_CI_POLICY_NOT_ACCEPTED`, `SOURCE_CI_PROVIDER_NOT_ACCEPTED`); live strict-carrier activation awaits separate maintainer target-policy acceptance.
 
 ## Version-only release proof
 
