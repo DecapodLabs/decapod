@@ -895,6 +895,11 @@
       "id": "chk-gov-ledger-merge-01621",
       "summary": "Reconciled PR #1919 onto origin/master v0.162.1 (e3948d62f), synced docs/agent via worktree binary, updated 0.162.1 entrypoints & Dockerfile, refreshed specs, and passed fmt/clippy/tests.",
       "input_digest": "sha256:dfdfecf187508701423167271a1ecd5d2ea0b863570d90390912e7a3870c1f11"
+    },
+    {
+      "id": "chk-gov-ledger-manifest-1691",
+      "summary": "Refreshed .decapod/managed/specs/.manifest.json with worktree candidate binary so #1691 entrypoint template_hash matches content_hash and fingerprints.",
+      "input_digest": "sha256:7ffd551c823fdd05133cd7d5716a2cfa7cc479b141105f26ded62109c1114502"
     }
   ],
   "intents": {
@@ -938,21 +943,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master (v0.162.1, PR #1917 + #1918) preserving both sides' architecture sections plus Shard 5 #1691/#1468/#1569/#1093/obligation_ledger/artifact_clarity/formal_obligations.",
+          "reason": "Refreshed .decapod/managed/specs/.manifest.json entrypoint template_hash and fingerprints using worktree candidate binary for #1691.",
           "reviewed_code_fingerprint": "1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f",
           "spec_material_hash": "12e1c85a281d342b5c744af1d33967bc8d130a7c28e535d6c3c01eca63a16183"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master (v0.162.1, PR #1917 + #1918) preserving both sides' CLI/RPC contracts plus decapod validate --clarity --profile and [governance].main_merge.",
+          "reason": "Refreshed .decapod/managed/specs/.manifest.json entrypoint template_hash and fingerprints using worktree candidate binary for #1691.",
           "reviewed_code_fingerprint": "1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f",
           "spec_material_hash": "b1b892a2b5eef8efdece0f6e771bd9c360a389c52bc37c09993c04ba2cbc416e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Merged origin/master (v0.162.1) preserving security boundaries plus #1468 fail-closed main_merge, #1569 offline historical exceptions (history_proven=false), and #1907 pinned formal-checker attestation.",
+          "reason": "Refreshed .decapod/managed/specs/.manifest.json entrypoint template_hash and fingerprints using worktree candidate binary for #1691.",
           "reviewed_code_fingerprint": "1337f9940f4bd532f245b25db735a656ff0d5d6fedc609ece4d7f7ca67a2385f",
           "spec_material_hash": "94cea1a8cb792f6240b7a1f4f71bb3e578aa4f9385c49730e5b5bb0b04c2dbd5"
         }
@@ -965,7 +970,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795359382Z"
+      "updated_at": "1795359742Z"
     },
     "trajectory": {
       "active_boundaries": [
