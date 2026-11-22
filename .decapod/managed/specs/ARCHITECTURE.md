@@ -1,5 +1,14 @@
 # Architecture
 
+## Portable policy-transition carriers and unified target-map checks (#1833, #1832)
+
+- **Portable approval verification (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**:
+  `transition_approval::{ApprovalInput, verify_signed, verify_cloud, approve_cloud, cloud_backend, git_object}` provides independent transition carriers under `repository_profile::verify_accepted_transition`. `verify_signed` reads `.decapod/repository-policy-signers.json` exclusively from the accepted base Git commit (`{base}:.decapod/repository-policy-signers.json`) and verifies an Ed25519 signature (`ring::signature::ED25519`) over `["decapod.repository-policy-approval.v1", key_id, transition_id, issued_at, expires_at]` within a 24-hour maximum lifetime (`MAX_APPROVAL_SECONDS = 86_400`). Under Cloud backends (`supabase-cloud`), `cloud::approve` and `cloud::verify` call `propodus_governance_v1` (`authorize_exception` / `verify_decision`) via `cloud_client::connect_control` and `repo_identity::resolve_repository_identity`, checking `project_id`, `decision_id`, `capability = "governance.exception.authorize"`, `obligation_id`, `base_commit`, `candidate_commit`, `affected_commit`, `tree_oid`, `current_generation_matches`, `authority_basis`, and expiration timestamps. Local checkouts continue reading the canonical main `.decapod/data` ledger while `has_active_policy_transition_approval` rejects any tracked `.decapod/data` (`POLICY_STORE_UNSAFE`).
+- **CI base/candidate enforcement (`src/decapod/core/validation_rules.rs`, `src/decapod/core/validation_runtime.rs`, `src/decapod/core/workspace.rs`, `src/decapod/plugins/policy.rs`, `src/decapod/lib.rs`)**:
+  `evaluate_policy_transition_with_approval` resolves the CI base ref strictly from provider metadata (`GITHUB_BASE_REF`, `BUILDKITE_PULL_REQUEST_BASE_BRANCH`) or remote-tracking `origin/HEAD` / unambiguous `origin/{main,master}`, verifies that working-tree `.decapod/config.toml` matches committed `{head}:.decapod/config.toml` when `is_ci` holds, and shares `ApprovalInput::from_environment` across `validation_rules`, `validation_runtime::load_project`, and `workspace::canonical_local_readiness_repository`. `lib.rs::run_govern_command` routes `GovernCommand::Policy` to `policy::run_policy_cli_in_workspace` to handle Cloud `repo.pr-readiness.v1` approvals.
+- **Target-map transitions & scoped-proof diagnostics (`src/decapod/core/repository_profile.rs`, `src/decapod/core/validation_history.rs`, `src/decapod/plugins/verify.rs`, `src/decapod/lib.rs`)**:
+  `repository_profile::preserve_accepted` enforces `accepted.targets == candidate.targets` (requiring exact transition approval for target additions, removals, or edits) and consolidates platform-key validation around canonical helpers. `validation_history::{FullHistoryLookup, current_target_only_diagnostic}` preserves target-scoped completion evidence isolation and feeds `TARGET_SCOPED_PROOF_REJECTED` diagnostics into `lib.rs::enforce_workbranch_readiness_before_push` and `verify::run_validate_and_hash_detailed`.
+
 ## Cloud Wave 2 control-plane, keystore custody, and Cloud workspace runtime (#1836, #1835, #1886)
 
 - **Quota/cap taxonomy, spend inspection & metadata warnings (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_todo_operation.rs`, `src/decapod/core/propodus.rs`)**:
@@ -1265,8 +1274,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
+- Repository signal fingerprint: `40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

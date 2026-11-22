@@ -1,5 +1,13 @@
 # Intent
 
+## Portable repository policy transition approvals and deployment-target admission (#1833, #1832)
+
+Extends `repo.pr-readiness.v1` governed policy transitions so reviewed source-inventory and command-contract upgrades verify across local checkouts, fresh CI clones (`ci_local`), and Decapod Cloud (`dactyl-db`), while closing target-map self-authorization and incomplete target-proof diagnostics:
+
+- **Portable CI & Cloud transition custody (#1833)**: Keeps `.decapod/data/policy.db` gitignored while admitting exact `(accepted_base_sha, candidate_head_sha, accepted_sources_digest, candidate_sources_digest, accepted_commands_digest, candidate_commands_digest)` transitions through either (1) maintainer Ed25519 signatures (`DECAPOD_REPO_TRANSITION_APPROVAL`) verified exclusively against `.decapod/repository-policy-signers.json` committed on the accepted base commit, or (2) authenticated Cloud `propodus_governance_v1` decisions (`DECAPOD_REPO_TRANSITION_DECISION_ID`) bound to the routed project, current authority generation, base/candidate commits, and exact candidate tree. Also enables toolchain upgrades that change source-inventory digests on unchanged files to be cleanly reviewed and approved across local and `ci_local` verification without permitting candidate-committed files to self-authorize.
+- **Unified deployment-target & platform transitions (#1832)**: Consolidates platform-key validation helpers, requires an exact `repo.pr-readiness.v1` policy transition approval for any change to `RepositoryContract.targets` (including additions and `shared_inputs` edits), and emits `TARGET_SCOPED_PROOF_REJECTED` with unscoped `decapod validate` guidance when `workspace publish` or `qa verify` finds only target-scoped proof for `HEAD`.
+- **v0.160.0 source inventory alignment**: Reconciles `.decapod/config.toml` `[proof.required_profile].reviewed_sources_digest` to `sha256:96d47fcfe781090fd7945ddb1e42a9b82ec8e7cf6498c2323d364d4a3c512975` for the `v0.160.0` `Cargo.toml`/`Cargo.lock` release metadata without relaxing `decapod.pr-readiness.v1` (`REQUIRED_PROFILE_DOWNGRADE` remains unconditionally blocked).
+
 ## Cloud Wave 2: quota/spend-cap visibility, cross-platform DPoP device custody, and SQLite-free Cloud workspaces (#1836, #1835, #1886)
 
 Completes Decapod Cloud operational parity across error taxonomy, device lifecycle,
@@ -764,8 +772,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
+- Repository signal fingerprint: `40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
