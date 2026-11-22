@@ -15,6 +15,7 @@ pub mod broker;
 pub mod capabilities;
 pub mod capability_contract;
 pub mod capsule_policy;
+pub mod cloud_admin;
 pub mod cloud_backend;
 pub mod cloud_client;
 pub mod cloud_dpop;

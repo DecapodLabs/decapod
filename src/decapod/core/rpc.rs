@@ -746,6 +746,80 @@ pub struct StateDiffResult {
     pub diff: serde_json::Value,
 }
 
+fn default_list_operation() -> String {
+    "list".to_string()
+}
+
+// Cloud Admin Subsystem
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudOrgsParams {
+    #[serde(default)]
+    pub project_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudMembersParams {
+    #[serde(default = "default_list_operation")]
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub project_id: Option<String>,
+    #[serde(default)]
+    pub slot: Option<u32>,
+    #[serde(default)]
+    pub member_account_id: Option<String>,
+    #[serde(default)]
+    pub expected_revision: Option<u64>,
+    #[serde(default)]
+    pub project_name: Option<String>,
+    #[serde(default)]
+    pub after: Option<u32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudInvitesParams {
+    #[serde(default = "default_list_operation")]
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub recipient_account_id: Option<String>,
+    #[serde(default)]
+    pub invitation_id: Option<String>,
+    #[serde(default)]
+    pub invitation_secret: Option<crate::core::cloud_admin::RedactedSecret>,
+    #[serde(default)]
+    pub after: Option<u32>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudIdentityParams {
+    pub operation: String,
+    #[serde(default)]
+    pub provider: Option<crate::core::cloud_admin::CloudIdentityProvider>,
+    #[serde(default)]
+    pub intent_id: Option<String>,
+    #[serde(default)]
+    pub stepup_secret: Option<crate::core::cloud_admin::RedactedSecret>,
+    #[serde(default)]
+    pub decision: Option<crate::core::cloud_admin::CloudQuarantineDecision>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudBillingParams {
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub project_id: Option<String>,
+}
+
 pub fn default_request_id() -> String {
     crate::core::ulid::new_ulid()
 }
@@ -1392,6 +1466,36 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "cloud.orgs".to_string(),
+                description: "List verified cloud organizations, org-admin roles vs paid repository seat access (#215), and paid repo counts".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "cloud.members".to_string(),
+                description: "Administer cloud organization members, seat assignments/revocations, ownership transfer, and project settings".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.invites".to_string(),
+                description: "List, create, cancel, and accept cloud organization workspace invitations with secret redaction".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.identity".to_string(),
+                description: "Prepare, confirm, resolve quarantine, and revoke OAuth identity provider links".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.billing".to_string(),
+                description: "Mint verified HTTPS billing portal URLs and inspect live usage and spend-cap warning state".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {
@@ -1488,6 +1592,11 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                     "projects".to_string(),
                     "project.use".to_string(),
                     "project.create".to_string(),
+                    "orgs".to_string(),
+                    "members".to_string(),
+                    "invites".to_string(),
+                    "identity".to_string(),
+                    "billing".to_string(),
                 ],
             },
             SubsystemInfo {

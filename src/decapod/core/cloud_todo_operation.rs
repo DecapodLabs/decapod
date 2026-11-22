@@ -246,6 +246,7 @@ pub fn failure_kind(error: &DecapodError) -> FailureKind {
             | CloudAuthStatus::RegistrationRequired
             | CloudAuthStatus::ProviderLinkStepupRequired
             | CloudAuthStatus::RestartRequired => FailureKind::Authentication,
+            CloudAuthStatus::OutcomeUnknown => FailureKind::Transport,
             CloudAuthStatus::Offline => FailureKind::Offline,
             CloudAuthStatus::ProviderUnavailable => FailureKind::Unavailable,
             _ => FailureKind::Authentication,

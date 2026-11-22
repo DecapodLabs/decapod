@@ -705,6 +705,9 @@ Live validation and readback remain owned by `workspace publish`."#
                 "constitution" => {
                     writeln!(file, "\n{}", constitution_overlay_command_contract())?;
                 }
+                "cloud" => {
+                    writeln!(file, "\n{}", cloud_admin_command_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -774,6 +777,15 @@ fn db_maintenance_command_contract() -> &'static str {
 - **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
 - **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
 - **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`)."#
+}
+
+fn cloud_admin_command_contract() -> &'static str {
+    r#"### Decapod Cloud Onboarding & Administration (`decapod cloud ...` / `cloud.*` RPC)
+
+- **Control-plane surface:** `decapod cloud {orgs,members,invites,identity,billing}` and matching JSON RPC ops (`cloud.orgs`, `cloud.members`, `cloud.invites`, `cloud.identity`, `cloud.billing`) route strictly through Dactyl `AccountOperation::{Register, Status, Manage, Portal}` without touching or creating `.decapod/data/decapod.db` or `todo.db`.
+- **Orthogonal roles & zero-seat invites (#215):** `orgs` explicitly surfaces `admin` vs `paid_repo_seat_assigned` and `paid_repo_count`; `invites create` / `accept` state explicitly that workspace membership grants zero paid repository seats until an admin assigns a seat via `cloud members assign`.
+- **Secret handling:** `invites accept --secret-stdin` and `identity confirm-link --secret-stdin` read secrets strictly from stdin (zero secret CLI flags); RPC secret operations reject `--params` argv secrets and require `decapod rpc --stdin`. All secrets and URL fragments are redacted from `Debug`, stderr, error diagnostics, and RPC receipts.
+- **URL, AAL2 MFA & post-send semantics:** `billing portal` strictly enforces an `https://` origin with zero embedded userinfo/fragments/credential query parameters; privileged mutations propagate typed `mfa_step_up_required` (`MfaRequired`) and post-send `outcome_unknown` (`OutcomeUnknown`, never blindly replayed) diagnostics, plus `billing limits` / `status --live` `spend_cap_warning` (including `overage_cap_exhausted`)."#
 }
 
 fn broker_audit_command_contract() -> &'static str {

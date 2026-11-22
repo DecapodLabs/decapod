@@ -1518,3 +1518,57 @@ approval_categories = ["destructive_operations"]
         }
     }
 }
+
+#[test]
+fn cloud_admin_help_secrets_and_rpc_capabilities_stay_in_sync() {
+    let cloud_help = run_decapod(&["cloud", "--help"]);
+    for sub in ["orgs", "members", "invites", "identity", "billing"] {
+        let re = Regex::new(&format!(r"(?m)^\s+{}\s+", regex::escape(sub))).unwrap();
+        assert!(re.is_match(&cloud_help), "cloud --help missing `{sub}`");
+    }
+
+    let members_help = run_decapod(&["cloud", "members", "--help"]);
+    for sub in [
+        "list",
+        "assign",
+        "revoke-seat",
+        "revoke-member",
+        "transfer-ownership",
+        "project-settings",
+    ] {
+        assert!(
+            members_help.contains(sub),
+            "cloud members --help missing `{sub}`"
+        );
+    }
+
+    let accept_help = run_decapod(&["cloud", "invites", "accept", "--help"]);
+    assert!(accept_help.contains("--secret-stdin"));
+    assert!(!accept_help.contains("--invitation-secret"));
+    assert!(!accept_help.contains("--secret "));
+
+    let confirm_help = run_decapod(&["cloud", "identity", "confirm-link", "--help"]);
+    assert!(confirm_help.contains("--secret-stdin"));
+    assert!(!confirm_help.contains("--stepup-secret"));
+    assert!(!confirm_help.contains("--secret "));
+
+    let billing_help = run_decapod(&["cloud", "billing", "--help"]);
+    assert!(billing_help.contains("portal"));
+    assert!(billing_help.contains("limits"));
+
+    let caps_out = run_decapod(&["capabilities", "--format", "json"]);
+    let caps: serde_json::Value = serde_json::from_str(&caps_out).unwrap();
+    let cloud_sub = caps["subsystems"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["name"] == "cloud")
+        .expect("cloud subsystem in capabilities");
+    let ops = cloud_sub["ops"].as_array().unwrap();
+    for expected in ["orgs", "members", "invites", "identity", "billing"] {
+        assert!(
+            ops.iter().any(|v| v == expected),
+            "cloud subsystem missing op `{expected}`"
+        );
+    }
+}

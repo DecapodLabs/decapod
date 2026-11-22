@@ -5,6 +5,25 @@
 - **Multi-org Cloud tenancy parity (`#1895`)**: `tests/cloud_tenancy_parity_1895.rs` verifies multi-organization switching, cross-tenant refusal, `#215` org-admin vs zero-paid-seat isolation on Repo 1B, concurrent CAS race exclusivity, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit/policy-bound evidence capture, mid-session seat revocation and network-cut fail-closed behavior with zero `.decapod/data/decapod.db` creation, independent observer state checks, and local SQLite equivalence on the supported operation subset (using a local 2-org/2-DB gateway simulation rather than live hosted Cloud infrastructure). Unit coverage in `src/decapod/core/cloud_parity_matrix.rs` asserts matrix schema invariants and Cloud refusal behavior (`CLOUD_LEASE_RENEW_UNSUPPORTED`).
 - **Organization constitution overlays (`#877`)**: Unit tests in `src/decapod/core/org_overlay.rs` and integration suite `tests/org_constitution_overlay_877.rs` verify all eight authority and integrity states (`base-only`, `organization-only`, `project-only`, `all-three`, `conflicting`, `stale`, `tampered`, `offline`), `ORG_OVERLAY_NON_OVERRIDABLE_CONFLICT`, `ORG_OVERLAY_EXTEND_ONLY_WEAKENING_REJECTED`, `ORG_OVERLAY_PRIVATE_LEAK_REJECTED`, Layer 4 non-authority, `interop.manifest` authority hierarchy export, and `validate_project_config_downgrade_check` / `validate_override_authority` (`ORG_OVERLAY_POLICY_DOWNGRADE`) enforcement inside `src/decapod/core/validate.rs`.
 
+## First-class `decapod cloud` admin CLI/RPC verification (#1896, #1836, #1835, #1877)
+
+Verified on `origin/master` (`a53f2eb7d`, `v0.161.0`) inside isolated worktree `agent/swarm-cloud-admin/feat_01m80wt1ty67gx2n-cloud-admin-cli`:
+
+- **Formatting, feature matrix, lints & documentation sync (`--locked`)**:
+  - `cargo fmt --all -- --check`: passed.
+  - `cargo check --no-default-features`: passed (0 warnings).
+  - `cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings; verified `DecapodError` stays within the `clippy::result_large_err` 128-byte ceiling via 1-byte `Option<CloudAuthErrorCode>`).
+  - `cargo run --locked --features supabase-cloud -- docs build`: synchronized `docs/agent/command-contracts.md` (`decapod cloud` contract section + `Operation: Cloud{Orgs,Members,Invites,Identity,Billing}`).
+- **Unit & integration suites (`--locked --features supabase-cloud`)**:
+  - `--lib cloud_`: `87 passed; 0 failed` (`1920 filtered out`), including `core::cloud_admin::tests::*` (secret redaction/zeroization, strict HTTPS portal URL validation, URL fragment masking, UUID/bounded-ID validation) and `core::cloud_client::cloud_admin_client_tests::*` (mutating vs read `outcome_unknown` separation, AAL2 `mfa_step_up_required` vs `admin_required`, admin diagnostic codes).
+  - `--lib advertised_rpc_sessions_match_the_actual_entry_guards` (`1/1`), `--lib core::interop` (`25/25`), and `--lib propodus` (`18/18`): passed.
+  - `--test cloud_admin_boundary`: `6 passed; 0 failed` (loopback HTTP E2E coverage across CLI and RPC `--op`/`--stdin` for `orgs` `#215` role/seat separation + header warnings, `members` slot-to-UUID resolution + pending-slot fail-closed + `assign`/`revoke-seat`/`transfer-ownership`/`project-settings`, `mfa_step_up_required` + single-send `outcome_unknown` non-retry, `invites` & `identity` `--secret-stdin` + argv secret rejection + zero-paid-seats notice + fragment redaction, strict `https://` billing portal validation, `overage_cap_exhausted` `spend_cap_warning`, and asserted `.decapod/data/decapod.db` / `todo.db` non-creation).
+  - `--test cli_contracts`: `134 passed; 0 failed; 1 ignored` (including `cloud_admin_help_secrets_and_rpc_capabilities_stay_in_sync`).
+  - Existing Cloud/interop regression suites: `cloud_supabase_boundary` (`52/52`), `cloud_cli_boundary` (`2/2`), `cloud_command_path` (`1/1`), `cloud_dactyl_boundary` (`1/1`), `cloud_todo_resume_wire` (`3/3`), `propodus_contract` (`6/6`), `release_dependency_policy` (`4/4`), `doc_alignment` (`5/5`), `interop_conformance` (`12/12`), `capability_contract_drift` (`3/3`), and `rpc_golden_vectors` (`6/6`).
+- **Observed host/pre-existing gaps**:
+  - Live hosted Propodus/Stripe end-to-end runs remain unexecuted locally (`supabase_service` hosted checks require live deployment credentials). Buildkite validation was waived by operator instruction; hosted GitHub Actions CI remains pending PR execution.
+  - Pre-existing unrelated checks on this checkout: `integration_sharding_policy` passed `22/23` (`relocated_gatling_shards_route_exact_filters_and_preserve_runfiles` failed on macOS `/var` -> `/private/var` temp symlink); legacy `cloud_backend_storage` (`DECAPOD_CLOUD_DATASTORE=neon`) failed `5/9` on pre-existing `provider_unavailable` vs `offline` and origin-error text assertions untouched by this PR.
+
 ## Effective operation grants and guidance hygiene verification (#1905, #1893)
 
 Verified on `origin/master` (`485a35148`, `v0.160.0` + PR `#1908` + PR `#1911` + PR `#1909` + PR `#1912`) inside isolated worktree `agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905`:
@@ -1660,8 +1679,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
+- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

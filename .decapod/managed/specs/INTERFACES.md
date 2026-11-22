@@ -5,6 +5,17 @@
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
 - **Constitution overlay CLI, RPC, and manifest (`#877`)**: Adds `decapod constitution get --resolved`, `decapod constitution search` provenance metadata, and `decapod constitution overlay {status|verify|import|clear}` (`src/decapod/core/constitution_cli.rs`, documented in `src/decapod/core/docs_cli.rs` and `docs/agent/command-contracts.md`). Adds read-only RPC `constitution.overlay.status` (`handle_constitution_overlay_status` in `src/decapod/lib.rs`, schema types `ConstitutionOverlayStatusParams`/`ConstitutionOverlayStatusResult` and extended `ContextResolveResult`/`ContextCapsule`/`ConstitutionGetParams`/`ConstitutionGetResult` in `src/decapod/core/rpc.rs`), plus `authority_hierarchy` (`AuthorityHierarchyEntry`) on `InteropManifest` in `src/decapod/core/interop.rs`.
 
+## First-class `decapod cloud` CLI & JSON RPC admin contracts (#1896, #1836, #1835, #1877)
+
+- **CLI subcommands (`src/decapod/cli.rs::CloudCommand`, `src/decapod/lib.rs::run_cloud_command`)**:
+  - `decapod cloud orgs [--project-id <id>]`: outputs `decapod.cloud.orgs.v1` with `organization_id`, `cloud_org_id`, `slug`/`display_name`, `admin`, `paid_repo_seat_assigned`, `paid_repo_count`, `org_admin_without_paid_seat`, `access_model_note`, and response header `warnings`.
+  - `decapod cloud members {list|assign|revoke-seat|revoke-member|transfer-ownership|project-settings}`: outputs `decapod.cloud.members.v1`; `list` supports `--organization-id`/`--org`, `--project-id` (`access_details`), and integer `--after`; `assign` takes `--project-id` + `--slot`; `revoke-seat` supports project-scoped `Manage` (`--project-id` + `--slot` or `--member-account-id`) and org-slot `Register` (`--slot`); `revoke-member` and `transfer-ownership [--expected-revision]` take `--member-account-id` UUID; `project-settings` updates `--project-id` + `--project-name`.
+  - `decapod cloud invites {list|create|cancel|accept}`: outputs `decapod.cloud.invites.v1` with `membership_grants_paid_seats: false` and explicit zero-paid-seats notice; `accept --invitation-id <uuid> --secret-stdin` reads the one-time secret strictly from stdin (zero secret flags exist on CLI).
+  - `decapod cloud identity {prepare-link|confirm-link|resolve-quarantine|revoke-link}`: uses `CloudIdentityProvider::{Google,Github,Gitlab}` and `CloudQuarantineDecision::{Confirm,Revoke}`; `confirm-link --intent-id <uuid> --secret-stdin` reads `stepup_secret` strictly from stdin.
+  - `decapod cloud billing {portal|limits}`: outputs `decapod.cloud.billing.v1`; `portal [--organization-id]` validates strict `https://` origin + zero credentials; `limits [--project-id]` projects `resource_limits`, `spend_cap_status`, and `spend_cap_warning` (true on `warning | overage_cap_exhausted | exhausted | cap_reached`).
+- **JSON RPC ops (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/lib.rs`)**:
+  Registers `cloud.{orgs,members,invites,identity,billing}` with `session_required = false`, typed `Cloud{Orgs,Members,Invites,Identity,Billing}Params`, and `SubsystemInfo` entries; dispatches early via `run_cloud_admin_rpc` (with `execute_rpc` parity and `is_cloud_file_only_command` / `rpc_op_requires_worktree` / `rpc_op_bypasses_session` / `rpc_op_skips_mandate_enforcement` alignment) without creating `.decapod/data/decapod.db`. Rejects `--params` argv secrets in `parse_rpc_request` and redacts secrets from receipts/errors/traces (`cloud_auth_diagnostic_code` attaches serialized `CloudAuthDiagnostic` in `RpcError.details`). Regenerated `docs/agent/command-contracts.md` via `decapod docs build` (`src/decapod/core/docs_cli.rs`).
+
 ## Effective operation grant explanation, delegation CLI, and guidance hygiene (#1905, #1893)
 
 - **Read-only CLI grant explanation (`src/decapod/plugins/policy.rs::PolicyCommand::Grant`)**:
@@ -1661,8 +1672,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
+- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
