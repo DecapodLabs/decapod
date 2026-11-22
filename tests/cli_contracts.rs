@@ -1522,9 +1522,20 @@ approval_categories = ["destructive_operations"]
 #[test]
 fn cloud_admin_help_secrets_and_rpc_capabilities_stay_in_sync() {
     let cloud_help = run_decapod(&["cloud", "--help"]);
-    for sub in ["orgs", "members", "invites", "identity", "billing"] {
+    for sub in [
+        "orgs", "members", "invites", "identity", "billing", "admins", "recovery", "policies",
+        "upgrades",
+    ] {
         let re = Regex::new(&format!(r"(?m)^\s+{}\s+", regex::escape(sub))).unwrap();
         assert!(re.is_match(&cloud_help), "cloud --help missing `{sub}`");
+    }
+
+    let project_help = run_decapod(&["cloud", "project", "--help"]);
+    for sub in ["use", "create", "enroll"] {
+        assert!(
+            project_help.contains(sub),
+            "cloud project --help missing `{sub}`"
+        );
     }
 
     let members_help = run_decapod(&["cloud", "members", "--help"]);
@@ -1565,7 +1576,19 @@ fn cloud_admin_help_secrets_and_rpc_capabilities_stay_in_sync() {
         .find(|s| s["name"] == "cloud")
         .expect("cloud subsystem in capabilities");
     let ops = cloud_sub["ops"].as_array().unwrap();
-    for expected in ["orgs", "members", "invites", "identity", "billing"] {
+    for expected in [
+        "project.enroll",
+        "orgs",
+        "members",
+        "invites",
+        "identity",
+        "billing",
+        "enroll",
+        "admins",
+        "recovery",
+        "policies",
+        "upgrades",
+    ] {
         assert!(
             ops.iter().any(|v| v == expected),
             "cloud subsystem missing op `{expected}`"

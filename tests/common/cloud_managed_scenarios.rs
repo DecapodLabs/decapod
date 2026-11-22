@@ -134,6 +134,15 @@ impl Service {
             request.headers.get("apikey").map(String::as_str),
             Some("sb_publishable_fixture")
         );
+        if request.path.rsplit('/').next().is_some_and(|segment| {
+            matches!(
+                segment,
+                "device-challenge" | "device-session" | "device-refresh"
+            )
+        }) {
+            assert!(request.headers.contains_key("authorization"));
+            return Some((404, serde_json::json!({"error": {"code": "not_found"}})));
+        }
         if !matches!(
             request.path.as_str(),
             COMPLETE | QUERY | ACCOUNT_STATUS | ACCOUNT_REGISTER

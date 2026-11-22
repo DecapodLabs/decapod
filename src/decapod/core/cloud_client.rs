@@ -74,6 +74,55 @@ fn restart_required() -> DecapodError {
     )
 }
 
+/// Staged first-party Decapod Cloud custom HTTPS origin (`dactyl-db 0.19.0` `#138`).
+/// Default traffic remains on `DEFAULT_CLOUD_ORIGIN` until custom-domain cutover
+/// is explicitly opted into via `DECAPOD_CLOUD_FIRST_PARTY_ORIGIN=1`.
+#[cfg(feature = "supabase-cloud")]
+pub const FIRST_PARTY_CLOUD_ORIGIN: &str = dactyl_db::FIRST_PARTY_CLOUD_ORIGIN;
+#[cfg(not(feature = "supabase-cloud"))]
+pub const FIRST_PARTY_CLOUD_ORIGIN: &str = "https://api.decapodlabs.ai";
+
+#[cfg(feature = "supabase-cloud")]
+pub const FIRST_PARTY_AUTH_PATH: &str = dactyl_db::FIRST_PARTY_AUTH_PATH;
+#[cfg(not(feature = "supabase-cloud"))]
+pub const FIRST_PARTY_AUTH_PATH: &str = "/auth";
+
+#[cfg(feature = "supabase-cloud")]
+pub const FIRST_PARTY_REPO_PATH_PREFIX: &str = dactyl_db::FIRST_PARTY_REPO_PATH_PREFIX;
+#[cfg(not(feature = "supabase-cloud"))]
+pub const FIRST_PARTY_REPO_PATH_PREFIX: &str = "/decapod";
+
+/// Whether staged first-party custom HTTPS origin opt-in (`#138`) is active.
+pub fn first_party_origin_opted_in() -> bool {
+    std::env::var("DECAPOD_CLOUD_FIRST_PARTY_ORIGIN")
+        .ok()
+        .is_some_and(|v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes"))
+}
+
+/// Build the canonical `/auth` application URL bound strictly to `connector`'s
+/// verified origin (`dactyl-db 0.19.0` `#138`).
+#[cfg(feature = "supabase-cloud")]
+pub fn canonical_auth_url(connector: &dactyl_db::CloudConnector) -> Result<String, DecapodError> {
+    connector.canonical_auth_url().map_err(transport_error)
+}
+
+/// Build the canonical `/decapod/<org>/<repo>` application URL bound strictly
+/// to `connector`'s verified origin (`dactyl-db 0.19.0` `#138`).
+#[cfg(feature = "supabase-cloud")]
+pub fn canonical_repository_url(
+    connector: &dactyl_db::CloudConnector,
+    identity: &RepositoryIdentity,
+) -> Result<String, DecapodError> {
+    let Some((org, repo)) = identity.canonical_name.split_once('/') else {
+        return Err(DecapodError::ValidationError(
+            "Repository identity must be in canonical `<org>/<repo>` form.".into(),
+        ));
+    };
+    connector
+        .canonical_repository_url(org, repo)
+        .map_err(|err| transport_error_for_repository(err, Some(&identity.canonical_name)))
+}
+
 /// Select only a logical cloud connection. The built-in deployment and its
 /// physical transport belong to Dactyl. A loopback-only fixture override is
 /// explicit, process-scoped and never persisted as project policy.
@@ -97,6 +146,9 @@ pub fn selected_origin() -> Result<String, DecapodError> {
             ));
         }
         return Ok(origin.trim_end_matches('/').to_owned());
+    }
+    if first_party_origin_opted_in() {
+        return Ok(FIRST_PARTY_CLOUD_ORIGIN.to_owned());
     }
     Ok(dactyl_db::CloudConnector::default_origin())
 }
@@ -221,12 +273,96 @@ pub(crate) fn diagnostic_for_status_code(
             CloudAuthStatus::AdminApprovalRequired,
             "This account does not have an assigned paid repository seat; organization admin privileges alone do not grant repository data access.",
             "Organization admin access and paid repository seats are separate. Ask an organization administrator to assign a paid seat and approve access for this repository, then retry.",
-        ),
+        )
+        .with_error_code(CloudAuthErrorCode::AdminApprovalRequired),
         "organization_already_enrolled" => CloudAuthDiagnostic::new(
             CloudAuthStatus::OrganizationAlreadyEnrolled,
             "This organization is already enrolled under an existing immutable Cloud organization record.",
             "Do not purchase a duplicate organization subscription. Ask an existing organization administrator for an invite or seat assignment for this repository, then retry.",
-        ),
+        )
+        .with_error_code(CloudAuthErrorCode::OrganizationAlreadyEnrolled),
+        "paid_seat_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::EntitlementDenied,
+            "A paid repository seat is required to access this cloud repository.",
+            "Ask an organization administrator to assign a paid seat (`decapod cloud members assign`) or enroll additional capacity, then retry.",
+        )
+        .with_error_code(CloudAuthErrorCode::PaidSeatRequired),
+        "seat_capacity_exceeded" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::QuotaExceeded,
+            "Organization paid repository seat capacity is full.",
+            "Revoke an unused seat (`decapod cloud members revoke-seat`) or increase subscription capacity via `decapod cloud billing portal`, then retry.",
+        )
+        .with_error_code(CloudAuthErrorCode::SeatCapacityExceeded),
+        "tenant_upgrade_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "This cloud organization requires a tenant schema or plan upgrade before continuing.",
+            "Run `decapod cloud upgrades status` and apply the required organization upgrade (`decapod cloud upgrades request` / `apply`).",
+        )
+        .with_error_code(CloudAuthErrorCode::TenantUpgradeRequired),
+        "tenant_upgrading" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::PendingFulfillment,
+            "This cloud organization tenant upgrade is currently in progress.",
+            "Wait for the upgrade to complete and check `decapod cloud upgrades status` before retrying.",
+        )
+        .with_error_code(CloudAuthErrorCode::TenantUpgrading),
+        "tenant_suspended" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::Unauthorized,
+            "This cloud organization tenant is suspended.",
+            "Inspect billing and recovery state (`decapod cloud billing portal` or `decapod cloud recovery status`) with an organization administrator.",
+        )
+        .with_error_code(CloudAuthErrorCode::TenantSuspended),
+        "tenant_archived" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::RepositoryDenied,
+            "This cloud organization tenant has been archived and is read-restricted.",
+            "Confirm organization status (`decapod cloud orgs`) or initiate recovery (`decapod cloud recovery status`) if eligible.",
+        )
+        .with_error_code(CloudAuthErrorCode::TenantArchived),
+        "org_recovery_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "Organization custody recovery is required before administrative mutations can proceed.",
+            "Inspect recovery status (`decapod cloud recovery status`) or initiate recovery (`decapod cloud recovery initiate`).",
+        )
+        .with_error_code(CloudAuthErrorCode::OrgRecoveryRequired),
+        "policy_template_conflict" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "The requested cloud policy template conflicts with the organization's current revision or constraints.",
+            "Inspect current templates (`decapod cloud policies list`) and retry with an updated template payload.",
+        )
+        .with_error_code(CloudAuthErrorCode::PolicyTemplateConflict),
+        "grant_revoked" | "grant_expired" | "scope_denied" | "repo_access_denied" => {
+            CloudAuthDiagnostic::new(
+                CloudAuthStatus::RepositoryDenied,
+                "The organization session or repository grant does not authorize this scope.",
+                "Verify organization/repository access (`decapod cloud orgs`, `decapod cloud projects`) or re-establish a scoped session via `decapod cloud login --restart`.",
+            )
+            .with_error_code(
+                CloudAuthErrorCode::from_code_str(code)
+                    .unwrap_or(CloudAuthErrorCode::ScopeDenied),
+            )
+        }
+        "provenance_origin_mismatch" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ProviderUnavailable,
+            "Cloud response provenance did not match the verified service origin.",
+            "Verify the configured cloud origin (`decapod cloud status`) and retry without following untrusted redirects.",
+        )
+        .with_error_code(CloudAuthErrorCode::ProvenanceOriginMismatch),
+        "idempotency_conflict" | "idempotency_in_progress" | "version_conflict" => {
+            CloudAuthDiagnostic::new(
+                CloudAuthStatus::ActionRequired,
+                "The cloud service reported a concurrency, version, or idempotency conflict.",
+                "Inspect live cloud state before retrying with a fresh attempt or current revision.",
+            )
+            .with_error_code(
+                CloudAuthErrorCode::from_code_str(code)
+                    .unwrap_or(CloudAuthErrorCode::Conflict),
+            )
+        }
+        "transaction_aborted" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ProviderUnavailable,
+            "The cloud service aborted the transaction due to serialization contention.",
+            "Retry the operation after inspecting current state.",
+        )
+        .with_error_code(CloudAuthErrorCode::TransactionAborted),
         "quota_exceeded" => CloudAuthDiagnostic::new(
             CloudAuthStatus::QuotaExceeded,
             "The cloud service declined the request because the included quota is exhausted.",
@@ -247,10 +383,14 @@ pub(crate) fn diagnostic_for_status_code(
             "The service denied repository entitlement for this account.",
             "Ask the account owner to assign or restore a seat for this repository, then retry.",
         ),
-        "device_revoked" => CloudAuthDiagnostic::new(
+        "device_revoked" | "device_key_expired" | "device_not_enrolled" => CloudAuthDiagnostic::new(
             CloudAuthStatus::DeviceRevoked,
-            "This enrolled device key has been revoked on the cloud service.",
+            "This enrolled device key has been revoked or expired on the cloud service.",
             "Run `decapod cloud revoke` to clear local device state, then `decapod cloud login --restart` to enroll a fresh device key.",
+        )
+        .with_error_code(
+            CloudAuthErrorCode::from_code_str(code)
+                .unwrap_or(CloudAuthErrorCode::DeviceRevoked),
         ),
         "entitlement_required"
         | "organization_seat_required"
@@ -282,10 +422,27 @@ pub(crate) fn diagnostic_for_status_code(
             "The pending sign-in can no longer be completed.",
             RESTART,
         ),
-        "invalid_dpop_proof" | "dpop_replay" => CloudAuthDiagnostic::new(
+        "invalid_dpop_proof"
+        | "use_dpop_nonce"
+        | "dpop_replay"
+        | "invalid_binding"
+        | "dpop_proof_required"
+        | "missing_dpop_proof"
+        | "dpop_nonce_mismatch"
+        | "dpop_clock_skew"
+        | "dpop_ath_mismatch"
+        | "dpop_htu_mismatch"
+        | "dpop_htm_mismatch"
+        | "dpop_jkt_mismatch"
+        | "dpop_aud_mismatch"
+        | "stolen_bearer" => CloudAuthDiagnostic::new(
             CloudAuthStatus::AuthRequired,
-            "The service rejected the request DPoP proof or replay nonce.",
+            "The service rejected the request DPoP proof, audience binding, or replay nonce.",
             "Retry the command with a fresh proof; if the device key was rotated or revoked, run `decapod cloud login --restart`.",
+        )
+        .with_error_code(
+            CloudAuthErrorCode::from_code_str(code)
+                .unwrap_or(CloudAuthErrorCode::InvalidDpopProof),
         ),
         "invalid_token"
         | "session_expired"
@@ -294,11 +451,19 @@ pub(crate) fn diagnostic_for_status_code(
         | "bad_jwt"
         | "invalid_grant"
         | "refresh_token_not_found"
-        | "refresh_token_already_used" => CloudAuthDiagnostic::new(
-            CloudAuthStatus::Revoked,
-            "The service rejected the managed session.",
-            RESTART,
-        ),
+        | "refresh_token_already_used"
+        | "refresh_reuse_detected"
+        | "expired_credential" => {
+            let mut diag = CloudAuthDiagnostic::new(
+                CloudAuthStatus::Revoked,
+                "The service rejected the managed session.",
+                RESTART,
+            );
+            if let Some(err_code) = CloudAuthErrorCode::from_code_str(code) {
+                diag = diag.with_error_code(err_code);
+            }
+            diag
+        }
         _ => return None,
     };
     Some(diagnostic)
@@ -451,7 +616,9 @@ pub(crate) fn admin_transport_error(
         );
     }
 
-    if error.adapter_kind() == Some(AdapterErrorKind::NotFound) && error.adapter_code().is_none() {
+    if error.adapter_kind() == Some(AdapterErrorKind::NotFound)
+        && matches!(error.adapter_code(), None | Some("not_found"))
+    {
         return DecapodError::CloudAuth(
             CloudAuthDiagnostic::new(
                 CloudAuthStatus::ActionRequired,
@@ -614,6 +781,25 @@ pub fn record_rejected_credential(
         state.phase = crate::core::cloud_session::Phase::RestartRequired;
         guard.replace(state)?;
     }
+    #[cfg(feature = "supabase-cloud")]
+    {
+        let matched_repo = guard
+            .device_session(&identity.canonical_name)?
+            .is_some_and(|session| session.access_token == rejected);
+        let matched_routed = match context.route() {
+            BackendRoute::Cloud { repository, .. }
+                if repository.canonical_name != identity.canonical_name =>
+            {
+                guard
+                    .device_session(&repository.canonical_name)?
+                    .is_some_and(|session| session.access_token == rejected)
+            }
+            _ => false,
+        };
+        if matched_repo || matched_routed {
+            guard.clear_device_session()?;
+        }
+    }
     Ok(())
 }
 
@@ -680,16 +866,41 @@ fn acquire_with_metadata(
             };
             state.phase = Phase::Refreshing;
             guard.replace(state.clone())?;
-            match connector.refresh_session(&refresh) {
+            let current_access_token = state
+                .session
+                .as_ref()
+                .map(|s| s.access_token.clone())
+                .unwrap_or_default();
+            let refreshed = if crate::core::cloud_dpop::is_dpop_refresh_token(&refresh) {
+                refresh_device_session_with_connector(
+                    &connector,
+                    project_root,
+                    identity,
+                    &current_access_token,
+                    &refresh,
+                )
+                .map_err(|err| match err {
+                    DpopStepError::Dactyl(error) => {
+                        one_time_error(error, Some(&identity.canonical_name))
+                    }
+                    DpopStepError::Decapod(error) => error,
+                })
+            } else {
+                connector
+                    .refresh_session(&refresh)
+                    .map_err(|error| one_time_error(error, Some(&identity.canonical_name)))
+                    .and_then(managed_session)
+            };
+            match refreshed {
                 Ok(session) => {
                     // Persist a received rotation before any subsequent call.
-                    state.session = Some(managed_session(session)?);
+                    state.session = Some(session);
                     state.phase = following_phase;
                     guard.replace(state.clone())?;
                 }
                 Err(error) => {
                     persist_restart(&mut guard, state)?;
-                    return Err(one_time_error(error, Some(&identity.canonical_name)));
+                    return Err(error);
                 }
             }
         } else {
@@ -876,6 +1087,7 @@ where
 {
     let (connector, mut guard, discover_meta) =
         acquire_with_metadata(project_root, identity, false)?;
+    let connector = connector.with_device_gateway();
     let bearer = guard
         .state()
         .session
@@ -897,11 +1109,24 @@ pub fn connect(
 ) -> Result<StorageContext, DecapodError> {
     let (connector, mut guard) = acquire(project_root, identity, restart)?;
     let state = guard.state().clone();
-    let session = state.session.as_ref().ok_or_else(restart_required)?;
-    let result =
-        crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity);
+    let human_session = state.session.as_ref().ok_or_else(restart_required)?.clone();
+    let control_connector = connector.clone().with_device_gateway();
+    let result = crate::core::cloud_project::route(
+        &control_connector,
+        &guard,
+        &human_session.access_token,
+        identity,
+    );
     let routed = account_result(&mut guard, result)?;
-    let context = context(connector.origin(), &routed, session)?;
+    let (_active_connector, active_session) = resolve_operational_session(
+        &connector,
+        &mut guard,
+        project_root,
+        &human_session,
+        &routed,
+    )?;
+    let used_device_sidecar = active_session.access_token != human_session.access_token;
+    let context = context(connector.origin(), &routed, &active_session)?;
     if check_readiness {
         // A valid cached token is not evidence of current account access.
         // This uses the service's existing authorized task-read contract,
@@ -916,7 +1141,11 @@ pub fn connect(
             return Err(match error {
                 DecapodError::DactylError(error) => {
                     if terminal_session_error(&error) {
-                        persist_restart(&mut guard, state)?;
+                        if used_device_sidecar {
+                            guard.clear_device_session()?;
+                        } else {
+                            persist_restart(&mut guard, state)?;
+                        }
                     }
                     transport_error_for_repository(error, Some(&routed.canonical_name))
                 }
@@ -940,6 +1169,7 @@ pub fn projects(
     operation: crate::core::cloud_project::Operation,
 ) -> Result<crate::core::cloud_project::ProjectOutput, DecapodError> {
     let (connector, mut guard) = acquire(project_root, identity, false)?;
+    let connector = connector.with_device_gateway();
     let bearer = guard
         .state()
         .session
@@ -1012,6 +1242,7 @@ fn local_status(
     serde_json::json!({
         "schema_version": "decapod.cloud.session.v1",
         "repository": identity.canonical_name,
+        "first_party_origin_staged": origin == FIRST_PARTY_CLOUD_ORIGIN,
         "phase": state.phase,
         "credential_present": state.session.is_some(),
         "expires_at": state.session.as_ref().map(|session| session.expires_at),
@@ -1049,14 +1280,8 @@ pub fn status_live(
         })?;
     let (mut connector, discover_meta) =
         CloudConnector::discover_with_metadata(&origin).map_err(transport_error)?;
+    connector = connector.with_device_gateway();
     let mut warnings = crate::core::propodus::warnings_from_cloud_metadata(&discover_meta);
-    if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
-        connector.origin(),
-        &identity.canonical_name,
-        project_root,
-    ) {
-        connector = connector.with_proof_signer(signer);
-    }
     let selected =
         crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity)?;
     let mut req_meta = CloudResponseMetadata::default();
@@ -1157,16 +1382,10 @@ pub fn devices(
             })?;
         let (mut connector, discover_meta) =
             CloudConnector::discover_with_metadata(&origin).map_err(transport_error)?;
+        connector = connector.with_device_gateway();
         warnings.extend(crate::core::propodus::warnings_from_cloud_metadata(
             &discover_meta,
         ));
-        if let Some(signer) = crate::core::cloud_dpop::active_request_proof_signer(
-            connector.origin(),
-            &identity.canonical_name,
-            project_root,
-        ) {
-            connector = connector.with_proof_signer(signer);
-        }
         let selected =
             crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity)?;
         let mut req_meta = CloudResponseMetadata::default();
@@ -1225,40 +1444,102 @@ pub fn logout(
     }))
 }
 
-/// Acquire an authenticated `CloudConnector`, routed repository identity, and
-/// current bearer token for control-plane RPC calls (`propodus_repository_access_v1`,
-/// `propodus_proof_acceptance_v1`, `propodus_proof_acceptance_get_v1`).
 #[cfg(feature = "supabase-cloud")]
-pub fn connect_control(
-    project_root: &Path,
-    identity: &RepositoryIdentity,
-) -> Result<(dactyl_db::CloudConnector, RepositoryIdentity, String), DecapodError> {
-    let (connector, mut guard) = acquire(project_root, identity, false)?;
-    let state = guard.state().clone();
-    let session = state.session.as_ref().ok_or_else(restart_required)?;
-    let result =
-        crate::core::cloud_project::route(&connector, &guard, &session.access_token, identity);
-    let routed = account_result(&mut guard, result)?;
-    Ok((connector, routed, session.access_token.clone()))
+enum DpopStepError {
+    Dactyl(dactyl_db::DactylError),
+    Decapod(DecapodError),
 }
 
-/// Perform challenge-response Ed25519 device key enrollment via `dactyl-db 0.18.0`
-/// `AccountOperation::{DeviceChallenge, DeviceEnroll}` (`#1778`).
 #[cfg(feature = "supabase-cloud")]
-pub fn enroll_device_with_connector(
+fn default_device_label() -> String {
+    std::env::var("HOSTNAME")
+        .ok()
+        .map(|h| h.trim().to_string())
+        .filter(|h| !h.is_empty())
+        .unwrap_or_else(|| "decapod-cli".to_string())
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn parse_device_session_response(response: &serde_json::Value) -> Result<Session, DecapodError> {
+    let access_token = response
+        .get("access_token")
+        .and_then(|v| v.as_str())
+        .filter(|t| crate::core::cloud_dpop::is_dpop_access_token(t))
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::ProviderUnavailable,
+                "The service returned an invalid or missing DPoP device access token.",
+                "Retry the command after verifying the device session endpoint.",
+            )
+        })?
+        .to_owned();
+    let refresh_token = match response.get("refresh_token").and_then(|v| v.as_str()) {
+        Some(rt) => {
+            if !crate::core::cloud_dpop::is_dpop_refresh_token(rt) {
+                return Err(diagnostic(
+                    CloudAuthStatus::ProviderUnavailable,
+                    "The service returned an invalid DPoP device refresh token.",
+                    "Retry the command after verifying the device session endpoint.",
+                ));
+            }
+            Some(rt.to_owned())
+        }
+        None => None,
+    };
+    let current = now();
+    let expires_at = if let Some(ts) = response.get("expires_at_unix").and_then(|v| v.as_i64()) {
+        ts
+    } else if let Some(ts) = response.get("expires_at").and_then(|v| v.as_i64()) {
+        ts
+    } else if let Some(ts_str) = response.get("expires_at").and_then(|v| v.as_str()) {
+        crate::core::time::parse_rfc3339(ts_str)
+            .map_err(|_| {
+                diagnostic(
+                    CloudAuthStatus::ProviderUnavailable,
+                    "The service returned an invalid device session expiry timestamp.",
+                    RESTART,
+                )
+            })?
+            .unix_timestamp()
+    } else {
+        let expires_in = response
+            .get("expires_in")
+            .and_then(|v| v.as_i64())
+            .unwrap_or(900);
+        if !(1..=86_400).contains(&expires_in) {
+            return Err(diagnostic(
+                CloudAuthStatus::ProviderUnavailable,
+                "The service returned an invalid device session lifetime.",
+                RESTART,
+            ));
+        }
+        current.saturating_add(expires_in)
+    };
+    if expires_at <= current {
+        return Err(diagnostic(
+            CloudAuthStatus::Expired,
+            "The service returned an already-expired device session.",
+            RESTART,
+        ));
+    }
+    Ok(Session {
+        access_token,
+        refresh_token,
+        expires_at,
+    })
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn enroll_device_raw(
     connector: &dactyl_db::CloudConnector,
     bearer: &str,
     project_root: &Path,
     identity: &RepositoryIdentity,
     label: &str,
-) -> Result<serde_json::Value, DecapodError> {
-    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
-        connector.origin(),
-        &identity.canonical_name,
-        project_root,
-    )?;
-    let key = key_store.load_or_create()?;
+) -> Result<serde_json::Value, DpopStepError> {
     let challenge = connector
+        .clone()
+        .with_device_gateway()
         .account_request(
             dactyl_db::AccountOperation::DeviceChallenge,
             &serde_json::json!({
@@ -1268,50 +1549,59 @@ pub fn enroll_device_with_connector(
             bearer,
             None,
         )
-        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
+        .map_err(DpopStepError::Dactyl)?;
     let nonce = challenge
         .get("nonce")
         .and_then(|v| v.as_str())
         .ok_or_else(|| {
-            diagnostic(
+            DpopStepError::Decapod(diagnostic(
                 CloudAuthStatus::ProviderUnavailable,
                 "Device enrollment challenge response omitted required nonce.",
                 "Retry device enrollment after the service is healthy.",
-            )
+            ))
         })?;
     let audience = challenge
         .get("audience")
         .and_then(|v| v.as_str())
         .unwrap_or_else(|| connector.origin());
-    let enroll_url = format!(
-        "{}/functions/v1/decapod-onboarding/device-enroll",
-        connector.origin().trim_end_matches('/')
+    let challenge_id = challenge.get("challenge_id").and_then(|v| v.as_str());
+
+    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        connector.origin(),
+        &identity.canonical_name,
+        project_root,
+    )
+    .map_err(DpopStepError::Decapod)?;
+    let key = std::sync::Arc::new(key_store.load_or_create().map_err(DpopStepError::Decapod)?);
+    let signer = std::sync::Arc::new(
+        crate::core::cloud_dpop::DeviceDpopSigner::from_arc_with_audience(
+            std::sync::Arc::clone(&key),
+            audience,
+        ),
     );
-    let dpop_proof = key.sign_dpop_proof(
-        "POST",
-        &enroll_url,
-        Some(bearer),
-        Some(nonce),
-        Some(audience),
-        None,
-    )?;
+    dactyl_db::RequestProofSigner::observe_nonce(signer.as_ref(), "", nonce);
+
+    let mut enroll_body = serde_json::json!({
+        "version": 1,
+        "nonce": nonce,
+        "label": label,
+    });
+    if let Some(cid) = challenge_id {
+        enroll_body["challenge_id"] = serde_json::json!(cid);
+    } else {
+        enroll_body["project_id"] = serde_json::json!(identity.canonical_name);
+    }
     let response = connector
+        .clone()
+        .with_device_gateway()
+        .with_proof_signer(signer)
         .account_request(
             dactyl_db::AccountOperation::DeviceEnroll,
-            &serde_json::json!({
-                "version": 1,
-                "project_id": identity.canonical_name,
-                "public_jwk": key.public_jwk,
-                "jwk_thumbprint": key.jkt,
-                "algorithm": "EdDSA",
-                "label": label,
-                "nonce": nonce,
-                "dpop_proof": dpop_proof,
-            }),
+            &enroll_body,
             bearer,
             None,
         )
-        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))?;
+        .map_err(DpopStepError::Dactyl)?;
     if let Some(device_key_id) = response
         .get("device_key_id")
         .or_else(|| response.pointer("/device_key/id"))
@@ -1322,7 +1612,418 @@ pub fn enroll_device_with_connector(
     Ok(response)
 }
 
-/// Request an account-level AAL2 MFA step-up challenge via `dactyl-db 0.18.0`
+#[cfg(feature = "supabase-cloud")]
+fn exchange_device_session_raw(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    key: std::sync::Arc<crate::core::cloud_dpop::DeviceKeyMaterial>,
+    identity: &RepositoryIdentity,
+) -> Result<(Session, Option<String>), DpopStepError> {
+    let signer = std::sync::Arc::new(crate::core::cloud_dpop::DeviceDpopSigner::from_arc(key));
+    let response = connector
+        .clone()
+        .with_device_gateway()
+        .with_proof_signer(signer)
+        .account_request(
+            dactyl_db::AccountOperation::DeviceSession,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+            }),
+            bearer,
+            None,
+        )
+        .map_err(DpopStepError::Dactyl)?;
+    let session = parse_device_session_response(&response).map_err(DpopStepError::Decapod)?;
+    let device_key_id = response
+        .get("device_key_id")
+        .or_else(|| response.pointer("/device_key/id"))
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned);
+    Ok((session, device_key_id))
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn refresh_device_session_with_connector(
+    connector: &dactyl_db::CloudConnector,
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    current_access_token: &str,
+    refresh_token: &str,
+) -> Result<Session, DpopStepError> {
+    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        connector.origin(),
+        &identity.canonical_name,
+        project_root,
+    )
+    .map_err(DpopStepError::Decapod)?;
+    let key = key_store
+        .load()
+        .map_err(DpopStepError::Decapod)?
+        .ok_or_else(|| {
+            DpopStepError::Decapod(diagnostic(
+                CloudAuthStatus::KeyLost,
+                "Refreshing a DPoP device session requires the enrolled local device key.",
+                "Run `decapod cloud revoke --local-only`, then `decapod cloud login --restart`.",
+            ))
+        })?;
+    let signer = std::sync::Arc::new(crate::core::cloud_dpop::DeviceDpopSigner::new(key));
+    let response = connector
+        .clone()
+        .with_device_gateway()
+        .with_proof_signer(signer)
+        .account_request(
+            dactyl_db::AccountOperation::DeviceRefresh,
+            &serde_json::json!({
+                "version": 1,
+                "refresh_token": refresh_token,
+                "project_id": identity.canonical_name,
+            }),
+            current_access_token,
+            None,
+        )
+        .map_err(DpopStepError::Dactyl)?;
+    parse_device_session_response(&response).map_err(DpopStepError::Decapod)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn resolve_operational_session(
+    connector: &dactyl_db::CloudConnector,
+    guard: &mut SessionGuard,
+    project_root: &Path,
+    human_session: &Session,
+    routed: &RepositoryIdentity,
+) -> Result<(dactyl_db::CloudConnector, Session), DecapodError> {
+    if std::env::var("DECAPOD_CONTAINER_SIGNER_SOCKET")
+        .ok()
+        .is_some_and(|s| !s.trim().is_empty())
+    {
+        let active = guard
+            .device_session(&routed.canonical_name)?
+            .unwrap_or_else(|| human_session.clone());
+        let mut active_connector = connector.clone();
+        if crate::core::cloud_dpop::is_dpop_access_token(&active.access_token) {
+            active_connector = active_connector.with_device_gateway();
+        }
+        if let Some(signer) = crate::core::cloud_dpop::request_proof_signer_for_bearer(
+            connector.origin(),
+            &routed.canonical_name,
+            project_root,
+            &active.access_token,
+        ) {
+            active_connector = active_connector
+                .with_device_gateway()
+                .with_proof_signer(signer);
+        }
+        return Ok((active_connector, active));
+    }
+    if crate::core::cloud_dpop::cloud_auth_scheme_override() == Some("bearer")
+        && !crate::core::cloud_dpop::is_dpop_access_token(&human_session.access_token)
+    {
+        return Ok((connector.clone(), human_session.clone()));
+    }
+    if crate::core::cloud_dpop::is_dpop_access_token(&human_session.access_token) {
+        let signer = crate::core::cloud_dpop::request_proof_signer_for_bearer(
+            connector.origin(),
+            &routed.canonical_name,
+            project_root,
+            &human_session.access_token,
+        )
+        .ok_or_else(|| {
+            diagnostic(
+                CloudAuthStatus::KeyLost,
+                "Cloud DPoP session requires an enrolled local device key to sign requests.",
+                "Run `decapod cloud revoke --local-only`, then `decapod cloud login --restart`.",
+            )
+        })?;
+        return Ok((
+            connector
+                .clone()
+                .with_device_gateway()
+                .with_proof_signer(signer),
+            human_session.clone(),
+        ));
+    }
+
+    let strict_dpop = crate::core::cloud_dpop::cloud_auth_scheme_override() == Some("dpop");
+    let key_store = crate::core::cloud_dpop::DeviceKeyStore::for_project(
+        connector.origin(),
+        &routed.canonical_name,
+        project_root,
+    )?;
+
+    if let Some(cached) = guard.device_session(&routed.canonical_name)? {
+        if let Some(key) = key_store.load()? {
+            if cached.expires_at > now().saturating_add(REFRESH_LEAD_SECONDS) {
+                let signer =
+                    std::sync::Arc::new(crate::core::cloud_dpop::DeviceDpopSigner::new(key));
+                return Ok((
+                    connector
+                        .clone()
+                        .with_device_gateway()
+                        .with_proof_signer(signer),
+                    cached,
+                ));
+            }
+            if let Some(rt) = cached
+                .refresh_token
+                .as_deref()
+                .filter(|t| crate::core::cloud_dpop::is_dpop_refresh_token(t))
+            {
+                match refresh_device_session_with_connector(
+                    connector,
+                    project_root,
+                    routed,
+                    &cached.access_token,
+                    rt,
+                ) {
+                    Ok(refreshed) => {
+                        guard.replace_device_session(&routed.canonical_name, refreshed.clone())?;
+                        let signer = std::sync::Arc::new(
+                            crate::core::cloud_dpop::DeviceDpopSigner::new(key),
+                        );
+                        return Ok((
+                            connector
+                                .clone()
+                                .with_device_gateway()
+                                .with_proof_signer(signer),
+                            refreshed,
+                        ));
+                    }
+                    Err(DpopStepError::Dactyl(err)) => {
+                        if matches!(
+                            err.adapter_code(),
+                            Some(
+                                "refresh_reuse_detected" | "device_revoked" | "device_key_expired"
+                            )
+                        ) {
+                            guard.clear_device_session()?;
+                            return Err(transport_error_for_repository(
+                                err,
+                                Some(&routed.canonical_name),
+                            ));
+                        }
+                        if matches!(
+                            err.adapter_code(),
+                            Some(
+                                "invalid_token"
+                                    | "session_expired"
+                                    | "session_revoked"
+                                    | "session_not_found"
+                                    | "invalid_grant"
+                                    | "refresh_token_not_found"
+                            )
+                        ) {
+                            guard.clear_device_session()?;
+                        } else {
+                            return Err(transport_error_for_repository(
+                                err,
+                                Some(&routed.canonical_name),
+                            ));
+                        }
+                    }
+                    Err(DpopStepError::Decapod(err)) => return Err(err),
+                }
+            } else {
+                guard.clear_device_session()?;
+            }
+        } else {
+            guard.clear_device_session()?;
+        }
+    }
+
+    if let Some(existing_key) = key_store.load()? {
+        let existing_key = std::sync::Arc::new(existing_key);
+        match exchange_device_session_raw(
+            connector,
+            &human_session.access_token,
+            std::sync::Arc::clone(&existing_key),
+            routed,
+        ) {
+            Ok((dpop_session, key_id)) => {
+                if let Some(id) = key_id.as_deref() {
+                    let _ = key_store.record_device_key_id(&existing_key.jkt, id);
+                }
+                guard.replace_device_session(&routed.canonical_name, dpop_session.clone())?;
+                let signer = std::sync::Arc::new(
+                    crate::core::cloud_dpop::DeviceDpopSigner::from_arc(existing_key),
+                );
+                return Ok((
+                    connector
+                        .clone()
+                        .with_device_gateway()
+                        .with_proof_signer(signer),
+                    dpop_session,
+                ));
+            }
+            Err(DpopStepError::Dactyl(err)) => {
+                if err.adapter_kind() == Some(dactyl_db::AdapterErrorKind::NotFound) && !strict_dpop
+                {
+                    return Ok((connector.clone(), human_session.clone()));
+                }
+                if !matches!(
+                    err.adapter_code(),
+                    Some("device_not_enrolled" | "device_key_not_found" | "invalid_dpop_proof")
+                ) {
+                    return Err(transport_error_for_repository(
+                        err,
+                        Some(&routed.canonical_name),
+                    ));
+                }
+            }
+            Err(DpopStepError::Decapod(err)) => return Err(err),
+        }
+    }
+
+    match enroll_device_raw(
+        connector,
+        &human_session.access_token,
+        project_root,
+        routed,
+        &default_device_label(),
+    ) {
+        Ok(_) => (),
+        Err(DpopStepError::Dactyl(err)) => {
+            if err.adapter_kind() == Some(dactyl_db::AdapterErrorKind::NotFound) && !strict_dpop {
+                return Ok((connector.clone(), human_session.clone()));
+            }
+            return Err(transport_error_for_repository(
+                err,
+                Some(&routed.canonical_name),
+            ));
+        }
+        Err(DpopStepError::Decapod(err)) => return Err(err),
+    }
+
+    let enrolled_key = std::sync::Arc::new(key_store.load()?.ok_or_else(|| {
+        diagnostic(
+            CloudAuthStatus::KeyLost,
+            "Enrolled local device key could not be loaded after device registration.",
+            "Run `decapod cloud revoke --local-only`, then `decapod cloud login --restart`.",
+        )
+    })?);
+    let (dpop_session, key_id) = exchange_device_session_raw(
+        connector,
+        &human_session.access_token,
+        std::sync::Arc::clone(&enrolled_key),
+        routed,
+    )
+    .map_err(|err| match err {
+        DpopStepError::Dactyl(error) => {
+            transport_error_for_repository(error, Some(&routed.canonical_name))
+        }
+        DpopStepError::Decapod(error) => error,
+    })?;
+    if let Some(id) = key_id.as_deref() {
+        let _ = key_store.record_device_key_id(&enrolled_key.jkt, id);
+    }
+    guard.replace_device_session(&routed.canonical_name, dpop_session.clone())?;
+    let signer = std::sync::Arc::new(crate::core::cloud_dpop::DeviceDpopSigner::from_arc(
+        enrolled_key,
+    ));
+    Ok((
+        connector
+            .clone()
+            .with_device_gateway()
+            .with_proof_signer(signer),
+        dpop_session,
+    ))
+}
+
+/// Inspect enrolled server-side device keys via `dactyl-db 0.19.0`
+/// `AccountOperation::DeviceKeys` (`#133`).
+#[cfg(feature = "supabase-cloud")]
+pub fn list_device_keys_with_connector(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    connector
+        .clone()
+        .with_device_gateway()
+        .account_request(
+            dactyl_db::AccountOperation::DeviceKeys,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+            }),
+            bearer,
+            None,
+        )
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))
+}
+
+/// Inspect active server-side DPoP device sessions via `dactyl-db 0.19.0`
+/// `AccountOperation::DeviceSessions` (`#133`).
+#[cfg(feature = "supabase-cloud")]
+pub fn list_device_sessions_with_connector(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    identity: &RepositoryIdentity,
+) -> Result<serde_json::Value, DecapodError> {
+    connector
+        .clone()
+        .with_device_gateway()
+        .account_request(
+            dactyl_db::AccountOperation::DeviceSessions,
+            &serde_json::json!({
+                "version": 1,
+                "project_id": identity.canonical_name,
+            }),
+            bearer,
+            None,
+        )
+        .map_err(|error| transport_error_for_repository(error, Some(&identity.canonical_name)))
+}
+
+/// Acquire an authenticated `CloudConnector`, routed repository identity, and
+/// current bearer token for control-plane RPC calls (`propodus_repository_access_v1`,
+/// `propodus_proof_acceptance_v1`, `propodus_proof_acceptance_get_v1`).
+#[cfg(feature = "supabase-cloud")]
+pub fn connect_control(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+) -> Result<(dactyl_db::CloudConnector, RepositoryIdentity, String), DecapodError> {
+    let (connector, mut guard) = acquire(project_root, identity, false)?;
+    let state = guard.state().clone();
+    let human_session = state.session.as_ref().ok_or_else(restart_required)?.clone();
+    let control_connector = connector.clone().with_device_gateway();
+    let result = crate::core::cloud_project::route(
+        &control_connector,
+        &guard,
+        &human_session.access_token,
+        identity,
+    );
+    let routed = account_result(&mut guard, result)?;
+    let (active_connector, active_session) = resolve_operational_session(
+        &connector,
+        &mut guard,
+        project_root,
+        &human_session,
+        &routed,
+    )?;
+    Ok((active_connector, routed, active_session.access_token))
+}
+
+/// Perform challenge-response Ed25519 device key enrollment via `dactyl-db 0.19.0`
+/// `AccountOperation::{DeviceChallenge, DeviceEnroll}` (`#1778`, `#1878`).
+#[cfg(feature = "supabase-cloud")]
+pub fn enroll_device_with_connector(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    label: &str,
+) -> Result<serde_json::Value, DecapodError> {
+    enroll_device_raw(connector, bearer, project_root, identity, label).map_err(|err| match err {
+        DpopStepError::Dactyl(error) => {
+            transport_error_for_repository(error, Some(&identity.canonical_name))
+        }
+        DpopStepError::Decapod(error) => error,
+    })
+}
+
+/// Request an account-level AAL2 MFA step-up challenge via `dactyl-db 0.19.0`
 /// `AccountOperation::DeviceStepUp` (`#1778`).
 #[cfg(feature = "supabase-cloud")]
 pub fn request_mfa_step_up(
@@ -1333,6 +2034,8 @@ pub fn request_mfa_step_up(
 ) -> Result<serde_json::Value, DecapodError> {
     let _ = project_root;
     connector
+        .clone()
+        .with_device_gateway()
         .account_request(
             dactyl_db::AccountOperation::DeviceStepUp,
             &serde_json::json!({
@@ -1380,7 +2083,17 @@ pub fn revoke(
 
     let store = SessionStore::for_project(&origin, &identity.canonical_name, project_root)?;
     let mut guard = store.lock(LOCK_TIMEOUT)?;
-    let has_session = guard.state().session.is_some();
+    let sidecar_dpop = {
+        #[cfg(feature = "supabase-cloud")]
+        {
+            guard.device_session(&identity.canonical_name)?
+        }
+        #[cfg(not(feature = "supabase-cloud"))]
+        {
+            None::<crate::core::cloud_session::Session>
+        }
+    };
+    let has_session = guard.state().session.is_some() || sidecar_dpop.is_some();
 
     if let Some(target) = requested_device_id
         && !matches_local
@@ -1429,12 +2142,17 @@ pub fn revoke(
     }
 
     #[cfg(feature = "supabase-cloud")]
-    if let Some(session) = guard.state().session.as_ref() {
+    if guard.state().session.is_some() || sidecar_dpop.is_some() {
         use dactyl_db::{AccountOperation, CloudResponseMetadata};
 
-        let is_dpop_session_token = session.access_token.starts_with("dpc_at_");
-        let use_session_logout =
-            session_logout || (is_dpop_session_token && !all && requested_device_id.is_none());
+        let state_session = guard.state().session.clone();
+        let is_dpop_session_token = state_session
+            .as_ref()
+            .is_some_and(|session| session.access_token.starts_with("dpc_at_"));
+        let use_session_logout = session_logout
+            || ((is_dpop_session_token || (sidecar_dpop.is_some() && state_session.is_none()))
+                && !all
+                && requested_device_id.is_none());
 
         let (mut connector, discover_meta) =
             dactyl_db::CloudConnector::discover_with_metadata(&origin).map_err(transport_error)?;
@@ -1442,12 +2160,29 @@ pub fn revoke(
             &discover_meta,
         ));
 
-        let payload = if use_session_logout {
+        let (bearer_for_revoke, payload) = if use_session_logout {
             operation = "logout";
-            let signer = crate::core::cloud_dpop::active_request_proof_signer(
+            let logout_session = sidecar_dpop
+                .clone()
+                .filter(|s| crate::core::cloud_dpop::is_dpop_access_token(&s.access_token))
+                .or_else(|| {
+                    state_session
+                        .clone()
+                        .filter(|s| crate::core::cloud_dpop::is_dpop_access_token(&s.access_token))
+                })
+                .or(state_session)
+                .ok_or_else(|| {
+                    diagnostic(
+                        CloudAuthStatus::AuthRequired,
+                        "Session logout requires an active saved cloud session.",
+                        "Run `decapod cloud login` first, or use `decapod cloud revoke --local-only` to clear local device state.",
+                    )
+                })?;
+            let signer = crate::core::cloud_dpop::request_proof_signer_for_bearer(
                 connector.origin(),
                 &identity.canonical_name,
                 project_root,
+                &logout_session.access_token,
             )
             .or_else(|| {
                 key_store.load().ok().flatten().map(|key| {
@@ -1462,21 +2197,43 @@ pub fn revoke(
                     "Use `decapod cloud revoke --local-only` to clear local state, then run `decapod cloud login --restart`.",
                 )
             })?;
-            connector = connector.with_proof_signer(signer);
-            serde_json::json!({
-                "version": 1,
-                "project_id": identity.canonical_name,
-                "action": "logout",
-            })
+            connector = connector.with_device_gateway().with_proof_signer(signer);
+            (
+                logout_session.access_token,
+                serde_json::json!({
+                    "version": 1,
+                    "project_id": identity.canonical_name,
+                    "action": "logout",
+                }),
+            )
         } else if all {
+            let human_session = state_session.ok_or_else(|| {
+                diagnostic(
+                    CloudAuthStatus::AuthRequired,
+                    "Revoking all device keys requires a human managed session.",
+                    "Run `decapod cloud login` first, or use `--session-logout` / `--local-only`.",
+                )
+            })?;
+            connector = connector.with_device_gateway();
             operation = "revoke_all";
-            serde_json::json!({
-                "version": 1,
-                "project_id": identity.canonical_name,
-                "action": "revoke_all",
-                "revoke_all": true,
-            })
+            (
+                human_session.access_token,
+                serde_json::json!({
+                    "version": 1,
+                    "project_id": identity.canonical_name,
+                    "action": "revoke_all",
+                    "revoke_all": true,
+                }),
+            )
         } else {
+            let human_session = state_session.ok_or_else(|| {
+                diagnostic(
+                    CloudAuthStatus::AuthRequired,
+                    "Revoking a device key requires a human managed session.",
+                    "Run `decapod cloud login` first, or use `--session-logout` / `--local-only`.",
+                )
+            })?;
+            connector = connector.with_device_gateway();
             operation = "revoke_key";
             let target_key_id = requested_device_id
                 .filter(|t| existing_jkt.as_deref() != Some(*t))
@@ -1495,7 +2252,7 @@ pub fn revoke(
             if matches_local && let Some(jkt) = existing_jkt.as_deref() {
                 body["jwk_thumbprint"] = serde_json::json!(jkt);
             }
-            body
+            (human_session.access_token, body)
         };
 
         let mut req_meta = CloudResponseMetadata::default();
@@ -1505,7 +2262,7 @@ pub fn revoke(
             .account_request_with_metadata(
                 AccountOperation::DeviceRevoke,
                 &payload,
-                &session.access_token,
+                &bearer_for_revoke,
                 None,
                 None,
                 &mut req_meta,
@@ -1650,5 +2407,64 @@ mod cloud_admin_client_tests {
         let quar = diagnostic_for_status_code("provider_quarantined", None).unwrap();
         assert_eq!(quar.status, CloudAuthStatus::ActionRequired);
         assert_eq!(quar.error_code_str(), Some("provider_quarantined"));
+    }
+
+    #[test]
+    fn dactyl_019_problem_codes_and_staged_first_party_origin_helpers() {
+        assert_eq!(FIRST_PARTY_CLOUD_ORIGIN, "https://api.decapodlabs.ai");
+        assert_eq!(FIRST_PARTY_AUTH_PATH, "/auth");
+        assert_eq!(FIRST_PARTY_REPO_PATH_PREFIX, "/decapod");
+
+        let cfg =
+            dactyl_db::SupabaseRpcConfig::v1(FIRST_PARTY_CLOUD_ORIGIN, "sb_publishable_fixture");
+        let connector = dactyl_db::CloudConnector::with_config(cfg).expect("connector");
+        assert_eq!(
+            canonical_auth_url(&connector).expect("auth url"),
+            "https://api.decapodlabs.ai/auth"
+        );
+        let identity = RepositoryIdentity {
+            owner: "DecapodLabs".to_string(),
+            repository: "decapod".to_string(),
+            canonical_name: "DecapodLabs/decapod".to_string(),
+            remote_url: "https://github.com/DecapodLabs/decapod.git".to_string(),
+        };
+        assert_eq!(
+            canonical_repository_url(&connector, &identity).expect("repo url"),
+            "https://api.decapodlabs.ai/decapod/DecapodLabs/decapod"
+        );
+
+        for (code, expected_status) in [
+            ("dpop_aud_mismatch", CloudAuthStatus::AuthRequired),
+            ("use_dpop_nonce", CloudAuthStatus::AuthRequired),
+            ("device_key_expired", CloudAuthStatus::DeviceRevoked),
+            ("device_not_enrolled", CloudAuthStatus::DeviceRevoked),
+            ("refresh_reuse_detected", CloudAuthStatus::Revoked),
+            ("expired_credential", CloudAuthStatus::Revoked),
+            ("grant_revoked", CloudAuthStatus::RepositoryDenied),
+            ("grant_expired", CloudAuthStatus::RepositoryDenied),
+            ("scope_denied", CloudAuthStatus::RepositoryDenied),
+            ("repo_access_denied", CloudAuthStatus::RepositoryDenied),
+            ("paid_seat_required", CloudAuthStatus::EntitlementDenied),
+            ("seat_capacity_exceeded", CloudAuthStatus::QuotaExceeded),
+            ("tenant_upgrade_required", CloudAuthStatus::ActionRequired),
+            ("tenant_upgrading", CloudAuthStatus::PendingFulfillment),
+            ("tenant_suspended", CloudAuthStatus::Unauthorized),
+            ("tenant_archived", CloudAuthStatus::RepositoryDenied),
+            ("org_recovery_required", CloudAuthStatus::ActionRequired),
+            ("policy_template_conflict", CloudAuthStatus::ActionRequired),
+            (
+                "provenance_origin_mismatch",
+                CloudAuthStatus::ProviderUnavailable,
+            ),
+            ("idempotency_conflict", CloudAuthStatus::ActionRequired),
+            ("idempotency_in_progress", CloudAuthStatus::ActionRequired),
+            ("version_conflict", CloudAuthStatus::ActionRequired),
+            ("transaction_aborted", CloudAuthStatus::ProviderUnavailable),
+        ] {
+            let diag = diagnostic_for_status_code(code, Some("DecapodLabs/decapod"))
+                .unwrap_or_else(|| panic!("missing diagnostic for `{code}`"));
+            assert_eq!(diag.status, expected_status, "wrong status for `{code}`");
+            assert_eq!(diag.error_code_str(), Some(code), "wrong code for `{code}`");
+        }
     }
 }

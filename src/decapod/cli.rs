@@ -1151,6 +1151,26 @@ pub(crate) enum CloudCommand {
         #[clap(subcommand)]
         command: CloudBillingCommand,
     },
+    /// Inspect and administer orthogonal cloud organization administrators (`AccountOperation::OrgAdmins`).
+    Admins {
+        #[clap(subcommand)]
+        command: CloudAdminsCommand,
+    },
+    /// Inspect or coordinate organization custody recovery (`AccountOperation::OrgRecovery`).
+    Recovery {
+        #[clap(subcommand)]
+        command: CloudRecoveryCommand,
+    },
+    /// List, inspect, apply, or delete cloud organization policy templates (`AccountOperation::PolicyTemplates`).
+    Policies {
+        #[clap(subcommand)]
+        command: CloudPoliciesCommand,
+    },
+    /// Inspect, request, apply, or cancel cloud organization tenant upgrades (`AccountOperation::OrgUpgrades`).
+    Upgrades {
+        #[clap(subcommand)]
+        command: CloudUpgradesCommand,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1168,6 +1188,18 @@ pub(crate) enum CloudProjectCommand {
         /// Create the project in this managed organization.
         #[clap(long = "org")]
         organization_id: Option<String>,
+    },
+    /// Enroll a repository project into Decapod Cloud (`AccountOperation::RepositoryEnroll`).
+    Enroll {
+        /// Optional managed project identifier (defaults to the current checkout repository).
+        #[clap(long)]
+        project_id: Option<String>,
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Optional target plan tier for enrollment.
+        #[clap(long)]
+        plan_tier: Option<String>,
     },
 }
 
@@ -1337,6 +1369,154 @@ pub(crate) enum CloudBillingCommand {
         /// Optional managed project identifier (uses the routed project when omitted).
         #[clap(long)]
         project_id: Option<String>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudAdminsCommand {
+    /// List cloud organization administrators (orthogonal to paid repository seats).
+    List {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+    },
+    /// Grant organization administrator custody to an active member (AAL2 MFA gated).
+    Grant {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Member cloud account UUID to grant admin custody to.
+        #[clap(long)]
+        member_account_id: String,
+        /// Optional expected admin revision for optimistic concurrency control.
+        #[clap(long)]
+        expected_revision: Option<u64>,
+    },
+    /// Revoke organization administrator custody from a member (AAL2 MFA gated).
+    Revoke {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Member cloud account UUID to revoke admin custody from.
+        #[clap(long)]
+        member_account_id: String,
+        /// Optional expected admin revision for optimistic concurrency control.
+        #[clap(long)]
+        expected_revision: Option<u64>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudRecoveryCommand {
+    /// Inspect active organization custody recovery state.
+    Status {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+    },
+    /// Initiate organization custody recovery (AAL2 MFA gated).
+    Initiate {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Optional audit reason for recovery initiation.
+        #[clap(long)]
+        reason: Option<String>,
+    },
+    /// Approve a pending organization custody recovery workflow (AAL2 MFA gated).
+    Approve {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Recovery workflow identifier to approve.
+        #[clap(long)]
+        recovery_id: String,
+    },
+    /// Cancel a pending organization custody recovery workflow (AAL2 MFA gated).
+    Cancel {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Recovery workflow identifier to cancel.
+        #[clap(long)]
+        recovery_id: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudPoliciesCommand {
+    /// List cloud organization policy templates.
+    List {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+    },
+    /// Fetch a specific cloud organization policy template.
+    Get {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Policy template identifier.
+        #[clap(long)]
+        template_id: String,
+    },
+    /// Apply a cloud organization policy template (AAL2 MFA gated).
+    Apply {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Policy template identifier.
+        #[clap(long)]
+        template_id: String,
+        /// Optional expected template revision.
+        #[clap(long)]
+        revision: Option<u64>,
+    },
+    /// Delete a cloud organization policy template (AAL2 MFA gated).
+    Delete {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Policy template identifier.
+        #[clap(long)]
+        template_id: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudUpgradesCommand {
+    /// Inspect cloud organization tenant upgrade status.
+    Status {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+    },
+    /// Request a cloud organization tenant upgrade (AAL2 MFA gated).
+    Request {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Target plan or tenant upgrade tier.
+        #[clap(long)]
+        target_tier: String,
+    },
+    /// Apply an approved cloud organization tenant upgrade (AAL2 MFA gated).
+    Apply {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Upgrade identifier to apply.
+        #[clap(long)]
+        upgrade_id: String,
+    },
+    /// Cancel a pending cloud organization tenant upgrade (AAL2 MFA gated).
+    Cancel {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Upgrade identifier to cancel.
+        #[clap(long)]
+        upgrade_id: String,
     },
 }
 

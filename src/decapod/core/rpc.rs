@@ -820,6 +820,67 @@ pub struct CloudBillingParams {
     pub project_id: Option<String>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudEnrollParams {
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub project_id: Option<String>,
+    #[serde(default)]
+    pub plan_tier: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudAdminsParams {
+    #[serde(default = "default_list_operation")]
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub member_account_id: Option<String>,
+    #[serde(default)]
+    pub expected_revision: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudRecoveryParams {
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub recovery_id: Option<String>,
+    #[serde(default)]
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudPoliciesParams {
+    #[serde(default = "default_list_operation")]
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub template_id: Option<String>,
+    #[serde(default)]
+    pub revision: Option<u64>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct CloudUpgradesParams {
+    pub operation: String,
+    #[serde(default)]
+    pub organization_id: Option<String>,
+    #[serde(default)]
+    pub target_tier: Option<String>,
+    #[serde(default)]
+    pub upgrade_id: Option<String>,
+}
+
 pub fn default_request_id() -> String {
     crate::core::ulid::new_ulid()
 }
@@ -1492,9 +1553,39 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
             },
             Capability {
                 name: "cloud.billing".to_string(),
-                description: "Mint verified HTTPS billing portal URLs and inspect live usage and spend-cap warning state".to_string(),
+                description: "Mint verified HTTPS billing portal URLs and inspect live usage and spend-cap warning state via ResourceLimits".to_string(),
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
+            },
+            Capability {
+                name: "cloud.enroll".to_string(),
+                description: "Enroll a repository project into Decapod Cloud via AccountOperation::RepositoryEnroll".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.admins".to_string(),
+                description: "List, grant, and revoke orthogonal cloud organization administrators via AccountOperation::OrgAdmins".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.recovery".to_string(),
+                description: "Inspect, initiate, approve, and cancel cloud organization custody recovery via AccountOperation::OrgRecovery".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.policies".to_string(),
+                description: "List, inspect, apply, and delete cloud organization policy templates via AccountOperation::PolicyTemplates".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
+            },
+            Capability {
+                name: "cloud.upgrades".to_string(),
+                description: "Inspect, request, apply, and cancel cloud organization tenant upgrades via AccountOperation::OrgUpgrades".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
             },
         ],
         subsystems: vec![
@@ -1592,11 +1683,17 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                     "projects".to_string(),
                     "project.use".to_string(),
                     "project.create".to_string(),
+                    "project.enroll".to_string(),
                     "orgs".to_string(),
                     "members".to_string(),
                     "invites".to_string(),
                     "identity".to_string(),
                     "billing".to_string(),
+                    "enroll".to_string(),
+                    "admins".to_string(),
+                    "recovery".to_string(),
+                    "policies".to_string(),
+                    "upgrades".to_string(),
                 ],
             },
             SubsystemInfo {

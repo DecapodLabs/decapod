@@ -1,5 +1,12 @@
 # Intent
 
+## End-to-end DPoP device gateway lifecycle and `dactyl-db = "0.19.0"` Cloud Admin wiring (#1878, #1835, #1836, #1896, #1895, #1859, #1369)
+
+Completes sender-constrained RFC 9449 DPoP operational transport end-to-end across Decapod Cloud and upgrades the storage/onboarding control plane to `dactyl-db = "=0.19.0"` without breaking human-bearer admin custody or touching local SQLite:
+
+- **End-to-end DPoP device enrollment, sidecar session rotation, gateway routing, and container signing (`#1878`)**: Upgrades operational `connect` / `connect_control` calls from human Bearer sessions to repository-scoped `dpc_at_`/`dpc_rt_` DPoP device sessions backed by locally custodied Ed25519 keys, handles `401 use_dpop_nonce` challenges and proactive `REFRESH_LEAD_SECONDS` rotation over `/device-refresh`, routes data and proof-control RPCs through `/functions/v1/decapod-onboarding/cloud-{query,batch,control}`, extends the host container signer socket allowlist to `/cloud-control` while continuing to deny all device/billing/admin endpoints, and preserves human Bearer authentication on `/account-status` and Cloud Admin endpoints.
+- **Full `dactyl-db 0.19.0` Cloud Admin & transport integration**: Wires all six new `AccountOperation` variants (`RepositoryEnroll`, `ResourceLimits` with graceful legacy 404 fallback, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, `OrgUpgrades`), propagates `dactyl-db 0.19.0` problem codes (`#132`), DPoP nonce/key/audience lifecycle codes (`#133`), org session/grant narrowing codes (`#134`), paid repository seat enforcement (`#136`), explicit opt-in staged `FIRST_PARTY_CLOUD_ORIGIN` (`https://api.decapodlabs.ai`, `#138`) with verified `canonical_auth_url` / `canonical_repository_url` helpers, tenant upgrade/lifecycle diagnostics (`#139`), and validated `EffectProvenance` metadata (`#140`).
+
 ## Multi-organization Cloud parity (#1895) and organization constitution overlays (#877)
 
 - **Multi-organization Cloud parity without local SQLite fallback (`#1895`)**: Proves through an explicit versioned operation and evidence parity matrix (`decapod.cloud-parity-matrix.v1` / `decapod.cloud-parity-report.v1`) and a 2-organization / 2-database / 2-repo-per-org / 2-human integration harness (`tests/cloud_tenancy_parity_1895.rs`) that `backend = "cloud"` preserves Decapod logical semantics (ordered task/event/CAS claims, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit-and-policy-bound evidence capture, and `#215` separation of org-admin views from paid per-repo seats) across organization switches, mid-session seat revocation, and network cuts without exposing physical database identifiers to Decapod or creating `.decapod/data/decapod.db`. Blanket Cloud parity is never claimed: unsupported Cloud operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) are explicitly enumerated and fail closed (`CLOUD_LEASE_RENEW_UNSUPPORTED`, etc.) rather than falling back to SQLite.
@@ -807,8 +814,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (275 files)
+- Repository signal fingerprint: `b7b36d13485ba240bdc065dd4ca86a572ef86c01cc79f092891c1a4e9cf92da0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

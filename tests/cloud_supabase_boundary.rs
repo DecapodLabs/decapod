@@ -300,6 +300,19 @@ mod enabled {
                     write!(stream, "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}", body.len()).unwrap();
                     continue;
                 }
+                if path != "/device-revoke"
+                    && (headers.starts_with("post /functions/v1/decapod-onboarding/device-")
+                        || headers.starts_with("post /functions/v1/propodus-onboarding/device-"))
+                {
+                    let body = r#"{"error":{"code":"not_found"}}"#;
+                    write!(
+                        stream,
+                        "HTTP/1.1 404 Not Found\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    )
+                    .unwrap();
+                    continue;
+                }
                 let rpc = headers.starts_with("post /rest/v1/rpc/");
                 let is_query = headers.starts_with("post /query ")
                     || headers.starts_with("post /rest/v1/rpc/dactyl_query_v1 ");

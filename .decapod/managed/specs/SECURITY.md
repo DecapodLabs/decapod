@@ -1,5 +1,14 @@
 # Security
 
+## DPoP sender-constrained gateway custody, container signer isolation & `dactyl-db 0.19.0` fail-closed boundaries (#1878)
+
+- **Sidecar DPoP session binding & fail-closed revocation (`src/decapod/core/cloud_session.rs`, `src/decapod/core/cloud_client.rs`)**:
+  `device_session.json` shares the checkout's `SessionStore` binding and atomic private-file permissions; copying a device session across different `(origin, repository, checkout)` bindings fails closed. Refresh reuse (`refresh_reuse_detected`), `device_revoked`, `device_key_expired`, and `record_rejected_credential` clear the sidecar device session without falling back to SQLite or downgrading to unsigned Bearer in strict `DECAPOD_CLOUD_AUTH_SCHEME=dpop` mode. `cloud_client::revoke` separates DPoP-signed `action=logout` (using the active `dpc_at_` sidecar + enrolled device signer) from human-bearer management revocation (`revoke_all` / `revoke_key`).
+- **Container signer boundary (`src/decapod/core/container_signer.rs`)**:
+  Admits `/cloud-control` alongside `/cloud-query` and `/cloud-batch` via the host-mounted Unix domain socket so containerized workspaces sign operational Cloud control RPCs without ever receiving private key bytes or raw credentials, while explicitly denying all six new `dactyl-db 0.19.0` human-bearer admin operations (`/repository-enroll`, `/resource-limits`, `/org-admins`, `/org-recovery`, `/policy-templates`, `/org-upgrades`) as well as `/device-*` and `/billing-*`.
+- **Direct wire error-code forwarding, strict URL validation & privacy (`dactyl-db 0.19.0`, `cloud_client.rs`, `cloud_admin.rs`)**:
+  Upgrading to `dactyl-db 0.19.0` closes the prior `0.18.0` gap by directly forwarding allowlisted HTTP error codes (`mfa_step_up_required`, `custody_conflict`, `owner_protected`, `member_not_found`, `invitation_expired`, `invitation_not_found`, `project_not_found`, `seat_revoked`, `grant_revoked`, `grant_expired`, `scope_denied`, `dpop_aud_mismatch`, `version_conflict`, `idempotency_conflict`, `idempotency_in_progress`, `transaction_aborted`) and validating origin-bound `EffectProvenance` headers. `enroll_repository` validates returned `checkout_url`/`enrollment_url`/`portal_url` via `validate_https_portal_url`, `local_status` never leaks physical origin URLs, and `DECAPOD_CLOUD_FIRST_PARTY_ORIGIN=1` remains explicit opt-in until custom-domain cutover is verified.
+
 ## Multi-tenant Cloud isolation and non-overridable organization policy enforcement (#1895, #877)
 
 - **Tenant & seat isolation without SQLite fallback (`#1895`)**: Cloud sessions remain bound to explicit `(origin, repository, project/org)` context and verified server access. Decapod never receives backend DB names, URLs, or credentials, fails closed on cross-org/stale scopes, seat revocation, paid-seat absence (`#215`), cross-repo `operation_id` replay, or network cuts, and never initializes or modifies `.decapod/data/decapod.db` as a fallback.
@@ -895,8 +904,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (275 files)
+- Repository signal fingerprint: `b7b36d13485ba240bdc065dd4ca86a572ef86c01cc79f092891c1a4e9cf92da0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

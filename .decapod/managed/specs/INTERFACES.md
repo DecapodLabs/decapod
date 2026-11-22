@@ -1,5 +1,20 @@
 # Interfaces
 
+## DPoP device gateway & `dactyl-db 0.19.0` Cloud Admin CLI/RPC contracts (#1878)
+
+- **Expanded `decapod cloud` CLI subcommands (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
+  - `decapod cloud project enroll [--project-id <id>] [--organization-id <id>] [--plan-tier <tier>]` (`decapod.cloud.enroll.v1`, `AccountOperation::RepositoryEnroll`).
+  - `decapod cloud billing limits [--project-id <id>]` routes through `AccountOperation::ResourceLimits` first (falling back on 404 to legacy `AccountOperation::Status`).
+  - `decapod cloud admins {list|grant|revoke}` (`decapod.cloud.admins.v1`, `AccountOperation::OrgAdmins`, explicitly reiterating `#215` admin-vs-paid-seat orthogonality).
+  - `decapod cloud recovery {status|initiate|approve|cancel}` (`decapod.cloud.recovery.v1`, `AccountOperation::OrgRecovery`).
+  - `decapod cloud policies {list|get|apply|delete}` (`decapod.cloud.policies.v1`, `AccountOperation::PolicyTemplates`).
+  - `decapod cloud upgrades {status|request|apply|cancel}` (`decapod.cloud.upgrades.v1`, `AccountOperation::OrgUpgrades`).
+  - `decapod cloud status` adds non-secret boolean `first_party_origin_staged` without exposing physical origin URIs; explicit opt-in `DECAPOD_CLOUD_FIRST_PARTY_ORIGIN=1` selects `FIRST_PARTY_CLOUD_ORIGIN` (`https://api.decapodlabs.ai`).
+- **Expanded JSON RPC & capabilities contracts (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/core/docs_cli.rs`, `docs/agent/command-contracts.md`)**:
+  Registers `cloud.{enroll,admins,recovery,policies,upgrades}` with `session_required = false`, typed `Cloud{Enroll,Admins,Recovery,Policies,Upgrades}Params`, matching `Capability` and `cloud` subsystem `ops` (`project.enroll`, `enroll`, `admins`, `recovery`, `policies`, `upgrades`), and aligned early-dispatch guards without touching local SQLite.
+- **Typed `CloudAuthErrorCode` expansion (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**:
+  Adds typed `snake_case` error codes for DPoP (`use_dpop_nonce`, `invalid_dpop_proof`, `dpop_aud_mismatch`, `dpop_replay`, `dpop_nonce_mismatch`, `dpop_clock_skew`, `dpop_ath_mismatch`, `dpop_htu_mismatch`, `dpop_htm_mismatch`, `dpop_jkt_mismatch`, `invalid_binding`, `dpop_proof_required`, `missing_dpop_proof`, `stolen_bearer`, `device_revoked`, `device_key_expired`, `device_not_enrolled`, `refresh_reuse_detected`, `expired_credential`), org session/grant narrowing (`grant_revoked`, `grant_expired`, `scope_denied`, `repo_access_denied`), paid seats (`paid_seat_required`, `seat_capacity_exceeded`, `organization_already_enrolled`, `admin_approval_required`), tenant lifecycle (`tenant_upgrade_required`, `tenant_upgrading`, `tenant_suspended`, `tenant_archived`, `org_recovery_required`, `policy_template_conflict`), and provenance/concurrency (`provenance_origin_mismatch`, `idempotency_conflict`, `idempotency_in_progress`, `version_conflict`, `transaction_aborted`).
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1672,8 +1687,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (275 files)
+- Repository signal fingerprint: `b7b36d13485ba240bdc065dd4ca86a572ef86c01cc79f092891c1a4e9cf92da0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -269,6 +269,16 @@ struct ProjectRecord {
     value: serde_json::Value,
 }
 
+#[cfg(feature = "supabase-cloud")]
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct DeviceSessionRecord {
+    version: u16,
+    binding: Binding,
+    repository: String,
+    session: Session,
+}
+
 pub struct SessionGuard {
     file: File,
     store: SessionStore,
@@ -342,6 +352,82 @@ impl SessionGuard {
         Ok(())
     }
 
+    #[cfg(feature = "supabase-cloud")]
+    pub(crate) fn device_session(&self, repository: &str) -> Result<Option<Session>, DecapodError> {
+        let path = self.store.directory.join("device_session.json");
+        let file = match open_secret_file(&path, OpenOptions::new().read(true)) {
+            Ok(file) => file,
+            Err(DecapodError::IoError(error)) if error.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(None);
+            }
+            Err(error) => return Err(error),
+        };
+        let mut bytes = Vec::new();
+        file.take(MAX_RECORD_BYTES + 1).read_to_end(&mut bytes)?;
+        if bytes.len() as u64 > MAX_RECORD_BYTES {
+            return Err(invalid(
+                "cloud device session record exceeds its size bound",
+            ));
+        }
+        let record: DeviceSessionRecord = serde_json::from_slice(&bytes).map_err(|_| {
+            invalid("cloud device session record is invalid; preserve it for review")
+        })?;
+        if record.version != RECORD_VERSION || record.binding != self.store.binding {
+            return Err(invalid(
+                "cloud device session scope does not match this checkout",
+            ));
+        }
+        validate_session_fields(&record.session)?;
+        if record.repository != repository {
+            return Ok(None);
+        }
+        Ok(Some(record.session))
+    }
+
+    #[cfg(feature = "supabase-cloud")]
+    pub(crate) fn replace_device_session(
+        &mut self,
+        repository: &str,
+        session: Session,
+    ) -> Result<(), DecapodError> {
+        if repository.trim().is_empty() {
+            return Err(invalid(
+                "cloud device session requires a repository identifier",
+            ));
+        }
+        validate_session_fields(&session)?;
+        let path = self.store.directory.join("device_session.json");
+        match open_secret_file(&path, OpenOptions::new().read(true)) {
+            Ok(_) => (),
+            Err(DecapodError::IoError(error)) if error.kind() == std::io::ErrorKind::NotFound => (),
+            Err(error) => return Err(error),
+        }
+        let record = DeviceSessionRecord {
+            version: RECORD_VERSION,
+            binding: self.store.binding.clone(),
+            repository: repository.to_owned(),
+            session,
+        };
+        let bytes = serde_json::to_vec(&record)
+            .map_err(|_| invalid("cloud device session record could not be encoded"))?;
+        if bytes.len() as u64 > MAX_RECORD_BYTES {
+            return Err(invalid(
+                "cloud device session record exceeds its size bound",
+            ));
+        }
+        crate::core::atomic::write_atomic(&path, &bytes)?;
+        Ok(())
+    }
+
+    pub(crate) fn clear_device_session(&mut self) -> Result<(), DecapodError> {
+        let path = self.store.directory.join("device_session.json");
+        match fs::remove_file(&path) {
+            Ok(()) => Ok(()),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(error) => Err(error.into()),
+        }
+    }
+
     pub fn state(&self) -> &SessionState {
         &self.state
     }
@@ -375,6 +461,7 @@ impl SessionGuard {
     /// The caller must require an explicit restart action before discarding
     /// uncertain progress. Resetting custody never revokes a service session.
     pub fn clear_for_restart(&mut self) -> Result<(), DecapodError> {
+        self.clear_device_session()?;
         self.replace(SessionState::default())
     }
 }
@@ -527,17 +614,25 @@ fn challenge_secret(value: &str) -> bool {
         && value.as_bytes().last().is_some_and(|last| b"AEIMQUYcgkosw048".contains(last))
 }
 
+fn validate_session_fields(session: &Session) -> Result<(), DecapodError> {
+    if !secret(&session.access_token, 16 * 1024)
+        || session
+            .refresh_token
+            .as_deref()
+            .is_some_and(|token| !secret(token, 4096))
+        || session.expires_at <= 0
+    {
+        return Err(invalid(
+            "cloud session state has invalid or incomplete bounded fields",
+        ));
+    }
+    Ok(())
+}
+
 fn validate_state(state: &SessionState) -> Result<(), DecapodError> {
     let malformed = || invalid("cloud session state has invalid or incomplete bounded fields");
-    if let Some(session) = &state.session
-        && (!secret(&session.access_token, 16 * 1024)
-            || session
-                .refresh_token
-                .as_deref()
-                .is_some_and(|token| !secret(token, 4096))
-            || session.expires_at <= 0)
-    {
-        return Err(malformed());
+    if let Some(session) = &state.session {
+        validate_session_fields(session)?;
     }
     if let Some(bootstrap) = &state.bootstrap
         && (!challenge_secret(&bootstrap.pkce_verifier)

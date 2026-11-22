@@ -1478,10 +1478,11 @@ pub fn base64url_decode(input: &str) -> Result<Vec<u8>, DecapodError> {
 }
 
 /// Synchronous `dactyl_db::RequestProofSigner` backed by a locally custodied
-/// Ed25519 device key (`#1778` / `dactyl-db 0.18.0`). Tracks bounded server
+/// Ed25519 device key (`#1778` / `dactyl-db 0.19.0`). Tracks bounded server
 /// `DPoP-Nonce` updates observed on responses/challenges.
 pub struct DeviceDpopSigner {
     key: std::sync::Arc<DeviceKeyMaterial>,
+    audience: Option<String>,
     observed_nonce: std::sync::Mutex<Option<String>>,
 }
 
@@ -1489,12 +1490,58 @@ impl DeviceDpopSigner {
     pub fn new(key: DeviceKeyMaterial) -> Self {
         Self {
             key: std::sync::Arc::new(key),
+            audience: None,
+            observed_nonce: std::sync::Mutex::new(None),
+        }
+    }
+
+    pub fn with_audience(key: DeviceKeyMaterial, audience: impl Into<String>) -> Self {
+        Self::from_arc_with_audience(std::sync::Arc::new(key), audience)
+    }
+
+    pub fn from_arc(key: std::sync::Arc<DeviceKeyMaterial>) -> Self {
+        Self {
+            key,
+            audience: None,
+            observed_nonce: std::sync::Mutex::new(None),
+        }
+    }
+
+    pub fn from_arc_with_audience(
+        key: std::sync::Arc<DeviceKeyMaterial>,
+        audience: impl Into<String>,
+    ) -> Self {
+        let audience = audience.into();
+        let audience = (!audience.trim().is_empty()).then_some(audience);
+        Self {
+            key,
+            audience,
             observed_nonce: std::sync::Mutex::new(None),
         }
     }
 
     pub fn jkt(&self) -> &str {
         &self.key.jkt
+    }
+
+    pub fn sign_dpop_jwt(
+        &self,
+        input: &dactyl_db::RequestProofInput<'_>,
+    ) -> Result<String, DecapodError> {
+        let cached_nonce = self
+            .observed_nonce
+            .lock()
+            .ok()
+            .and_then(|guard| guard.clone());
+        let nonce = input.nonce().or(cached_nonce.as_deref());
+        self.key.sign_dpop_proof_with_ath(
+            input.method(),
+            input.canonical_url(),
+            input.access_token_sha256(),
+            nonce,
+            self.audience.as_deref(),
+            None,
+        )
     }
 }
 
@@ -1503,22 +1550,8 @@ impl dactyl_db::RequestProofSigner for DeviceDpopSigner {
         &self,
         input: &dactyl_db::RequestProofInput<'_>,
     ) -> Result<dactyl_db::RequestProof, dactyl_db::DactylError> {
-        let cached_nonce = self
-            .observed_nonce
-            .lock()
-            .ok()
-            .and_then(|guard| guard.clone());
-        let nonce = input.nonce().or(cached_nonce.as_deref());
         let jwt = self
-            .key
-            .sign_dpop_proof_with_ath(
-                input.method(),
-                input.canonical_url(),
-                input.access_token_sha256(),
-                nonce,
-                None,
-                None,
-            )
+            .sign_dpop_jwt(input)
             .map_err(|err| dactyl_db::DactylError::Adapter {
                 kind: dactyl_db::AdapterErrorKind::Authentication,
                 code: Some("invalid_dpop_proof".to_string()),
@@ -1618,6 +1651,65 @@ impl dactyl_db::RequestProofSigner for ContainerBrokerDpopSigner {
             *guard = Some(trimmed.to_string());
         }
     }
+}
+
+pub fn is_dpop_access_token(token: &str) -> bool {
+    token.trim().starts_with("dpc_at_")
+}
+
+pub fn is_dpop_refresh_token(token: &str) -> bool {
+    token.trim().starts_with("dpc_rt_")
+}
+
+pub fn cloud_auth_scheme_override() -> Option<&'static str> {
+    match std::env::var("DECAPOD_CLOUD_AUTH_SCHEME")
+        .ok()
+        .as_deref()
+        .map(str::trim)
+    {
+        Some(v) if v.eq_ignore_ascii_case("dpop") => Some("dpop"),
+        Some(v) if v.eq_ignore_ascii_case("bearer") => Some("bearer"),
+        _ => None,
+    }
+}
+
+/// Resolve the active `RequestProofSigner` for a cloud connector using the
+/// resolved bearer/DPoP access token alongside environment/key availability.
+pub fn request_proof_signer_for_bearer(
+    origin: &str,
+    canonical_repo: &str,
+    project_root: &Path,
+    bearer: &str,
+) -> Option<std::sync::Arc<dyn dactyl_db::RequestProofSigner>> {
+    if let Ok(socket) = std::env::var("DECAPOD_CONTAINER_SIGNER_SOCKET") {
+        let trimmed = socket.trim();
+        if !trimmed.is_empty() {
+            let repo = std::env::var("DECAPOD_CONTAINER_SIGNER_REPO")
+                .ok()
+                .filter(|v| !v.trim().is_empty())
+                .unwrap_or_else(|| canonical_repo.to_string());
+            let agent_id = std::env::var("DECAPOD_AGENT_ID")
+                .ok()
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| "container".to_string());
+            return Some(std::sync::Arc::new(ContainerBrokerDpopSigner::new(
+                PathBuf::from(trimmed),
+                repo,
+                agent_id,
+            )));
+        }
+    }
+    if cloud_auth_scheme_override() == Some("bearer") && !is_dpop_access_token(bearer) {
+        return None;
+    }
+    let wants_dpop = cloud_auth_scheme_override() == Some("dpop") || is_dpop_access_token(bearer);
+    if !wants_dpop {
+        return None;
+    }
+    let store = DeviceKeyStore::for_project(origin, canonical_repo, project_root).ok()?;
+    let key = store.load().ok().flatten()?;
+    Some(std::sync::Arc::new(DeviceDpopSigner::new(key)))
 }
 
 /// Resolve the active `RequestProofSigner` for a cloud connector if running

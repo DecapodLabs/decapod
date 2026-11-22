@@ -1,5 +1,31 @@
 # Validation
 
+## DPoP E2E & `dactyl-db = "=0.19.0"` Cloud Admin verification (#1878)
+
+Verified on `origin/master` (`863311461`, `v0.162.1`) inside isolated worktree `agent/swarm-w6-1878/feat_01m81s3sm3jet4vj-dpop-e2e`:
+
+- **Dependency lockfile & Bazel policy**:
+  - `Cargo.toml` / `Cargo.lock` bumped strictly `dactyl-db` `"=0.18.0"` -> `"=0.19.0"` (`url` preserved at `2.5.9` for `cargo deny`).
+  - `/opt/homebrew/bin/bazelisk mod deps --lockfile_mode=update` and `/opt/homebrew/bin/bazelisk test //:cargo_inputs_policy`: `1/1 passed`; all local `bazel-*` symlinks removed before `specs.refresh`.
+- **Formatting, lints, feature matrix & docs sync**:
+  - `cargo fmt --all -- --check`: passed.
+  - `cargo clippy --all-targets -- -D warnings`: passed (0 warnings).
+  - `cargo check --no-default-features`: passed (0 warnings).
+  - `cargo run --quiet --bin decapod -- docs build`: synchronized `docs/agent/command-contracts.md` using the candidate worktree binary.
+- **Unit & integration suites**:
+  - `cargo test --lib cloud_`: `93 passed; 0 failed` (including `dactyl_019_problem_codes_and_staged_first_party_origin_helpers`, `device_dpop_signer_with_audience_and_token_prefix_helpers`, `device_session_sidecar_enforces_scope_and_clears_on_restart`).
+  - `cargo test --lib container_signer`: `2 passed; 0 failed` (including `container_signer_allows_cloud_control_gateway_path_and_denies_019_admin_ops`).
+  - `cargo test --lib advertised_rpc_sessions_match_the_actual_entry_guards` (`1/1`) and `cargo test --lib core::interop` (`25/25`): passed.
+  - `cargo test --test cloud_dpop_e2e_1878`: `2 passed; 0 failed` (end-to-end enrollment, `401 use_dpop_nonce` retry, `/cloud-query`, `/cloud-batch`, `/cloud-control`, `/device-refresh` rotation, container signer Unix socket signing + `/device-enroll` denial, DPoP session logout, `refresh_reuse_detected`, `device_revoked`, `record_rejected_credential`, strict `DECAPOD_CLOUD_AUTH_SCHEME=dpop` 404 fail-closed, and zero SQLite creation).
+  - `cargo test --test cloud_admin_boundary`: `7 passed; 0 failed` (including `dactyl_019_six_account_operations_and_problem_codes_route_cleanly_without_sqlite` covering `RepositoryEnroll`, `ResourceLimits` direct + transitional `/propodus-onboarding/` + legacy `/account-status` fallback, `OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, `OrgUpgrades`, `version_conflict`, `grant_revoked`, `seat_revoked`, and zero SQLite creation).
+  - `cargo test --test cloud_supabase_boundary`: `52 passed; 0 failed`.
+  - `cargo test --test cloud_wave_parity`: `5 passed; 0 failed`.
+  - `cargo test --test cloud_workspace_validation_1886`: `4 passed; 0 failed`.
+  - `cargo test --test cli_contracts`: `134 passed; 0 failed; 1 ignored` (including updated `cloud_admin_help_secrets_and_rpc_capabilities_stay_in_sync`).
+  - `cargo test --test doc_alignment`: `5 passed; 0 failed`; `cargo test --test interop_conformance`: `12 passed; 0 failed`.
+- **Remaining external gates**:
+  - Live hosted Propodus/Supabase/Stripe deployments are outside offline loopback tests; Buildkite was waived by operator instruction; GitHub Actions CI runs upon PR push.
+
 ## Multi-org Cloud parity and organization constitution overlay verification (#1895, #877)
 
 - **Multi-org Cloud tenancy parity (`#1895`)**: `tests/cloud_tenancy_parity_1895.rs` verifies multi-organization switching, cross-tenant refusal, `#215` org-admin vs zero-paid-seat isolation on Repo 1B, concurrent CAS race exclusivity, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit/policy-bound evidence capture, mid-session seat revocation and network-cut fail-closed behavior with zero `.decapod/data/decapod.db` creation, independent observer state checks, and local SQLite equivalence on the supported operation subset (using a local 2-org/2-DB gateway simulation rather than live hosted Cloud infrastructure). Unit coverage in `src/decapod/core/cloud_parity_matrix.rs` asserts matrix schema invariants and Cloud refusal behavior (`CLOUD_LEASE_RENEW_UNSUPPORTED`).
@@ -1679,8 +1705,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (275 files)
+- Repository signal fingerprint: `b7b36d13485ba240bdc065dd4ca86a572ef86c01cc79f092891c1a4e9cf92da0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

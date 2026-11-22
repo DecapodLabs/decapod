@@ -338,15 +338,20 @@ impl DactylBridge {
                                         Some(&repository.canonical_name),
                                     )
                                 })?;
+                            if crate::core::cloud_dpop::is_dpop_access_token(bearer) {
+                                connector = connector.with_device_gateway();
+                            }
                             if let Ok(cwd) = std::env::current_dir()
                                 && let Some(signer) =
-                                    crate::core::cloud_dpop::active_request_proof_signer(
+                                    crate::core::cloud_dpop::request_proof_signer_for_bearer(
                                         connector.origin(),
                                         &repository.canonical_name,
                                         &cwd,
+                                        bearer,
                                     )
                             {
-                                connector = connector.with_proof_signer(signer);
+                                connector =
+                                    connector.with_device_gateway().with_proof_signer(signer);
                             }
                             connector.route(Some(bearer.to_owned()))
                         }
