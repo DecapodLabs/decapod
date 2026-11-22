@@ -13,6 +13,7 @@ pub mod backend;
 pub mod bounded_process;
 pub mod broker;
 pub mod capabilities;
+pub mod capability_contract;
 pub mod capsule_policy;
 pub mod cloud_backend;
 pub mod cloud_client;

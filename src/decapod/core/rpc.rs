@@ -664,6 +664,25 @@ pub struct InteropProjectResult {
     pub canonical_state_verified: Option<bool>,
 }
 
+/// Request accepted by `interop.capability_contracts`.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct InteropCapabilityContractsParams {
+    /// Include the multi-repository Decapod -> Dactyl -> Propodus compatibility fixture suite.
+    #[serde(default)]
+    pub fixture: bool,
+    /// Optional caller-supplied `decapod.capability-contract.v1` JSON object to check against accepted policy.
+    #[serde(default)]
+    pub contract: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InteropCapabilityContractsResult {
+    pub inspection: crate::core::capability_contract::CapabilityInspectionReport,
+    pub input_origin: String,
+    pub canonical_state_verified: bool,
+}
+
 // State Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StateResolveParams {
@@ -1320,6 +1339,12 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                     .to_string(),
                 stability: "alpha".to_string(),
                 cost: "medium".to_string(),
+            },
+            Capability {
+                name: "interop.capability_contracts".to_string(),
+                description: "Inspect composed service capability contracts and detect schema, revision, policy, or consequence drift".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
             },
         ],
         subsystems: vec![

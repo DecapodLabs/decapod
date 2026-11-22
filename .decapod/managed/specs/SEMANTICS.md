@@ -1,5 +1,17 @@
 # Semantics
 
+## Capability contract status & composite consequence semantics (#1906)
+
+- **Status orthogonality (`ContractStatus`)**:
+  Distinguishes `declared`, `observed`, `currently_verified`, `incompatible`, `unsupported`, and `stale`. Syntactic interface compatibility (`syntactically_compatible`), observed single-transaction behavior (`observed_behavior_verified`), and user-intent correctness (`user_intent_correctness_established = false`) are never conflated; an HTTP 200-shaped client response never overrides missing service fields, dropped error classes, renamed operations, auth scope drift, or revision mismatch.
+- **No self-certification**:
+  A contract descriptor setting `declared_status = "currently_verified"` or `is_self_reported = true` is rejected with `SelfVerificationRejected` (`CAPABILITY_CONTRACT_DRIFT`). Only non-self-reported evidence from a trusted `evidence.producer` matching current `accepted_source_revision`, `contract_revision`, `operation_name`, `auth_scope`, and `independent_readback_verified = true` can establish `currently_verified`.
+- **Composite consequence closure (`CompositeConsequenceState`)**:
+  - `prepared`: authorized and prestate-eligible, `effect_established = false`, `goal_completed = false`.
+  - `observed`: owner poststate confirmed and independent readback verified, `goal_completed = true`.
+  - `held`: containment preserved (`containment_preserved = true`, `goal_completed = false`) across prestate drift (`stale`), shared-capacity collision (`failed`), pending async consequence (`pending`), or severed ack / blocked blind replay (`uncertain`).
+  - `compensated`: mutually supported corrective operation (`task.release`) verified by final owner readback while retaining `original_fault_retained` in evidence (`goal_completed = false`; compensation is not erasure).
+
 ## Reversible integration removal invariants (#1704)
 
 - **Preview purity:** `decapod integration preview` never creates `.lock`, `-wal`,
@@ -390,8 +402,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a59ab3c7c7971e01af8b8ea38c5292f77194d9e4a02c6d273508848fc31d7a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
+- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

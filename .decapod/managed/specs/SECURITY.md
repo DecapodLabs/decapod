@@ -11,6 +11,15 @@
 - **Execution-outcome separation & maintainer-setting isolation**:
   `OperationConsequenceRecord` separates admission (`GrantDecision`) from external effects (`ExecutionOutcomeKind::WitnessedExternal` vs `DecapodMediatedApplied`), while `#1893` regression tests assert maintainer-only development entrypoint-version-drift override settings never surface in agent-facing specs, embedded docs, CLI help, or context capsules.
 
+## Capability contract trust boundaries & tamper resistance (#1906)
+
+- **Accepted policy precedence (`AcceptedCapabilityPolicy`)**:
+  Agent-edited local contract copies cannot weaken `auth_scope`, drop `required_error_classes` or `required_negative_case_ids`, disable `blind_replay_forbidden`, or disable `readback_required`; `check_against_accepted_policy` and `validate_repo_contract_boundary` compare against the main/host baseline (`repo_accepted_policy`) and fail closed with `AgentEditedContractCopyDrift` / `DroppedNegativeCase`.
+- **Evidence provenance & no blind replay**:
+  Evidence from untrusted producers, stale revisions, or `uncertain` / `pending` prior attempts cannot be reused as current proof (`EvidenceProducerUntrusted`, `EvidenceStale`, `EvidenceUncertainNotProof`). Blind replay after a severed acknowledgement is rejected (`SeveredAckBlindReplayAttempt`) and compensation is blocked until authoritative idempotent readback resolves uncertainty or a mutually supported corrective op runs while retaining the original fault.
+- **Read-only inspection isolation**:
+  `decapod capabilities contracts` and `interop.capability_contracts` never trust caller-supplied contracts as canonical authority (`canonical_state_verified = false`), perform zero network calls, and never write `.decapod/data/decapod.db` or session state.
+
 ## Snapshot policy enforcement, heartbeat custody invariants, and freshness measurement bounds (#1881, #1837, #1884)
 
 - **Snapshot authorization & symlink guards (`src/decapod/core/workspace.rs`)**:
@@ -870,8 +879,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a59ab3c7c7971e01af8b8ea38c5292f77194d9e4a02c6d273508848fc31d7a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
+- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

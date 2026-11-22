@@ -90,6 +90,28 @@ pub(crate) struct CapabilitiesCli {
     /// Output format: 'json' or 'text'.
     #[clap(long, default_value = "text")]
     pub format: String,
+    /// Optional capability contract inspection subcommands.
+    #[clap(subcommand)]
+    pub command: Option<CapabilitiesCommand>,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CapabilitiesCommand {
+    /// Inspect composed service capability contracts for drift without mutating repository state.
+    Contracts {
+        /// Include the multi-repository Decapod -> Dactyl -> Propodus compatibility fixture and traces.
+        #[clap(long)]
+        fixture: bool,
+        /// Optional path to a JSON capability contract file to evaluate against accepted policy.
+        #[clap(long)]
+        contract: Option<PathBuf>,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Output format: 'text' or 'json'.
+        #[clap(long, default_value = "text", value_parser = ["text", "json"])]
+        format: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]

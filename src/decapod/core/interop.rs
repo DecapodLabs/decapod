@@ -414,6 +414,12 @@ rpc_catalog![
         description: "Structured projection of a captured outcome (derived, non-authoritative)",
     },
     OpMeta {
+        op: "interop.capability_contracts",
+        read_only: true,
+        session_required: false,
+        description: "Composed service capability contract inspection and drift check (read-only, never grants authority)",
+    },
+    OpMeta {
         op: "state.resolve",
         read_only: true,
         session_required: false,

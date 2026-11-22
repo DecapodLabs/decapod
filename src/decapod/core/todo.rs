@@ -5855,18 +5855,26 @@ pub fn handoff_task_as(
     lease_seconds: Option<u64>,
     acting_agent: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
-    let project_root =
-        project_root_from_store_root(&store.root).unwrap_or_else(|_| store.root.to_path_buf());
-    crate::core::effective_grant::enforce_task_operation_if_delegated(
-        &project_root,
-        &store.root,
-        "todo.handoff",
-        acting_agent,
-        id,
-        Some(to),
-        &[],
-    )?;
-    match handoff_task_impl(store, id, to, from, summary, lease_seconds, acting_agent) {
+    let outcome = (|| {
+        if acting_agent.trim().is_empty() || acting_agent == "unknown" {
+            return Err(error::DecapodError::ValidationError(
+                "HANDOFF_CALLER_MISSING: use the actual active caller identity; --from only asserts the previous owner".to_string(),
+            ));
+        }
+        let project_root =
+            project_root_from_store_root(&store.root).unwrap_or_else(|_| store.root.to_path_buf());
+        crate::core::effective_grant::enforce_task_operation_if_delegated(
+            &project_root,
+            &store.root,
+            "todo.handoff",
+            acting_agent,
+            id,
+            Some(to),
+            &[],
+        )?;
+        handoff_task_impl(store, id, to, from, summary, lease_seconds, acting_agent)
+    })();
+    match outcome {
         Ok(mut output) => {
             if output["status"] != "ok" {
                 output["recovery"] = handoff_recovery_diagnostic(

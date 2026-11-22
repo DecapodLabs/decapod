@@ -1,0 +1,392 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://decapod.dev/schemas/capability-contract-1.0.0.schema.json",
+  "title": "Decapod Composed Service Capability Contract",
+  "description": "Versioned repo-native contract describing cross-service capability schemas, auth scope, preconditions, side effects, idempotency, uncertain-outcome handling, negative cases, and evidence provenance. Declarations are descriptive evidence inputs, never self-issued authorization or runtime proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "capability_id",
+    "contract_revision",
+    "declared_status",
+    "producer",
+    "consumer",
+    "owner",
+    "accepted_source_revision",
+    "operation_name",
+    "input_schema",
+    "output_schema",
+    "error_schema",
+    "transport_binding",
+    "auth_scope",
+    "preconditions",
+    "side_effects",
+    "idempotency",
+    "uncertain_outcome_behavior",
+    "dependencies",
+    "negative_cases",
+    "required_checks",
+    "evidence"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "https://decapod.dev/schemas/capability-contract-1.0.0.schema.json"
+    },
+    "schema_version": {
+      "const": "decapod.capability-contract.v1"
+    },
+    "capability_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "contract_revision": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "declared_status": {
+      "type": "string",
+      "enum": [
+        "declared",
+        "observed",
+        "currently_verified",
+        "incompatible",
+        "unsupported",
+        "stale"
+      ]
+    },
+    "producer": { "$ref": "#/$defs/participant" },
+    "consumer": { "$ref": "#/$defs/participant" },
+    "owner": { "$ref": "#/$defs/participant" },
+    "accepted_source_revision": { "$ref": "#/$defs/accepted_source_revision" },
+    "operation_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "input_schema": { "$ref": "#/$defs/schema_spec" },
+    "output_schema": { "$ref": "#/$defs/schema_spec" },
+    "error_schema": { "$ref": "#/$defs/error_schema_spec" },
+    "transport_binding": { "$ref": "#/$defs/transport_binding" },
+    "auth_scope": { "$ref": "#/$defs/auth_scope" },
+    "preconditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/precondition" }
+    },
+    "side_effects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/side_effect" }
+    },
+    "idempotency": { "$ref": "#/$defs/idempotency_spec" },
+    "uncertain_outcome_behavior": { "$ref": "#/$defs/uncertain_outcome_policy" },
+    "dependencies": { "$ref": "#/$defs/dependencies" },
+    "negative_cases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/negative_case" }
+    },
+    "required_checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/required_check" }
+    },
+    "evidence": { "$ref": "#/$defs/evidence_provenance" }
+  },
+  "$defs": {
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "component",
+        "service_name",
+        "accepted_source_revision",
+        "contract_revision"
+      ],
+      "properties": {
+        "component": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "service_name": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "accepted_source_revision": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "contract_revision": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "accepted_source_revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "revision", "policy_digest"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "revision": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "policy_digest": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "schema_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "revision",
+        "required_fields",
+        "optional_fields",
+        "field_types",
+        "readback_required"
+      ],
+      "properties": {
+        "schema_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "revision": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "required_fields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "optional_fields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "field_types": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "readback_required": { "type": "boolean" }
+      }
+    },
+    "error_schema_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error_classes",
+        "typed_status_codes",
+        "preserves_server_reason_code"
+      ],
+      "properties": {
+        "error_classes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "typed_status_codes": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 100, "maximum": 599 }
+        },
+        "preserves_server_reason_code": { "type": "boolean" }
+      }
+    },
+    "transport_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "connector",
+        "connector_version",
+        "envelope_version",
+        "protocol",
+        "endpoint_origin_policy",
+        "supports_atomic_readback",
+        "offline_usable_without_cloud"
+      ],
+      "properties": {
+        "connector": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "connector_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "envelope_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "protocol": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "endpoint_origin_policy": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "supports_atomic_readback": { "type": "boolean" },
+        "offline_usable_without_cloud": { "type": "boolean" }
+      }
+    },
+    "auth_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "required_scopes",
+        "requires_repository_binding",
+        "requires_principal_delegation",
+        "requires_fencing_generation",
+        "forbids_client_minted_grant"
+      ],
+      "properties": {
+        "scheme": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "required_scopes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "requires_repository_binding": { "type": "boolean" },
+        "requires_principal_delegation": { "type": "boolean" },
+        "requires_fencing_generation": { "type": "boolean" },
+        "forbids_client_minted_grant": { "type": "boolean" }
+      }
+    },
+    "precondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "subject", "predicate", "recheck_at_owner"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "subject": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "predicate": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "recheck_at_owner": { "type": "boolean" }
+      }
+    },
+    "side_effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "effect_kind",
+        "owner",
+        "mutates_durable_state",
+        "requires_poststate_readback",
+        "consumes_shared_capacity"
+      ],
+      "properties": {
+        "target": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "effect_kind": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "owner": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "mutates_durable_state": { "type": "boolean" },
+        "requires_poststate_readback": { "type": "boolean" },
+        "consumes_shared_capacity": { "type": "boolean" }
+      }
+    },
+    "idempotency_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "stable_attempt_id_field",
+        "payload_digest_required",
+        "blind_replay_forbidden",
+        "reconcile_via_readback_op"
+      ],
+      "properties": {
+        "mode": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "stable_attempt_id_field": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "payload_digest_required": { "type": "boolean" },
+        "blind_replay_forbidden": { "type": "boolean" },
+        "reconcile_via_readback_op": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "uncertain_outcome_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preserves_pending",
+        "preserves_uncertain",
+        "preserves_stale",
+        "forbids_goal_completed_on_unresolved",
+        "retains_reserved_capacity_until_disproved",
+        "supported_compensation_ops",
+        "compensation_preserves_original_fault"
+      ],
+      "properties": {
+        "preserves_pending": { "type": "boolean" },
+        "preserves_uncertain": { "type": "boolean" },
+        "preserves_stale": { "type": "boolean" },
+        "forbids_goal_completed_on_unresolved": { "type": "boolean" },
+        "retains_reserved_capacity_until_disproved": { "type": "boolean" },
+        "supported_compensation_ops": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "compensation_preserves_original_fault": { "type": "boolean" }
+      }
+    },
+    "dependency_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability_id", "component", "contract_revision", "required"],
+      "properties": {
+        "capability_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "component": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "contract_revision": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "required": { "type": "boolean" }
+      }
+    },
+    "compatibility_constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "enforced_by"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "enforced_by": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["upstream", "downstream", "compatibility_constraints"],
+      "properties": {
+        "upstream": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dependency_ref" }
+        },
+        "downstream": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dependency_ref" }
+        },
+        "compatibility_constraints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/compatibility_constraint" }
+        }
+      }
+    },
+    "negative_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "trigger",
+        "expected_status",
+        "expected_outcome_class",
+        "forbids_blind_replay",
+        "forbids_goal_completed"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "trigger": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "expected_status": {
+          "type": "string",
+          "enum": ["declared", "observed", "currently_verified", "incompatible", "unsupported", "stale"]
+        },
+        "expected_outcome_class": {
+          "type": "string",
+          "enum": ["pending", "uncertain", "failed", "unsupported", "stale"]
+        },
+        "forbids_blind_replay": { "type": "boolean" },
+        "forbids_goal_completed": { "type": "boolean" }
+      }
+    },
+    "required_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "owner_component", "kind"],
+      "properties": {
+        "check_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "owner_component": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "kind": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "evidence_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "producer",
+        "producer_version",
+        "observed_revision",
+        "check_run_id",
+        "observed_at",
+        "independent_readback_verified",
+        "outcome_status",
+        "is_self_reported"
+      ],
+      "properties": {
+        "producer": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "producer_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "observed_revision": { "type": "string", "maxLength": 128 },
+        "check_run_id": { "type": "string", "maxLength": 128 },
+        "observed_at": { "type": "string", "maxLength": 64 },
+        "independent_readback_verified": { "type": "boolean" },
+        "outcome_status": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "is_self_reported": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -210,6 +210,13 @@ Live validation and readback remain owned by `workspace publish`.
 ## `decapod capabilities`
 - **Intent:** Show Decapod capabilities (for agent discovery)
 
+### `decapod capabilities contracts`
+
+- **Intent:** Deterministic, read-only inspection of composed service capability contracts (`Decapod -> Dactyl -> Propodus`) for schema, operation, auth scope, revision, policy-copy, prestate, shared-invariant, and two-step fault/severed-ack drift before governed admission.
+- **Usage:** `decapod capabilities contracts [--fixture] [--contract <PATH>] [--dir <PATH>] [--format text|json]` (also via RPC `interop.capability_contracts`).
+- **Offline isolation:** Never requires network calls or Cloud credentials; unrelated local offline repositories remain unaffected and usable (`local_offline_usable=true`, Cloud capability marked `unsupported`).
+- **Validation gate:** When `.decapod/contracts/capability_contract.json` exists, `decapod validate` checks it against accepted host policy and fails closed on drift, dropped negative cases, or self-certification (`SELF_VERIFICATION_REJECTED`).
+
 ## `decapod infer`
 - **Intent:** Inference governance: shape context before model, validate after
 
@@ -278,6 +285,7 @@ Live validation and readback remain owned by `workspace publish`.
 ### Operation: `AssuranceEvaluate`
 ### Operation: `InteropManifest`
 ### Operation: `InteropNegotiate`
+### Operation: `InteropCapabilityContracts`
 ### Operation: `StateResolve`
 ### Operation: `StateDiff`
 

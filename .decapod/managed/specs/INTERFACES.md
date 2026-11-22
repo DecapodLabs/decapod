@@ -11,6 +11,15 @@
 - **Guidance & context hygiene (`#1893`)**:
   CLI help (`--help`, `validate --help`, `init --help`, `govern --help`), `decapod docs ingest`, `context.resolve`, `local_project_specs_context`, and `.decapod/managed/specs/*` exclude maintainer-only development entrypoint-version-drift override guidance while keeping `.decapod/config.toml` parsing backward-compatible.
 
+## Composed capability contract CLI & RPC interfaces (#1906)
+
+- **Read-only CLI (`decapod capabilities contracts`, `src/decapod/cli.rs::CapabilitiesCommand::Contracts`, `src/decapod/lib.rs::run_capabilities_command`)**:
+  `decapod capabilities contracts [--fixture] [--contract <PATH>] [--dir <PATH>] [--format text|json]` inspects composed service capability contracts without startup migrations, SQLite initialization, session acquisition, or network calls. `--fixture` executes the deterministic `Decapod -> Dactyl -> Propodus` compatibility suite (`decapod.capability-compatibility-fixture.v1`), and `--contract <PATH>` evaluates a candidate `decapod.capability-contract.v1` JSON file against accepted project policy (`decapod.capability-inspection.v1`). Existing `decapod capabilities [--format json|text]` output remains unchanged.
+- **Read-only RPC (`interop.capability_contracts`, `src/decapod/core/interop.rs`, `src/decapod/core/rpc.rs::InteropCapabilityContractsParams`)**:
+  Registered in `interop::RPC_OPS` with `read_only = true`, `session_required = false`, and bypassed worktree/mandate mutations in `src/decapod/lib.rs`. Accepts `{ fixture?: bool, contract?: object }`, returning `InteropCapabilityContractsResult` with `input_origin` (`"repository_pinned_contracts"` or `"caller_supplied"`) and `canonical_state_verified = false`.
+- **Schema contract (`assets/schemas/capability-contract.schema.json`)**:
+  Draft 2020-12 strict schema (`additionalProperties = false`, `$id = https://decapod.dev/schemas/capability-contract-1.0.0.schema.json`) enforced by `tests/assets_schema_contract.rs`.
+
 ## Container snapshot precheck, `--heartbeat` lease extension, and shared measurement contracts (#1881, #1837, #1884, #1838)
 
 - **Interactive container workspace precheck (`src/decapod/core/workspace.rs`)**:
@@ -1647,8 +1656,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a59ab3c7c7971e01af8b8ea38c5292f77194d9e4a02c6d273508848fc31d7a7`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
+- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

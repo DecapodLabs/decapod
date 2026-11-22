@@ -679,6 +679,15 @@ impl Default for ParsedScopeSpec {
     }
 }
 
+fn is_advisory_scope_label(trimmed: &str) -> bool {
+    !trimmed.is_empty()
+        && !trimmed.starts_with('.')
+        && !trimmed.starts_with('-')
+        && trimmed
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'_' || b == b'-')
+}
+
 /// Strictly parse task `--scope` / delegation scope descriptors without guessing on ambiguity.
 pub fn parse_scope_spec(raw: &str) -> Result<ParsedScopeSpec, GrantRejectionReason> {
     let trimmed = raw.trim();
@@ -686,6 +695,7 @@ pub fn parse_scope_spec(raw: &str) -> Result<ParsedScopeSpec, GrantRejectionReas
         || trimmed.eq_ignore_ascii_case("root")
         || trimmed.eq_ignore_ascii_case("workspace")
         || COMPONENT_NAMES.contains(&trimmed)
+        || is_advisory_scope_label(trimmed)
     {
         return Ok(ParsedScopeSpec::default());
     }
@@ -2367,12 +2377,9 @@ pub fn enforce_mediated_operation(
 /// protections established by the accepted repository policy.
 fn detect_candidate_policy_widening(
     project_root: &Path,
-    main_root: &Path,
+    _main_root: &Path,
     accepted: &DecapodProjectConfig,
 ) -> Option<GrantRejectionReason> {
-    if project_root == main_root {
-        return None;
-    }
     let candidate_path = project_root.join(".decapod").join("config.toml");
     if !candidate_path.exists() {
         return None;

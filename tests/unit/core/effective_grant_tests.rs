@@ -349,6 +349,15 @@ fn red_green_2_rejects_copied_parent_grant_forged_approval_plan_approved_and_can
         r,
         GrantRejectionReason::CandidatePolicyWideningRejected { .. }
     )));
+    // Also verify when project_root matches canonicalized main_root (Linux /tmp behavior).
+    let canon_root = root.canonicalize().unwrap();
+    let canon_store = canon_root.join(".decapod/data");
+    let canon_grant = evaluate_effective_grant(&canon_root, &canon_store, &cand_req);
+    assert_eq!(canon_grant.decision, GrantDecision::Denied);
+    assert!(canon_grant.reasons.iter().any(|r| matches!(
+        r,
+        GrantRejectionReason::CandidatePolicyWideningRejected { .. }
+    )));
     std::fs::write(root.join(".decapod/config.toml"), original_cfg).unwrap();
 
     // 5) Delegation budget widening beyond parent cap rejected atomically.
@@ -600,6 +609,13 @@ fn red_green_4_property_order_independence_monotonicity_replay_and_strict_parser
             parse_scope_spec(bad).is_err(),
             "ambiguous/invalid scope '{bad}' must be rejected"
         );
+    }
+    for label in ["handoff_scope", "handoff-recovery", "operator-recovery"] {
+        let parsed = parse_scope_spec(label).expect("plain topic label stays accepted");
+        assert!(matches!(
+            parsed.allowances,
+            ScopeAllowanceSet::Unconstrained
+        ));
     }
 
     // 4) Missing mandatory fields & unknown actor rejection.
