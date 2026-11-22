@@ -908,6 +908,16 @@
         "tests/consumer_readiness.rs",
         "tests/unit/core/proof_tests.rs"
       ]
+    },
+    {
+      "id": "pr1890-spec-review-fixup",
+      "summary": "Record unchanged-with-reason review for SECURITY.md relative to 295f0af39 and post-merge checks",
+      "input_digest": "sha256:5ed75c17679655f6b9a55d0513204f6c450a5368297e496acf6c19c29269a814",
+      "proof_refs": [
+        "src/decapod/core/validation_runtime.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/proof_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -963,9 +973,9 @@
           "spec_material_hash": "dc938eb998aea2045109af673b9bb07afb3ca23ced424138afe68884a64850df"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Integrated #1833+#1832 (295f0af39) security spec updates alongside #1890 refreshed attestation",
+          "reason": "Relative to merged origin/master (295f0af39), #1890 introduces no security spec prose changes beyond refreshed codebase attestation",
           "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
           "spec_material_hash": "22e4b9cb14e2ce910956e0ea59c12147cf7f3c1d6645e28c11dc07be82afcf18"
         }
@@ -978,13 +988,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795315039Z"
+      "updated_at": "1795315732Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:708af074a184ae5de5e5819bb5b6a299ba3316455fd61dc104756e5e09adf9cc",
+      "artifact_hash": "sha256:8eba472bb7f3706987c11a55b179f0f493f7a6dcf46b1ece23cde93ec372a594",
       "checks": [
         {
           "name": "cargo_check_no_default_features",
@@ -1035,6 +1045,38 @@
           "status": "passed"
         },
         {
+          "name": "post_merge_295f0af39_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_consumer_readiness",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_no_default_features",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_proof",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_readiness_profile",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_repository_profile",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_295f0af39_validation_rules",
+          "status": "passed"
+        },
+        {
           "name": "source_ci_profile_policy_macos",
           "status": "partial"
         },
@@ -1064,10 +1106,17 @@
             "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M80D5B47FTAS15P667YQJ709": {
@@ -1131,6 +1180,28 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Merged origin/master (295f0af39 / PR A #1908): fmt=0, clippy=0, no-default-features=0, proof 124/124, consumer_readiness 40/40, readiness_profile, validation_rules, repository_profile all passed."
+                ],
+                "proof_refs": [
+                  "post_merge_295f0af39_fmt",
+                  "post_merge_295f0af39_clippy",
+                  "post_merge_295f0af39_no_default_features",
+                  "post_merge_295f0af39_repository_profile",
+                  "post_merge_295f0af39_validation_rules",
+                  "post_merge_295f0af39_readiness_profile",
+                  "post_merge_295f0af39_proof",
+                  "post_merge_295f0af39_consumer_readiness"
+                ],
+                "scope": [
+                  "issue-1890"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1139,6 +1210,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Merged origin/master (295f0af39 / PR A #1908): fmt=0, clippy=0, no-default-features=0, proof 124/124, consumer_readiness 40/40, readiness_profile, validation_rules, repository_profile all passed.",
         "cargo fmt --all -- --check: 0; cargo clippy --all-targets --all-features -- -D warnings: 0; cargo check --no-default-features: 0; proof 124/124; ci_event_context_policy 54/54 (python3.14); doc_alignment 5/5; readiness_profile 50/50; validation_runtime 88/88 (2 ignored); snapshot_provider 211/211 (1 ignored); validation_scope 9/9; concurrent_worktree_1469 3/3; gate_skip_1659 5/5; workunit_1660 6/6; source_ci_profile_policy 55/59 (4 macOS host/linux-platform fixture checks)"
       ],
       "inspected_files": [
