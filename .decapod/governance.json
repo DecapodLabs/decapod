@@ -896,6 +896,15 @@
         "tests/cli_contracts.rs",
         "tests/cloud_admin_boundary.rs"
       ]
+    },
+    {
+      "id": "cp-cloud-admin-plan-done",
+      "summary": "Record spec reviews and finalize plan state DONE for first-class cloud admin CLI/RPC",
+      "input_digest": "sha256:c9a136b43534c44f4b2fc99365486ac115118cf8d0054a1f90798a808ae73fd5",
+      "proof_refs": [
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs"
+      ]
     }
   ],
   "intents": {
@@ -939,7 +948,30 @@
         "cargo test --locked --features supabase-cloud --test cloud_admin_boundary --test cli_contracts --test cloud_supabase_boundary --test doc_alignment --test interop_conformance --test capability_contract_drift --test rpc_golden_vectors"
       ],
       "schema_version": "1.1.0",
-      "state": "EXECUTING",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented cloud_admin module, 1-byte CloudAuthErrorCode, admin_transport_error, and slot-to-UUID resolution",
+          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
+          "spec_material_hash": "3cd6a8c0312c83918080cd9f0a8c6431e1f798e198e935f3589cb983389981b7"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated INTERFACES.md with decapod cloud {orgs,members,invites,identity,billing} CLI flags, stdin-only secrets, HTTPS portal URL validation, and cloud.* JSON RPC schemas matching src/decapod/cli.rs, core/rpc.rs, core/interop.rs, lib.rs, and docs/agent/command-contracts.md",
+          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
+          "spec_material_hash": "98ff6d50051464ec8295817d27872bfebe1df9e53683c2e79b8923fd296549fa"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented RedactedSecret zeroization, argv secret rejection, HTTPS portal/invite URL checks, and Dactyl 0.18.0 403 allowlist disambiguation",
+          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
+          "spec_material_hash": "c62037fee8a3e29e78a88f5121fcb5155827082663a44749aa4d50e6de039607"
+        }
+      ],
+      "state": "DONE",
       "stop_conditions": [],
       "title": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
       "todo_ids": [
@@ -947,7 +979,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795330713Z"
+      "updated_at": "1795331194Z"
     },
     "trajectory": {
       "active_boundaries": [
