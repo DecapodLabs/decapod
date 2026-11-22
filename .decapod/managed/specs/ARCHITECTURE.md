@@ -1,5 +1,14 @@
 # Architecture
 
+## First-class Decapod Cloud administrative core (`src/decapod/core/cloud_admin.rs`, #1896, #1836, #1835, #1877)
+
+- **Admin control-plane boundary (`src/decapod/core/cloud_admin.rs`, `src/decapod/core/cloud_client.rs`)**:
+  `cloud_client::with_admin_session` acquires `CloudConnector` (via `acquire_with_metadata` using `discover_with_metadata`), enrolled DPoP signer, and repository-scoped `SessionStore` bearer without initializing `.decapod/data/decapod.db`, reconciles `AuthRequired | Revoked` via `account_result`, and threads `CloudMetadataWarning`s from both discovery and per-request `CloudResponseMetadata`. All five handlers (`cloud_admin::{orgs, members, invites, identity, billing}`) execute exclusively over `dactyl_db::AccountOperation::{Register, Status, Manage, Portal}` (`--no-default-features` builds keep compile-time feature parity and fail closed via `selected_origin()`).
+- **Slot-to-UUID seat resolution & orthogonal billing probing (`cloud_admin::{orgs, members}`)**:
+  `orgs` merges `AccountOperation::Status` (`organizations`, `projects`) with admin-gated `AccountOperation::Manage` (`action = "status"`) to obtain `active_paid_repositories` / `paid_repo_count` while treating unconfigured billing probes benignly and preserving `OutcomeUnknown`/`AuthRequired`/`Revoked`/`MfaRequired` failures. `members assign` and project-scoped `members revoke-seat` resolve `--slot <n>` across cursor-paginated `AccountOperation::Register` (`operation = "members"`, integer `after` cursor) to an active verified `account_id`, failing closed on pending slots before dispatching `AccountOperation::Manage` (`action = "assign" | "revoke"`).
+- **Compact diagnostic & error taxonomy (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_todo_operation.rs`)**:
+  Adds `CloudAuthStatus::OutcomeUnknown` (mapped to `FailureKind::Transport`) and 1-byte `CloudAuthErrorCode` inside `CloudAuthDiagnostic` (keeping `DecapodError` under the 128-byte `clippy::result_large_err` budget while emitting snake_case `error_code`). `cloud_client::admin_transport_error` separates read transport failures (`Offline`) from mutating post-send uncertainty (`MutationOutcome::Uncertain`, `outcome_unknown`, transport/timeout/unavailable -> `OutcomeUnknown`) and handles `dactyl-db 0.18.0`'s redacted HTTP 403 `Authorization` errors on AAL2-gated operations via `bearer_aal2_claim` (`MfaStepUpRequired` when bearer JWT lacks `"aal":"aal2"` or is opaque; `AdminRequired` when `"aal":"aal2"` is present). `status_live` and `cloud_admin::billing` both classify `"overage_cap_exhausted"` in `spend_cap_warning`.
+
 ## Effective operation grants and cumulative delegation accounting (#1905, #1893)
 
 - **Deterministic composition & canonical path algebra (`src/decapod/core/effective_grant.rs`)**:
@@ -1311,8 +1320,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

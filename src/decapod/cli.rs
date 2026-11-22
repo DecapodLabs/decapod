@@ -1098,6 +1098,32 @@ pub(crate) enum CloudCommand {
         #[clap(subcommand)]
         command: CloudProjectCommand,
     },
+    /// List verified cloud organizations, org-admin roles, and paid repository seat status.
+    Orgs {
+        /// Optional project identifier to inspect orthogonal org-admin vs paid-seat status for.
+        #[clap(long)]
+        project_id: Option<String>,
+    },
+    /// Inspect and administer cloud organization members, paid seats, ownership, and projects.
+    Members {
+        #[clap(subcommand)]
+        command: CloudMembersCommand,
+    },
+    /// List, create, cancel, and accept cloud organization workspace invitations.
+    Invites {
+        #[clap(subcommand)]
+        command: CloudInvitesCommand,
+    },
+    /// Prepare, confirm, resolve quarantine, or revoke OAuth provider identity links.
+    Identity {
+        #[clap(subcommand)]
+        command: CloudIdentityCommand,
+    },
+    /// Open verified HTTPS billing portal sessions or inspect live usage and spend-cap limits.
+    Billing {
+        #[clap(subcommand)]
+        command: CloudBillingCommand,
+    },
 }
 
 #[derive(Subcommand, Debug)]
@@ -1115,6 +1141,175 @@ pub(crate) enum CloudProjectCommand {
         /// Create the project in this managed organization.
         #[clap(long = "org")]
         organization_id: Option<String>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudMembersCommand {
+    /// List organization member seat slots and optional project access details.
+    List {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Optional repository project identifier to also inspect access details for.
+        #[clap(long)]
+        project_id: Option<String>,
+        /// Optional slot pagination cursor.
+        #[clap(long)]
+        after: Option<u32>,
+    },
+    /// Assign an organization member slot to a paid repository project seat (AAL2 MFA gated).
+    Assign {
+        /// Target cloud organization identifier (inferred from project when omitted).
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Target managed project identifier.
+        #[clap(long)]
+        project_id: String,
+        /// Organization seat slot number (>= 1) to assign.
+        #[clap(long)]
+        slot: u32,
+    },
+    /// Revoke a paid repository seat or organization seat slot without revoking admin custody (AAL2 MFA gated).
+    RevokeSeat {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Optional repository project identifier to revoke a project seat assignment from.
+        #[clap(long)]
+        project_id: Option<String>,
+        /// Organization seat slot number to revoke.
+        #[clap(long)]
+        slot: Option<u32>,
+        /// Explicit member account UUID for seat revocation verification.
+        #[clap(long)]
+        member_account_id: Option<String>,
+    },
+    /// Revoke a member's organization membership and seats (AAL2 MFA gated).
+    RevokeMember {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Member cloud account UUID to revoke.
+        #[clap(long)]
+        member_account_id: String,
+    },
+    /// Transfer primary organization ownership to an active verified member (owner + AAL2 MFA gated).
+    TransferOwnership {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Recipient member cloud account UUID.
+        #[clap(long)]
+        member_account_id: String,
+        /// Optional expected admin revision for optimistic concurrency control.
+        #[clap(long)]
+        expected_revision: Option<u64>,
+    },
+    /// Update managed project display settings in Cloud Admin (AAL2 MFA gated).
+    ProjectSettings {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Target managed project identifier.
+        #[clap(long)]
+        project_id: String,
+        /// Updated repository project display name.
+        #[clap(long)]
+        project_name: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudInvitesCommand {
+    /// List pending workspace invitations for a cloud organization.
+    List {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Optional slot pagination cursor.
+        #[clap(long)]
+        after: Option<u32>,
+    },
+    /// Create a workspace invitation (membership alone grants zero paid repository seats; AAL2 MFA gated).
+    Create {
+        /// Target cloud organization UUID/identifier.
+        #[clap(long, alias = "org")]
+        organization_id: String,
+        /// Recipient cloud account UUID.
+        #[clap(long)]
+        recipient_account_id: String,
+    },
+    /// Cancel a pending organization workspace invitation (AAL2 MFA gated).
+    Cancel {
+        /// Target cloud organization UUID/identifier.
+        #[clap(long, alias = "org")]
+        organization_id: String,
+        /// Invitation UUID to cancel.
+        #[clap(long)]
+        invitation_id: String,
+    },
+    /// Accept a workspace invitation reading the one-time secret strictly from stdin.
+    Accept {
+        /// Invitation UUID to accept.
+        #[clap(long)]
+        invitation_id: String,
+        /// Optional expected organization UUID/identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+        /// Read the one-time invitation secret strictly from standard input (never via argv).
+        #[clap(long = "secret-stdin")]
+        secret_stdin: bool,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudIdentityCommand {
+    /// Prepare a step-up intent to link an external OAuth identity provider (AAL2 MFA gated).
+    PrepareLink {
+        /// Identity provider to link (`google`, `github`, or `gitlab`).
+        #[clap(long, value_enum)]
+        provider: crate::core::cloud_admin::CloudIdentityProvider,
+    },
+    /// Confirm an OAuth provider link intent reading the step-up secret strictly from stdin (AAL2 MFA gated).
+    ConfirmLink {
+        /// Link intent UUID returned by `prepare-link`.
+        #[clap(long)]
+        intent_id: String,
+        /// Read the one-time step-up secret strictly from standard input (never via argv).
+        #[clap(long = "secret-stdin")]
+        secret_stdin: bool,
+    },
+    /// Resolve a quarantined OAuth provider attachment by confirming or revoking it (AAL2 MFA gated).
+    ResolveQuarantine {
+        /// Quarantined provider (`google`, `github`, or `gitlab`).
+        #[clap(long, value_enum)]
+        provider: crate::core::cloud_admin::CloudIdentityProvider,
+        /// Explicit resolution decision (`confirm` or `revoke`).
+        #[clap(long, value_enum)]
+        decision: crate::core::cloud_admin::CloudQuarantineDecision,
+    },
+    /// Revoke an active linked OAuth identity provider from this cloud account (AAL2 MFA gated).
+    RevokeLink {
+        /// Identity provider to unlink (`google`, `github`, or `gitlab`).
+        #[clap(long, value_enum)]
+        provider: crate::core::cloud_admin::CloudIdentityProvider,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudBillingCommand {
+    /// Mint a verified HTTPS billing portal URL for an organization (AAL2 MFA gated).
+    Portal {
+        /// Target cloud organization identifier.
+        #[clap(long, alias = "org")]
+        organization_id: Option<String>,
+    },
+    /// Inspect live included usage and spend-cap warning state for a cloud project.
+    Limits {
+        /// Optional managed project identifier (uses the routed project when omitted).
+        #[clap(long)]
+        project_id: Option<String>,
     },
 }
 

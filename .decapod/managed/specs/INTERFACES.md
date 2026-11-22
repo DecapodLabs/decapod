@@ -1,5 +1,16 @@
 # Interfaces
 
+## First-class `decapod cloud` CLI & JSON RPC admin contracts (#1896, #1836, #1835, #1877)
+
+- **CLI subcommands (`src/decapod/cli.rs::CloudCommand`, `src/decapod/lib.rs::run_cloud_command`)**:
+  - `decapod cloud orgs [--project-id <id>]`: outputs `decapod.cloud.orgs.v1` with `organization_id`, `cloud_org_id`, `slug`/`display_name`, `admin`, `paid_repo_seat_assigned`, `paid_repo_count`, `org_admin_without_paid_seat`, `access_model_note`, and response header `warnings`.
+  - `decapod cloud members {list|assign|revoke-seat|revoke-member|transfer-ownership|project-settings}`: outputs `decapod.cloud.members.v1`; `list` supports `--organization-id`/`--org`, `--project-id` (`access_details`), and integer `--after`; `assign` takes `--project-id` + `--slot`; `revoke-seat` supports project-scoped `Manage` (`--project-id` + `--slot` or `--member-account-id`) and org-slot `Register` (`--slot`); `revoke-member` and `transfer-ownership [--expected-revision]` take `--member-account-id` UUID; `project-settings` updates `--project-id` + `--project-name`.
+  - `decapod cloud invites {list|create|cancel|accept}`: outputs `decapod.cloud.invites.v1` with `membership_grants_paid_seats: false` and explicit zero-paid-seats notice; `accept --invitation-id <uuid> --secret-stdin` reads the one-time secret strictly from stdin (zero secret flags exist on CLI).
+  - `decapod cloud identity {prepare-link|confirm-link|resolve-quarantine|revoke-link}`: uses `CloudIdentityProvider::{Google,Github,Gitlab}` and `CloudQuarantineDecision::{Confirm,Revoke}`; `confirm-link --intent-id <uuid> --secret-stdin` reads `stepup_secret` strictly from stdin.
+  - `decapod cloud billing {portal|limits}`: outputs `decapod.cloud.billing.v1`; `portal [--organization-id]` validates strict `https://` origin + zero credentials; `limits [--project-id]` projects `resource_limits`, `spend_cap_status`, and `spend_cap_warning` (true on `warning | overage_cap_exhausted | exhausted | cap_reached`).
+- **JSON RPC ops (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/lib.rs`)**:
+  Registers `cloud.{orgs,members,invites,identity,billing}` with `session_required = false`, typed `Cloud{Orgs,Members,Invites,Identity,Billing}Params`, and `SubsystemInfo` entries; dispatches early via `run_cloud_admin_rpc` (with `execute_rpc` parity and `is_cloud_file_only_command` / `rpc_op_requires_worktree` / `rpc_op_bypasses_session` / `rpc_op_skips_mandate_enforcement` alignment) without creating `.decapod/data/decapod.db`. Rejects `--params` argv secrets in `parse_rpc_request` and redacts secrets from receipts/errors/traces (`cloud_auth_diagnostic_code` attaches serialized `CloudAuthDiagnostic` in `RpcError.details`). Regenerated `docs/agent/command-contracts.md` via `decapod docs build` (`src/decapod/core/docs_cli.rs`).
+
 ## Effective operation grant explanation, delegation CLI, and guidance hygiene (#1905, #1893)
 
 - **Read-only CLI grant explanation (`src/decapod/plugins/policy.rs::PolicyCommand::Grant`)**:
@@ -1656,8 +1667,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

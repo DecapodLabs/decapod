@@ -437,6 +437,36 @@ rpc_catalog![
         session_required: false,
         description: "Explain deterministically computed effective operation grant inputs, scope, decision, and reasons",
     },
+    OpMeta {
+        op: "cloud.orgs",
+        read_only: true,
+        session_required: false,
+        description: "List verified cloud organizations, org-admin role vs paid-seat status (#215), and paid repo counts",
+    },
+    OpMeta {
+        op: "cloud.members",
+        read_only: false,
+        session_required: false,
+        description: "Inspect and administer cloud organization members, seats, ownership transfers, and project settings",
+    },
+    OpMeta {
+        op: "cloud.invites",
+        read_only: false,
+        session_required: false,
+        description: "List, create, cancel, and accept cloud workspace invitations with secret redaction",
+    },
+    OpMeta {
+        op: "cloud.identity",
+        read_only: false,
+        session_required: false,
+        description: "Prepare, confirm, resolve quarantine, and revoke cloud OAuth provider identity links",
+    },
+    OpMeta {
+        op: "cloud.billing",
+        read_only: false,
+        session_required: false,
+        description: "Mint verified HTTPS billing portal sessions and inspect live usage and spend-cap limits",
+    },
 ];
 
 /// Source coverage in the black-box suite, independent of whether it ran.

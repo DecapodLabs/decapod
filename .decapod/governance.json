@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a934da95aa9e61d9f019de02a413313c5b9cec0d",
+    "accepted_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,95 +869,63 @@
     }
   },
   "change": {
-    "id": "pr_1905_1893",
-    "base_commit": "a934da95aa9e61d9f019de02a413313c5b9cec0d",
+    "id": "change_01M80X7CEVYJWBDBJJET04VXWB",
+    "base_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:effective-operation-grant-1905": {
-      "statement": "Every mediated operation deterministically forms EffectiveOperationGrant from accepted policy, Cloud verified scope, custody, live approvals, cumulative delegation bounds, and prestate; child requests, copied parent grants, candidate edits, and PlanState::Approved cannot widen scope.",
-      "falsifier": "Any child delegation, copied parent grant, forged/plan approval, sibling budget overflow, candidate policy edit, or stale prestate/lease admits a disallowed operation or exceeds parent capacity.",
+    "claim:cloud-admin-cli-rpc": {
+      "statement": "First-class decapod cloud {orgs,members,invites,identity,billing} CLI and cloud.* JSON RPC ops operate exclusively via dactyl-db 0.18.0 AccountOperation::{Register,Status,Manage,Portal} with zero decapod.db creation, stdin-only secrets, full secret/fragment redaction, strict HTTPS portal validation, typed AAL2 mfa_step_up_required and single-send outcome_unknown diagnostics, and #215/#1836 status fidelity.",
+      "falsifier": "Any cloud admin CLI/RPC call touches decapod.db, accepts CLI/RPC argv secrets, leaks secret material in Debug/stderr/errors/receipts, admits non-HTTPS or credential-bearing portal URLs, drops mfa_step_up_required/outcome_unknown/overage_cap_exhausted, or conflates org admin privileges with paid repo seats.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/effective_grant.rs",
+        "src/decapod/core/cloud_admin.rs",
+        "src/decapod/core/cloud_client.rs",
         "tests/cli_contracts.rs",
-        "tests/unit/core/effective_grant_tests.rs"
-      ]
-    },
-    "claim:guidance-hygiene-1893": {
-      "statement": "Agent-facing managed specs, embedded docs, CLI help, and generated context exclude maintainer-only development entrypoint-version-drift guidance while preserving config validation and default rejection.",
-      "falsifier": "Any agent-facing spec, rendered help, embedded docs, or context capsule exposes maintainer-only entrypoint drift configuration or breaks config validation defaults.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/unit/core/docs_tests.rs",
-        "tests/unit/core/project_specs_tests.rs"
+        "tests/cloud_admin_boundary.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1905_1893",
-      "summary": "Implement #1905 monotonically narrowing effective operation grants and #1893 agent guidance hygiene on v0.160.0",
-      "input_digest": "sha256:650cec6dfb354cf5986a42c2fa06bb2c159a240cc6850a7d4499917f1a09536c",
+      "id": "cp-cloud-admin-cli-rpc",
+      "summary": "Implement first-class decapod cloud orgs/members/invites/identity/billing CLI and RPC over dactyl-db 0.18.0 with specs, docs, and unit/E2E proofs",
+      "input_digest": "sha256:f7014420fb06cd3bdf3828c95e259ff03b9a307c4e8e5e52c059fce163ddcf8b",
       "proof_refs": [
-        "src/decapod/core/effective_grant.rs",
+        "src/decapod/core/cloud_admin.rs",
         "tests/cli_contracts.rs",
-        "tests/unit/core/docs_tests.rs",
-        "tests/unit/core/effective_grant_tests.rs",
-        "tests/unit/core/project_specs_tests.rs"
+        "tests/cloud_admin_boundary.rs"
       ]
     },
     {
-      "id": "chk_1905_1893_approved",
-      "summary": "Approve governed plan and finalize #1905 effective grants + #1893 guidance hygiene",
-      "input_digest": "sha256:d4091e487be49dddc2efd555c83578374eeee4337167ac4b55b80d3ac501c7e8",
+      "id": "cp-cloud-admin-plan-done",
+      "summary": "Record spec reviews and finalize plan state DONE for first-class cloud admin CLI/RPC",
+      "input_digest": "sha256:c9a136b43534c44f4b2fc99365486ac115118cf8d0054a1f90798a808ae73fd5",
       "proof_refs": [
-        "src/decapod/core/effective_grant.rs",
         "tests/cli_contracts.rs",
-        "tests/unit/core/effective_grant_tests.rs"
-      ]
-    },
-    {
-      "id": "chk_1905_1893_sync_8c2f552",
-      "summary": "Synced onto origin/master 8c2f55246 (#1909), refreshed Living Specs & spec reviews, and passed post-merge fmt, clippy, no-default-features, docs build, unit (73/73), and integration suites",
-      "input_digest": "sha256:6a2b92fb59671f160b893b101ed49c0f7c645c8346cf6afc880b80bb47984a7a",
-      "proof_refs": [
-        "cargo test --locked --lib -- effective_grant project_specs docs entrypoint_integrity (73/73)",
-        "cargo test --locked --test cli_contracts (133/133, 1 ignored)",
-        "cargo test --locked --test concurrent_worktree_integration_1469 --test doc_alignment --test interop_conformance --test policy_self_authorization_1776 --test todo_enforcement --test workunit_cli"
-      ]
-    },
-    {
-      "id": "chk_1905_1893_sync_485a351",
-      "summary": "Synced onto origin/master 485a35148 (#1912), fixed plugins_todo_tests advisory labels/handoff diagnostic and Linux canonicalized candidate-widening detection, and verified all post-merge suites",
-      "input_digest": "sha256:b0fb09f215769240435f8cce16dadfd5f7865b47392ec472bcf69d0dd056e99c",
-      "proof_refs": [
-        "cargo test --locked --features supabase-cloud --lib -- effective_grant project_specs docs entrypoint_integrity capability_contract (80/80) + cloud consumer targets (72/72, 4 ignored)",
-        "cargo test --locked --test cli_contracts (133/133, 1 ignored) --test capability_contract_drift (3/3) --test assets_schema_contract (4/4) --test concurrent_worktree_integration_1469 (3/3) --test doc_alignment (5/5) --test interop_conformance (12/12) --test policy_self_authorization_1776 (9/9) --test todo_enforcement (6/6) --test workunit_cli (7/7)",
-        "cargo test --locked --test plugins_todo_tests (40/40) + all 7 remaining plugins_* targets"
+        "tests/cloud_admin_boundary.rs"
       ]
     }
   ],
   "intents": {
-    "intent:run_1905_1893": {
+    "intent:change_01M80X7CEVYJWBDBJJET04VXWB": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Never mutate root checkout, existing WT_DEC worktrees, or /private/tmp/decapod-*; never auto-approve policy or spoof operator; Buildkite waived by operator"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1905_1893",
+      "id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1905 narrowing effective operation grants and #1893 guidance hygiene on DecapodLabs/decapod",
-      "refined_intent": "Implement deterministic EffectiveOperationGrant composition, cumulative delegation accounting, CLI/RPC explain, mediated boundary checks, and maintainer-setting guidance hygiene",
+      "raw_intent": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
+      "refined_intent": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -970,66 +938,58 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Compute deterministic monotonically narrowing EffectiveOperationGrant across accepted repo policy, verified Cloud scope, custody, approvals, and cumulative parent-child delegation bounds (#1905); remove maintainer-only development entrypoint-version-drift guidance from agent-facing specs, docs, CLI help, and context (#1893).",
-      "phases": [
-        {
-          "completed": false,
-          "completed_at": null,
-          "description": "Implement effective_grant, CLI/RPC explain, Todo/Workspace/Plan boundaries, #1893 hygiene, and tests",
-          "entered": false,
-          "entered_at": null,
-          "entry_gates": [],
-          "exit_gates": [],
-          "id": "impl",
-          "name": "Implementation and verification"
-        }
-      ],
+      "intent": "Implement, prove, and document first-class Decapod Cloud orgs, members, invites, identity, and billing CLI and JSON RPC operations over dactyl-db 0.18.0 (#1896, #1836, #1835, #1877) without local SQLite fallback",
+      "phases": [],
       "proof_hooks": [
-        "cargo test --locked"
+        "cargo fmt --all -- --check",
+        "cargo check --no-default-features",
+        "cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo test --locked --features supabase-cloud --lib cloud_",
+        "cargo test --locked --features supabase-cloud --test cloud_admin_boundary --test cli_contracts --test cloud_supabase_boundary --test doc_alignment --test interop_conformance --test capability_contract_drift --test rpc_golden_vectors"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed after origin/master 485a35148 merge and #1905 scope-label/handoff/canonical-widening fixes",
-          "reviewed_code_fingerprint": "e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445",
-          "spec_material_hash": "2efe1936504e723ba7a1c9674c355a11fd5aada6845898cfb7b1f9f8d5d3bc64"
+          "reason": "Documented cloud_admin module, 1-byte CloudAuthErrorCode, admin_transport_error, and slot-to-UUID resolution",
+          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
+          "spec_material_hash": "3cd6a8c0312c83918080cd9f0a8c6431e1f798e198e935f3589cb983389981b7"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed after origin/master 485a35148 merge: govern policy grant, policy.grant.explain RPC, todo delegate, and #1893 interface hygiene",
-          "reviewed_code_fingerprint": "e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445",
-          "spec_material_hash": "5c1797d02740eb25eaaf3a52cd87c9d7149a9cc10530764829eec594d061e539"
+          "reason": "Updated INTERFACES.md with decapod cloud {orgs,members,invites,identity,billing} CLI flags, stdin-only secrets, HTTPS portal URL validation, and cloud.* JSON RPC schemas matching src/decapod/cli.rs, core/rpc.rs, core/interop.rs, lib.rs, and docs/agent/command-contracts.md",
+          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
+          "spec_material_hash": "98ff6d50051464ec8295817d27872bfebe1df9e53683c2e79b8923fd296549fa"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed after origin/master 485a35148 merge: #1905 monotonic narrowing, canonicalized candidate widening detection, TOCTOU prestate, and #1893 invariants",
-          "reviewed_code_fingerprint": "e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445",
-          "spec_material_hash": "fe3e4eb635b34cf6601467108e4d697a6b8eb79edaa800bd4f15a43f98d40b13"
+          "reason": "Documented RedactedSecret zeroization, argv secret rejection, HTTPS portal/invite URL checks, and Dactyl 0.18.0 403 allowlist disambiguation",
+          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
+          "spec_material_hash": "c62037fee8a3e29e78a88f5121fcb5155827082663a44749aa4d50e6de039607"
         }
       ],
-      "state": "APPROVED",
+      "state": "DONE",
       "stop_conditions": [],
-      "title": "Implement #1905 narrowing effective operation grants and #1893 guidance hygiene",
+      "title": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
       "todo_ids": [
-        "feat_01m80ckdn0ym2ja0"
+        "feat_01m80wt1ty67gx2n"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795323493Z"
+      "updated_at": "1795331194Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Never mutate root checkout, existing WT_DEC worktrees, or /private/tmp/decapod-*; never auto-approve policy or spoof operator; Buildkite waived by operator"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7e7227ed096c075615d36065368113d33ca5df97e15d072714fb76be0921ff18",
+      "artifact_hash": "sha256:e56a04fd38c62681713acac2fb51bfea427dfb50678157884d5d652006f5f6e8",
       "checks": [
         {
-          "name": "buildkite",
-          "status": "unavailable"
+          "name": "capability_contract_drift",
+          "status": "passed"
         },
         {
           "name": "check_no_default_features",
@@ -1044,15 +1004,19 @@
           "status": "passed"
         },
         {
-          "name": "concurrent_worktree_integration_1469",
+          "name": "cloud_admin_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_cli_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_supabase_boundary",
           "status": "passed"
         },
         {
           "name": "doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "docs_build",
           "status": "passed"
         },
         {
@@ -1064,284 +1028,102 @@
           "status": "passed"
         },
         {
-          "name": "policy_self_authorization_1776",
+          "name": "propodus_contract",
           "status": "passed"
         },
         {
-          "name": "post_merge_485a351_capability_drift_and_schema",
+          "name": "release_dependency_policy",
           "status": "passed"
         },
         {
-          "name": "post_merge_485a351_cli_contracts",
+          "name": "rpc_golden_vectors",
           "status": "passed"
         },
         {
-          "name": "post_merge_485a351_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_concurrent_worktree_1469",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_docs_build",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_interop_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_no_default_features",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_plugins_all_8_targets",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_policy_self_authorization_1776",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_supabase_cloud_boundary",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_supabase_cloud_unit",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_todo_enforcement",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_485a351_workunit_cli",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_cli_contracts",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_concurrent_worktree_1469",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_docs_build",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_interop_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_no_default_features",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_policy_self_authorization_1776",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_todo_enforcement",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_unit_focused",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_8c2f552_workunit_cli",
-          "status": "passed"
-        },
-        {
-          "name": "source_ci_profile_policy",
-          "status": "partial"
-        },
-        {
-          "name": "todo_enforcement",
-          "status": "passed"
-        },
-        {
-          "name": "unit_focused",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_cli",
+          "name": "unit_cloud",
           "status": "passed"
         }
       ],
-      "completion_claim": "proven_local_and_ready_for_pr",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1905_1893",
+            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1905_1893",
+            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1905_1893",
+            "detail": "trajectory:branch_01M80X7CK6SP18PJ32TAEN0BCY",
             "event_id": "event:4",
-            "intent_id": "intent:run_1905_1893",
+            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:run_1905_1893",
-            "event_id": "event:5",
-            "intent_id": "intent:run_1905_1893",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:run_1905_1893",
-            "event_id": "event:6",
-            "intent_id": "intent:run_1905_1893",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1905_1893": {
+          "branch_01M80X7CK6SP18PJ32TAEN0BCY": {
             "evidence_only": true,
-            "id": "run_1905_1893",
-            "intent_id": "intent:run_1905_1893",
+            "id": "branch_01M80X7CK6SP18PJ32TAEN0BCY",
+            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "command": "cargo fmt --all -- --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/policy.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/workspace.rs",
-                  "src/decapod/plan_governance.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/entrypoint_integrity/history.rs",
-                  "src/decapod/core/effective_grant.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/core/interop.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/error.rs",
                   "src/decapod/core/rpc.rs",
-                  "src/decapod/core/scaffold.rs",
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/interop.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/plan_governance.rs",
-                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/cloud_admin.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_dpop.rs",
+                  "src/decapod/core/cloud_todo_operation.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/lib.rs",
                   "docs/agent/command-contracts.md",
-                  "tests/unit/core/effective_grant_tests.rs",
-                  "tests/unit/core/project_specs_tests.rs",
-                  "tests/unit/core/docs_tests.rs",
                   "tests/cli_contracts.rs",
-                  "Post-merge a934da95a: unit focused 73/73, cli_contracts 133/133 (1 ignored), concurrent_worktree_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7, clippy 0 warnings, fmt & no-default-features pass; source_ci_profile_policy 55/59 on macOS (4 Linux/var symlink host checks); Buildkite waived by operator"
+                  "tests/cloud_admin_boundary.rs",
+                  "87/87 cloud_ lib tests, 6/6 cloud_admin_boundary loopback E2E, 52/52 cloud_supabase_boundary, 134/134 active cli_contracts (1 ignored), 5/5 doc_alignment, 12/12 interop_conformance, 3/3 capability_contract_drift, 6/6 rpc_golden_vectors, 0 clippy warnings, zero decapod.db creation"
                 ],
                 "proof_refs": [
                   "fmt",
-                  "clippy",
                   "check_no_default_features",
-                  "docs_build",
-                  "unit_focused",
+                  "clippy",
+                  "unit_cloud",
+                  "cloud_admin_boundary",
+                  "cloud_supabase_boundary",
+                  "cloud_cli_boundary",
                   "cli_contracts",
-                  "concurrent_worktree_integration_1469",
                   "doc_alignment",
                   "interop_conformance",
-                  "policy_self_authorization_1776",
-                  "todo_enforcement",
-                  "workunit_cli",
-                  "source_ci_profile_policy",
-                  "buildkite"
+                  "capability_contract_drift",
+                  "rpc_golden_vectors",
+                  "propodus_contract",
+                  "release_dependency_policy"
                 ],
                 "scope": [
-                  "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Post-merge origin/master 8c2f55246 (PR #1909): docs build clean; fmt --check, check --no-default-features, clippy -D warnings (0 warnings), --lib focused (73/73), cli_contracts (133/133, 1 ignored), concurrent_worktree_integration_1469 (3/3), doc_alignment (5/5), interop_conformance (12/12), policy_self_authorization_1776 (9/9), todo_enforcement (6/6), workunit_cli (7/7); Buildkite waived by operator."
-                ],
-                "proof_refs": [
-                  "post_merge_8c2f552_fmt_check",
-                  "post_merge_8c2f552_no_default_features",
-                  "post_merge_8c2f552_clippy",
-                  "post_merge_8c2f552_docs_build",
-                  "post_merge_8c2f552_unit_focused",
-                  "post_merge_8c2f552_cli_contracts",
-                  "post_merge_8c2f552_concurrent_worktree_1469",
-                  "post_merge_8c2f552_doc_alignment",
-                  "post_merge_8c2f552_interop_conformance",
-                  "post_merge_8c2f552_policy_self_authorization_1776",
-                  "post_merge_8c2f552_todo_enforcement",
-                  "post_merge_8c2f552_workunit_cli"
-                ],
-                "scope": [
-                  "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "Post-merge origin/master 485a35148 (PR #1912) + #1905 CI fixes: fmt --check, check --no-default-features, clippy -D warnings (0 warnings), docs build; --features supabase-cloud --lib focused 80/80 + cloud consumer 72/72 (4 ignored); all 8 plugins_* targets (plugins_todo_tests 40/40); cli_contracts 133/133 (1 ignored), assets_schema_contract 4/4, capability_contract_drift 3/3, concurrent_worktree_integration_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7; Buildkite waived."
-                ],
-                "proof_refs": [
-                  "post_merge_485a351_fmt_check",
-                  "post_merge_485a351_no_default_features",
-                  "post_merge_485a351_clippy",
-                  "post_merge_485a351_docs_build",
-                  "post_merge_485a351_supabase_cloud_unit",
-                  "post_merge_485a351_supabase_cloud_boundary",
-                  "post_merge_485a351_plugins_all_8_targets",
-                  "post_merge_485a351_cli_contracts",
-                  "post_merge_485a351_capability_drift_and_schema",
-                  "post_merge_485a351_concurrent_worktree_1469",
-                  "post_merge_485a351_doc_alignment",
-                  "post_merge_485a351_interop_conformance",
-                  "post_merge_485a351_policy_self_authorization_1776",
-                  "post_merge_485a351_todo_enforcement",
-                  "post_merge_485a351_workunit_cli"
-                ],
-                "scope": [
-                  "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1352,49 +1134,50 @@
         "cargo check --no-default-features",
         "cargo clippy --all-targets --all-features -- -D warnings",
         "cargo fmt --all -- --check",
-        "cargo test --locked --lib -- effective_grant project_specs docs entrypoint_integrity",
-        "cargo test --locked --test cli_contracts --test concurrent_worktree_integration_1469 --test doc_alignment --test interop_conformance --test policy_self_authorization_1776 --test todo_enforcement --test workunit_cli",
-        "decapod docs build"
+        "cargo test --locked --features supabase-cloud --lib cloud_",
+        "cargo test --locked --features supabase-cloud --test cloud_admin_boundary --test cloud_supabase_boundary --test cloud_cli_boundary --test cli_contracts --test doc_alignment --test interop_conformance --test capability_contract_drift --test rpc_golden_vectors"
       ],
+      "destination": "pull request",
       "evidence": [
-        "Post-merge a934da95a: unit focused 73/73, cli_contracts 133/133 (1 ignored), concurrent_worktree_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7, clippy 0 warnings, fmt & no-default-features pass; source_ci_profile_policy 55/59 on macOS (4 Linux/var symlink host checks); Buildkite waived by operator",
-        "Post-merge origin/master 485a35148 (PR #1912) + #1905 CI fixes: fmt --check, check --no-default-features, clippy -D warnings (0 warnings), docs build; --features supabase-cloud --lib focused 80/80 + cloud consumer 72/72 (4 ignored); all 8 plugins_* targets (plugins_todo_tests 40/40); cli_contracts 133/133 (1 ignored), assets_schema_contract 4/4, capability_contract_drift 3/3, concurrent_worktree_integration_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7; Buildkite waived.",
-        "Post-merge origin/master 8c2f55246 (PR #1909): docs build clean; fmt --check, check --no-default-features, clippy -D warnings (0 warnings), --lib focused (73/73), cli_contracts (133/133, 1 ignored), concurrent_worktree_integration_1469 (3/3), doc_alignment (5/5), interop_conformance (12/12), policy_self_authorization_1776 (9/9), todo_enforcement (6/6), workunit_cli (7/7); Buildkite waived by operator."
+        "87/87 cloud_ lib tests, 6/6 cloud_admin_boundary loopback E2E, 52/52 cloud_supabase_boundary, 134/134 active cli_contracts (1 ignored), 5/5 doc_alignment, 12/12 interop_conformance, 3/3 capability_contract_drift, 6/6 rpc_golden_vectors, 0 clippy warnings, zero decapod.db creation"
       ],
       "inspected_files": [
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/entrypoint_integrity/history.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/workspace.rs",
-        "src/decapod/plan_governance.rs",
-        "src/decapod/plugins/policy.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:run_1905_1893",
+      "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
       "modified_files": [
         "docs/agent/command-contracts.md",
-        "src/decapod/core/effective_grant.rs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/cloud_admin.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_dpop.rs",
+        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/error.rs",
         "src/decapod/core/interop.rs",
         "src/decapod/core/mod.rs",
         "src/decapod/core/rpc.rs",
-        "src/decapod/core/scaffold.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plan_governance.rs",
-        "src/decapod/plugins/policy.rs",
         "tests/cli_contracts.rs",
-        "tests/unit/core/docs_tests.rs",
-        "tests/unit/core/effective_grant_tests.rs",
-        "tests/unit/core/project_specs_tests.rs"
+        "tests/cloud_admin_boundary.rs"
+      ],
+      "next_transitions": [
+        "Checkpoint commits, verify docs-sync and governance checkpoints, push non-force, open non-draft PR",
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
+        "root"
       ],
-      "run_id": "run_1905_1893",
+      "run_id": "branch_01M80X7CK6SP18PJ32TAEN0BCY",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80ckdn0ym2ja0",
+      "task_id": "feat_01m80wt1ty67gx2n",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

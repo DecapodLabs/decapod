@@ -475,7 +475,303 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             }
             Ok(())
         }
+        CloudCommand::Orgs { project_id } => {
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::orgs(root, identity, project_id.as_deref())
+            })?;
+            if format != "json" {
+                let count = report["organizations"].as_array().map_or(0, Vec::len);
+                println!(
+                    "Cloud organizations for {} ({count} record(s)); {}",
+                    report["repository"].as_str().unwrap_or("-"),
+                    report["access_model_note"].as_str().unwrap_or(""),
+                );
+                if let Some(orgs) = report["organizations"].as_array() {
+                    for org in orgs {
+                        println!(
+                            "  org_id={} cloud_org_id={} slug={} admin={} paid_repo_seat_assigned={} paid_repo_count={}",
+                            org["organization_id"].as_str().unwrap_or("-"),
+                            org["cloud_org_id"].as_str().unwrap_or("-"),
+                            org["slug"]
+                                .as_str()
+                                .or_else(|| org["display_name"].as_str())
+                                .unwrap_or("-"),
+                            org["admin"].as_bool().unwrap_or(false),
+                            org["paid_repo_seat_assigned"].as_bool().unwrap_or(false),
+                            org["paid_repo_count"].as_u64().unwrap_or(0),
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
+        CloudCommand::Members { command } => {
+            let op = match command {
+                CloudMembersCommand::List {
+                    organization_id,
+                    project_id,
+                    after,
+                } => core::cloud_admin::CloudMembersOp::List {
+                    organization_id,
+                    project_id,
+                    after,
+                },
+                CloudMembersCommand::Assign {
+                    organization_id,
+                    project_id,
+                    slot,
+                } => core::cloud_admin::CloudMembersOp::Assign {
+                    organization_id,
+                    project_id,
+                    slot,
+                },
+                CloudMembersCommand::RevokeSeat {
+                    organization_id,
+                    project_id,
+                    slot,
+                    member_account_id,
+                } => core::cloud_admin::CloudMembersOp::RevokeSeat {
+                    organization_id,
+                    project_id,
+                    slot,
+                    member_account_id,
+                },
+                CloudMembersCommand::RevokeMember {
+                    organization_id,
+                    member_account_id,
+                } => core::cloud_admin::CloudMembersOp::RevokeMember {
+                    organization_id,
+                    member_account_id,
+                },
+                CloudMembersCommand::TransferOwnership {
+                    organization_id,
+                    member_account_id,
+                    expected_revision,
+                } => core::cloud_admin::CloudMembersOp::TransferOwnership {
+                    organization_id,
+                    member_account_id,
+                    expected_revision,
+                },
+                CloudMembersCommand::ProjectSettings {
+                    organization_id,
+                    project_id,
+                    project_name,
+                } => core::cloud_admin::CloudMembersOp::ProjectSettings {
+                    organization_id,
+                    project_id,
+                    project_name,
+                },
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::members(root, identity, op)
+            })?;
+            if format != "json" {
+                let operation = report["operation"].as_str().unwrap_or("members");
+                println!(
+                    "Cloud members `{operation}` completed for org={}.",
+                    report["organization_id"].as_str().unwrap_or("-"),
+                );
+                if let Some(note) = report["seat_access_note"].as_str() {
+                    println!("Note: {note}");
+                }
+                if let Some(members) = report["members"].as_array() {
+                    for member in members {
+                        println!(
+                            "  slot={} account_id={} role={} admin={} pending={}",
+                            member["slot"]
+                                .as_u64()
+                                .map_or("-".to_owned(), |n| n.to_string()),
+                            member["account_id"].as_str().unwrap_or("pending"),
+                            member["role"].as_str().unwrap_or("-"),
+                            member["admin"].as_bool().unwrap_or(false),
+                            member["pending"].as_bool().unwrap_or(false),
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
+        CloudCommand::Invites { command } => {
+            let op = match command {
+                CloudInvitesCommand::List {
+                    organization_id,
+                    after,
+                } => core::cloud_admin::CloudInvitesOp::List {
+                    organization_id,
+                    after,
+                },
+                CloudInvitesCommand::Create {
+                    organization_id,
+                    recipient_account_id,
+                } => core::cloud_admin::CloudInvitesOp::Create {
+                    organization_id,
+                    recipient_account_id,
+                },
+                CloudInvitesCommand::Cancel {
+                    organization_id,
+                    invitation_id,
+                } => core::cloud_admin::CloudInvitesOp::Cancel {
+                    organization_id,
+                    invitation_id,
+                },
+                CloudInvitesCommand::Accept {
+                    organization_id,
+                    invitation_id,
+                    secret_stdin,
+                } => {
+                    if !secret_stdin {
+                        return Err(error::DecapodError::ValidationError(
+                            "Accepting an invitation requires `--secret-stdin` reading the one-time secret strictly from stdin (CLI flag/argv secrets are prohibited)."
+                                .into(),
+                        ));
+                    }
+                    let invitation_secret =
+                        core::cloud_admin::read_secret_from_stdin("invitation_secret")?;
+                    core::cloud_admin::CloudInvitesOp::Accept {
+                        organization_id,
+                        invitation_id,
+                        invitation_secret,
+                    }
+                }
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::invites(root, identity, op)
+            })?;
+            if format != "json" {
+                let operation = report["operation"].as_str().unwrap_or("invites");
+                println!(
+                    "Cloud invites `{operation}` completed for org={}.",
+                    report["organization_id"].as_str().unwrap_or("-"),
+                );
+                if let Some(id) = report["invitation_id"].as_str() {
+                    println!("  invitation_id={id}");
+                }
+                if let Some(url) = report["invitation_url"].as_str() {
+                    println!("  invitation_url={url}");
+                }
+                if let Some(secret) = report["invitation_secret"].as_str() {
+                    println!("  invitation_secret={secret}");
+                }
+                if let Some(note) = report["seat_assignment_note"].as_str() {
+                    println!("Note: {note}");
+                }
+                if let Some(items) = report["invitations"].as_array() {
+                    for inv in items {
+                        println!(
+                            "  invitation_id={} slot={} expires_at={}",
+                            inv["invitation_id"].as_str().unwrap_or("-"),
+                            inv["slot"]
+                                .as_u64()
+                                .map_or("-".to_owned(), |n| n.to_string()),
+                            inv["expires_at"].as_str().unwrap_or("-"),
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
+        CloudCommand::Identity { command } => {
+            let op = match command {
+                CloudIdentityCommand::PrepareLink { provider } => {
+                    core::cloud_admin::CloudIdentityOp::PrepareLink { provider }
+                }
+                CloudIdentityCommand::ConfirmLink {
+                    intent_id,
+                    secret_stdin,
+                } => {
+                    if !secret_stdin {
+                        return Err(error::DecapodError::ValidationError(
+                            "Confirming a provider link requires `--secret-stdin` reading the one-time stepup secret strictly from stdin (CLI flag/argv secrets are prohibited)."
+                                .into(),
+                        ));
+                    }
+                    let stepup_secret = core::cloud_admin::read_secret_from_stdin("stepup_secret")?;
+                    core::cloud_admin::CloudIdentityOp::ConfirmLink {
+                        intent_id,
+                        stepup_secret,
+                    }
+                }
+                CloudIdentityCommand::ResolveQuarantine { provider, decision } => {
+                    core::cloud_admin::CloudIdentityOp::ResolveQuarantine { provider, decision }
+                }
+                CloudIdentityCommand::RevokeLink { provider } => {
+                    core::cloud_admin::CloudIdentityOp::RevokeLink { provider }
+                }
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::identity(root, identity, op)
+            })?;
+            if format != "json" {
+                let operation = report["operation"].as_str().unwrap_or("identity");
+                println!(
+                    "Cloud identity `{operation}` status={}.",
+                    report["status"].as_str().unwrap_or("ok"),
+                );
+                if let Some(intent_id) = report["link_intent_id"].as_str() {
+                    println!("  link_intent_id={intent_id}");
+                }
+                if let Some(secret) = report["stepup_secret"].as_str() {
+                    println!("  stepup_secret={secret}");
+                }
+                if let Some(url) = report["authorization_url"].as_str() {
+                    println!("  authorization_url={url}");
+                }
+            }
+            Ok(())
+        }
+        CloudCommand::Billing { command } => {
+            let op = match command {
+                CloudBillingCommand::Portal { organization_id } => {
+                    core::cloud_admin::CloudBillingOp::Portal { organization_id }
+                }
+                CloudBillingCommand::Limits { project_id } => {
+                    core::cloud_admin::CloudBillingOp::Limits { project_id }
+                }
+            };
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                core::cloud_admin::billing(root, identity, op)
+            })?;
+            if format != "json" {
+                let operation = report["operation"].as_str().unwrap_or("billing");
+                println!("Cloud billing `{operation}`:");
+                if let Some(url) = report["portal_url"].as_str() {
+                    println!("  portal_url={url}");
+                }
+                if let Some(project_id) = report["project_id"].as_str() {
+                    println!(
+                        "  project_id={project_id} spend_cap_status={} spend_cap_warning={}",
+                        report["spend_cap_status"].as_str().unwrap_or("unknown"),
+                        report["spend_cap_warning"].as_bool().unwrap_or(false),
+                    );
+                }
+            }
+            Ok(())
+        }
     }
+}
+
+fn run_cloud_admin_action<F>(format: &str, f: F) -> Result<serde_json::Value, error::DecapodError>
+where
+    F: FnOnce(
+        &Path,
+        &core::repo_identity::RepositoryIdentity,
+    ) -> Result<serde_json::Value, error::DecapodError>,
+{
+    let project_root = find_decapod_project_root(&std::env::current_dir()?)?;
+    let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+    let report = f(&project_root, &identity).inspect_err(|error| {
+        if let error::DecapodError::CloudAuth(diagnostic) = error {
+            print_cloud_auth_json_if_needed(diagnostic, Some(format));
+        }
+    })?;
+    emit_cloud_warnings_if_text(&report, format);
+    if format == "json" {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report).map_err(std::io::Error::other)?
+        );
+    }
+    Ok(report)
 }
 
 fn emit_cloud_warnings_if_text(report: &serde_json::Value, format: &str) {
@@ -3015,6 +3311,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     {
         return run_governed_database_rpc(&std::env::current_dir()?, request);
     }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && is_cloud_admin_rpc_op(&request.op)
+    {
+        return run_cloud_admin_rpc(&std::env::current_dir()?, request);
+    }
     let cli = Cli { command };
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let current_dir = std::env::current_dir()?;
@@ -3883,6 +4184,11 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "interop.negotiate"
                     | "interop.project"
                     | "interop.capability_contracts"
+                    | "cloud.orgs"
+                    | "cloud.members"
+                    | "cloud.invites"
+                    | "cloud.identity"
+                    | "cloud.billing"
             )
         ),
         _ => false,
@@ -4105,6 +4411,11 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.project"
             | "policy.grant.explain"
             | "interop.capability_contracts"
+            | "cloud.orgs"
+            | "cloud.members"
+            | "cloud.invites"
+            | "cloud.identity"
+            | "cloud.billing"
     )
 }
 
@@ -4183,6 +4494,11 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "interop.project"
             | "policy.grant.explain"
             | "interop.capability_contracts"
+            | "cloud.orgs"
+            | "cloud.members"
+            | "cloud.invites"
+            | "cloud.identity"
+            | "cloud.billing"
     )
 }
 
@@ -8824,6 +9140,11 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "interop.project"
             | "policy.grant.explain"
             | "interop.capability_contracts"
+            | "cloud.orgs"
+            | "cloud.members"
+            | "cloud.invites"
+            | "cloud.identity"
+            | "cloud.billing"
     )
 }
 
@@ -14361,6 +14682,363 @@ fn unsuccessful_validate_rpc_is_nonzero_without_changing_other_rpc_exit_semantic
     }
 }
 
+fn is_cloud_admin_rpc_op(op: &str) -> bool {
+    matches!(
+        op,
+        "cloud.orgs" | "cloud.members" | "cloud.invites" | "cloud.identity" | "cloud.billing"
+    )
+}
+
+fn reject_argv_cloud_admin_secrets(
+    op: &str,
+    params: &serde_json::Value,
+) -> Result<(), error::DecapodError> {
+    let norm_op = params
+        .get("operation")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim().to_ascii_lowercase().replace('-', "_"));
+    let has_secret_key = params.as_object().is_some_and(|obj| {
+        obj.keys().any(|k| {
+            let lower = k.to_ascii_lowercase();
+            matches!(
+                lower.as_str(),
+                "invitation_secret" | "stepup_secret" | "secret"
+            )
+        })
+    });
+    match op {
+        "cloud.invites"
+            if has_secret_key || matches!(norm_op.as_deref(), Some("accept" | "accept_invite")) =>
+        {
+            Err(error::DecapodError::ValidationError(
+                "RPC secrets and invite acceptance for `cloud.invites` must be passed via `decapod rpc --stdin` JSON and are prohibited in `--params` CLI arguments."
+                    .into(),
+            ))
+        }
+        "cloud.identity"
+            if has_secret_key
+                || matches!(
+                    norm_op.as_deref(),
+                    Some("confirm_link" | "confirm_provider_link")
+                ) =>
+        {
+            Err(error::DecapodError::ValidationError(
+                "RPC secrets and link confirmation for `cloud.identity` must be passed via `decapod rpc --stdin` JSON and are prohibited in `--params` CLI arguments."
+                    .into(),
+            ))
+        }
+        _ => Ok(()),
+    }
+}
+
+fn cloud_auth_diagnostic_code(diag: &core::error::CloudAuthDiagnostic) -> String {
+    diag.error_code_str().map(str::to_owned).unwrap_or_else(|| {
+        serde_json::to_value(diag.status)
+            .ok()
+            .and_then(|v| v.as_str().map(str::to_owned))
+            .unwrap_or_else(|| "cloud_auth_error".to_owned())
+    })
+}
+
+fn execute_cloud_admin_rpc(
+    invocation_dir: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let project_root = find_decapod_project_root(invocation_dir)?;
+    let identity = core::repo_identity::resolve_repository_identity(&project_root)?;
+    let invalid_params = |err: serde_json::Error| {
+        error::DecapodError::ValidationError(format!(
+            "Invalid `{}` RPC parameters: {err}",
+            request.op
+        ))
+    };
+    let req_str = |opt: Option<String>, field: &str| -> Result<String, error::DecapodError> {
+        opt.ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "RPC op `{}` requires `{field}` parameter.",
+                request.op
+            ))
+        })
+    };
+
+    match request.op.as_str() {
+        "cloud.orgs" => {
+            let params: core::rpc::CloudOrgsParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            core::cloud_admin::orgs(&project_root, &identity, params.project_id.as_deref())
+        }
+        "cloud.members" => {
+            let params: core::rpc::CloudMembersParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "list" => core::cloud_admin::CloudMembersOp::List {
+                    organization_id: params.organization_id,
+                    project_id: params.project_id,
+                    after: params.after,
+                },
+                "assign" => core::cloud_admin::CloudMembersOp::Assign {
+                    organization_id: params.organization_id,
+                    project_id: req_str(params.project_id, "project_id")?,
+                    slot: params.slot.ok_or_else(|| {
+                        error::DecapodError::ValidationError(
+                            "RPC op `cloud.members` (`assign`) requires `slot` parameter.".into(),
+                        )
+                    })?,
+                },
+                "revoke_seat" => core::cloud_admin::CloudMembersOp::RevokeSeat {
+                    organization_id: params.organization_id,
+                    project_id: params.project_id,
+                    slot: params.slot,
+                    member_account_id: params.member_account_id,
+                },
+                "revoke_member" | "revoke_membership" => {
+                    core::cloud_admin::CloudMembersOp::RevokeMember {
+                        organization_id: params.organization_id,
+                        member_account_id: req_str(params.member_account_id, "member_account_id")?,
+                    }
+                }
+                "transfer_ownership" => core::cloud_admin::CloudMembersOp::TransferOwnership {
+                    organization_id: params.organization_id,
+                    member_account_id: req_str(params.member_account_id, "member_account_id")?,
+                    expected_revision: params.expected_revision,
+                },
+                "project_settings" => core::cloud_admin::CloudMembersOp::ProjectSettings {
+                    organization_id: params.organization_id,
+                    project_id: req_str(params.project_id, "project_id")?,
+                    project_name: req_str(params.project_name, "project_name")?,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.members` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::members(&project_root, &identity, op)
+        }
+        "cloud.invites" => {
+            let params: core::rpc::CloudInvitesParams = serde_json::from_value(
+                request.params.clone(),
+            )
+            .map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "Invalid `cloud.invites` RPC parameters (check field names and non-empty string values)."
+                        .into(),
+                )
+            })?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "list" | "invitations" => core::cloud_admin::CloudInvitesOp::List {
+                    organization_id: params.organization_id,
+                    after: params.after,
+                },
+                "create" | "invite" => core::cloud_admin::CloudInvitesOp::Create {
+                    organization_id: req_str(params.organization_id, "organization_id")?,
+                    recipient_account_id: req_str(
+                        params.recipient_account_id,
+                        "recipient_account_id",
+                    )?,
+                },
+                "cancel" | "revoke_invitation" => core::cloud_admin::CloudInvitesOp::Cancel {
+                    organization_id: req_str(params.organization_id, "organization_id")?,
+                    invitation_id: req_str(params.invitation_id, "invitation_id")?,
+                },
+                "accept" | "accept_invite" => core::cloud_admin::CloudInvitesOp::Accept {
+                    organization_id: params.organization_id,
+                    invitation_id: req_str(params.invitation_id, "invitation_id")?,
+                    invitation_secret: params.invitation_secret.ok_or_else(|| {
+                        error::DecapodError::ValidationError(
+                            "RPC op `cloud.invites` (`accept`) requires `invitation_secret` supplied via `--stdin` JSON."
+                                .into(),
+                        )
+                    })?,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.invites` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::invites(&project_root, &identity, op)
+        }
+        "cloud.identity" => {
+            let params: core::rpc::CloudIdentityParams = serde_json::from_value(
+                request.params.clone(),
+            )
+            .map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "Invalid `cloud.identity` RPC parameters (check field names and non-empty string values)."
+                        .into(),
+                )
+            })?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "prepare_link" | "prepare_provider_link" => {
+                    core::cloud_admin::CloudIdentityOp::PrepareLink {
+                        provider: params.provider.ok_or_else(|| {
+                            error::DecapodError::ValidationError(
+                                "RPC op `cloud.identity` (`prepare-link`) requires `provider` (`google|github|gitlab`)."
+                                    .into(),
+                            )
+                        })?,
+                    }
+                }
+                "confirm_link" | "confirm_provider_link" => {
+                    core::cloud_admin::CloudIdentityOp::ConfirmLink {
+                        intent_id: req_str(params.intent_id, "intent_id")?,
+                        stepup_secret: params.stepup_secret.ok_or_else(|| {
+                            error::DecapodError::ValidationError(
+                                "RPC op `cloud.identity` (`confirm-link`) requires `stepup_secret` supplied via `--stdin` JSON."
+                                    .into(),
+                            )
+                        })?,
+                    }
+                }
+                "resolve_quarantine" | "resolve_provider_quarantine" => {
+                    core::cloud_admin::CloudIdentityOp::ResolveQuarantine {
+                        provider: params.provider.ok_or_else(|| {
+                            error::DecapodError::ValidationError(
+                                "RPC op `cloud.identity` (`resolve-quarantine`) requires `provider` (`google|github|gitlab`)."
+                                    .into(),
+                            )
+                        })?,
+                        decision: params.decision.ok_or_else(|| {
+                            error::DecapodError::ValidationError(
+                                "RPC op `cloud.identity` (`resolve-quarantine`) requires `decision` (`confirm|revoke`)."
+                                    .into(),
+                            )
+                        })?,
+                    }
+                }
+                "revoke_link" | "revoke_provider_link" => {
+                    core::cloud_admin::CloudIdentityOp::RevokeLink {
+                        provider: params.provider.ok_or_else(|| {
+                            error::DecapodError::ValidationError(
+                                "RPC op `cloud.identity` (`revoke-link`) requires `provider` (`google|github|gitlab`)."
+                                    .into(),
+                            )
+                        })?,
+                    }
+                }
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.identity` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::identity(&project_root, &identity, op)
+        }
+        "cloud.billing" => {
+            let params: core::rpc::CloudBillingParams =
+                serde_json::from_value(request.params.clone()).map_err(invalid_params)?;
+            let norm = params
+                .operation
+                .trim()
+                .to_ascii_lowercase()
+                .replace('-', "_");
+            let op = match norm.as_str() {
+                "portal" => core::cloud_admin::CloudBillingOp::Portal {
+                    organization_id: params.organization_id,
+                },
+                "limits" | "resource_limits" => core::cloud_admin::CloudBillingOp::Limits {
+                    project_id: params.project_id,
+                },
+                other => {
+                    return Err(error::DecapodError::ValidationError(format!(
+                        "Unsupported `cloud.billing` operation `{other}`."
+                    )));
+                }
+            };
+            core::cloud_admin::billing(&project_root, &identity, op)
+        }
+        other => Err(error::DecapodError::ValidationError(format!(
+            "Unknown cloud admin RPC operation `{other}`."
+        ))),
+    }
+}
+
+fn cloud_admin_rpc_response(
+    request: &core::rpc::RpcRequest,
+    outcome: &Result<serde_json::Value, error::DecapodError>,
+    mandates: Vec<core::docs::Mandate>,
+) -> core::rpc::RpcResponse {
+    let safe_params = core::cloud_admin::redact_json_value(&request.params);
+    match outcome {
+        Ok(report) => core::rpc::success_response(
+            request.id.clone(),
+            request.op.clone(),
+            safe_params,
+            Some(report.clone()),
+            vec![],
+            None,
+            vec![],
+            mandates,
+        ),
+        Err(error) => {
+            let (code, msg, details, next_ops) = match error {
+                error::DecapodError::CloudAuth(diag) => (
+                    cloud_auth_diagnostic_code(diag),
+                    diag.message.clone(),
+                    serde_json::to_value(diag).ok(),
+                    vec![core::rpc::AllowedOp {
+                        op: "cloud.orgs".to_string(),
+                        reason: diag.next_action.clone(),
+                        required_params: vec![],
+                    }],
+                ),
+                other => (
+                    "validation_error".to_string(),
+                    core::cloud_admin::redact_url_fragment(&other.to_string()),
+                    None,
+                    vec![],
+                ),
+            };
+            let mut response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                safe_params,
+                code,
+                msg,
+                None,
+                mandates,
+            );
+            response.allowed_next_ops = next_ops;
+            if let Some(err) = response.error.as_mut() {
+                err.details = details;
+            }
+            response
+        }
+    }
+}
+
+fn run_cloud_admin_rpc(
+    invocation_dir: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<(), error::DecapodError> {
+    let outcome = execute_cloud_admin_rpc(invocation_dir, request);
+    let response = cloud_admin_rpc_response(request, &outcome, vec![]);
+    println!(
+        "{}",
+        serde_json::to_string_pretty(&response).map_err(std::io::Error::other)?
+    );
+    match outcome {
+        Ok(_) => Ok(()),
+        Err(error) => Err(error),
+    }
+}
+
 fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::DecapodError> {
     use crate::core::rpc::*;
     // Bound framing before allocating the JSON value, including the early
@@ -14413,6 +15091,29 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
                     )
                 })?
                 .unwrap_or(serde_json::json!({}))
+        } else if is_cloud_admin_rpc_op(&op) {
+            if cli.params.as_deref().is_some_and(|raw| {
+                matches!(op.as_str(), "cloud.invites" | "cloud.identity")
+                    && (raw.contains("invitation_secret")
+                        || raw.contains("stepup_secret")
+                        || raw.contains("\"secret\""))
+            }) {
+                return Err(error::DecapodError::ValidationError(
+                    "RPC secrets must be passed via `decapod rpc --stdin` JSON and are prohibited in `--params` CLI arguments."
+                        .into(),
+                ));
+            }
+            let parsed = cli
+                .params
+                .as_ref()
+                .map(|params| core::json::unique_value(params.as_bytes()))
+                .transpose()
+                .map_err(|_| {
+                    error::DecapodError::ValidationError(format!("Invalid `{op}` JSON parameters."))
+                })?
+                .unwrap_or(serde_json::json!({}));
+            reject_argv_cloud_admin_secrets(&op, &parsed)?;
+            parsed
         } else {
             cli.params
                 .as_ref()
@@ -14557,6 +15258,10 @@ fn run_rpc_command(
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,
+        "cloud.orgs" | "cloud.members" | "cloud.invites" | "cloud.identity" | "cloud.billing" => {
+            let outcome = execute_cloud_admin_rpc(project_root, &request);
+            cloud_admin_rpc_response(&request, &outcome, mandates.clone())
+        }
         _ => error_response(
             request.id.clone(),
             request.op.clone(),
@@ -14568,14 +15273,18 @@ fn run_rpc_command(
         ),
     };
 
-    // Trace the RPC call
+    // Trace the RPC call (always redact secret material).
+    let mut traced_request = request.clone();
+    traced_request.params = core::cloud_admin::redact_json_value(&traced_request.params);
     let trace_event = trace::TraceEvent {
         trace_id: request.id.clone(),
         ts: crate::core::time::now_epoch_z(),
         actor: current_agent_id(),
         op: request.op.clone(),
-        request: serde_json::to_value(&request).unwrap_or(serde_json::Value::Null),
-        response: serde_json::to_value(&response).unwrap_or(serde_json::Value::Null),
+        request: serde_json::to_value(&traced_request).unwrap_or(serde_json::Value::Null),
+        response: core::cloud_admin::redact_json_value(
+            &serde_json::to_value(&response).unwrap_or(serde_json::Value::Null),
+        ),
     };
     let _ = trace::append_trace(project_root, trace_event);
 

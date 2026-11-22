@@ -27,6 +27,8 @@ pub enum CloudAuthStatus {
     OrganizationAlreadyEnrolled,
     /// A one-time request has an uncertain outcome and cannot be replayed.
     RestartRequired,
+    /// A mutating cloud request failed after send with an uncertain outcome.
+    OutcomeUnknown,
     Expired,
     RefreshFailed,
     Unauthorized,
@@ -46,6 +48,75 @@ pub enum CloudAuthStatus {
     NonInteractive,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CloudAuthErrorCode {
+    MfaStepUpRequired,
+    OutcomeUnknown,
+    AdminRequired,
+    OwnerRequired,
+    ProviderQuarantined,
+    QuarantinedProviderLink,
+    CustodyConflict,
+    OwnerProtected,
+    MemberNotFound,
+    InvitationExpired,
+    InvitationNotFound,
+    ProjectNotFound,
+    SeatRevoked,
+    BillingNotConfigured,
+    BillingUnavailable,
+    Conflict,
+    NotFound,
+}
+
+impl CloudAuthErrorCode {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::MfaStepUpRequired => "mfa_step_up_required",
+            Self::OutcomeUnknown => "outcome_unknown",
+            Self::AdminRequired => "admin_required",
+            Self::OwnerRequired => "owner_required",
+            Self::ProviderQuarantined => "provider_quarantined",
+            Self::QuarantinedProviderLink => "quarantined_provider_link",
+            Self::CustodyConflict => "custody_conflict",
+            Self::OwnerProtected => "owner_protected",
+            Self::MemberNotFound => "member_not_found",
+            Self::InvitationExpired => "invitation_expired",
+            Self::InvitationNotFound => "invitation_not_found",
+            Self::ProjectNotFound => "project_not_found",
+            Self::SeatRevoked => "seat_revoked",
+            Self::BillingNotConfigured => "billing_not_configured",
+            Self::BillingUnavailable => "billing_unavailable",
+            Self::Conflict => "conflict",
+            Self::NotFound => "not_found",
+        }
+    }
+
+    pub fn from_code_str(code: &str) -> Option<Self> {
+        match code {
+            "mfa_step_up_required" => Some(Self::MfaStepUpRequired),
+            "outcome_unknown" => Some(Self::OutcomeUnknown),
+            "admin_required" => Some(Self::AdminRequired),
+            "owner_required" => Some(Self::OwnerRequired),
+            "provider_quarantined" => Some(Self::ProviderQuarantined),
+            "quarantined_provider_link" => Some(Self::QuarantinedProviderLink),
+            "custody_conflict" => Some(Self::CustodyConflict),
+            "owner_protected" => Some(Self::OwnerProtected),
+            "member_not_found" => Some(Self::MemberNotFound),
+            "invitation_expired" => Some(Self::InvitationExpired),
+            "invitation_not_found" => Some(Self::InvitationNotFound),
+            "project_not_found" => Some(Self::ProjectNotFound),
+            "seat_revoked" => Some(Self::SeatRevoked),
+            "billing_not_configured" => Some(Self::BillingNotConfigured),
+            "billing_unavailable" => Some(Self::BillingUnavailable),
+            "conflict" => Some(Self::Conflict),
+            "not_found" => Some(Self::NotFound),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CloudAuthDiagnostic {
     pub schema_version: &'static str,
@@ -56,6 +127,8 @@ pub struct CloudAuthDiagnostic {
     pub authorization_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enrollment_url: Option<Box<str>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error_code: Option<CloudAuthErrorCode>,
 }
 
 impl CloudAuthDiagnostic {
@@ -71,6 +144,7 @@ impl CloudAuthDiagnostic {
             next_action: next_action.into(),
             authorization_url: None,
             enrollment_url: None,
+            error_code: None,
         }
     }
 
@@ -82,6 +156,15 @@ impl CloudAuthDiagnostic {
     pub fn with_enrollment_url(mut self, url: impl Into<String>) -> Self {
         self.enrollment_url = Some(url.into().into_boxed_str());
         self
+    }
+
+    pub fn with_error_code(mut self, code: CloudAuthErrorCode) -> Self {
+        self.error_code = Some(code);
+        self
+    }
+
+    pub fn error_code_str(&self) -> Option<&'static str> {
+        self.error_code.map(CloudAuthErrorCode::as_str)
     }
 }
 
