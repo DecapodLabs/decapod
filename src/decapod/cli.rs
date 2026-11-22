@@ -486,6 +486,12 @@ pub(crate) struct InitWithCli {
     /// Preserve project-opted database maintenance policy during init refresh.
     #[clap(skip)]
     pub existing_db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
+    /// Preserve configured public-boundary publication deny identifiers during init refresh.
+    #[clap(skip)]
+    pub existing_publication_deny_identifiers: Vec<String>,
+    /// Preserve `[init].readme_badge` preference across init refreshes (default true).
+    #[clap(skip)]
+    pub existing_readme_badge: Option<bool>,
     /// Preserve reviewed post-proof Laya configuration during init refresh.
     #[clap(skip)]
     pub existing_laya: crate::core::laya_readiness::Configuration,
@@ -585,6 +591,10 @@ pub struct InitConfigSection {
     pub specs: bool,
     #[serde(default = "default_true")]
     pub ci: bool,
+    /// Whether `decapod init` manages the versioned Decapod badge in `README.md` (#1023).
+    /// Defaults to `true`; users can set `readme_badge = false` in `.decapod/config.toml`.
+    #[serde(default = "default_true")]
+    pub readme_badge: bool,
     pub diagram_style: InitDiagramStyle,
     pub entrypoints: Vec<String>,
 }
@@ -638,6 +648,11 @@ pub struct GovernanceConfig {
         skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
     )]
     pub db_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
+    /// Optional repo-configured literal identifiers forbidden from authored
+    /// publication commits/diffs (#1838). For private or sensitive strings that
+    /// must stay out of tracked config, use `.decapod/data/publication-deny.txt`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub publication_deny_identifiers: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -1030,6 +1045,7 @@ impl Default for DecapodProjectConfig {
             init: InitConfigSection {
                 specs: true,
                 ci: true,
+                readme_badge: true,
                 diagram_style: InitDiagramStyle::Ascii,
                 entrypoints: vec![
                     "AGENTS.md".to_string(),

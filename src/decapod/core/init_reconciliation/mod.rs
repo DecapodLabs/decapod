@@ -12,10 +12,10 @@ use std::fs;
 use std::io::Read;
 use std::path::{Component, Path};
 
-const MAX_ENTRIES: usize = 512;
-const MAX_DEPTH: usize = 8;
-const MAX_FILE_BYTES: usize = 1024 * 1024;
-const MAX_TOTAL_BYTES: usize = 8 * 1024 * 1024;
+pub(crate) const MAX_ENTRIES: usize = 512;
+pub(crate) const MAX_DEPTH: usize = 8;
+pub(crate) const MAX_FILE_BYTES: usize = 1024 * 1024;
+pub(crate) const MAX_TOTAL_BYTES: usize = 8 * 1024 * 1024;
 // Resolving a fixed discovery root must not scan an unbounded parent directory.
 // Unrelated entries do not consume the smaller source-inventory entry budget.
 const MAX_NAME_LOOKUP_ENTRIES: usize = 8192;
@@ -55,7 +55,7 @@ pub(crate) fn reviewed_source_alias(
 
 // These are discovery roots, not an inferred executable profile. Unknown source
 // providers are deliberately retained so additions cannot disappear from the pin.
-const SOURCE_DIRECTORIES: &[&str] = &[
+pub(crate) const SOURCE_DIRECTORIES: &[&str] = &[
     ".github/workflows",
     ".github/actions",
     ".github/scripts",
@@ -71,7 +71,7 @@ const SOURCE_DIRECTORIES: &[&str] = &[
     "assets/build",
     "scripts",
 ];
-const SOURCE_FILES: &[&str] = &[
+pub(crate) const SOURCE_FILES: &[&str] = &[
     "Cargo.toml",
     "Cargo.lock",
     "rust-toolchain",
