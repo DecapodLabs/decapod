@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.162.0](https://github.com/DecapodLabs/decapod/compare/v0.161.0...v0.162.0) - 2026-11-22
+
+### Added
+
+- *(cloud,constitution)* prove multi-org cloud parity ([#1895](https://github.com/DecapodLabs/decapod/pull/1895)) and org constitution overlays ([#877](https://github.com/DecapodLabs/decapod/pull/877))
+- *(cloud)* add first-class decapod cloud admin CLI and RPC (#1896, #1836, #1835, #1877)
+
+### Other
+
+- reconcile origin/master (PR #1914) into #1895 and #877
+- *(governance)* record canonical spec reviews (#1895, #877)
+- *(governance)* finalize spec reviews and plan state
+
 ## [0.161.0](https://github.com/DecapodLabs/decapod/compare/v0.160.0...v0.161.0) - 2026-11-22
 
 ### Added
