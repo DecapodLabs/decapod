@@ -6,6 +6,7 @@ use provider::{github_artifacts as github, source_execution as custody};
 pub(super) struct SourceCollection {
     pub checks: BTreeMap<CheckKey, VerifiedCheck>,
     pub blockers: Vec<Blocker>,
+    pub github_artifacts: BTreeMap<String, BTreeMap<String, u64>>,
 }
 pub(super) struct VerifiedCheck {
     pub binding: ExecutionBinding,
@@ -26,6 +27,7 @@ impl SourceCollection {
 /// adding an invented provider workflow or dropping a source obligation.
 pub(super) fn source_run_plan(project: &CurrentProject) -> io::Result<automatic::SourceRunPlan> {
     let mut buildkite = BTreeSet::new();
+    let mut github = BTreeSet::new();
     for obligation in project.catalog.obligations() {
         if obligation.kind != evidence::CheckKind::SourceCi {
             continue;
@@ -34,28 +36,32 @@ pub(super) fn source_run_plan(project: &CurrentProject) -> io::Result<automatic:
             evidence::Provider::Buildkite => {
                 buildkite.insert(obligation.key.workflow.clone());
             }
+            evidence::Provider::GithubActions => {
+                github.insert(obligation.key.workflow.clone());
+            }
             _ => return Err(invalid("unsupported provider in required source catalog")),
         }
     }
-    if buildkite.is_empty() {
+    if github.is_empty() == buildkite.is_empty() {
         return Err(invalid(
-            "complete Buildkite source workflow catalog is required",
+            "exactly one complete source provider catalog is required",
         ));
     }
     Ok(automatic::SourceRunPlan {
-        github_workflows: Vec::new(),
-        buildkite_pipelines: vec![automatic::ImportedPipeline {
-            organization: "decapodlabs".into(),
-            pipeline: "decapod".into(),
-            pipeline_id: "01a0bcf1-5e16-44ae-8457-04495fae8ff5".into(),
-            workflows: buildkite.into_iter().collect(),
-        }],
+        github_workflows: github.into_iter().collect(),
+        buildkite_pipelines: (!buildkite.is_empty())
+            .then(|| automatic::ImportedPipeline {
+                organization: "decapodlabs".into(),
+                pipeline: "decapod".into(),
+                pipeline_id: "01a0bcf1-5e16-44ae-8457-04495fae8ff5".into(),
+                workflows: buildkite.into_iter().collect(),
+            })
+            .into_iter()
+            .collect(),
     })
 }
 
-// Retained adapter for ordinary GitHub CI tooling; Buildkite-only preflight
-// never calls it or accepts its results as required preflight proof.
-#[allow(dead_code, clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)]
 pub(super) fn github_sources(
     options: &Options,
     runner: &mut impl Runner,
@@ -251,10 +257,10 @@ pub(super) fn github_sources(
         }
         let current = github::discover_workflow(runner, snapshot, workflow, budget)?
             .ok_or_else(|| invalid("provider workflow disappeared during custody collection"))?;
-        for (name, id) in selected_artifacts {
+        for (name, id) in &selected_artifacts {
             if current
-                .artifact_selection(&name)?
-                .is_none_or(|selection| selection.artifact_id != id)
+                .artifact_selection(name)?
+                .is_none_or(|selection| selection.artifact_id != *id)
             {
                 return Err(invalid(
                     "selected source artifact changed during collection",
@@ -271,8 +277,34 @@ pub(super) fn github_sources(
                 "provider run/attempt/jobs changed during artifact verification",
             ));
         }
+        collection
+            .github_artifacts
+            .insert(workflow.into(), selected_artifacts);
     }
     Ok(collection)
+}
+
+pub(super) fn recheck_github_artifacts(
+    runner: &mut impl Runner,
+    snapshot: &transport::PreparedSnapshot,
+    artifacts: &BTreeMap<String, BTreeMap<String, u64>>,
+    budget: &provider::Budget<'_>,
+) -> io::Result<()> {
+    for (workflow, selected) in artifacts {
+        let current = github::discover_workflow(runner, snapshot, workflow, budget)?
+            .ok_or_else(|| invalid("source workflow disappeared after artifact verification"))?;
+        for (name, id) in selected {
+            if current
+                .artifact_selection(name)?
+                .is_none_or(|selection| selection.artifact_id != *id)
+            {
+                return Err(invalid(
+                    "selected GitHub source artifact changed after collection",
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 struct ProducerContext<'a> {
@@ -392,18 +424,18 @@ fn verify_check(
     }
     integration::record(project, check, &expected, files, known_inputs)?;
     let observation = execution.observation();
-    if check.id == "setup-bazel" && obligation.key.provider == evidence::Provider::Buildkite {
+    if check.id == "setup-bazel" {
         let candidate = project
             .catalog
             .obligations()
             .iter()
             .find(|o| o.kind == evidence::CheckKind::CandidateBuild)
             .ok_or_else(|| invalid("candidate build obligation absent"))?;
-        if candidate.key.provider != evidence::Provider::Buildkite
-            || binding.executor != evidence::Provider::Buildkite
+        if candidate.key.provider != obligation.key.provider
+            || binding.executor != candidate.key.provider
         {
             return Err(invalid(
-                "candidate build must bind authenticated Buildkite setup",
+                "candidate build must bind the authenticated source-provider setup",
             ));
         }
         let artifact = execution

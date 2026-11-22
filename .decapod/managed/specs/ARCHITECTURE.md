@@ -9,6 +9,17 @@
 - **Multi-repository fixture & validation gate (`run_compatibility_fixture_suite`, `src/decapod/core/validate.rs::validate_composed_capability_contract`)**:
   `run_compatibility_fixture_suite` exercises negative and repaired traces for every falsifier in `#1906`. `validate_composed_capability_contract` leaves local repositories without `.decapod/contracts/capability_contract.json` unaffected while failing closed (`CAPABILITY_CONTRACT_DRIFT`) when an explicit contract file drifts from accepted host policy, drops required negative cases, or self-certifies.
 
+## Operational reliability fixes (#1881, #1837, #1884, #1838)
+
+- **Pre-build backup policy gate & `.decapod/backups` staging (`src/decapod/core/workspace.rs`)**:
+  Local `ensure_workspace` invokes `container_snapshot_policy_blocker` (`db_maintenance::resolve_canonical_policy` + `evaluate_capability_decision(DbMaintenanceCapability::Backup)`) before `acquire_registered` / `build_workspace_image`, returning a `pending` `WorkspaceStatus` with `BlockerKind::Unauthorized` (`WORKSPACE_CONTAINER_SNAPSHOT_DENIED`) when denied. Authorized `container_workspace_launch_command` creates `.decapod/backups/container-store.XXXXXX` with symlink refusal (`test ! -L .decapod && test ! -L .decapod/backups`) and `mkdir -m 700`, cleaning the temporary directory on exit/signals.
+- **Same-generation task heartbeat (`src/decapod/core/todo.rs`, `src/decapod/core/task_journal.rs`, `src/decapod/core/trajectory/execution.rs`, `src/decapod/core/mentor/reflection.rs`, `src/decapod/core/validation_history.rs`)**:
+  `todo::heartbeat_claim_lease` journals `"todo.heartbeat"` (`task.lease_heartbeat`) without incrementing `revision` or `lease_generation` when the current active holder extends `lease_expires_at` (`now + lease_secs > previous_secs`), and `ensure_validation_lease_ttl` (`ValidationLeaseTtlMode::Renew`) delegates to `heartbeat_claim_lease` bound to the observed `lease_generation`. `task_journal::check_heartbeat_step` validates strict monotonic extension (`at < old && old < next`) with identical remaining projection fields, records `heartbeat_anchors`, and permits `"todo.heartbeat"` transitions inside `check_validation_binding` while preserving `#1892` stale subcodes (`TASK_ADVANCED_DURING_VALIDATION`), for all non-heartbeat transitions. `todo::capture_execution_custody_binding` (used by `trajectory/execution.rs::capture_once` and `mentor/reflection.rs::custody`) binds to the pre-heartbeat `heartbeat_anchor` expiry while still verifying live expiration.
+- **Shared read-only toolchain hashing (`src/decapod/core/native_proof.rs`)**:
+  `measure_readonly_toolchains` parameterizes `measured_toolchain_inputs` over a `FnMut(&Path) -> io::Result<String>` closure and caches `PathBuf -> digest` within a single `capture_readonly_identity` invocation while keeping independent execution checks live-measured.
+- **Child-isolated Podman fixture (`tests/unit/plugins/container_tests.rs`)**:
+  Writes the executable fixture in a waited `/bin/sh` child before `chmod 0o755`, preventing inherited writable file descriptors across parallel test threads.
+
 ## Portable policy-transition carriers and unified target-map checks (#1833, #1832)
 
 - **Portable approval verification (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**:
@@ -1082,9 +1093,17 @@ profile, policy, and execution evidence. CI-local validation has a narrower
 scope and cannot authorize publication. Candidate or authority changes can
 invalidate earlier proof.
 
-The native validation route and optional Buildkite route implement required
-check profiles. Buildkite is a provider of execution evidence. Its presence
-does not change the ownership of intent, policy, or proof requirements.
+The strict source profile (`decapod.pr-readiness.v1`) retains the same required
+check graph across native execution, Buildkite (`validation_buildkite_preflights`),
+and independently accepted GitHub Actions execution
+(`validation_github_actions_preflights`). In `src/decapod/core/validation_runtime.rs`,
+`ProofConfiguration::verify_source_ci_authority` verifies candidate against accepted
+target policy before `required_source_catalog_for_provider` selects
+`Provider::Buildkite` or `Provider::GithubActions`, and `SnapshotHost` /
+`snapshot::source_import` bind the accepted dual-root executor and recollect
+measured workflow attempts and authenticated archives from the immutable source
+branch. Provider choice changes only the evidence carrier while explicit source,
+target, and complete-check requirements remain authoritative.
 Provider details belong in [VALIDATION.md](VALIDATION.md).
 
 The controller's finite source adapters are separate from the configured
@@ -1283,7 +1302,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

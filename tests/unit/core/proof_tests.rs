@@ -281,6 +281,14 @@ fn proof_agent_schema_describes_both_required_proof_providers() {
     assert!(field.contains("native Decapod full required proof"));
     assert!(field.contains("Buildkite temporary-snapshot full required proof"));
     assert!(field.contains("neither disables proof"));
+
+    let gha_field = schema["config_schema"]["proof"]["validation_github_actions_preflights"]
+        .as_str()
+        .expect("agent schema github actions provider field");
+    assert!(gha_field.contains("default: false"));
+    assert!(gha_field.contains("GitHub Actions"));
+    assert!(gha_field.contains("independently accepted"));
+    assert!(gha_field.contains("mutually exclusive with Buildkite"));
 }
 
 #[test]

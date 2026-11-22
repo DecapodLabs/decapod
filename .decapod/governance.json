@@ -864,7 +864,8 @@
       "trajectory:f004e139bd2e3056": "Remaining fixture repairs require executable checks and fresh full validation",
       "trajectory:f9fb9362db79deb2": "Userauthorizesboundedcontractdiagnosis and evidence-backed productdecision, no repeatedfailedfullrun before causalcorrection. No sourcecode/math/weights/calibration/tolerance/gate/recipe changes justified bycontractreview. Authoranexposed-study audit andsourceadmissionledger, maintainlivingvalidation/intent interpretations, andprepareexplicitunappliedscopeproposal. Actualproductionprojection differsfromoldfullpatchharness andcannotbeclaimedtestedbythose29outcomes.",
       "trajectory:fa421ac6b37186ed": "Automatic trusted remote controller bootstrap is absent; a two-revision independent provider harness requires separate scope decision. Diagnostics do not claim to close that gap.",
-      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions."
+      "trajectory:fbf201a48e407df9": "Actual official0.154.0 system version succeeds; unsupported --version and top-level version refused. Source test execution remains pending GitHub Actions.",
+      "trajectory:fd7299e932697c34": "Linux GitHub Actions Tests (core) executes the full Linux source_ci_profile_policy suite; Buildkite is explicitly waived by operator."
     }
   },
   "change": {
@@ -930,6 +931,17 @@
         "docs/agent/command-contracts.md",
         "docs/agent/config-schema.md"
       ]
+    },
+    {
+      "id": "chk:1906-merge-origin-master-8c2f55246",
+      "summary": "Reconcile merge with origin/master (8c2f55246, post PR B #1911 and PR C1 #1909), refresh specs, and record updated publication spec reviews",
+      "input_digest": "sha256:e292752dd123e46df46d71376f4c46bbd6b011775d45668e6a017700c3662854",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -975,23 +987,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md for #1906 alongside merged origin/master #1833/#1832 and synced generated agent docs: verified composed Decapod -> Dactyl -> Propodus contract evaluator, consequence trace states, and validate.rs gate.",
-          "reviewed_code_fingerprint": "f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a",
-          "spec_material_hash": "fb123ef8867ec81ab9ca1ca2c78bc7b89ea6e273c08fd8cd35203642a2937dcd"
+          "reason": "Updated ARCHITECTURE.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified composed Decapod -> Dactyl -> Propodus contract evaluator, consequence trace states, and validate.rs gate.",
+          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
+          "spec_material_hash": "8d1ca544b61aaed3766f55d670cb5983b120b7f0a78a38760868f26086197dbb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md for #1906 alongside merged origin/master #1833/#1832 and synced generated agent docs: verified decapod capabilities contracts CLI, interop.capability_contracts RPC, and capability-contract.schema.json.",
-          "reviewed_code_fingerprint": "f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a",
-          "spec_material_hash": "24db3c88567c55c252b1af9fa469e60c368c3b4f200c52d6262823107029ccdb"
+          "reason": "Updated INTERFACES.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified decapod capabilities contracts CLI, interop.capability_contracts RPC, and capability-contract.schema.json.",
+          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
+          "spec_material_hash": "57088bf57c361c02d2cd35aed3cbf9d661629d9793553ba74be0b1fec514a52f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated SECURITY.md for #1906 alongside merged origin/master #1833/#1832 and synced generated agent docs: verified fail-closed policy baseline, evidence provenance, and severed-ack replay refusal boundaries.",
-          "reviewed_code_fingerprint": "f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a",
-          "spec_material_hash": "901143cd2927b1e8f002182c32a7802104191b510b1a5622687a01963e3f7bec"
+          "reason": "Updated SECURITY.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified fail-closed policy baseline, evidence provenance, and severed-ack replay refusal boundaries.",
+          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
+          "spec_material_hash": "6f47e6f8cc1af2b5a30ac702ef16c5bd4a3deebb15c4d81b86ad6cbac66221bd"
         }
       ],
       "state": "APPROVED",
@@ -1002,7 +1014,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795315076Z"
+      "updated_at": "1795319005Z"
     },
     "trajectory": {
       "active_boundaries": [

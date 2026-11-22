@@ -29,6 +29,10 @@ fn resolve_decapod_bin() -> PathBuf {
 }
 
 fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
+    setup_workspace_with_policy("")
+}
+
+fn setup_workspace_with_policy(policy: &str) -> (TempDir, std::path::PathBuf, String) {
     let tmp = TempDir::new().expect("tempdir");
     let dir = tmp.path().to_path_buf();
 
@@ -69,6 +73,12 @@ fn setup_workspace() -> (TempDir, std::path::PathBuf, String) {
         .output()
         .expect("decapod init");
     assert!(out.status.success(), "decapod init failed");
+
+    if !policy.is_empty() {
+        let config = dir.join(".decapod/config.toml");
+        let contents = std::fs::read_to_string(&config).expect("read initialized config");
+        std::fs::write(&config, format!("{contents}\n{policy}\n")).expect("write fixture policy");
+    }
 
     // Commit the initialized control plane on the protected base before
     // creating the feature branch. Workspace ensure intentionally starts new
@@ -575,12 +585,28 @@ fn test_workspace_ensure_reuses_external_todo_ref_for_exclusive_claims() {
 
 #[test]
 fn test_workspace_ensure_container_creates_coordination_todo() {
-    let (_tmp, dir, password) = setup_workspace();
-    let agent_id = "test-agent-container-no-todo";
+    check_container_coordination(true);
+}
+
+#[test]
+fn test_workspace_ensure_container_reports_default_backup_denial_before_build() {
+    check_container_coordination(false);
+}
+
+fn check_container_coordination(backup_allowed: bool) {
+    let policy = if backup_allowed {
+        "[governance.db_maintenance]\nenabled = true\nallowed = [\"db.backup\"]"
+    } else {
+        ""
+    };
+    let (_tmp, dir, password) = setup_workspace_with_policy(policy);
+    let agent_id = "test-agent-enforce";
 
     let fake_bin = dir.join("fake-bin");
     let runtime_log = dir.join("runtime-args.log");
     std::fs::create_dir_all(&fake_bin).expect("create fake bin");
+    std::os::unix::fs::symlink(resolve_decapod_bin(), fake_bin.join("decapod"))
+        .expect("expose test binary to the launch command");
     for runtime in ["docker", "podman"] {
         let fake_runtime = fake_bin.join(runtime);
         std::fs::write(
@@ -606,7 +632,7 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
     let out = Command::new(resolve_decapod_bin())
         .args(["workspace", "ensure", "--container"])
         .current_dir(&dir)
-        .env("PATH", fake_path)
+        .env("PATH", &fake_path)
         .env("DECAPOD_AGENT_ID", agent_id)
         .env("DECAPOD_SESSION_PASSWORD", &password)
         .env("DECAPOD_CONTAINER_LOCAL_BINARY_FALLBACK", "1")
@@ -627,6 +653,38 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
 
     let json: serde_json::Value =
         serde_json::from_slice(&out.stdout).expect("workspace ensure --container json");
+    let blockers = json["blockers"].as_array().expect("blockers");
+    if backup_allowed {
+        let launch = blockers
+            .iter()
+            .filter_map(|blocker| blocker["resolve_hint"].as_str())
+            .find(|hint| hint.contains(".decapod/backups/container-store."))
+            .expect("command with a governed snapshot path");
+        let output = Command::new("sh")
+            .args(["-c", launch])
+            .env("PATH", &fake_path)
+            .env("DECAPOD_AGENT_ID", agent_id)
+            .env("DECAPOD_SESSION_PASSWORD", &password)
+            .output()
+            .expect("execute launch command against the fake runtime");
+        assert!(
+            output.status.success(),
+            "approved launch failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    } else {
+        assert_eq!(json["status"], "pending");
+        assert!(blockers.iter().any(|blocker| {
+            blocker["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("POLICY_OPT_IN_DISABLED"))
+        }));
+        assert!(!blockers.iter().any(|blocker| {
+            blocker["resolve_hint"]
+                .as_str()
+                .is_some_and(|hint| hint.contains("snapshot_dir="))
+        }));
+    }
     let branch = json["branch"].as_str().expect("branch");
     let worktree_path = json["worktree_path"].as_str().expect("worktree_path");
     let tasks = Command::new(resolve_decapod_bin())
@@ -677,12 +735,19 @@ fn test_workspace_ensure_container_creates_coordination_todo() {
             || worktree_path.contains(&generated_task_sanitized),
         "container worktree should use generated todo scope, got: {worktree_path}"
     );
-    let runtime_args = std::fs::read_to_string(&runtime_log).expect("runtime args log");
-    assert!(
-        runtime_args.contains("--build-arg DECAPOD_IMAGE=debian:bookworm-slim")
-            && runtime_args.contains("--build-arg DECAPOD_USE_LOCAL_BINARY=1"),
-        "workspace container proof should pass local binary fallback build args, got: {runtime_args}"
-    );
+    if backup_allowed {
+        let runtime_args = std::fs::read_to_string(&runtime_log).expect("runtime args log");
+        assert!(
+            runtime_args.contains("--build-arg DECAPOD_IMAGE=debian:bookworm-slim")
+                && runtime_args.contains("--build-arg DECAPOD_USE_LOCAL_BINARY=1"),
+            "workspace container proof should pass local binary fallback build args, got: {runtime_args}"
+        );
+    } else {
+        assert!(
+            !runtime_log.exists(),
+            "denied snapshot must not invoke the runtime"
+        );
+    }
 }
 
 #[test]

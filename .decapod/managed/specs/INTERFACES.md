@@ -9,6 +9,18 @@
 - **Schema contract (`assets/schemas/capability-contract.schema.json`)**:
   Draft 2020-12 strict schema (`additionalProperties = false`, `$id = https://decapod.dev/schemas/capability-contract-1.0.0.schema.json`) enforced by `tests/assets_schema_contract.rs`.
 
+## Container snapshot precheck, `--heartbeat` lease extension, and shared measurement contracts (#1881, #1837, #1884, #1838)
+
+- **Interactive container workspace precheck (`src/decapod/core/workspace.rs`)**:
+  - `decapod workspace ensure --container` fails early into `status: "pending"` with `BlockerKind::Unauthorized` (`WORKSPACE_CONTAINER_SNAPSHOT_DENIED (<code>): <detail>`) when canonical `db.backup` policy is disabled/denied, without invoking `docker`/`podman build`.
+  - When backup is permitted, the emitted launch command stages `decapod.db` inside `.decapod/backups/container-store.XXXXXX` (`mkdir -p -m 700`) and mounts it read-only to `/tmp/decapod-store.db`.
+- **`decapod todo renew --heartbeat` (`src/decapod/core/todo.rs::TodoCommand::Renew`)**:
+  - Adds `--heartbeat` boolean flag to `decapod todo renew --id <ID> [--lease-seconds <N>]`. Extends `lease_expires_at` only if `now + lease_secs > previous_secs` while keeping `lease_generation` and `revision` unchanged; returns `LEASE_HEARTBEAT_STALE` if inactive, wrong holder, or generation mismatched.
+  - `DECAPOD_VALIDATE_LEASE_TTL=warn` emits `VALIDATION_LEASE_TTL_LOW` hinting `decapod todo renew --heartbeat --id <task_id> --lease-seconds <secs> before running validation`; `DECAPOD_VALIDATE_LEASE_TTL=renew` triggers `heartbeat_claim_lease`.
+  - Cloud-mode `TodoCommand::Renew` (including `--heartbeat`) continues rejecting early in `check_cloud_todo_preflight` with `CLOUD_LEASE_RENEW_UNSUPPORTED`.
+- **Read-only freshness identity (`src/decapod/core/native_proof.rs::capture_readonly_identity`)**:
+  Preserves identical digest format (`measured_toolchain_inputs`), byte budget enforcement, deadline, and cancellation behavior while hashing each distinct file path once per capture call.
+
 ## Portable policy-transition carriers and target-scoped diagnostics (#1833, #1832)
 
 - **Signed CI approval carrier (`docs/agent/repository-readiness.md`, `src/decapod/core/repository_policy_approval.rs`)**:
@@ -1440,9 +1452,22 @@ Repeating validation with that controller, changing the declaration or building
 manually cannot repair this incompatibility. The current runtime does not
 bootstrap a replacement controller or accept a candidate's own readiness claim.
 
-`proof.validation_buildkite_preflights=false` selects native execution; `true`
-selects the optional Buildkite adapter for the same required profile. Unknown
-profiles, unavailable adapters, and unreconciled source contracts fail explicitly.
+Without either remote preflight flag, strict source preflight selects native
+execution (`ProjectProofConfig::uses_remote_preflight() == false`).
+`proof.validation_buildkite_preflights=true` selects Buildkite, and
+`proof.validation_github_actions_preflights=true` selects authenticated GitHub
+Actions execution when that strict carrier is independently accepted on the
+target (`ProofConfiguration::verify_source_ci_authority`). Setting both remote
+flags together, combining GitHub Actions preflight with `ci_attested` or
+`repo.pr-readiness.v1`, missing accepted dual-root support
+(`GITHUB_SOURCE_CI_EXECUTOR_UNAVAILABLE`), or candidate-selected carrier drift
+(`GITHUB_SOURCE_CI_POLICY_NOT_ACCEPTED`, `SOURCE_CI_PROVIDER_NOT_ACCEPTED`) fails
+closed. GitHub Actions collection uses configured official GitHub access and
+binds workflow path, logical job, matrix, run, attempt, and archive identity
+before admitting measured execution; `init_reconciliation::inspect` and
+`intent_reconcile::selected::admission` treat both remote flags uniformly via
+`uses_remote_preflight()`. Unknown profiles, unavailable adapters, and unreconciled
+source contracts fail explicitly.
 The remote route pushes or reuses the exact existing workspace branch, executes
 its project checks remotely, and verifies authenticated build, attempt, artifact,
 and final source/target identities. It does not run duplicate local prerequisites,
@@ -1620,7 +1645,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

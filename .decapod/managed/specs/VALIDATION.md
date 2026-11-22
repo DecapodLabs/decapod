@@ -2,7 +2,7 @@
 
 ## Composed service capability contract verification (#1906)
 
-Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-1906` merged with `origin/master` (`295f0af39`, `v0.160.0`):
+Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-1906` merged with `origin/master` (`8c2f55246`, `v0.160.0`):
 
 - Formatting, lint, and feature-matrix compilation (after final edit):
   - `cargo fmt --all -- --check`: passed.
@@ -14,8 +14,31 @@ Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-
   - `decapod capabilities contracts --fixture --format text`: `21/21` scenarios passed (`declared`, `observed`, `currently_verified`, `incompatible`, `unsupported`, `stale`, and `prepared`/`observed`/`held`/`compensated` trace separation).
   - `decapod docs build`: synchronized `docs/agent/command-contracts.md` (`+8` insertions for `decapod capabilities contracts` and `Operation: InteropCapabilityContracts`).
 - Core repository conformance and boundary suites:
-  - `assets_schema_contract`: `4 passed; 0 failed`; `contract_conformance`: `12 passed; 0 failed`; `doc_alignment`: `5 passed; 0 failed`; `rpc_golden_vectors`: `6 passed; 0 failed`; `spec_conformance -- --test-threads=1`: `15 passed; 0 failed`; `propodus_contract`: `6 passed; 0 failed`; `cloud_dactyl_boundary`: `1 passed; 0 failed`; `constitution_claims`: `4 passed; 0 failed`; `interop_conformance`: `12 passed; 0 failed`; `substrate_integrity`: `9 passed; 0 failed`.
+  - `assets_schema_contract`: `4 passed; 0 failed`; `contract_conformance`: `12 passed; 0 failed`; `doc_alignment`: `5 passed; 0 failed`; `rpc_golden_vectors`: `6 passed; 0 failed`; `consumer_readiness`: `40 passed; 0 failed`; `propodus_contract`: `6 passed; 0 failed`; `cloud_dactyl_boundary`: `1 passed; 0 failed`; `constitution_claims`: `4 passed; 0 failed`; `substrate_integrity`: `9 passed; 0 failed`.
   - Pre-existing/host-platform caveats on macOS (`macos-aarch64`): `source_ci_profile_policy` (`55 passed; 4 failed` on `linux-x86_64` and `/var` temp canonicalization checks) and `integration_sharding_policy` (`22 passed; 1 failed` on `/var` temp canonicalization `relocated_gatling_shards_route_exact_filters_and_preserve_runfiles`).
+
+## Operational reliability fixes verification (#1881, #1837, #1884, #1838)
+
+Verified on `origin/master` (`295f0af39`, `v0.160.0` + PR `#1908`) inside isolated worktree `agent/swarm-readiness-b/bugs_01m80ex82zgnq661-ops-1881-1837-1884-1838`:
+
+- **Formatting, lints, and feature matrix**:
+  - `cargo fmt --all -- --check`: passed.
+  - `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings; added `HeartbeatTaskRow` type alias in `src/decapod/core/todo.rs` for Rust `1.96` `clippy::type_complexity`).
+  - `cargo check --no-default-features`: passed.
+- **Unit & integration suites (`--locked`)**:
+  - `--lib plugins::container::tests`: `65 passed; 0 failed` (covers `podman_machine_start_captures_output_without_reading_terminal_input` child-isolated fixture writer for `#1838`).
+  - `--lib core::workspace::tests`: `40 passed; 0 failed` (covers `container_launch_snapshot_lifecycle_is_repeatable_and_failure_safe` using `.decapod/backups`).
+  - `--lib core::cloud_workspace::tests -- --test-threads=1`: `3 passed; 0 failed` (note: parallel `host_cloud_relay_enforces_container_admission_scope_and_allowlist` hit transient `Broken pipe` / `Socket is not connected` under concurrent `--lib workspace` load before passing serially `3/3`).
+  - `--lib native_proof`: `6 passed; 0 failed` (covers `readonly_identity_reuses_shared_tool_bytes_within_one_capture` for `#1884`).
+  - `--lib task_journal`: `74 passed; 0 failed`.
+  - `--lib reflection`: `33 passed; 0 failed`.
+  - `--lib validation_history`: `34 passed; 0 failed` (covers `capture_task_binding_with_budget_can_extend_a_lease_without_rotating_custody` for `#1837`).
+  - `--lib core::todo::tests`: `10 passed; 0 failed`.
+  - `--lib plugins::verify::tests`: `14 passed; 0 failed`.
+  - `--test todo_enforcement`: `6 passed; 0 failed` (covers `test_workspace_ensure_container_reports_default_backup_denial_before_build` and `test_workspace_ensure_container_creates_coordination_todo` for `#1881`).
+  - `--test cloud_cli_boundary`: `2 passed; 0 failed` (preserves Wave 2 `CLOUD_LEASE_RENEW_UNSUPPORTED`).
+  - `--test consumer_readiness`: `40 passed; 0 failed`.
+  - `--test source_ci_profile_policy` on macOS (`macos-aarch64`): `55 passed; 4 failed` (4 Linux-only `supabase-consumer`/`fmt` platform checks and `/var`->`/private/var` temp path symlink in `provider_carrier_executes_immutable_r_and_wrapper_preserves_fixed_context_and_failure`, unrelated to this PR; full Linux CI and waived Buildkite remain separate external gates).
 
 ## Portable policy transition approvals & target-map unification verification (#1833, #1832)
 
@@ -1010,12 +1033,18 @@ real bounded CI-local checks. Reports state `scope=ci_local` and
 submit another suite, or accept snapshot transport arguments. Provider environment
 flags alone cannot authorize publication.
 
-Native execution and optional Buildkite execution enforce the same complete
-required profile. The canonical `proof.validation_buildkite_preflights` setting
-selects the route. The Buildkite route executes its prerequisites remotely and
-reports local project checks as `not_run_provider_owned`. It pushes or reuses the
-exact existing workspace-branch commit and collects authenticated execution
-artifacts. GitHub Actions results neither satisfy nor block that selected profile.
+Native execution, optional Buildkite execution, and independently accepted GitHub
+Actions execution enforce the same complete `decapod.pr-readiness.v1` required
+profile (`readiness_profile::required_source_catalog_for_provider`). The canonical
+`proof.validation_buildkite_preflights` and `proof.validation_github_actions_preflights`
+settings (mutually exclusive) select the remote carrier when matched on the accepted
+target. Remote carriers execute prerequisites remotely and report local project
+checks as `not_run_provider_owned`. The Buildkite route pushes or reuses the exact
+existing workspace-branch commit and collects authenticated execution artifacts;
+GitHub Actions results neither satisfy nor block a Buildkite-selected profile, and
+repository-local `repo.pr-readiness.v1` / selected-root profiles reject both remote
+preflight flags (`REPOSITORY_PROFILE_PROVIDER_UNSUPPORTED`,
+`SELECTED_REQUIREMENTS_PROFILE_UNSUPPORTED`).
 
 The checked workspace-publication path binds its push request to the exact
 repository, workspace, candidate and branch. This validation-owned request does
@@ -1603,7 +1632,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

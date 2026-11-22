@@ -466,6 +466,8 @@ pub(crate) struct InitWithCli {
     pub existing_rust_workers: Option<crate::core::validation_runtime::rust_worker::Configuration>,
     #[clap(skip)]
     pub existing_ci_attested: Option<crate::core::validation_runtime::CiAttestedPolicy>,
+    #[clap(skip)]
+    pub existing_github_actions_preflights: bool,
     /// Preserve the configured shared-claim policy during reinitialization.
     #[clap(skip)]
     pub existing_allow_basic_shared_claims: bool,

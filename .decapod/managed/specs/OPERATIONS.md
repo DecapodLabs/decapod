@@ -255,14 +255,15 @@ candidate commit SHA (`head_revision`), canonical tracked `tree_digest`,
   To surface avoidable mid-validation lease expiration before long provider runs,
   `validation_history::capture_task_binding_with_budget` calls the read-only
   `todo::ensure_validation_lease_ttl` guard *before* freezing `HistoricalTaskBinding`.
-  Because renewal rotates custody, validation never renews implicitly. The mode is
+  Validation renews only with explicit opt-in. The mode is
   selected by `DECAPOD_VALIDATE_LEASE_TTL`: `warn` (default) emits a
-  `VALIDATION_LEASE_TTL_LOW` stderr advisory with the exact `decapod todo renew`
+  `VALIDATION_LEASE_TTL_LOW` stderr advisory with the exact `decapod todo renew --heartbeat`
   command and continues with custody untouched; `strict` fails fast with
   `VALIDATION_LEASE_TTL_INSUFFICIENT`; `renew` is an explicit operator opt-in that
-  renews the claiming agent's lease first and therefore requires refreshing any
-  existing workunit/governance checkpoint. The safe path is to claim or renew with
-  a lease longer than the expected run (`--lease-seconds`) *before* checkpointing.
+  extends the claiming agent's active deadline against the observed generation.
+  The same-holder heartbeat is journaled and preserves the task revision, lease
+  generation and workunit custody binding. An explicit `todo renew` without
+  `--heartbeat` remains a fenced custody rotation.
 - **Open file descriptor limits (`RLIMIT_NOFILE`):** On Unix hosts with restrictive
   default soft limits (such as macOS `ulimit -n 256`), `bounded_process::configure_child_nofile_limit`
   and `raise_nofile_soft_limit_in_child` raise the soft `RLIMIT_NOFILE` of spawned
@@ -482,7 +483,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

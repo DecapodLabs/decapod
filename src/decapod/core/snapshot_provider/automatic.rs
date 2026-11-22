@@ -34,8 +34,9 @@ impl SourceRunPlan {
         }
         let mut pipelines = BTreeSet::new();
         ensure(
-            !self.buildkite_pipelines.is_empty() && self.buildkite_pipelines.len() <= 64,
-            "source Buildkite workflow plan missing or oversized",
+            (!self.github_workflows.is_empty() || !self.buildkite_pipelines.is_empty())
+                && self.buildkite_pipelines.len() <= 64,
+            "source workflow plan missing or oversized",
         )?;
         let mut total = 0;
         for pipeline in &self.buildkite_pipelines {

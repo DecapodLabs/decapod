@@ -8,6 +8,15 @@ Makes cross-service capability contracts independently inspectable before govern
 - **Four explicit composite consequence states**: Separates `prepared` (eligible, no effect yet), `observed` (owner poststate + independent readback confirmed), `held` (containment with `goal_completed = false` on prestate drift, shared-capacity collision, pending async work, severed ack, or blocked blind replay), and `compensated` (supported corrective operation verified with original fault retained in historical evidence).
 - **Local offline repository isolation**: Repositories without Cloud binding (`backend = "local"`) evaluate offline contracts (`local.task.offline.v1`) with zero Cloud or network dependency (`local_offline_usable = true`), reporting Cloud-only contracts as `unsupported` without impairing local governance or backlog workflows.
 
+## Operational reliability fixes: snapshot policy precheck, custody-preserving heartbeat, shared tool measurement, and Podman fixture isolation (#1881, #1837, #1884, #1838)
+
+Integrates four targeted operational and CI-stability fixes on `v0.160.0` (`295f0af39`):
+
+- **Container snapshot policy precheck & private staging (#1881)**: `decapod workspace ensure --container` validates canonical `db.backup` maintenance authorization before invoking container image builds (`WORKSPACE_CONTAINER_SNAPSHOT_DENIED` pending workspace when denied) and stages authorized backup snapshots under mode-`700` `.decapod/backups/container-store.XXXXXX` instead of `target/`.
+- **Custody-preserving lease heartbeat (#1837)**: Decouples same-holder task lease deadline extension (`decapod todo renew --heartbeat`, `DECAPOD_VALIDATE_LEASE_TTL=renew`) from `lease_generation` rotation so long validation runs extend active deadlines without invalidating pre-existing workunit execution custody bindings (`capture_execution_custody_binding`). Plain `decapod todo renew` without `--heartbeat` retains custody-rotating semantics, and Cloud workspaces preserve `CLOUD_LEASE_RENEW_UNSUPPORTED`.
+- **Bounded repeated-toolchain freshness measurement (#1884)**: Reuses per-path cryptographic measurements across multiple checks within a single `native_proof::capture_readonly_identity` freshness pass so multi-check repositories stay within strict byte budgets while preserving full check identity digests, deadlines, and cancellation checks.
+- **Podman fixture writer isolation (`Refs #1838`)**: Isolates executable fixture creation in `podman_machine_start_captures_output_without_reading_terminal_input` to a waited child `/bin/sh` process so parallel test forks cannot inherit writable descriptors (`ETXTBSY`).
+
 ## Portable repository policy transition approvals and deployment-target admission (#1833, #1832)
 
 Extends `repo.pr-readiness.v1` governed policy transitions so reviewed source-inventory and command-contract upgrades verify across local checkouts, fresh CI clones (`ci_local`), and Decapod Cloud (`dactyl-db`), while closing target-map self-authorization and incomplete target-proof diagnostics:
@@ -780,7 +789,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1278,6 +1287,10 @@ with the existing governed operations.
 ## Recorded instructions and independently accepted requirements
 
 Keep the original request and ordered clarification history available across a cold handoff. A recorded revision identifies its observed or declared source. A provider account observation supports provenance without authenticating human approval. Pending decisions remain visible after reinitializing the same plan. Resolving a decision requires a fresh plan acceptance before the existing execution evidence can be used.
+
+## Independently accepted GitHub Actions preflight (#1890)
+
+A strict `decapod.pr-readiness.v1` source publication can use GitHub Actions (`[proof].validation_github_actions_preflights = true`) only when the accepted target independently selects that carrier and retains the reviewed dual-root executor. The carrier enforces the same complete finite source-CI and candidate-build graph (`readiness_profile::required_source_catalog_for_provider` with `evidence::Provider::GithubActions`) and source/target freshness checks, while CI-local `validate` remains diagnostic (`scope=ci_local`, `publication_ready=false`). Candidate configuration changes cannot opt a branch into a different strict source-CI carrier (`GITHUB_SOURCE_CI_POLICY_NOT_ACCEPTED`, `SOURCE_CI_PROVIDER_NOT_ACCEPTED`); live strict-carrier activation awaits separate maintainer target-policy acceptance.
 
 ## Version-only release proof
 
