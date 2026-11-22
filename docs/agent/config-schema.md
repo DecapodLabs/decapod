@@ -368,7 +368,7 @@ tuple under scope `repo.pr-readiness.v1`.
    the candidate, then run `decapod validate`. Unreconciled source inventories or
    stale command digests still fail with `PROOF_PROFILE_RECONCILIATION_REQUIRED`
    or `STALE_COMMAND_CONTRACT`.
-2. **Privilege-gated maintainer approval:** `decapod govern policy approve` is
+2. **Privilege-gated local maintainer approval:** `decapod govern policy approve` is
    gated on `"policy.control"` (core trust) in the canonical main `.decapod/data`
    policy ledger (`decapod.db`). Ordinary agents and `"unknown"` callers are
    rejected fail-closed, and candidate `.decapod/config.toml` or `governance.json`
@@ -389,6 +389,64 @@ tuple under scope `repo.pr-readiness.v1`.
    downgrading an accepted `decapod.pr-readiness.v1` strict profile to
    `repo.pr-readiness.v1` remains unconditionally blocked with
    `REQUIRED_PROFILE_DOWNGRADE`.
+
+#### Approvals in fresh CI checkouts and Decapod Cloud
+
+CI uses a signing key accepted on the protected target. On that target, maintain
+`.decapod/repository-policy-signers.json` with this shape. Each value holds
+the raw 32-byte Ed25519 public key encoded as 64 hexadecimal characters.
+
+```json
+{
+  "schema": "decapod.repository-policy-signers.v1",
+  "keys": {"maintainer": "<raw-public-key-hex>"}
+}
+```
+
+For a reviewed transition, sign the compact UTF-8 JSON array
+`["decapod.repository-policy-approval.v1",key_id,transition_id,issued_at,expires_at]`
+with the corresponding Ed25519 private key. Both times are integer Unix
+seconds and the interval must be at most 24 hours. For example, OpenSSL 3
+`pkeyutl -sign -rawin -inkey signer.pem -in message.json` emits the raw
+64-byte signature. Serialize it as 128 hexadecimal characters and supply the
+following JSON as `DECAPOD_REPO_TRANSITION_APPROVAL` in the validation job.
+Keep the private key in the maintainer's signing environment.
+[OpenSSL Ed25519 signing documentation](https://docs.openssl.org/3.0/man1/openssl-pkeyutl/#ed25519-and-ed448-algorithms).
+
+```json
+{
+  "schema": "decapod.repository-policy-approval.v1",
+  "key_id": "maintainer",
+  "transition_id": "<exact-transition-id>",
+  "issued_at": 1800000000,
+  "expires_at": 1800000900,
+  "signature": "<raw-signature-hex>"
+}
+```
+
+Run CI with an independently configured checkout of the candidate commit and
+the protected target available as a remote-tracking ref under `origin`. For
+pull requests, the verifier uses the provider's base branch metadata. A job
+without a PR base uses `origin/HEAD` or an unambiguous `origin/main` or
+`origin/master`. An approval expires at its deadline or when any bound Git
+revision or digest changes. Updating the accepted signer list also changes the
+protected base, so it invalidates earlier approvals.
+
+In Cloud mode, a repository maintainer can run the same `govern policy approve`
+command in a checkout with the exact candidate and a current `origin` base ref.
+The authenticated Dactyl client records an exact pre-execution policy decision
+in the Cloud governance service. Pass the printed
+`DECAPOD_REPO_TRANSITION_DECISION_ID` to a Cloud validator with authenticated
+repository access. The validator reads the decision from the service and checks
+the routed project, authority generation, expiration, both commits, candidate
+tree and full transition ID. Cloud validators can also use an accepted signed
+approval. CI uses the signed carrier, so a CI job needs only public verifier data.
+
+A release that changes how the source inventory is measured can require a
+reviewed digest update even if the inventoried files are unchanged. Refresh the
+reviewed digest with the current toolchain and approve the resulting exact
+transition. Approval admits the changed policy to the normal required checks.
+The `ci_local` result remains bounded to CI-local verification.
 
 ## Offline canonical local Git targets
 
@@ -467,9 +525,9 @@ Repositories using `repo.pr-readiness.v1` may declare an optional reviewed map
   `macos-aarch64`, `macos-x86_64`) compatible with that target's executor
 
 `command_contract_digest` preserves pre-#1740 digests byte-for-byte when `targets` is
-empty and binds `targets` when non-empty. `repository_profile::preserve_accepted`
-rejects candidate target removal, required command removal, `depends_on` or
-`shared_inputs` narrowing, and `platforms` changes with
+empty and binds `targets` when non-empty. Adding, removing, or editing a target
+requires a policy transition approval bound to the exact candidate, accepted
+base, and reviewed command and source digests. Unapproved changes fail with
 `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
 
 Passing `--target <name>` to `decapod validate` (or `target` on RPC `validate.run`)
@@ -482,6 +540,9 @@ results carry `scope = "repository_target_readiness"` (or
 candidate SHA into `native-readiness-receipt.json` and `CompletedReadinessEvidence`,
 keep `publication_ready = false`, and are rejected by full-repository PR publication,
 workunit `VERIFIED` promotion, and unrelated target lookups.
+When the canonical journal holds only target-scoped proof for the candidate,
+failed full publication or verification reports `TARGET_SCOPED_PROOF_REJECTED`
+and directs the caller to run unscoped `decapod validate`.
 
 ## Explicit legacy TODO retirement permission
 

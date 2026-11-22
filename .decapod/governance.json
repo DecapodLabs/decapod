@@ -918,6 +918,15 @@
         "tests/consumer_readiness.rs",
         "tests/unit/core/proof_tests.rs"
       ]
+    },
+    {
+      "id": "pr1890-docs-sync-295f0af39",
+      "summary": "Sync generated docs/agent/config-schema.md after merging #1833+#1832 (295f0af39) and pass docs_sync/doc_alignment",
+      "input_digest": "sha256:337d8bab71566de36ac3b8289f10e543c6b7becc9d96fcd93f436722d7920e15",
+      "proof_refs": [
+        "docs/agent/config-schema.md",
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -994,7 +1003,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:8eba472bb7f3706987c11a55b179f0f493f7a6dcf46b1ece23cde93ec372a594",
+      "artifact_hash": "sha256:dd7ee1436dafb44bf62fd83e431c8bac3ebb763e3caf73269ea0e5e30c99f6fd",
       "checks": [
         {
           "name": "cargo_check_no_default_features",
@@ -1077,6 +1086,14 @@
           "status": "passed"
         },
         {
+          "name": "post_merge_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_docs_build",
+          "status": "passed"
+        },
+        {
           "name": "source_ci_profile_policy_macos",
           "status": "partial"
         },
@@ -1113,10 +1130,17 @@
             "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M80D5B47FTAS15P667YQJ709",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M80D5B47FTAS15P667YQJ709": {
@@ -1202,6 +1226,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "docs/agent/config-schema.md",
+                  "Regenerated docs/agent/config-schema.md via source-built decapod docs build to include merged #1833/#1832 repository-readiness.md sections; doc_alignment 5/5 passed."
+                ],
+                "proof_refs": [
+                  "post_merge_docs_build",
+                  "post_merge_doc_alignment"
+                ],
+                "scope": [
+                  "issue-1890"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1211,6 +1252,7 @@
       "destination": "pull request",
       "evidence": [
         "Merged origin/master (295f0af39 / PR A #1908): fmt=0, clippy=0, no-default-features=0, proof 124/124, consumer_readiness 40/40, readiness_profile, validation_rules, repository_profile all passed.",
+        "Regenerated docs/agent/config-schema.md via source-built decapod docs build to include merged #1833/#1832 repository-readiness.md sections; doc_alignment 5/5 passed.",
         "cargo fmt --all -- --check: 0; cargo clippy --all-targets --all-features -- -D warnings: 0; cargo check --no-default-features: 0; proof 124/124; ci_event_context_policy 54/54 (python3.14); doc_alignment 5/5; readiness_profile 50/50; validation_runtime 88/88 (2 ignored); snapshot_provider 211/211 (1 ignored); validation_scope 9/9; concurrent_worktree_1469 3/3; gate_skip_1659 5/5; workunit_1660 6/6; source_ci_profile_policy 55/59 (4 macOS host/linux-platform fixture checks)"
       ],
       "inspected_files": [
@@ -1222,6 +1264,7 @@
       ],
       "intent_id": "intent:change_01M80D5B0PC9CHKAV12YE3QRZF",
       "modified_files": [
+        "docs/agent/config-schema.md",
         "src/decapod/cli.rs",
         "src/decapod/core/init_reconciliation/mod.rs",
         "src/decapod/core/intent_reconcile/selected.rs",
