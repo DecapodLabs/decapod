@@ -14,6 +14,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Component, Path};
 
+#[path = "repository_policy_approval.rs"]
+pub(crate) mod transition_approval;
+
 pub const REQUIRED_PROFILE: &str = "repo.pr-readiness.v1";
 pub const POLICY_TRANSITION_SCOPE: &str = REQUIRED_PROFILE;
 pub const READINESS_SCOPE: &str = "repository_local_readiness";
@@ -222,7 +225,8 @@ fn invalid(message: impl Into<String>) -> PlanningFailure {
 
 /// Candidate review digests establish internal consistency, not authority to
 /// replace requirements already accepted on the target. Additive checks are
-/// allowed; accepted execution and coverage obligations must remain intact.
+/// allowed; accepted execution, coverage and deployment target obligations
+/// must remain intact. The target map requires review even for additions.
 pub(crate) fn preserve_accepted(
     commands: &[ProofDef],
     contract: Option<&RepositoryContract>,
@@ -237,6 +241,7 @@ pub(crate) fn preserve_accepted(
     let accepted = accepted_contract.ok_or_else(changed)?;
     let candidate = contract.ok_or_else(changed)?;
     if accepted.canonical_local_target != candidate.canonical_local_target
+        || accepted.targets != candidate.targets
         || accepted_commands.is_empty()
         || command_contract_digest(accepted_commands, accepted)?
             != accepted.reviewed_commands_digest
@@ -279,25 +284,6 @@ pub(crate) fn preserve_accepted(
             return Err(changed());
         }
     }
-    for (target_name, accepted_target) in &accepted.targets {
-        let candidate_target = candidate.targets.get(target_name).ok_or_else(changed)?;
-        if !accepted_target
-            .commands
-            .iter()
-            .all(|name| candidate_target.commands.contains(name))
-            || !accepted_target
-                .depends_on
-                .iter()
-                .all(|dep| candidate_target.depends_on.contains(dep))
-            || !accepted_target
-                .shared_inputs
-                .iter()
-                .all(|pattern| candidate_target.shared_inputs.contains(pattern))
-            || candidate_target.platforms != accepted_target.platforms
-        {
-            return Err(changed());
-        }
-    }
     Ok(())
 }
 
@@ -326,6 +312,38 @@ pub fn repo_policy_transition_id(
     Ok(raw.strip_prefix("sha256:").unwrap_or(&raw).to_string())
 }
 
+#[cfg(feature = "supabase-cloud")]
+fn transition_id_from_config(
+    base: &str,
+    head: &str,
+    accepted: &[u8],
+    candidate: &[u8],
+) -> Result<String, PlanningFailure> {
+    let parse = |bytes| {
+        super::validation_runtime::proof_configuration(bytes)
+            .map_err(|_| invalid("POLICY_APPROVAL_CONFIG_INVALID"))
+    };
+    let accepted = parse(accepted)?;
+    let candidate = parse(candidate)?;
+    let subject = |config: super::validation_runtime::ProofConfiguration| {
+        config
+            .required_profile
+            .filter(|profile| profile.id == REQUIRED_PROFILE)
+            .zip(config.repository_contract)
+            .ok_or_else(|| invalid("POLICY_APPROVAL_REPOSITORY_PROFILE_REQUIRED"))
+    };
+    let (accepted_profile, accepted_contract) = subject(accepted)?;
+    let (candidate_profile, candidate_contract) = subject(candidate)?;
+    repo_policy_transition_id(
+        base,
+        head,
+        &accepted_profile.reviewed_sources_digest,
+        &candidate_profile.reviewed_sources_digest,
+        &accepted_contract.reviewed_commands_digest,
+        &candidate_contract.reviewed_commands_digest,
+    )
+}
+
 pub(crate) fn has_active_policy_transition_approval(
     checkout_root: &Path,
     transition_id: &str,
@@ -345,6 +363,17 @@ pub(crate) fn has_active_policy_transition_approval(
         }
         Ok(_) => {}
     }
+    if [checkout_root, main_root.as_path()]
+        .into_iter()
+        .any(|root| {
+            transition_approval::git_object(root, &["ls-files", "-z", "--", ".decapod/data"])
+                .map_or(true, |tracked| !tracked.is_empty())
+        })
+    {
+        return Err(invalid(
+            "POLICY_STORE_UNSAFE: canonical policy data must be outside tracked repository content",
+        ));
+    }
     let Some(db_str) = db_path.to_str() else {
         return Err(invalid(
             "POLICY_STORE_UNSAFE: canonical policy datastore path is not valid UTF-8",
@@ -360,10 +389,8 @@ pub(crate) fn has_active_policy_transition_approval(
     .map_err(|e| invalid(format!("POLICY_APPROVAL_CHECK_FAILED: {e}")))
 }
 
-/// Enforce accepted `repo.pr-readiness.v1` preservation unless the repository's
-/// canonical main `.decapod/data` policy ledger holds an active, bounded,
-/// `policy.control`-authorized approval for this exact base, head, source, and
-/// command-contract transition.
+/// Enforce accepted `repo.pr-readiness.v1` preservation unless an independent
+/// authority approved this exact base, head, source and command transition.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn verify_accepted_transition(
     checkout_root: &Path,
@@ -375,6 +402,7 @@ pub(crate) fn verify_accepted_transition(
     candidate_commands: &[ProofDef],
     accepted_contract: Option<&RepositoryContract>,
     candidate_contract: Option<&RepositoryContract>,
+    approval: transition_approval::ApprovalInput,
 ) -> Result<(), PlanningFailure> {
     let Some(accepted_decl) = accepted_profile.filter(|p| p.id == REQUIRED_PROFILE) else {
         return Ok(());
@@ -429,15 +457,43 @@ pub(crate) fn verify_accepted_transition(
         &accepted.reviewed_commands_digest,
         &candidate.reviewed_commands_digest,
     )?;
-    if has_active_policy_transition_approval(checkout_root, &transition_id)? {
+    let approved = if let Some(envelope) = approval.signed {
+        let envelope = envelope
+            .to_str()
+            .ok_or_else(|| invalid("POLICY_APPROVAL_ENVELOPE_INVALID: expected UTF-8 JSON"))?;
+        transition_approval::verify_signed(
+            checkout_root,
+            accepted_base_sha,
+            &transition_id,
+            envelope.as_bytes(),
+        )?
+    } else if approval.ci_local {
+        false
+    } else if transition_approval::cloud_backend(checkout_root, accepted_base_sha)? {
+        match std::env::var(transition_approval::CLOUD_DECISION_ENV) {
+            Ok(decision) => transition_approval::verify_cloud(
+                checkout_root,
+                accepted_base_sha,
+                candidate_head_sha,
+                &transition_id,
+                &decision,
+            )?,
+            Err(_) => false,
+        }
+    } else {
+        has_active_policy_transition_approval(checkout_root, &transition_id)?
+    };
+    if approved {
         return Ok(());
     }
     Err(invalid(format!(
-        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or source inventory changed without an active policy.control transition approval (base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}). Review the diff and run `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}` as a policy.control-authorized maintainer before revalidation",
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or source inventory changed without an active transition approval (base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}). Review the exact diff. A local or Cloud maintainer can use `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}`. CI requires a signed approval in {}. Cloud verification uses a decision ID in {} or a signed approval.",
         accepted_decl.reviewed_sources_digest,
         candidate_decl.reviewed_sources_digest,
         accepted.reviewed_commands_digest,
         candidate.reviewed_commands_digest,
+        transition_approval::SIGNED_APPROVAL_ENV,
+        transition_approval::CLOUD_DECISION_ENV,
     )))
 }
 fn relative(path: &str) -> bool {

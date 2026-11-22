@@ -1177,12 +1177,32 @@ fn is_target_scoped_record(record: &CompletionRecord) -> bool {
         )
 }
 
+fn target_only_message(target: &str) -> String {
+    format!(
+        "TARGET_SCOPED_PROOF_REJECTED: recorded validation for deployment target {target:?} cannot satisfy full-repository readiness. Run unscoped `decapod validate` for full-repository proof before PR publication or VERIFIED promotion."
+    )
+}
+
+enum FullHistoryLookup {
+    Full(Box<HistoricalValidationProof>),
+    TargetOnly(String),
+}
+
+impl FullHistoryLookup {
+    fn require_full(self) -> Result<HistoricalValidationProof, DecapodError> {
+        match self {
+            Self::Full(proof) => Ok(*proof),
+            Self::TargetOnly(target) => Err(invalid(target_only_message(&target))),
+        }
+    }
+}
+
 fn lookup_inner(
     root: &Path,
     store: &Store,
     sha: &str,
     id: Option<&str>,
-) -> Result<HistoricalValidationProof, DecapodError> {
+) -> Result<FullHistoryLookup, DecapodError> {
     require_sha(sha)?;
     require_local(store, root)?;
     let path = events::canonical_db_path(&store.root);
@@ -1199,18 +1219,13 @@ fn lookup_inner(
                 .ok_or_else(|| {
                     invalid("no canonical full validation proof was recorded for this commit")
                 })?;
-        let record = decode(&event)?;
-        if is_target_scoped_record(&record) {
-            return Err(invalid(
-                "TARGET_SCOPED_PROOF_REJECTED: target-scoped validation record cannot satisfy full-repository readiness",
-            ));
-        }
-        record
+        decode(&event)?
     } else {
         let history =
             events::query_subject_on_conn(&conn, events::VERIFICATION, "commit", sha, MAX_RECORDS)?;
         let mut binding: Option<HistoricalTaskBinding> = None;
         let mut selected = None;
+        let mut target_only = None;
         for event in &history {
             let record = decode(event)?;
             if record.candidate_sha != sha || record.proof.material.repository != repository {
@@ -1218,7 +1233,8 @@ fn lookup_inner(
                     "subject journal contains another commit or repository",
                 ));
             }
-            if is_target_scoped_record(&record) {
+            if let Some(scope) = record.proof.target_scope() {
+                target_only = Some(scope.target.clone());
                 continue;
             }
             if let Some(previous) = &binding {
@@ -1236,26 +1252,47 @@ fn lookup_inner(
             binding = Some(record.task_binding.clone());
             selected = Some(record);
         }
-        selected.ok_or_else(|| {
-            invalid("no canonical full validation proof was recorded for this commit")
-        })?
+        match (selected, target_only) {
+            (Some(record), _) => record,
+            (None, Some(target)) => return Ok(FullHistoryLookup::TargetOnly(target)),
+            (None, None) => {
+                return Err(invalid(
+                    "no canonical full validation proof was recorded for this commit",
+                ));
+            }
+        }
     };
     if record.candidate_sha != sha || record.proof.material.repository != repository {
         return Err(invalid(
             "historical proof belongs to a different commit or repository",
         ));
     }
-    Ok(HistoricalValidationProof {
-        record,
-        store_root: store.root.clone(),
-    })
+    if let Some(scope) = record.proof.target_scope() {
+        return Ok(FullHistoryLookup::TargetOnly(scope.target.clone()));
+    }
+    Ok(FullHistoryLookup::Full(Box::new(
+        HistoricalValidationProof {
+            record,
+            store_root: store.root.clone(),
+        },
+    )))
+}
+
+/// A diagnostic only. Full validation still decides whether publication or
+/// replay can proceed, and unavailable history cannot hide its failure.
+pub(crate) fn current_target_only_diagnostic(root: &Path, store: &Store) -> Option<String> {
+    let head = git_text(root, &["rev-parse", "--verify", "HEAD^{commit}"]).ok()?;
+    match lookup_inner(root, store, &head, None).ok()? {
+        FullHistoryLookup::TargetOnly(target) => Some(target_only_message(&target)),
+        FullHistoryLookup::Full(_) => None,
+    }
 }
 pub(crate) fn lookup(
     root: &Path,
     store: &Store,
     sha: &str,
 ) -> Result<HistoricalValidationProof, DecapodError> {
-    lookup_inner(root, store, sha, None)
+    lookup_inner(root, store, sha, None)?.require_full()
 }
 pub(crate) fn lookup_record(
     root: &Path,
@@ -1263,7 +1300,7 @@ pub(crate) fn lookup_record(
     sha: &str,
     record_id: &str,
 ) -> Result<HistoricalValidationProof, DecapodError> {
-    lookup_inner(root, store, sha, Some(record_id))
+    lookup_inner(root, store, sha, Some(record_id))?.require_full()
 }
 
 /// Look up historical proof for an exact candidate SHA and deployment target.
@@ -1374,6 +1411,7 @@ fn lookup_current_workunit(
         ));
     }
     let mut selected = None;
+    let mut target_only = None;
     for event in &history {
         let record = decode(event)?;
         if record.candidate_sha != binding.candidate_sha
@@ -1383,17 +1421,22 @@ fn lookup_current_workunit(
                 "subject journal contains another commit or repository",
             ));
         }
-        if is_target_scoped_record(&record) {
+        if record.task_binding != binding.task {
             continue;
         }
-        if record.task_binding == binding.task {
+        if let Some(scope) = record.proof.target_scope() {
+            target_only = Some(scope.target.clone());
+        } else {
             selected = Some(record);
         }
     }
     Ok(HistoricalValidationProof {
-        record: selected.ok_or_else(|| invalid(
-            "WORKUNIT_PROOF_STALE: no successful full validation for current task and custody; obtain fresh full validation"
-        ))?,
+        record: selected.ok_or_else(|| match target_only {
+            Some(target) => invalid(target_only_message(&target)),
+            None => invalid(
+                "WORKUNIT_PROOF_STALE: no successful full validation for current task and custody; obtain fresh full validation",
+            ),
+        })?,
         store_root: store.root.clone(),
     })
 }
@@ -2825,13 +2868,29 @@ mod tests {
 
         assert!(is_target_scoped_record(&base));
         // Full-repo lookup and explicit record lookup must reject target-scoped records.
-        assert!(lookup(&repo, &store, &head).is_err());
-        assert!(lookup_record(&repo, &store, &head, "target-inv").is_err());
+        let diagnostic = current_target_only_diagnostic(&repo, &store).unwrap();
+        assert!(diagnostic.contains("TARGET_SCOPED_PROOF_REJECTED"));
+        assert!(diagnostic.contains("linux"));
+        assert!(diagnostic.contains("unscoped `decapod validate`"));
+        assert!(
+            lookup(&repo, &store, &head)
+                .unwrap_err()
+                .to_string()
+                .contains(&diagnostic)
+        );
+        assert!(
+            lookup_record(&repo, &store, &head, "target-inv")
+                .unwrap_err()
+                .to_string()
+                .contains(&diagnostic)
+        );
         // Target-scoped lookup succeeds only for the exact target and SHA.
         let found = lookup_for_target(&repo, &store, &head, "linux").unwrap();
         assert_eq!(found.target_scope().unwrap().target, "linux");
         assert!(lookup_for_target(&repo, &store, &head, "macos").is_err());
         assert!(lookup_for_target(&repo, &store, &"f".repeat(40), "linux").is_err());
+        run_git(&["commit", "--allow-empty", "-m", "advance candidate"]);
+        assert!(current_target_only_diagnostic(&repo, &store).is_none());
     }
 }
 

@@ -1,5 +1,22 @@
 # Validation
 
+## Portable policy transition approvals & target-map unification verification (#1833, #1832)
+
+Verified on `origin/master` (`efc05d792`, `v0.160.0`) inside isolated worktree `agent/swarm-readiness-a/code_01m80cm518wkhbww-policy-1833-1832`:
+
+- **Source-CI inventory reconciliation, formatting, lints & feature matrix**:
+  - `.decapod/config.toml` `[proof.required_profile].reviewed_sources_digest` updated to `sha256:96d47fcfe781090fd7945ddb1e42a9b82ec8e7cf6498c2323d364d4a3c512975` for `v0.160.0` `Cargo.toml`/`Cargo.lock` release metadata.
+  - `cargo fmt --all -- --check`: passed.
+  - `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings).
+  - `cargo check --no-default-features`: passed.
+- **Unit & integration suites (`--locked`)**:
+  - `--lib repository_profile`: `25 passed; 0 failed` (covers `transition_approval::tests::signature_requires_accepted_key_exact_transition_and_live_expiry`, `transition_approval::cloud::tests::cloud_decision_requires_exact_live_repository_authority`, and `preserve_accepted_rejects_candidate_target_map_changes`).
+  - `--lib validation_rules`: `17 passed; 0 failed` (covers `fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade`).
+  - `--lib validation_history`: `34 passed; 0 failed` (covers `target_scoped_completed_evidence_cannot_authorize_full_repo_or_other_target` and `current_target_only_diagnostic` verification).
+  - `--lib public_buildkite`: `91 passed; 0 failed; 1 ignored` (covers `log_reader_rejects_escape_second_hop_and_http_denial_without_retry` timeout tolerance).
+  - `--test consumer_readiness`: `40 passed; 0 failed` (covers `single_platform_to_platform_map_requires_exact_approval_and_runs_host_checks`, `target_map_addition_and_update_require_exact_approval_and_preserve_receipt_scope`, and `decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_approval`).
+  - `--test source_ci_profile_policy` on macOS (`macos-aarch64`): `55 passed; 4 failed` (the 4 failures are host-OS mismatches on macOS vs Linux-only `supabase-consumer`/`fmt` fixtures and `/var` -> `/private/var` temp path canonicalization in `provider_carrier_executes_immutable_r_and_wrapper_preserves_fixed_context_and_failure`, unrelated to `#1833`/`#1832`; full Linux `Tests (core)` and Buildkite remain separate CI/operator gates, with Buildkite waived by operator).
+
 ## Cloud Wave 2 verification (#1836, #1835, #1886)
 
 Verified on the merged `origin/master` (`v0.159.0`, including PR `#1901` and
@@ -1569,8 +1586,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fa0fd2097bb0219f44c4c8625bcdb6b023ed4ec5c535ff62ec2f9ecd1fd0bbd2`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (253 files), `tests/` (268 files)
+- Repository signal fingerprint: `40545a84e95cb04615fd839e56a998a53011351e299debee028246141e668e52`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

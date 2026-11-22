@@ -1196,6 +1196,7 @@ fn log_reader_follows_one_scoped_redirect_and_retains_raw_body() {
 #[cfg(unix)]
 #[test]
 fn log_reader_rejects_escape_second_hop_and_http_denial_without_retry() {
+    let fixture_timeout = Duration::from_secs(30);
     for location in [
         log_location().replace(PIPE, IMPORTER),
         log_location().replace(BUILD, IMPORTER),
@@ -1208,8 +1209,9 @@ fn log_reader_rejects_escape_second_hop_and_http_denial_without_retry() {
         ));
         let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
         let cancel = Cancellation::default();
-        let budget = Budget::new(Duration::from_secs(3), 4096, &cancel).unwrap();
-        assert!(reader.get(&log_request(), &budget).is_err());
+        let budget = Budget::new(fixture_timeout, 4096, &cancel).unwrap();
+        let error = reader.get(&log_request(), &budget).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::InvalidData, "{error}");
         assert_eq!(timeout_attempts(&path), 1);
     }
     let location = log_location();
@@ -1222,7 +1224,7 @@ fn log_reader_rejects_escape_second_hop_and_http_denial_without_retry() {
         ));
         let mut reader = CurlPublicReader::new(path.clone(), |_, _| Ok(())).unwrap();
         let cancel = Cancellation::default();
-        let budget = Budget::new(Duration::from_secs(3), 4096, &cancel).unwrap();
+        let budget = Budget::new(fixture_timeout, 4096, &cancel).unwrap();
         let error = reader.get(&log_request(), &budget).unwrap_err();
         assert!(!error.to_string().contains("synthetic-signature"));
         assert_eq!(timeout_attempts(&path), 2);

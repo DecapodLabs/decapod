@@ -68,6 +68,36 @@ pub fn run_policy_cli(store: &Store, cli: PolicyCli) -> Result<(), error::Decapo
     run_policy_cli_as(store, cli, &crate::current_agent_id())
 }
 
+pub(crate) fn run_policy_cli_in_workspace(
+    store: &Store,
+    workspace: &Path,
+    cli: PolicyCli,
+) -> Result<(), error::DecapodError> {
+    if let PolicyCommand::Approve {
+        id,
+        scope,
+        expires_in_seconds,
+        ..
+    } = &cli.command
+        && scope == crate::core::repository_profile::POLICY_TRANSITION_SCOPE
+        && crate::cli::DecapodProjectConfig::load(workspace)?
+            .repo
+            .effective_backend()
+            .is_cloud()
+    {
+        let approval = crate::core::repository_profile::transition_approval::approve_cloud(
+            workspace,
+            id,
+            *expires_in_seconds,
+        )?;
+        println!(
+            "Cloud policy transition approved. Set DECAPOD_REPO_TRANSITION_DECISION_ID={approval} during validation."
+        );
+        return Ok(());
+    }
+    run_policy_cli(store, cli)
+}
+
 /// Trusted in-process caller form. CLI labels never select this identity.
 pub fn run_policy_cli_as(
     store: &Store,
