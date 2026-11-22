@@ -904,6 +904,16 @@
         "tests/cloud_tenancy_parity_1895.rs",
         "tests/org_constitution_overlay_877.rs"
       ]
+    },
+    {
+      "id": "cp-1895-877-spec-reviews",
+      "summary": "Record canonical Living Spec reviews for ARCHITECTURE.md, INTERFACES.md, and SECURITY.md (#1895, #877)",
+      "input_digest": "sha256:1297632cbe7d3af4671cf86082b024fb8a85954ed5c5c96c40a10e10382f9eca",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
@@ -943,6 +953,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Authored and verified #1895 multi-org cloud parity and #877 4-layer organization constitution overlays documentation against committed source changes in 763dd2e31.",
+          "reviewed_code_fingerprint": "5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa",
+          "spec_material_hash": "74a2d39edbed1c507c85b8602de73c88115c9b1daaeabe0fa2b580b0f92f4cf5"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Authored and verified #1895 multi-org cloud parity and #877 4-layer organization constitution overlays documentation against committed source changes in 763dd2e31.",
+          "reviewed_code_fingerprint": "5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa",
+          "spec_material_hash": "1bea8aa153019c33b6ea47e4d533b55061f4a9f598ea0f529d9a327a59531e4e"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Authored and verified #1895 multi-org cloud parity and #877 4-layer organization constitution overlays documentation against committed source changes in 763dd2e31.",
+          "reviewed_code_fingerprint": "5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa",
+          "spec_material_hash": "b47463baef4f26a5fbe42bef341a952d1346f3ecff7cc2f1313167057fd14b09"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
@@ -951,7 +984,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795327551Z"
+      "updated_at": "1795332759Z"
     },
     "trajectory": {
       "active_boundaries": [
