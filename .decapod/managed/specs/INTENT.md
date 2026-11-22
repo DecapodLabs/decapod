@@ -1,5 +1,13 @@
 # Intent
 
+## Read-only observability projections and hardened authenticated loopback HTTP transport (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)
+
+Provides strictly read-only, bounded, versioned observability projections (`decapod.observe.v1`) and hardens Decapod's optional authenticated HTTP RPC transport without introducing any UI, frontend state machine, telemetry database, or resident daemon (`INV-DAEMONLESS`):
+
+- **Repository-bounded specs, governance, timeline, and live workspace projections (`#860`, `#1712`, `#1713`, `#1714`, `#1723`, `#1727`, `#1728`)**: Exposes structured, deterministic projections over existing canonical Git, `.decapod/managed/specs/*`, `.decapod/governance.json`, witnessed native path (`observed-path.json`), and read-only SQLite records (`decapod observe <specs|timeline|workspace|validation-plan|pr-manifest|context-provenance>` and read-only RPC ops `observe.*`). Double-read cross-store snapshots explicitly report non-atomicity and concurrent-edit inconsistencies (`SnapshotConsistency`), separate human-origin `original_intent` from agent-authored `refined_intent`, distinguish `Witnessed` vs `Declared` vs `RecordedFact` timeline provenance with tamper/missing-attempt detection, provide canonical `#860` workunit activity categories (`active`, `waiting`, `blocked`, `drifting`, `completed`, `abandoned`) with typed transition rules and a shared human/machine renderer, and tie bounded `SourceAnchor` file slices to exact SHA-256 hashes that turn stale immediately on edit.
+- **Validation-plan applicability, prospective PR correspondence, and redacted context provenance (`#1730`, `#1731`, `#1732`)**: Surfaces applicable rules across all four authorities (`KernelInvariant`, `Constitution`, `ProjectOverride`, `TaskConstraints`), requirement decomposition coverage (catching dropped requirements such as `R3`), local vs joint/integration checks, global equality/inequality constraint-relation satisfiability (`A=B, B=C, A!=C`), prospective PR agent-intent vs published provider state correspondence and drift flags (never labeling auto-approved plans `human_approved`), and secret/prompt/reasoning-stripped context consultation provenance linked to canonical intent lineage.
+- **Hardened authenticated HTTP RPC & strictly read-only loopback observability server (`#874`, `#1719`, `#1720`)**: Fixes `#874`'s reopened HTTP transport defects by binding `Idempotency-Key` to the canonical SHA-256 digest of `(method, path, query, op, body, repository_context, caller/session/tenant/repo headers, hashed token)`, refusing same-key conflicts (`409 idempotency_conflict`), bounding replay tables by both entry count and bytes with fail-closed capacity enforcement (`503`), reconciling uncertain outcomes (`409 unknown_outcome_reconcile_required`) instead of blind replay, and executing child RPC via `bounded_process::BoundedCommand::bounded_capture_with_stdin`. Adds `decapod observe serve` with constant-time Bearer auth, `--token-stdin`, loopback-only fail-closed binding, foreign `Origin`/`Host` rejection, tenant/repo/revocation checks, and strict refusal of all mutating operations (`403 read_only_enforced` / `405 method_not_allowed`).
+
 ## Obligation ledger, clarity/STE validation, escalation admissibility, offline historical exceptions, and opt-in formal obligations (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907; Refs #1095, #1772, #1774, #1796)
 
 - **Escalation admissibility in canonical entrypoints and embedded constitution (`#1691`)**: Aligns `src/decapod/core/assets.rs` (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) and `assets/constitution.json` (all 16 routing-pass sites and `interfaces/PROCEDURAL_NORMS`) so freshly initialized agents investigate ordinary uncertainty locally via bounded reflection (`decapod govern plan reflect`) and escalate to a human only when escalation admission confirms irreducible ambiguity, conflicting requirements, or missing authority.
@@ -822,8 +830,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (267 files), `tests/` (277 files)
+- Repository signal fingerprint: `ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (276 files), `tests/` (278 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

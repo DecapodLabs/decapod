@@ -3301,6 +3301,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Integration(integration_cli) => {
             return run_integration_command(integration_cli);
         }
+        Command::Observe(observe_cli) => {
+            return run_observe_command(observe_cli);
+        }
         command => command,
     };
 
@@ -4276,6 +4279,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         | Command::Docs(_)
         | Command::Eval(_)
         | Command::Analyze(_)
+        | Command::Observe(_)
         | Command::Validate(_)
         | Command::Session(_) => true,
         Command::Workspace(ws_cli) => matches!(
@@ -4323,6 +4327,12 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "interop.capability_contracts"
                     | "interop.cloud_parity"
                     | "constitution.overlay.status"
+                    | "observe.specs"
+                    | "observe.timeline"
+                    | "observe.workspace"
+                    | "observe.validation_plan"
+                    | "observe.pr_manifest"
+                    | "observe.context_provenance"
                     | "cloud.orgs"
                     | "cloud.members"
                     | "cloud.invites"
@@ -4397,6 +4407,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Todo(_)
         | Command::System(_)
         | Command::Integration(_)
+        | Command::Observe(_)
         | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
@@ -4424,6 +4435,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
             | Command::Trace(_)
             | Command::Capabilities(_)
             | Command::System(_)
+            | Command::Observe(_)
             | Command::Qa(_)
     )
 }
@@ -4444,6 +4456,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
             | Command::Trace(_)
             | Command::Capabilities(_)
             | Command::System(_)
+            | Command::Observe(_)
             | Command::Qa(_)
     )
 }
@@ -4555,6 +4568,12 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.capability_contracts"
             | "interop.cloud_parity"
             | "constitution.overlay.status"
+            | "observe.specs"
+            | "observe.timeline"
+            | "observe.workspace"
+            | "observe.validation_plan"
+            | "observe.pr_manifest"
+            | "observe.context_provenance"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -4640,6 +4659,12 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "interop.capability_contracts"
             | "interop.cloud_parity"
             | "constitution.overlay.status"
+            | "observe.specs"
+            | "observe.timeline"
+            | "observe.workspace"
+            | "observe.validation_plan"
+            | "observe.pr_manifest"
+            | "observe.context_provenance"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -4684,7 +4709,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Release(_)
         | Command::Trace(_)
         | Command::System(_)
-        | Command::Integration(_) => false,
+        | Command::Integration(_)
+        | Command::Observe(_) => false,
         Command::Context(ContextGroupCli {
             command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
         }) => false,
@@ -9345,6 +9371,12 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "interop.capability_contracts"
             | "interop.cloud_parity"
             | "constitution.overlay.status"
+            | "observe.specs"
+            | "observe.timeline"
+            | "observe.workspace"
+            | "observe.validation_plan"
+            | "observe.pr_manifest"
+            | "observe.context_provenance"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -12158,6 +12190,223 @@ fn run_qa_command(
     Ok(())
 }
 
+fn resolve_observe_root(dir: Option<PathBuf>) -> Result<PathBuf, error::DecapodError> {
+    let base = match dir {
+        Some(path) => path,
+        None => std::env::current_dir()?,
+    };
+    Ok(find_decapod_project_root(&base).unwrap_or(base))
+}
+
+fn run_observe_command(cli: ObserveCli) -> Result<(), error::DecapodError> {
+    use core::observability_projections as obs;
+
+    match cli.command {
+        ObserveCommand::Specs {
+            dir,
+            offset,
+            limit,
+            include_excerpts,
+            anchor_path,
+            start_line,
+            end_line,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_specs_and_governance(
+                &root,
+                &obs::SpecsProjectionQuery {
+                    offset,
+                    limit,
+                    include_excerpts,
+                    anchor_path,
+                    start_line,
+                    end_line,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_specs_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Timeline {
+            dir,
+            after_seq,
+            limit,
+            stream,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_activity_timeline(
+                &root,
+                &obs::TimelineProjectionQuery {
+                    after_seq,
+                    limit,
+                    stream,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_timeline_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Workspace {
+            dir,
+            offset,
+            limit,
+            anchor_path,
+            start_line,
+            end_line,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_workspace_observation(
+                &root,
+                &obs::WorkspaceProjectionQuery {
+                    offset,
+                    limit,
+                    anchor_path,
+                    start_line,
+                    end_line,
+                    ..obs::WorkspaceProjectionQuery::default()
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_workspace_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::ValidationPlan {
+            dir,
+            accepted_requirements,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_validation_plan(
+                &root,
+                &obs::ValidationPlanQuery {
+                    accepted_requirements,
+                    ..obs::ValidationPlanQuery::default()
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_validation_plan_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::PrManifest {
+            dir,
+            planned_scope_files,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_pr_manifest(
+                &root,
+                &obs::PrManifestQuery {
+                    planned_scope_files,
+                    ..obs::PrManifestQuery::default()
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_pr_manifest_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::ContextProvenance {
+            dir,
+            offset,
+            limit,
+            task_id,
+            repo_id,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_context_provenance(
+                &root,
+                &obs::ContextProvenanceQuery {
+                    offset,
+                    limit,
+                    task_id,
+                    expected_repo_id: repo_id,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_context_provenance_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Serve {
+            dir,
+            bind,
+            token_stdin,
+            auth_token,
+            allow_remote,
+            max_requests,
+            max_body_bytes,
+            tenant_id,
+            allowed_repo_ids,
+            revoked_token_ids,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let token = if token_stdin {
+                let mut buf = String::new();
+                io::stdin().read_to_string(&mut buf)?;
+                buf.trim().to_string()
+            } else {
+                auth_token
+                    .or_else(|| std::env::var("DECAPOD_OBSERVE_TOKEN").ok())
+                    .ok_or_else(|| {
+                        error::DecapodError::ValidationError(
+                            "authenticated observe server requires --token-stdin, --auth-token, or DECAPOD_OBSERVE_TOKEN"
+                                .to_string(),
+                        )
+                    })?
+            };
+            let mut options = obs::ObserveServeOptions::loopback_default(token);
+            options.bind = bind;
+            options.allow_remote = allow_remote;
+            options.max_requests = max_requests;
+            options.max_body_bytes = max_body_bytes;
+            options.policy.require_loopback = !allow_remote;
+            options.policy.tenant_id = tenant_id;
+            options.policy.allowed_repo_ids = allowed_repo_ids;
+            options.policy.revoked_token_ids = revoked_token_ids;
+            obs::serve_observe_http(&root, options)?;
+            Ok(())
+        }
+    }
+}
+
 fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodError> {
     match cli.command {
         IntegrationCommand::Preview { dir, format } => {
@@ -14603,6 +14852,34 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_observe(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        match crate::core::observability_projections::dispatch_observe_rpc_op(
+            ctx.project_root,
+            &ctx.request.op,
+            &ctx.request.params,
+        ) {
+            Ok((data, _snapshot_id)) => Ok(success_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                Some(data),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
+            )),
+            Err(err) => Ok(error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "observe_error".to_string(),
+                err.to_string(),
+                None,
+                ctx.mandates.clone(),
+            )),
+        }
+    }
+
     pub(crate) fn handle_interop_manifest(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -15524,13 +15801,20 @@ fn run_rpc_command(
                 )
             })?;
         let root = project_root.to_path_buf();
-        return core::http_transport::serve(
+        let canonical_repo = std::fs::canonicalize(&root)
+            .unwrap_or_else(|_| root.clone())
+            .display()
+            .to_string();
+        let config = core::http_transport::HttpTransportConfig::for_rpc(
             &cli.listen,
             &token,
             cli.allow_remote,
             cli.max_body_bytes,
-            move |body| http_rpc_handler(&root, body),
-        )
+            canonical_repo,
+        );
+        return core::http_transport::serve_with_config(config, move |req| {
+            http_rpc_handler(&root, &req.body)
+        })
         .map_err(error::DecapodError::IoError);
     }
 
@@ -15632,6 +15916,12 @@ fn run_rpc_command(
         "constitution.overlay.status" => {
             rpc_handlers::handle_constitution_overlay_status(&rpc_ctx)?
         }
+        "observe.specs"
+        | "observe.timeline"
+        | "observe.workspace"
+        | "observe.validation_plan"
+        | "observe.pr_manifest"
+        | "observe.context_provenance" => rpc_handlers::handle_observe(&rpc_ctx)?,
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,
@@ -15669,52 +15959,77 @@ fn run_rpc_command(
     rpc_validation_exit_status(&request.op, response.success)
 }
 
-/// Execute HTTP requests through the exact local stdin RPC path. This keeps
-/// semantic envelopes, session checks, mandates, and repository authority in
-/// one implementation while making HTTP an explicitly opt-in adapter.
-fn http_rpc_handler(project_root: &Path, body: &[u8]) -> core::http_transport::HttpResponse {
-    let output = match std::process::Command::new(
-        std::env::current_exe().unwrap_or_else(|_| PathBuf::from("decapod")),
-    )
-    .current_dir(project_root)
-    .args(["rpc", "--stdin"])
-    .stdin(std::process::Stdio::piped())
-    .stdout(std::process::Stdio::piped())
-    .stderr(std::process::Stdio::piped())
-    .spawn()
-    {
-        Ok(mut child) => {
-            if let Some(mut stdin) = child.stdin.take() {
-                let _ = stdin.write_all(body);
+/// Execute HTTP requests through the exact local stdin RPC path using
+/// `bounded_process` process-group ownership, explicit timeout, and stdout/stderr
+/// byte caps (#874). Keeps semantic envelopes, session checks, mandates, and
+/// repository authority in one implementation.
+pub fn http_rpc_handler_with_limits(
+    project_root: &Path,
+    program: &Path,
+    args: &[&str],
+    body: &[u8],
+    limits: core::bounded_process::ProcessLimits,
+) -> core::http_transport::HttpResponse {
+    use core::bounded_process::{BoundedCommand, Cancellation, Termination};
+
+    let mut command = std::process::Command::new(program);
+    command.current_dir(project_root).args(args);
+    let cancel = Cancellation::default();
+    match command.bounded_capture_with_stdin(body, limits, &cancel) {
+        Ok(capture) => match capture.termination {
+            Termination::Exited if capture.output.status.success() => {
+                core::http_transport::HttpResponse::json(200, capture.output.stdout)
             }
-            child.wait_with_output()
-        }
-        Err(error) => Err(error),
-    };
-    match output {
-        Ok(output) if output.status.success() => {
-            core::http_transport::HttpResponse::json(200, output.stdout)
-        }
-        Ok(output) => {
-            let body = if output.stdout.is_empty() {
-                serde_json::json!({
-                    "success": false,
-                    "error": String::from_utf8_lossy(&output.stderr).trim()
-                })
-                .to_string()
-                .into_bytes()
-            } else {
-                output.stdout
-            };
-            core::http_transport::HttpResponse::json(400, body)
-        }
-        Err(error) => core::http_transport::HttpResponse::json(
+            Termination::Exited => {
+                let body = if capture.output.stdout.is_empty() {
+                    serde_json::json!({
+                        "success": false,
+                        "error_code": "rpc_failed",
+                        "error": String::from_utf8_lossy(&capture.output.stderr).trim()
+                    })
+                    .to_string()
+                    .into_bytes()
+                } else {
+                    capture.output.stdout
+                };
+                core::http_transport::HttpResponse::json(400, body)
+            }
+            Termination::TimedOut => core::http_transport::HttpResponse::json_uncertain(
+                504,
+                core::http_transport::error_code_json(
+                    "rpc_timeout_unknown_outcome",
+                    "RPC child exceeded deadline; owned process group terminated and reaped; outcome is unknown",
+                ),
+            ),
+            Termination::OutputLimit => core::http_transport::HttpResponse::json_uncertain(
+                502,
+                core::http_transport::error_code_json(
+                    "rpc_output_limit_exceeded",
+                    "RPC child output exceeded configured byte cap; owned process group terminated and reaped",
+                ),
+            ),
+            Termination::Cancelled => core::http_transport::HttpResponse::json_uncertain(
+                503,
+                core::http_transport::error_code_json(
+                    "rpc_cancelled_unknown_outcome",
+                    "RPC child was cancelled; owned process group terminated and reaped; outcome is unknown",
+                ),
+            ),
+        },
+        Err(error) => core::http_transport::HttpResponse::json_uncertain(
             500,
-            serde_json::json!({"success": false, "error": error.to_string()})
-                .to_string()
-                .into_bytes(),
+            core::http_transport::error_code_json("rpc_spawn_failed", &error.to_string()),
         ),
     }
+}
+
+fn http_rpc_handler(project_root: &Path, body: &[u8]) -> core::http_transport::HttpResponse {
+    let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("decapod"));
+    let limits = core::bounded_process::ProcessLimits {
+        timeout: std::time::Duration::from_secs(30),
+        max_output_bytes: core::http_transport::DEFAULT_MAX_RESPONSE_BYTES,
+    };
+    http_rpc_handler_with_limits(project_root, &program, &["rpc", "--stdin"], body, limits)
 }
 
 fn maybe_bind_capsule_to_workunit_state_ref(

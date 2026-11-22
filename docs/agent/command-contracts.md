@@ -296,6 +296,9 @@ always stops at a decision gate; Decapod never force-pushes silently.
 - **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
 - **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries.
 
+## `decapod observe`
+- **Intent:** Strictly read-only observability projections and optional authenticated loopback HTTP server
+
 # RPC Operations (Auto-generated)
 
 ### Operation: `AgentInit`

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "e3948d62f1f832a46c933b70066ee0d46627f123",
+    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,32 +869,56 @@
     }
   },
   "change": {
-    "id": "change_01M81YH82VJW6C6QTCJP437JP5",
-    "base_commit": "e3948d62f1f832a46c933b70066ee0d46627f123",
+    "id": "change_01M81G1G9K176E1K6J9QXNT34X",
+    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "gov-ledger-clarity-formal-authority": {
-      "statement": "Obligation ledger, stagnation detection, clarity/STE validator, escalation admissibility, opt-in accepted-policy main_merge, offline Ed25519 historical exceptions (history_proven=false), semantic plan/claims integrity, and opt-in formal obligations enforce fail-closed governance deterministically.",
-      "falsifier": "Pre-escalation wording remains in entrypoints or constitution; candidate main_merge=true self-authorizes; historical exceptions set history_proven=true; theater diffs or placeholder claims pass; paraphrased prose resets stagnation; ste-strict clarity passes ambiguous text; or formal admitted holes/fabricated transcripts pass.",
+    "claim:observability-projections-and-http-transport": {
+      "statement": "Strictly read-only observability projections (observe.*) and hardened authenticated loopback HTTP transport bind idempotency keys to canonical request digests, bound cache entries/bytes and child processes via bounded_process, redact secrets/prompts/reasoning, detect snapshot inconsistencies and tampered history, and refuse all mutations over read-only credentials.",
+      "falsifier": "Any read-only projection mutates repo/SQLite state, leaks raw prompts/secrets/symlinks, misses tampered history or cyclic constraint contradictions, returns another op receipt on Idempotency-Key collision, allows unbounded cache growth, or admits a mutating op on observe serve.",
       "status": "supported",
       "proof_refs": [
-        "tests/constitution_claims.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/obligation_ledger_tests.rs",
-        "tests/policy_self_authorization_1776.rs"
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/observability_projections.rs",
+        "tests/unit/core/http_transport_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-gov-ledger-shard5-clean",
-      "summary": "Clean checkpointed Shard 5 commit on origin/master v0.162.1 (e3948d62f) with #1691 entrypoint_correctness alignment and candidate-refreshed manifest.",
-      "input_digest": "sha256:efe59ca94ea287b15ba07bca2c5b419f25bca6bcd2306b54c7ccb281807d38fa"
+      "id": "chk-projections-1",
+      "summary": "Implement read-only observability projections (decapod observe / observe.* RPC) and hardened authenticated loopback HTTP transport (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)",
+      "input_digest": "sha256:feddf2c3953cac3d0c6ed9f7163abb8210a7aa47626d2714e0880aa69cf0d886",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/observability_projections.rs",
+        "tests/unit/core/http_transport_tests.rs"
+      ]
+    },
+    {
+      "id": "chk-projections-2",
+      "summary": "Implement read-only observability projections (decapod observe / observe.* RPC) and hardened authenticated loopback HTTP transport (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)",
+      "input_digest": "sha256:c9511cdf338a803eb4ee298f2435898ff44d08ebb854ae1c7c8fcad0c1f7dd7e",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/observability_projections.rs",
+        "tests/unit/core/http_transport_tests.rs"
+      ]
+    },
+    {
+      "id": "chk-projections-merge-01621",
+      "summary": "Reconcile PR #1920 onto origin/master v0.162.1 (e0096f606) preserving all merged changes and regenerating docs/specs with worktree candidate binary",
+      "input_digest": "sha256:5518daba390e56600d17b832cb887464a222c5d701508a431d73311bf773d2a0",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/observability_projections.rs",
+        "tests/unit/core/http_transport_tests.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M81YH82VJW6C6QTCJP437JP5": {
+    "intent:change_01M81G1G9K176E1K6J9QXNT34X": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -904,14 +928,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
+      "id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
-      "refined_intent": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
+      "raw_intent": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
+      "refined_intent": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -924,7 +948,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
+      "intent": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -934,43 +958,47 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #1691 escalation-admissibility templates/constitution, #1468 accepted-policy main_merge, #1569 offline Ed25519 historical exceptions, #1093 semantic governance integrity, obligation_ledger.rs, artifact_clarity.rs, and formal_obligations.rs on clean checkpointed recovery branch.",
-          "reviewed_code_fingerprint": "3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250",
-          "spec_material_hash": "12e1c85a281d342b5c744af1d33967bc8d130a7c28e535d6c3c01eca63a16183"
+          "reason": "Reconciled onto origin/master v0.162.1; documented core::observability_projections submodules, double-read Git+SQLite snapshot consistency, bounded_process stdin capture, and hardened http_transport replay binding.",
+          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "spec_material_hash": "0fe37309d9142223ab3f98fe58df0f4008ab2951bf360856030310fc4ab4b896"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod validate --clarity --profile CLI, [governance].main_merge config contract, offline historical-exception carrier, and Rust core ledger/clarity/formal APIs on clean checkpointed recovery branch.",
-          "reviewed_code_fingerprint": "3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250",
-          "spec_material_hash": "b1b892a2b5eef8efdece0f6e771bd9c360a389c52bc37c09993c04ba2cbc416e"
+          "reason": "Reconciled onto origin/master v0.162.1; documented decapod observe CLI subcommands, 6 read-only observe.* RPC ops, and hardened loopback HTTP transport.",
+          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "spec_material_hash": "7c6b6022bcaf10f9c9569403f73e99b8116a80290c87e9149784aa04b0285203"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated security boundary docs for #1468 fail-closed default main_merge with POLICY_SELF_AUTHORIZATION_REJECTED, #1569 offline Ed25519 historical exceptions preserving history_proven=false, and #1907 pinned formal-checker attestation.",
-          "reviewed_code_fingerprint": "3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250",
-          "spec_material_hash": "94cea1a8cb792f6240b7a1f4f71bb3e578aa4f9385c49730e5b5bb0b04c2dbd5"
+          "reason": "Reconciled onto origin/master v0.162.1; documented O_NOFOLLOW repo containment, secret/prompt/reasoning redaction, constant-time bearer auth, foreign Origin/Host rejection, tenant/repo/revocation isolation, and #874 request-bound idempotency.",
+          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Decapod gov-ledger recovery: clean checkpointed branch for Shard 5",
+      "title": "Decapod projections & authenticated read-only HTTP transport (#860 #874 #1712-#1714 #1719-#1720 #1723 #1727-#1728 #1730-#1732)",
       "todo_ids": [
-        "code_01m81yfryyfgymzq"
+        "secu_01m81fz0x05nhj39"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795361981Z"
+      "updated_at": "1795364451Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:232cbadea6abd679c140186998c8fd9b0ce23f1dd3b01e791ea5b99e36661e85",
+      "artifact_hash": "sha256:cb61c35f4b98e672607dc2412258192936172ec76403a1b0779d4233f2471ce2",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "bounded_process_unit_11",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
@@ -978,31 +1006,19 @@
           "status": "passed"
         },
         {
-          "name": "constitution_claims",
+          "name": "doc_alignment_5",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
+          "name": "http_transport_unit_5",
           "status": "passed"
         },
         {
-          "name": "entrypoint_correctness",
+          "name": "interop_conformance_12",
           "status": "passed"
         },
         {
-          "name": "entrypoint_integrity_unit",
-          "status": "passed"
-        },
-        {
-          "name": "governance_document_unit",
-          "status": "passed"
-        },
-        {
-          "name": "obligation_ledger_tests",
-          "status": "passed"
-        },
-        {
-          "name": "policy_self_authorization_1776",
+          "name": "observability_projections_10",
           "status": "passed"
         }
       ],
@@ -1011,20 +1027,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
+            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
+            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M81YH86835P1B1NB2Q9DZDWT",
+            "detail": "trajectory:branch_01M81G1GDVDT0S0Q85TNEYZVN0",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
+            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1033,41 +1049,32 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M81YH86835P1B1NB2Q9DZDWT": {
+          "branch_01M81G1GDVDT0S0Q85TNEYZVN0": {
             "evidence_only": true,
-            "id": "branch_01M81YH86835P1B1NB2Q9DZDWT",
-            "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
+            "id": "branch_01M81G1GDVDT0S0Q85TNEYZVN0",
+            "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/assets.rs",
-                  "assets/constitution.json",
-                  "tests/entrypoint_correctness.rs",
-                  "src/decapod/core/assets.rs",
-                  "assets/constitution.json",
+                  "src/decapod/core/observability_projections.rs",
+                  "src/decapod/core/http_transport.rs",
+                  "src/decapod/core/bounded_process.rs",
                   "src/decapod/cli.rs",
-                  "src/decapod/core/governance_document.rs",
-                  "src/decapod/core/governance_document/historical_exception.rs",
-                  "src/decapod/core/governance_document/semantic_integrity.rs",
-                  "src/decapod/core/obligation_ledger.rs",
-                  "src/decapod/core/artifact_clarity.rs",
-                  "src/decapod/core/formal_obligations.rs",
-                  "tests/obligation_ledger_tests.rs",
-                  "tests/policy_self_authorization_1776.rs",
-                  "tests/entrypoint_correctness.rs"
+                  "src/decapod/lib.rs",
+                  "tests/observability_projections.rs",
+                  "tests/unit/core/http_transport_tests.rs",
+                  "cargo test --lib http_transport (5/5), bounded_process (11/11), advertised_rpc_sessions (1/1), --test observability_projections (10/10), interop_conformance (12/12), doc_alignment (5/5); cargo fmt --check & clippy -D warnings passed"
                 ],
                 "proof_refs": [
                   "cargo_fmt",
-                  "cargo_clippy",
-                  "obligation_ledger_tests",
-                  "policy_self_authorization_1776",
-                  "constitution_claims",
-                  "doc_alignment",
-                  "entrypoint_correctness",
-                  "entrypoint_integrity_unit",
-                  "governance_document_unit"
+                  "cargo_clippy_all_targets",
+                  "http_transport_unit_5",
+                  "bounded_process_unit_11",
+                  "observability_projections_10",
+                  "interop_conformance_12",
+                  "doc_alignment_5"
                 ],
                 "scope": [
                   "root"
@@ -1081,26 +1088,19 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [
-        "assets/constitution.json",
-        "src/decapod/core/assets.rs",
-        "tests/entrypoint_correctness.rs"
+      "evidence": [
+        "cargo test --lib http_transport (5/5), bounded_process (11/11), advertised_rpc_sessions (1/1), --test observability_projections (10/10), interop_conformance (12/12), doc_alignment (5/5); cargo fmt --check & clippy -D warnings passed"
       ],
-      "intent_id": "intent:change_01M81YH82VJW6C6QTCJP437JP5",
+      "inspected_files": [],
+      "intent_id": "intent:change_01M81G1G9K176E1K6J9QXNT34X",
       "modified_files": [
-        "assets/constitution.json",
         "src/decapod/cli.rs",
-        "src/decapod/core/artifact_clarity.rs",
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/formal_obligations.rs",
-        "src/decapod/core/governance_document.rs",
-        "src/decapod/core/governance_document/historical_exception.rs",
-        "src/decapod/core/governance_document/semantic_integrity.rs",
-        "src/decapod/core/obligation_ledger.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/obligation_ledger_tests.rs",
-        "tests/policy_self_authorization_1776.rs"
+        "src/decapod/core/bounded_process.rs",
+        "src/decapod/core/http_transport.rs",
+        "src/decapod/core/observability_projections.rs",
+        "src/decapod/lib.rs",
+        "tests/observability_projections.rs",
+        "tests/unit/core/http_transport_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1108,10 +1108,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M81YH86835P1B1NB2Q9DZDWT",
+      "run_id": "branch_01M81G1GDVDT0S0Q85TNEYZVN0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m81yfryyfgymzq",
+      "task_id": "secu_01m81fz0x05nhj39",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

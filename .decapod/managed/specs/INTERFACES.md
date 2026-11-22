@@ -1,5 +1,22 @@
 # Interfaces
 
+## Read-only observability CLI, RPC, and loopback HTTP interfaces (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)
+
+- **Read-only CLI (`src/decapod/cli.rs::ObserveCli`, `src/decapod/lib.rs::run_observe_command`)**:
+  - `decapod observe specs [--dir <PATH>] [--offset <N>] [--limit <N>] [--include-excerpts] [--anchor-path <REL>] [--start-line <N>] [--end-line <N>] [--format json|text]`
+  - `decapod observe timeline [--dir <PATH>] [--after-seq <N>] [--limit <N>] [--stream <NAME>] [--format json|text]`
+  - `decapod observe workspace [--dir <PATH>] [--offset <N>] [--limit <N>] [--anchor-path <REL>] [--start-line <N>] [--end-line <N>] [--format json|text]`
+  - `decapod observe validation-plan [--dir <PATH>] [--require <R_ID>...] [--format json|text]`
+  - `decapod observe pr-manifest [--dir <PATH>] [--planned-file <REL>...] [--format json|text]`
+  - `decapod observe context-provenance [--dir <PATH>] [--offset <N>] [--limit <N>] [--task-id <ID>] [--repo-id <ID>] [--format json|text]`
+  - `decapod observe serve [--dir <PATH>] [--bind 127.0.0.1:0] [--token-stdin | --auth-token <TOK>] [--allow-remote] [--max-requests <N>] [--max-body-bytes <N>] [--tenant-id <ID>] [--repo-id <ID>...] [--revoked-token-id <ID>...]`
+  - All `decapod observe` commands are strictly read-only, sessionless, offline-first, and emit `schema_version = "decapod.observe.v1"`, `read_only = true`, `authoritative = false`.
+- **Read-only JSON RPC ops (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs::rpc_handlers::handle_observe`)**:
+  - Registers `observe.specs`, `observe.timeline`, `observe.workspace`, `observe.validation_plan`, `observe.pr_manifest`, and `observe.context_provenance` (`read_only = true`, `session_required = false`, worktree/mandate bypass aligned in `lib.rs`).
+- **Loopback HTTP endpoints (`src/decapod/core/http_transport.rs`, `src/decapod/core/observability_projections/server.rs`)**:
+  - `decapod observe serve`: accepts `GET /observe/v1/{specs,timeline,workspace,validation-plan,pr-manifest,context-provenance}` and `POST /rpc/v1` restricted exclusively to `ALLOWLISTED_OBSERVE_RPC_OPS`, setting `X-Decapod-Read-Only: true`, `X-Decapod-Snapshot-Id`, `Cache-Control: no-store`, and `X-Content-Type-Options: nosniff`. Mutating RPC operations return `403 read_only_enforced`; non-`GET`/`POST` HTTP methods return `405 method_not_allowed`.
+  - `decapod rpc --http-server`: retains `POST /rpc/v1` while enforcing request-bound `Idempotency-Key` (`409 idempotency_conflict`), `X-Decapod-Request-Id` (`409 replayed_request`), bounded entry/byte cache (`503 idempotency_capacity_exceeded`), uncertain-outcome non-replay (`409 unknown_outcome_reconcile_required`), and bounded child timeouts/output caps (`504`/`502`).
+
 ## Mechanical clarity CLI, accepted-policy `main_merge`, historical exceptions, and ledger APIs (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907)
 
 - **Clarity validation CLI (`src/decapod/cli.rs::ValidateCli`, `src/decapod/lib.rs::run_validate_command`, `src/decapod/core/artifact_clarity.rs`)**:
@@ -1691,8 +1708,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (267 files), `tests/` (277 files)
+- Repository signal fingerprint: `ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (276 files), `tests/` (278 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
