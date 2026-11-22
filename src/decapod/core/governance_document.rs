@@ -1909,14 +1909,42 @@ pub(crate) fn record_history_recovery(
             ));
         }
         let id = format!("history-recovery:{source}");
+        let source_tree =
+            immutable_archive_git(root, &["rev-parse", &format!("{source}^{{tree}}")])?;
+        let exception_judgment = historical_exception::evaluate_observation_exception(
+            root,
+            &change.base_commit,
+            &source,
+            &source_tree,
+            &change.base_commit,
+        );
+        let recovery_disposition = if exception_judgment.exception_authorized
+            && exception_judgment.policy_permits_exceptional_admission
+        {
+            "exceptional_admission_authorized"
+        } else {
+            "reauthor_and_obtain_fresh_proof"
+        };
         let observation = json!({
             "schema":"decapod.history-recovery.v1",
-            "source_commit":source, "source_tree":immutable_archive_git(root, &["rev-parse", &format!("{source}^{{tree}}")])?,
+            "source_commit":source,
+            "source_tree":source_tree,
             "source_governance_blob":immutable_archive_git(root, &["rev-parse", &format!("{source}:{GOVERNANCE_PATH}")])?,
-            "destination_change":change.id, "destination_base":change.base_commit,
-            "actor":actor, "authority":"current_task_custody_only",
-            "reason":reason.trim(), "historical_proof":"not_proven",
-            "exception_authorized":false, "recovery":"reauthor_and_obtain_fresh_proof",
+            "destination_change":change.id,
+            "destination_base":change.base_commit,
+            "actor":actor,
+            "authority": if exception_judgment.exception_authorized {
+                "offline_ed25519_historical_exception"
+            } else {
+                "current_task_custody_only"
+            },
+            "reason":reason.trim(),
+            "history_proven":false,
+            "historical_proof":"not_proven",
+            "exception_authorized":exception_judgment.exception_authorized,
+            "policy_permits_exceptional_admission":exception_judgment.policy_permits_exceptional_admission,
+            "exception_identity_assurance":exception_judgment.identity_assurance,
+            "recovery":recovery_disposition,
             "assessment":report,
         });
         if let Some(prior) = document.baseline.unresolved.get(&id) {
@@ -2169,6 +2197,21 @@ pub use merge_reconcile::reconcile_merge;
 #[path = "governance_document/scope_reconciliation.rs"]
 mod scope_reconciliation;
 pub use scope_reconciliation::{ScopeReconciliationReport, reconcile_scope_projections};
+
+#[path = "governance_document/historical_exception.rs"]
+pub mod historical_exception;
+pub use historical_exception::{
+    AuthorizedHistoricalException, HistoricalExceptionContext, HistoricalExceptionDecision,
+    HistoricalExceptionPublicationJudgment, HistoricalExceptionSigners,
+    verify_historical_exceptions,
+};
+
+#[path = "governance_document/semantic_integrity.rs"]
+pub mod semantic_integrity;
+pub use semantic_integrity::{
+    SemanticIntegrityFinding, SemanticIntegrityReport, detect_governance_theater_diff,
+    validate_semantic_governance_integrity, validate_semantic_governance_json,
+};
 
 fn verify_pr_checkpoints_inner(
     root: &Path,

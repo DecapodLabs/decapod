@@ -50,13 +50,14 @@ pub use task_journal::{
 
 /// Bootstrap-only recovery: the CLI authenticates apply requests before calling
 /// this crate-private kernel entrypoint. Local policy is rechecked by the owner.
-pub(crate) fn reconcile_legacy_todo(
+pub(crate) use legacy_todo_recovery::LegacyRecoveryOptions;
+
+pub(crate) fn reconcile_legacy_todo_with_options(
     root: &Path,
     actor: &str,
-    expected_review: Option<&str>,
-    prepare_only: bool,
+    options: legacy_todo_recovery::LegacyRecoveryOptions<'_>,
 ) -> Result<JsonValue, error::DecapodError> {
-    legacy_todo_recovery::run(root, actor, expected_review, prepare_only)
+    legacy_todo_recovery::run_with_options(root, actor, options)
 }
 
 pub(crate) fn guard_pending_legacy_reconciliation(root: &Path) -> Result<(), error::DecapodError> {
@@ -610,14 +611,23 @@ pub fn task_journal_restore(
 
 #[derive(Subcommand, Debug)]
 pub enum TodoJournalCommand {
-    /// Review mixed TODO input; explicitly prepare/apply only the exact reviewed
-    /// empty or byte-identical canonical copy. Unmatched history stays blocked.
+    /// Review mixed TODO input; explicitly prepare/apply, quarantine, export, or
+    /// opt-in import missing non-conflicting legacy tasks without silent overwrites (#1657).
     ReconcileLegacy {
         #[clap(long)]
         expected_review: Option<String>,
         /// Persist the versioned operation intent without retiring the input.
-        #[clap(long, requires = "expected_review")]
+        #[clap(long, requires = "expected_review", conflicts_with_all = ["quarantine", "import_missing"])]
         prepare_only: bool,
+        /// Explicitly quarantine any reviewed legacy store to an archive without touching canonical state.
+        #[clap(long, requires = "expected_review", conflicts_with_all = ["prepare_only", "import_missing"])]
+        quarantine: bool,
+        /// Explicitly import only non-conflicting legacy tasks absent from canonical state into the task journal.
+        #[clap(long = "import-missing", requires = "expected_review", conflicts_with_all = ["prepare_only", "quarantine"])]
+        import_missing: bool,
+        /// Non-destructively export a deterministic JSON inspection bundle of the legacy store to a new file.
+        #[clap(long = "export", value_name = "PATH")]
+        export: Option<PathBuf>,
     },
     /// Observe current state as an explicit versioned baseline.
     Checkpoint {
@@ -748,6 +758,9 @@ pub struct TodoCli {
 pub(crate) struct LegacyReconciliationRequest<'a> {
     pub(crate) expected_review: Option<&'a str>,
     pub(crate) prepare_only: bool,
+    pub(crate) quarantine: bool,
+    pub(crate) import_missing: bool,
+    pub(crate) export: Option<&'a Path>,
     pub(crate) has_operation_id: bool,
 }
 
@@ -759,10 +772,16 @@ impl TodoCli {
                     TodoJournalCommand::ReconcileLegacy {
                         expected_review,
                         prepare_only,
+                        quarantine,
+                        import_missing,
+                        export,
                     },
             } => Some(LegacyReconciliationRequest {
                 expected_review: expected_review.as_deref(),
                 prepare_only: *prepare_only,
+                quarantine: *quarantine,
+                import_missing: *import_missing,
+                export: export.as_deref(),
                 has_operation_id: self.operation_id.is_some(),
             }),
             _ => None,

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="20" role="img" aria-label="Decapod: governed">
+  <title>Decapod: governed</title>
+  <linearGradient id="decapod-badge-shade" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <clipPath id="decapod-badge-clip">
+    <rect width="144" height="20" rx="3" fill="#fff"/>
+  </clipPath>
+  <g clip-path="url(#decapod-badge-clip)">
+    <rect width="74" height="20" fill="#1f2937"/>
+    <rect x="74" width="70" height="20" fill="#dc2626"/>
+    <rect width="144" height="20" fill="url(#decapod-badge-shade)"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
+    <text aria-hidden="true" x="380" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="580">Decapod</text>
+    <text x="380" y="140" transform="scale(.1)" fill="#fff" textLength="580">Decapod</text>
+    <text aria-hidden="true" x="1080" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="540">governed</text>
+    <text x="1080" y="140" transform="scale(.1)" fill="#fff" textLength="540">governed</text>
+  </g>
+</svg>

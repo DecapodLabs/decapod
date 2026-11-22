@@ -744,12 +744,23 @@ fn discovery_and_negotiation() {
         vec!["test registration describes source coverage, not an observed execution".into()],
     );
     let mcp = caps.iter().find(|c| c["id"] == "transport:mcp");
+    let a2a = caps.iter().find(|c| c["id"] == "transport:a2a");
+    let acp = caps.iter().find(|c| c["id"] == "transport:acp");
     h.check(
-        "manifest.mcp_intentionally_not_used",
+        "manifest.bounded_transports_truthful",
         "rpc-stdin:interop.manifest",
-        "transport:mcp intentionally_not_used (never advertised as available)",
-        serde_json::to_string(&mcp).unwrap_or_else(|_| "missing".to_string()),
-        mcp.is_some_and(|c| c["implementation_status"] == "intentionally_not_used"),
+        "transport:mcp and transport:a2a implemented (evidence=not_run); transport:acp intentionally_not_used",
+        format!(
+            "mcp={} a2a={} acp={}",
+            serde_json::to_string(&mcp).unwrap_or_else(|_| "missing".to_string()),
+            serde_json::to_string(&a2a).unwrap_or_else(|_| "missing".to_string()),
+            serde_json::to_string(&acp).unwrap_or_else(|_| "missing".to_string()),
+        ),
+        mcp.is_some_and(|c| {
+            c["implementation_status"] == "implemented" && c["evidence"]["state"] == "not_run"
+        }) && a2a.is_some_and(|c| {
+            c["implementation_status"] == "implemented" && c["evidence"]["state"] == "not_run"
+        }) && acp.is_some_and(|c| c["implementation_status"] == "intentionally_not_used"),
         None,
         vec![],
     );

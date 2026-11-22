@@ -897,6 +897,18 @@
         "tests/houseboat_engine.rs",
         "tests/projection_consistency.rs"
       ]
+    },
+    {
+      "id": "houseboat-reconcile-782e9ce19",
+      "summary": "Reconcile PR #1922 with origin/master (782e9ce19, v0.162.1): preserved all merged PRs (#1917-#1926/#1920/#1921), rebuilt command-contracts.md with worktree binary, refreshed specs/manifest, verified fmt/clippy/all Rust & TS tests",
+      "input_digest": "sha256:61fa171d73eabcca4e0dadaaf76195fabec2fe974bc65e556dbc8c78f0966dc8",
+      "proof_refs": [
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/doc_alignment.rs",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
+      ]
     }
   ],
   "intents": {
@@ -940,23 +952,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented src/decapod/core/houseboat.rs, src/decapod/core/mooring.rs, Darkmatter read-only snapshot contract, TypeScript/Pi packages, and tests/houseboat_engine.rs architecture",
-          "reviewed_code_fingerprint": "f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2",
-          "spec_material_hash": "c1f6033d08a98f68bcb6e5d2d0bf6c8706ecc4b4a6a440e20e784ef66a6d8c5c"
+          "reason": "Merged origin/master (782e9ce19) preserving Houseboat core engine, mooring, Darkmatter contract, and TS/Pi SDK architecture sections",
+          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
+          "spec_material_hash": "0b8615bb8853bb0b2e5ba7de74bbfa4298c4cc5d5187f4c89d5657e70d084b86"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod houseboat CLI subcommands, Darkmatter read-only snapshot schema, and TypeScript/Pi client interfaces",
-          "reviewed_code_fingerprint": "f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2",
-          "spec_material_hash": "2522b628a667174925012be383e3f0c2217dfbf77cc63603555c2b60977b3784"
+          "reason": "Merged origin/master (782e9ce19) preserving decapod houseboat CLI, Darkmatter snapshot schema, and TypeScript/Pi client interfaces",
+          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
+          "spec_material_hash": "f1e8853c2683881d3ff4a6771b9d404c9758fad7c23b3b2b96935e3354b3edec"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Houseboat/mooring/Darkmatter/TS surfaces extend fail-closed custody without weakening existing security boundaries; attestation refreshed via specs.refresh",
-          "reviewed_code_fingerprint": "f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2",
-          "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
+          "reason": "Preserved origin/master (782e9ce19) security updates and refreshed codebase attestation; Houseboat/mooring/Darkmatter/TS surfaces maintain fail-closed custody",
+          "reviewed_code_fingerprint": "8836198e8470af583af8a378f4d2eb871d86c7e911d4ddecf056e2819b790fc6",
+          "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
       "state": "APPROVED",
@@ -967,7 +979,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795353507Z"
+      "updated_at": "1795371971Z"
     },
     "trajectory": {
       "active_boundaries": [

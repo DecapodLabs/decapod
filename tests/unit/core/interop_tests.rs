@@ -41,20 +41,28 @@ fn manifest_derives_entries_from_registered_ops() {
 }
 
 #[test]
-fn manifest_marks_mcp_acp_a2a_intentionally_not_used() {
+fn manifest_tracks_implemented_mcp_a2a_and_unsupported_acp() {
     let manifest = sample_manifest();
-    for id in ["transport:mcp", "transport:acp", "transport:a2a"] {
+    for id in ["transport:mcp", "transport:a2a"] {
         let cap = manifest
             .capabilities
             .iter()
             .find(|c| c.id == id)
             .expect("transport entry exists");
-        assert_eq!(
-            cap.implementation_status,
-            ImplementationStatus::IntentionallyNotUsed
-        );
-        assert!(cap.implementation.is_none());
+        assert_eq!(cap.implementation_status, ImplementationStatus::Implemented);
+        assert!(cap.implementation.is_some());
+        assert_eq!(cap.evidence.state, VerificationState::NotRun);
     }
+    let acp = manifest
+        .capabilities
+        .iter()
+        .find(|c| c.id == "transport:acp")
+        .expect("transport:acp entry exists");
+    assert_eq!(
+        acp.implementation_status,
+        ImplementationStatus::IntentionallyNotUsed
+    );
+    assert!(acp.implementation.is_none());
 }
 
 #[test]

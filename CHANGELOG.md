@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.162.1](https://github.com/DecapodLabs/decapod/compare/v0.162.0...v0.162.1) - 2026-11-22
+
+### Added
+
+- *(validate,container,init)* qualify release-only transitions, privacy lints, headless podman, and badge
+
+### Fixed
+
+- *(deps,validate)* update url to 2.5.9 for RUSTSEC-2026-0592 and refresh v0.162.0 Dockerfile pin
+
+### Other
+
+- *(specs)* refresh clean codebase attestation without local bazel symlinks
+- *(bazel)* update MODULE.bazel.lock for url 2.5.9
+
 ## [0.162.0](https://github.com/DecapodLabs/decapod/compare/v0.161.0...v0.162.0) - 2026-11-22
 
 ### Added
