@@ -1,5 +1,10 @@
 # Validation
 
+## Multi-org Cloud parity and organization constitution overlay verification (#1895, #877)
+
+- **Multi-org Cloud tenancy parity (`#1895`)**: `tests/cloud_tenancy_parity_1895.rs` verifies multi-organization switching, cross-tenant refusal, `#215` org-admin vs zero-paid-seat isolation on Repo 1B, concurrent CAS race exclusivity, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit/policy-bound evidence capture, mid-session seat revocation and network-cut fail-closed behavior with zero `.decapod/data/decapod.db` creation, independent observer state checks, and local SQLite equivalence on the supported operation subset (using a local 2-org/2-DB gateway simulation rather than live hosted Cloud infrastructure). Unit coverage in `src/decapod/core/cloud_parity_matrix.rs` asserts matrix schema invariants and Cloud refusal behavior (`CLOUD_LEASE_RENEW_UNSUPPORTED`).
+- **Organization constitution overlays (`#877`)**: Unit tests in `src/decapod/core/org_overlay.rs` and integration suite `tests/org_constitution_overlay_877.rs` verify all eight authority and integrity states (`base-only`, `organization-only`, `project-only`, `all-three`, `conflicting`, `stale`, `tampered`, `offline`), `ORG_OVERLAY_NON_OVERRIDABLE_CONFLICT`, `ORG_OVERLAY_EXTEND_ONLY_WEAKENING_REJECTED`, `ORG_OVERLAY_PRIVATE_LEAK_REJECTED`, Layer 4 non-authority, `interop.manifest` authority hierarchy export, and `validate_project_config_downgrade_check` / `validate_override_authority` (`ORG_OVERLAY_POLICY_DOWNGRADE`) enforcement inside `src/decapod/core/validate.rs`.
+
 ## Effective operation grants and guidance hygiene verification (#1905, #1893)
 
 Verified on `origin/master` (`485a35148`, `v0.160.0` + PR `#1908` + PR `#1911` + PR `#1909` + PR `#1912`) inside isolated worktree `agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905`:
@@ -1655,8 +1660,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

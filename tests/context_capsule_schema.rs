@@ -27,6 +27,7 @@ fn context_capsule_canonical_serialization_is_deterministic() {
     let capsule = DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".to_string(),
         topic: "auth provider boundary".to_string(),
         scope: "interfaces".to_string(),
@@ -80,6 +81,7 @@ fn context_capsule_with_recomputed_hash_is_stable() {
     let base = DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".to_string(),
         topic: "promotion firewall".to_string(),
         scope: "interfaces".to_string(),

@@ -702,6 +702,9 @@ Live validation and readback remain owned by `workspace publish`."#
                 "capabilities" => {
                     writeln!(file, "\n{}", capability_contracts_command_contract())?;
                 }
+                "constitution" => {
+                    writeln!(file, "\n{}", constitution_overlay_command_contract())?;
+                }
                 _ => {}
             }
             writeln!(file)?;
@@ -1283,5 +1286,21 @@ fn capability_contracts_command_contract() -> &'static str {
 - **Intent:** Deterministic, read-only inspection of composed service capability contracts (`Decapod -> Dactyl -> Propodus`) for schema, operation, auth scope, revision, policy-copy, prestate, shared-invariant, and two-step fault/severed-ack drift before governed admission.
 - **Usage:** `decapod capabilities contracts [--fixture] [--contract <PATH>] [--dir <PATH>] [--format text|json]` (also via RPC `interop.capability_contracts`).
 - **Offline isolation:** Never requires network calls or Cloud credentials; unrelated local offline repositories remain unaffected and usable (`local_offline_usable=true`, Cloud capability marked `unsupported`).
-- **Validation gate:** When `.decapod/contracts/capability_contract.json` exists, `decapod validate` checks it against accepted host policy and fails closed on drift, dropped negative cases, or self-certification (`SELF_VERIFICATION_REJECTED`)."#
+- **Validation gate:** When `.decapod/contracts/capability_contract.json` exists, `decapod validate` checks it against accepted host policy and fails closed on drift, dropped negative cases, or self-certification (`SELF_VERIFICATION_REJECTED`).
+
+### `decapod capabilities parity`
+
+- **Intent:** Deterministic, read-only inspection of the versioned Local vs Cloud logical operation and evidence parity matrix (`decapod.cloud-parity-matrix.v1`), including explicit enumeration of unsupported Cloud operations and placement opacity boundaries.
+- **Usage:** `decapod capabilities parity [--dir <PATH>] [--format text|json]` (also via RPC `interop.cloud_parity`).
+- **No blanket parity / no local SQLite fallback:** Reports supported logical operations separately from Cloud-unsupported operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) and never creates or touches `.decapod/data/decapod.db`."#
+}
+
+fn constitution_overlay_command_contract() -> &'static str {
+    r#"### `decapod constitution get` & `decapod constitution overlay`
+
+- **4-Layer Precedence Order (`#877`):** `1. binary_embedded` -> `2. organization_overlay` (explicit local path under `[context.organization_overlay]` or verified imported cache `.decapod/managed/organization-overlay.json`) -> `3. repository_project_override` (`.decapod/OVERRIDE.md`) -> `4. task_context_projection` (strictly non-authoritative projection).
+- **Overridability & Fail-Closed Enforcement:** Organization directives specify `overridable`, `extend_only` (rejects weakening via `ORG_OVERLAY_EXTEND_ONLY_WEAKENING_REJECTED`), or `non_overridable` (rejects any `.decapod/OVERRIDE.md` override via `ORG_OVERLAY_NON_OVERRIDABLE_CONFLICT`).
+- **Verification & Offline Use:** `decapod constitution overlay status [--format text|json]` inspects trust (`verified_signature`, `verified_digest`, `local_configured`, `tampered`) and freshness (`fresh`, `offline_cached`, `stale`). `verify` fails closed on invalid, tampered, stale, or conflicting overlays. `import <PATH>` verifies and caches bundles locally for disconnected offline execution; `clear` removes the imported cache.
+- **No Secret Leakage:** `organization_private` directives retain hash provenance in context capsules while redacting private policy text from portable context bundles (`ORG_OVERLAY_PRIVATE_LEAK_REJECTED`).
+- **RPC:** `constitution.get` (`resolved: true`) and `constitution.overlay.status` (read-only)."#
 }

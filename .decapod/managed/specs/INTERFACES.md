@@ -1,5 +1,10 @@
 # Interfaces
 
+## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
+
+- **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
+- **Constitution overlay CLI, RPC, and manifest (`#877`)**: Adds `decapod constitution get --resolved`, `decapod constitution search` provenance metadata, and `decapod constitution overlay {status|verify|import|clear}` (`src/decapod/core/constitution_cli.rs`, documented in `src/decapod/core/docs_cli.rs` and `docs/agent/command-contracts.md`). Adds read-only RPC `constitution.overlay.status` (`handle_constitution_overlay_status` in `src/decapod/lib.rs`, schema types `ConstitutionOverlayStatusParams`/`ConstitutionOverlayStatusResult` and extended `ContextResolveResult`/`ContextCapsule`/`ConstitutionGetParams`/`ConstitutionGetResult` in `src/decapod/core/rpc.rs`), plus `authority_hierarchy` (`AuthorityHierarchyEntry`) on `InteropManifest` in `src/decapod/core/interop.rs`.
+
 ## Effective operation grant explanation, delegation CLI, and guidance hygiene (#1905, #1893)
 
 - **Read-only CLI grant explanation (`src/decapod/plugins/policy.rs::PolicyCommand::Grant`)**:
@@ -1656,8 +1661,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

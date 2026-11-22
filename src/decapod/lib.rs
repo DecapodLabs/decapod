@@ -2013,6 +2013,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         },
         context: DeclaredContextConfig {
             declared_sources: declared_context_sources,
+            organization_overlay: None,
         },
         workspace: crate::cli::WorkspaceConfigSection::default(),
         laya: init.existing_laya.clone(),
@@ -3883,6 +3884,8 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "interop.negotiate"
                     | "interop.project"
                     | "interop.capability_contracts"
+                    | "interop.cloud_parity"
+                    | "constitution.overlay.status"
             )
         ),
         _ => false,
@@ -4105,6 +4108,8 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.project"
             | "policy.grant.explain"
             | "interop.capability_contracts"
+            | "interop.cloud_parity"
+            | "constitution.overlay.status"
     )
 }
 
@@ -4183,6 +4188,8 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "interop.project"
             | "policy.grant.explain"
             | "interop.capability_contracts"
+            | "interop.cloud_parity"
+            | "constitution.overlay.status"
     )
 }
 
@@ -8824,6 +8831,8 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "interop.project"
             | "policy.grant.explain"
             | "interop.capability_contracts"
+            | "interop.cloud_parity"
+            | "constitution.overlay.status"
     )
 }
 
@@ -12234,6 +12243,7 @@ mod rpc_handlers {
             Some(ContextCapsule {
                 fragments: vec![],
                 resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+                authority_chain: None,
                 spec: Some("Agent initialized; complete required proof is pending".to_string()),
                 architecture: None,
                 security: None,
@@ -12424,7 +12434,8 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let limit = params.limit.unwrap_or(5);
-        let resolved_authority = core::assets::resolved_override_evidence(ctx.project_root)?;
+        let authority = core::org_overlay::resolve_authority_chain(ctx.project_root)?;
+        let resolved_authority = authority.evidence;
 
         let touched_vec = params.touched_paths.clone().unwrap_or_default();
         let tags_vec = params.intent_tags.clone().unwrap_or_default();
@@ -12465,6 +12476,7 @@ mod rpc_handlers {
                 update_guidance: Some(local_specs.update_guidance.clone()),
             },
             resolved_authority: resolved_authority.clone(),
+            authority_chain: Some(authority.chain.clone()),
         };
         let response = success_response(
             ctx.request.id.clone(),
@@ -12475,6 +12487,7 @@ mod rpc_handlers {
             Some(ContextCapsule {
                 fragments,
                 resolved_authority,
+                authority_chain: Some(authority.chain),
                 spec: local_specs.intent.clone(),
                 architecture: local_specs.architecture.clone(),
                 security: None,
@@ -12597,6 +12610,7 @@ mod rpc_handlers {
             Some(ContextCapsule {
                 fragments: vec![],
                 resolved_authority: capsule.resolved_authority.clone(),
+                authority_chain: capsule.authority_chain.clone(),
                 spec: Some("Deterministic context capsule query completed".to_string()),
                 architecture: None,
                 security: None,
@@ -12757,6 +12771,17 @@ mod rpc_handlers {
         let (category, title, dependencies) = core::assets::get_doc_metadata(&params.section)
             .unwrap_or(("unknown".to_string(), params.section.clone(), Vec::new()));
 
+        let authority = core::org_overlay::resolve_authority_chain(ctx.project_root)?;
+        if params.resolved == Some(true)
+            && let Some(merged) = core::assets::get_merged_doc(ctx.project_root, &params.section)
+            && let Some(obj) = content.as_object_mut()
+        {
+            obj.insert(
+                "merged_markdown".to_string(),
+                serde_json::Value::String(merged),
+            );
+        }
+
         mark_core_constitution_ingested(ctx.project_root, "constitution.get")?;
 
         Ok(success_response(
@@ -12770,6 +12795,7 @@ mod rpc_handlers {
                     category,
                     dependencies,
                     content,
+                    authority_chain: Some(authority.chain),
                 })
                 .unwrap(),
             ),
@@ -13538,6 +13564,7 @@ mod rpc_handlers {
         let context_capsule = ContextCapsule {
             fragments: vec![],
             resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+            authority_chain: None,
             spec: None,
             architecture: None,
             security: None,
@@ -13608,6 +13635,7 @@ mod rpc_handlers {
         let context_capsule = ContextCapsule {
             fragments: vec![],
             resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+            authority_chain: None,
             spec: None,
             architecture: None,
             security: None,
@@ -14199,6 +14227,87 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_interop_cloud_parity(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: InteropCloudParityParams =
+            match serde_json::from_value(ctx.request.params.clone()) {
+                Ok(p) => p,
+                Err(e) => {
+                    return Ok(error_response(
+                        ctx.request.id.clone(),
+                        ctx.request.op.clone(),
+                        ctx.request.params.clone(),
+                        "invalid_params".to_string(),
+                        format!("Invalid params: {e}"),
+                        None,
+                        ctx.mandates.clone(),
+                    ));
+                }
+            };
+        let inspection = crate::core::cloud_parity_matrix::inspect_cloud_parity(ctx.project_root)?;
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(InteropCloudParityResult {
+                    inspection,
+                    input_origin: "repository_parity_matrix".to_string(),
+                    canonical_state_verified: false,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_constitution_overlay_status(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let _params: ConstitutionOverlayStatusParams =
+            match serde_json::from_value(ctx.request.params.clone()) {
+                Ok(p) => p,
+                Err(e) => {
+                    return Ok(error_response(
+                        ctx.request.id.clone(),
+                        ctx.request.op.clone(),
+                        ctx.request.params.clone(),
+                        "invalid_params".to_string(),
+                        format!("Invalid params: {e}"),
+                        None,
+                        ctx.mandates.clone(),
+                    ));
+                }
+            };
+        let loaded = crate::core::org_overlay::load_organization_overlay(ctx.project_root)?;
+        let (authority_chain, conflicts) =
+            match crate::core::org_overlay::resolve_authority_chain(ctx.project_root) {
+                Ok(resolved) => (Some(resolved.chain), Vec::new()),
+                Err(err) => (None, vec![err.to_string()]),
+            };
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(
+                serde_json::to_value(ConstitutionOverlayStatusResult {
+                    overlay: loaded.status,
+                    authority_chain,
+                    conflicts,
+                })
+                .unwrap(),
+            ),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_state_resolve(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
         let params: state::StateResolveParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
@@ -14211,6 +14320,7 @@ mod rpc_handlers {
         let context_capsule = ContextCapsule {
             fragments: vec![],
             resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+            authority_chain: None,
             spec: Some("Governed state resolution".to_string()),
             architecture: None,
             security: None,
@@ -14257,6 +14367,7 @@ mod rpc_handlers {
         let context_capsule = ContextCapsule {
             fragments: vec![],
             resolved_authority: core::assets::resolved_override_evidence(ctx.project_root)?,
+            authority_chain: None,
             spec: Some("Governed state diff".to_string()),
             architecture: None,
             security: None,
@@ -14554,6 +14665,10 @@ fn run_rpc_command(
         "interop.capability_contracts" => {
             rpc_handlers::handle_interop_capability_contracts(&rpc_ctx)?
         }
+        "interop.cloud_parity" => rpc_handlers::handle_interop_cloud_parity(&rpc_ctx)?,
+        "constitution.overlay.status" => {
+            rpc_handlers::handle_constitution_overlay_status(&rpc_ctx)?
+        }
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,
@@ -14723,6 +14838,61 @@ fn run_capabilities_command(cli: CapabilitiesCli) -> Result<(), error::DecapodEr
                         scenario.passed
                     );
                 }
+            }
+            println!("Note: {}", inspection.authority_note);
+        }
+        return Ok(());
+    }
+
+    if let Some(CapabilitiesCommand::Parity { dir, format }) = cli.command {
+        let target_dir = match dir {
+            Some(path) => path,
+            None => std::env::current_dir().map_err(error::DecapodError::IoError)?,
+        };
+        let root = find_decapod_project_root(&target_dir).unwrap_or(target_dir);
+        let inspection = crate::core::cloud_parity_matrix::inspect_cloud_parity(&root)?;
+        if format == "json" {
+            println!("{}", serde_json::to_string_pretty(&inspection).unwrap());
+        } else {
+            println!(
+                "Decapod Cloud Parity Matrix ({})",
+                inspection.matrix.schema_version
+            );
+            println!("Matrix version: {}", inspection.matrix.matrix_version);
+            println!("Matrix digest: {}", inspection.matrix.matrix_sha256);
+            println!("Backend: {}", inspection.repository_backend);
+            println!(
+                "Local SQLite present: {}",
+                inspection.local_sqlite_path_present
+            );
+            println!(
+                "Blanket parity claimed: {}",
+                inspection.blanket_parity_claimed
+            );
+            println!("Consistent: {}", inspection.cross_check.consistent);
+            println!(
+                "Supported operations ({}):",
+                inspection.matrix.operations.len()
+            );
+            for entry in &inspection.matrix.operations {
+                println!(
+                    "  - {} [{} | {}]",
+                    entry.operation_id,
+                    entry.domain.as_str(),
+                    entry.support_class.as_str()
+                );
+            }
+            println!(
+                "Explicitly unsupported in Cloud ({}):",
+                inspection.matrix.unsupported_cloud_operations.len()
+            );
+            for entry in &inspection.matrix.unsupported_cloud_operations {
+                println!(
+                    "  - {} [{} | reason={}]",
+                    entry.operation_id,
+                    entry.domain.as_str(),
+                    entry.reason_code
+                );
             }
             println!("Note: {}", inspection.authority_note);
         }

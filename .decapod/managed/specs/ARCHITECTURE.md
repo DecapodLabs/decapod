@@ -1,5 +1,10 @@
 # Architecture
 
+## Multi-organization Cloud parity matrix and organization overlay stack (#1895, #877)
+
+- **Parity matrix & tenant isolation verification (`#1895`)**: `src/decapod/core/cloud_parity_matrix.rs` defines the versioned `decapod.cloud-parity-matrix.v1` inventory comparing `local` SQLite and `cloud` storage/governance behavior across task/event/CAS ordering, custody and leases, authorization-scoped transitions, commit/policy-bound evidence, and Cloud-unsupported operations. It exposes CLI (`decapod capabilities parity`) and read-only RPC (`interop.cloud_parity`) projections without touching local SQLite. `tests/cloud_tenancy_parity_1895.rs` exercises these invariants against a local simulated Cloud gateway backed by two isolated backend stores; live hosted Dactyl/Supabase/Propodus clusters remain outside offline cargo test execution.
+- **Four-layer constitution resolution (`#877`)**: `src/decapod/core/org_overlay.rs` resolves `OrganizationOverlayConfig` (`DeclaredContextConfig.organization_overlay` in `src/decapod/cli.rs`) and `OrganizationOverlayBundle` (`decapod.org-constitution-overlay.v1`), computing `OverlayTrustState`, `OverlayFreshnessState`, and `AuthorityChainProvenance`. `src/decapod/core/assets.rs` (`canonical_override_id`, `raw_project_override_entries`, `resolved_override_evidence`, `get_merged_doc`) blends layers 1–3; `src/decapod/core/docs.rs` (`resolve_scoped_context`) projects non-authoritative Layer 4 context; `src/decapod/core/context_capsule.rs` (`DeterministicContextCapsule.authority_chain`) binds provenance hashes while preserving legacy hash stability when `authority_chain` is `None`; and `src/decapod/core/context_bundle.rs` (`build_bundle`, `validate_bundle`, `contains_private_policy_leak`) strips and rejects `organization_private` policy text leaks (`ORG_OVERLAY_PRIVATE_LEAK_REJECTED`).
+
 ## Effective operation grants and cumulative delegation accounting (#1905, #1893)
 
 - **Deterministic composition & canonical path algebra (`src/decapod/core/effective_grant.rs`)**:
@@ -1311,8 +1316,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

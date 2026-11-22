@@ -2071,6 +2071,9 @@ fn validate_project_config_toml(
                     ctx,
                 );
             }
+            if let Err(err) = check_org_overlay_candidate_downgrade(&accepted_cfg, &typed_config) {
+                fail(&err.to_string(), ctx);
+            }
         }
     }
 
@@ -3795,17 +3798,101 @@ fn validate_spec_drift(
     Ok(())
 }
 
+fn check_org_overlay_candidate_downgrade(
+    accepted_cfg: &crate::cli::DecapodProjectConfig,
+    candidate_cfg: &crate::cli::DecapodProjectConfig,
+) -> Result<(), error::DecapodError> {
+    let accepted_overlay = accepted_cfg
+        .context
+        .organization_overlay
+        .as_ref()
+        .filter(|o| !o.is_empty());
+    let Some(accepted) = accepted_overlay else {
+        return Ok(());
+    };
+    let candidate = candidate_cfg
+        .context
+        .organization_overlay
+        .as_ref()
+        .filter(|o| !o.is_empty())
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(
+                "ORG_OVERLAY_POLICY_DOWNGRADE: candidate cannot remove accepted [context.organization_overlay] configuration"
+                    .to_string(),
+            )
+        })?;
+    if accepted.path.is_some() && candidate.path != accepted.path {
+        return Err(error::DecapodError::ValidationError(
+            "ORG_OVERLAY_POLICY_DOWNGRADE: candidate cannot alter accepted organization_overlay.path"
+                .to_string(),
+        ));
+    }
+    if accepted.org_id.is_some() && candidate.org_id != accepted.org_id {
+        return Err(error::DecapodError::ValidationError(
+            "ORG_OVERLAY_POLICY_DOWNGRADE: candidate cannot alter accepted organization_overlay.org_id"
+                .to_string(),
+        ));
+    }
+    if accepted.sha256.is_some() && candidate.sha256 != accepted.sha256 {
+        return Err(error::DecapodError::ValidationError(
+            "ORG_OVERLAY_POLICY_DOWNGRADE: candidate cannot alter or remove accepted organization_overlay.sha256 pin"
+                .to_string(),
+        ));
+    }
+    if accepted.public_key_hex.is_some() && candidate.public_key_hex != accepted.public_key_hex {
+        return Err(error::DecapodError::ValidationError(
+            "ORG_OVERLAY_POLICY_DOWNGRADE: candidate cannot remove or swap accepted organization_overlay.public_key_hex"
+                .to_string(),
+        ));
+    }
+    if candidate.freshness_policy.as_deref() == Some("offline_stale_degraded")
+        && accepted.freshness_policy.as_deref() != Some("offline_stale_degraded")
+    {
+        return Err(error::DecapodError::ValidationError(
+            "ORG_OVERLAY_POLICY_DOWNGRADE: candidate cannot weaken freshness_policy to offline_stale_degraded"
+                .to_string(),
+        ));
+    }
+    Ok(())
+}
+
+pub fn validate_project_config_downgrade_check(
+    repo_root: &Path,
+) -> Result<(), error::DecapodError> {
+    let candidate = crate::cli::DecapodProjectConfig::load(repo_root)?;
+    let (_main_root, accepted_cfg, _) =
+        crate::core::db_maintenance::resolve_accepted_project_config(repo_root).map_err(
+            |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
+        )?;
+    check_org_overlay_candidate_downgrade(&accepted_cfg, &candidate)
+}
+
 fn validate_override_authority(
     ctx: &ValidationContext,
     repo_root: &Path,
 ) -> Result<(), error::DecapodError> {
     info("Repository Override Authority Gate", ctx);
-    match assets::resolved_override_evidence(repo_root) {
+    match crate::core::org_overlay::resolve_authority_chain(repo_root) {
         Ok(resolved) => {
+            if resolved.chain.organization_overlay.freshness_state
+                == crate::core::org_overlay::OverlayFreshnessState::Stale
+            {
+                warn(
+                    resolved
+                        .chain
+                        .organization_overlay
+                        .diagnostic
+                        .as_deref()
+                        .unwrap_or("Organization overlay stale under degraded offline policy"),
+                    ctx,
+                );
+            }
             pass(
                 &format!(
-                    "Repository override authority resolved with {} applied directive(s)",
-                    resolved.len()
+                    "4-layer authority chain resolved (org_overlay={:?}/{:?}) with {} active directive(s)",
+                    resolved.chain.organization_overlay.trust_state,
+                    resolved.chain.organization_overlay.freshness_state,
+                    resolved.evidence.len()
                 ),
                 ctx,
             );
@@ -4169,6 +4256,13 @@ fn compute_policy_fingerprint(working_root: &Path) -> Result<String, error::Deca
     if override_path.exists() {
         let content = std::fs::read(&override_path).map_err(error::DecapodError::IoError)?;
         hasher.update(&content);
+    }
+
+    // Hash active organization overlay bundle digest if configured/present.
+    if let Ok(overlay) = crate::core::org_overlay::load_organization_overlay(working_root)
+        && let Some(digest) = overlay.status.bundle_sha256
+    {
+        hasher.update(digest.as_bytes());
     }
 
     // Hash governance.json

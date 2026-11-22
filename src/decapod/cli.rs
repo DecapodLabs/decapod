@@ -112,6 +112,15 @@ pub(crate) enum CapabilitiesCommand {
         #[clap(long, default_value = "text", value_parser = ["text", "json"])]
         format: String,
     },
+    /// Inspect the versioned Local vs Cloud logical operation and evidence parity matrix without mutating state.
+    Parity {
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Output format: 'text' or 'json'.
+        #[clap(long, default_value = "text", value_parser = ["text", "json"])]
+        format: String,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -712,6 +721,8 @@ impl Default for TrackerConfig {
 pub struct DeclaredContextConfig {
     #[serde(default)]
     pub declared_sources: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub organization_overlay: Option<crate::core::org_overlay::OrganizationOverlayConfig>,
 }
 
 /// Canonicalize a repository-relative path used by governance configuration.

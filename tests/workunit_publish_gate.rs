@@ -44,6 +44,7 @@ fn write_capsule(root: &std::path::Path, task_id: &str) {
     let capsule = DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".to_string(),
         topic: "publish".to_string(),
         scope: "interfaces".to_string(),

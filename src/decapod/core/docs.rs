@@ -182,19 +182,35 @@ pub fn resolve_scoped_context(
     }
 
     let mut selection = ContextSelection::default();
-    // Invalid overrides must never be silently treated as absent. Fallible
-    // CLI/RPC owners return the parser's typed error; this legacy Vec API emits
-    // no authority on malformed input.
-    if assets::validate_override_structure(repo_root).is_err() {
-        selection
-            .excluded
-            .insert(".decapod/OVERRIDE.md".into(), "invalid_override".into());
-        selection.advisory_status = "invalid_authority".into();
-        return ScopedContext {
-            fragments: vec![],
-            selection,
-        };
+    // Invalid overrides or tampered/conflicting organization overlays must never
+    // be silently treated as absent. Fallible CLI/RPC owners return the typed
+    // error; this legacy Vec API emits no authority on malformed input.
+    let authority_result = match crate::core::org_overlay::resolve_authority_chain(repo_root) {
+        Ok(res) => res,
+        Err(err) => {
+            let reason = err.to_string();
+            let surface = if reason.contains("ORG_OVERLAY_") {
+                "organization_overlay"
+            } else {
+                ".decapod/OVERRIDE.md"
+            };
+            selection.excluded.insert(surface.into(), reason);
+            selection.advisory_status = "invalid_authority".into();
+            return ScopedContext {
+                fragments: vec![],
+                selection,
+            };
+        }
+    };
+    for record in &authority_result.chain.directives {
+        candidate_paths.insert(record.directive_id.clone());
     }
+    let directive_records: BTreeMap<&str, _> = authority_result
+        .chain
+        .directives
+        .iter()
+        .map(|d| (d.directive_id.as_str(), d))
+        .collect();
     let mut ranked = Vec::new();
     for path in candidate_paths {
         if scope.is_some_and(|prefix| !path.starts_with(&format!("{prefix}/"))) {
@@ -213,10 +229,17 @@ pub fn resolve_scoped_context(
                 .insert(path, format!("inactive:{status}"));
             continue;
         }
-        let override_body = assets::get_override_doc(repo_root, &path);
-        let Some(content) = override_body
-            .as_ref()
-            .map(|body| format!("# Project Overrides\n{body}"))
+        let effective_overlay_body = authority_result.effective_bodies.get(&path);
+        let overlay_record = directive_records.get(path.as_str()).copied();
+        let section_heading = match overlay_record.map(|r| r.effective_layer.as_str()) {
+            Some("organization_overlay") => "Organization Authority",
+            Some("organization_plus_project_extension") => {
+                "Authority Overrides (Organization -> Project)"
+            }
+            _ => "Project Overrides",
+        };
+        let Some(content) = effective_overlay_body
+            .map(|body| format!("# {section_heading}\n{body}"))
             .or_else(|| assets::get_merged_doc(repo_root, &path))
         else {
             continue;
@@ -237,7 +260,7 @@ pub fn resolve_scoped_context(
             .iter()
             .map(|term| if metadata_terms.contains(*term) { 4 } else { 1 })
             .sum::<usize>();
-        if !bound && score == 0 {
+        if !bound && score == 0 && overlay_record.is_none() {
             *selection
                 .excluded_counts
                 .entry("no_relevant_advisory_fragment".into())
@@ -254,9 +277,14 @@ pub fn resolve_scoped_context(
                     .join(",")
             ));
         }
-        let fragment = if override_body.is_some() {
-            node_reasons.insert("repository_project_override".into());
-            fragment_from_section(&path, "Project Overrides", &content)
+        let fragment = if effective_overlay_body.is_some() {
+            if let Some(rec) = overlay_record {
+                for r in &rec.reasons {
+                    node_reasons.insert(r.clone());
+                }
+                node_reasons.insert(format!("precedence:{}", rec.precedence_decision));
+            }
+            fragment_from_section(&path, section_heading, &content)
         } else if let Some(anchor) = preferred_anchors.get(&path) {
             get_fragment(repo_root, &path, Some(anchor))
                 .or_else(|| get_fragment(repo_root, &path, None))
@@ -267,31 +295,31 @@ pub fn resolve_scoped_context(
             get_fragment(repo_root, &path, None)
         };
         if let Some(f) = fragment {
+            let (authority, source_layer, source_hash) = match overlay_record {
+                Some(rec) => (
+                    match rec.effective_layer.as_str() {
+                        "organization_overlay" => "organization",
+                        "organization_plus_project_extension" => "organization+override",
+                        _ => "override",
+                    }
+                    .to_string(),
+                    rec.effective_layer.clone(),
+                    rec.effective_body_hash.clone(),
+                ),
+                None => (
+                    node["authority"].as_str().unwrap_or("unknown").to_string(),
+                    "binary_embedded".to_string(),
+                    format!("{:x}", Sha256::digest(raw.as_bytes())),
+                ),
+            };
             let evidence = FragmentSelection {
                 fragment_ref: f.r#ref.clone(),
                 node_id: path,
-                authority: if override_body.is_some() {
-                    "override"
-                } else {
-                    node["authority"].as_str().unwrap_or("unknown")
-                }
-                .into(),
+                authority,
                 binding: node["binding"].as_str().unwrap_or("advisory").into(),
                 status: status.into(),
-                source_layer: if override_body.is_some() {
-                    "repository_project_override"
-                } else {
-                    "binary_embedded"
-                }
-                .into(),
-                source_hash: format!(
-                    "{:x}",
-                    Sha256::digest(if let Some(body) = &override_body {
-                        body.as_bytes()
-                    } else {
-                        raw.as_bytes()
-                    })
-                ),
+                source_layer,
+                source_hash,
                 fragment_hash: f.hash.clone(),
                 resolver_version: RESOLVER_VERSION.into(),
                 reasons: node_reasons.into_iter().collect(),

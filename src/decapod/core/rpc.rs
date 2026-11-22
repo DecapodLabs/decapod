@@ -199,6 +199,8 @@ pub struct ContextResolveResult {
     pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
     #[serde(default)]
     pub selection: crate::core::docs::ContextSelection,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_chain: Option<crate::core::org_overlay::AuthorityChainProvenance>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -247,6 +249,8 @@ pub struct ContextBindingsParams {}
 pub struct ConstitutionGetParams {
     pub section: String,
     pub subsection: Option<String>,
+    #[serde(default)]
+    pub resolved: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -256,6 +260,22 @@ pub struct ConstitutionGetResult {
     pub category: String,
     pub dependencies: Vec<String>,
     pub content: serde_json::Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_chain: Option<crate::core::org_overlay::AuthorityChainProvenance>,
+}
+
+/// Request accepted by `constitution.overlay.status`.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct ConstitutionOverlayStatusParams {}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConstitutionOverlayStatusResult {
+    pub overlay: crate::core::org_overlay::OrganizationOverlayStatus,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_chain: Option<crate::core::org_overlay::AuthorityChainProvenance>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conflicts: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -683,6 +703,18 @@ pub struct InteropCapabilityContractsResult {
     pub canonical_state_verified: bool,
 }
 
+/// Request accepted by `interop.cloud_parity`.
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct InteropCloudParityParams {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InteropCloudParityResult {
+    pub inspection: crate::core::cloud_parity_matrix::CloudParityInspectionReport,
+    pub input_origin: String,
+    pub canonical_state_verified: bool,
+}
+
 // State Subsystem
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StateResolveParams {
@@ -783,6 +815,8 @@ pub struct ContextCapsule {
     pub fragments: Vec<DocFragment>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resolved_authority: Vec<crate::core::assets::ResolvedOverrideEvidence>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_chain: Option<crate::core::org_overlay::AuthorityChainProvenance>,
     /// Relevant spec slices
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub spec: Option<String>,
@@ -1346,6 +1380,18 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
             },
+            Capability {
+                name: "interop.cloud_parity".to_string(),
+                description: "Inspect the versioned Local vs Cloud logical operation and evidence parity matrix (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "constitution.overlay.status".to_string(),
+                description: "Inspect 4-layer constitution authority precedence and organization overlay trust/freshness status (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
         ],
         subsystems: vec![
             SubsystemInfo {
@@ -1353,6 +1399,7 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 status: "active".to_string(),
                 ops: vec![
                     "get".to_string(),
+                    "overlay.status".to_string(),
                     "links.query".to_string(),
                     "links.navigate".to_string(),
                     "migrate".to_string(),

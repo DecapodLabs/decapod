@@ -1,5 +1,10 @@
 # Semantics
 
+## Cloud parity boundaries and 4-layer constitution precedence (#1895, #877)
+
+- **Logical parity vs unsupported Cloud operations (`#1895`)**: `decapod.cloud-parity-matrix.v1` strictly separates supported Cloud equivalents (task lifecycle, ordered events, single-winner CAS claims, repository-bound `operation_id` idempotency, stale `task_revision` rejection, commit/policy-bound submit captures) from unsupported operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`), preventing blanket parity claims or silent local SQLite fallback.
+- **Deterministic 4-layer constitution authority (`#877`)**: Constitution resolution follows `binary_embedded` (layer 1) -> `organization_overlay` (layer 2) -> `repository_project_override` (layer 3) -> `task_context_projection` (layer 4). Directive overridability (`DirectiveOverridability::Overridable`, `ExtendOnly`, `NonOverridable`) and visibility (`DirectiveVisibility::Shared`, `OrganizationPrivate`) govern whether `.decapod/OVERRIDE.md` can amend controls and whether rule bodies appear in portable context bundles, while `AuthorityChainProvenance` preserves layer digests and order (`TaskContextProjection` remains non-authoritative).
+
 ## Capability contract status & composite consequence semantics (#1906)
 
 - **Status orthogonality (`ContractStatus`)**:
@@ -402,8 +407,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

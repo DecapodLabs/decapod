@@ -1,5 +1,10 @@
 # Intent
 
+## Multi-organization Cloud parity (#1895) and organization constitution overlays (#877)
+
+- **Multi-organization Cloud parity without local SQLite fallback (`#1895`)**: Proves through an explicit versioned operation and evidence parity matrix (`decapod.cloud-parity-matrix.v1` / `decapod.cloud-parity-report.v1`) and a 2-organization / 2-database / 2-repo-per-org / 2-human integration harness (`tests/cloud_tenancy_parity_1895.rs`) that `backend = "cloud"` preserves Decapod logical semantics (ordered task/event/CAS claims, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit-and-policy-bound evidence capture, and `#215` separation of org-admin views from paid per-repo seats) across organization switches, mid-session seat revocation, and network cuts without exposing physical database identifiers to Decapod or creating `.decapod/data/decapod.db`. Blanket Cloud parity is never claimed: unsupported Cloud operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) are explicitly enumerated and fail closed (`CLOUD_LEASE_RENEW_UNSUPPORTED`, etc.) rather than falling back to SQLite.
+- **Organization constitution overlays with explicit 4-layer precedence (`#877`)**: Establishes a deterministic, inspectable governance hierarchy linking Decapod's binary-embedded doctrine (`binary_embedded`, layer 1), organization-level policy (`organization_overlay`, layer 2, loaded from `[context.organization_overlay]` or imported cache `.decapod/managed/organization-overlay.json`), repository-local `.decapod/OVERRIDE.md` (`repository_project_override`, layer 3), and non-authoritative task context projection (`task_context_projection`, layer 4). Organizations can classify controls as `overridable`, `extend_only`, or `non_overridable`, enforce `shared` vs `organization_private` visibility, verify SHA-256 digests and Ed25519 signatures, support signed offline bundles, and fail closed when repository overrides or candidate config changes attempt to weaken or bypass higher-precedence controls.
+
 ## Narrowing effective operation grants and agent guidance hygiene (#1905, #1893)
 
 - **Monotonically narrowing effective operation grants (`#1905`)**: Ensures every governed operation evaluates a deterministic, non-persisted `EffectiveOperationGrant` (`decapod.effective-grant.v1`) formed by intersecting accepted repository policy, server-verified Cloud access (`VerifiedCloudScope`), actor trust and active task custody, live scoped policy approvals, parent-to-child delegation bounds, and exact operation/parameter/path/resource/prestate bindings. Authority can only narrow across delegation: child requests, copied parent grants, candidate-branch policy edits, forged approval tokens, or `PlanState::Approved` can never widen scope, override explicit denials, or bypass human approval or cumulative shared-parent budget accounting across sibling subtasks. Request admission (`GrantDecision`) remains distinct from observed consequence (`ExecutionOutcomeKind::DecapodMediatedApplied` vs `WitnessedExternal`).
@@ -794,8 +799,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
+- Repository signal fingerprint: `5a16363dabd5930709f9794fedf89bc2879cc5d0669dd0d13dbb46ad10c1cefa`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (258 files), `tests/` (273 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

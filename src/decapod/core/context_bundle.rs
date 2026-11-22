@@ -86,17 +86,76 @@ struct CanonicalBundle {
     source_environment: ContextBundleEnvironment,
 }
 
+fn contains_private_policy_leak(text: &str, private_bodies: &[String]) -> bool {
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    private_bodies.iter().any(|secret| {
+        let secret_trimmed = secret.trim();
+        !secret_trimmed.is_empty()
+            && (trimmed.contains(secret_trimmed)
+                || (trimmed.len() >= 12 && secret_trimmed.contains(trimmed)))
+    })
+}
+
 pub fn build_bundle(
     project_root: &Path,
-    capsule: DeterministicContextCapsule,
+    mut capsule: DeterministicContextCapsule,
     workunit: Option<WorkUnitManifest>,
-    uncertainty: Vec<String>,
-    constraints: Vec<String>,
+    mut uncertainty: Vec<String>,
+    mut constraints: Vec<String>,
 ) -> Result<PortableContextBundle, error::DecapodError> {
     let config = crate::cli::DecapodProjectConfig::load(project_root)?;
     let mut declared_capabilities = config.repo.capabilities.clone();
     declared_capabilities.sort();
     declared_capabilities.dedup();
+
+    // Issue #877: Never leak organization_private policy text into portable context bundles.
+    let loaded_overlay = crate::core::org_overlay::load_organization_overlay(project_root)?;
+    let private_bodies = crate::core::org_overlay::private_directive_bodies(&loaded_overlay);
+    let private_ids: std::collections::BTreeSet<String> = capsule
+        .authority_chain
+        .as_ref()
+        .map(crate::core::org_overlay::private_directive_ids)
+        .unwrap_or_default();
+    let redaction_marker =
+        "[REDACTED: organization-private directive policy retained by hash only]";
+    for snippet in &mut capsule.snippets {
+        let base_id = snippet
+            .source_path
+            .strip_suffix(".md")
+            .unwrap_or(&snippet.source_path);
+        if private_ids.contains(&snippet.source_path)
+            || private_ids.contains(base_id)
+            || contains_private_policy_leak(&snippet.text, &private_bodies)
+        {
+            snippet.text = redaction_marker.to_string();
+        }
+    }
+    for entry in &mut uncertainty {
+        if contains_private_policy_leak(entry, &private_bodies) {
+            *entry = redaction_marker.to_string();
+        }
+    }
+    for entry in &mut constraints {
+        if contains_private_policy_leak(entry, &private_bodies) {
+            *entry = redaction_marker.to_string();
+        }
+    }
+    if let Some(chain) = &mut capsule.authority_chain {
+        for directive in &mut chain.directives {
+            if directive.visibility
+                == crate::core::org_overlay::DirectiveVisibility::OrganizationPrivate
+            {
+                directive.redacted_for_portability = true;
+            }
+        }
+    }
+    capsule = capsule.with_recomputed_hash().map_err(|e| {
+        error::DecapodError::ValidationError(format!("failed to hash redacted capsule: {e}"))
+    })?;
+
     let bundle = PortableContextBundle {
         schema_version: PORTABLE_CONTEXT_BUNDLE_SCHEMA_VERSION.to_string(),
         capsule,
@@ -228,6 +287,26 @@ pub fn validate_bundle(
             "CONTEXT_BUNDLE_STALE: repository signal fingerprint differs from the receiving repository"
                 .to_string(),
         ));
+    }
+    if let Ok(loaded_overlay) = crate::core::org_overlay::load_organization_overlay(project_root) {
+        let private_bodies = crate::core::org_overlay::private_directive_bodies(&loaded_overlay);
+        if !private_bodies.is_empty() {
+            let texts = bundle
+                .capsule
+                .snippets
+                .iter()
+                .map(|s| s.text.as_str())
+                .chain(bundle.uncertainty.iter().map(String::as_str))
+                .chain(bundle.constraints.iter().map(String::as_str));
+            for text in texts {
+                if contains_private_policy_leak(text, &private_bodies) {
+                    return Err(error::DecapodError::ValidationError(
+                        "ORG_OVERLAY_PRIVATE_LEAK_REJECTED: portable bundle contains organization_private policy text"
+                            .to_string(),
+                    ));
+                }
+            }
+        }
     }
     Ok(())
 }

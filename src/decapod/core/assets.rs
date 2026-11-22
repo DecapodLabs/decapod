@@ -121,11 +121,10 @@ const LEGACY_OVERRIDE_BODY_PLACEHOLDER: &str =
 pub const OVERRIDE_BODY_FENCE_OPEN: &str = "````markdown";
 pub const OVERRIDE_BODY_FENCE_CLOSE: &str = "````";
 
-/// Resolve the complete repository-local authority overlay and return the
-/// provenance of every non-empty directive. Invalid structure fails closed.
-pub fn resolved_override_evidence(
+/// Parse raw `.decapod/OVERRIDE.md` directives without organization overlay composition.
+pub(crate) fn raw_project_override_entries(
     repo_root: &Path,
-) -> Result<Vec<ResolvedOverrideEvidence>, error::DecapodError> {
+) -> Result<Vec<(ResolvedOverrideEvidence, String)>, error::DecapodError> {
     let override_path = repo_root.join(".decapod").join("OVERRIDE.md");
     if !override_path.exists() {
         return Ok(Vec::new());
@@ -134,8 +133,18 @@ pub fn resolved_override_evidence(
     Ok(parse_override_sections(&content)?
         .into_values()
         .filter(|resolved| resolved.evidence.byte_count > 0)
-        .map(|resolved| resolved.evidence)
+        .map(|resolved| (resolved.evidence, resolved.content))
         .collect())
+}
+
+/// Resolve the complete multi-layer authority chain (embedded -> org overlay ->
+/// repository `.decapod/OVERRIDE.md`) and return provenance evidence for active
+/// directives. Invalid structure, tampered/stale overlays, or non-overridable
+/// conflicts fail closed.
+pub fn resolved_override_evidence(
+    repo_root: &Path,
+) -> Result<Vec<ResolvedOverrideEvidence>, error::DecapodError> {
+    crate::core::org_overlay::resolve_authority_chain(repo_root).map(|resolved| resolved.evidence)
 }
 
 pub fn validate_override_structure(repo_root: &Path) -> Result<(), error::DecapodError> {
@@ -329,7 +338,7 @@ fn known_override_ids() -> Vec<String> {
     ids
 }
 
-fn canonical_override_id(id: &str) -> Option<String> {
+pub(crate) fn canonical_override_id(id: &str) -> Option<String> {
     known_override_ids().into_iter().find(|known| {
         doc_id_candidates(known)
             .into_iter()
@@ -561,14 +570,34 @@ fn override_body_fence_length(line: &str) -> Option<usize> {
     (ticks.len() >= 4 && ticks.chars().all(|c| c == '`')).then_some(ticks.len())
 }
 
-/// Get merged document (embedded base + optional project override from OVERRIDE.md)
+/// Get merged document (embedded base + validated org overlay + optional project override)
 pub fn get_merged_doc(repo_root: &Path, id: &str) -> Option<String> {
     // Get embedded base
     let embedded_content = render_embedded_doc_text(id, &get_embedded_doc(id)?);
+    let canonical = canonical_override_id(id).unwrap_or_else(|| id.to_string());
 
-    // Check for component-specific override in .decapod/OVERRIDE.md
-    if let Some(override_content) = get_override_doc(repo_root, id) {
-        return Some(merge_override_content(&embedded_content, &override_content));
+    if let Ok(resolved) = crate::core::org_overlay::resolve_authority_chain(repo_root)
+        && let Some(body) = resolved.effective_bodies.get(&canonical)
+    {
+        let heading = resolved
+            .chain
+            .directives
+            .iter()
+            .find(|d| d.directive_id == canonical)
+            .map(|d| match d.effective_layer.as_str() {
+                "organization_overlay" => "Organization Authority",
+                "organization_plus_project_extension" => {
+                    "Authority Overrides (Organization -> Project)"
+                }
+                _ => "Project Overrides",
+            })
+            .unwrap_or("Project Overrides");
+        return Some(format!(
+            "{}\n\n---\n\n## {}\n\n{}",
+            embedded_content.trim(),
+            heading,
+            body.trim()
+        ));
     }
 
     Some(embedded_content)
