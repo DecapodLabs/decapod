@@ -816,6 +816,19 @@ pub fn ensure_workspace(
         && (!upgrade_container || status.container.in_container)
     {
         todo::admit_authoring(&store_root, repo_root, agent_id)?;
+        if let Ok(Some(task_id)) =
+            crate::core::effective_grant::find_active_task_for_checkout(repo_root, &store_root)
+        {
+            crate::core::effective_grant::enforce_task_operation_if_delegated(
+                repo_root,
+                &store_root,
+                "workspace.ensure",
+                agent_id,
+                &task_id,
+                None,
+                &[],
+            )?;
+        }
         initialize_workbranch_governance(
             repo_root,
             agent_id,
@@ -912,6 +925,19 @@ pub fn ensure_workspace(
     };
 
     todo::admit_authoring(&store_root, &worktree_path, agent_id)?;
+    if let Ok(Some(task_id)) =
+        crate::core::effective_grant::find_active_task_for_checkout(&worktree_path, &store_root)
+    {
+        crate::core::effective_grant::enforce_task_operation_if_delegated(
+            &worktree_path,
+            &store_root,
+            "workspace.ensure",
+            agent_id,
+            &task_id,
+            None,
+            &[],
+        )?;
+    }
     initialize_workbranch_governance_at(
         &worktree_path,
         agent_id,
@@ -2740,6 +2766,14 @@ pub(crate) fn publish_workspace_with_readiness(
         &["resource:integration", &base_integration_resource],
         "workspace.publish",
     )?;
+    if let Ok(changed_files) = crate::plan_governance::collect_candidate_changed_files(repo_root) {
+        crate::core::effective_grant::enforce_workspace_publish_grant(
+            repo_root,
+            &main_repo.join(".decapod/data"),
+            &crate::current_agent_id(),
+            &changed_files,
+        )?;
+    }
 
     let dir = repo_root.to_str().unwrap_or(".");
 

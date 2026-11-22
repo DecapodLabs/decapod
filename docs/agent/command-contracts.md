@@ -252,6 +252,7 @@ Live validation and readback remain owned by `workspace publish`.
 ### Operation: `ConstitutionLinksQuery`
 ### Operation: `ConstitutionLinksNavigate`
 ### Operation: `SpecsRefresh`
+### Operation: `PolicyGrantExplain`
 ### Operation: `IntentReconcile`
 ### Operation: `ConstitutionMigrate`
 ### Operation: `AgentRegistryQuery`

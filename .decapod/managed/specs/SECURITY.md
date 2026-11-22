@@ -1,5 +1,16 @@
 # Security
 
+## Effective operation grant anti-widening and TOCTOU invariants (#1905, #1893)
+
+- **Strict monotonic narrowing & denial precedence (`src/decapod/core/effective_grant.rs`)**:
+  `EffectiveOperationGrant` never widens past the accepted repository policy (`resolve_repository_policy`), server-verified Cloud scope (`VerifiedCloudScope`), actor trust floor (`required_trust_for_operation`), or parent delegation limits. Explicit denials (`denials`, `denied_operations`, `denied_resources`) compose by union, allowances compose by exact order-independent intersection, budgets compose by `min`, and delegation depth decrements across every parent->child edge.
+- **Anti-spoofing & non-self-authorization (`evaluate_effective_grant`, `detect_candidate_policy_widening`)**:
+  Rejects `"unknown"`/blank actors (`ActorSpoofingRejected`), copied parent grant references (`CopiedParentGrantRejected`), unrecognized/non-live approval tokens (`ForgedOrUnknownApproval`), `PlanState::Approved` substitution (`PlanApprovalNotAuthorization`), trust-insufficient actors (`TrustLevelInsufficient`), and candidate-branch `.decapod/config.toml` weakening (`CandidatePolicyWideningRejected`).
+- **Prestate binding, lease expiry & cumulative sibling capacity**:
+  Binds grants via `GrantPrestateBinding` (`repo_fingerprint`, `accepted_base_oid`, `head_oid`, `policy_revision`, `working_tree_digest`, `task_revision`, `lease_generation`, `lease_expires_at`, `session_id`, `harness_id`) so state drift, lease expiry, or harness/session changes invalidate old grants (`GrantDecision::Stale`). Atomic SQLite transactions in `reserve_delegation_budget_on_conn` prevent concurrent or sequential sibling subtasks from exceeding parent cumulative capacity (`CUMULATIVE_DELEGATION_BUDGET_EXCEEDED`), and `Consumed` reservations remain counted after `todo done`.
+- **Execution-outcome separation & maintainer-setting isolation**:
+  `OperationConsequenceRecord` separates admission (`GrantDecision`) from external effects (`ExecutionOutcomeKind::WitnessedExternal` vs `DecapodMediatedApplied`), while `#1893` regression tests assert maintainer-only development entrypoint-version-drift override settings never surface in agent-facing specs, embedded docs, CLI help, or context capsules.
+
 ## Snapshot policy enforcement, heartbeat custody invariants, and freshness measurement bounds (#1881, #1837, #1884)
 
 - **Snapshot authorization & symlink guards (`src/decapod/core/workspace.rs`)**:
@@ -859,8 +870,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

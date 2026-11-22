@@ -1,5 +1,25 @@
 # Validation
 
+## Effective operation grants and guidance hygiene verification (#1905, #1893)
+
+Verified on `origin/master` (`a934da95a`, `v0.160.0` + PR `#1908` + PR `#1911`) inside isolated worktree `agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905`:
+
+- **Formatting, lints, docs generation & feature matrix (`--locked`)**:
+  - `cargo fmt --all -- --check`: passed.
+  - `cargo check --no-default-features`: passed.
+  - `cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings).
+  - `decapod docs build`: updated `docs/agent/command-contracts.md` (`### Operation: PolicyGrantExplain`).
+- **Unit & integration suites (`--locked`, post-`a934da95a` merge)**:
+  - `--lib -- effective_grant project_specs docs entrypoint_integrity`: `73 passed; 0 failed` (`1917 filtered out`; covers Red->Green `#1` path narrowing/disjoint workflow denial, `#2` copied parent grant / forged approval / `PlanState::Approved` / candidate-branch `.decapod/config.toml` widening / budget widening refusal, `#3` `S0 -> S1` prestate drift / lease expiry / harness mismatch / policy revision change + lawful re-formation, `#4` 24-permutation order independence / replay determinism / strict scope ambiguity rejection / missing fields, adversarial shared-parent cumulative budget `2+2 > 3` refusal vs `2+1 <= 3` acceptance + delegation depth limit, Cloud `VerifiedCloudScope`, witness-attribution separation, and `#1893` regression assertions). Pre-merge full `--lib` also passed (`1981 passed; 0 failed; 8 ignored`).
+  - `--test cli_contracts`: `133 passed; 0 failed; 1 ignored` (covers `effective_grant_cli_contracts::red_green_5_cli_rpc_grant_refusal_lawful_repair_and_fresh_authorization`, `cli_cumulative_delegation_budget_rejects_sibling_overflow`, `guidance_surfaces_exclude_maintainer_entrypoint_drift_setting` across `--help`/`docs ingest`/`rpc context.resolve`, and `todo_help_schema_and_docs_stay_in_sync` including `delegate`).
+  - `--test concurrent_worktree_integration_1469`: `3 passed; 0 failed` (preserves legacy advisory `paths:[...]` claim overlaps via `is_advisory_paths`).
+  - `--test doc_alignment`: `5 passed; 0 failed`.
+  - `--test interop_conformance`: `12 passed; 0 failed`.
+  - `--test policy_self_authorization_1776`: `9 passed; 0 failed`.
+  - `--test todo_enforcement`: `6 passed; 0 failed`.
+  - `--test workunit_cli`: `7 passed; 0 failed`.
+  - Pre-merge `--test datastore_contract`: `4 passed; 1 failed` (`logical_schema_inventory_is_structurally_valid_and_matches_runtime_core` pre-existing `0.143.1` vs `0.160.0` version string mismatch on `master`); `--test source_ci_profile_policy` on `macos-aarch64`: `55 passed; 4 failed` (4 Linux-only `linux-x86_64` / macOS `/var` temp symlink checks; Buildkite waived by operator).
+
 ## Operational reliability fixes verification (#1881, #1837, #1884, #1838)
 
 Verified on `origin/master` (`295f0af39`, `v0.160.0` + PR `#1908`) inside isolated worktree `agent/swarm-readiness-b/bugs_01m80ex82zgnq661-ops-1881-1837-1884-1838`:
@@ -1609,8 +1629,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

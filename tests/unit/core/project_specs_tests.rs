@@ -509,3 +509,68 @@ fn readme_identity_uses_product_section_or_intro_never_task_section_fallback() {
     );
     assert_eq!(readme_project_summary("# Recipe Kit\n\nRecipe Kit scales ingredients.\n\n## Current Task\nFix parser rounding.\n").as_deref(), Some("Recipe Kit scales ingredients."));
 }
+
+#[test]
+fn managed_specs_and_generated_spec_context_exclude_maintainer_entrypoint_drift_setting() {
+    const FORBIDDEN_KEY: &str = "_allow_entrypoint_version_drift";
+
+    // Check fresh scaffolded living specs and generated context
+    let dir = tempfile::tempdir().unwrap();
+    let specs_dir = dir.path().join(".decapod/managed/specs");
+    fs::create_dir_all(&specs_dir).unwrap();
+    for spec in LOCAL_PROJECT_SPECS {
+        if let Some(rendered) = crate::core::scaffold::render_project_spec_content(
+            spec.path,
+            crate::core::scaffold::DiagramStyle::Mermaid,
+            None,
+        ) {
+            assert!(
+                !rendered.contains(FORBIDDEN_KEY),
+                "spec template {} must not expose {FORBIDDEN_KEY}",
+                spec.path
+            );
+            fs::write(dir.path().join(spec.path), rendered).unwrap();
+        }
+    }
+    let ctx = local_project_specs_context(dir.path());
+    let serialized = format!("{ctx:?}");
+    assert!(
+        !serialized.contains(FORBIDDEN_KEY),
+        "generated local_project_specs_context must not expose {FORBIDDEN_KEY}"
+    );
+
+    // Check repository-managed specs (including release-alignment guidance in OPERATIONS.md)
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let repo_specs = repo_root.join(".decapod/managed/specs");
+    if repo_specs.is_dir() {
+        for spec in LOCAL_PROJECT_SPECS {
+            let path = repo_root.join(spec.path);
+            if path.is_file() {
+                let text = fs::read_to_string(&path).unwrap();
+                assert!(
+                    !text.contains(FORBIDDEN_KEY),
+                    "agent-facing managed spec {} must not expose maintainer-only {FORBIDDEN_KEY}",
+                    spec.path
+                );
+            }
+        }
+        let ops_path = repo_root.join(LOCAL_PROJECT_SPECS_OPERATIONS);
+        if ops_path.is_file() {
+            let ops = fs::read_to_string(&ops_path).unwrap();
+            assert!(
+                ops.contains("### Current Release Alignment"),
+                "OPERATIONS.md must preserve release-alignment guidance boundary"
+            );
+            assert!(
+                !ops.contains(FORBIDDEN_KEY),
+                "OPERATIONS.md release-alignment guidance must not expose {FORBIDDEN_KEY}"
+            );
+        }
+        let repo_ctx = local_project_specs_context(repo_root);
+        let repo_ctx_json = format!("{repo_ctx:?}");
+        assert!(
+            !repo_ctx_json.contains(FORBIDDEN_KEY),
+            "repo local_project_specs_context must not expose {FORBIDDEN_KEY}"
+        );
+    }
+}

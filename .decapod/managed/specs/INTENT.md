@@ -1,5 +1,10 @@
 # Intent
 
+## Narrowing effective operation grants and agent guidance hygiene (#1905, #1893)
+
+- **Monotonically narrowing effective operation grants (`#1905`)**: Ensures every governed operation evaluates a deterministic, non-persisted `EffectiveOperationGrant` (`decapod.effective-grant.v1`) formed by intersecting accepted repository policy, server-verified Cloud access (`VerifiedCloudScope`), actor trust and active task custody, live scoped policy approvals, parent-to-child delegation bounds, and exact operation/parameter/path/resource/prestate bindings. Authority can only narrow across delegation: child requests, copied parent grants, candidate-branch policy edits, forged approval tokens, or `PlanState::Approved` can never widen scope, override explicit denials, or bypass human approval or cumulative shared-parent budget accounting across sibling subtasks. Request admission (`GrantDecision`) remains distinct from observed consequence (`ExecutionOutcomeKind::DecapodMediatedApplied` vs `WitnessedExternal`).
+- **Agent-facing guidance hygiene (`#1893`)**: Removes maintainer-only development entrypoint-version-drift override settings from agent-facing managed specs, CLI help, embedded docs, and generated context capsules so agents continue treating managed entrypoints as tool-managed while keeping internal `.decapod/config.toml` validation and default drift rejection in `src/decapod/core/entrypoint_integrity/history.rs` intact.
+
 ## Operational reliability fixes: snapshot policy precheck, custody-preserving heartbeat, shared tool measurement, and Podman fixture isolation (#1881, #1837, #1884, #1838)
 
 Integrates four targeted operational and CI-stability fixes on `v0.160.0` (`295f0af39`):
@@ -781,8 +786,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

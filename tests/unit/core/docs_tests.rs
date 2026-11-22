@@ -225,3 +225,54 @@ fn mandates_have_existing_source_sections_and_real_gate_identifiers() {
         );
     }
 }
+
+#[test]
+fn embedded_docs_and_scoped_context_exclude_maintainer_entrypoint_drift_setting() {
+    const FORBIDDEN_KEY: &str = "_allow_entrypoint_version_drift";
+
+    for path in assets::list_docs() {
+        if let Some(doc) = assets::get_doc(&path) {
+            assert!(
+                !doc.contains(FORBIDDEN_KEY),
+                "embedded/rendered doc {path} must not expose maintainer-only {FORBIDDEN_KEY}"
+            );
+        }
+    }
+
+    let root = tempfile::tempdir().unwrap();
+    for query in [
+        "entrypoint version drift release alignment",
+        "_allow_entrypoint_version_drift",
+        "config.toml schema",
+    ] {
+        let ctx = resolve_scoped_context(root.path(), Some(query), None, &[], &[], 12, None);
+        let json = serde_json::to_string(&ctx).unwrap();
+        assert!(
+            !json.contains(FORBIDDEN_KEY),
+            "scoped context for query '{query}' must not expose {FORBIDDEN_KEY}"
+        );
+    }
+
+    let repo_root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for doc_dir in ["docs/agent", "docs/book/src"] {
+        let full = repo_root.join(doc_dir);
+        if full.is_dir() {
+            let mut stack = vec![full];
+            while let Some(dir) = stack.pop() {
+                for entry in std::fs::read_dir(&dir).unwrap() {
+                    let path = entry.unwrap().path();
+                    if path.is_dir() {
+                        stack.push(path);
+                    } else if path.extension().and_then(|e| e.to_str()) == Some("md") {
+                        let content = std::fs::read_to_string(&path).unwrap();
+                        assert!(
+                            !content.contains(FORBIDDEN_KEY),
+                            "published doc {} must not expose maintainer-only {FORBIDDEN_KEY}",
+                            path.display()
+                        );
+                    }
+                }
+            }
+        }
+    }
+}

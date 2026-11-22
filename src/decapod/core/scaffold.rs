@@ -1262,7 +1262,7 @@ Describe the security primitives and security controls implemented in this repos
     )
 }
 
-fn render_project_spec_content(
+pub(crate) fn render_project_spec_content(
     rel_path: &str,
     diagram_style: DiagramStyle,
     seed: Option<&SpecsSeed>,

@@ -1,5 +1,16 @@
 # Interfaces
 
+## Effective operation grant explanation, delegation CLI, and guidance hygiene (#1905, #1893)
+
+- **Read-only CLI grant explanation (`src/decapod/plugins/policy.rs::PolicyCommand::Grant`)**:
+  `decapod govern policy grant --command <OP> [--path <PATH>] [--task-id <ID>] [--resource <RES>] [--recipient <AGENT>] [--budget-units <N>] [--expected-prestate <DIGEST>] [--harness-id <ID>] [--format text|json]` evaluates `EffectiveOperationGrant` (`decapod.effective-grant.v1`) read-only (`observing = true`, `is_read_only_operation` admits `policy.grant` and `*.explain`), printing bounded text or JSON (`decision`: `allowed | denied | unproven | stale`, `reasons`, `effective_allowances`, `effective_denials`, `effective_max_budget_units`, `remaining_delegation_depth`, `cumulative_budget`, `target_fingerprint`, `approval_ids_matched`, `prestate`, `layers`, `execution_outcome`).
+- **Read-only RPC interface (`src/decapod/core/rpc.rs::PolicyGrantExplainParams`, `src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/lib.rs::rpc_handlers::handle_policy_grant_explain`)**:
+  Registers `policy.grant.explain` (`read_only: true`, `session_required: false`) in `RPC_OPS`, generates `### Operation: PolicyGrantExplain` in `docs/agent/command-contracts.md`, binds actor identity strictly from `current_agent_id()`, and returns the computed `EffectiveOperationGrant` JSON payload.
+- **Task delegation subcommand (`src/decapod/core/todo.rs::TodoCommand::Delegate`)**:
+  `decapod todo delegate --parent <TASK_ID> [--child <TASK_ID>] [--recipient <AGENT>] [--allow <PATTERN>...] [--deny <PATTERN>...] [--op <OP>...] [--resource <RES>] [--budget-total <N>] [--budget-child <N>] [--depth <N>]` records monotonic parent-to-child delegation bounds atomically in `events::TODO` (`todo::schema()` exposes `"delegate"`).
+- **Guidance & context hygiene (`#1893`)**:
+  CLI help (`--help`, `validate --help`, `init --help`, `govern --help`), `decapod docs ingest`, `context.resolve`, `local_project_specs_context`, and `.decapod/managed/specs/*` exclude maintainer-only development entrypoint-version-drift override guidance while keeping `.decapod/config.toml` parsing backward-compatible.
+
 ## Container snapshot precheck, `--heartbeat` lease extension, and shared measurement contracts (#1881, #1837, #1884, #1838)
 
 - **Interactive container workspace precheck (`src/decapod/core/workspace.rs`)**:
@@ -1623,8 +1634,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

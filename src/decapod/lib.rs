@@ -3871,6 +3871,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "schema.get"
                     | "state.resolve"
                     | "state.diff"
+                    | "policy.grant.explain"
                     | "standards.resolve"
                     | "mentor.obligations"
                     | "assurance.evaluate"
@@ -4097,6 +4098,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "policy.grant.explain"
     )
 }
 
@@ -4173,6 +4175,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "policy.grant.explain"
     )
 }
 
@@ -8799,6 +8802,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "interop.manifest"
             | "interop.negotiate"
             | "interop.project"
+            | "policy.grant.explain"
     )
 }
 
@@ -13927,6 +13931,46 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_policy_grant_explain(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let params: PolicyGrantExplainParams = serde_json::from_value(ctx.request.params.clone())
+            .map_err(|e| {
+            error::DecapodError::ValidationError(format!("Invalid params: {e}"))
+        })?;
+        let actor_id = current_agent_id();
+        let mut req = crate::core::effective_grant::GrantEvaluationRequest::for_operation(
+            params.command,
+            actor_id,
+        );
+        req.target_path = params.path;
+        req.task_id = params.task_id;
+        req.target_resource = params.resource;
+        req.recipient = params.recipient;
+        req.requested_budget_units = params.budget_units;
+        req.expected_prestate_digest = params.expected_prestate;
+        req.expected_harness_id = params.harness_id;
+        let grant = crate::core::effective_grant::evaluate_effective_grant(
+            ctx.project_root,
+            &ctx.store.root,
+            &req,
+        );
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(&grant).map_err(|e| {
+                error::DecapodError::ValidationError(format!(
+                    "Failed to serialize effective grant: {e}"
+                ))
+            })?),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_interop_manifest(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -14416,6 +14460,7 @@ fn run_rpc_command(
         "interop.project" => rpc_handlers::handle_interop_project(&rpc_ctx)?,
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
+        "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,
         _ => error_response(
             request.id.clone(),
             request.op.clone(),

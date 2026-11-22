@@ -15,6 +15,12 @@ pub struct PolicyCli {
     pub command: PolicyCommand,
 }
 
+#[derive(Copy, Clone, Debug, Eq, PartialEq, clap::ValueEnum)]
+pub enum GrantOutputFormat {
+    Text,
+    Json,
+}
+
 #[derive(Subcommand, Debug)]
 pub enum PolicyCommand {
     /// Evaluate risk for a command and optional path.
@@ -23,6 +29,27 @@ pub enum PolicyCommand {
         command: String,
         #[clap(long)]
         path: Option<String>,
+    },
+    /// Explain the effective operation grant (inputs, scope, decision, and reasons).
+    Grant {
+        #[clap(long)]
+        command: String,
+        #[clap(long)]
+        path: Option<String>,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        resource: Option<String>,
+        #[clap(long)]
+        recipient: Option<String>,
+        #[clap(long)]
+        budget_units: Option<u64>,
+        #[clap(long)]
+        expected_prestate: Option<String>,
+        #[clap(long)]
+        harness_id: Option<String>,
+        #[clap(long, value_enum, default_value = "text")]
+        format: GrantOutputFormat,
     },
     /// Approve a specific high-risk action.
     Approve {
@@ -112,6 +139,7 @@ pub fn run_policy_cli_as(
     let observing = matches!(
         &cli.command,
         PolicyCommand::Eval { .. }
+            | PolicyCommand::Grant { .. }
             | PolicyCommand::Riskmap {
                 command: RiskmapSubcommand::Verify
             }
@@ -140,6 +168,54 @@ pub fn run_policy_cli_as(
             );
             println!("Requirements: {requirements:?}");
             println!("Human-in-the-loop Required: {hitl_required}");
+        }
+        PolicyCommand::Grant {
+            command,
+            path,
+            task_id,
+            resource,
+            recipient,
+            budget_units,
+            expected_prestate,
+            harness_id,
+            format,
+        } => {
+            let project_root = store
+                .root
+                .ancestors()
+                .find(|p| p.join(".decapod").is_dir())
+                .or_else(|| store.root.parent().and_then(Path::parent))
+                .unwrap_or(&store.root);
+            let mut req = crate::core::effective_grant::GrantEvaluationRequest::for_operation(
+                command, caller,
+            );
+            req.task_id = task_id;
+            req.target_path = path;
+            req.target_resource = resource;
+            req.recipient = recipient;
+            req.requested_budget_units = budget_units;
+            req.expected_prestate_digest = expected_prestate;
+            req.expected_harness_id = harness_id;
+            let grant = crate::core::effective_grant::evaluate_effective_grant(
+                project_root,
+                &store.root,
+                &req,
+            );
+            match format {
+                GrantOutputFormat::Json => {
+                    println!(
+                        "{}",
+                        serde_json::to_string_pretty(&grant).map_err(|e| {
+                            error::DecapodError::ValidationError(format!(
+                                "failed serializing effective grant: {e}"
+                            ))
+                        })?
+                    );
+                }
+                GrantOutputFormat::Text => {
+                    print!("{}", grant.render_text());
+                }
+            }
         }
         PolicyCommand::Approve {
             id,
@@ -632,7 +708,7 @@ pub fn human_in_loop_required(
     !is_hitl_disabled_by_override(store, scope, level)
 }
 
-fn trust_level_to_int(level: &str) -> i32 {
+pub(crate) fn trust_level_to_int(level: &str) -> i32 {
     match level {
         "untrusted" => 0,
         "basic" => 1,
@@ -661,11 +737,13 @@ pub fn is_read_only_operation(op_name: &str) -> bool {
     ];
     read_suffixes.iter().any(|s| op_name.ends_with(s))
         || op_name.ends_with(".init")
+        || op_name.ends_with(".explain")
         || op_name == "policy.check"
         || op_name == "policy.list"
+        || op_name == "policy.grant"
 }
 
-fn required_trust_for_operation(op_name: &str) -> &'static str {
+pub(crate) fn required_trust_for_operation(op_name: &str) -> &'static str {
     if op_name == "policy.control" {
         return "core";
     }
@@ -858,7 +936,7 @@ pub(crate) fn authorize_rbac_exception(
     Ok(format!("sha256:{:x}", Sha256::digest(bytes)))
 }
 
-fn configured_approval_categories_at_project(
+pub(crate) fn configured_approval_categories_at_project(
     main_root: &Path,
 ) -> Result<Vec<String>, error::DecapodError> {
     let config_path = main_root.join(".decapod").join("config.toml");
@@ -893,7 +971,7 @@ fn configured_approval_categories_at_project(
     Ok(config.governance.approval_categories)
 }
 
-fn configured_approval_required(categories: &[String], op_name: &str) -> bool {
+pub(crate) fn configured_approval_required(categories: &[String], op_name: &str) -> bool {
     categories.iter().any(|category| match category.as_str() {
         "destructive_operations" => {
             !op_name.contains("_internal")

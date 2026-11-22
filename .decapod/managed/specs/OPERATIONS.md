@@ -320,17 +320,15 @@ job cap and the four declared artifact targets remain separate from this
 release-job override. Only observed artifact builds can establish a throughput
 improvement; source validation alone makes no four-platform packaging claim.
 
-### Current Release Alignment (v0.156.2)
+### Current Release Alignment (v0.160.0)
 
-The `v0.156.2` release cut aligns the package version in `Cargo.toml`,
-root package entry in `Cargo.lock`, and release notes in `CHANGELOG.md` with
-managed projections refreshed by the `0.156.2` binary.
-`.decapod/managed/Dockerfile.decapod` pins the `v0.156.2-debian` image
-and `DECAPOD_VERSION=0.156.2`. The managed spec manifest records
-`decapod_release` as `0.156.2` alongside current codebase attestations.
+The `v0.160.0` release aligns the workspace package version in `Cargo.toml`,
+root package entry in `Cargo.lock`, and managed projections refreshed by the
+`0.160.0` binary. `.decapod/managed/Dockerfile.decapod` pins the `v0.160.0`
+image and `DECAPOD_VERSION=0.160.0`, and the managed spec manifest records
+`decapod_release = "0.160.0"` alongside current codebase attestations.
 Repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`)
-remain intentionally pinned at `0.148.0` under
-`[repo]._allow_entrypoint_version_drift = true` in `.decapod/config.toml`.
+remain tool-managed and refreshed via `decapod validate` or `decapod rpc --op specs.refresh`.
 
 ## Incident Response
 
@@ -477,8 +475,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

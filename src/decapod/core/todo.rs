@@ -33,7 +33,7 @@ use std::io::{BufRead, BufReader, IsTerminal};
 use std::path::{Path, PathBuf};
 
 #[path = "authoring.rs"]
-mod authoring;
+pub(crate) mod authoring;
 #[path = "legacy_todo_recovery.rs"]
 mod legacy_todo_recovery;
 #[path = "task_journal.rs"]
@@ -941,6 +941,29 @@ pub enum TodoCommand {
         /// Filter by agent id.
         #[clap(long)]
         agent: Option<String>,
+    },
+    /// Delegate narrower effective bounds and budget limits from a parent task.
+    Delegate {
+        #[clap(long)]
+        parent: String,
+        #[clap(long)]
+        child: Option<String>,
+        #[clap(long)]
+        recipient: Option<String>,
+        #[clap(long = "allow")]
+        allow: Vec<String>,
+        #[clap(long = "deny")]
+        deny: Vec<String>,
+        #[clap(long = "op")]
+        ops: Vec<String>,
+        #[clap(long)]
+        resource: Option<String>,
+        #[clap(long)]
+        budget_total: Option<u64>,
+        #[clap(long)]
+        budget_child: Option<u64>,
+        #[clap(long)]
+        depth: Option<u32>,
     },
     /// Release a claimed task (makes it available for others).
     Release {
@@ -2920,20 +2943,20 @@ pub fn initialize_todo_db(root: &Path) -> Result<(), error::DecapodError> {
     Ok(())
 }
 
-fn scope_from_dir(p: &str) -> String {
-    const COMPONENT_NAMES: &[&str] = &[
-        "application_development",
-        "architecture",
-        "artificial_intelligence",
-        "design_and_style",
-        "development_lifecycle",
-        "documentation",
-        "languages",
-        "platform_engineering",
-        "project_management",
-        "specialized_domains",
-    ];
+pub(crate) const COMPONENT_NAMES: &[&str] = &[
+    "application_development",
+    "architecture",
+    "artificial_intelligence",
+    "design_and_style",
+    "development_lifecycle",
+    "documentation",
+    "languages",
+    "platform_engineering",
+    "project_management",
+    "specialized_domains",
+];
 
+fn scope_from_dir(p: &str) -> String {
     let path = Path::new(p);
     for component_name in COMPONENT_NAMES {
         if path.file_name().map(|s| s.to_string_lossy().to_lowercase())
@@ -3685,6 +3708,8 @@ pub(crate) fn add_task_local(
     } else {
         scope_from_dir(&dir_abs)
     };
+    let _parsed_scope = crate::core::effective_grant::parse_scope_spec(&scope)
+        .map_err(|reason| error::DecapodError::ValidationError(reason.summary()))?;
     if let Some(paths) =
         fleet_coord::declared_paths(&scope).map_err(error::DecapodError::ValidationError)?
     {
@@ -4100,6 +4125,23 @@ fn update_status_with_verification(
             }
             if matches!(new_status, "done" | "archived") {
                 authoring::retire_task_bindings_on_conn(conn, id, &actor, event_type, &ts)?;
+            }
+            if new_status == "done" {
+                crate::core::effective_grant::transition_child_reservations_on_conn(
+                    conn,
+                    &ts,
+                    &actor,
+                    id,
+                    crate::core::effective_grant::ReservationStatus::Consumed,
+                )?;
+            } else if new_status == "archived" {
+                crate::core::effective_grant::transition_child_reservations_on_conn(
+                    conn,
+                    &ts,
+                    &actor,
+                    id,
+                    crate::core::effective_grant::ReservationStatus::Released,
+                )?;
             }
 
             let new_revision = expected_revision + 1;
@@ -4933,6 +4975,15 @@ pub(crate) fn claim_task_with_lease_local(
                 payload["lease_generation"] = serde_json::json!(generation);
                 payload["lease_lifecycle"] = serde_json::json!(lifecycle.as_str());
                 payload["intent_anchor"] = serde_json::json!(resolved_intent);
+                crate::core::effective_grant::reserve_delegation_budget_on_conn(
+                    conn,
+                    &ts,
+                    agent_id,
+                    id,
+                    i64::from(generation),
+                    None,
+                    None,
+                )?;
             }
             payload["dependency_readiness"] = serde_json::json!(dependency_readiness.clone());
             if let Some(prev) = reclaimed_from.as_ref() {
@@ -5804,6 +5855,17 @@ pub fn handoff_task_as(
     lease_seconds: Option<u64>,
     acting_agent: &str,
 ) -> Result<serde_json::Value, error::DecapodError> {
+    let project_root =
+        project_root_from_store_root(&store.root).unwrap_or_else(|_| store.root.to_path_buf());
+    crate::core::effective_grant::enforce_task_operation_if_delegated(
+        &project_root,
+        &store.root,
+        "todo.handoff",
+        acting_agent,
+        id,
+        Some(to),
+        &[],
+    )?;
     match handoff_task_impl(store, id, to, from, summary, lease_seconds, acting_agent) {
         Ok(mut output) => {
             if output["status"] != "ok" {
@@ -6718,6 +6780,118 @@ fn release_task_local(root: &Path, id: &str) -> Result<serde_json::Value, error:
     release_task_as_actor_local(root, id, &mutation_actor(None))
 }
 
+#[allow(clippy::too_many_arguments)]
+fn delegate_task_local(
+    root: &Path,
+    workspace_root: &Path,
+    parent: &str,
+    child: Option<&str>,
+    recipient: Option<&str>,
+    allow: &[String],
+    deny: &[String],
+    ops: &[String],
+    resource: Option<&str>,
+    budget_total: Option<u64>,
+    budget_child: Option<u64>,
+    depth: Option<u32>,
+) -> Result<serde_json::Value, error::DecapodError> {
+    let actor = crate::current_agent_id();
+    if authoring::is_missing_or_unknown_actor(&actor) {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    for raw in allow.iter().chain(deny.iter()) {
+        crate::core::effective_grant::PathPattern::parse(raw)
+            .map_err(|r| error::DecapodError::ValidationError(r.summary()))?;
+    }
+    if let Some(rec) = recipient
+        && authoring::is_missing_or_unknown_actor(rec)
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "GRANT_ACTOR_SPOOFING: invalid delegation recipient '{rec}'"
+        )));
+    }
+    let ts = now_iso();
+    let main_root = crate::core::workspace::get_main_repo_root(workspace_root)
+        .unwrap_or_else(|_| workspace_root.to_path_buf());
+    let policy_revision = crate::core::db_maintenance::resolve_repository_policy(&main_root)
+        .map(|(_, _, rev, _)| rev)
+        .unwrap_or_else(|_| "local".to_string());
+    let record = crate::core::effective_grant::DelegationPolicyRecord {
+        parent_task_id: parent.to_string(),
+        child_task_id: child.map(str::to_string),
+        grantor_actor: actor.clone(),
+        recipient_actor: recipient.map(str::to_string),
+        allowed_paths: allow.to_vec(),
+        denied_paths: deny.to_vec(),
+        allowed_operations: if ops.is_empty() {
+            None
+        } else {
+            Some(ops.to_vec())
+        },
+        max_total_budget_units: budget_total,
+        max_child_budget_units: budget_child,
+        max_delegation_depth: depth,
+        resource_scope: resource.map(str::to_string),
+        policy_revision,
+        expires_at_epoch_s: None,
+    };
+
+    let broker = DbBroker::new(root);
+    let db_path = todo_db_path(root);
+    with_task_journal(
+        &broker,
+        &db_path,
+        &actor,
+        None,
+        "todo.delegate",
+        TaskJournalSelection::Ids(vec![parent.to_string()]),
+        |conn| {
+            ensure_schema(conn)?;
+            if let Some(cid) = child {
+                let child_parent: Option<Option<String>> = conn
+                    .query_row(
+                        "SELECT parent_task_id FROM tasks WHERE id = ?1",
+                        [cid],
+                        |row| row.get(0),
+                    )
+                    .optional()
+                    .map_err(error::DecapodError::StorageError)?;
+                match child_parent {
+                    None => {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "Child task '{cid}' not found"
+                        )));
+                    }
+                    Some(Some(existing_parent)) if existing_parent != parent => {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "Task '{cid}' belongs to parent '{existing_parent}', not '{parent}'"
+                        )));
+                    }
+                    Some(None) => {
+                        return Err(error::DecapodError::ValidationError(format!(
+                            "Task '{cid}' is a root task without parent '{parent}'"
+                        )));
+                    }
+                    Some(Some(_)) => {}
+                }
+            }
+            let event_id = crate::core::effective_grant::record_delegation_policy_on_conn(
+                conn, &ts, &actor, &record,
+            )?;
+            Ok(serde_json::json!({
+                "ts": ts,
+                "cmd": "todo.delegate",
+                "status": "ok",
+                "root": root.to_string_lossy(),
+                "event_id": event_id,
+                "parent": parent,
+                "child": child,
+                "policy": record,
+            }))
+        },
+    )
+}
+
 pub fn release_task_as_actor(
     root: &Path,
     id: &str,
@@ -6826,6 +7000,13 @@ pub(crate) fn release_task_as_actor_local(
                 sync_legacy_owner_column(conn, id)?;
             }
             authoring::retire_task_bindings_on_conn(conn, id, actor, "task.release", &ts)?;
+            crate::core::effective_grant::transition_child_reservations_on_conn(
+                conn,
+                &ts,
+                actor,
+                id,
+                crate::core::effective_grant::ReservationStatus::Released,
+            )?;
 
             // Create release event
             let ev = TodoEvent {
@@ -7693,6 +7874,7 @@ pub fn rebuild_db_from_events(events: &Path, out_db: &Path) -> Result<u64, error
                         ],
                     )?;
                 }
+                "task.delegation.policy" | "task.delegation.reserve" => {}
                 _ => {
                     return Err(error::DecapodError::ValidationError(format!(
                         "Unknown event_type '{}'",
@@ -7725,6 +7907,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "renew", "parameters": ["id", "agent", "lease_seconds"] },
             { "name": "yield", "parameters": ["id", "agent", "reason"] },
             { "name": "fleet", "parameters": ["agent"] },
+            { "name": "delegate", "parameters": ["parent", "child", "recipient", "allow", "deny", "op", "resource", "budget-total", "budget-child", "depth"] },
             { "name": "release", "parameters": ["id"] },
             { "name": "categories", "parameters": [] },
             { "name": "register-agent", "parameters": ["agent", "category"] },
@@ -9108,6 +9291,15 @@ pub fn run_todo_cli_with_cloud_factory_in_workspace<F: CloudTodoStoreFactory>(
         } => {
             let task_id = resolve_task_id_arg(id, id_positional, "todo done")?;
             let project_root = workspace_root.to_path_buf();
+            crate::core::effective_grant::enforce_task_operation_if_delegated(
+                &project_root,
+                &store.root,
+                "todo.done",
+                &crate::current_agent_id(),
+                &task_id,
+                None,
+                &[],
+            )?;
             if commit.is_none() && crate::plan_governance::load_plan(&project_root)?.is_some() {
                 crate::plan_governance::ensure_execute_ready(
                     crate::plan_governance::ExecuteCheckInput {
@@ -9327,6 +9519,31 @@ pub fn run_todo_cli_with_cloud_factory_in_workspace<F: CloudTodoStoreFactory>(
             yield_claim_lease(root, id, agent_id, reason)?
         }
         TodoCommand::Fleet { agent } => fleet_health(root, agent.as_deref())?,
+        TodoCommand::Delegate {
+            parent,
+            child,
+            recipient,
+            allow,
+            deny,
+            ops,
+            resource,
+            budget_total,
+            budget_child,
+            depth,
+        } => delegate_task_local(
+            root,
+            workspace_root,
+            parent,
+            child.as_deref(),
+            recipient.as_deref(),
+            allow,
+            deny,
+            ops,
+            resource.as_deref(),
+            *budget_total,
+            *budget_child,
+            *depth,
+        )?,
         TodoCommand::Release { id } => release_task_local(root, id)?,
         TodoCommand::Rebuild => rebuild_from_events(root)?,
         TodoCommand::Journal { command } => match command {

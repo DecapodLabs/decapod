@@ -1,5 +1,14 @@
 # Architecture
 
+## Effective operation grants and cumulative delegation accounting (#1905, #1893)
+
+- **Deterministic composition & canonical path algebra (`src/decapod/core/effective_grant.rs`)**:
+  `PathPattern` and `ScopeAllowanceSet` normalize repository-relative paths/globs (`RepoWide`, `DirPrefix`, `DirImmediate`, `Exact`) with strict ambiguity rejection in `parse_scope_spec` (no silent fallback on malformed clauses, `..`, backslashes, mid-path `**`, or unsupported wildcards). `compose_layers_order_independent` performs commutative, associative intersection over allowances/operations/resources, union over denials (`reduce_subsumed_patterns`), `min` over budgets and expirations, and exact recipient/policy/repo bindings. `evaluate_effective_grant` reuses `db_maintenance::resolve_repository_policy`, `plugins::policy` (`eval_risk`, `actor_trust_level_on_conn`, `required_trust_for_operation`, `trust_level_to_int`, `check_approval_on_conn`, `has_live_scoped_approval_on_conn`, `exact_target_approval_ids_on_conn`), `fleet_coord::lease_state`, `GatekeeperConfig::from_repo_config`, and `plan_governance::load_plan` without persisting any flattened mutable permission cache.
+- **SQLite event-backed delegation & cumulative shared-parent budgets (`src/decapod/core/effective_grant.rs`, `src/decapod/core/todo.rs`, `src/decapod/core/task_journal.rs`)**:
+  Delegation policies (`task.delegation.policy`) and child reservations (`task.delegation.reserve`) are recorded in `events::TODO` without changing SQLite table DDL (`tests/datastore_contract.rs`). `record_delegation_policy_on_conn` rejects widening relative to ancestor tasks (`GRANT_DELEGATION_WIDENING`, `GRANT_DELEGATION_DEPTH_EXCEEDED`), `reserve_delegation_budget_on_conn` inside `claim_task_with_lease_local` enforces cumulative sibling budgets atomically (`CUMULATIVE_DELEGATION_BUDGET_EXCEEDED`), and `transition_child_reservations_on_conn` marks reservations `Consumed` on `todo done` and `Released` on `todo release`/`archive`.
+- **Boundary enforcement & guidance hygiene (`src/decapod/core/workspace.rs`, `src/decapod/plan_governance.rs`, `src/decapod/core/scaffold.rs`)**:
+  `enforce_task_operation_if_delegated` and `enforce_workspace_publish_grant` bind `todo.done`, `todo.handoff`, `workspace.ensure`, `plan.execute`, and `workspace.publish` (`collect_candidate_changed_files`) to `EffectiveOperationGrant` and candidate-policy widening detection (`detect_candidate_policy_widening`). Non-filesystem task policy targets (`task.*`/`todo.*` with `--path <task_id> --task-id <task_id>`) resolve exact `derive_fingerprint` approvals without misclassifying task IDs as repository paths. Maintainer-only development entrypoint-version-drift override text is excluded from `.decapod/managed/specs/OPERATIONS.md` while runtime config validation remains preserved in `entrypoint_integrity/history.rs`.
+
 ## Operational reliability fixes (#1881, #1837, #1884, #1838)
 
 - **Pre-build backup policy gate & `.decapod/backups` staging (`src/decapod/core/workspace.rs`)**:
@@ -1285,8 +1294,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ee70b707f7d5a8a21963eaa11118c6ef9eb766292683812d642b4d46bc7f1a07`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (268 files)
+- Repository signal fingerprint: `2cf4e561adcfaae7dd3d145438eb0c8cc0027a38f89fc27324fd86de784e8349`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (269 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
