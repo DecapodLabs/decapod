@@ -909,6 +909,17 @@
         "tests/capability_contract_drift.rs",
         "tests/unit/core/capability_contract_tests.rs"
       ]
+    },
+    {
+      "id": "chk:1906-merge-origin-master-295f0af39",
+      "summary": "Reconcile merge with origin/master (295f0af39, PR A #1908), refresh specs, and record updated publication spec reviews",
+      "input_digest": "sha256:59aecd65d46f77839bc01ab59a1954d2c95db965c5a53e38fd5456fea8eacbd0",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -954,23 +965,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md for #1906: composed Decapod -> Dactyl -> Propodus capability contract boundary in src/decapod/core/capability_contract.rs, four explicit composite consequence states (prepared/observed/held/compensated), and validate.rs admission gate preserving local offline repo usability.",
-          "reviewed_code_fingerprint": "96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c",
-          "spec_material_hash": "2d601d5503ff85eb387ec94fbd4a05bd43fe7708f63cf6567fb019ce61ea655e"
+          "reason": "Updated ARCHITECTURE.md for #1906 alongside merged origin/master #1833/#1832: verified composed Decapod -> Dactyl -> Propodus contract evaluator, consequence trace states, and validate.rs gate.",
+          "reviewed_code_fingerprint": "f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a",
+          "spec_material_hash": "fb123ef8867ec81ab9ca1ca2c78bc7b89ea6e273c08fd8cd35203642a2937dcd"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md for #1906: decapod capabilities contracts CLI (--fixture, --contract, --dir, --format), read-only RPC interop.capability_contracts, and strict Draft 2020-12 capability-contract.schema.json verified against src/decapod/cli.rs, src/decapod/core/interop.rs, src/decapod/core/rpc.rs, and src/decapod/lib.rs.",
-          "reviewed_code_fingerprint": "96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c",
-          "spec_material_hash": "c6baf64fe290c8f414241e863526d7f95a3ac76096f72447bc613dd1d05d976d"
+          "reason": "Updated INTERFACES.md for #1906 alongside merged origin/master #1833/#1832: verified decapod capabilities contracts CLI, interop.capability_contracts RPC, and capability-contract.schema.json.",
+          "reviewed_code_fingerprint": "f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a",
+          "spec_material_hash": "24db3c88567c55c252b1af9fa469e60c368c3b4f200c52d6262823107029ccdb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated SECURITY.md for #1906: fail-closed drift detection rejecting self-certified descriptors, self-reported observations, HTTP 200 error/field drift masking, blind replay of severed-ack two-step mutations, fault-erasing compensations, and agent-edited local policy overrides.",
-          "reviewed_code_fingerprint": "96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c",
-          "spec_material_hash": "8f7a384b5e3f47c007383cc6ed2849a84cb81eeb73a03e8ab279f4873fd48582"
+          "reason": "Updated SECURITY.md for #1906 alongside merged origin/master #1833/#1832: verified fail-closed policy baseline, evidence provenance, and severed-ack replay refusal boundaries.",
+          "reviewed_code_fingerprint": "f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a",
+          "spec_material_hash": "901143cd2927b1e8f002182c32a7802104191b510b1a5622687a01963e3f7bec"
         }
       ],
       "state": "APPROVED",
@@ -981,7 +992,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795313727Z"
+      "updated_at": "1795313898Z"
     },
     "trajectory": {
       "active_boundaries": [

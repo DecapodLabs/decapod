@@ -2,7 +2,7 @@
 
 ## Composed service capability contract verification (#1906)
 
-Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-1906` off `origin/master` (`efc05d792`, `v0.160.0`):
+Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-1906` merged with `origin/master` (`295f0af39`, `v0.160.0`):
 
 - Formatting, lint, and feature-matrix compilation (after final edit):
   - `cargo fmt --all -- --check`: passed.
@@ -14,9 +14,25 @@ Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-
   - `decapod capabilities contracts --fixture --format text`: `21/21` scenarios passed (`declared`, `observed`, `currently_verified`, `incompatible`, `unsupported`, `stale`, and `prepared`/`observed`/`held`/`compensated` trace separation).
   - `decapod docs build`: synchronized `docs/agent/command-contracts.md` (`+8` insertions for `decapod capabilities contracts` and `Operation: InteropCapabilityContracts`).
 - Core repository conformance and boundary suites:
-  - `cargo test --locked --lib` (prior to test-only harness fix in `tests/capability_contract_drift.rs`, source unchanged): `1977 passed; 0 failed; 8 ignored`.
   - `assets_schema_contract`: `4 passed; 0 failed`; `contract_conformance`: `12 passed; 0 failed`; `doc_alignment`: `5 passed; 0 failed`; `rpc_golden_vectors`: `6 passed; 0 failed`; `spec_conformance -- --test-threads=1`: `15 passed; 0 failed`; `propodus_contract`: `6 passed; 0 failed`; `cloud_dactyl_boundary`: `1 passed; 0 failed`; `constitution_claims`: `4 passed; 0 failed`; `interop_conformance`: `12 passed; 0 failed`; `substrate_integrity`: `9 passed; 0 failed`.
-  - Pre-existing/host-platform caveats on macOS (`macos-aarch64`): `source_ci_profile_policy` (`55 passed; 4 failed` on `linux-x86_64` and `/var` temp canonicalization checks), `integration_sharding_policy` (`22 passed; 1 failed` on `/var` temp canonicalization `relocated_gatling_shards_route_exact_filters_and_preserve_runfiles`), and `specs_refresh_docs` (`6 passed; 1 failed` on `origin/master` `readiness_guidance_keeps_branch_push_separate_from_pr`).
+  - Pre-existing/host-platform caveats on macOS (`macos-aarch64`): `source_ci_profile_policy` (`55 passed; 4 failed` on `linux-x86_64` and `/var` temp canonicalization checks) and `integration_sharding_policy` (`22 passed; 1 failed` on `/var` temp canonicalization `relocated_gatling_shards_route_exact_filters_and_preserve_runfiles`).
+
+## Portable policy transition approvals & target-map unification verification (#1833, #1832)
+
+Verified on `origin/master` (`efc05d792`, `v0.160.0`) inside isolated worktree `agent/swarm-readiness-a/code_01m80cm518wkhbww-policy-1833-1832`:
+
+- **Source-CI inventory reconciliation, formatting, lints & feature matrix**:
+  - `.decapod/config.toml` `[proof.required_profile].reviewed_sources_digest` updated to `sha256:96d47fcfe781090fd7945ddb1e42a9b82ec8e7cf6498c2323d364d4a3c512975` for `v0.160.0` `Cargo.toml`/`Cargo.lock` release metadata.
+  - `cargo fmt --all -- --check`: passed.
+  - `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings).
+  - `cargo check --no-default-features`: passed.
+- **Unit & integration suites (`--locked`)**:
+  - `--lib repository_profile`: `25 passed; 0 failed` (covers `transition_approval::tests::signature_requires_accepted_key_exact_transition_and_live_expiry`, `transition_approval::cloud::tests::cloud_decision_requires_exact_live_repository_authority`, and `preserve_accepted_rejects_candidate_target_map_changes`).
+  - `--lib validation_rules`: `17 passed; 0 failed` (covers `fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade`).
+  - `--lib validation_history`: `34 passed; 0 failed` (covers `target_scoped_completed_evidence_cannot_authorize_full_repo_or_other_target` and `current_target_only_diagnostic` verification).
+  - `--lib public_buildkite`: `91 passed; 0 failed; 1 ignored` (covers `log_reader_rejects_escape_second_hop_and_http_denial_without_retry` timeout tolerance).
+  - `--test consumer_readiness`: `40 passed; 0 failed` (covers `single_platform_to_platform_map_requires_exact_approval_and_runs_host_checks`, `target_map_addition_and_update_require_exact_approval_and_preserve_receipt_scope`, and `decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_approval`).
+  - `--test source_ci_profile_policy` on macOS (`macos-aarch64`): `55 passed; 4 failed` (the 4 failures are host-OS mismatches on macOS vs Linux-only `supabase-consumer`/`fmt` fixtures and `/var` -> `/private/var` temp path canonicalization in `provider_carrier_executes_immutable_r_and_wrapper_preserves_fixed_context_and_failure`, unrelated to `#1833`/`#1832`; full Linux `Tests (core)` and Buildkite remain separate CI/operator gates, with Buildkite waived by operator).
 
 ## Cloud Wave 2 verification (#1836, #1835, #1886)
 
@@ -1587,8 +1603,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (270 files)
+- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

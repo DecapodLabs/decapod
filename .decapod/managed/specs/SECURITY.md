@@ -9,6 +9,15 @@
 - **Read-only inspection isolation**:
   `decapod capabilities contracts` and `interop.capability_contracts` never trust caller-supplied contracts as canonical authority (`canonical_state_verified = false`), perform zero network calls, and never write `.decapod/data/decapod.db` or session state.
 
+## Portable transition approval verification and target-map non-self-authorization (#1833, #1832)
+
+- **Untrusted candidate isolation (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/validation_rules.rs`)**:
+  In `ci_local` mode, `evaluate_policy_transition_with_approval` derives the accepted base solely from provider base-branch variables (`GITHUB_BASE_REF`, `BUILDKITE_PULL_REQUEST_BASE_BRANCH`) or `origin/HEAD` / unambiguous `origin/{main,master}` — never candidate `.decapod/config.toml` — and requires candidate working-tree `.decapod/config.toml` to equal committed `{head}:.decapod/config.toml`. `verify_signed` reads `.decapod/repository-policy-signers.json` strictly from `{base}:.decapod/repository-policy-signers.json` using `--no-replace-objects` and `GIT_CONFIG_COUNT=0`, preventing candidate-committed signer lists or ambient Git config from authorizing transitions (`fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade`).
+- **Tracked store refusal & Cloud decision binding (`src/decapod/core/repository_profile.rs`, `src/decapod/core/repository_policy_approval.rs::cloud`)**:
+  `has_active_policy_transition_approval` fails closed (`POLICY_STORE_UNSAFE`) if `.decapod/data` is tracked in Git on either checkout or main root. Cloud decision verification enforces exact `project_id`, `decision_id`, `capability = "governance.exception.authorize"`, `obligation_id`, `base_commit`, `candidate_commit`, `affected_commit`, `tree_oid`, `current_generation_matches == true`, `authority_basis` (`verified_repo_admin` or `delegated_repo_lead`), and live `expires_at` / `authority_expires_at` bounds (`cloud_decision_requires_exact_live_repository_authority`).
+- **Deployment-target preservation & strict-profile lock (`src/decapod/core/repository_profile.rs`, `tests/consumer_readiness.rs`)**:
+  `preserve_accepted` requires exact equality on `RepositoryContract.targets` so target additions, dependency edits, or `shared_inputs` expansions cannot alter validation scope without transition approval, while downgrading `decapod.pr-readiness.v1` remains unconditionally blocked (`REQUIRED_PROFILE_DOWNGRADE`) even when a candidate carries an approved transition ID (`decapod_strict_profile_downgrade_remains_unconditionally_blocked_even_with_approval`).
+
 ## Cloud Wave 2 keystore custody, DPoP logout isolation, and fail-closed container relay (#1836, #1835, #1886)
 
 - **Cross-platform OS keystore & non-secret inventory (`src/decapod/core/cloud_dpop.rs`)**:
@@ -850,8 +859,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (270 files)
+- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

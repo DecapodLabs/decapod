@@ -9,6 +9,16 @@
 - **Schema contract (`assets/schemas/capability-contract.schema.json`)**:
   Draft 2020-12 strict schema (`additionalProperties = false`, `$id = https://decapod.dev/schemas/capability-contract-1.0.0.schema.json`) enforced by `tests/assets_schema_contract.rs`.
 
+## Portable policy-transition carriers and target-scoped diagnostics (#1833, #1832)
+
+- **Signed CI approval carrier (`docs/agent/repository-readiness.md`, `src/decapod/core/repository_policy_approval.rs`)**:
+  - Accepted base signer manifest at `.decapod/repository-policy-signers.json` (`schema = "decapod.repository-policy-signers.v1"`, `keys` mapping key IDs to 64-hex raw 32-byte Ed25519 public keys).
+  - Environment carrier `DECAPOD_REPO_TRANSITION_APPROVAL` holding JSON `schema = "decapod.repository-policy-approval.v1"`, `key_id`, `transition_id`, `issued_at`, `expires_at` (`<= 86_400s` window), and 128-hex `signature` over `["decapod.repository-policy-approval.v1", key_id, transition_id, issued_at, expires_at]`.
+- **Cloud policy approval interface (`src/decapod/plugins/policy.rs::run_policy_cli_in_workspace`, `src/decapod/core/repository_policy_approval.rs::approve_cloud`)**:
+  - `decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1` on a Cloud-configured repository records a `propodus_governance_v1` decision (`authorize_exception`) and prints `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` for Cloud validation (`verify_decision`). Without `supabase-cloud`, Cloud approval/verification fails closed with `CLOUD_POLICY_APPROVAL_UNSUPPORTED`.
+- **Target-scoped readiness rejection diagnostic (`src/decapod/core/validation_history.rs::current_target_only_diagnostic`, `src/decapod/lib.rs`, `src/decapod/plugins/verify.rs`)**:
+  - Adding, removing, or modifying `proof.repository_contract.targets` triggers `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`. When `HEAD` holds only target-scoped validation proof (`--target <name>`), `workspace publish` (`enforce_workbranch_readiness_before_push`) and `qa verify` (`run_validate_and_hash_detailed`) emit `TARGET_SCOPED_PROOF_REJECTED` instructing the caller to run unscoped `decapod validate`.
+
 ## Cloud Wave 2 CLI, error diagnostics, and hosted workspace interfaces (#1836, #1835, #1886)
 
 - **`decapod cloud` subcommands (`src/decapod/cli.rs::CloudCommand`)**:
@@ -1610,8 +1620,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (254 files), `tests/` (270 files)
+- Repository signal fingerprint: `f554c409c6949cb63c23d85bc75929f208664d85f7ca57207b765a4eaa2f732a`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

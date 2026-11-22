@@ -893,7 +893,7 @@ impl RuleRegistry {
 
         self.register_rule(ValidationRule {
             id: RuleId::new("decapod.policy.accepted_repository_contract"),
-            description: "Accepted repository proof policies and reviewed source inventories cannot be weakened or replaced without policy.control transition approval"
+            description: "Accepted repository proof policies and reviewed source inventories require independently verified approval for an exact transition"
                 .to_string(),
             authority: RuleAuthority::KernelInvariant,
             applicability: RuleApplicability::default(),
@@ -903,13 +903,14 @@ impl RuleRegistry {
             severity: RuleSeverity::Critical,
             remediation: RuleRemediation {
                 error_code: "ACCEPTED_REPOSITORY_CONTRACT_CHANGED".to_string(),
-                violation_description: "Candidate altered accepted repo.pr-readiness.v1 source inventory, commands, executions, or coverage without an active policy.control transition approval".to_string(),
-                expected_condition: "Accepted repository-local proof policy is preserved, or an active non-expired non-revoked policy.control approval matches the exact base, head, and digest transition under scope repo.pr-readiness.v1".to_string(),
-                observed_condition: "Candidate modified accepted repository proof declarations without a matching policy.control approval".to_string(),
+                violation_description: "Candidate altered accepted repo.pr-readiness.v1 source inventory, commands, executions, or coverage without an independently verified transition approval".to_string(),
+                expected_condition: "Accepted repository-local proof policy is preserved, or live approval matches the exact base, head, and digests under scope repo.pr-readiness.v1".to_string(),
+                observed_condition: "Candidate proof differs from the accepted policy, or the accepted CI base or exact approval is unavailable".to_string(),
                 affected_paths: vec![".decapod/config.toml".to_string()],
                 required_steps: vec![
-                    "Preserve the accepted repo.pr-readiness.v1 commands, executions, coverage, and reviewed_sources_digest, OR".to_string(),
-                    "Review the exact diff and run `decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1` as a policy.control-authorized maintainer".to_string(),
+                    "Inspect the exact candidate and accepted target. In CI, fetch the protected base under origin and validate the candidate commit.".to_string(),
+                    "Preserve the accepted proof policy or obtain an exact transition approval. Run `decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1` for local or Cloud approval.".to_string(),
+                    "Pass a maintainer-signed receipt in DECAPOD_REPO_TRANSITION_APPROVAL for CI, or pass the authenticated Cloud decision ID in DECAPOD_REPO_TRANSITION_DECISION_ID for Cloud validation.".to_string(),
                 ],
                 autonomous_remediation_permitted: false,
                 human_authorization_required: true,
@@ -1931,56 +1932,114 @@ fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
 }
 
 fn evaluate_policy_transition_rule(context: &RuleEvaluationContext) -> RuleVerdict {
+    use crate::core::repository_profile::transition_approval::ApprovalInput;
+    evaluate_policy_transition_with_approval(
+        context,
+        ApprovalInput::from_environment(context.is_ci),
+    )
+}
+
+fn evaluate_policy_transition_with_approval(
+    context: &RuleEvaluationContext,
+    approval: crate::core::repository_profile::transition_approval::ApprovalInput,
+) -> RuleVerdict {
+    use crate::core::repository_profile::{
+        REQUIRED_PROFILE, transition_approval::git_object, verify_accepted_transition,
+    };
+    use crate::core::validation_runtime::proof_configuration;
+    use crate::core::workspace::{base_ref_for_branch, resolve_base_branch};
+
     let Some(root) = context.repo_root.as_deref() else {
         return RuleVerdict::Pass;
     };
-    if !root.join(".git").exists() || !root.join(".decapod/config.toml").is_file() {
+    if !root.join(".git").exists() {
         return RuleVerdict::Pass;
     }
-    let Ok(candidate_bytes) = std::fs::read(root.join(".decapod/config.toml")) else {
-        return RuleVerdict::Fail;
+    let config = ".decapod/config.toml";
+    let git_text = |args: &[&str]| {
+        String::from_utf8(git_object(root, args).ok()?)
+            .ok()
+            .map(|text| text.trim().to_owned())
     };
-    let Ok(candidate) = crate::core::validation_runtime::proof_configuration(&candidate_bytes)
-    else {
-        return RuleVerdict::Fail;
+    let candidate = match std::fs::read(root.join(config)) {
+        Ok(bytes) => match proof_configuration(&bytes) {
+            Ok(candidate) => candidate,
+            Err(_) => return RuleVerdict::Fail,
+        },
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Default::default(),
+        Err(_) => return RuleVerdict::Fail,
     };
-    let base_branch = crate::core::workspace::resolve_base_branch(root, None);
-    let Some(base_ref) = crate::core::workspace::base_ref_for_branch(root, &base_branch) else {
-        return RuleVerdict::Pass;
-    };
-    let git = |args: &[&str]| -> Option<String> {
-        let out = std::process::Command::new("git")
-            .current_dir(root)
-            .args(args)
-            .output()
-            .ok()?;
-        if !out.status.success() {
-            return None;
+    let candidate_is_local = candidate
+        .required_profile
+        .as_ref()
+        .is_some_and(|profile| profile.id == REQUIRED_PROFILE);
+    let base_ref = if context.is_ci {
+        // Pull request metadata and remote-tracking refs belong to the
+        // independently configured CI runner. Candidate config cannot pick
+        // which commit supplies its trusted maintainer signing keys.
+        if let Some(branch) = &approval.ci_target {
+            Some(format!("refs/remotes/origin/{branch}"))
+        } else if let Some(reference) = git_text(&["symbolic-ref", "refs/remotes/origin/HEAD"]) {
+            Some(reference)
+        } else {
+            let mut defaults = ["refs/remotes/origin/main", "refs/remotes/origin/master"]
+                .into_iter()
+                .filter(|reference| git_text(&["rev-parse", "--verify", reference]).is_some());
+            defaults
+                .next()
+                .filter(|_| defaults.next().is_none())
+                .map(str::to_owned)
         }
-        Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+        .filter(|reference| {
+            reference.starts_with("refs/remotes/origin/")
+                && git_object(root, &["check-ref-format", reference]).is_ok()
+        })
+    } else {
+        base_ref_for_branch(root, &resolve_base_branch(root, None))
     };
-    let Some(base_sha) = git(&["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")]) else {
-        return RuleVerdict::Pass;
+    let missing_base = if context.is_ci && (candidate_is_local || approval.ci_target.is_some()) {
+        RuleVerdict::Fail
+    } else {
+        RuleVerdict::Pass
     };
-    let Some(head_sha) = git(&["rev-parse", "--verify", "HEAD^{commit}"]) else {
-        return RuleVerdict::Pass;
+    let Some(base_ref) = base_ref else {
+        return missing_base;
     };
-    let Some(accepted_toml) = git(&["show", &format!("{base_sha}:.decapod/config.toml")]) else {
-        return RuleVerdict::Pass;
-    };
-    let Ok(accepted) =
-        crate::core::validation_runtime::proof_configuration(accepted_toml.as_bytes())
+    let Some(base_sha) = git_text(&["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")])
     else {
+        return missing_base;
+    };
+    let Ok(entries) = git_object(root, &["ls-tree", &base_sha, "--", config]) else {
+        return RuleVerdict::Fail;
+    };
+    if entries.is_empty() {
+        return RuleVerdict::Pass;
+    }
+    let Ok(accepted_toml) = git_object(root, &["show", &format!("{base_sha}:{config}")]) else {
+        return RuleVerdict::Fail;
+    };
+    let Ok(accepted) = proof_configuration(&accepted_toml) else {
         return RuleVerdict::Fail;
     };
     if accepted
         .required_profile
         .as_ref()
-        .is_none_or(|p| p.id != crate::core::repository_profile::REQUIRED_PROFILE)
+        .is_none_or(|profile| profile.id != REQUIRED_PROFILE)
     {
         return RuleVerdict::Pass;
     }
-    match crate::core::repository_profile::verify_accepted_transition(
+    let Some(head_sha) = git_text(&["rev-parse", "--verify", "HEAD^{commit}"]) else {
+        return RuleVerdict::Fail;
+    };
+    if context.is_ci {
+        let Ok(bytes) = git_object(root, &["show", &format!("{head_sha}:{config}")]) else {
+            return RuleVerdict::Fail;
+        };
+        if !proof_configuration(&bytes).is_ok_and(|committed| candidate == committed) {
+            return RuleVerdict::Fail;
+        }
+    }
+    match verify_accepted_transition(
         root,
         &base_sha,
         &head_sha,
@@ -1990,6 +2049,7 @@ fn evaluate_policy_transition_rule(context: &RuleEvaluationContext) -> RuleVerdi
         &candidate.commands,
         accepted.repository_contract.as_ref(),
         candidate.repository_contract.as_ref(),
+        approval,
     ) {
         Ok(()) => RuleVerdict::Pass,
         Err(_) => RuleVerdict::Fail,
@@ -2192,7 +2252,7 @@ pub(crate) fn evaluate_terminal_rules(
         changed_paths: proof.changed_paths().clone(),
         task_type: normalize_rule_task_type(task_category.as_deref(), task_id),
         git_ref: canonical_git_ref(&material.work_branch),
-        is_ci: std::env::var("GITHUB_ACTIONS").is_ok() || std::env::var("BUILDKITE").is_ok(),
+        is_ci: crate::ValidationScope::public_validate() == crate::ValidationScope::CiLocal,
         evidence_artifacts: artifacts,
         validation_epoch: crate::core::validation_epoch::active_validation_epoch_bounded(root)?,
         policy_fingerprint: governance_digest.into(),
@@ -2368,6 +2428,212 @@ mod tests {
                 workunit,
             }),
         }
+    }
+
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    #[test]
+    fn fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade() {
+        use crate::consumer_readiness_fixture::{Fixture, git};
+        use crate::core::repository_profile;
+        use crate::core::repository_profile::transition_approval::ApprovalInput;
+        use crate::core::store::{Store, StoreKind};
+        use crate::plugins::policy::{PolicyCli, run_policy_cli_as};
+        use clap::Parser;
+        use ring::signature::{Ed25519KeyPair, KeyPair};
+        use serde_json::json;
+
+        let hex =
+            |bytes: &[u8]| -> String { bytes.iter().map(|byte| format!("{byte:02x}")).collect() };
+        let maintainer = Ed25519KeyPair::from_seed_unchecked(&[12; 32]).unwrap();
+        let candidate_key = Ed25519KeyPair::from_seed_unchecked(&[13; 32]).unwrap();
+        let write_signers = |root: &Path, key: &Ed25519KeyPair| {
+            std::fs::write(
+                root.join(".decapod/repository-policy-signers.json"),
+                serde_json::to_vec(&json!({
+                    "schema": "decapod.repository-policy-signers.v1",
+                    "keys": {"maintainer": hex(key.public_key().as_ref())}
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+        };
+
+        let mut fixture = Fixture::new();
+        let root = &fixture.options.root;
+        let save_config = |fixture: &Fixture| {
+            let mut config = crate::cli::DecapodProjectConfig {
+                proof: fixture.proof.clone(),
+                ..Default::default()
+            };
+            config.repo.base_branch = Some("main".into());
+            std::fs::write(
+                fixture.options.root.join(".decapod/config.toml"),
+                toml::to_string_pretty(&config).unwrap(),
+            )
+            .unwrap();
+        };
+        let inventory = crate::core::validation_runtime::discover_source_inventory(
+            &fixture.options,
+            &crate::core::bounded_process::Cancellation::default(),
+        )
+        .unwrap();
+        let digest = inventory.digest().unwrap();
+        // Model a release whose scanner did not yet inventory this check file.
+        let mut previous_inventory = inventory;
+        assert!(
+            previous_inventory
+                .files
+                .remove("scripts/check_source.py")
+                .is_some()
+        );
+        let previous_digest = previous_inventory.digest().unwrap();
+        fixture
+            .proof
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest = previous_digest.clone();
+        save_config(&fixture);
+        write_signers(root, &maintainer);
+        fixture.commit("accept inventory measured by previous scanner");
+        git(root, &["push", "origin", "HEAD:main"]);
+        let base = git(root, &["rev-parse", "refs/remotes/origin/main"]);
+        let contract = fixture.proof.repository_contract.as_ref().unwrap();
+        let command_digest = contract.reviewed_commands_digest.clone();
+        assert_ne!(digest, previous_digest);
+        fixture
+            .proof
+            .required_profile
+            .as_mut()
+            .unwrap()
+            .reviewed_sources_digest = digest.clone();
+        save_config(&fixture);
+        fixture.commit("review inventory measured by current scanner");
+        let head = git(root, &["rev-parse", "HEAD"]);
+        assert_eq!(
+            git(root, &["diff", "--name-only", &base, &head]),
+            ".decapod/config.toml"
+        );
+        let id = repository_profile::repo_policy_transition_id(
+            &base,
+            &head,
+            &previous_digest,
+            &digest,
+            &command_digest,
+            &command_digest,
+        )
+        .unwrap();
+
+        let mut rules = RuleRegistry::new();
+        let rule = rules
+            .get_rule(&RuleId::new("decapod.policy.accepted_repository_contract"))
+            .unwrap();
+        let mut context = terminal_test_context(None, None);
+        context.repo_root = Some(root.clone());
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Fail);
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: root.join(".decapod/data"),
+        };
+        std::fs::create_dir_all(&store.root).unwrap();
+        run_policy_cli_as(
+            &store,
+            PolicyCli::try_parse_from([
+                "policy",
+                "approve",
+                "--id",
+                &id,
+                "--scope",
+                repository_profile::POLICY_TRANSITION_SCOPE,
+            ])
+            .unwrap(),
+            "operator",
+        )
+        .unwrap();
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Pass);
+        let approved = fixture.validate(&mut fixture.host());
+        assert!(approved.ready && approved.proof_ready, "{approved:?}");
+
+        git(root, &["push", "origin", "HEAD:consumer-work"]);
+        let ci = fixture._storage.path().join("fresh-ci");
+        git(
+            fixture._storage.path(),
+            &[
+                "clone",
+                "--no-local",
+                "--branch",
+                "consumer-work",
+                fixture.upstream.to_str().unwrap(),
+                ci.to_str().unwrap(),
+            ],
+        );
+        assert_eq!(git(&ci, &["rev-parse", "HEAD"]), head);
+        assert_eq!(git(&ci, &["rev-parse", "refs/remotes/origin/main"]), base);
+        assert!(!crate::plugins::policy::policy_db_path(&ci.join(".decapod/data")).exists());
+        context.repo_root = Some(ci.clone());
+        context.is_ci = true;
+        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Fail);
+
+        let signed = |id: &str, key: &Ed25519KeyPair, issued: i64, expiry: i64| {
+            let schema = "decapod.repository-policy-approval.v1";
+            let message = serde_json::to_vec(&(schema, "maintainer", id, issued, expiry)).unwrap();
+            ApprovalInput::ci_with_signature(
+                json!({
+                    "schema": schema, "key_id": "maintainer", "transition_id": id,
+                    "issued_at": issued, "expires_at": expiry,
+                    "signature": hex(key.sign(&message).as_ref())
+                })
+                .to_string(),
+            )
+        };
+        let now = time::OffsetDateTime::now_utc().unix_timestamp();
+        let valid = || signed(&id, &maintainer, now - 10, now + 900);
+        assert_eq!(
+            evaluate_policy_transition_with_approval(&context, valid()),
+            RuleVerdict::Pass,
+        );
+        assert_eq!(
+            evaluate_policy_transition_with_approval(
+                &context,
+                signed(&id, &maintainer, now - 100, now - 10)
+            ),
+            RuleVerdict::Fail,
+        );
+
+        write_signers(&ci, &candidate_key);
+        git(&ci, &["add", ".decapod/repository-policy-signers.json"]);
+        git(
+            &ci,
+            &["commit", "-m", "change candidate signer configuration"],
+        );
+        let new_head = git(&ci, &["rev-parse", "HEAD"]);
+        assert_eq!(
+            evaluate_policy_transition_with_approval(&context, valid()),
+            RuleVerdict::Fail,
+        );
+        let new_id = repository_profile::repo_policy_transition_id(
+            &base,
+            &new_head,
+            &previous_digest,
+            &digest,
+            &command_digest,
+            &command_digest,
+        )
+        .unwrap();
+        assert_eq!(
+            evaluate_policy_transition_with_approval(
+                &context,
+                signed(&new_id, &candidate_key, now - 10, now + 900)
+            ),
+            RuleVerdict::Fail,
+        );
+        assert_eq!(
+            evaluate_policy_transition_with_approval(
+                &context,
+                signed(&new_id, &maintainer, now - 10, now + 900)
+            ),
+            RuleVerdict::Pass,
+        );
     }
 
     #[test]
