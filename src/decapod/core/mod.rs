@@ -43,6 +43,7 @@ pub mod derived_release_profile;
 pub mod dirty_classification;
 pub mod docs;
 pub mod docs_cli;
+pub mod effective_grant;
 pub mod entrypoint_integrity;
 pub mod error;
 pub mod events;

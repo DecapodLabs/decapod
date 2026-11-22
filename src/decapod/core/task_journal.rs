@@ -1217,7 +1217,7 @@ fn check_complete_suffix_for_task(
     through: u64,
 ) -> Result<(), DecapodError> {
     let incomplete: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed'))",
+        "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed','task.delegation.policy','task.delegation.reserve'))",
         params![id, source_watermark, through],
         |r| r.get(0),
     )?;

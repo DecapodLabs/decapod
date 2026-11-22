@@ -431,6 +431,12 @@ rpc_catalog![
         session_required: false,
         description: "Compare governed state projections",
     },
+    OpMeta {
+        op: "policy.grant.explain",
+        read_only: true,
+        session_required: false,
+        description: "Explain deterministically computed effective operation grant inputs, scope, decision, and reasons",
+    },
 ];
 
 /// Source coverage in the black-box suite, independent of whether it ran.

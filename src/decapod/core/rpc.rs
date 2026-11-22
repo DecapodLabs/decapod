@@ -294,6 +294,25 @@ pub struct SpecsRefreshResult {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PolicyGrantExplainParams {
+    pub command: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub task_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipient: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub budget_units: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expected_prestate: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub harness_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct IntentReconcileParams {
     /// Optional full immutable Git base commit for bounded source/spec impact.

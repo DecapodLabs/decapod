@@ -1,5 +1,28 @@
 # Validation
 
+## Effective operation grants and guidance hygiene verification (#1905, #1893)
+
+Verified on `origin/master` (`485a35148`, `v0.160.0` + PR `#1908` + PR `#1911` + PR `#1909` + PR `#1912`) inside isolated worktree `agent/swarm-1905/feat_01m80ckdn0ym2ja0-effective-grants-1905`:
+
+- **Formatting, lints, docs generation & feature matrix (`--locked`, post-`485a35148` merge)**:
+  - `cargo fmt --all -- --check`: passed.
+  - `cargo check --no-default-features`: passed.
+  - `cargo clippy --all-targets --all-features -- -D warnings`: passed (0 warnings).
+  - `decapod docs build`: synced `docs/agent/command-contracts.md` (`### Operation: PolicyGrantExplain` + `### Operation: InteropCapabilityContracts`).
+- **Unit, Cloud-consumer, plugins & integration suites (`--locked`, post-`485a35148` merge)**:
+  - `--features supabase-cloud --lib -- effective_grant project_specs docs entrypoint_integrity capability_contract`: `80 passed; 0 failed` (`1920 filtered out`; covers Red->Green `#1` path narrowing/disjoint workflow denial, `#2` copied parent grant / forged approval / `PlanState::Approved` / candidate-branch `.decapod/config.toml` widening including canonicalized primary-checkout match / budget widening refusal, `#3` `S0 -> S1` prestate drift / lease expiry / harness mismatch / policy revision change + lawful re-formation, `#4` 24-permutation order independence / replay determinism / strict scope ambiguity rejection / plain topic label acceptance / missing fields, adversarial shared-parent cumulative budget `2+2 > 3` refusal vs `2+1 <= 3` acceptance + delegation depth limit, Cloud `VerifiedCloudScope`, witness-attribution separation, capability contract unit suite, and `#1893` regression assertions). Pre-sync full `--lib` also passed (`1981 passed; 0 failed; 8 ignored`).
+  - `--features supabase-cloud` Cloud-consumer targets: `cloud_cli_boundary` (`2/2`), `cloud_command_path` (`1/1`), `cloud_dactyl_boundary` (`1/1`), `cloud_supabase_boundary` (`52/52`), `cloud_todo_resume_wire` (`3/3`), `propodus_contract` (`6/6`), `release_dependency_policy` (`4/4`), `supabase_service` (`3/3`, `4 ignored`).
+  - All 8 `plugins_*` targets (clean ambient env): `plugins_aptitude_tests` (`10/10`), `plugins_decide_tests` (`18/18`), `plugins_federation_tests` (`24/24`), `plugins_health_tests` (`15/15`), `plugins_internalize_tests` (`6/6`, `1 ignored`), `plugins_obligation_tests` (`24/24`), `plugins_policy_tests` (`21/21`), `plugins_todo_tests` (`40/40`, including `handoff_advances_lease_generation_and_preserves_intent`, `handoff_checks_real_actor_and_preserves_owner_until_approved`, `handoff_failure_returns_agent_recovery_without_authorizing_or_mutating`, `operator_recovery_requires_exact_one_use_authority`).
+  - `--test cli_contracts`: `133 passed; 0 failed; 1 ignored` (covers `effective_grant_cli_contracts::red_green_5_cli_rpc_grant_refusal_lawful_repair_and_fresh_authorization`, `cli_cumulative_delegation_budget_rejects_sibling_overflow`, `guidance_surfaces_exclude_maintainer_entrypoint_drift_setting` across `--help`/`docs ingest`/`rpc context.resolve`, and `todo_help_schema_and_docs_stay_in_sync` including `delegate`).
+  - `--test assets_schema_contract`: `4 passed; 0 failed`; `--test capability_contract_drift`: `3 passed; 0 failed`.
+  - `--test concurrent_worktree_integration_1469`: `3 passed; 0 failed` (preserves legacy advisory `paths:[...]` claim overlaps via `is_advisory_paths`).
+  - `--test doc_alignment`: `5 passed; 0 failed`.
+  - `--test interop_conformance`: `12 passed; 0 failed`.
+  - `--test policy_self_authorization_1776`: `9 passed; 0 failed`.
+  - `--test todo_enforcement`: `6 passed; 0 failed`.
+  - `--test workunit_cli`: `7 passed; 0 failed`.
+  - Pre-sync `--test datastore_contract`: `4 passed; 1 failed` (`logical_schema_inventory_is_structurally_valid_and_matches_runtime_core` pre-existing `0.143.1` vs `0.160.0` version string mismatch on `master`); pre-sync `--test source_ci_profile_policy` on `macos-aarch64`: `55 passed; 4 failed` (4 Linux-only `linux-x86_64` / macOS `/var` temp symlink checks; Buildkite waived by operator).
+
 ## Composed service capability contract verification (#1906)
 
 Verified on branch `agent/swarm-1906/feat_01m80ckft9ab64f9-capability-contracts-1906` merged with `origin/master` (`8c2f55246`, `v0.160.0`):
@@ -1632,8 +1655,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (255 files), `tests/` (270 files)
+- Repository signal fingerprint: `e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (256 files), `tests/` (271 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

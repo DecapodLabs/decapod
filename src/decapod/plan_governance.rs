@@ -1674,14 +1674,10 @@ pub(crate) fn enforce_scope_paths(
     }
     Ok(())
 }
-pub(crate) fn enforce_scope_constraints(
+pub(crate) fn collect_candidate_changed_files(
     project_root: &Path,
-    constraints: &ScopeConstraints,
-) -> Result<(), error::DecapodError> {
+) -> Result<std::collections::BTreeSet<String>, error::DecapodError> {
     use crate::core::bounded_process::BoundedCommand;
-    if constraints.file_touch_budget.is_none() && constraints.forbidden_paths.is_empty() {
-        return Ok(());
-    }
     let base_branch = crate::core::workspace::resolve_base_branch(project_root, None);
     let base = crate::core::workspace::base_ref_for_branch(project_root, &base_branch).ok_or_else(
         || {
@@ -1753,7 +1749,45 @@ pub(crate) fn enforce_scope_constraints(
             changed_files.insert(path.to_owned());
         }
     }
-    enforce_scope_paths(constraints, &changed_files)
+    Ok(changed_files)
+}
+
+pub(crate) fn enforce_scope_constraints(
+    project_root: &Path,
+    constraints: &ScopeConstraints,
+) -> Result<(), error::DecapodError> {
+    let main_root = crate::core::workspace::get_main_repo_root(project_root)
+        .unwrap_or_else(|_| project_root.to_path_buf());
+    let store_root = main_root.join(".decapod").join("data");
+    let active_task =
+        crate::core::effective_grant::find_active_task_for_checkout(project_root, &store_root)
+            .ok()
+            .flatten();
+    if constraints.file_touch_budget.is_none()
+        && constraints.forbidden_paths.is_empty()
+        && active_task.is_none()
+    {
+        return Ok(());
+    }
+    let changed_files = collect_candidate_changed_files(project_root)?;
+    enforce_scope_paths(constraints, &changed_files)?;
+    if let Some(task_id) = active_task {
+        let non_bookkeeping: Vec<String> = changed_files
+            .iter()
+            .filter(|p| *p != ".decapod/governance.json" && !p.starts_with(".decapod/managed/"))
+            .cloned()
+            .collect();
+        crate::core::effective_grant::enforce_task_operation_if_delegated(
+            project_root,
+            &store_root,
+            "plan.execute",
+            &crate::current_agent_id(),
+            &task_id,
+            None,
+            &non_bookkeeping,
+        )?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]

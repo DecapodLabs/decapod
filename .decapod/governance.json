@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "efc05d7926fa9a5a53cda773b5bfbec1ce685142",
+    "accepted_commit": "a934da95aa9e61d9f019de02a413313c5b9cec0d",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,100 +869,95 @@
     }
   },
   "change": {
-    "id": "change_01M80CX8ZCMVFW60F3Z54K3BJ7",
-    "base_commit": "efc05d7926fa9a5a53cda773b5bfbec1ce685142",
+    "id": "pr_1905_1893",
+    "base_commit": "a934da95aa9e61d9f019de02a413313c5b9cec0d",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:composed-capability-contract-drift": {
-      "statement": "Composed Decapod -> Dactyl -> Propodus capability contracts detect schema, operation, auth scope, revision, policy-copy, prestate, shared-invariant, and unresolved-async/severed-ack drift deterministically without self-certification, blind replay, false goal_completed=true, or Cloud dependency in local offline repositories.",
-      "falsifier": "A removed/undeclared field or error class, renamed operation/auth scope, client/service contract revision mismatch, agent-edited contract copy or dropped negative case, self-certified descriptor, prestate drift after preparation, concurrent shared-invariant violation, unresolved async or severed-ack two-step fault sets currently_verified or goal_completed=true, triggers blind replay, erases the original fault on compensation, or renders a local offline repository unusable.",
+    "claim:effective-operation-grant-1905": {
+      "statement": "Every mediated operation deterministically forms EffectiveOperationGrant from accepted policy, Cloud verified scope, custody, live approvals, cumulative delegation bounds, and prestate; child requests, copied parent grants, candidate edits, and PlanState::Approved cannot widen scope.",
+      "falsifier": "Any child delegation, copied parent grant, forged/plan approval, sibling budget overflow, candidate policy edit, or stale prestate/lease admits a disallowed operation or exceeds parent capacity.",
       "status": "supported",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "assets/schemas/capability-contract.schema.json",
-        "src/decapod/core/capability_contract.rs",
-        "tests/capability_contract_drift.rs",
-        "tests/unit/core/capability_contract_tests.rs"
+        "src/decapod/core/effective_grant.rs",
+        "tests/cli_contracts.rs",
+        "tests/unit/core/effective_grant_tests.rs"
+      ]
+    },
+    "claim:guidance-hygiene-1893": {
+      "statement": "Agent-facing managed specs, embedded docs, CLI help, and generated context exclude maintainer-only development entrypoint-version-drift guidance while preserving config validation and default rejection.",
+      "falsifier": "Any agent-facing spec, rendered help, embedded docs, or context capsule exposes maintainer-only entrypoint drift configuration or breaks config validation defaults.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cli_contracts.rs",
+        "tests/unit/core/docs_tests.rs",
+        "tests/unit/core/project_specs_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk:1906-capability-contracts-v1",
-      "summary": "Implement #1906 composed service capability contract schema, drift checker, 4 consequence states, 21-scenario compatibility fixture, CLI/RPC/validate gate, docs sync, and Living Specs",
-      "input_digest": "sha256:b7ea21a6e1577e7d7bdfdcf1356d7a71964ad62dc54e18667965b9baa2e3a3c6",
+      "id": "chk_1905_1893",
+      "summary": "Implement #1905 monotonically narrowing effective operation grants and #1893 agent guidance hygiene on v0.160.0",
+      "input_digest": "sha256:650cec6dfb354cf5986a42c2fa06bb2c159a240cc6850a7d4499917f1a09536c",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "assets/schemas/capability-contract.schema.json",
-        "src/decapod/core/capability_contract.rs",
-        "tests/capability_contract_drift.rs",
-        "tests/unit/core/capability_contract_tests.rs"
+        "src/decapod/core/effective_grant.rs",
+        "tests/cli_contracts.rs",
+        "tests/unit/core/docs_tests.rs",
+        "tests/unit/core/effective_grant_tests.rs",
+        "tests/unit/core/project_specs_tests.rs"
       ]
     },
     {
-      "id": "chk:1906-spec-review-v2",
-      "summary": "Record current-content spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md on c1cf7efcc",
-      "input_digest": "sha256:83e84a4986638871465c8f1cc98fae0d2cd93037e829a31fdb40a7da74e6f847",
+      "id": "chk_1905_1893_approved",
+      "summary": "Approve governed plan and finalize #1905 effective grants + #1893 guidance hygiene",
+      "input_digest": "sha256:d4091e487be49dddc2efd555c83578374eeee4337167ac4b55b80d3ac501c7e8",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/capability_contract.rs",
-        "tests/capability_contract_drift.rs",
-        "tests/unit/core/capability_contract_tests.rs"
+        "src/decapod/core/effective_grant.rs",
+        "tests/cli_contracts.rs",
+        "tests/unit/core/effective_grant_tests.rs"
       ]
     },
     {
-      "id": "chk:1906-merge-origin-master-295f0af39",
-      "summary": "Reconcile merge with origin/master (295f0af39, PR A #1908), refresh specs, and record updated publication spec reviews",
-      "input_digest": "sha256:59aecd65d46f77839bc01ab59a1954d2c95db965c5a53e38fd5456fea8eacbd0",
+      "id": "chk_1905_1893_sync_8c2f552",
+      "summary": "Synced onto origin/master 8c2f55246 (#1909), refreshed Living Specs & spec reviews, and passed post-merge fmt, clippy, no-default-features, docs build, unit (73/73), and integration suites",
+      "input_digest": "sha256:6a2b92fb59671f160b893b101ed49c0f7c645c8346cf6afc880b80bb47984a7a",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/capability_contract.rs",
-        "tests/capability_contract_drift.rs",
-        "tests/unit/core/capability_contract_tests.rs"
+        "cargo test --locked --lib -- effective_grant project_specs docs entrypoint_integrity (73/73)",
+        "cargo test --locked --test cli_contracts (133/133, 1 ignored)",
+        "cargo test --locked --test concurrent_worktree_integration_1469 --test doc_alignment --test interop_conformance --test policy_self_authorization_1776 --test todo_enforcement --test workunit_cli"
       ]
     },
     {
-      "id": "chk:1906-docs-sync-v3",
-      "summary": "Sync docs/agent/config-schema.md generated by decapod docs build after origin/master merge and re-verify checkpoints and docs_sync",
-      "input_digest": "sha256:30dbcf9577074f51b50cd2f23aad5c6cfdf5d48cce2f675b2909e6b41fc3cfec",
+      "id": "chk_1905_1893_sync_485a351",
+      "summary": "Synced onto origin/master 485a35148 (#1912), fixed plugins_todo_tests advisory labels/handoff diagnostic and Linux canonicalized candidate-widening detection, and verified all post-merge suites",
+      "input_digest": "sha256:b0fb09f215769240435f8cce16dadfd5f7865b47392ec472bcf69d0dd056e99c",
       "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "docs/agent/command-contracts.md",
-        "docs/agent/config-schema.md"
-      ]
-    },
-    {
-      "id": "chk:1906-merge-origin-master-8c2f55246",
-      "summary": "Reconcile merge with origin/master (8c2f55246, post PR B #1911 and PR C1 #1909), refresh specs, and record updated publication spec reviews",
-      "input_digest": "sha256:e292752dd123e46df46d71376f4c46bbd6b011775d45668e6a017700c3662854",
-      "proof_refs": [
-        ".decapod/managed/specs/VALIDATION.md",
-        "src/decapod/core/capability_contract.rs",
-        "tests/capability_contract_drift.rs",
-        "tests/unit/core/capability_contract_tests.rs"
+        "cargo test --locked --features supabase-cloud --lib -- effective_grant project_specs docs entrypoint_integrity capability_contract (80/80) + cloud consumer targets (72/72, 4 ignored)",
+        "cargo test --locked --test cli_contracts (133/133, 1 ignored) --test capability_contract_drift (3/3) --test assets_schema_contract (4/4) --test concurrent_worktree_integration_1469 (3/3) --test doc_alignment (5/5) --test interop_conformance (12/12) --test policy_self_authorization_1776 (9/9) --test todo_enforcement (6/6) --test workunit_cli (7/7)",
+        "cargo test --locked --test plugins_todo_tests (40/40) + all 7 remaining plugins_* targets"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7": {
+    "intent:run_1905_1893": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Never mutate root checkout, existing WT_DEC worktrees, or /private/tmp/decapod-*; never auto-approve policy or spoof operator; Buildkite waived by operator"
       ],
       "constraints": [
-        "root"
+        "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+      "id": "intent:run_1905_1893",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1906 composed service capability drift detection",
-      "refined_intent": "Implement #1906 composed service capability drift detection",
+      "raw_intent": "Implement #1905 narrowing effective operation grants and #1893 guidance hygiene on DecapodLabs/decapod",
+      "refined_intent": "Implement deterministic EffectiveOperationGrant composition, cumulative delegation accounting, CLI/RPC explain, mediated boundary checks, and maintainer-setting guidance hygiene",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -975,87 +970,89 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement versioned repo-native capability contract schema, deterministic composition drift checker, 4 composite consequence states, Decapod -> Dactyl -> Propodus compatibility fixture with negative/repaired traces for all #1906 falsifiers, CLI/RPC inspection surfaces, and offline local isolation.",
-      "phases": [],
+      "intent": "Compute deterministic monotonically narrowing EffectiveOperationGrant across accepted repo policy, verified Cloud scope, custody, approvals, and cumulative parent-child delegation bounds (#1905); remove maintainer-only development entrypoint-version-drift guidance from agent-facing specs, docs, CLI help, and context (#1893).",
+      "phases": [
+        {
+          "completed": false,
+          "completed_at": null,
+          "description": "Implement effective_grant, CLI/RPC explain, Todo/Workspace/Plan boundaries, #1893 hygiene, and tests",
+          "entered": false,
+          "entered_at": null,
+          "entry_gates": [],
+          "exit_gates": [],
+          "id": "impl",
+          "name": "Implementation and verification"
+        }
+      ],
       "proof_hooks": [
-        "cargo test --locked",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "decapod govern project-check --refresh-specs --format json"
+        "cargo test --locked"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified composed Decapod -> Dactyl -> Propodus contract evaluator, consequence trace states, and validate.rs gate.",
-          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
-          "spec_material_hash": "8d1ca544b61aaed3766f55d670cb5983b120b7f0a78a38760868f26086197dbb"
+          "reason": "Refreshed after origin/master 485a35148 merge and #1905 scope-label/handoff/canonical-widening fixes",
+          "reviewed_code_fingerprint": "e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445",
+          "spec_material_hash": "2efe1936504e723ba7a1c9674c355a11fd5aada6845898cfb7b1f9f8d5d3bc64"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified decapod capabilities contracts CLI, interop.capability_contracts RPC, and capability-contract.schema.json.",
-          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
-          "spec_material_hash": "57088bf57c361c02d2cd35aed3cbf9d661629d9793553ba74be0b1fec514a52f"
+          "reason": "Refreshed after origin/master 485a35148 merge: govern policy grant, policy.grant.explain RPC, todo delegate, and #1893 interface hygiene",
+          "reviewed_code_fingerprint": "e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445",
+          "spec_material_hash": "5c1797d02740eb25eaaf3a52cd87c9d7149a9cc10530764829eec594d061e539"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated SECURITY.md for #1906 alongside merged origin/master 8c2f55246 (#1911/#1909): verified fail-closed policy baseline, evidence provenance, and severed-ack replay refusal boundaries.",
-          "reviewed_code_fingerprint": "3d602fb7829a3c96b69aa0c923ebb573486c69400355607306d6d684a5acd8df",
-          "spec_material_hash": "6f47e6f8cc1af2b5a30ac702ef16c5bd4a3deebb15c4d81b86ad6cbac66221bd"
+          "reason": "Refreshed after origin/master 485a35148 merge: #1905 monotonic narrowing, canonicalized candidate widening detection, TOCTOU prestate, and #1893 invariants",
+          "reviewed_code_fingerprint": "e5fa94dad5ecca5b6397f65713a211a8e16b19cba02123559d64ce84c3e3c445",
+          "spec_material_hash": "fe3e4eb635b34cf6601467108e4d697a6b8eb79edaa800bd4f15a43f98d40b13"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Detect drift in composed service capabilities before governed admission (#1906)",
+      "title": "Implement #1905 narrowing effective operation grants and #1893 guidance hygiene",
       "todo_ids": [
-        "feat_01m80ckft9ab64f9"
+        "feat_01m80ckdn0ym2ja0"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795319005Z"
+      "updated_at": "1795323493Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Never mutate root checkout, existing WT_DEC worktrees, or /private/tmp/decapod-*; never auto-approve policy or spoof operator; Buildkite waived by operator"
       ],
-      "artifact_hash": "sha256:a9c600205d40b1840e9f25b7ff15afa4b3161b81d3cc02da390a4bc224d3d9ea",
+      "artifact_hash": "sha256:7e7227ed096c075615d36065368113d33ca5df97e15d072714fb76be0921ff18",
       "checks": [
         {
-          "name": "assets_schema_contract_4_of_4",
-          "status": "passed"
-        },
-        {
-          "name": "capability_contract_drift_3_of_3",
-          "status": "passed"
-        },
-        {
-          "name": "capability_contract_unit_7_of_7",
-          "status": "passed"
+          "name": "buildkite",
+          "status": "unavailable"
         },
         {
           "name": "check_no_default_features",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_features",
+          "name": "cli_contracts",
           "status": "passed"
         },
         {
-          "name": "cloud_dactyl_boundary_1_of_1",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "constitution_claims_4_of_4",
+          "name": "concurrent_worktree_integration_1469",
           "status": "passed"
         },
         {
-          "name": "contract_conformance_12_of_12",
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "doc_alignment_5_of_5",
+          "name": "docs_build",
           "status": "passed"
         },
         {
@@ -1063,196 +1060,343 @@
           "status": "passed"
         },
         {
-          "name": "integration_sharding_policy_macos_22_of_23",
+          "name": "interop_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "policy_self_authorization_1776",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_capability_drift_and_schema",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_cli_contracts",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_concurrent_worktree_1469",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_docs_build",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_fmt_check",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_interop_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_no_default_features",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_plugins_all_8_targets",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_policy_self_authorization_1776",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_supabase_cloud_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_supabase_cloud_unit",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_todo_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_485a351_workunit_cli",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_cli_contracts",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_concurrent_worktree_1469",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_docs_build",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_fmt_check",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_interop_conformance",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_no_default_features",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_policy_self_authorization_1776",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_todo_enforcement",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_unit_focused",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_8c2f552_workunit_cli",
+          "status": "passed"
+        },
+        {
+          "name": "source_ci_profile_policy",
           "status": "partial"
         },
         {
-          "name": "interop_conformance_12_of_12",
+          "name": "todo_enforcement",
           "status": "passed"
         },
         {
-          "name": "propodus_contract_6_of_6",
+          "name": "unit_focused",
           "status": "passed"
         },
         {
-          "name": "rpc_golden_vectors_6_of_6",
-          "status": "passed"
-        },
-        {
-          "name": "source_ci_profile_policy_macos_55_of_59",
-          "status": "partial"
-        },
-        {
-          "name": "spec_conformance_15_of_15",
-          "status": "passed"
-        },
-        {
-          "name": "specs_refresh_docs_base_master_6_of_7",
-          "status": "partial"
-        },
-        {
-          "name": "substrate_integrity_9_of_9",
+          "name": "workunit_cli",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "completion_claim": "proven_local_and_ready_for_pr",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+            "intent_id": "intent:run_1905_1893",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+            "intent_id": "intent:run_1905_1893",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80CX932HS4KF7SV32G5QAWD",
+            "detail": "trajectory:run_1905_1893",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+            "intent_id": "intent:run_1905_1893",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run_1905_1893",
+            "event_id": "event:5",
+            "intent_id": "intent:run_1905_1893",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:run_1905_1893",
+            "event_id": "event:6",
+            "intent_id": "intent:run_1905_1893",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80CX932HS4KF7SV32G5QAWD": {
+          "run_1905_1893": {
             "evidence_only": true,
-            "id": "branch_01M80CX932HS4KF7SV32G5QAWD",
-            "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+            "id": "run_1905_1893",
+            "intent_id": "intent:run_1905_1893",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "command": "cargo fmt --all -- --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/lib.rs",
-                  "assets/tools/docs_sync.rs",
-                  "tests/assets_schema_contract.rs",
-                  "assets/schemas/capability-contract.schema.json",
-                  "docs/agent/command-contracts.md",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/capability_contract.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "src/decapod/core/interop.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/entrypoint_integrity/history.rs",
+                  "src/decapod/core/effective_grant.rs",
                   "src/decapod/core/mod.rs",
+                  "src/decapod/core/interop.rs",
                   "src/decapod/core/rpc.rs",
-                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/scaffold.rs",
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/workspace.rs",
                   "src/decapod/lib.rs",
-                  "tests/assets_schema_contract.rs",
-                  "tests/capability_contract_drift.rs",
-                  "tests/unit/core/capability_contract_tests.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SEMANTICS.md",
-                  ".decapod/managed/specs/SECURITY.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  ".decapod/managed/specs/VALIDATION.md",
-                  "task-505: fmt, clippy -D warnings, check --no-default-features, capability_contract unit 7/7, capability_contract_drift 3/3 passed after final edit; task-500: capabilities contracts fixture 21/21 passed, docs build +8 lines"
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/plugins/policy.rs",
+                  "docs/agent/command-contracts.md",
+                  "tests/unit/core/effective_grant_tests.rs",
+                  "tests/unit/core/project_specs_tests.rs",
+                  "tests/unit/core/docs_tests.rs",
+                  "tests/cli_contracts.rs",
+                  "Post-merge a934da95a: unit focused 73/73, cli_contracts 133/133 (1 ignored), concurrent_worktree_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7, clippy 0 warnings, fmt & no-default-features pass; source_ci_profile_policy 55/59 on macOS (4 Linux/var symlink host checks); Buildkite waived by operator"
                 ],
                 "proof_refs": [
                   "fmt",
-                  "clippy_all_targets_features",
+                  "clippy",
                   "check_no_default_features",
-                  "capability_contract_unit_7_of_7",
-                  "capability_contract_drift_3_of_3",
-                  "assets_schema_contract_4_of_4",
-                  "contract_conformance_12_of_12",
-                  "doc_alignment_5_of_5",
-                  "rpc_golden_vectors_6_of_6",
-                  "spec_conformance_15_of_15",
-                  "propodus_contract_6_of_6",
-                  "cloud_dactyl_boundary_1_of_1",
-                  "constitution_claims_4_of_4",
-                  "interop_conformance_12_of_12",
-                  "substrate_integrity_9_of_9",
-                  "source_ci_profile_policy_macos_55_of_59",
-                  "integration_sharding_policy_macos_22_of_23",
-                  "specs_refresh_docs_base_master_6_of_7"
+                  "docs_build",
+                  "unit_focused",
+                  "cli_contracts",
+                  "concurrent_worktree_integration_1469",
+                  "doc_alignment",
+                  "interop_conformance",
+                  "policy_self_authorization_1776",
+                  "todo_enforcement",
+                  "workunit_cli",
+                  "source_ci_profile_policy",
+                  "buildkite"
                 ],
                 "scope": [
-                  "root"
+                  "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Linux-x86_64 CI checks wait for GitHub Actions PR execution; Buildkite waived per operator instruction; macOS host shows 4 platform/var-symlink failures in source_ci_profile_policy and 1 /var-symlink failure in integration_sharding_policy; origin/master has pre-existing specs_refresh_docs::readiness_guidance_keeps_branch_push_separate_from_pr failure"
-                ]
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Post-merge origin/master 8c2f55246 (PR #1909): docs build clean; fmt --check, check --no-default-features, clippy -D warnings (0 warnings), --lib focused (73/73), cli_contracts (133/133, 1 ignored), concurrent_worktree_integration_1469 (3/3), doc_alignment (5/5), interop_conformance (12/12), policy_self_authorization_1776 (9/9), todo_enforcement (6/6), workunit_cli (7/7); Buildkite waived by operator."
+                ],
+                "proof_refs": [
+                  "post_merge_8c2f552_fmt_check",
+                  "post_merge_8c2f552_no_default_features",
+                  "post_merge_8c2f552_clippy",
+                  "post_merge_8c2f552_docs_build",
+                  "post_merge_8c2f552_unit_focused",
+                  "post_merge_8c2f552_cli_contracts",
+                  "post_merge_8c2f552_concurrent_worktree_1469",
+                  "post_merge_8c2f552_doc_alignment",
+                  "post_merge_8c2f552_interop_conformance",
+                  "post_merge_8c2f552_policy_self_authorization_1776",
+                  "post_merge_8c2f552_todo_enforcement",
+                  "post_merge_8c2f552_workunit_cli"
+                ],
+                "scope": [
+                  "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Post-merge origin/master 485a35148 (PR #1912) + #1905 CI fixes: fmt --check, check --no-default-features, clippy -D warnings (0 warnings), docs build; --features supabase-cloud --lib focused 80/80 + cloud consumer 72/72 (4 ignored); all 8 plugins_* targets (plugins_todo_tests 40/40); cli_contracts 133/133 (1 ignored), assets_schema_contract 4/4, capability_contract_drift 3/3, concurrent_worktree_integration_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7; Buildkite waived."
+                ],
+                "proof_refs": [
+                  "post_merge_485a351_fmt_check",
+                  "post_merge_485a351_no_default_features",
+                  "post_merge_485a351_clippy",
+                  "post_merge_485a351_docs_build",
+                  "post_merge_485a351_supabase_cloud_unit",
+                  "post_merge_485a351_supabase_cloud_boundary",
+                  "post_merge_485a351_plugins_all_8_targets",
+                  "post_merge_485a351_cli_contracts",
+                  "post_merge_485a351_capability_drift_and_schema",
+                  "post_merge_485a351_concurrent_worktree_1469",
+                  "post_merge_485a351_doc_alignment",
+                  "post_merge_485a351_interop_conformance",
+                  "post_merge_485a351_policy_self_authorization_1776",
+                  "post_merge_485a351_todo_enforcement",
+                  "post_merge_485a351_workunit_cli"
+                ],
+                "scope": [
+                  "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
         }
       },
       "declared_commands": [
-        "CLIPPY_CONF_DIR=.config cargo clippy --locked --all-targets --all-features -- -D warnings",
-        "cargo check --locked --no-default-features",
+        "cargo check --no-default-features",
+        "cargo clippy --all-targets --all-features -- -D warnings",
         "cargo fmt --all -- --check",
-        "cargo test --locked --lib core::capability_contract",
-        "cargo test --locked --test capability_contract_drift",
-        "decapod capabilities contracts --fixture --format text"
+        "cargo test --locked --lib -- effective_grant project_specs docs entrypoint_integrity",
+        "cargo test --locked --test cli_contracts --test concurrent_worktree_integration_1469 --test doc_alignment --test interop_conformance --test policy_self_authorization_1776 --test todo_enforcement --test workunit_cli",
+        "decapod docs build"
       ],
-      "destination": "pull request",
       "evidence": [
-        "task-505: fmt, clippy -D warnings, check --no-default-features, capability_contract unit 7/7, capability_contract_drift 3/3 passed after final edit; task-500: capabilities contracts fixture 21/21 passed, docs build +8 lines"
+        "Post-merge a934da95a: unit focused 73/73, cli_contracts 133/133 (1 ignored), concurrent_worktree_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7, clippy 0 warnings, fmt & no-default-features pass; source_ci_profile_policy 55/59 on macOS (4 Linux/var symlink host checks); Buildkite waived by operator",
+        "Post-merge origin/master 485a35148 (PR #1912) + #1905 CI fixes: fmt --check, check --no-default-features, clippy -D warnings (0 warnings), docs build; --features supabase-cloud --lib focused 80/80 + cloud consumer 72/72 (4 ignored); all 8 plugins_* targets (plugins_todo_tests 40/40); cli_contracts 133/133 (1 ignored), assets_schema_contract 4/4, capability_contract_drift 3/3, concurrent_worktree_integration_1469 3/3, doc_alignment 5/5, interop_conformance 12/12, policy_self_authorization_1776 9/9, todo_enforcement 6/6, workunit_cli 7/7; Buildkite waived.",
+        "Post-merge origin/master 8c2f55246 (PR #1909): docs build clean; fmt --check, check --no-default-features, clippy -D warnings (0 warnings), --lib focused (73/73), cli_contracts (133/133, 1 ignored), concurrent_worktree_integration_1469 (3/3), doc_alignment (5/5), interop_conformance (12/12), policy_self_authorization_1776 (9/9), todo_enforcement (6/6), workunit_cli (7/7); Buildkite waived by operator."
       ],
       "inspected_files": [
-        "assets/tools/docs_sync.rs",
-        "src/decapod/cli.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/lib.rs",
-        "tests/assets_schema_contract.rs"
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/entrypoint_integrity/history.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/plan_governance.rs",
+        "src/decapod/plugins/policy.rs"
       ],
-      "intent_id": "intent:change_01M80CX8ZCMVFW60F3Z54K3BJ7",
+      "intent_id": "intent:run_1905_1893",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        ".decapod/managed/specs/SECURITY.md",
-        ".decapod/managed/specs/SEMANTICS.md",
-        ".decapod/managed/specs/VALIDATION.md",
-        "assets/schemas/capability-contract.schema.json",
         "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/capability_contract.rs",
-        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/effective_grant.rs",
         "src/decapod/core/interop.rs",
         "src/decapod/core/mod.rs",
         "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
+        "src/decapod/core/scaffold.rs",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
-        "tests/assets_schema_contract.rs",
-        "tests/capability_contract_drift.rs",
-        "tests/unit/core/capability_contract_tests.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "src/decapod/plan_governance.rs",
+        "src/decapod/plugins/policy.rs",
+        "tests/cli_contracts.rs",
+        "tests/unit/core/docs_tests.rs",
+        "tests/unit/core/effective_grant_tests.rs",
+        "tests/unit/core/project_specs_tests.rs"
       ],
       "repo_scope": [
-        "root"
+        "src/decapod/core/effective_grant.rs,src/decapod/plugins/policy.rs,src/decapod/core/todo.rs,src/decapod/core/workspace.rs,src/decapod/plan_governance.rs,docs/agent/command-contracts.md,.decapod/managed/specs/*"
       ],
-      "run_id": "branch_01M80CX932HS4KF7SV32G5QAWD",
+      "run_id": "run_1905_1893",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80ckft9ab64f9",
+      "task_id": "feat_01m80ckdn0ym2ja0",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Linux-x86_64 CI checks wait for GitHub Actions PR execution; Buildkite waived per operator instruction; macOS host shows 4 platform/var-symlink failures in source_ci_profile_policy and 1 /var-symlink failure in integration_sharding_policy; origin/master has pre-existing specs_refresh_docs::readiness_guidance_keeps_branch_push_separate_from_pr failure"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {
