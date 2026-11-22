@@ -49,6 +49,8 @@ pub struct DeterministicContextCapsule {
     pub knowledge: Option<crate::plugins::knowledge::KnowledgeContext>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub governed_plan: Option<crate::core::rpc::GovernedPlanContext>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_chain: Option<crate::core::org_overlay::AuthorityChainProvenance>,
 }
 
 impl DeterministicContextCapsule {
@@ -81,6 +83,7 @@ impl DeterministicContextCapsule {
             selection: self.selection.clone(),
             knowledge: self.knowledge.clone(),
             governed_plan: self.governed_plan.clone(),
+            authority_chain: self.authority_chain.clone(),
         }
     }
 
@@ -126,6 +129,8 @@ struct CanonicalCapsule {
     spec_input_hash: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     selection: Option<docs::ContextSelection>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    authority_chain: Option<crate::core::org_overlay::AuthorityChainProvenance>,
 }
 
 fn capsule_schema_version_default() -> String {
@@ -166,7 +171,8 @@ pub fn query_embedded_capsule_governed(
             "topic must contain 1..=4096 UTF-8 bytes".to_string(),
         ));
     }
-    let resolved_authority = assets::resolved_override_evidence(repo_root)?;
+    let authority_resolution = crate::core::org_overlay::resolve_authority_chain(repo_root)?;
+    let resolved_authority = authority_resolution.evidence;
 
     let context =
         docs::resolve_scoped_context(repo_root, Some(topic), None, &[], &[], limit, Some(scope));
@@ -203,6 +209,7 @@ pub fn query_embedded_capsule_governed(
             &[],
             None,
         )?),
+        authority_chain: Some(authority_resolution.chain),
         schema_version: "1.4.0".to_string(),
         topic: topic.to_string(),
         scope: scope.to_string(),

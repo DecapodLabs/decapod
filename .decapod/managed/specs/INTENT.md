@@ -1,5 +1,10 @@
 # Intent
 
+## Multi-organization Cloud parity (#1895) and organization constitution overlays (#877)
+
+- **Multi-organization Cloud parity without local SQLite fallback (`#1895`)**: Proves through an explicit versioned operation and evidence parity matrix (`decapod.cloud-parity-matrix.v1` / `decapod.cloud-parity-report.v1`) and a 2-organization / 2-database / 2-repo-per-org / 2-human integration harness (`tests/cloud_tenancy_parity_1895.rs`) that `backend = "cloud"` preserves Decapod logical semantics (ordered task/event/CAS claims, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit-and-policy-bound evidence capture, and `#215` separation of org-admin views from paid per-repo seats) across organization switches, mid-session seat revocation, and network cuts without exposing physical database identifiers to Decapod or creating `.decapod/data/decapod.db`. Blanket Cloud parity is never claimed: unsupported Cloud operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) are explicitly enumerated and fail closed (`CLOUD_LEASE_RENEW_UNSUPPORTED`, etc.) rather than falling back to SQLite.
+- **Organization constitution overlays with explicit 4-layer precedence (`#877`)**: Establishes a deterministic, inspectable governance hierarchy linking Decapod's binary-embedded doctrine (`binary_embedded`, layer 1), organization-level policy (`organization_overlay`, layer 2, loaded from `[context.organization_overlay]` or imported cache `.decapod/managed/organization-overlay.json`), repository-local `.decapod/OVERRIDE.md` (`repository_project_override`, layer 3), and non-authoritative task context projection (`task_context_projection`, layer 4). Organizations can classify controls as `overridable`, `extend_only`, or `non_overridable`, enforce `shared` vs `organization_private` visibility, verify SHA-256 digests and Ed25519 signatures, support signed offline bundles, and fail closed when repository overrides or candidate config changes attempt to weaken or bypass higher-precedence controls.
+
 ## First-class Decapod Cloud onboarding & administrative CLI/RPC over Dactyl 0.18.0 (#1896, #1836, #1835, #1877)
 
 Extends `decapod cloud` and JSON RPC with first-class organization, member/seat, invitation, OAuth provider identity, and billing control-plane operations strictly over `dactyl_db::AccountOperation::{Register, Status, Manage, Portal}` without touching local SQLite or waiting on an unreleased `dactyl-db` version:
@@ -802,8 +807,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
+- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

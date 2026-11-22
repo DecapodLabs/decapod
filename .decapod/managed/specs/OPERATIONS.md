@@ -1,5 +1,10 @@
 # Operations
 
+## Cloud parity inspection and offline constitution overlay management (#1895, #877)
+
+- **Parity matrix inspection (`#1895`)**: Operators and tools run `decapod capabilities parity [--dir <PATH>] [--format text|json]` or RPC `interop.cloud_parity` to inspect the logical operation support matrix, unsupported Cloud actions, and placement opacity invariants without initializing local SQLite.
+- **Organization overlay lifecycle (`#877`)**: Repositories configure an organization overlay under `[context.organization_overlay]` in `.decapod/config.toml` or cache a verified signed bundle for offline use via `decapod constitution overlay import <PATH>` (persisting `.decapod/managed/organization-overlay.json`). `decapod constitution overlay status` inspects trust (`OverlayTrustState`) and freshness (`OverlayFreshnessState`), `verify` validates digests, signatures, staleness, and override conflicts fail-closed, and `clear` removes the imported cache.
+
 ## Operating Decapod Cloud orgs, members, invites, identity, and billing (#1896, #1836, #1835, #1877)
 
 - **Inspect organization admin vs paid seat access (`decapod cloud orgs`, `cloud.orgs`)**: Run `decapod cloud orgs [--format json]` after `decapod cloud login` to inspect verified organizations (`cloud_org_id`, `admin`, `paid_repo_count`, `paid_repo_seat_assigned`). An admin without an assigned paid repository seat cannot read/write hosted repo data until assigning a seat via `decapod cloud members assign --project-id <id> --slot <n>`.
@@ -488,8 +493,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
+- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

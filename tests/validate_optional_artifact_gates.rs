@@ -492,6 +492,7 @@ fn validate_fails_on_verified_workunit_capsule_without_state_ref_binding() {
     let mut capsule = DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".to_string(),
         topic: "lineage".to_string(),
         scope: "interfaces".to_string(),
@@ -568,6 +569,7 @@ fn validate_fails_on_context_capsule_hash_mismatch_if_present() {
     let mut capsule = DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".to_string(),
         topic: "phase0".to_string(),
         scope: "interfaces".to_string(),

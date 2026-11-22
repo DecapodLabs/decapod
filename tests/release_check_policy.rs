@@ -63,6 +63,7 @@ fn setup_release_fixture(changelog_unreleased: &str) -> (TempDir, PathBuf) {
     let capsule = DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".to_string(),
         topic: "release fixture".to_string(),
         scope: "interfaces".to_string(),

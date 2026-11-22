@@ -100,6 +100,7 @@ fn prepared() -> (consumer::Fixture, Store) {
     let capsule = context_capsule::DeterministicContextCapsule {
         knowledge: None,
         governed_plan: None,
+        authority_chain: None,
         schema_version: "1.1.0".into(),
         topic: "Observe local proof".into(),
         scope: "interfaces".into(),

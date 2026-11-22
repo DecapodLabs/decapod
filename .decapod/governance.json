@@ -869,46 +869,66 @@
     }
   },
   "change": {
-    "id": "change_01M80X7CEVYJWBDBJJET04VXWB",
+    "id": "change_01M80X6REQ2PT4R77GAB3CS078",
     "base_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:cloud-admin-cli-rpc": {
-      "statement": "First-class decapod cloud {orgs,members,invites,identity,billing} CLI and cloud.* JSON RPC ops operate exclusively via dactyl-db 0.18.0 AccountOperation::{Register,Status,Manage,Portal} with zero decapod.db creation, stdin-only secrets, full secret/fragment redaction, strict HTTPS portal validation, typed AAL2 mfa_step_up_required and single-send outcome_unknown diagnostics, and #215/#1836 status fidelity.",
-      "falsifier": "Any cloud admin CLI/RPC call touches decapod.db, accepts CLI/RPC argv secrets, leaks secret material in Debug/stderr/errors/receipts, admits non-HTTPS or credential-bearing portal URLs, drops mfa_step_up_required/outcome_unknown/overage_cap_exhausted, or conflates org admin privileges with paid repo seats.",
+    "claim_1895_parity": {
+      "statement": "Decapod #1895 provides a versioned local vs cloud logical operation/evidence parity matrix and proves multi-org isolated DB tenancy without local SQLite fallback",
+      "falsifier": "Cloud mode falls back to .decapod/data/decapod.db, leaks cross-org/unassigned-repo data, allows admin-without-seat read/write, or claims unimplemented parity",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_admin.rs",
-        "src/decapod/core/cloud_client.rs",
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs"
+        "src/decapod/core/cloud_parity_matrix.rs",
+        "tests/cloud_tenancy_parity_1895.rs"
+      ]
+    },
+    "claim_877_overlay": {
+      "statement": "Decapod #877 enforces 4-layer constitution authority precedence (embedded -> org overlay -> repo OVERRIDE.md -> task projection) with explicit provenance and fail-closed non_overridable conflict checks",
+      "falsifier": "Project OVERRIDE.md silently weakens non_overridable org controls, tampered/stale overlays pass silent, org-private policy leaks into portable bundles, or provenance is missing",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/org_overlay.rs",
+        "tests/org_constitution_overlay_877.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-cloud-admin-cli-rpc",
-      "summary": "Implement first-class decapod cloud orgs/members/invites/identity/billing CLI and RPC over dactyl-db 0.18.0 with specs, docs, and unit/E2E proofs",
-      "input_digest": "sha256:f7014420fb06cd3bdf3828c95e259ff03b9a307c4e8e5e52c059fce163ddcf8b",
+      "id": "cp-1895-877-impl",
+      "summary": "Implement #1895 multi-org cloud parity matrix/tests and #877 4-layer org constitution overlays with Living Specs and verified proofs",
+      "input_digest": "sha256:1b5c4c342c5db062d7c7714a45256e26a65a1397d886ad322e431b924c3f7859",
       "proof_refs": [
-        "src/decapod/core/cloud_admin.rs",
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs"
+        "src/decapod/core/cloud_parity_matrix.rs",
+        "src/decapod/core/org_overlay.rs",
+        "tests/cloud_tenancy_parity_1895.rs",
+        "tests/org_constitution_overlay_877.rs"
       ]
     },
     {
-      "id": "cp-cloud-admin-plan-done",
-      "summary": "Record spec reviews and finalize plan state DONE for first-class cloud admin CLI/RPC",
-      "input_digest": "sha256:c9a136b43534c44f4b2fc99365486ac115118cf8d0054a1f90798a808ae73fd5",
+      "id": "cp-1895-877-spec-reviews",
+      "summary": "Record canonical Living Spec reviews for ARCHITECTURE.md, INTERFACES.md, and SECURITY.md (#1895, #877)",
+      "input_digest": "sha256:1297632cbe7d3af4671cf86082b024fb8a85954ed5c5c96c40a10e10382f9eca",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md"
+      ]
+    },
+    {
+      "id": "cp-1895-877-merge-master",
+      "summary": "Reconcile origin/master acb44b422 (PR #1914) with #1895 and #877, docs, Living Specs, and post-merge verification",
+      "input_digest": "sha256:743de10daefed35e965261e75bf321747b57a01cb65dfc1dfebd1c1001bb888f",
+      "proof_refs": [
+        "src/decapod/core/cloud_parity_matrix.rs",
+        "src/decapod/core/org_overlay.rs",
+        "tests/cloud_tenancy_parity_1895.rs",
+        "tests/org_constitution_overlay_877.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80X7CEVYJWBDBJJET04VXWB": {
+    "intent:change_01M80X6REQ2PT4R77GAB3CS078": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -918,14 +938,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
+      "id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
-      "refined_intent": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
+      "raw_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "refined_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -938,54 +958,50 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement, prove, and document first-class Decapod Cloud orgs, members, invites, identity, and billing CLI and JSON RPC operations over dactyl-db 0.18.0 (#1896, #1836, #1835, #1877) without local SQLite fallback",
+      "intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
       "phases": [],
       "proof_hooks": [
-        "cargo fmt --all -- --check",
-        "cargo check --no-default-features",
-        "cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --locked --features supabase-cloud --lib cloud_",
-        "cargo test --locked --features supabase-cloud --test cloud_admin_boundary --test cli_contracts --test cloud_supabase_boundary --test doc_alignment --test interop_conformance --test capability_contract_drift --test rpc_golden_vectors"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented cloud_admin module, 1-byte CloudAuthErrorCode, admin_transport_error, and slot-to-UUID resolution",
-          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
-          "spec_material_hash": "3cd6a8c0312c83918080cd9f0a8c6431e1f798e198e935f3589cb983389981b7"
+          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
+          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
+          "spec_material_hash": "5b80a9a3e3f82b7beb67cfa7b5a3680cf267d4c460835b1f8967a39ae875e544"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md with decapod cloud {orgs,members,invites,identity,billing} CLI flags, stdin-only secrets, HTTPS portal URL validation, and cloud.* JSON RPC schemas matching src/decapod/cli.rs, core/rpc.rs, core/interop.rs, lib.rs, and docs/agent/command-contracts.md",
-          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
-          "spec_material_hash": "98ff6d50051464ec8295817d27872bfebe1df9e53683c2e79b8923fd296549fa"
+          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
+          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
+          "spec_material_hash": "dc76d2b2df887f463347f1706febfe811015c3ebfaf27923ea4288650ec06b63"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented RedactedSecret zeroization, argv secret rejection, HTTPS portal/invite URL checks, and Dactyl 0.18.0 403 allowlist disambiguation",
-          "reviewed_code_fingerprint": "6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca",
-          "spec_material_hash": "c62037fee8a3e29e78a88f5121fcb5155827082663a44749aa4d50e6de039607"
+          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
+          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
+          "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
         }
       ],
-      "state": "DONE",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement first-class Decapod Cloud org, member, invite, identity, and billing CLI/RPC",
+      "title": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
       "todo_ids": [
-        "feat_01m80wt1ty67gx2n"
+        "feat_01m80wsps229vtve"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795331194Z"
+      "updated_at": "1795334627Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e56a04fd38c62681713acac2fb51bfea427dfb50678157884d5d652006f5f6e8",
+      "artifact_hash": "sha256:ba5edcac4d768d9c28921817e42720991f60d272bf0865e2f3d3b74985bd96d2",
       "checks": [
         {
           "name": "capability_contract_drift",
@@ -1000,15 +1016,7 @@
           "status": "passed"
         },
         {
-          "name": "clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_admin_boundary",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_cli_boundary",
+          "name": "clippy_all_targets_features",
           "status": "passed"
         },
         {
@@ -1016,11 +1024,15 @@
           "status": "passed"
         },
         {
+          "name": "cloud_tenancy_parity_1895",
+          "status": "passed"
+        },
+        {
           "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "fmt",
+          "name": "fmt_check",
           "status": "passed"
         },
         {
@@ -1028,19 +1040,27 @@
           "status": "passed"
         },
         {
-          "name": "propodus_contract",
+          "name": "lib_targeted_47",
           "status": "passed"
         },
         {
-          "name": "release_dependency_policy",
+          "name": "org_constitution_overlay_877",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_25_integration_suites",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_fmt_clippy_nofeat",
+          "status": "passed"
+        },
+        {
+          "name": "post_merge_lib_134",
           "status": "passed"
         },
         {
           "name": "rpc_golden_vectors",
-          "status": "passed"
-        },
-        {
-          "name": "unit_cloud",
           "status": "passed"
         }
       ],
@@ -1049,135 +1069,150 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
+            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
+            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80X7CK6SP18PJ32TAEN0BCY",
+            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
+            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80X7CK6SP18PJ32TAEN0BCY": {
+          "branch_01M80X6RJV40ZZKZV0T1YX0STS": {
             "evidence_only": true,
-            "id": "branch_01M80X7CK6SP18PJ32TAEN0BCY",
-            "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
+            "id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
+            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
             "steps": [
               {
                 "action": "verification",
-                "command": "cargo fmt --all -- --check",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/cloud_client.rs",
                   "src/decapod/core/cloud_project.rs",
-                  "src/decapod/core/error.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/cloud_admin.rs",
                   "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_dpop.rs",
-                  "src/decapod/core/cloud_todo_operation.rs",
-                  "src/decapod/core/error.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/assets.rs",
+                  "src/decapod/core/docs.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/cloud_parity_matrix.rs",
+                  "src/decapod/core/org_overlay.rs",
+                  "src/decapod/core/assets.rs",
+                  "src/decapod/core/docs.rs",
+                  "src/decapod/core/constitution_cli.rs",
+                  "src/decapod/core/context_capsule.rs",
+                  "src/decapod/core/context_bundle.rs",
                   "src/decapod/core/interop.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/validate.rs",
                   "src/decapod/core/docs_cli.rs",
+                  "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
                   "docs/agent/command-contracts.md",
-                  "tests/cli_contracts.rs",
-                  "tests/cloud_admin_boundary.rs",
-                  "87/87 cloud_ lib tests, 6/6 cloud_admin_boundary loopback E2E, 52/52 cloud_supabase_boundary, 134/134 active cli_contracts (1 ignored), 5/5 doc_alignment, 12/12 interop_conformance, 3/3 capability_contract_drift, 6/6 rpc_golden_vectors, 0 clippy warnings, zero decapod.db creation"
+                  "tests/cloud_tenancy_parity_1895.rs",
+                  "tests/org_constitution_overlay_877.rs",
+                  "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
                 ],
                 "proof_refs": [
-                  "fmt",
+                  "fmt_check",
                   "check_no_default_features",
-                  "clippy",
-                  "unit_cloud",
-                  "cloud_admin_boundary",
+                  "clippy_all_targets_features",
+                  "lib_targeted_47",
+                  "cloud_tenancy_parity_1895",
+                  "org_constitution_overlay_877",
                   "cloud_supabase_boundary",
-                  "cloud_cli_boundary",
                   "cli_contracts",
                   "doc_alignment",
                   "interop_conformance",
                   "capability_contract_drift",
-                  "rpc_golden_vectors",
-                  "propodus_contract",
-                  "release_dependency_policy"
+                  "rpc_golden_vectors"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites."
+                ],
+                "proof_refs": [
+                  "post_merge_fmt_clippy_nofeat",
+                  "post_merge_lib_134",
+                  "post_merge_25_integration_suites"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo check --no-default-features",
-        "cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo fmt --all -- --check",
-        "cargo test --locked --features supabase-cloud --lib cloud_",
-        "cargo test --locked --features supabase-cloud --test cloud_admin_boundary --test cloud_supabase_boundary --test cloud_cli_boundary --test cli_contracts --test doc_alignment --test interop_conformance --test capability_contract_drift --test rpc_golden_vectors"
-      ],
+      "declared_commands": [],
       "destination": "pull request",
       "evidence": [
-        "87/87 cloud_ lib tests, 6/6 cloud_admin_boundary loopback E2E, 52/52 cloud_supabase_boundary, 134/134 active cli_contracts (1 ignored), 5/5 doc_alignment, 12/12 interop_conformance, 3/3 capability_contract_drift, 6/6 rpc_golden_vectors, 0 clippy warnings, zero decapod.db creation"
+        "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites.",
+        "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
       ],
       "inspected_files": [
-        "src/decapod/cli.rs",
+        "src/decapod/core/assets.rs",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/error.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs"
+        "src/decapod/core/docs.rs",
+        "src/decapod/core/validate.rs"
       ],
-      "intent_id": "intent:change_01M80X7CEVYJWBDBJJET04VXWB",
+      "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
       "modified_files": [
         "docs/agent/command-contracts.md",
         "src/decapod/cli.rs",
-        "src/decapod/core/cloud_admin.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
-        "src/decapod/core/cloud_todo_operation.rs",
+        "src/decapod/core/assets.rs",
+        "src/decapod/core/cloud_parity_matrix.rs",
+        "src/decapod/core/constitution_cli.rs",
+        "src/decapod/core/context_bundle.rs",
+        "src/decapod/core/context_capsule.rs",
+        "src/decapod/core/docs.rs",
         "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/error.rs",
         "src/decapod/core/interop.rs",
-        "src/decapod/core/mod.rs",
+        "src/decapod/core/org_overlay.rs",
         "src/decapod/core/rpc.rs",
+        "src/decapod/core/validate.rs",
         "src/decapod/lib.rs",
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs"
+        "tests/cloud_tenancy_parity_1895.rs",
+        "tests/org_constitution_overlay_877.rs"
       ],
       "next_transitions": [
-        "Checkpoint commits, verify docs-sync and governance checkpoints, push non-force, open non-draft PR",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M80X7CK6SP18PJ32TAEN0BCY",
+      "run_id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80wt1ty67gx2n",
+      "task_id": "feat_01m80wsps229vtve",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

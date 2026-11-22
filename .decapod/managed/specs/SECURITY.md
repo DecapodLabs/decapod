@@ -1,5 +1,10 @@
 # Security
 
+## Multi-tenant Cloud isolation and non-overridable organization policy enforcement (#1895, #877)
+
+- **Tenant & seat isolation without SQLite fallback (`#1895`)**: Cloud sessions remain bound to explicit `(origin, repository, project/org)` context and verified server access. Decapod never receives backend DB names, URLs, or credentials, fails closed on cross-org/stale scopes, seat revocation, paid-seat absence (`#215`), cross-repo `operation_id` replay, or network cuts, and never initializes or modifies `.decapod/data/decapod.db` as a fallback.
+- **Overlay integrity, non-weakening, and private-policy redaction (`#877`)**: `src/decapod/core/org_overlay.rs` verifies Ed25519 signatures via `ring::signature::ED25519` and SHA-256 digests, marking invalid bundles `OverlayTrustState::Tampered` and rejecting stale or conflicting overlays fail-closed. `.decapod/OVERRIDE.md` cannot override `non_overridable` controls (`ORG_OVERLAY_NON_OVERRIDABLE_CONFLICT`) or weaken `extend_only` controls (`ORG_OVERLAY_EXTEND_ONLY_WEAKENING_REJECTED`). Candidate config downgrades against accepted HEAD are blocked during validation (`ORG_OVERLAY_POLICY_DOWNGRADE` in `src/decapod/core/validate.rs`), and `organization_private` directive text is omitted from portable context bundles with fail-closed validation (`ORG_OVERLAY_PRIVATE_LEAK_REJECTED` in `src/decapod/core/context_bundle.rs`).
+
 ## Decapod Cloud admin secret custody, URL validation, and SQLite isolation (#1896, #1836, #1835, #1877)
 
 - **Zero secret leakage & volatile zeroization (`src/decapod/core/cloud_admin.rs::RedactedSecret`)**:
@@ -890,8 +895,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6e410e04d3b1de1444a2bbb38adddb682fb466ed5790da40f309533e25b9b9ca`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (257 files), `tests/` (272 files)
+- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

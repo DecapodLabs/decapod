@@ -129,6 +129,15 @@ pub struct InteropCapability {
     pub description: String,
 }
 
+/// Deterministic layer declaration in the 4-layer authority hierarchy (#877).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AuthorityHierarchyEntry {
+    pub rank: u8,
+    pub layer: String,
+    pub authoritative: bool,
+    pub description: String,
+}
+
 /// Versioned, machine-readable interoperability manifest.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InteropManifest {
@@ -140,6 +149,8 @@ pub struct InteropManifest {
     /// Source-of-authority declaration: this manifest describes; it never
     /// authorizes.
     pub authority_declaration: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authority_hierarchy: Option<Vec<AuthorityHierarchyEntry>>,
     pub capabilities: Vec<InteropCapability>,
 }
 
@@ -420,6 +431,18 @@ rpc_catalog![
         description: "Composed service capability contract inspection and drift check (read-only, never grants authority)",
     },
     OpMeta {
+        op: "interop.cloud_parity",
+        read_only: true,
+        session_required: false,
+        description: "Versioned Local vs Cloud logical operation and evidence parity matrix inspection (read-only, never grants authority)",
+    },
+    OpMeta {
+        op: "constitution.overlay.status",
+        read_only: true,
+        session_required: false,
+        description: "Inspect 4-layer constitution authority precedence and organization overlay trust/freshness status (read-only)",
+    },
+    OpMeta {
         op: "state.resolve",
         read_only: true,
         session_required: false,
@@ -577,6 +600,32 @@ pub fn builtin_manifest() -> InteropManifest {
         reference_implementation: "decapod".to_string(),
         implementation_version: env!("CARGO_PKG_VERSION").to_string(),
         authority_declaration: "Decapod's governed state, session, policy and validation mechanisms are the sole authority. This manifest is a descriptive claim; negotiation is not authorization; conformance results are evidence, not publication proof.".to_string(),
+        authority_hierarchy: Some(vec![
+            AuthorityHierarchyEntry {
+                rank: 1,
+                layer: crate::core::org_overlay::LAYER_BINARY_EMBEDDED.to_string(),
+                authoritative: true,
+                description: "Binary-embedded baseline constitution".to_string(),
+            },
+            AuthorityHierarchyEntry {
+                rank: 2,
+                layer: crate::core::org_overlay::LAYER_ORGANIZATION_OVERLAY.to_string(),
+                authoritative: true,
+                description: "Organization/team overlay selected via explicit config or verified imported bundle".to_string(),
+            },
+            AuthorityHierarchyEntry {
+                rank: 3,
+                layer: crate::core::org_overlay::LAYER_REPOSITORY_PROJECT_OVERRIDE.to_string(),
+                authoritative: true,
+                description: "Repository .decapod/OVERRIDE.md (refuses weakening non_overridable/extend_only org controls)".to_string(),
+            },
+            AuthorityHierarchyEntry {
+                rank: 4,
+                layer: crate::core::org_overlay::LAYER_TASK_CONTEXT_PROJECTION.to_string(),
+                authoritative: false,
+                description: "Task-scoped resolved context projection (never authoritative over Layers 1-3)".to_string(),
+            },
+        ]),
         capabilities,
     }
 }
