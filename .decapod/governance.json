@@ -931,6 +931,16 @@
         "tests/sqlite_maintenance.rs",
         "tests/unit/core/workspace_publication_tests.rs"
       ]
+    },
+    {
+      "id": "chk-fix-workspace-interlock-readme-badge",
+      "summary": "Compare isolated worktree README.md against post-init committed README.md in tests/workspace_interlock.rs",
+      "input_digest": "sha256:b892e4f51045a79ca45cca5b79f2a650278b3a6ff8cd14e94659d5cae0e919eb",
+      "proof_refs": [
+        "cargo_clippy_all_targets",
+        "cargo_fmt_check",
+        "tests/workspace_interlock.rs"
+      ]
     }
   ],
   "intents": {
@@ -974,22 +984,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled with origin/master v0.162.1; documented db_maintenance wal_checkpoint & [maintenance] resolution, legacy_todo_recovery logical snapshot inspection/export/quarantine/journaled import, OperationClass::AnalyzeReadOnly early dispatch, workspace publish planning, and pre_build_validate",
-          "reviewed_code_fingerprint": "6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6",
+          "reason": "Updated workspace_interlock test for PR #1917 README badge default; architecture unchanged",
+          "reviewed_code_fingerprint": "1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad",
           "spec_material_hash": "9ee28d9c72481a201ad55226ee42e7a643c0aae2d9d6f585c5b30cd2babf4f3c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled with origin/master v0.162.1; documented db.wal.checkpoint/CLI aliases, legacy TODO --export/--quarantine/--import-missing, decapod analyze --read-only, workspace effective-state --format json, workspace publish --pr/--branch/--mode/--dry-run, and validate --pre-build",
-          "reviewed_code_fingerprint": "6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6",
+          "reason": "Updated workspace_interlock test for PR #1917 README badge default; interfaces unchanged",
+          "reviewed_code_fingerprint": "1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad",
           "spec_material_hash": "8f1891081c4006b74a2d0f61217b231d958b928028b00224df57e71f3f623af3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled with origin/master v0.162.1; documented opt-in PASSIVE WAL checkpoint & AMBIGUOUS_MAINTENANCE_POLICY fail-closed checks, non-overwriting legacy recovery conflict blocking, zero-mutation analyze symlink/sensitive/prompt-safety isolation, non-forced publish divergence gate, and pre_build non-substitution",
-          "reviewed_code_fingerprint": "6c0de4c7136b0f7d8794f91869ab102e10674893742ccc454277d580460acca6",
+          "reason": "Updated workspace_interlock test for PR #1917 README badge default; security unchanged",
+          "reviewed_code_fingerprint": "1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad",
           "spec_material_hash": "12884bd42c780c94b716c20466ebb2b2c1dca74c25b11a327ac9c1598d86e793"
         }
       ],
@@ -1001,7 +1011,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795354606Z"
+      "updated_at": "1795356603Z"
     },
     "trajectory": {
       "active_boundaries": [
