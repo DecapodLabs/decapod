@@ -26,6 +26,26 @@ Verified on `origin/master` (`863311461`, `v0.162.1`) inside isolated worktree `
 - **Remaining external gates**:
   - Live hosted Propodus/Supabase/Stripe deployments are outside offline loopback tests; Buildkite was waived by operator instruction; GitHub Actions CI runs upon PR push.
 
+## Read-only observability projections & authenticated HTTP transport verification (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)
+
+Verified on `origin/master` (`9fbf3c310`, `v0.162.0`) inside isolated worktree `agent/swarm-w6-proj/secu_01m81fz0x05nhj39-projections`:
+
+- **Unit & guard parity suites**:
+  - `cargo test --lib http_transport`: `5 passed; 0 failed` (loopback-by-default fail-closed binding, empty-token rejection, constant-time Bearer check, foreign `Origin`/`Host` rejection, live loopback request-bound `Idempotency-Key` conflict `409 idempotency_conflict`, finite entry & byte cache limits `503 idempotency_capacity_exceeded`, uncertain-outcome non-replay `409 unknown_outcome_reconcile_required`, `X-Decapod-Request-Id` replay rejection `409 replayed_request`, slowloris `408 Request Timeout` handling).
+  - `cargo test --lib advertised_rpc_sessions_match_the_actual_entry_guards`: `1 passed; 0 failed` (verifies all 6 `observe.*` RPC ops in `interop::RPC_OPS` match entry guards in `src/decapod/lib.rs`).
+- **End-to-end integration suite (`tests/observability_projections.rs`)**: `10 passed; 0 failed`:
+  - `issue_1712_and_1720_specs_governance_traversal_security_and_adversarial_paths`: specs pagination, `original_intent` vs `refined_intent`, auto-approved plan non-human label, malicious spec text security flags & secret redaction, traversal edges + missing obligation detection, traversal/symlink/secret path rejection.
+  - `issue_1713_timeline_witnessed_vs_declared_and_tampered_history_detection`: deterministic multi-reader replay, `Declared` vs `Witnessed` trust classes, and tampered-history detection (`TRAJECTORY_HASH_MISMATCH`, `MISSING_INITIAL_LOOP_ATTEMPT`, `FORGED_OR_DANGLING_CUSTODY_LINK`, `FORGED_VALIDATION_RECEIPT`).
+  - `issue_1727_and_1728_snapshot_consistency_inventory_and_anchor_staleness`: concurrent mid-read Git index change marks `consistent = false`, staged/unstaged/untracked/binary/secret inventory classification, and SHA-256 `SourceAnchor` staleness detection immediately after edit.
+  - `issue_860_and_1723_workunit_activity_transitions_and_shared_renderer`: typed workunit transitions, stale completion classified as `Drifting` + `StaleInput`, dependency blocking, `is_kernel_proof = false` / `semantic_alignment = "not_proven"` claimed effects, and shared human/machine renderer.
+  - `issue_1730_validation_plan_requirement_drop_joint_checks_and_cyclic_constraints`: rules across all 4 authorities, dropped `R3` requirement surfacing, unrun joint check with `clean_merge_does_not_prove = true`, union-find global contradiction detection for `A=B, B=C, A!=C`, and `ZERO_ASSERTION_SUITE` blocking.
+  - `issue_1731_pr_manifest_correspondence_and_drift_states`: unpublished plan non-masquerade (`plan_is_not_published = true`, never `human_approved`) and full drift/correspondence flags (`PrSuperseded`, `UncommittedEditsOmitted`, `WorkspaceDiffersFromPlannedScope`, `FinalShaChanged`, `BranchRebased`, `TargetMainMoved`, `CheckTiedToWrongHead`).
+  - `issue_1732_context_provenance_redacts_secrets_and_prompts_and_denies_cross_scope`: redaction of `raw_prompt`, `thinking`, API keys, and Bearer tokens, `agent_reported` trust preservation, and `CROSS_SCOPE_DENIED`.
+  - `issue_1719_1720_observe_loopback_server_enforces_all_security_gates`: live loopback HTTP server verifying valid GET + `X-Decapod-Read-Only: true` + `X-Decapod-Snapshot-Id`, wrong Bearer (`401`), revoked token ID (`401 token_revoked`), cross-tenant (`403 cross_tenant_denied`), cross-repo (`403 cross_repo_denied`), foreign Origin (`403 forbidden_origin`), mutating RPC op (`403 read_only_enforced`), `DELETE` method (`405 method_not_allowed`), and allowlisted `POST /rpc/v1 observe.validation_plan` (`200`).
+  - `issue_874_bounded_child_timeout_output_limit_and_http_stdio_parity`: stalled child timeout (`504 rpc_timeout_unknown_outcome`), oversized stdout cap (`502 rpc_output_limit_exceeded`), and live loopback HTTP vs `decapod rpc --stdin` semantic parity.
+  - `cli_observe_subcommands_and_rpc_ops_end_to_end`: all 6 `decapod observe <subcommand>` JSON/text outputs, all 6 `decapod rpc --op observe.*` invocations, and non-loopback `decapod observe serve --bind 0.0.0.0:0 --token-stdin` refusal.
+- **Formatting & static analysis**: `cargo fmt --all -- --check` and `CLIPPY_CONF_DIR=.config cargo clippy --all-targets -- -D warnings`. Hosted GitHub Actions / Buildkite CI remains pending PR execution.
+
 ## Multi-org Cloud parity and organization constitution overlay verification (#1895, #877)
 
 - **Multi-org Cloud tenancy parity (`#1895`)**: `tests/cloud_tenancy_parity_1895.rs` verifies multi-organization switching, cross-tenant refusal, `#215` org-admin vs zero-paid-seat isolation on Repo 1B, concurrent CAS race exclusivity, cross-repo `operation_id` replay rejection, stale `task_revision` rejection, commit/policy-bound evidence capture, mid-session seat revocation and network-cut fail-closed behavior with zero `.decapod/data/decapod.db` creation, independent observer state checks, and local SQLite equivalence on the supported operation subset (using a local 2-org/2-DB gateway simulation rather than live hosted Cloud infrastructure). Unit coverage in `src/decapod/core/cloud_parity_matrix.rs` asserts matrix schema invariants and Cloud refusal behavior (`CLOUD_LEASE_RENEW_UNSUPPORTED`).
@@ -1705,8 +1725,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (277 files)
+- Repository signal fingerprint: `c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

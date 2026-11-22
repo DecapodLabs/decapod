@@ -9,6 +9,19 @@
 - **Direct wire error-code forwarding, strict URL validation & privacy (`dactyl-db 0.19.0`, `cloud_client.rs`, `cloud_admin.rs`)**:
   Upgrading to `dactyl-db 0.19.0` closes the prior `0.18.0` gap by directly forwarding allowlisted HTTP error codes (`mfa_step_up_required`, `custody_conflict`, `owner_protected`, `member_not_found`, `invitation_expired`, `invitation_not_found`, `project_not_found`, `seat_revoked`, `grant_revoked`, `grant_expired`, `scope_denied`, `dpop_aud_mismatch`, `version_conflict`, `idempotency_conflict`, `idempotency_in_progress`, `transaction_aborted`) and validating origin-bound `EffectProvenance` headers. `enroll_repository` validates returned `checkout_url`/`enrollment_url`/`portal_url` via `validate_https_portal_url`, `local_status` never leaks physical origin URLs, and `DECAPOD_CLOUD_FIRST_PARTY_ORIGIN=1` remains explicit opt-in until custom-domain cutover is verified.
 
+## Read-only observability containment, redaction, and authenticated HTTP transport hardening (#874, #1719, #1720, #1728, #1732)
+
+- **Repository containment & adversarial file defense (`src/decapod/core/observability_projections/snapshot.rs`, `specs.rs`)**:
+  - `validate_repo_bounded_path` rejects absolute paths, `..` traversal, NUL bytes, and symlinks at every ancestor and leaf component (`SYMLINK_BOUNDARY_VIOLATION`), and opens regular files with `O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC` on Unix.
+  - `is_secret_sensitive_path` blocks `.git/*`, `.decapod/managed/sessions/*`, `.env*`, `*.pem`, `*.key`, `id_rsa`, `credentials*`, and similar sensitive paths (`SECRET_PATH_DENIED`); `read_source_anchor` rejects binary files, enforces hard byte ceilings, redacts secret patterns and absolute paths, and post-checks file hashes for concurrent edits.
+  - `inspect_spec_text_security` flags control characters, prompt-injection markers, and embedded secrets in untrusted spec prose without mutating files.
+- **Provenance redaction & cross-scope isolation (`src/decapod/core/observability_projections/provenance.rs`)**:
+  - Strips `raw_prompt`, `user_prompt`, `system_prompt`, `thinking`, `chain_of_thought`, `private_reasoning`, `api_key`, `token`, `password`, `authorization`, and related keys before emitting consultation metadata, preserves `agent_reported` vs `trusted_host` origin trust (preventing consultations from self-authenticating human prompts), and rejects mismatched repository scope (`CROSS_SCOPE_DENIED`).
+- **Transport authentication, replay binding, and mutation refusal (`src/decapod/core/http_transport.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/lib.rs`)**:
+  - Constant-time Bearer verification (`verify_bearer_token`) over SHA-256 digests and exact byte slices; `--token-stdin` avoids leaking credentials into process argv; loopback-only default binding fails closed on non-loopback addresses without `--allow-remote`.
+  - Rejects foreign `Origin` (`403 forbidden_origin`) and non-loopback `Host` (`403 forbidden_host`) headers, cross-tenant (`403 cross_tenant_denied`), cross-repository (`403 cross_repo_denied`), and revoked token IDs (`401 token_revoked`), and enforces read-only credentials cannot execute any mutating operation (`403 read_only_enforced` / `405 method_not_allowed`).
+  - Fixes `#874` idempotency confusion by binding `Idempotency-Key` to the SHA-256 digest of method, path, query, RPC op, raw body bytes, repository context, caller/session/tenant/repo headers, and hashed token, capping replay storage by both entry count and byte weight (`503` on capacity exhaustion within window), preventing blind replay of uncertain outcomes (`409 unknown_outcome_reconcile_required`), and executing child RPC through Unix process-group `bounded_capture_with_stdin` so stalled or oversized children are killed and reaped within bounds.
+
 ## Maintenance RBAC boundaries, non-destructive legacy recovery, read-only analysis isolation, and non-forced publish guards (#1568, #1657, #1279, #1071, #1064, #1047)
 
 - **Maintenance capability scoping & conflict rejection (`src/decapod/core/db_maintenance.rs`)**: `db.wal.checkpoint` is excluded from `DEFAULT_SAFE_ALLOWLIST`, requires explicit opt-in from canonical main-repository config, uses `PRAGMA wal_checkpoint(PASSIVE)` with a 5000ms ceiling (never `TRUNCATE`/`RESTART` or sidecar deletion), and refuses dual `[governance.db_maintenance]` + `[maintenance]` declarations (`AMBIGUOUS_MAINTENANCE_POLICY`). Worktree backend tampering continues failing closed with `BACKEND_MISMATCH`; Cloud backends remain denied (`CLOUD_PRINCIPAL_UNVERIFIED`) pending Propodus `#88`.
@@ -228,8 +241,12 @@ canonical enforcement across the remaining privilege and schema surfaces:
    from lowering `severity` or relaxing (increasing) `evidence_max_age_seconds`.
 
 Already-enforced controls covered by actual-binary regression in `tests/policy_self_authorization_1776.rs`
-include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, `main_merge`
-unknown-field `INVALID_CONFIG_SCHEMA`, `[governance].allow_basic_shared_claims`,
+include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, default-deny
+`[governance].main_merge` (`POLICY_SELF_AUTHORIZATION_REJECTED` when candidate-authored
+beyond accepted base policy, `#1468`), unknown-key `INVALID_CONFIG_SCHEMA`,
+`[governance].allow_basic_shared_claims`,
+offline Ed25519 historical-exception verification preserving `history_proven = false` (`#1569`),
+and opt-in pinned formal-checker attestation rejecting admitted holes and fabricated transcripts (`#1907`),
 `POLICY_SNAPSHOT_STALE` TOCTOU rejection across base-policy rotation, stale-target/proof
 invalidation on `validate` + `todo done --validated`, bounded accepted rotation and
 revocation with intact `data db audit` history, and pre-config read-only repair via
@@ -911,8 +928,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (277 files)
+- Repository signal fingerprint: `c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

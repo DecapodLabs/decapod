@@ -15,6 +15,50 @@
 - **Typed `CloudAuthErrorCode` expansion (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**:
   Adds typed `snake_case` error codes for DPoP (`use_dpop_nonce`, `invalid_dpop_proof`, `dpop_aud_mismatch`, `dpop_replay`, `dpop_nonce_mismatch`, `dpop_clock_skew`, `dpop_ath_mismatch`, `dpop_htu_mismatch`, `dpop_htm_mismatch`, `dpop_jkt_mismatch`, `invalid_binding`, `dpop_proof_required`, `missing_dpop_proof`, `stolen_bearer`, `device_revoked`, `device_key_expired`, `device_not_enrolled`, `refresh_reuse_detected`, `expired_credential`), org session/grant narrowing (`grant_revoked`, `grant_expired`, `scope_denied`, `repo_access_denied`), paid seats (`paid_seat_required`, `seat_capacity_exceeded`, `organization_already_enrolled`, `admin_approval_required`), tenant lifecycle (`tenant_upgrade_required`, `tenant_upgrading`, `tenant_suspended`, `tenant_archived`, `org_recovery_required`, `policy_template_conflict`), and provenance/concurrency (`provenance_origin_mismatch`, `idempotency_conflict`, `idempotency_in_progress`, `version_conflict`, `transaction_aborted`).
 
+## Agent interoperability CLI, RPC, schema, and independent conformance surfaces (#870–#878, #1715–#1718, #1724, #1725, #1733, #1735)
+
+- **Bounded transport CLI subcommands (`src/decapod/cli.rs::{McpCli, A2aCli}`, `src/decapod/lib.rs::{run_mcp_command, run_a2a_command}`)**:
+  - `decapod mcp serve [--one-shot] [--max-requests <N>] [--max-frame-bytes <N>] [--framing auto|jsonl|content-length]`: finite, daemonless local stdio JSON-RPC 2.0 server handling `initialize`, `notifications/initialized`, `notifications/cancelled`, `ping`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, and `shutdown`.
+  - `decapod mcp schema [--format json|text]`: exports `McpSurfaceSchema` (tools, resources, supported protocol versions, authority boundary).
+  - `decapod mcp config [--root <PATH>] [--executable <PATH>]`: emits scoped `mcpServers.decapod` JSON configuration.
+  - `decapod a2a card [--format json|text]`: prints `A2aAgentCard` advertising only executable local skills and separate `conformance_layers`.
+  - `decapod a2a handoff (--input <FILE> | --json <JSON>)`: validates `{ "envelope", "local_context" }` via unique-key JSON parsing, exiting non-zero on stale proof, contradictory ownership, tampered digests, or `claims_local_authority = true`.
+- **Read-only JSON RPC ops (`src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/core/rpc.rs`, `src/decapod/lib.rs`)**:
+  - Registers 7 read-only, session-free, storage-independent RPC operations: `interop.envelope.verify`, `interop.drift.check`, `interop.registry.query`, `interop.skills.select`, `interop.rules.evaluate`, `interop.rules.taxonomy`, and `interop.overlap.classify`.
+  - Updates `transport:mcp` and `transport:a2a` in `interop::builtin_manifest()` to `implementation_status = "implemented"` with truthful `evidence.state = "not_run"`, while `transport:acp` remains `intentionally_not_used`.
+- **Normative schema, fixtures, docs & conformance suite**:
+  - `assets/schemas/agent-interop-envelope-v1.schema.json`: Draft 2020-12 JSON Schema for `decapod.governance-envelope:v1`.
+  - `tests/fixtures/agent_interop_vectors.v1.json` + `tests/fixtures/agent_interop_reference_consumer.py` + `tests/agent_interop_conformance.rs`: 26 pinned adversarial and positive-twin vectors verified across Decapod, an independent raw-JSON Rust verifier, and an independent Python stdlib consumer.
+  - `docs/conformance/governance-envelope-v1.md` and `docs/architecture/agent-interop-adr.md`: normative profile specification and `#1735`-aligned `proven / partial / target` ADR cross-reference.
+
+## Read-only observability CLI, RPC, and loopback HTTP interfaces (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)
+
+- **Read-only CLI (`src/decapod/cli.rs::ObserveCli`, `src/decapod/lib.rs::run_observe_command`)**:
+  - `decapod observe specs [--dir <PATH>] [--offset <N>] [--limit <N>] [--include-excerpts] [--anchor-path <REL>] [--start-line <N>] [--end-line <N>] [--format json|text]`
+  - `decapod observe timeline [--dir <PATH>] [--after-seq <N>] [--limit <N>] [--stream <NAME>] [--format json|text]`
+  - `decapod observe workspace [--dir <PATH>] [--offset <N>] [--limit <N>] [--anchor-path <REL>] [--start-line <N>] [--end-line <N>] [--format json|text]`
+  - `decapod observe validation-plan [--dir <PATH>] [--require <R_ID>...] [--format json|text]`
+  - `decapod observe pr-manifest [--dir <PATH>] [--planned-file <REL>...] [--format json|text]`
+  - `decapod observe context-provenance [--dir <PATH>] [--offset <N>] [--limit <N>] [--task-id <ID>] [--repo-id <ID>] [--format json|text]`
+  - `decapod observe serve [--dir <PATH>] [--bind 127.0.0.1:0] [--token-stdin | --auth-token <TOK>] [--allow-remote] [--max-requests <N>] [--max-body-bytes <N>] [--tenant-id <ID>] [--repo-id <ID>...] [--revoked-token-id <ID>...]`
+  - All `decapod observe` commands are strictly read-only, sessionless, offline-first, and emit `schema_version = "decapod.observe.v1"`, `read_only = true`, `authoritative = false`.
+- **Read-only JSON RPC ops (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs::rpc_handlers::handle_observe`)**:
+  - Registers `observe.specs`, `observe.timeline`, `observe.workspace`, `observe.validation_plan`, `observe.pr_manifest`, and `observe.context_provenance` (`read_only = true`, `session_required = false`, worktree/mandate bypass aligned in `lib.rs`).
+- **Loopback HTTP endpoints (`src/decapod/core/http_transport.rs`, `src/decapod/core/observability_projections/server.rs`)**:
+  - `decapod observe serve`: accepts `GET /observe/v1/{specs,timeline,workspace,validation-plan,pr-manifest,context-provenance}` and `POST /rpc/v1` restricted exclusively to `ALLOWLISTED_OBSERVE_RPC_OPS`, setting `X-Decapod-Read-Only: true`, `X-Decapod-Snapshot-Id`, `Cache-Control: no-store`, and `X-Content-Type-Options: nosniff`. Mutating RPC operations return `403 read_only_enforced`; non-`GET`/`POST` HTTP methods return `405 method_not_allowed`.
+  - `decapod rpc --http-server`: retains `POST /rpc/v1` while enforcing request-bound `Idempotency-Key` (`409 idempotency_conflict`), `X-Decapod-Request-Id` (`409 replayed_request`), bounded entry/byte cache (`503 idempotency_capacity_exceeded`), uncertain-outcome non-replay (`409 unknown_outcome_reconcile_required`), and bounded child timeouts/output caps (`504`/`502`).
+
+## Mechanical clarity CLI, accepted-policy `main_merge`, historical exceptions, and ledger APIs (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907)
+
+- **Clarity validation CLI (`src/decapod/cli.rs::ValidateCli`, `src/decapod/lib.rs::run_validate_command`, `src/decapod/core/artifact_clarity.rs`)**:
+  - `decapod validate --clarity [--profile ste-lite|ste-strict|custom] [--format text|json]` evaluates durable governance artifacts (`.decapod/governance.json` excluding human prompt fields and `.decapod/managed/specs/*.md`) deterministically and outputs `decapod.artifact-clarity.v1` (`formal_asd_ste100_compliance: false`, `deterministic: true`, `findings[]`). Exits non-zero (`CLARITY_VALIDATION_FAILED`) on error-severity findings.
+- **Configuration contract (`src/decapod/cli.rs::GovernanceConfig`, `src/decapod/core/docs_cli.rs`)**:
+  - Adds `[governance].main_merge` (`bool`, default `false`, omitted when false). Candidate-branch opt-in beyond accepted base policy fails closed with `POLICY_SELF_AUTHORIZATION_REJECTED`.
+- **Offline historical exception carrier (`src/decapod/core/governance_document/historical_exception.rs`)**:
+  - Accepted base trust root `.decapod/historical-exception-signers.json` (`decapod.historical-exception-signers.v1`) and `DECAPOD_HISTORICAL_EXCEPTION_DECISION` (`decapod.historical-exception.v1`), producing `decapod.historical-exception-judgment.v1` with `history_proven: false`.
+- **Rust core interfaces (`src/decapod/core/obligation_ledger.rs`, `src/decapod/core/formal_obligations.rs`, `src/decapod/core/governance_document/semantic_integrity.rs`)**:
+  - Exposes typed deterministic evaluators `derive_obligation_ledger` (`decapod.obligation-ledger.v1`), `StagnationTracker`, `verify_outcome_claim_anchor`, `build_completion_report_4d` (`decapod.completion-report-4d.v1`), `ApprovalLedger`, `evaluate_trusted_grader` (`decapod.trusted-grader-report.v1`), `evaluate_root_conservation`, `evaluate_main_merge_authorization`, `validate_semantic_governance_integrity`, `detect_governance_theater_diff`, `verify_formal_obligation` (`decapod.formal-obligation.v1` / `decapod.formal-obligation-verdict.v1`), and `CapacityAccountingState`.
+
 ## Maintenance WAL checkpoint, legacy TODO logical recovery, read-only analyze, workspace effective-state/publish planning, and pre-build validate (#1568, #1657, #1279, #1071, #1064, #1047)
 
 - **Database maintenance CLI & RPC (`src/decapod/cli.rs::DatabaseMaintainCommand`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**: Adds `decapod data db maintain wal-checkpoint [--timeout-ms <0..=5000>]` (and RPC `data.database.wal_checkpoint` with `DatabaseWalCheckpointParams`), `lock-inspect` (`db.lock.diagnose`), plus visible aliases `diagnose` (`inspect`) and `integrity-check` (`verify`). Accepts `[maintenance]` alongside `[governance.db_maintenance]` in `.decapod/config.toml`.
@@ -1695,8 +1739,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (277 files)
+- Repository signal fingerprint: `c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2445,3 +2489,16 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **`[governance].publication_deny_identifiers` (`src/decapod/cli.rs`)**: Optional string array in `.decapod/config.toml` (omitted when empty) listing literal identifiers blocked from authored commit messages and non-config diffs during `decapod validate`; private operator strings remain in untracked `.decapod/data/publication-deny.txt`.
 - **`[init].readme_badge` (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Boolean flag defaulting to `true`; when enabled, `decapod init` idempotently writes/updates the installed-version Decapod badge in `README.md` (unless `README.md` is missing, listed in `[governance].protected_paths`, or already links `assets/badge/decapod-governed.svg`).
 - **Static SVG badge (`assets/badge/decapod-governed.svg`, `README.md`)**: Accessible flat SVG badge (`role="img"`, `aria-label="Decapod: governed"`) linked and documented in `README.md`.
+
+## Houseboat CLI, Darkmatter Read-Only Snapshot, and TypeScript/Pi Interfaces
+
+- **CLI (`decapod houseboat ...` wired in `src/decapod/cli.rs` & `src/decapod/lib.rs`)**:
+  - `decapod houseboat status`: emits `decapod.houseboat.v1` JSON listing active Houseboat engine subsystems and issue mappings.
+  - `decapod houseboat verify-darkmatter-snapshot --file <path>`: validates a `decapod.darkmatter-readonly-snapshot.v1` fixture for read-only flags, repository-bounded relative paths, cryptographic evidence digests, and intent-to-evidence traceability.
+  - `decapod houseboat storage-benchmark --tasks <n>`: runs a local SQLite task/lease/compaction/GC/reclaim workload in an isolated temp directory and emits `decapod.storage-compaction-benchmark.v1` JSON with explicit `hosted_backend_status = "unavailable_local_only"` and `unknown_fields`.
+  - `decapod houseboat verify-mooring [--file <path>] [--now-epoch <u64>]`: evaluates a `decapod.mooring-contract.v1` contract at a read boundary and prints the structured `MooringVerdict`.
+- **Darkmatter Read-Only Contract (`docs/architecture/darkmatter-readonly-contract.md`, `tests/fixtures/darkmatter_readonly_snapshot.v1.json`)**:
+  - Schema `decapod.darkmatter-readonly-snapshot.v1` mandates `read_only = true`, `mutation_endpoints_exposed = false`, `ui_generated_proof_allowed = false`, and repository-relative paths only.
+- **TypeScript Binding & Pi Extension (`bindings/typescript/`, `packages/pi-decapod/`)**:
+  - `DecapodClient` (`bindings/typescript/src/index.ts`): concurrent, `AbortSignal`-cancellable wrapper around `decapod` CLI/RPC with per-instance `cwd`, `agentId`, and `sessionPassword` isolation and zero `process.exit` calls.
+  - `createPiDecapodExtension` (`packages/pi-decapod/src/index.ts`): captures raw human prompts separately from agent interpretation across model/harness switches, enforces preparation/pre-mutation/validation-admission gates without equating plan drafting to human approval, and classifies unobserved direct host writes as `outside_native_enforcement`.

@@ -916,6 +916,16 @@
         "tests/cloud_admin_boundary.rs",
         "tests/cloud_dpop_e2e_1878.rs"
       ]
+    },
+    {
+      "id": "chk-dpop-1878-reconcile-9453ebe97",
+      "summary": "Reconcile origin/master (9453ebe97, Wave 6 PRs #1917-#1926) with #1878 DPoP E2E and dactyl-db =0.19.0",
+      "input_digest": "sha256:6ea497b0e7a79eec33c8843965fd39b5364c61a91549a7007d8660653c19c095",
+      "proof_refs": [
+        "tests/cli_contracts.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/cloud_dpop_e2e_1878.rs"
+      ]
     }
   ],
   "intents": {
@@ -959,23 +969,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented DPoP device session gateway sidecar custody, container signer /cloud-control allowlist, and dactyl-db 0.19.0 Cloud Admin wiring on v0.162.1",
-          "reviewed_code_fingerprint": "a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f",
-          "spec_material_hash": "116e50f7c7a3c5ecaf4c536b2113bdaefd324ba9c7a069d2b7c677824336392e"
+          "reason": "Reconciled origin/master (9453ebe97) with #1878 DPoP E2E gateway and dactyl-db 0.19.0 Cloud Admin wiring",
+          "reviewed_code_fingerprint": "c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4",
+          "spec_material_hash": "1136777d9a864b1ad24a13eb87507c9a6c695e5bbe8eaa3904aba8932c75fa79"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented new cloud CLI/RPC subcommands (project enroll, admins, recovery, policies, upgrades), ResourceLimits routing, staged FIRST_PARTY_CLOUD_ORIGIN opt-in, and typed CloudAuthErrorCode variants on v0.162.1",
-          "reviewed_code_fingerprint": "a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f",
-          "spec_material_hash": "06e894a2ab3f6bb6bcbe69937845fb774341a9c8448366b8ff09cc2e4a0e80d9"
+          "reason": "Reconciled origin/master (9453ebe97) with #1878 + dactyl-db 0.19.0 cloud CLI/RPC contracts and error taxonomy",
+          "reviewed_code_fingerprint": "c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4",
+          "spec_material_hash": "95a10a300478a56bcb6c0178d83d5d5fa0d68e542542d220a0c25eae0058e8cb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented DPoP sidecar binding/revocation, container signer denial of 0.19.0 admin endpoints, direct 0.19.0 wire error-code forwarding, HTTPS URL validation, and origin privacy on v0.162.1",
-          "reviewed_code_fingerprint": "a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f",
-          "spec_material_hash": "fdeca194ba5871b6cb0f62dc4fb7ea093328224a87c68bfa19c67a959e0b3f0f"
+          "reason": "Reconciled origin/master (9453ebe97) with #1878 DPoP sidecar custody, container signer /cloud-control allowlist, and dactyl-db 0.19.0 boundaries",
+          "reviewed_code_fingerprint": "c2ac30c624f957592bc8989bdf12edac51b708e40ed67db12285031a4c6bdeb4",
+          "spec_material_hash": "81a91ba784970d5006af60593a71899a8576e9da7f143cf5b315c63714ad3664"
         }
       ],
       "state": "DRAFT",
@@ -986,7 +996,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795361077Z"
+      "updated_at": "1795373883Z"
     },
     "trajectory": {
       "active_boundaries": [

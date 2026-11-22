@@ -903,6 +903,15 @@ redacted NDJSON audit entry (`implies_validation_ready = false`).
 and install the reviewed profile to opt in to post-proof Laya judgment.
 Required accepted policy cannot be silently disabled.
 
+## Direct main-merge policy (#1468)
+
+`[governance].main_merge` defaults to `false` (fail-closed) and is omitted when
+false. A human maintainer may explicitly opt in to direct merge to main after
+full validation passes by setting `main_merge = true` in the accepted base
+repository's `.decapod/config.toml`. A candidate workbranch cannot self-authorize
+`main_merge = true` beyond accepted policy (`POLICY_SELF_AUTHORIZATION_REJECTED`),
+and direct merge always fails closed if the target base moves after validation.
+
 ## Cooperative shared-claim policy
 
 `[governance].allow_basic_shared_claims` defaults to `false`. A project may set

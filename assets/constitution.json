@@ -92,7 +92,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -301,7 +301,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -552,7 +552,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -752,7 +752,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -971,7 +971,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -1192,7 +1192,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -1408,7 +1408,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -1609,7 +1609,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -1800,7 +1800,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -2024,7 +2024,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -2201,7 +2201,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -2380,7 +2380,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -2562,7 +2562,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -2745,7 +2745,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -15628,7 +15628,7 @@
           "Pre-Inference Governance: Retrieve core/DECAPOD and domain nodes before planning or coding. Stop and query human if Decapod emits a Decision Gate.",
           "Epistemic Custody: Preserve uncertainty in specs/issue logs. Carry forward assumptions recursively. Tie completion claims directly to measured proof.",
           "Call Decapod Early: The constitution is pre-inference faculty; retrieve doctrine before plan hardening.",
-          "Ask When Blocked: Stop and request human clarification if ambiguity prevents safe, governed inference.",
+          "Ask When Admitted: Investigate ordinary uncertainty locally, submit bounded reflection/escalation, and request human clarification only when escalation admission confirms irreducible ambiguity or missing authority.",
           "Preserve Evidence: Every mutation must be accompanied by executable proof or validation logs.",
           "Stop on Risk: Halt execution immediately if trust boundaries or authority rules are violated."
         ],
@@ -15636,7 +15636,7 @@
           "Stop inference if the 'safe-to-proceed' threshold for a specific mutation is undefined."
         ],
         "decisions": [
-          "Choose between making a documented assumption versus stopping to ask the user for input."
+          "Choose between investigating via bounded reflection, making a documented assumption with proof, or escalating to the user only when escalation admission confirms irreducible ambiguity or missing authority."
         ],
         "standards": [
           "Agents must cite the constitution node or spec that authorized their procedural path."
@@ -15687,7 +15687,7 @@
           "choice": "Preserve the existing interfaces/PROCEDURAL_NORMS contract",
           "use_when": "The current producer, consumer, and validation evidence already satisfy the requested behavior.",
           "avoid_when": "Avoid preservation when the existing contract leaves ownership, required fields, or failure behavior ambiguous.",
-          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Choose between making a documented assumption versus stopping to ask the user for input."
+          "implications": "Record the current contract and proof surface without changing payload shape; the relevant guidance is: Choose between investigating via bounded reflection, making a documented assumption with proof, or escalating to the user only when escalation admission confirms irreducible ambiguity or missing authority."
         },
         {
           "choice": "Evolve interfaces/PROCEDURAL_NORMS additively",
@@ -27593,7 +27593,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",
@@ -45879,7 +45879,7 @@
         "loop_guards": [
           "Do not revisit another core router unless it would add a new fact, resolve a named uncertainty, or change the proof plan.",
           "If two core nodes keep referring to each other, choose the node that owns the next concrete artifact: generated file, spec, interface, command, or proof gate.",
-          "After two unresolved routing passes, stop and ask a focused human question or record the gap instead of continuing inference."
+          "After two unresolved routing passes, submit a bounded reflection/escalation check (`decapod govern plan reflect`) and ask a focused human question only when escalation admission confirms irreducible ambiguity or missing human authority; otherwise record the gap and stop without guessing."
         ],
         "proof_planning": [
           "Name the selected route, the rejected adjacent routes, and the evidence that made this route sufficient for the next action.",

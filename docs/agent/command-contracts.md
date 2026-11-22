@@ -297,6 +297,18 @@ always stops at a decision gate; Decapod never force-pushes silently.
 - **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
 - **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries.
 
+## `decapod houseboat`
+- **Intent:** Houseboat core engine: fleet coordination, mooring, resilience, budgets, benchmarks & read-only contracts
+
+## `decapod mcp`
+- **Intent:** Bounded local stdio MCP JSON-RPC 2.0 adapter and schema/config exporter (#872)
+
+## `decapod a2a`
+- **Intent:** Bounded A2A Agent Card and task/handoff envelope validator (#873)
+
+## `decapod observe`
+- **Intent:** Strictly read-only observability projections and optional authenticated loopback HTTP server
+
 # RPC Operations (Auto-generated)
 
 ### Operation: `AgentInit`

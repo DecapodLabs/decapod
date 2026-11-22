@@ -1,0 +1,53 @@
+{
+  "schema_version": "decapod.darkmatter-readonly-snapshot.v1",
+  "read_only": true,
+  "mutation_endpoints_exposed": false,
+  "ui_generated_proof_allowed": false,
+  "repository": "DecapodLabs/decapod",
+  "head_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
+  "human_requested_intent": "Provide a read-only cockpit contract tracing human intent through agent objectives, task scope, files, and proof receipts without mutating Decapod state.",
+  "current_agent_objective": "Publish and verify the decapod.darkmatter-readonly-snapshot.v1 offline fixture and repository-bounded read contract.",
+  "task_id": "code_01m81me586f0pmvj",
+  "task_scope": [
+    "docs/architecture/darkmatter-readonly-contract.md",
+    "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
+    "src/decapod/core/houseboat.rs"
+  ],
+  "dependencies": [
+    "issue:#1714",
+    "issue:#1735"
+  ],
+  "relevant_files": [
+    ".decapod/governance.json",
+    ".decapod/managed/specs/INTENT.md",
+    ".decapod/managed/specs/ARCHITECTURE.md",
+    ".decapod/managed/specs/INTERFACES.md",
+    "docs/architecture/darkmatter-readonly-contract.md",
+    "src/decapod/core/houseboat.rs",
+    "tests/fixtures/darkmatter_readonly_snapshot.v1.json"
+  ],
+  "governance_json_path": ".decapod/governance.json",
+  "completion_evidence": [
+    {
+      "evidence_id": "ev:darkmatter-contract-schema-check",
+      "kind": "unit_and_integration_test",
+      "status": "passed",
+      "digest": "sha256:9fbf3c3107fbdb0d8fab1d26a99103686516e688000000000000000000000001",
+      "path": "tests/houseboat_engine.rs"
+    },
+    {
+      "evidence_id": "ev:governance-document-custody",
+      "kind": "governance_snapshot",
+      "status": "recorded",
+      "digest": "sha256:9fbf3c3107fbdb0d8fab1d26a99103686516e688000000000000000000000002",
+      "path": ".decapod/governance.json"
+    }
+  ],
+  "outstanding_obligations": [
+    {
+      "obligation_id": "obl:darkmatter-external-repo-ui",
+      "description": "Implement web (localhost:3000) and TUI presentation layers in DecapodLabs/darkmatter against this read-only contract.",
+      "status": "open_external_repo"
+    }
+  ]
+}

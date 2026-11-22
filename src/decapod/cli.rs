@@ -74,6 +74,12 @@ pub(crate) struct ValidateCli {
     /// Reports scope=pre_build and publication_ready=false; never substitutes for full validation.
     #[clap(long = "pre-build")]
     pub pre_build: bool,
+    /// Run the deterministic mechanical clarity validator (#1097, #1365) on durable governance artifacts.
+    #[clap(long)]
+    pub clarity: bool,
+    /// Mechanical clarity profile: 'ste-lite' (default), 'ste-strict', or 'custom'.
+    #[clap(long, value_name = "PROFILE", requires = "clarity")]
+    pub profile: Option<String>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -512,6 +518,9 @@ pub(crate) struct InitWithCli {
     /// Preserve the configured shared-claim policy during reinitialization.
     #[clap(skip)]
     pub existing_allow_basic_shared_claims: bool,
+    /// Preserve the configured direct main-merge opt-in policy during reinitialization.
+    #[clap(skip)]
+    pub existing_main_merge: bool,
     /// Preserve human-authored exceptional grants during init refresh.
     #[clap(skip)]
     pub existing_rbac: GovernanceRbac,
@@ -677,6 +686,10 @@ pub struct GovernanceConfig {
     /// Cooperative opt-in for basic-trust secondary shared claims. False by default.
     #[serde(default, skip_serializing_if = "is_false")]
     pub allow_basic_shared_claims: bool,
+    /// Human-opted direct merge to main after full validation passes (#1468).
+    /// Defaults to false (fail-closed) and cannot be self-authorized by a candidate branch.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub main_merge: bool,
     /// Human-authored, fail-closed role grants for exceptional operations.
     #[serde(default, skip_serializing_if = "GovernanceRbac::is_default")]
     pub rbac: GovernanceRbac,
@@ -2817,6 +2830,211 @@ pub(crate) enum Command {
     /// Preview, reversibly remove, or restore repository integration without deleting project state
     #[clap(name = "integration")]
     Integration(IntegrationCli),
+
+    /// Houseboat core engine: fleet coordination, mooring, resilience, budgets, benchmarks & read-only contracts
+    #[clap(name = "houseboat")]
+    Houseboat(crate::core::houseboat::HouseboatCli),
+
+    /// Bounded local stdio MCP JSON-RPC 2.0 adapter and schema/config exporter (#872)
+    #[clap(name = "mcp")]
+    Mcp(McpCli),
+
+    /// Bounded A2A Agent Card and task/handoff envelope validator (#873)
+    #[clap(name = "a2a")]
+    A2a(A2aCli),
+
+    /// Strictly read-only observability projections and optional authenticated loopback HTTP server
+    #[clap(name = "observe")]
+    Observe(ObserveCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct McpCli {
+    #[clap(subcommand)]
+    pub command: McpCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum McpCommand {
+    /// Serve the bounded local stdio MCP JSON-RPC 2.0 adapter (exits cleanly on EOF/one-shot/shutdown)
+    Serve {
+        /// Handle a single JSON-RPC request frame and exit cleanly (test-safe)
+        #[clap(long)]
+        one_shot: bool,
+        /// Optional maximum number of request frames to process before exiting
+        #[clap(long)]
+        max_requests: Option<usize>,
+        /// Maximum incoming frame size in bytes
+        #[clap(long, default_value_t = 262_144)]
+        max_frame_bytes: usize,
+        /// Framing mode: auto, jsonl, or content-length
+        #[clap(long, default_value = "auto", value_parser = ["auto", "jsonl", "content-length"])]
+        framing: String,
+    },
+    /// Export deterministic MCP tool and resource schemas
+    Schema {
+        /// Output format: json or text
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+    },
+    /// Generate conflict-safe host MCP server configuration
+    Config {
+        /// Repository root directory (defaults to current working directory)
+        #[clap(long)]
+        root: Option<PathBuf>,
+        /// Executable path override (defaults to current decapod binary path)
+        #[clap(long)]
+        executable: Option<PathBuf>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct A2aCli {
+    #[clap(subcommand)]
+    pub command: A2aCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum A2aCommand {
+    /// Print the truthful A2A Agent Card describing only executable governance skills
+    Card {
+        /// Output format: json or text
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+    },
+    /// Validate a bounded A2A task/handoff envelope against local repository context
+    Handoff {
+        /// Path to JSON file containing `{ "envelope": ..., "local_context": ... }`
+        #[clap(long, conflicts_with = "json")]
+        input: Option<PathBuf>,
+        /// Inline JSON containing `{ "envelope": ..., "local_context": ... }`
+        #[clap(long, conflicts_with = "input")]
+        json: Option<String>,
+    },
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct ObserveCli {
+    #[clap(subcommand)]
+    pub command: ObserveCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ObserveCommand {
+    /// Read-only repository-bounded specs, manifest, and governance state projection (#1712)
+    Specs {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        offset: usize,
+        #[clap(long, default_value_t = 64)]
+        limit: usize,
+        #[clap(long)]
+        include_excerpts: bool,
+        #[clap(long)]
+        anchor_path: Option<String>,
+        #[clap(long, default_value_t = 1)]
+        start_line: usize,
+        #[clap(long, default_value_t = 0)]
+        end_line: usize,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only agent activity, custody, witnessed-vs-declared path, and proof timeline (#1713)
+    Timeline {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        after_seq: u64,
+        #[clap(long, default_value_t = 256)]
+        limit: usize,
+        #[clap(long)]
+        stream: Option<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only consistent Git + SQLite live workspace inventory, workunit activity, and source anchors (#860, #1714, #1723, #1727, #1728)
+    Workspace {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        offset: usize,
+        #[clap(long, default_value_t = 512)]
+        limit: usize,
+        #[clap(long)]
+        anchor_path: Option<String>,
+        #[clap(long, default_value_t = 1)]
+        start_line: usize,
+        #[clap(long, default_value_t = 0)]
+        end_line: usize,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only validation-plan applicability, requirement coverage, and joint checks (#1730)
+    ValidationPlan {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long = "require")]
+        accepted_requirements: Vec<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only prospective PR manifest and verified publication correspondence (#1731)
+    PrManifest {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long = "planned-file")]
+        planned_scope_files: Vec<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only redacted provenance for agent context consultations (#1732)
+    ContextProvenance {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        offset: usize,
+        #[clap(long, default_value_t = 64)]
+        limit: usize,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        repo_id: Option<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Serve strictly read-only observability projections over authenticated loopback HTTP (#874, #1719, #1720)
+    Serve {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Loopback bind address (fail-closed on non-loopback unless --allow-remote).
+        #[clap(long, default_value = "127.0.0.1:0")]
+        bind: String,
+        /// Read bearer token from stdin so credentials never appear in argv.
+        #[clap(long, conflicts_with = "auth_token")]
+        token_stdin: bool,
+        /// Bearer token (prefer --token-stdin or DECAPOD_OBSERVE_TOKEN).
+        #[clap(long, conflicts_with = "token_stdin")]
+        auth_token: Option<String>,
+        /// Explicitly allow binding beyond loopback.
+        #[clap(long)]
+        allow_remote: bool,
+        /// Bounded request cap for daemonless/test runs (INV-DAEMONLESS).
+        #[clap(long)]
+        max_requests: Option<usize>,
+        /// Maximum request body size in bytes.
+        #[clap(long, default_value_t = 262_144)]
+        max_body_bytes: usize,
+        /// Optional tenant scope enforcement header (`X-Decapod-Tenant`).
+        #[clap(long)]
+        tenant_id: Option<String>,
+        /// Optional allowed repository IDs (`X-Decapod-Repo-Id`).
+        #[clap(long = "repo-id")]
+        allowed_repo_ids: Vec<String>,
+        /// Explicitly revoked token IDs (`X-Decapod-Token-Id`).
+        #[clap(long = "revoked-token-id")]
+        revoked_token_ids: Vec<String>,
+    },
 }
 
 #[derive(clap::Args, Debug)]

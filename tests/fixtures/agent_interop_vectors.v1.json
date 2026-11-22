@@ -1,0 +1,2985 @@
+{
+  "schema_version": "1.0.0",
+  "profile_id": "decapod.governance-envelope",
+  "profile_version": "v1",
+  "vectors": [
+    {
+      "id": "positive_valid_external_evidence",
+      "family": "positive",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:da2fcf9effb0417d05b9a0d23c9a432779a21d84b67652a3ed0c48bef730653f"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "accepted_external_evidence",
+      "expected_reason_class": "valid_external_evidence"
+    },
+    {
+      "id": "version_incompatible_plane_major",
+      "family": "versioning",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "2.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:fdfcd3e537a69e2d416ec7d3e409f2845a0225b519d19aaa6c9ef34e0fce88a8"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "incompatible_plane_version"
+    },
+    {
+      "id": "extension_unsupported_mandatory",
+      "family": "versioning",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "unknown-mandatory-ext"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:8b01097ccadf08998c9f2ff59f8919432c061d9290407e64b043faab8d621ec2"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "unsupported_mandatory_extension"
+    },
+    {
+      "id": "tampered_envelope_after_seal",
+      "family": "tampering",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "verified",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:da2fcf9effb0417d05b9a0d23c9a432779a21d84b67652a3ed0c48bef730653f"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "envelope_tampered"
+    },
+    {
+      "id": "provenance_self_declared_producer",
+      "family": "provenance",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "self_declared",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:d88254ae26c2abf544183ab9415b1ea9583494a7b9a956211924f9b344b2b9c8"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "untrusted_producer"
+    },
+    {
+      "id": "provenance_untrusted_producer_id",
+      "family": "provenance",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "rogue-signer-99",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:b99f59bf729eeaf93a6909cac9c6b103382d1b2e7ae0b2efd60232ca8a191282"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "untrusted_producer"
+    },
+    {
+      "id": "summary_fiction_15_digests_no_raw_receipts",
+      "family": "summary_fiction",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "0000000000000000000000000000000000000000000000000000000000000001",
+            "0000000000000000000000000000000000000000000000000000000000000002",
+            "0000000000000000000000000000000000000000000000000000000000000003",
+            "0000000000000000000000000000000000000000000000000000000000000004",
+            "0000000000000000000000000000000000000000000000000000000000000005",
+            "0000000000000000000000000000000000000000000000000000000000000006",
+            "0000000000000000000000000000000000000000000000000000000000000007",
+            "0000000000000000000000000000000000000000000000000000000000000008",
+            "0000000000000000000000000000000000000000000000000000000000000009",
+            "000000000000000000000000000000000000000000000000000000000000000a",
+            "000000000000000000000000000000000000000000000000000000000000000b",
+            "000000000000000000000000000000000000000000000000000000000000000c",
+            "000000000000000000000000000000000000000000000000000000000000000d",
+            "000000000000000000000000000000000000000000000000000000000000000e",
+            "000000000000000000000000000000000000000000000000000000000000000f"
+          ],
+          "raw_receipts": [],
+          "self_generated_checksum_only": true,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:94ac02784b5adb6bdbc401f7dc6b41dbba4b3b4a6f438f57fb86d2803acd374a"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "not_proven",
+      "expected_reason_class": "summary_fiction_missing_raw_receipts"
+    },
+    {
+      "id": "summary_fiction_mutated_raw_receipt",
+      "family": "summary_fiction",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":false,\"assertions\":0}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:24374eef4e995a788d8b8e7bd88ffb8bf856c2c07c107fddb2fca776ae249873"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "raw_receipt_digest_mismatch"
+    },
+    {
+      "id": "freshness_stale_head_commit",
+      "family": "freshness",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "9999999999999999999999999999999999999999",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:b966af07cc0d476d4ca027900609db2a900bffbdaf9020b7ea4c0ffea1c4dea4"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "stale_evidence"
+    },
+    {
+      "id": "freshness_moved_accepted_base",
+      "family": "freshness",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "8888888888888888888888888888888888888888",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:bc6e5d9c9c99d2a2ebf829a798a0442af38d3b867b53d5eb2820fbb7e8f2a708"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "stale_evidence"
+    },
+    {
+      "id": "freshness_expired_window",
+      "family": "freshness",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:da2fcf9effb0417d05b9a0d23c9a432779a21d84b67652a3ed0c48bef730653f"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 2500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "stale_evidence"
+    },
+    {
+      "id": "freshness_revoked_lease_generation",
+      "family": "freshness",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 1,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:55a8b52667acf0f00dbd07ace5ff0b815e25fe2c7bd809569c61424227dfdc9c"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "stale_evidence"
+    },
+    {
+      "id": "freshness_newer_suite_failed",
+      "family": "freshness",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": true,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:031641c3ee798392e2971f930e65d95b6be91549bf918abfdee0704cd636da9b"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "stale_evidence"
+    },
+    {
+      "id": "isolation_cross_tenant_denied",
+      "family": "replay_and_tenant",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-beta",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:a1700d95359fedbecbfd41c8fb4c36f83a14fcb912496fc36aee800caf1d7c89"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "cross_tenant_or_repo_denied"
+    },
+    {
+      "id": "replay_retired_run_after_restart",
+      "family": "replay_and_tenant",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:da2fcf9effb0417d05b9a0d23c9a432779a21d84b67652a3ed0c48bef730653f"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [
+        [
+          "repo:local",
+          "run_001"
+        ]
+      ],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "replay_detected"
+    },
+    {
+      "id": "replay_duplicate_op_mutated_payload",
+      "family": "replay_and_tenant",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:da2fcf9effb0417d05b9a0d23c9a432779a21d84b67652a3ed0c48bef730653f"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [
+        {
+          "key": [
+            "repo:local",
+            "DecapodLabs/decapod",
+            "tenant-alpha",
+            "run_001",
+            "op_001"
+          ],
+          "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "replay_detected"
+    },
+    {
+      "id": "authority_delegation_widening_denied",
+      "family": "authority",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ],
+          "delegation": {
+            "parent_grant_id": "grant-parent-1",
+            "parent_allowed_actions": [
+              "validate.run"
+            ],
+            "parent_recipient_id": "decapod-kernel-local",
+            "parent_expires_at_epoch": 1900,
+            "parent_allowed_paths": [
+              "src/decapod/core"
+            ],
+            "parent_max_budget": 100,
+            "child_action": "validate.run",
+            "child_recipient_id": "decapod-kernel-local",
+            "child_expires_at_epoch": 1900,
+            "child_paths": [
+              ".github/workflows/ci.yml"
+            ],
+            "child_budget": 250
+          }
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:24ec84eed4601770237522e27c6e2ee47f138eda761be6399dad164139a97306"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "authority_widening_denied"
+    },
+    {
+      "id": "authority_approval_parameter_mismatch",
+      "family": "authority",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"user\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:4162da7775a8878af874653fd668f84c56014c4d24d1fc6075f3aca798455383"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "approval_parameter_mismatch"
+    },
+    {
+      "id": "authority_plan_approval_not_human_consent",
+      "family": "authority",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "workspace.publish",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "workspace.publish",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:6edee492c62e80498c0a0367130ddcb49c93019e193e791e1a7da03a1eebab64"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "missing_human_approval"
+    },
+    {
+      "id": "env_tamper_protected_test_modified",
+      "family": "tampered_env",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [
+            "protected_test_modified_and_restored"
+          ],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:52ed8524d0f8054c30da61267d890360e5501199d7178af9c2f2873be631e3e3"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "tampered_execution_environment"
+    },
+    {
+      "id": "history_tail_truncated",
+      "family": "history",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:8c82d09ba0a62314811d67ac63e4c12b3e08c0f8a2c85336ff848fefe5a5a218"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "history_incomplete_or_reordered"
+    },
+    {
+      "id": "process_prohibited_path_with_passing_output",
+      "family": "process_vs_outcome",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": false,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:37a94f1494e7ab3833e2e0e499f85277808d9cef9f5fc12bb13ecbb2bd1c3842"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "prohibited_execution_path"
+    },
+    {
+      "id": "semantic_zero_assertions_passed",
+      "family": "semantic",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 0,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:3c8c93023dc7d93637c39c2d2dd2fd0db676dc9935daf55af95f48274d06b730"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "semantic_outcome_mismatch"
+    },
+    {
+      "id": "semantic_http_404_declared_success",
+      "family": "semantic",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs",
+          "observed_http_status": 404
+        },
+        "envelope_sha256": "sha256:8bc4ca13b9bfb48b8e9150c5a8fa3944a01e01c119e20f4d14b6e85a0980cbb6"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "semantic_outcome_mismatch"
+    },
+    {
+      "id": "scope_precommit_containment_as_goal_completion",
+      "family": "summary_fiction",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "precommit_containment",
+          "declared_status": "goal_completed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "src/decapod/core/agent_interop.rs"
+        },
+        "envelope_sha256": "sha256:1819a6eaff0e1c6010fd0e4e67249ebf06af3ab20da8641f0637d13d51146d05"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "not_proven",
+      "expected_reason_class": "precommit_containment_not_goal_completion"
+    },
+    {
+      "id": "ambiguity_url_userinfo_and_traversal",
+      "family": "ambiguity",
+      "envelope": {
+        "profile_id": "decapod.governance-envelope",
+        "profile_version": "v1",
+        "plane_versions": {
+          "intent": "1.0.0",
+          "authority": "1.0.0",
+          "evidence": "1.0.0",
+          "outcome": "1.0.0"
+        },
+        "intent": {
+          "repository_id": "DecapodLabs/decapod",
+          "tenant_id": "tenant-alpha",
+          "task_id": "code_01m81gnkzncv9qsk",
+          "run_id": "run_001",
+          "op_id": "op_001",
+          "actor_id": "agent-worker-1",
+          "recipient_id": "decapod-kernel-local",
+          "replay_domain": "repo:local",
+          "lease_generation": 3,
+          "original_human_request_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "agent_interpretation_summary": "Execute governed conformance validation",
+          "human_request_independently_observed": true
+        },
+        "authority": {
+          "requested_operation": "validate.run",
+          "actual_parameters_canonical": "{\"store\":\"repo\"}",
+          "claimed_approved_operation": "validate.run",
+          "claimed_approved_parameters_canonical": "{\"store\":\"repo\"}",
+          "authenticated_human_approval": false,
+          "plan_approved_by_agent": true,
+          "issued_at_epoch": 1000,
+          "expires_at_epoch": 2000,
+          "mandatory_extensions": [
+            "receipts",
+            "interlocks"
+          ],
+          "optional_extensions": [
+            "zzz-future-optional",
+            "receipts"
+          ]
+        },
+        "evidence": {
+          "producer_id": "ci-executor-1",
+          "producer_trust_class": "trusted_ci",
+          "source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+          "head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "proof_plan_epoch": 7,
+          "claimed_receipt_digests": [
+            "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713"
+          ],
+          "raw_receipts": [
+            {
+              "receipt_id": "rcpt-01",
+              "claimed_sha256": "e63083af7dc71de7fab7a30ef010d21368a687f9f866625d9b1b2b7e7d233713",
+              "raw_bytes_utf8": "{\"suite\":\"core\",\"passed\":true,\"assertions\":42}"
+            }
+          ],
+          "self_generated_checksum_only": false,
+          "newer_suite_failed": false,
+          "environment_tamper_signals": [],
+          "history_events": [
+            {
+              "seq": 1,
+              "event_kind": "claim",
+              "verdict": "ok"
+            },
+            {
+              "seq": 2,
+              "event_kind": "validate",
+              "verdict": "passed"
+            }
+          ],
+          "expected_terminal_seq": 2,
+          "independent_effect_observed": true
+        },
+        "outcome": {
+          "claim_kind": "effect",
+          "declared_status": "passed",
+          "observed_status": "passed",
+          "observed_assertions": 42,
+          "process_path_authorized": true,
+          "behavioral_passed": true,
+          "target_uri_or_path": "https://trusted.example@evil.example/repo/../secret"
+        },
+        "envelope_sha256": "sha256:67e4dc578e1a0789da70afcad08b43d8dca9ba6274d656c63af47ead5c2ac864"
+      },
+      "trust_policy": {
+        "repository_id": "DecapodLabs/decapod",
+        "tenant_id": "tenant-alpha",
+        "expected_recipient_id": "decapod-kernel-local",
+        "expected_head_commit_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "expected_base_commit_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "expected_source_tree_sha": "cccccccccccccccccccccccccccccccccccccccc",
+        "min_lease_generation": 3,
+        "current_proof_plan_epoch": 7,
+        "accepted_producers": [
+          "ci-executor-1",
+          "independent-observer-1"
+        ],
+        "require_human_approval_for_ops": [
+          "workspace.publish"
+        ]
+      },
+      "now_epoch": 1500,
+      "retired_runs": [],
+      "prior_ops": [],
+      "expected_verdict": "rejected",
+      "expected_reason_class": "input_ambiguity_rejected"
+    }
+  ]
+}

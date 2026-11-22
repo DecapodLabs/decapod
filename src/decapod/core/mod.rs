@@ -4,8 +4,10 @@
 //! and shared primitives live here.
 
 pub mod agent_eval;
+pub mod agent_interop;
 pub mod analyze;
 pub mod ansi;
+pub mod artifact_clarity;
 pub mod assets;
 pub mod assurance;
 pub mod atomic;
@@ -53,12 +55,14 @@ pub mod events;
 pub mod external_action;
 pub mod fleet_coord;
 pub mod flight_recorder;
+pub mod formal_obligations;
 pub mod fs_permissions;
 pub mod gatekeeper;
 pub mod governance_artifacts;
 pub mod governance_document;
 pub mod governed_transition;
 pub mod group_broker;
+pub mod houseboat;
 pub mod http_transport;
 pub mod init_reconciliation;
 pub mod integration_removal;
@@ -69,8 +73,11 @@ pub(crate) mod jev_history;
 pub(crate) mod json;
 pub mod mentor;
 pub mod migration;
+pub mod mooring;
 pub mod native_proof;
 pub mod obligation;
+pub mod obligation_ledger;
+pub mod observability_projections;
 pub mod org_overlay;
 pub mod output;
 pub mod path_policy;
