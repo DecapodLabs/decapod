@@ -898,6 +898,17 @@
         "tests/capability_contract_drift.rs",
         "tests/unit/core/capability_contract_tests.rs"
       ]
+    },
+    {
+      "id": "chk:1906-spec-review-v2",
+      "summary": "Record current-content spec reviews for INTERFACES.md, ARCHITECTURE.md, and SECURITY.md on c1cf7efcc",
+      "input_digest": "sha256:83e84a4986638871465c8f1cc98fae0d2cd93037e829a31fdb40a7da74e6f847",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/capability_contract.rs",
+        "tests/capability_contract_drift.rs",
+        "tests/unit/core/capability_contract_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -939,6 +950,29 @@
         "decapod govern project-check --refresh-specs --format json"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Updated ARCHITECTURE.md for #1906: composed Decapod -> Dactyl -> Propodus capability contract boundary in src/decapod/core/capability_contract.rs, four explicit composite consequence states (prepared/observed/held/compensated), and validate.rs admission gate preserving local offline repo usability.",
+          "reviewed_code_fingerprint": "96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c",
+          "spec_material_hash": "2d601d5503ff85eb387ec94fbd4a05bd43fe7708f63cf6567fb019ce61ea655e"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Updated INTERFACES.md for #1906: decapod capabilities contracts CLI (--fixture, --contract, --dir, --format), read-only RPC interop.capability_contracts, and strict Draft 2020-12 capability-contract.schema.json verified against src/decapod/cli.rs, src/decapod/core/interop.rs, src/decapod/core/rpc.rs, and src/decapod/lib.rs.",
+          "reviewed_code_fingerprint": "96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c",
+          "spec_material_hash": "c6baf64fe290c8f414241e863526d7f95a3ac76096f72447bc613dd1d05d976d"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Updated SECURITY.md for #1906: fail-closed drift detection rejecting self-certified descriptors, self-reported observations, HTTP 200 error/field drift masking, blind replay of severed-ack two-step mutations, fault-erasing compensations, and agent-edited local policy overrides.",
+          "reviewed_code_fingerprint": "96178ac8c988c8a66d4ddcd84e262cf3a3eda416497581ddd675c9596f126c5c",
+          "spec_material_hash": "8f7a384b5e3f47c007383cc6ed2849a84cb81eeb73a03e8ab279f4873fd48582"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Detect drift in composed service capabilities before governed admission (#1906)",
@@ -947,7 +981,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795313385Z"
+      "updated_at": "1795313727Z"
     },
     "trajectory": {
       "active_boundaries": [
