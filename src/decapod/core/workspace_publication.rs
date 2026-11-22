@@ -35,6 +35,76 @@ fn run(repo: &Path, program: &str, args: &[&str], action: &str) -> Result<Vec<u8
     Ok(output.stdout)
 }
 
+pub(super) fn is_governance_only_path(path: &str) -> bool {
+    let p = path.trim_start_matches("./");
+    p == ".decapod/governance.json"
+        || p.starts_with(".decapod/governance/")
+        || p.starts_with(".decapod/managed/specs/")
+        || p == ".decapod/managed/Dockerfile.decapod"
+        || matches!(p, "AGENTS.md" | "CLAUDE.md" | "GEMINI.md" | "CODEX.md")
+}
+
+/// Inspect the exact remote branch head (read-only) and classify fast-forward
+/// vs divergence decision gate without fetching into shared refs or mutating git.
+pub(super) fn classify_remote_divergence(
+    repo: &Path,
+    target: &str,
+    branch: &str,
+    local_head: &str,
+) -> Result<(Option<String>, &'static str), DecapodError> {
+    let head_ref = format!("refs/heads/{branch}");
+    let output = text(run(
+        repo,
+        "git",
+        &["ls-remote", "--refs", "--", target, &head_ref],
+        "Remote branch divergence check",
+    )?)?;
+    let mut remote_head = None;
+    for line in output.lines() {
+        let Some((sha, reference)) = line.split_once('\t') else {
+            continue;
+        };
+        if reference == head_ref && oid(sha) {
+            remote_head = Some(sha.to_string());
+            break;
+        }
+    }
+    let Some(remote_sha) = remote_head else {
+        return Ok((None, "new_branch"));
+    };
+    if remote_sha == local_head {
+        return Ok((Some(remote_sha), "up_to_date"));
+    }
+    let is_ancestor = Command::new("git")
+        .current_dir(repo)
+        .env("GIT_OPTIONAL_LOCKS", "0")
+        .args(["merge-base", "--is-ancestor", &remote_sha, local_head])
+        .bounded_output(CONTROL_TIMEOUT)
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+    if is_ancestor {
+        Ok((Some(remote_sha), "fast_forward"))
+    } else {
+        Ok((Some(remote_sha), "diverged_decision_gate"))
+    }
+}
+
+pub(super) fn branch_changed_paths(
+    repo: &Path,
+    base: &str,
+    head: &str,
+) -> Result<BTreeSet<String>, DecapodError> {
+    changed_paths(repo, base, head)
+}
+
+pub(super) fn find_open_pr_for_branch(
+    repo: &Path,
+    slug: &str,
+    branch: &str,
+) -> Result<Option<u64>, DecapodError> {
+    find_pr(&mut |args| gh(repo, args), slug, branch)
+}
+
 pub(super) fn redact_remote(url: &str) -> String {
     if let Some((scheme, rest)) = url.split_once("://") {
         let rest = rest.split(['?', '#']).next().unwrap_or_default();
@@ -545,7 +615,7 @@ fn quarantine_pr(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn ensure_and_verify_pr(
+pub(super) fn ensure_and_verify_pr_for_target(
     repo: &Path,
     target: &str,
     slug: &str,
@@ -555,13 +625,15 @@ pub(super) fn ensure_and_verify_pr(
     readiness: &crate::core::validation_history::PublicationReadiness,
     title: Option<&str>,
     description: Option<&str>,
-) -> Result<String, DecapodError> {
-    let result = ensure_and_verify_pr_with(
+    expected_pr: Option<u64>,
+) -> Result<(String, bool), DecapodError> {
+    let result = ensure_and_verify_pr_with_target(
         &mut |args| gh(repo, args),
         slug,
         branch,
         base,
         proof,
+        expected_pr,
         &mut || {
             readiness.verify_subject(slug, branch, &proof.head, base, &proof.base)?;
             readiness.verify_current(repo)?;
@@ -574,6 +646,34 @@ pub(super) fn ensure_and_verify_pr(
         Ok(path) => failure(format!("{error}\nRejection evidence: {}", path.display())),
         Err(record_error) => failure(format!("{error}\nPUBLICATION_REJECTION_RECORD_FAILED: {record_error}; admission remains rejected")),
     })
+}
+
+#[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
+pub(super) fn ensure_and_verify_pr(
+    repo: &Path,
+    target: &str,
+    slug: &str,
+    branch: &str,
+    base: &str,
+    proof: &RemoteProof,
+    readiness: &crate::core::validation_history::PublicationReadiness,
+    title: Option<&str>,
+    description: Option<&str>,
+) -> Result<String, DecapodError> {
+    ensure_and_verify_pr_for_target(
+        repo,
+        target,
+        slug,
+        branch,
+        base,
+        proof,
+        readiness,
+        title,
+        description,
+        None,
+    )
+    .map(|(url, _)| url)
 }
 
 fn metadata_for_create(
@@ -659,6 +759,7 @@ fn metadata_for_create(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)]
 fn ensure_and_verify_pr_with(
     call: &mut impl FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
     slug: &str,
@@ -668,10 +769,39 @@ fn ensure_and_verify_pr_with(
     admission: &mut impl FnMut() -> Result<(), DecapodError>,
     metadata: impl FnOnce() -> Result<(String, String), DecapodError>,
 ) -> Result<String, DecapodError> {
+    ensure_and_verify_pr_with_target(call, slug, branch, base, proof, None, admission, metadata)
+        .map(|(url, _)| url)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn ensure_and_verify_pr_with_target(
+    call: &mut impl FnMut(&[&str]) -> Result<Vec<u8>, DecapodError>,
+    slug: &str,
+    branch: &str,
+    base: &str,
+    proof: &RemoteProof,
+    expected_pr: Option<u64>,
+    admission: &mut impl FnMut() -> Result<(), DecapodError>,
+    metadata: impl FnOnce() -> Result<(String, String), DecapodError>,
+) -> Result<(String, bool), DecapodError> {
     admission()?;
-    let number = match find_pr(call, slug, branch)? {
-        Some(number) => number,
+    let (number, reused) = match find_pr(call, slug, branch)? {
+        Some(number) => {
+            if let Some(expected) = expected_pr
+                && number != expected
+            {
+                return Err(failure(format!(
+                    "PR_TARGET_MISMATCH: requested --pr #{expected} does not match open PR #{number} for branch '{branch}'"
+                )));
+            }
+            (number, true)
+        }
         None => {
+            if let Some(expected) = expected_pr {
+                return Err(failure(format!(
+                    "PR_TARGET_MISMATCH: requested --pr #{expected} is not an open PR for branch '{branch}' on '{slug}'; refusing to create a duplicate PR"
+                )));
+            }
             let (title, description) = metadata()?;
             admission()?;
             // Retry a failed create only by readback: GitHub may have accepted
@@ -692,7 +822,7 @@ fn ensure_and_verify_pr_with(
                 &description,
             ]);
             match find_pr(call, slug, branch)? {
-                Some(number) => number,
+                Some(number) => (number, false),
                 None => {
                     created?;
                     return Err(failure(
@@ -753,7 +883,7 @@ fn ensure_and_verify_pr_with(
             ));
         }
         admission()?;
-        Ok(final_pr.html_url)
+        Ok((final_pr.html_url, reused))
     })();
     result.map_err(|error| {
         let quarantine = match quarantine_pr(call, slug, branch, base, number) {

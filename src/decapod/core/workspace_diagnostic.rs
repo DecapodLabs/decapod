@@ -67,6 +67,7 @@ fn proposal(
                 let accepted = serde_json::to_value(accepted).unwrap_or(Value::Null);
                 for section in [
                     "governance",
+                    "maintenance",
                     "proof",
                     "custody",
                     "laya",
@@ -512,6 +513,18 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
     } else {
         operation
     };
+    let mut next_actions: Vec<String> = Vec::new();
+    for blocker in &blockers {
+        if let Some(action) = blocker["next_action"].as_str()
+            && !next_actions.iter().any(|existing| existing == action)
+        {
+            next_actions.push(action.to_string());
+        }
+    }
+    let dirty_files = inventory
+        .as_ref()
+        .and_then(|i| serde_json::to_value(&i.dirty).ok())
+        .unwrap_or(json!({"status":"unavailable"}));
     super::trace::redact(
         json!({"schema_version":SCHEMA,"exit_code":exit_code,"read_only":true,
         "repository":{"root":main,"protected_root":protected_root},
@@ -531,11 +544,12 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
             "container_broker":{"status":"unavailable","dependency":"1066"},
             "cloud_identity":{"status":"unverified","independently_authenticated":false}},
         "container_proof":{"required":container_required,"status":match (container_required, in_container) {(Some(false),_)=>"not_required",(Some(true),Some(true))=>"runtime_detected_proof_unverified",(Some(true),Some(false))=>"unestablished",_=>"unavailable"},"captured":null,"source":"accepted_repository_config_and_workspace_status"},
+        "dirty_files":dirty_files,
         "governance_artifacts":artifacts,"proof":proof,"target_pr":target_pr,
         "remote_check_readiness":{"status":if failing_checks{"blocked"}else if pending_checks{"pending"}else if forge_checks.is_some_and(|checks| !checks.is_empty() && checks.iter().all(|check| check["bucket"]=="pass")){"forge_required_checks_passing"}else{"unverified"},
             "source":"github_required_pr_checks","complete_proof_profile_verified":false},
         "publication_readiness":{"can_publish":false,"live_recheck_required":true,"source":"existing_governed_publisher"},
-        "merge_authorized":false,"blockers":blockers}),
+        "merge_authorized":false,"blockers":blockers,"next_actions":next_actions}),
     )
 }
 

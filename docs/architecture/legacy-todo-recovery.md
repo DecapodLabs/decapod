@@ -26,14 +26,32 @@ legacy reconciliation, preserved empty bytes, corrupt/nonzero input, all three
 sidecars and symlink uncertainty. These are store-boundary tests; hosted execution
 and final publication readiness remain pending.
 
-## General logical recovery remains unresolved
+## Non-empty logical inspection, export, quarantine, and opt-in import (#1657)
 
-Decapod #1657 still requires an explicit versioned, idempotent recovery operation
-for valid nonempty legacy stores beside canonical history. Equivalent historical
-rows, divergent state, malformed stores and interrupted recovery need independent
-classification and source-bound receipts under accepted repair authority. The
-narrow placeholder repair does not implement or silently authorize that cutover.
-Repository owner repair remains separately coordinated with #1590.
+`decapod todo journal reconcile-legacy` inspects bounded temporary snapshots of
+non-empty legacy `todo.db` files (`<= 10,000` rows) against canonical `tasks`
+and classifies them into `empty`, `canonical_copy`, `logically_equivalent`,
+`divergent`, `unmatched`, `corrupt`, or `unverifiable` without opening the live
+legacy file directly:
+
+- `--export <PATH>` writes a deterministic private JSON inspection bundle
+  (`create_new`, refusing overwrites) containing classification, digests,
+  `logical_summary` (`matched_task_ids`, `legacy_only_task_ids`,
+  `conflicting_task_ids`), legacy tasks, and legacy events without mutating
+  either datastore.
+- `--quarantine --expected-review <quarantine_review_sha256>` archives any
+  reviewed legacy `todo.db` to `todo.db.legacy-recovery-v1.archive`, writes the
+  committed receipt (`mode = "quarantine"`), and retires `todo.db` without
+  mutating canonical `decapod.db`.
+- `--import-missing --expected-review <quarantine_review_sha256>` archives
+  `todo.db` first, fails closed (`LEGACY_TODO_CONFLICT_BLOCKED`) if any task ID
+  conflicts with canonical state, inserts only `legacy_only_task_ids` plus
+  `task.add` events and `task_journal::record_changes` inside one atomic
+  transaction, verifies `task_journal::verify_with_budget`, and retires
+  `todo.db`. Conflicting or uncertain rows are never silently overwritten.
+- Zero-byte regular `todo.db` placeholders without sidecars retain `#1683`'s
+  inert preservation behavior. Repository owner repair remains separately
+  coordinated with `#1590`.
 
 Use supported read-only inventory and task-journal inspection to preserve the
 actual state and blocker. Do not manually delete a source, fabricate a historical

@@ -15,6 +15,14 @@
 - **Typed `CloudAuthErrorCode` expansion (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**:
   Adds typed `snake_case` error codes for DPoP (`use_dpop_nonce`, `invalid_dpop_proof`, `dpop_aud_mismatch`, `dpop_replay`, `dpop_nonce_mismatch`, `dpop_clock_skew`, `dpop_ath_mismatch`, `dpop_htu_mismatch`, `dpop_htm_mismatch`, `dpop_jkt_mismatch`, `invalid_binding`, `dpop_proof_required`, `missing_dpop_proof`, `stolen_bearer`, `device_revoked`, `device_key_expired`, `device_not_enrolled`, `refresh_reuse_detected`, `expired_credential`), org session/grant narrowing (`grant_revoked`, `grant_expired`, `scope_denied`, `repo_access_denied`), paid seats (`paid_seat_required`, `seat_capacity_exceeded`, `organization_already_enrolled`, `admin_approval_required`), tenant lifecycle (`tenant_upgrade_required`, `tenant_upgrading`, `tenant_suspended`, `tenant_archived`, `org_recovery_required`, `policy_template_conflict`), and provenance/concurrency (`provenance_origin_mismatch`, `idempotency_conflict`, `idempotency_in_progress`, `version_conflict`, `transaction_aborted`).
 
+## Maintenance WAL checkpoint, legacy TODO logical recovery, read-only analyze, workspace effective-state/publish planning, and pre-build validate (#1568, #1657, #1279, #1071, #1064, #1047)
+
+- **Database maintenance CLI & RPC (`src/decapod/cli.rs::DatabaseMaintainCommand`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**: Adds `decapod data db maintain wal-checkpoint [--timeout-ms <0..=5000>]` (and RPC `data.database.wal_checkpoint` with `DatabaseWalCheckpointParams`), `lock-inspect` (`db.lock.diagnose`), plus visible aliases `diagnose` (`inspect`) and `integrity-check` (`verify`). Accepts `[maintenance]` alongside `[governance.db_maintenance]` in `.decapod/config.toml`.
+- **Legacy TODO recovery CLI (`src/decapod/core/todo.rs::TodoJournalCommand::ReconcileLegacy`)**: Extends `decapod todo journal reconcile-legacy` with `--export <PATH>`, `--quarantine`, and `--import-missing` (mutually exclusive with `--prepare-only` and requiring `--expected-review <sha256>` for mutating actions). Review responses expose `quarantine_review_sha256`, `logical_summary`, `can_quarantine`, and `can_import_missing`.
+- **Read-only analysis CLI (`src/decapod/cli.rs::Command::Analyze`, `AnalyzeCli`)**: Adds `decapod analyze [--read-only] [--format text|json] [--max-files N] [--max-bytes N] [--timeout-ms N] [--draft-spec] [PATH]` returning `decapod.analyze-readonly.v1` JSON or concise text with zero repository/SQLite/session mutations.
+- **Workspace effective-state & publication planning CLI (`src/decapod/cli.rs::WorkspaceCommand`, `WorkspacePublishMode`)**: Adds `visible_alias = "effective-state"` and `--format text|json` to `WorkspaceCommand::Diagnose`, plus `--pr <N>`, `--branch <NAME>`, `--mode full|governance-only`, and `--dry-run` (`decapod.workspace-publish-plan.v1`) on `WorkspaceCommand::Publish` (and `pr_reused` + `mode` on `PublishResult`).
+- **Pre-build validate CLI (`src/decapod/cli.rs::ValidateCli::pre_build`)**: Adds `decapod validate --pre-build [--format text|json]` returning `decapod.pre-build-validate.v1` with `scope: "pre_build"`, `read_only: true`, `publication_ready: false`, and `proof_ready: false`.
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1687,8 +1695,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b7b36d13485ba240bdc065dd4ca86a572ef86c01cc79f092891c1a4e9cf92da0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (260 files), `tests/` (276 files)
+- Repository signal fingerprint: `a948d7329b441bd2faa95998396f6cf6159778821d8e2d43564b89dec1e6898f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (277 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
