@@ -1672,8 +1672,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (261 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2416,3 +2416,16 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
   - Readiness blockers mirrored into `report.failures` (`"publication_readiness: ..."`) retain `stage = "readiness"` / `"post_validation_readiness"` and readiness scope when no non-readiness project gate failed.
 - **Actionable execution-binding recovery (`src/decapod/core/trajectory/execution.rs`, `src/decapod/core/todo.rs`, `docs/agent/error-recovery.md`)**:
   - `verify_execution_binding` classifies `EXECUTION_STATE_CHANGED` into the changed dimension (`EXECUTION_POLICY_CHANGED`, `EXECUTION_TASK_CUSTODY_CHANGED`, `EXECUTION_MATERIAL_CHANGED`, `EXECUTION_PLAN_OR_INTENT_CHANGED`, `EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED`) and surfaces `decapod govern workunit checkpoint --task-id <id> --operation-id <id>` / `decapod govern trajectory checkpoint` so lease renewals or independent policy approvals can refresh active workunit custody without altering Git `HEAD` or historical `done` task completion timestamps.
+
+## Houseboat CLI, Darkmatter Read-Only Snapshot, and TypeScript/Pi Interfaces
+
+- **CLI (`decapod houseboat ...` wired in `src/decapod/cli.rs` & `src/decapod/lib.rs`)**:
+  - `decapod houseboat status`: emits `decapod.houseboat.v1` JSON listing active Houseboat engine subsystems and issue mappings.
+  - `decapod houseboat verify-darkmatter-snapshot --file <path>`: validates a `decapod.darkmatter-readonly-snapshot.v1` fixture for read-only flags, repository-bounded relative paths, cryptographic evidence digests, and intent-to-evidence traceability.
+  - `decapod houseboat storage-benchmark --tasks <n>`: runs a local SQLite task/lease/compaction/GC/reclaim workload in an isolated temp directory and emits `decapod.storage-compaction-benchmark.v1` JSON with explicit `hosted_backend_status = "unavailable_local_only"` and `unknown_fields`.
+  - `decapod houseboat verify-mooring [--file <path>] [--now-epoch <u64>]`: evaluates a `decapod.mooring-contract.v1` contract at a read boundary and prints the structured `MooringVerdict`.
+- **Darkmatter Read-Only Contract (`docs/architecture/darkmatter-readonly-contract.md`, `tests/fixtures/darkmatter_readonly_snapshot.v1.json`)**:
+  - Schema `decapod.darkmatter-readonly-snapshot.v1` mandates `read_only = true`, `mutation_endpoints_exposed = false`, `ui_generated_proof_allowed = false`, and repository-relative paths only.
+- **TypeScript Binding & Pi Extension (`bindings/typescript/`, `packages/pi-decapod/`)**:
+  - `DecapodClient` (`bindings/typescript/src/index.ts`): concurrent, `AbortSignal`-cancellable wrapper around `decapod` CLI/RPC with per-instance `cwd`, `agentId`, and `sessionPassword` isolation and zero `process.exit` calls.
+  - `createPiDecapodExtension` (`packages/pi-decapod/src/index.ts`): captures raw human prompts separately from agent interpretation across model/harness switches, enforces preparation/pre-mutation/validation-admission gates without equating plan drafting to human approval, and classifies unobserved direct host writes as `outside_native_enforcement`.

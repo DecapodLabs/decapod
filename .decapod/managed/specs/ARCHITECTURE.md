@@ -1325,8 +1325,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (261 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1931,3 +1931,18 @@ The encoding profile and independently retained agent-run coverage remain separa
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
 
 The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding validation. The conformance harness obtains executable identity through the documented read-only `decapod system version` command; unsupported top-level version flags are not execution evidence. Native regeneration supplies the current release projections, while the independent decoder and all pinned raw inputs remain separate from authorization and full native admission.
+
+## Houseboat Core Modules, Darkmatter Contract, and TypeScript/Pi Bindings
+
+- **`src/decapod/core/mooring.rs` (`#855`)**: Implements `CollaborationContract`, `ArtifactProvenance`, `DisengagementRecord`, `MooringEnforcementRequest`, `MooringVerdict`, and `MooringRegistry`. Explicit forbidden operations override allowed operations; data boundaries reject path traversal; external artifact import/publish verifies both `content_sha256` and `wrapper_sha256` against verified obligations so wrapper-metadata tampering cannot bypass verification; revocation and disengagement are idempotent and recorded in `audit_trail`.
+- **`src/decapod/core/houseboat.rs` (`#852`-`#854`, `#856`-`#859`, `#657`, `#1367`, `#1630`, `#1711`)**:
+  - `FleetCoordGraph` (`#852`): typed edge graph (`FleetEdgeKind`), Kahn cycle detector on `DependsOn`/`DerivesFrom`, admission evaluation, and `evaluate_combined_merge_gate` against `CombinedReconciliationProof`.
+  - `WorkspaceLifecycleMachine`, `HabitatManifest`, and `detect_leaked_resources` (`#853`): deterministic state transitions (`Provisioning -> Active -> Canceling/Abandoned -> Teardown -> Recovered/Terminated`), dirty-worktree non-force preservation, reproducible input-hash manifests, and leak classification across containers, mounts, services, temporary credentials, and orphan worktrees.
+  - `DriftPolicyConfig`, `evaluate_seaworthiness`, and `SeaworthinessRemediationLoop` (`#854`): project-configurable severities and warning thresholds, semver/sunset checks for toolchains and deprecated APIs, and bounded proposal-only remediation preserving confidence and uncertainty notes.
+  - `DurableJournal` and `reconcile_machine_journals` (`#856`): SHA-256 hash-chained journal spanning `Todo`, `Workunit`, `Capsule`, `Lease`, and `Proof` domains with idempotent replay, uncommitted-tail preservation, checkpoints, and conflict-surfacing multi-machine sync.
+  - `MotionAdjudicator` (`#857`): evaluates `WorkunitMotionSnapshot` for premature implementation, out-of-scope edits, stalled retry loops, and authority/motion projection divergence, emitting bounded recovery proposals that preserve proof gates.
+  - `classify_dependencies`, `recover_partial_write`, and `evaluate_exit_degraded` (`#858`): separates critical failures (`OperationalState::StoppedRecoverable`) from optional losses (`DegradedMode::{CloudUnavailable, ContainerUnavailable, ProviderUnavailable, ToolingUnavailable}`), handles idempotent staging recovery, and enforces repository health + recovery evidence before leaving degraded mode.
+  - `ResourceBudgetLedger` (`#859`): principal-level ceiling + per-child limit enforcement, monotonic fence tokens, `ReservationState::UncertainHold` immune to expiry auto-refund, authoritative `reconcile_outcome`, and `BudgetForecast` with explicit assumptions and confidence.
+  - `KnowledgeAttestation` (`#657`), `reconcile_after_crash` (`#1367`), `run_local_storage_compaction_benchmark` (`#1630`), and `validate_darkmatter_snapshot` (`#1711`).
+- **Consumer & harness surfaces (`#1711`, `#1277`)**: `docs/architecture/darkmatter-readonly-contract.md` + `tests/fixtures/darkmatter_readonly_snapshot.v1.json` specify the read-only cockpit contract; `bindings/typescript/` (`@decapodlabs/decapod-client`) and `packages/pi-decapod/` (`@decapodlabs/pi-decapod`) implement pure-TypeScript process/RPC bindings and Pi lifecycle hooks verified with `tsc --noEmit` and `node --test`.
+- **Verification**: `tests/houseboat_engine.rs` exercises all Houseboat subsystems, real SQLite compaction/recovery/downgrade refusal, offline multi-provider/non-Rust/monorepo/version-skew init matrix (`#1024`), Darkmatter CLI fixture verification, and a 3-worktree combined-candidate negative control (`#1763`).

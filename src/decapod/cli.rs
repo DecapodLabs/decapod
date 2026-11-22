@@ -2530,6 +2530,10 @@ pub(crate) enum Command {
     /// Preview, reversibly remove, or restore repository integration without deleting project state
     #[clap(name = "integration")]
     Integration(IntegrationCli),
+
+    /// Houseboat core engine: fleet coordination, mooring, resilience, budgets, benchmarks & read-only contracts
+    #[clap(name = "houseboat")]
+    Houseboat(crate::core::houseboat::HouseboatCli),
 }
 
 #[derive(clap::Args, Debug)]

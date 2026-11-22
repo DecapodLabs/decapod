@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,66 +869,38 @@
     }
   },
   "change": {
-    "id": "change_01M80X6REQ2PT4R77GAB3CS078",
-    "base_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "id": "change_01M81MJK527WN5XVM6DRP7XAQE",
+    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim_1895_parity": {
-      "statement": "Decapod #1895 provides a versioned local vs cloud logical operation/evidence parity matrix and proves multi-org isolated DB tenancy without local SQLite fallback",
-      "falsifier": "Cloud mode falls back to .decapod/data/decapod.db, leaks cross-org/unassigned-repo data, allows admin-without-seat read/write, or claims unimplemented parity",
+    "claim:houseboat-core-engine-and-contracts": {
+      "statement": "Houseboat core engine modules (#852-#859), Darkmatter read-only snapshot contract (#1711), pure-TS/Pi bindings (#1277), local SQLite compaction benchmark/recovery (#1630), write-time knowledge attestation (#657), offline init reconciliation matrix (#1024), crash unknown-outcome reconciliation (#1367), and 3-worktree combined-candidate negative control (#1763) enforce fail-closed governance invariants locally without modifying forbidden/sibling files or claiming hosted/live external proof.",
+      "falsifier": "Any Houseboat invariant fails open (cyclic fleet graph, dirty worktree non-force drop, wrapper-tampered mooring artifact, silent LWW journal merge, auto-refunded uncertain budget hold, 6+6 or 3x4 oversubscription, secret accepted in knowledge attestation, stale-repo crash resume, path-escaping Darkmatter snapshot, or 3-worktree semantic violation admitted), or cargo fmt/clippy/tests/TS typecheck fail.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "tests/cloud_tenancy_parity_1895.rs"
-      ]
-    },
-    "claim_877_overlay": {
-      "statement": "Decapod #877 enforces 4-layer constitution authority precedence (embedded -> org overlay -> repo OVERRIDE.md -> task projection) with explicit provenance and fail-closed non_overridable conflict checks",
-      "falsifier": "Project OVERRIDE.md silently weakens non_overridable org controls, tampered/stale overlays pass silent, org-private policy leaks into portable bundles, or provenance is missing",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/org_overlay.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1895-877-impl",
-      "summary": "Implement #1895 multi-org cloud parity matrix/tests and #877 4-layer org constitution overlays with Living Specs and verified proofs",
-      "input_digest": "sha256:1b5c4c342c5db062d7c7714a45256e26a65a1397d886ad322e431b924c3f7859",
+      "id": "houseboat-shard6-complete",
+      "summary": "Implement Houseboat Core Engine (#852-#859), Mooring Contracts, Darkmatter Read-Only Contract (#1711), TypeScript/Pi SDK (#1277), Local Storage Compaction Benchmarks & Recovery (#1630), Knowledge Write-Time Attestation (#657), Offline Init Matrix (#1024), Crash Reconciliation (#1367), #880 Projection Consistency Fixture Repair, 3-Worktree Negative Control (#1763), Living Specs, and Dockerfile 0.162.0 Pin",
+      "input_digest": "sha256:0349fe5801eedd25cbe8ec8f85ace4a02ea2591a3000946a6216d0ac20344742",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
-      ]
-    },
-    {
-      "id": "cp-1895-877-spec-reviews",
-      "summary": "Record canonical Living Spec reviews for ARCHITECTURE.md, INTERFACES.md, and SECURITY.md (#1895, #877)",
-      "input_digest": "sha256:1297632cbe7d3af4671cf86082b024fb8a85954ed5c5c96c40a10e10382f9eca",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "cp-1895-877-merge-master",
-      "summary": "Reconcile origin/master acb44b422 (PR #1914) with #1895 and #877, docs, Living Specs, and post-merge verification",
-      "input_digest": "sha256:743de10daefed35e965261e75bf321747b57a01cb65dfc1dfebd1c1001bb888f",
-      "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80X6REQ2PT4R77GAB3CS078": {
+    "intent:change_01M81MJK527WN5XVM6DRP7XAQE": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -938,14 +910,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+      "id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
-      "refined_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "raw_intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
+      "refined_intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -958,7 +930,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "intent": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -968,203 +940,132 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "5b80a9a3e3f82b7beb67cfa7b5a3680cf267d4c460835b1f8967a39ae875e544"
+          "reason": "Documented src/decapod/core/houseboat.rs, src/decapod/core/mooring.rs, Darkmatter read-only snapshot contract, TypeScript/Pi packages, and tests/houseboat_engine.rs architecture",
+          "reviewed_code_fingerprint": "f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2",
+          "spec_material_hash": "c1f6033d08a98f68bcb6e5d2d0bf6c8706ecc4b4a6a440e20e784ef66a6d8c5c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "dc76d2b2df887f463347f1706febfe811015c3ebfaf27923ea4288650ec06b63"
+          "reason": "Documented decapod houseboat CLI subcommands, Darkmatter read-only snapshot schema, and TypeScript/Pi client interfaces",
+          "reviewed_code_fingerprint": "f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2",
+          "spec_material_hash": "2522b628a667174925012be383e3f0c2217dfbf77cc63603555c2b60977b3784"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
+          "reason": "Houseboat/mooring/Darkmatter/TS surfaces extend fail-closed custody without weakening existing security boundaries; attestation refreshed via specs.refresh",
+          "reviewed_code_fingerprint": "f2bbe2692acc93a394d15cc95e53d8d7d5997172ec07a5e8f1d4b1339b0e80c2",
           "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "title": "Decapod houseboat engine (#852-#859), Darkmatter contract (#1711), TS/Pi SDK (#1277), #1630/#657/#1024/#1367",
       "todo_ids": [
-        "feat_01m80wsps229vtve"
+        "code_01m81me586f0pmvj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795334627Z"
+      "updated_at": "1795353507Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ba5edcac4d768d9c28921817e42720991f60d272bf0865e2f3d3b74985bd96d2",
+      "artifact_hash": "sha256:89c7b2c127ce38f25d9dde7008316ea2304216cb9f6417eb16b45cbdb8239a95",
       "checks": [
         {
-          "name": "capability_contract_drift",
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "check_no_default_features",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "cli_contracts",
+          "name": "fleet_coord_16_tests",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_features",
+          "name": "houseboat_engine_13_tests",
           "status": "passed"
         },
         {
-          "name": "cloud_supabase_boundary",
+          "name": "init_reconciliation_4_tests",
           "status": "passed"
         },
         {
-          "name": "cloud_tenancy_parity_1895",
+          "name": "projection_consistency_7_tests",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "interop_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "lib_targeted_47",
-          "status": "passed"
-        },
-        {
-          "name": "org_constitution_overlay_877",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_25_integration_suites",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_fmt_clippy_nofeat",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_lib_134",
-          "status": "passed"
-        },
-        {
-          "name": "rpc_golden_vectors",
+          "name": "ts_binding_and_pi_extension_5_tests",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
+            "detail": "trajectory:branch_01M81MJK865YSJPN770C1V71FJ",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80X6RJV40ZZKZV0T1YX0STS": {
+          "branch_01M81MJK865YSJPN770C1V71FJ": {
             "evidence_only": true,
-            "id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "id": "branch_01M81MJK865YSJPN770C1V71FJ",
+            "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_project.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/cloud_parity_matrix.rs",
-                  "src/decapod/core/org_overlay.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/constitution_cli.rs",
-                  "src/decapod/core/context_capsule.rs",
-                  "src/decapod/core/context_bundle.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/houseboat.rs",
+                  "src/decapod/core/mooring.rs",
+                  "src/decapod/core/mod.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_tenancy_parity_1895.rs",
-                  "tests/org_constitution_overlay_877.rs",
-                  "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
+                  "tests/houseboat_engine.rs",
+                  "tests/projection_consistency.rs",
+                  "docs/architecture/darkmatter-readonly-contract.md",
+                  "docs/datastore-v2/compaction-benchmarks-v0.162.0.md",
+                  "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
+                  "bindings/typescript/src/index.ts",
+                  "packages/pi-decapod/src/index.ts"
                 ],
                 "proof_refs": [
-                  "fmt_check",
-                  "check_no_default_features",
-                  "clippy_all_targets_features",
-                  "lib_targeted_47",
-                  "cloud_tenancy_parity_1895",
-                  "org_constitution_overlay_877",
-                  "cloud_supabase_boundary",
-                  "cli_contracts",
-                  "doc_alignment",
-                  "interop_conformance",
-                  "capability_contract_drift",
-                  "rpc_golden_vectors"
+                  "cargo_fmt",
+                  "cargo_clippy_all_targets",
+                  "houseboat_engine_13_tests",
+                  "projection_consistency_7_tests",
+                  "init_reconciliation_4_tests",
+                  "fleet_coord_16_tests",
+                  "ts_binding_and_pi_extension_5_tests"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites."
-                ],
-                "proof_refs": [
-                  "post_merge_fmt_clippy_nofeat",
-                  "post_merge_lib_134",
-                  "post_merge_25_integration_suites"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1173,35 +1074,22 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites.",
-        "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
-      ],
-      "inspected_files": [
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/validate.rs"
-      ],
-      "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M81MJK527WN5XVM6DRP7XAQE",
       "modified_files": [
-        "docs/agent/command-contracts.md",
+        "bindings/typescript/src/index.ts",
+        "docs/architecture/darkmatter-readonly-contract.md",
+        "docs/datastore-v2/compaction-benchmarks-v0.162.0.md",
+        "packages/pi-decapod/src/index.ts",
         "src/decapod/cli.rs",
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/constitution_cli.rs",
-        "src/decapod/core/context_bundle.rs",
-        "src/decapod/core/context_capsule.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/org_overlay.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
+        "src/decapod/core/houseboat.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/mooring.rs",
         "src/decapod/lib.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
+        "tests/houseboat_engine.rs",
+        "tests/projection_consistency.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1209,10 +1097,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
+      "run_id": "branch_01M81MJK865YSJPN770C1V71FJ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80wsps229vtve",
+      "task_id": "code_01m81me586f0pmvj",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
