@@ -1,5 +1,22 @@
 # Interfaces
 
+## Read-only observability CLI, RPC, and loopback HTTP interfaces (#860, #874, #1712-#1714, #1719-#1720, #1723, #1727-#1728, #1730-#1732)
+
+- **Read-only CLI (`src/decapod/cli.rs::ObserveCli`, `src/decapod/lib.rs::run_observe_command`)**:
+  - `decapod observe specs [--dir <PATH>] [--offset <N>] [--limit <N>] [--include-excerpts] [--anchor-path <REL>] [--start-line <N>] [--end-line <N>] [--format json|text]`
+  - `decapod observe timeline [--dir <PATH>] [--after-seq <N>] [--limit <N>] [--stream <NAME>] [--format json|text]`
+  - `decapod observe workspace [--dir <PATH>] [--offset <N>] [--limit <N>] [--anchor-path <REL>] [--start-line <N>] [--end-line <N>] [--format json|text]`
+  - `decapod observe validation-plan [--dir <PATH>] [--require <R_ID>...] [--format json|text]`
+  - `decapod observe pr-manifest [--dir <PATH>] [--planned-file <REL>...] [--format json|text]`
+  - `decapod observe context-provenance [--dir <PATH>] [--offset <N>] [--limit <N>] [--task-id <ID>] [--repo-id <ID>] [--format json|text]`
+  - `decapod observe serve [--dir <PATH>] [--bind 127.0.0.1:0] [--token-stdin | --auth-token <TOK>] [--allow-remote] [--max-requests <N>] [--max-body-bytes <N>] [--tenant-id <ID>] [--repo-id <ID>...] [--revoked-token-id <ID>...]`
+  - All `decapod observe` commands are strictly read-only, sessionless, offline-first, and emit `schema_version = "decapod.observe.v1"`, `read_only = true`, `authoritative = false`.
+- **Read-only JSON RPC ops (`src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs::rpc_handlers::handle_observe`)**:
+  - Registers `observe.specs`, `observe.timeline`, `observe.workspace`, `observe.validation_plan`, `observe.pr_manifest`, and `observe.context_provenance` (`read_only = true`, `session_required = false`, worktree/mandate bypass aligned in `lib.rs`).
+- **Loopback HTTP endpoints (`src/decapod/core/http_transport.rs`, `src/decapod/core/observability_projections/server.rs`)**:
+  - `decapod observe serve`: accepts `GET /observe/v1/{specs,timeline,workspace,validation-plan,pr-manifest,context-provenance}` and `POST /rpc/v1` restricted exclusively to `ALLOWLISTED_OBSERVE_RPC_OPS`, setting `X-Decapod-Read-Only: true`, `X-Decapod-Snapshot-Id`, `Cache-Control: no-store`, and `X-Content-Type-Options: nosniff`. Mutating RPC operations return `403 read_only_enforced`; non-`GET`/`POST` HTTP methods return `405 method_not_allowed`.
+  - `decapod rpc --http-server`: retains `POST /rpc/v1` while enforcing request-bound `Idempotency-Key` (`409 idempotency_conflict`), `X-Decapod-Request-Id` (`409 replayed_request`), bounded entry/byte cache (`503 idempotency_capacity_exceeded`), uncertain-outcome non-replay (`409 unknown_outcome_reconcile_required`), and bounded child timeouts/output caps (`504`/`502`).
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1672,8 +1689,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `d6365493dc55d6adcd1a1fbff82316da10d54c89d175e158667620803668e12e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (268 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

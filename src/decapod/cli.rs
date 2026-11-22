@@ -2530,6 +2530,134 @@ pub(crate) enum Command {
     /// Preview, reversibly remove, or restore repository integration without deleting project state
     #[clap(name = "integration")]
     Integration(IntegrationCli),
+
+    /// Strictly read-only observability projections and optional authenticated loopback HTTP server
+    #[clap(name = "observe")]
+    Observe(ObserveCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct ObserveCli {
+    #[clap(subcommand)]
+    pub command: ObserveCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ObserveCommand {
+    /// Read-only repository-bounded specs, manifest, and governance state projection (#1712)
+    Specs {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        offset: usize,
+        #[clap(long, default_value_t = 64)]
+        limit: usize,
+        #[clap(long)]
+        include_excerpts: bool,
+        #[clap(long)]
+        anchor_path: Option<String>,
+        #[clap(long, default_value_t = 1)]
+        start_line: usize,
+        #[clap(long, default_value_t = 0)]
+        end_line: usize,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only agent activity, custody, witnessed-vs-declared path, and proof timeline (#1713)
+    Timeline {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        after_seq: u64,
+        #[clap(long, default_value_t = 256)]
+        limit: usize,
+        #[clap(long)]
+        stream: Option<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only consistent Git + SQLite live workspace inventory, workunit activity, and source anchors (#860, #1714, #1723, #1727, #1728)
+    Workspace {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        offset: usize,
+        #[clap(long, default_value_t = 512)]
+        limit: usize,
+        #[clap(long)]
+        anchor_path: Option<String>,
+        #[clap(long, default_value_t = 1)]
+        start_line: usize,
+        #[clap(long, default_value_t = 0)]
+        end_line: usize,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only validation-plan applicability, requirement coverage, and joint checks (#1730)
+    ValidationPlan {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long = "require")]
+        accepted_requirements: Vec<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only prospective PR manifest and verified publication correspondence (#1731)
+    PrManifest {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long = "planned-file")]
+        planned_scope_files: Vec<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only redacted provenance for agent context consultations (#1732)
+    ContextProvenance {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        offset: usize,
+        #[clap(long, default_value_t = 64)]
+        limit: usize,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        repo_id: Option<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Serve strictly read-only observability projections over authenticated loopback HTTP (#874, #1719, #1720)
+    Serve {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Loopback bind address (fail-closed on non-loopback unless --allow-remote).
+        #[clap(long, default_value = "127.0.0.1:0")]
+        bind: String,
+        /// Read bearer token from stdin so credentials never appear in argv.
+        #[clap(long, conflicts_with = "auth_token")]
+        token_stdin: bool,
+        /// Bearer token (prefer --token-stdin or DECAPOD_OBSERVE_TOKEN).
+        #[clap(long, conflicts_with = "token_stdin")]
+        auth_token: Option<String>,
+        /// Explicitly allow binding beyond loopback.
+        #[clap(long)]
+        allow_remote: bool,
+        /// Bounded request cap for daemonless/test runs (INV-DAEMONLESS).
+        #[clap(long)]
+        max_requests: Option<usize>,
+        /// Maximum request body size in bytes.
+        #[clap(long, default_value_t = 262_144)]
+        max_body_bytes: usize,
+        /// Optional tenant scope enforcement header (`X-Decapod-Tenant`).
+        #[clap(long)]
+        tenant_id: Option<String>,
+        /// Optional allowed repository IDs (`X-Decapod-Repo-Id`).
+        #[clap(long = "repo-id")]
+        allowed_repo_ids: Vec<String>,
+        /// Explicitly revoked token IDs (`X-Decapod-Token-Id`).
+        #[clap(long = "revoked-token-id")]
+        revoked_token_ids: Vec<String>,
+    },
 }
 
 #[derive(clap::Args, Debug)]

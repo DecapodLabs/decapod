@@ -70,6 +70,7 @@ pub mod mentor;
 pub mod migration;
 pub mod native_proof;
 pub mod obligation;
+pub mod observability_projections;
 pub mod org_overlay;
 pub mod output;
 pub mod path_policy;

@@ -4,7 +4,7 @@
 //! handler by default. SignalCancellationGuard opts one public invocation into
 //! a scoped SIGINT/SIGTERM bridge. Unix
 //! process groups are mandatory: unsupported platforms fail before spawning.
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::process::{Child, Command, ExitStatus, Output, Stdio};
 use std::sync::{
     Arc,
@@ -184,6 +184,14 @@ pub trait BoundedCommand {
         limits: ProcessLimits,
         cancel: &Cancellation,
     ) -> io::Result<ProcessCapture>;
+    /// Same bounded process-group execution as `bounded_capture`, with
+    /// nonblocking delivery of `stdin_bytes` before closing stdin.
+    fn bounded_capture_with_stdin(
+        &mut self,
+        stdin_bytes: &[u8],
+        limits: ProcessLimits,
+        cancel: &Cancellation,
+    ) -> io::Result<ProcessCapture>;
     /// Separate bounded allowance for a declared, authenticated artifact body.
     /// Callers must validate the fixed transport request and expected byte count.
     /// Ordinary subprocess capture retains its original 64 MiB ceiling.
@@ -317,19 +325,28 @@ impl BoundedCommand for Command {
         limits: ProcessLimits,
         cancel: &Cancellation,
     ) -> io::Result<ProcessCapture> {
-        self.capture_with_ceiling(limits, cancel, MAX_OUTPUT_BYTES)
+        self.capture_with_ceiling(None, limits, cancel, MAX_OUTPUT_BYTES)
+    }
+    fn bounded_capture_with_stdin(
+        &mut self,
+        stdin_bytes: &[u8],
+        limits: ProcessLimits,
+        cancel: &Cancellation,
+    ) -> io::Result<ProcessCapture> {
+        self.capture_with_ceiling(Some(stdin_bytes), limits, cancel, MAX_OUTPUT_BYTES)
     }
     fn bounded_artifact_capture(
         &mut self,
         limits: ProcessLimits,
         cancel: &Cancellation,
     ) -> io::Result<ProcessCapture> {
-        self.capture_with_ceiling(limits, cancel, 256 * 1024 * 1024 + 64 * 1024)
+        self.capture_with_ceiling(None, limits, cancel, 256 * 1024 * 1024 + 64 * 1024)
     }
 }
 trait CaptureWithCeiling {
     fn capture_with_ceiling(
         &mut self,
+        stdin_bytes: Option<&[u8]>,
         limits: ProcessLimits,
         cancel: &Cancellation,
         ceiling: usize,
@@ -338,6 +355,7 @@ trait CaptureWithCeiling {
 impl CaptureWithCeiling for Command {
     fn capture_with_ceiling(
         &mut self,
+        stdin_bytes: Option<&[u8]>,
         limits: ProcessLimits,
         cancel: &Cancellation,
         ceiling: usize,
@@ -359,6 +377,7 @@ impl CaptureWithCeiling for Command {
         }
         #[cfg(not(unix))]
         {
+            let _ = stdin_bytes;
             Err(io::Error::new(
                 io::ErrorKind::Unsupported,
                 "bounded process-group execution requires a Unix adapter",
@@ -367,10 +386,15 @@ impl CaptureWithCeiling for Command {
         #[cfg(unix)]
         {
             use std::os::unix::process::CommandExt;
-            self.stdin(Stdio::null())
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .process_group(0);
+            let has_stdin = stdin_bytes.is_some();
+            self.stdin(if has_stdin {
+                Stdio::piped()
+            } else {
+                Stdio::null()
+            })
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .process_group(0);
             #[cfg(target_os = "linux")]
             let parent_pid = std::process::id() as libc::pid_t;
             unsafe {
@@ -396,6 +420,22 @@ impl CaptureWithCeiling for Command {
                 child: self.spawn()?,
                 reaped: false,
             };
+            let mut stdin_pipe = if has_stdin {
+                let pipe = child
+                    .child
+                    .stdin
+                    .take()
+                    .ok_or_else(|| io::Error::other("stdin unavailable"))?;
+                nonblocking(&pipe)?;
+                Some(pipe)
+            } else {
+                None
+            };
+            let stdin_payload = stdin_bytes.unwrap_or(&[]);
+            let mut stdin_written = 0usize;
+            if stdin_payload.is_empty() {
+                stdin_pipe = None;
+            }
             let mut stdout = child
                 .child
                 .stdout
@@ -417,7 +457,33 @@ impl CaptureWithCeiling for Command {
                 if started.elapsed() >= limits.timeout {
                     break Termination::TimedOut;
                 }
-                let previous_bytes = out.len() + err.len();
+                let previous_progress = out.len() + err.len() + stdin_written;
+                if let Some(pipe) = stdin_pipe.as_mut() {
+                    for _ in 0..8 {
+                        if stdin_written >= stdin_payload.len() {
+                            break;
+                        }
+                        match pipe.write(&stdin_payload[stdin_written..]) {
+                            Ok(0) => {
+                                stdin_pipe = None;
+                                break;
+                            }
+                            Ok(n) => {
+                                stdin_written += n;
+                            }
+                            Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
+                            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                            Err(error) if error.kind() == io::ErrorKind::BrokenPipe => {
+                                stdin_pipe = None;
+                                break;
+                            }
+                            Err(error) => return Err(error),
+                        }
+                    }
+                    if stdin_written >= stdin_payload.len() {
+                        stdin_pipe = None;
+                    }
+                }
                 let (noisy_out, _) = drain(&mut stdout, &mut out, limits.max_output_bytes, 8)?;
                 let (noisy_err, _) = drain(&mut stderr, &mut err, limits.max_output_bytes, 8)?;
                 if noisy_out || noisy_err {
@@ -445,10 +511,11 @@ impl CaptureWithCeiling for Command {
                 if unsafe { info.assume_init().si_pid() != 0 } {
                     break Termination::Exited;
                 }
-                if out.len() + err.len() == previous_bytes {
+                if out.len() + err.len() + stdin_written == previous_progress {
                     std::thread::sleep(Duration::from_millis(2));
                 }
             };
+            drop(stdin_pipe);
             child.terminate();
             let status = child.reap()?;
             // At most a pipe's buffered data remains after group termination. We

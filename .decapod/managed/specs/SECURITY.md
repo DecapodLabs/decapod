@@ -1,5 +1,18 @@
 # Security
 
+## Read-only observability containment, redaction, and authenticated HTTP transport hardening (#874, #1719, #1720, #1728, #1732)
+
+- **Repository containment & adversarial file defense (`src/decapod/core/observability_projections/snapshot.rs`, `specs.rs`)**:
+  - `validate_repo_bounded_path` rejects absolute paths, `..` traversal, NUL bytes, and symlinks at every ancestor and leaf component (`SYMLINK_BOUNDARY_VIOLATION`), and opens regular files with `O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC` on Unix.
+  - `is_secret_sensitive_path` blocks `.git/*`, `.decapod/managed/sessions/*`, `.env*`, `*.pem`, `*.key`, `id_rsa`, `credentials*`, and similar sensitive paths (`SECRET_PATH_DENIED`); `read_source_anchor` rejects binary files, enforces hard byte ceilings, redacts secret patterns and absolute paths, and post-checks file hashes for concurrent edits.
+  - `inspect_spec_text_security` flags control characters, prompt-injection markers, and embedded secrets in untrusted spec prose without mutating files.
+- **Provenance redaction & cross-scope isolation (`src/decapod/core/observability_projections/provenance.rs`)**:
+  - Strips `raw_prompt`, `user_prompt`, `system_prompt`, `thinking`, `chain_of_thought`, `private_reasoning`, `api_key`, `token`, `password`, `authorization`, and related keys before emitting consultation metadata, preserves `agent_reported` vs `trusted_host` origin trust (preventing consultations from self-authenticating human prompts), and rejects mismatched repository scope (`CROSS_SCOPE_DENIED`).
+- **Transport authentication, replay binding, and mutation refusal (`src/decapod/core/http_transport.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/lib.rs`)**:
+  - Constant-time Bearer verification (`verify_bearer_token`) over SHA-256 digests and exact byte slices; `--token-stdin` avoids leaking credentials into process argv; loopback-only default binding fails closed on non-loopback addresses without `--allow-remote`.
+  - Rejects foreign `Origin` (`403 forbidden_origin`) and non-loopback `Host` (`403 forbidden_host`) headers, cross-tenant (`403 cross_tenant_denied`), cross-repository (`403 cross_repo_denied`), and revoked token IDs (`401 token_revoked`), and enforces read-only credentials cannot execute any mutating operation (`403 read_only_enforced` / `405 method_not_allowed`).
+  - Fixes `#874` idempotency confusion by binding `Idempotency-Key` to the SHA-256 digest of method, path, query, RPC op, raw body bytes, repository context, caller/session/tenant/repo headers, and hashed token, capping replay storage by both entry count and byte weight (`503` on capacity exhaustion within window), preventing blind replay of uncertain outcomes (`409 unknown_outcome_reconcile_required`), and executing child RPC through Unix process-group `bounded_capture_with_stdin` so stalled or oversized children are killed and reaped within bounds.
+
 ## Multi-tenant Cloud isolation and non-overridable organization policy enforcement (#1895, #877)
 
 - **Tenant & seat isolation without SQLite fallback (`#1895`)**: Cloud sessions remain bound to explicit `(origin, repository, project/org)` context and verified server access. Decapod never receives backend DB names, URLs, or credentials, fails closed on cross-org/stale scopes, seat revocation, paid-seat absence (`#215`), cross-repo `operation_id` replay, or network cuts, and never initializes or modifies `.decapod/data/decapod.db` as a fallback.
@@ -895,8 +908,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `d6365493dc55d6adcd1a1fbff82316da10d54c89d175e158667620803668e12e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (268 files), `tests/` (275 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

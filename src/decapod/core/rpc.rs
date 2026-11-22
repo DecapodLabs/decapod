@@ -1467,6 +1467,42 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
+                name: "observe.specs".to_string(),
+                description: "Read-only repository-bounded specs, manifest, governance state, and intent-to-receipt traversal projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.timeline".to_string(),
+                description: "Read-only structured multi-agent activity, custody, witnessed-vs-declared path, and proof timeline projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.workspace".to_string(),
+                description: "Read-only consistent Git + SQLite live workspace inventory, workunit activity projection, and immutable source anchors".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.validation_plan".to_string(),
+                description: "Read-only validation-plan applicability, requirement coverage, joint checks, and constraint relation consistency projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.pr_manifest".to_string(),
+                description: "Read-only prospective PR manifest and verified publication correspondence projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.context_provenance".to_string(),
+                description: "Read-only redacted provenance for agent context consultations linked to canonical intent lineage".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "cloud.orgs".to_string(),
                 description: "List verified cloud organizations, org-admin roles vs paid repository seat access (#215), and paid repo counts".to_string(),
                 stability: "beta".to_string(),
