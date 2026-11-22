@@ -905,6 +905,16 @@
         "tests/observability_projections.rs",
         "tests/unit/core/http_transport_tests.rs"
       ]
+    },
+    {
+      "id": "chk-projections-merge-01621",
+      "summary": "Reconcile PR #1920 onto origin/master v0.162.1 (e0096f606) preserving all merged changes and regenerating docs/specs with worktree candidate binary",
+      "input_digest": "sha256:5518daba390e56600d17b832cb887464a222c5d701508a431d73311bf773d2a0",
+      "proof_refs": [
+        ".decapod/managed/specs/VALIDATION.md",
+        "tests/observability_projections.rs",
+        "tests/unit/core/http_transport_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -948,23 +958,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented core::observability_projections submodules, double-read Git+SQLite snapshot consistency, bounded_process stdin capture, and hardened http_transport replay binding.",
-          "reviewed_code_fingerprint": "d6365493dc55d6adcd1a1fbff82316da10d54c89d175e158667620803668e12e",
-          "spec_material_hash": "8a50bd67b612c29aeb72e7f92238b1ea433c5e1e715930dfaa3c9fd6112c1767"
+          "reason": "Reconciled onto origin/master v0.162.1; documented core::observability_projections submodules, double-read Git+SQLite snapshot consistency, bounded_process stdin capture, and hardened http_transport replay binding.",
+          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "spec_material_hash": "0fe37309d9142223ab3f98fe58df0f4008ab2951bf360856030310fc4ab4b896"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod observe CLI subcommands, 6 read-only observe.* RPC operations, and hardened loopback HTTP endpoints/status codes for #860/#874/#1712-#1732.",
-          "reviewed_code_fingerprint": "d6365493dc55d6adcd1a1fbff82316da10d54c89d175e158667620803668e12e",
-          "spec_material_hash": "2ef7ea1effe32ae16db4eb42d069c609e8c418f16777e1a40ee8d63713ed19a5"
+          "reason": "Reconciled onto origin/master v0.162.1; documented decapod observe CLI subcommands, 6 read-only observe.* RPC ops, and hardened loopback HTTP transport.",
+          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "spec_material_hash": "7c6b6022bcaf10f9c9569403f73e99b8116a80290c87e9149784aa04b0285203"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented O_NOFOLLOW repo containment, secret/prompt/reasoning redaction, constant-time bearer auth, foreign Origin/Host rejection, tenant/repo/revocation isolation, and #874 request-bound idempotency.",
-          "reviewed_code_fingerprint": "d6365493dc55d6adcd1a1fbff82316da10d54c89d175e158667620803668e12e",
-          "spec_material_hash": "93f657bf15dc2a38c5c033ee779e6840462aa0c2e4dec744b6a0f84fedaa877d"
+          "reason": "Reconciled onto origin/master v0.162.1; documented O_NOFOLLOW repo containment, secret/prompt/reasoning redaction, constant-time bearer auth, foreign Origin/Host rejection, tenant/repo/revocation isolation, and #874 request-bound idempotency.",
+          "reviewed_code_fingerprint": "ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37",
+          "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
       "state": "APPROVED",
@@ -975,7 +985,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795351294Z"
+      "updated_at": "1795364451Z"
     },
     "trajectory": {
       "active_boundaries": [

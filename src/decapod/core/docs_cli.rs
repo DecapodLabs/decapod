@@ -669,22 +669,58 @@ fn build_docs(touched: Vec<PathBuf>) -> Result<(), error::DecapodError> {
                         r#"
 ### Workspace diagnosis
 
-`decapod workspace diagnose [--json] [--offline] [--pr <number>] [--operation <name>]`
-reads checkout and custody state, accepted policy, candidate config and
-override proposals, artifact freshness, dirty-file groups, and historical
-proof. Optional GitHub readback observes the exact PR head and required forge
-checks. `--offline` skips remote reads. Credentials appear as capability
-status. Diagnosis does not acquire sessions or repair files.
+`decapod workspace diagnose [--json] [--format text|json] [--offline] [--pr <number>] [--operation <name>]`
+(also reachable as `decapod workspace effective-state --format json`) reads
+checkout and custody state, accepted policy, candidate config and override
+proposals, artifact freshness, top-level `dirty_files`, ordered `next_actions`,
+and historical proof. Optional GitHub readback observes the exact PR head and
+required forge checks. `--offline` skips remote reads. Credentials appear as
+capability status. Diagnosis does not acquire sessions or repair files.
 
 JSON uses `decapod.workspace-diagnostic.v1`. Exit 0 means the selected local
 operation has no observed blocker. Exit 1 means blockers remain, 2 means
 candidate config is invalid, and 3 means the default publication diagnosis
 lacks verified remote evidence. Use the ordered next actions to recover.
-Live validation and readback remain owned by `workspace publish`."#
+Live validation and readback remain owned by `workspace publish`.
+
+### Workspace publication modes and dry-run planning
+
+`decapod workspace publish [--pr <number>] [--branch <name>] [--mode full|governance-only] [--dry-run]`
+supports explicit target-PR reuse (`--pr`), same-branch assertion (`--branch`),
+governance-only artifact filtering (`--mode governance-only`), and zero-mutation
+dry-run planning (`--dry-run` returning `decapod.workspace-publish-plan.v1` with
+fast-forward vs `diverged_decision_gate` classification). Remote divergence
+always stops at a decision gate; Decapod never force-pushes silently."#
+                    )?;
+                }
+                "analyze" => {
+                    writeln!(
+                        file,
+                        r#"
+### Lower-level read-only repository analysis (`decapod analyze --read-only`)
+
+`decapod analyze [--read-only] [--format text|json] [--max-files N] [--max-bytes N] [--timeout-ms N] [--draft-spec] [PATH]`
+executes under `OperationClass::AnalyzeReadOnly` before startup migrations,
+sessions, or storage locks. It performs zero mutations to the target repository
+or `.decapod/`, skips symlinks and sensitive files, scans instruction files via
+prompt-safety checks without executing repository code, separates observed facts
+from advisory `draft` inferred capabilities and non-blocking governance
+observations, and requires explicit promotion before any `GovernedChange`."#
                     )?;
                 }
                 "validate" => {
                     writeln!(file, "{}", readiness_contract())?;
+                    writeln!(
+                        file,
+                        r#"
+### Pre-build structural validation (`decapod validate --pre-build`)
+
+`decapod validate --pre-build [--format text|json]` runs read-only structural
+and completeness checks (`.decapod/config.toml` schema, `.decapod/governance.json`
+sections, living specs layout, agent entrypoints, and feature-branch material
+specs diff) without compiling, running tests, or mutating `.decapod/`. It always
+reports `scope=pre_build`, `publication_ready=false`, and `proof_ready=false`."#
+                    )?;
                 }
                 "data" => {
                     writeln!(file, "\n{}", db_maintenance_command_contract())?;
@@ -775,8 +811,8 @@ fn db_maintenance_command_contract() -> &'static str {
     r#"### Governed Local Database Maintenance (`decapod data db ...`)
 
 - **Read-only inventory (ungated):** `decapod data database inspect` / RPC `data.database.inspect` remains non-initializing and read-only.
-- **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect,verify,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true`.
-- **Boundaries:** `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`)."#
+- **Governed capabilities (default-deny):** `decapod data db capabilities`, `decapod data db lock {diagnose,retry,release-own}`, `decapod data db maintain {inspect|diagnose,verify|integrity-check,lock-inspect,wal-checkpoint,backup,recover}`, and `decapod data db audit` (plus `data.database.{capabilities,maintain.inspect,verify,backup,recover,lock.diagnose,lock.retry,lock.release_own,wal_checkpoint,audit}`) require an authenticated local `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` inside the agent's claimed `.decapod/workspaces/*` worktree and canonical main-repository `[governance.db_maintenance] enabled = true` (or top-level `[maintenance] enabled = true`; configuring both fails closed with `AMBIGUOUS_MAINTENANCE_POLICY`).
+- **Boundaries:** `db.wal.checkpoint` runs bounded SQLite `PRAGMA wal_checkpoint(PASSIVE)` only and requires explicit allowlisting; `db.backup` writes only to non-existing paths under `.decapod/backups/` (`<= 512 MiB`) and never implies `db.recover`; `db.recover` requires repository `owner` repair authority (`#1590`); `backend = "cloud"` fails closed (`CLOUD_PRINCIPAL_UNVERIFIED`); raw SQL, `sqlite3`, vacuum, and restore are unmodeled (`CAPABILITY_UNSUPPORTED`)."#
 }
 
 fn cloud_admin_command_contract() -> &'static str {
@@ -865,6 +901,15 @@ redacted NDJSON audit entry (`implies_validation_ready = false`).
 `[laya] mode = "disabled"` is the default. Set `mode = "required"`
 and install the reviewed profile to opt in to post-proof Laya judgment.
 Required accepted policy cannot be silently disabled.
+
+## Direct main-merge policy (#1468)
+
+`[governance].main_merge` defaults to `false` (fail-closed) and is omitted when
+false. A human maintainer may explicitly opt in to direct merge to main after
+full validation passes by setting `main_merge = true` in the accepted base
+repository's `.decapod/config.toml`. A candidate workbranch cannot self-authorize
+`main_merge = true` beyond accepted policy (`POLICY_SELF_AUTHORIZATION_REJECTED`),
+and direct merge always fails closed if the target base moves after validation.
 
 ## Cooperative shared-claim policy
 
@@ -1267,16 +1312,27 @@ fn legacy_todo_recovery_contract() -> &'static str {
     r#"## `decapod todo journal reconcile-legacy`
 
 Review the canonical main repository's quiesced local legacy TODO input before
-normal startup. Only empty/no-schema input and a byte-identical canonical copy
-are supported; other layouts remain blocked. The returned review digest binds
-source/canonical bytes, Unix identities/modes, policy and actor. Apply using
-`--expected-review sha256:<digest>` under an active local session and the explicit
-canonical `todo.legacy.reconcile` grant. `--prepare-only` requires that token and
-persists an unresolved operation while preserving the source. Resume with the
-same apply command after interruption; never edit its receipt to assert success.
-There is no arbitrary source/destination or task-import surface. Responses keep
-`publication_ready=false` and `completion_proven=false`, including committed
-replays. See `docs/architecture/legacy-todo-recovery.md` for bounds and limits."#
+normal startup without opening live `todo.db` directly. Default retirement
+accepts only empty/no-schema input and a byte-identical canonical copy; other
+layouts remain blocked unless explicitly exported, quarantined, or imported.
+The returned review digest binds source/canonical bytes, Unix identities/modes,
+policy and actor. Apply using `--expected-review sha256:<digest>` under an
+active local session and the explicit canonical `todo.legacy.reconcile` grant:
+- `--prepare-only` persists an unresolved operation while preserving the source.
+- `--export <PATH>` non-destructively exports a deterministic JSON inspection
+  bundle (tasks, events, conflicts, digests) to a new file without mutating
+  either datastore.
+- `--quarantine` archives any reviewed legacy store (`logically_equivalent`,
+  `divergent`, `unmatched`, `corrupt`) to `todo.db.legacy-recovery-v1.archive`
+  and retires `todo.db` without mutating canonical `decapod.db`.
+- `--import-missing` imports only missing legacy tasks into canonical
+  `decapod.db` with verified task-journal checkpoints when ZERO conflicting task
+  IDs exist; conflicts fail closed (`LEGACY_TODO_CONFLICT_BLOCKED`) without
+  silent overwrites.
+Resume with the same apply command after interruption; never edit its receipt to
+assert success. Responses keep `publication_ready=false` and
+`completion_proven=false`, including committed replays. See
+`docs/architecture/legacy-todo-recovery.md` for bounds and limits."#
 }
 
 fn legacy_todo_recovery_config_contract() -> &'static str {

@@ -730,3 +730,40 @@ fn setup_presentation_keeps_scaffold_guidance_out_of_product_defaults() {
         "event-driven workers"
     );
 }
+
+#[test]
+fn init_readme_badge_defaults_true_roundtrips_opt_out_and_syncs_versioned_badge() {
+    let mut config = DecapodProjectConfig::default();
+    assert!(config.init.readme_badge);
+    config.init.readme_badge = false;
+    config.governance.publication_deny_identifiers = vec!["internal.secret:prefix".into()];
+    let init = init_with_from_config(&config, PathBuf::from("."), false, false);
+    let roundtrip = config_from_init_with(&init, config.repo.clone());
+    assert!(!roundtrip.init.readme_badge);
+    assert_eq!(
+        roundtrip.governance.publication_deny_identifiers,
+        vec!["internal.secret:prefix".to_owned()]
+    );
+
+    let dir = tempdir().unwrap();
+    let readme = dir.path().join("README.md");
+    fs::write(&readme, "# sample\n\nA governed project.\n").unwrap();
+    // Respect protected_paths.
+    sync_readme_badge(dir.path(), &["README.md".into()], "0.162.0").unwrap();
+    assert_eq!(
+        fs::read_to_string(&readme).unwrap(),
+        "# sample\n\nA governed project.\n"
+    );
+
+    // Insert versioned badge when enabled and unprotected.
+    sync_readme_badge(dir.path(), &[], "0.162.0").unwrap();
+    let first = fs::read_to_string(&readme).unwrap();
+    assert!(first.contains(&decapod_readme_badge_markdown("0.162.0")));
+    assert!(first.contains("A governed project."));
+
+    // Idempotent version upgrade on re-init.
+    sync_readme_badge(dir.path(), &[], "0.163.0").unwrap();
+    let upgraded = fs::read_to_string(&readme).unwrap();
+    assert!(upgraded.contains(&decapod_readme_badge_markdown("0.163.0")));
+    assert!(!upgraded.contains("v0.162.0"));
+}

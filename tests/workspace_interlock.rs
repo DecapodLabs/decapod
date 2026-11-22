@@ -65,6 +65,9 @@ fn workspace_ensure_preserves_dirty_protected_branch_and_isolates_committed_base
         .output()
         .expect("decapod init");
     assert!(init_out.status.success(), "init failed");
+    let committed_readme =
+        std::fs::read_to_string(dir.join("README.md")).expect("read committed readme");
+    assert!(committed_readme.starts_with("# test\n"));
 
     // The isolated workspace starts from the committed initialized project, never
     // from uncommitted root configuration or source bytes.
@@ -114,7 +117,7 @@ fn workspace_ensure_preserves_dirty_protected_branch_and_isolates_committed_base
     assert_ne!(workspace, dir);
     assert_eq!(
         std::fs::read_to_string(workspace.join("README.md")).unwrap(),
-        "# test\n"
+        committed_readme
     );
     assert_eq!(
         val["root_isolation"]["strategy"],

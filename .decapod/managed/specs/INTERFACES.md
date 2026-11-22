@@ -17,6 +17,25 @@
   - `decapod observe serve`: accepts `GET /observe/v1/{specs,timeline,workspace,validation-plan,pr-manifest,context-provenance}` and `POST /rpc/v1` restricted exclusively to `ALLOWLISTED_OBSERVE_RPC_OPS`, setting `X-Decapod-Read-Only: true`, `X-Decapod-Snapshot-Id`, `Cache-Control: no-store`, and `X-Content-Type-Options: nosniff`. Mutating RPC operations return `403 read_only_enforced`; non-`GET`/`POST` HTTP methods return `405 method_not_allowed`.
   - `decapod rpc --http-server`: retains `POST /rpc/v1` while enforcing request-bound `Idempotency-Key` (`409 idempotency_conflict`), `X-Decapod-Request-Id` (`409 replayed_request`), bounded entry/byte cache (`503 idempotency_capacity_exceeded`), uncertain-outcome non-replay (`409 unknown_outcome_reconcile_required`), and bounded child timeouts/output caps (`504`/`502`).
 
+## Mechanical clarity CLI, accepted-policy `main_merge`, historical exceptions, and ledger APIs (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907)
+
+- **Clarity validation CLI (`src/decapod/cli.rs::ValidateCli`, `src/decapod/lib.rs::run_validate_command`, `src/decapod/core/artifact_clarity.rs`)**:
+  - `decapod validate --clarity [--profile ste-lite|ste-strict|custom] [--format text|json]` evaluates durable governance artifacts (`.decapod/governance.json` excluding human prompt fields and `.decapod/managed/specs/*.md`) deterministically and outputs `decapod.artifact-clarity.v1` (`formal_asd_ste100_compliance: false`, `deterministic: true`, `findings[]`). Exits non-zero (`CLARITY_VALIDATION_FAILED`) on error-severity findings.
+- **Configuration contract (`src/decapod/cli.rs::GovernanceConfig`, `src/decapod/core/docs_cli.rs`)**:
+  - Adds `[governance].main_merge` (`bool`, default `false`, omitted when false). Candidate-branch opt-in beyond accepted base policy fails closed with `POLICY_SELF_AUTHORIZATION_REJECTED`.
+- **Offline historical exception carrier (`src/decapod/core/governance_document/historical_exception.rs`)**:
+  - Accepted base trust root `.decapod/historical-exception-signers.json` (`decapod.historical-exception-signers.v1`) and `DECAPOD_HISTORICAL_EXCEPTION_DECISION` (`decapod.historical-exception.v1`), producing `decapod.historical-exception-judgment.v1` with `history_proven: false`.
+- **Rust core interfaces (`src/decapod/core/obligation_ledger.rs`, `src/decapod/core/formal_obligations.rs`, `src/decapod/core/governance_document/semantic_integrity.rs`)**:
+  - Exposes typed deterministic evaluators `derive_obligation_ledger` (`decapod.obligation-ledger.v1`), `StagnationTracker`, `verify_outcome_claim_anchor`, `build_completion_report_4d` (`decapod.completion-report-4d.v1`), `ApprovalLedger`, `evaluate_trusted_grader` (`decapod.trusted-grader-report.v1`), `evaluate_root_conservation`, `evaluate_main_merge_authorization`, `validate_semantic_governance_integrity`, `detect_governance_theater_diff`, `verify_formal_obligation` (`decapod.formal-obligation.v1` / `decapod.formal-obligation-verdict.v1`), and `CapacityAccountingState`.
+
+## Maintenance WAL checkpoint, legacy TODO logical recovery, read-only analyze, workspace effective-state/publish planning, and pre-build validate (#1568, #1657, #1279, #1071, #1064, #1047)
+
+- **Database maintenance CLI & RPC (`src/decapod/cli.rs::DatabaseMaintainCommand`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**: Adds `decapod data db maintain wal-checkpoint [--timeout-ms <0..=5000>]` (and RPC `data.database.wal_checkpoint` with `DatabaseWalCheckpointParams`), `lock-inspect` (`db.lock.diagnose`), plus visible aliases `diagnose` (`inspect`) and `integrity-check` (`verify`). Accepts `[maintenance]` alongside `[governance.db_maintenance]` in `.decapod/config.toml`.
+- **Legacy TODO recovery CLI (`src/decapod/core/todo.rs::TodoJournalCommand::ReconcileLegacy`)**: Extends `decapod todo journal reconcile-legacy` with `--export <PATH>`, `--quarantine`, and `--import-missing` (mutually exclusive with `--prepare-only` and requiring `--expected-review <sha256>` for mutating actions). Review responses expose `quarantine_review_sha256`, `logical_summary`, `can_quarantine`, and `can_import_missing`.
+- **Read-only analysis CLI (`src/decapod/cli.rs::Command::Analyze`, `AnalyzeCli`)**: Adds `decapod analyze [--read-only] [--format text|json] [--max-files N] [--max-bytes N] [--timeout-ms N] [--draft-spec] [PATH]` returning `decapod.analyze-readonly.v1` JSON or concise text with zero repository/SQLite/session mutations.
+- **Workspace effective-state & publication planning CLI (`src/decapod/cli.rs::WorkspaceCommand`, `WorkspacePublishMode`)**: Adds `visible_alias = "effective-state"` and `--format text|json` to `WorkspaceCommand::Diagnose`, plus `--pr <N>`, `--branch <NAME>`, `--mode full|governance-only`, and `--dry-run` (`decapod.workspace-publish-plan.v1`) on `WorkspaceCommand::Publish` (and `pr_reused` + `mode` on `PublishResult`).
+- **Pre-build validate CLI (`src/decapod/cli.rs::ValidateCli::pre_build`)**: Adds `decapod validate --pre-build [--format text|json]` returning `decapod.pre-build-validate.v1` with `scope: "pre_build"`, `read_only: true`, `publication_ready: false`, and `proof_ready: false`.
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1689,8 +1708,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d6365493dc55d6adcd1a1fbff82316da10d54c89d175e158667620803668e12e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (268 files), `tests/` (275 files)
+- Repository signal fingerprint: `ffd2853f2f8b549ea2a4e1061a27838f7540d51bb451af08d73b758680307f37`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (276 files), `tests/` (278 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -2433,3 +2452,9 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
   - Readiness blockers mirrored into `report.failures` (`"publication_readiness: ..."`) retain `stage = "readiness"` / `"post_validation_readiness"` and readiness scope when no non-readiness project gate failed.
 - **Actionable execution-binding recovery (`src/decapod/core/trajectory/execution.rs`, `src/decapod/core/todo.rs`, `docs/agent/error-recovery.md`)**:
   - `verify_execution_binding` classifies `EXECUTION_STATE_CHANGED` into the changed dimension (`EXECUTION_POLICY_CHANGED`, `EXECUTION_TASK_CUSTODY_CHANGED`, `EXECUTION_MATERIAL_CHANGED`, `EXECUTION_PLAN_OR_INTENT_CHANGED`, `EXECUTION_GOVERNANCE_OR_TRAJECTORY_CHANGED`) and surfaces `decapod govern workunit checkpoint --task-id <id> --operation-id <id>` / `decapod govern trajectory checkpoint` so lease renewals or independent policy approvals can refresh active workunit custody without altering Git `HEAD` or historical `done` task completion timestamps.
+
+## Configuration and badge surfaces (#1838, #1023)
+
+- **`[governance].publication_deny_identifiers` (`src/decapod/cli.rs`)**: Optional string array in `.decapod/config.toml` (omitted when empty) listing literal identifiers blocked from authored commit messages and non-config diffs during `decapod validate`; private operator strings remain in untracked `.decapod/data/publication-deny.txt`.
+- **`[init].readme_badge` (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Boolean flag defaulting to `true`; when enabled, `decapod init` idempotently writes/updates the installed-version Decapod badge in `README.md` (unless `README.md` is missing, listed in `[governance].protected_paths`, or already links `assets/badge/decapod-governed.svg`).
+- **Static SVG badge (`assets/badge/decapod-governed.svg`, `README.md`)**: Accessible flat SVG badge (`role="img"`, `aria-label="Decapod: governed"`) linked and documented in `README.md`.

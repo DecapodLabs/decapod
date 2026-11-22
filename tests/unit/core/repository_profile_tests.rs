@@ -1408,3 +1408,480 @@ fn resolve_for_platform_selects_only_matching_host_and_fails_closed_otherwise() 
         .unwrap_err();
     assert!(unsupported_err.to_string().contains("UNSUPPORTED_PLATFORM"));
 }
+
+mod release_only_inventory_transition_tests {
+    use super::*;
+    use crate::core::init_reconciliation::discover_source_inventory;
+    use std::fs;
+    use std::path::Path;
+    use std::process::Command;
+
+    fn git(repo: &Path, args: &[&str]) -> String {
+        let output = Command::new("git")
+            .current_dir(repo)
+            .env_remove("GIT_DIR")
+            .env_remove("GIT_WORK_TREE")
+            .env_remove("GIT_INDEX_FILE")
+            .env_remove("GIT_COMMON_DIR")
+            .args(args)
+            .output()
+            .expect("run git");
+        assert!(
+            output.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&output.stderr)
+        );
+        String::from_utf8(output.stdout)
+            .expect("utf8 git output")
+            .trim()
+            .to_owned()
+    }
+
+    fn init_repo() -> tempfile::TempDir {
+        let dir = tempfile::tempdir().expect("tempdir");
+        git(dir.path(), &["init", "-b", "main"]);
+        git(
+            dir.path(),
+            &["config", "user.email", "release@example.test"],
+        );
+        git(dir.path(), &["config", "user.name", "Release Bot"]);
+        dir
+    }
+
+    fn commit_all(repo: &Path, message: &str) -> String {
+        git(repo, &["add", "-A"]);
+        git(repo, &["commit", "-m", message]);
+        git(repo, &["rev-parse", "HEAD"])
+    }
+
+    fn cargo_toml(name: &str, version: &str, extra_dep: &str) -> String {
+        format!(
+            "[package]\nname = \"{name}\"\nversion = \"{version}\"\nedition = \"2021\"\n\n[dependencies]\nserde = \"1.0\"\n{extra_dep}"
+        )
+    }
+
+    fn cargo_lock(name: &str, version: &str, dep_version: &str) -> String {
+        format!(
+            "version = 4\n\n[[package]]\nname = \"{name}\"\nversion = \"{version}\"\ndependencies = [\n \"serde\",\n]\n\n[[package]]\nname = \"serde\"\nversion = \"{dep_version}\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"\n"
+        )
+    }
+
+    fn setup_dactyl_style_repo() -> (tempfile::TempDir, String, String) {
+        let dir = init_repo();
+        let root = dir.path();
+        fs::create_dir_all(root.join(".github/workflows")).unwrap();
+        fs::write(
+            root.join(".github/workflows/rust-contract.yml"),
+            "name: Rust Contract\non: [push, pull_request]\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.17.0", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.17.0", "1.0.210"),
+        )
+        .unwrap();
+        fs::create_dir_all(root.join(".decapod")).unwrap();
+        fs::write(
+            root.join(".decapod/config.toml"),
+            "schema_version = \"1.0.0\"\n\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n\n[repo]\nbase_branch = \"main\"\nbackend = \"local\"\n",
+        )
+        .unwrap();
+        fs::create_dir_all(root.join("src")).unwrap();
+        fs::write(root.join("src/lib.rs"), "pub fn version() -> u32 { 1 }\n").unwrap();
+        let prior_sha = commit_all(root, "chore: baseline 0.17.0");
+        let prior_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        (dir, prior_sha, prior_digest)
+    }
+
+    fn approval_input(ci_local: bool) -> transition_approval::ApprovalInput {
+        transition_approval::ApprovalInput {
+            ci_local,
+            signed: None,
+            ci_target: if ci_local { Some("main".into()) } else { None },
+        }
+    }
+
+    fn dactyl_contract() -> (Vec<ProofDef>, RepositoryContract) {
+        let cmds = commands();
+        let cov = vec![SourceCoverage {
+            source: ".github/workflows/rust-contract.yml".into(),
+            commands: vec!["lint".into()],
+            ci_only: false,
+            reason: None,
+        }];
+        let c = contract(cov);
+        (cmds, c)
+    }
+
+    #[test]
+    fn release_only_semver_bump_qualifies_in_local_and_ci_local_without_approval() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        // Simulate release-please / release-plz cutting 0.17.0 -> 0.18.0 on main.
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.18.0", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.18.0", "1.0.210"),
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: release 0.18.0");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        assert_ne!(prior_digest, base_digest);
+
+        // Candidate branch modifies non-inventory source only and reconciles digest.
+        fs::write(root.join("src/lib.rs"), "pub fn version() -> u32 { 2 }\n").unwrap();
+        let head_sha = commit_all(root, "feat: runtime selector update");
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: base_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        for ci_local in [false, true] {
+            verify_accepted_transition(
+                root,
+                &base_sha,
+                &head_sha,
+                Some(&accepted_decl),
+                Some(&candidate_decl),
+                &cmds,
+                &cmds,
+                Some(&repo_contract),
+                Some(&repo_contract),
+                approval_input(ci_local),
+            )
+            .unwrap_or_else(|e| {
+                panic!("expected release-only bump to qualify (ci_local={ci_local}): {e}")
+            });
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn git_tree_inventory_matches_filesystem_discovery_including_toolchain_alias() {
+        let (dir, _prior_sha, _prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+        fs::create_dir_all(root.join(".config/build")).unwrap();
+        fs::write(
+            root.join(".config/build/rust-toolchain.toml"),
+            "[toolchain]\nchannel = \"1.96.1\"\n",
+        )
+        .unwrap();
+        std::os::unix::fs::symlink(
+            ".config/build/rust-toolchain.toml",
+            root.join("rust-toolchain.toml"),
+        )
+        .unwrap();
+        let head = commit_all(root, "chore: add reviewed toolchain symlink alias");
+
+        let fs_inv = discover_source_inventory(root).unwrap();
+        let mut cache = BTreeMap::new();
+        let git_inv =
+            compute_git_tree_source_inventory(root, &head, &mut cache).expect("git tree inventory");
+        assert_eq!(git_inv.inventory, fs_inv);
+        assert_eq!(
+            git_inv.inventory.digest().unwrap(),
+            fs_inv.digest().unwrap()
+        );
+    }
+
+    #[test]
+    fn release_bump_with_modified_workflow_fails_closed() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.18.0", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.18.0", "1.0.210"),
+        )
+        .unwrap();
+        fs::write(
+            root.join(".github/workflows/rust-contract.yml"),
+            "name: Rust Contract\non: [push]\n",
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: release 0.18.0 + sneaky workflow change");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: base_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &base_sha,
+            Some(&accepted_decl),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(true),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn release_bump_with_cargo_toml_dependency_change_fails_closed() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.18.0", "tokio = \"1.0\"\n"),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.18.0", "1.0.210"),
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: release 0.18.0 + new dep");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: base_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &base_sha,
+            Some(&accepted_decl),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn release_bump_with_cargo_lock_dependency_change_fails_closed() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.18.0", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.18.0", "1.0.215"),
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: release 0.18.0 + serde bump");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: base_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &base_sha,
+            Some(&accepted_decl),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(true),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn candidate_modified_cargo_toml_fails_closed() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        // Main cuts 0.18.0.
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.18.0", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.18.0", "1.0.210"),
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: release 0.18.0");
+
+        // Candidate modifies Cargo.toml further (0.19.0) and sets its reviewed digest to match HEAD.
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.19.0", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.19.0", "1.0.210"),
+        )
+        .unwrap();
+        let head_sha = commit_all(root, "feat: candidate tries self-bumping Cargo.toml");
+        let candidate_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: candidate_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &head_sha,
+            Some(&accepted_decl),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "unexpected error: {err}"
+        );
+    }
+
+    #[test]
+    fn version_downgrade_and_missing_ancestor_fail_closed() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        // Downgrade 0.17.0 -> 0.16.9 must not qualify.
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.16.9", ""),
+        )
+        .unwrap();
+        fs::write(
+            root.join("Cargo.lock"),
+            cargo_lock("dactyl-db", "0.16.9", "1.0.210"),
+        )
+        .unwrap();
+        let downgrade_sha = commit_all(root, "chore: downgrade 0.16.9");
+        let downgrade_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: downgrade_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        let err = verify_accepted_transition(
+            root,
+            &downgrade_sha,
+            &downgrade_sha,
+            Some(&accepted_decl),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(true),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "unexpected error: {err}"
+        );
+
+        // Missing ancestor digest (unknown accepted digest) must not qualify.
+        let unknown_accepted = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: format!("sha256:{}", "f".repeat(64)),
+        };
+        let err = verify_accepted_transition(
+            root,
+            &downgrade_sha,
+            &downgrade_sha,
+            Some(&unknown_accepted),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(true),
+        )
+        .unwrap_err();
+        assert!(
+            err.to_string()
+                .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "unexpected error: {err}"
+        );
+    }
+}

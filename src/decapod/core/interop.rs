@@ -347,6 +347,12 @@ rpc_catalog![
         description: "Governed db.lock.release_own relinquish of an explicitly registered idle current-process lease",
     },
     OpMeta {
+        op: "data.database.wal_checkpoint",
+        read_only: false,
+        session_required: true,
+        description: "Governed db.wal.checkpoint bounded non-destructive SQLite PASSIVE WAL checkpoint",
+    },
+    OpMeta {
         op: "data.database.audit",
         read_only: true,
         session_required: true,
