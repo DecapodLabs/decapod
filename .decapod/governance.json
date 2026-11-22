@@ -907,6 +907,16 @@
         "tests/unit/core/effective_grant_tests.rs",
         "tests/unit/core/project_specs_tests.rs"
       ]
+    },
+    {
+      "id": "chk_1905_1893_approved",
+      "summary": "Approve governed plan and finalize #1905 effective grants + #1893 guidance hygiene",
+      "input_digest": "sha256:d4091e487be49dddc2efd555c83578374eeee4337167ac4b55b80d3ac501c7e8",
+      "proof_refs": [
+        "src/decapod/core/effective_grant.rs",
+        "tests/cli_contracts.rs",
+        "tests/unit/core/effective_grant_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -981,7 +991,7 @@
           "spec_material_hash": "6ca8b63d3ea055c847feb2ed8be9e8aec067b86e7f96cf9c31d8c7e9c963e2be"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
       "title": "Implement #1905 narrowing effective operation grants and #1893 guidance hygiene",
       "todo_ids": [
@@ -989,7 +999,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795318523Z"
+      "updated_at": "1795318844Z"
     },
     "trajectory": {
       "active_boundaries": [
