@@ -1,5 +1,25 @@
 # Security
 
+## Read-only observability containment, redaction, and authenticated HTTP transport hardening (#874, #1719, #1720, #1728, #1732)
+
+- **Repository containment & adversarial file defense (`src/decapod/core/observability_projections/snapshot.rs`, `specs.rs`)**:
+  - `validate_repo_bounded_path` rejects absolute paths, `..` traversal, NUL bytes, and symlinks at every ancestor and leaf component (`SYMLINK_BOUNDARY_VIOLATION`), and opens regular files with `O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC` on Unix.
+  - `is_secret_sensitive_path` blocks `.git/*`, `.decapod/managed/sessions/*`, `.env*`, `*.pem`, `*.key`, `id_rsa`, `credentials*`, and similar sensitive paths (`SECRET_PATH_DENIED`); `read_source_anchor` rejects binary files, enforces hard byte ceilings, redacts secret patterns and absolute paths, and post-checks file hashes for concurrent edits.
+  - `inspect_spec_text_security` flags control characters, prompt-injection markers, and embedded secrets in untrusted spec prose without mutating files.
+- **Provenance redaction & cross-scope isolation (`src/decapod/core/observability_projections/provenance.rs`)**:
+  - Strips `raw_prompt`, `user_prompt`, `system_prompt`, `thinking`, `chain_of_thought`, `private_reasoning`, `api_key`, `token`, `password`, `authorization`, and related keys before emitting consultation metadata, preserves `agent_reported` vs `trusted_host` origin trust (preventing consultations from self-authenticating human prompts), and rejects mismatched repository scope (`CROSS_SCOPE_DENIED`).
+- **Transport authentication, replay binding, and mutation refusal (`src/decapod/core/http_transport.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/lib.rs`)**:
+  - Constant-time Bearer verification (`verify_bearer_token`) over SHA-256 digests and exact byte slices; `--token-stdin` avoids leaking credentials into process argv; loopback-only default binding fails closed on non-loopback addresses without `--allow-remote`.
+  - Rejects foreign `Origin` (`403 forbidden_origin`) and non-loopback `Host` (`403 forbidden_host`) headers, cross-tenant (`403 cross_tenant_denied`), cross-repository (`403 cross_repo_denied`), and revoked token IDs (`401 token_revoked`), and enforces read-only credentials cannot execute any mutating operation (`403 read_only_enforced` / `405 method_not_allowed`).
+  - Fixes `#874` idempotency confusion by binding `Idempotency-Key` to the SHA-256 digest of method, path, query, RPC op, raw body bytes, repository context, caller/session/tenant/repo headers, and hashed token, capping replay storage by both entry count and byte weight (`503` on capacity exhaustion within window), preventing blind replay of uncertain outcomes (`409 unknown_outcome_reconcile_required`), and executing child RPC through Unix process-group `bounded_capture_with_stdin` so stalled or oversized children are killed and reaped within bounds.
+
+## Maintenance RBAC boundaries, non-destructive legacy recovery, read-only analysis isolation, and non-forced publish guards (#1568, #1657, #1279, #1071, #1064, #1047)
+
+- **Maintenance capability scoping & conflict rejection (`src/decapod/core/db_maintenance.rs`)**: `db.wal.checkpoint` is excluded from `DEFAULT_SAFE_ALLOWLIST`, requires explicit opt-in from canonical main-repository config, uses `PRAGMA wal_checkpoint(PASSIVE)` with a 5000ms ceiling (never `TRUNCATE`/`RESTART` or sidecar deletion), and refuses dual `[governance.db_maintenance]` + `[maintenance]` declarations (`AMBIGUOUS_MAINTENANCE_POLICY`). Worktree backend tampering continues failing closed with `BACKEND_MISMATCH`; Cloud backends remain denied (`CLOUD_PRINCIPAL_UNVERIFIED`) pending Propodus `#88`.
+- **Fail-closed legacy TODO recovery (`src/decapod/core/legacy_todo_recovery.rs`)**: Live `todo.db` is never opened directly by SQLite; exports refuse overwriting existing files (`create_new(true)` with private permissions); `--import-missing` refuses any conflicting task ID (`LEGACY_TODO_CONFLICT_BLOCKED`) and archives original bytes before transactional journaled insertion; `--quarantine` never touches `decapod.db`; both require canonical `todo.legacy.reconcile` RBAC and active local session authentication.
+- **Zero-mutation read-only analysis & hostile input containment (`src/decapod/core/analyze.rs`)**: Dispatched before store/session/lock code so `.decapod/data/decapod.db` SHA-256 and Git status remain byte-identical. Never follows symlinks, excludes sensitive files (`.env*`, `id_rsa`, `*.pem`, `*.key`, credentials) without reading them, scans untrusted instruction files with `agent_eval::evaluate_prompt` without executing repository code or hooks, and redacts all output via `core::trace::redact`.
+- **Non-forced publication & pre-build non-substitution (`src/decapod/core/workspace.rs`, `src/decapod/core/pre_build_validate.rs`)**: `workspace publish` rejects `--branch`/`--pr` mismatches, mixed implementation diffs under `--mode governance-only`, and diverged remote heads (`REMOTE_BRANCH_DIVERGED` decision gate — never force-pushes). `validate --pre-build` performs zero writes and unconditionally reports `publication_ready = false` and `proof_ready = false`.
+
 ## Multi-tenant Cloud isolation and non-overridable organization policy enforcement (#1895, #877)
 
 - **Tenant & seat isolation without SQLite fallback (`#1895`)**: Cloud sessions remain bound to explicit `(origin, repository, project/org)` context and verified server access. Decapod never receives backend DB names, URLs, or credentials, fails closed on cross-org/stale scopes, seat revocation, paid-seat absence (`#215`), cross-repo `operation_id` replay, or network cuts, and never initializes or modifies `.decapod/data/decapod.db` as a fallback.
@@ -212,8 +232,12 @@ canonical enforcement across the remaining privilege and schema surfaces:
    from lowering `severity` or relaxing (increasing) `evidence_max_age_seconds`.
 
 Already-enforced controls covered by actual-binary regression in `tests/policy_self_authorization_1776.rs`
-include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, `main_merge`
-unknown-field `INVALID_CONFIG_SCHEMA`, `[governance].allow_basic_shared_claims`,
+include default-deny `[governance.db_maintenance]`, `[governance.rbac]`, default-deny
+`[governance].main_merge` (`POLICY_SELF_AUTHORIZATION_REJECTED` when candidate-authored
+beyond accepted base policy, `#1468`), unknown-key `INVALID_CONFIG_SCHEMA`,
+`[governance].allow_basic_shared_claims`,
+offline Ed25519 historical-exception verification preserving `history_proven = false` (`#1569`),
+and opt-in pinned formal-checker attestation rejecting admitted holes and fabricated transcripts (`#1907`),
 `POLICY_SNAPSHOT_STALE` TOCTOU rejection across base-policy rotation, stale-target/proof
 invalidation on `validate` + `todo done --validated`, bounded accepted rotation and
 revocation with intact `data db audit` history, and pre-config read-only repair via
@@ -895,8 +919,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (276 files)
+- Repository signal fingerprint: `7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (281 files), `tests/` (280 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
@@ -1515,3 +1539,9 @@ Actual official0.153.2 rejected an unpaired surrogate that the prior Python deco
 The encoding profile and independently retained agent-run coverage remain separate. Matching decoder reasons proves only the declared raw-input interpretation scope; it cannot substitute for required run boundaries, tool observations or the actual agent closing event. Missing observer coverage remains unknown even after every encoding vector passes.
 
 The independent JSON encoding vectors remain a bounded parser compatibility check alongside accepted recorded-instruction readiness in `src/decapod/plan_governance.rs`. Agreement on Unicode, finite numbers, duplicate keys and nesting cannot converge unresolved instructions, satisfy spec review, or confer current publication authority.
+
+## Release-only inventory qualification and publication privacy controls (#1838)
+
+- **Fail-closed release-only boundary (`src/decapod/core/repository_profile.rs`)**: `qualifies_release_only_inventory_transition` never waives command/execution/coverage review (`commands_preserved` and exact `reviewed_commands_digest` equality remain required) and never permits candidate-authored edits to `Cargo.toml`, `Cargo.lock`, workflows, or other inventoried sources. Both line-level exact-diff checks and `toml::Value` AST roundtrips verify that only `[package].version` (`new > old` strict SemVer `X.Y.Z`) and the root `[[package]]` entry in `Cargo.lock` (with no `source` or `checksum`) changed between the bounded first-parent ancestor and `accepted_base_sha`. Any deviation, downgrade, dependency change, workflow edit, missing ancestor, or symlink/size-cap violation fails closed to `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
+- **Redacted public-boundary privacy lint (`src/decapod/core/validation_runtime/publication_privacy.rs`, `src/decapod/core/effective_grant.rs`)**: Local deny rules in private `.decapod/data/publication-deny.txt` (enforced via `fs_permissions::open_private_file`) and repo-configured `[governance].publication_deny_identifiers` (protected against candidate removal in `effective_grant.rs`) are matched literally against commit messages and non-deletion diffs. Findings fail closed with `PUBLICATION_PRIVATE_IDENTIFIER` referencing only the rule index/line and never echoing the matched secret/identifier back into logs.
+- **Headless hypervisor boundary (`src/decapod/plugins/container.rs`)**: `start_podman_machine_quietly` scrubs `PODMAN_LOG_LEVEL` and `CONTAINERS_LOG_LEVEL` and rejects `--log-level=debug`/`--log-level=trace`/`--gui` so automatic workspace/validation startup cannot spawn a `vfkit` GUI window or steal desktop focus on macOS (#1417).

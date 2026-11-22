@@ -616,7 +616,12 @@ fn test_entrypoints_contain_four_invariants() {
     let agents_content =
         fs::read_to_string(temp_path.join("AGENTS.md")).expect("Failed to read AGENTS.md");
 
-    let invariant_markers = ["core/DECAPOD", "decapod validate", "stop if", "✅"];
+    let invariant_markers = [
+        "core/DECAPOD",
+        "decapod validate",
+        "escalation admission",
+        "✅",
+    ];
 
     for marker in invariant_markers {
         assert!(

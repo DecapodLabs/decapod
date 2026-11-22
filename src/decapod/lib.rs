@@ -156,6 +156,75 @@ fn retire_decision_provider(config: &mut toml::Value) -> Result<(), error::Decap
     Ok(())
 }
 
+fn decapod_readme_badge_markdown(version: &str) -> String {
+    format!(
+        "[![🦀 Decapod](https://img.shields.io/badge/🦀%20Decapod-v{version}-dc2626)](https://github.com/DecapodLabs/decapod)"
+    )
+}
+
+fn render_readme_with_badge(content: &str, version: &str) -> String {
+    const BADGE_URL_PREFIX: &str = "https://img.shields.io/badge/🦀%20Decapod-v";
+    const BADGE_URL_PREFIX_ENCODED: &str = "https://img.shields.io/badge/%F0%9F%A6%80%20Decapod-v";
+    if content.contains("assets/badge/decapod-governed.svg") {
+        return content.to_owned();
+    }
+    let badge_line = decapod_readme_badge_markdown(version);
+    let mut lines: Vec<String> = content.lines().map(str::to_owned).collect();
+    if let Some(existing) = lines
+        .iter_mut()
+        .find(|line| line.contains(BADGE_URL_PREFIX) || line.contains(BADGE_URL_PREFIX_ENCODED))
+    {
+        *existing = badge_line;
+    } else if let Some(heading_idx) = lines.iter().position(|line| line.starts_with("# ")) {
+        let insert_at = heading_idx + 1;
+        lines.insert(insert_at, String::new());
+        lines.insert(insert_at + 1, badge_line);
+        if lines
+            .get(insert_at + 2)
+            .is_some_and(|next| !next.is_empty())
+        {
+            lines.insert(insert_at + 2, String::new());
+        }
+    } else {
+        lines.insert(0, badge_line);
+        if lines.get(1).is_some_and(|next| !next.is_empty()) {
+            lines.insert(1, String::new());
+        }
+    }
+    let mut rendered = lines.join("\n");
+    if content.ends_with('\n') || !rendered.ends_with('\n') {
+        rendered.push('\n');
+    }
+    rendered
+}
+
+fn sync_readme_badge(
+    target_dir: &Path,
+    protected_paths: &[String],
+    version: &str,
+) -> Result<(), error::DecapodError> {
+    if protected_paths
+        .iter()
+        .any(|p| p.trim_start_matches("./") == "README.md")
+    {
+        return Ok(());
+    }
+    let readme_path = target_dir.join("README.md");
+    let meta = match std::fs::symlink_metadata(&readme_path) {
+        Ok(meta) if meta.is_file() => meta,
+        Ok(_) => return Ok(()),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(err) => return Err(error::DecapodError::IoError(err)),
+    };
+    let _ = meta;
+    let existing = std::fs::read_to_string(&readme_path).map_err(error::DecapodError::IoError)?;
+    let updated = render_readme_with_badge(&existing, version);
+    if updated != existing {
+        std::fs::write(&readme_path, updated).map_err(error::DecapodError::IoError)?;
+    }
+    Ok(())
+}
+
 fn write_project_config(
     target_dir: &Path,
     config: &DecapodProjectConfig,
@@ -2072,8 +2141,14 @@ fn init_with_from_config(
         existing_ci_attested: config.proof.ci_attested.clone(),
         existing_github_actions_preflights: config.proof.validation_github_actions_preflights,
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
+        existing_main_merge: config.governance.main_merge,
         existing_rbac: config.governance.rbac.clone(),
         existing_db_maintenance: config.governance.db_maintenance.clone(),
+        existing_publication_deny_identifiers: config
+            .governance
+            .publication_deny_identifiers
+            .clone(),
+        existing_readme_badge: Some(config.init.readme_badge),
         existing_laya: config.laya.clone(),
         laya_decisions: Some(config.laya.mode == core::laya_readiness::Mode::Required),
         validation_buildkite_preflights: Some(config.proof.validation_buildkite_preflights),
@@ -2188,8 +2263,11 @@ fn preserve_unspecified_init_options(
     init.existing_ci_attested = existing.existing_ci_attested;
     init.existing_github_actions_preflights = existing.existing_github_actions_preflights;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
+    init.existing_main_merge = existing.existing_main_merge;
     init.existing_rbac = existing.existing_rbac;
     init.existing_db_maintenance = existing.existing_db_maintenance;
+    init.existing_publication_deny_identifiers = existing.existing_publication_deny_identifiers;
+    init.existing_readme_badge = existing.existing_readme_badge;
     init.existing_laya = existing.existing_laya;
 }
 
@@ -2266,6 +2344,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         init: InitConfigSection {
             specs: init.specs,
             ci: init.ci,
+            readme_badge: init.existing_readme_badge.unwrap_or(true),
             diagram_style: init.diagram_style,
             entrypoints,
         },
@@ -2274,8 +2353,10 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             protected_paths,
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
+            main_merge: init.existing_main_merge,
             rbac: init.existing_rbac.clone(),
             db_maintenance: init.existing_db_maintenance.clone(),
+            publication_deny_identifiers: init.existing_publication_deny_identifiers.clone(),
         },
         proof: proof::ProjectProofConfig {
             selected_work: init.existing_selected_work.clone(),
@@ -2312,6 +2393,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             organization_overlay: None,
         },
         workspace: crate::cli::WorkspaceConfigSection::default(),
+        maintenance: Default::default(),
         laya: init.existing_laya.clone(),
     }
 }
@@ -3091,6 +3173,11 @@ pub fn run() -> Result<(), error::DecapodError> {
     let parsed_cli = Cli::from_arg_matches(&command_line).unwrap_or_else(|error| error.exit());
     let command = match parsed_cli.command {
         Command::Eval(eval_cli) => return core::agent_eval::run_agent_eval_cli(eval_cli),
+        Command::Analyze(analyze_cli) => return core::analyze::run_analyze_cli(analyze_cli),
+        Command::Validate(validate_cli) if validate_cli.pre_build => {
+            let root = std::env::current_dir()?;
+            return core::pre_build_validate::run(&root, &validate_cli.format);
+        }
         Command::ProjectCheckWorker(validate_cli) => {
             if validate_cli.bypass_validation
                 || validate_cli.snapshot_prepare
@@ -3132,13 +3219,45 @@ pub fn run() -> Result<(), error::DecapodError> {
             command:
                 WorkspaceCommand::Diagnose {
                     json,
+                    format,
                     offline,
                     pr,
                     operation,
                 },
         }) => {
             let root = std::env::current_dir()?;
-            return core::workspace_diagnostic::run(&root, &operation, pr, offline, json);
+            let machine = json || format == "json";
+            return core::workspace_diagnostic::run(&root, &operation, pr, offline, machine);
+        }
+        Command::Workspace(WorkspaceCli {
+            command:
+                WorkspaceCommand::Publish {
+                    title,
+                    description,
+                    pr,
+                    branch,
+                    mode,
+                    dry_run: true,
+                    ..
+                },
+        }) => {
+            let root = std::env::current_dir()?;
+            let plan = workspace::plan_workspace_publish(
+                &root,
+                &workspace::PublishOptions {
+                    title,
+                    description,
+                    target_pr: pr,
+                    target_branch: branch,
+                    mode,
+                    dry_run: true,
+                },
+            )?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&plan).map_err(io::Error::other)?
+            );
+            return Ok(());
         }
         Command::Data(DataCli {
             command: DataCommand::Schema(schema_cli),
@@ -3182,6 +3301,9 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Integration(integration_cli) => {
             return run_integration_command(integration_cli);
         }
+        Command::Observe(observe_cli) => {
+            return run_observe_command(observe_cli);
+        }
         command => command,
     };
 
@@ -3217,11 +3339,16 @@ pub fn run() -> Result<(), error::DecapodError> {
                     error::DecapodError::ValidationError(format!("{code}: {message}"))
                 })?;
             }
-            let report = todo::reconcile_legacy_todo(
+            let report = todo::reconcile_legacy_todo_with_options(
                 &main_root.join(".decapod/data"),
                 &actor,
-                request.expected_review,
-                request.prepare_only,
+                todo::LegacyRecoveryOptions {
+                    expected_review: request.expected_review,
+                    prepare_only: request.prepare_only,
+                    quarantine: request.quarantine,
+                    import_missing: request.import_missing,
+                    export_path: request.export,
+                },
             )?;
             println!(
                 "{}",
@@ -3407,9 +3534,12 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_ci_attested: None,
                             existing_github_actions_preflights: false,
                             existing_allow_basic_shared_claims: false,
+                            existing_main_merge: false,
                             existing_rbac: crate::cli::GovernanceRbac::default(),
                             existing_db_maintenance:
                                 crate::core::db_maintenance::DbMaintenanceConfig::default(),
+                            existing_publication_deny_identifiers: Vec::new(),
+                            existing_readme_badge: None,
                             existing_laya: crate::core::laya_readiness::Configuration::default(),
                             laya_decisions: init_group.laya_decisions,
                             validation_buildkite_preflights: init_group
@@ -3519,6 +3649,13 @@ pub fn run() -> Result<(), error::DecapodError> {
                 }
             }
             write_project_config(&target_dir, &config, init_with.dry_run)?;
+            if !init_with.dry_run && config.init.readme_badge {
+                sync_readme_badge(
+                    &target_dir,
+                    &config.governance.protected_paths,
+                    env!("CARGO_PKG_VERSION"),
+                )?;
+            }
             // The scaffold writes project specs before the final config is
             // persisted. Refresh the manifest after that write so its
             // config/spec input hashes describe the actual initialized
@@ -4113,6 +4250,7 @@ fn should_auto_clock_in(command: &Command) -> bool {
         Command::Todo(todo_cli) => !todo::is_heartbeat_command(todo_cli),
         Command::Activate
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Init(_)
         | Command::Setup(_)
         | Command::Session(_)
@@ -4146,6 +4284,8 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         | Command::Constitution(_)
         | Command::Docs(_)
         | Command::Eval(_)
+        | Command::Analyze(_)
+        | Command::Observe(_)
         | Command::Validate(_)
         | Command::Session(_) => true,
         Command::Workspace(ws_cli) => matches!(
@@ -4200,6 +4340,12 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "interop.rules.taxonomy"
                     | "interop.overlap.classify"
                     | "constitution.overlay.status"
+                    | "observe.specs"
+                    | "observe.timeline"
+                    | "observe.workspace"
+                    | "observe.validation_plan"
+                    | "observe.pr_manifest"
+                    | "observe.context_provenance"
                     | "cloud.orgs"
                     | "cloud.members"
                     | "cloud.invites"
@@ -4261,6 +4407,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         Command::Init(_)
         | Command::Activate
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Setup(_)
         | Command::Session(_)
         | Command::Validate(_)
@@ -4273,6 +4420,7 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Todo(_)
         | Command::System(_)
         | Command::Integration(_)
+        | Command::Observe(_)
         | Command::Qa(_) => false,
         Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
         Command::Rpc(_) => false,
@@ -4292,6 +4440,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Eval(_)
+            | Command::Analyze(_)
             | Command::Activate
             | Command::Constitution(_)
             | Command::Docs(_)
@@ -4299,6 +4448,7 @@ fn command_requires_todo_scoped_worktree(command: &Command) -> bool {
             | Command::Trace(_)
             | Command::Capabilities(_)
             | Command::System(_)
+            | Command::Observe(_)
             | Command::Qa(_)
     )
 }
@@ -4311,6 +4461,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
         command,
         Command::Validate(_)
             | Command::Eval(_)
+            | Command::Analyze(_)
             | Command::Activate
             | Command::Constitution(_)
             | Command::Docs(_)
@@ -4318,6 +4469,7 @@ fn command_requires_canonical_worktree_path(command: &Command) -> bool {
             | Command::Trace(_)
             | Command::Capabilities(_)
             | Command::System(_)
+            | Command::Observe(_)
             | Command::Qa(_)
     )
 }
@@ -4436,6 +4588,12 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "interop.rules.taxonomy"
             | "interop.overlap.classify"
             | "constitution.overlay.status"
+            | "observe.specs"
+            | "observe.timeline"
+            | "observe.workspace"
+            | "observe.validation_plan"
+            | "observe.pr_manifest"
+            | "observe.context_provenance"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -4528,6 +4686,12 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "interop.rules.taxonomy"
             | "interop.overlap.classify"
             | "constitution.overlay.status"
+            | "observe.specs"
+            | "observe.timeline"
+            | "observe.workspace"
+            | "observe.validation_plan"
+            | "observe.pr_manifest"
+            | "observe.context_provenance"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -4563,6 +4727,7 @@ fn requires_session_token(command: &Command) -> bool {
         // Bootstrap/session lifecycle + version + capabilities are sessionless.
         Command::Init(_)
         | Command::Eval(_)
+        | Command::Analyze(_)
         | Command::Session(_)
         | Command::Activate
         | Command::Constitution(_)
@@ -4573,7 +4738,8 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::System(_)
         | Command::Integration(_)
         | Command::Mcp(_)
-        | Command::A2a(_) => false,
+        | Command::A2a(_)
+        | Command::Observe(_) => false,
         Command::Context(ContextGroupCli {
             command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
         }) => false,
@@ -7562,6 +7728,48 @@ fn run_validate_command(
     project_store: &Store,
     scope: ValidationScope,
 ) -> Result<(), error::DecapodError> {
+    if validate_cli.clarity {
+        let report = core::artifact_clarity::validate_workspace_clarity(
+            workspace_root,
+            validate_cli.profile.as_deref(),
+        )
+        .map_err(error::DecapodError::ValidationError)?;
+        if validate_cli.format == "json" {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report)
+                    .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?
+            );
+        } else {
+            println!(
+                "Clarity validation ({}): {} file(s), {} error(s), {} warning(s), {} info",
+                report.profile,
+                report.files_checked,
+                report.error_count,
+                report.warning_count,
+                report.info_count
+            );
+            for finding in &report.findings {
+                println!(
+                    "  [{:?}] {}:{}:{} {} — {} ({})",
+                    finding.severity,
+                    finding.source_path,
+                    finding.line,
+                    finding.column,
+                    finding.rule_id,
+                    finding.explanation,
+                    finding.suggested_remediation
+                );
+            }
+        }
+        if !report.passed {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLARITY_VALIDATION_FAILED: {} error finding(s) under profile '{}'",
+                report.error_count, report.profile
+            )));
+        }
+        return Ok(());
+    }
     if scope.requires_publication_proof() && !validate_cli.bypass_validation {
         core::validation_runtime::require_full_readiness_environment()?;
     }
@@ -7628,9 +7836,23 @@ fn run_validate_command(
         }
         return Ok(());
     }
-    let enabled = crate::cli::DecapodProjectConfig::load(workspace_root)?
-        .proof
-        .uses_remote_preflight();
+    let candidate_cfg = crate::cli::DecapodProjectConfig::load(workspace_root)?;
+    if candidate_cfg.governance.main_merge {
+        let (_, accepted_cfg, _) =
+            crate::core::db_maintenance::resolve_accepted_project_config(workspace_root).map_err(
+                |(code, msg)| {
+                    error::DecapodError::ValidationError(format!(
+                        "POLICY_SELF_AUTHORIZATION_REJECTED: cannot verify accepted base policy for governance.main_merge = true ({code}: {msg})"
+                    ))
+                },
+            )?;
+        if !accepted_cfg.governance.main_merge {
+            return Err(error::DecapodError::ValidationError(
+                "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.main_merge = true beyond accepted policy (#1468)".to_string(),
+            ));
+        }
+    }
+    let enabled = candidate_cfg.proof.uses_remote_preflight();
     scope.dispatch(
         enabled,
         validate_cli,
@@ -9322,6 +9544,12 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "interop.rules.taxonomy"
             | "interop.overlap.classify"
             | "constitution.overlay.status"
+            | "observe.specs"
+            | "observe.timeline"
+            | "observe.workspace"
+            | "observe.validation_plan"
+            | "observe.pr_manifest"
+            | "observe.context_provenance"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -10922,6 +11150,7 @@ fn is_governed_db_maintenance_rpc_op(op: &str) -> bool {
             | "data.database.lock.diagnose"
             | "data.database.lock.retry"
             | "data.database.lock.release_own"
+            | "data.database.wal_checkpoint"
             | "data.database.audit"
     )
 }
@@ -11206,6 +11435,36 @@ fn run_governed_database_cli(
                 vec![],
                 |policy, _| db_maintenance::run_maintain_verify(policy),
             )?,
+            DatabaseMaintainCommand::LockInspect {
+                timeout_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.lock.diagnose",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={timeout_ms}")],
+                |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, timeout_ms),
+            )?,
+            DatabaseMaintainCommand::WalCheckpoint {
+                timeout_ms,
+                operation_id,
+                expected_policy_sha256,
+                actor,
+            } => db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.wal.checkpoint",
+                actor.as_deref(),
+                operation_id.as_deref(),
+                expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={timeout_ms}")],
+                |policy, _| db_maintenance::run_maintain_wal_checkpoint(policy, timeout_ms),
+            )?,
             DatabaseMaintainCommand::Backup {
                 destination,
                 operation_id,
@@ -11353,6 +11612,7 @@ fn run_governed_database_rpc(
         DatabaseAuditParams, DatabaseBackupParams, DatabaseCapabilitiesParams,
         DatabaseLockDiagnoseParams, DatabaseLockReleaseOwnParams, DatabaseLockRetryParams,
         DatabaseMaintainInspectParams, DatabaseRecoverParams, DatabaseVerifyParams,
+        DatabaseWalCheckpointParams,
     };
 
     let outcome: Result<serde_json::Value, error::DecapodError> = (|| match request.op.as_str() {
@@ -11519,6 +11779,19 @@ fn run_governed_database_rpc(
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
+            )
+        }
+        "data.database.wal_checkpoint" => {
+            let params: DatabaseWalCheckpointParams = parse_governed_rpc_params(&request.params)?;
+            db_maintenance::execute_governed_capability(
+                invocation_dir,
+                "db.wal.checkpoint",
+                params.actor.as_deref(),
+                params.operation_id.as_deref(),
+                params.expected_policy_sha256.as_deref(),
+                &verify_strict_local_agent_session,
+                vec![format!("timeout_ms={}", params.timeout_ms)],
+                |policy, _| db_maintenance::run_maintain_wal_checkpoint(policy, params.timeout_ms),
             )
         }
         other => Err(error::DecapodError::ValidationError(format!(
@@ -12090,6 +12363,223 @@ fn run_qa_command(
     Ok(())
 }
 
+fn resolve_observe_root(dir: Option<PathBuf>) -> Result<PathBuf, error::DecapodError> {
+    let base = match dir {
+        Some(path) => path,
+        None => std::env::current_dir()?,
+    };
+    Ok(find_decapod_project_root(&base).unwrap_or(base))
+}
+
+fn run_observe_command(cli: ObserveCli) -> Result<(), error::DecapodError> {
+    use core::observability_projections as obs;
+
+    match cli.command {
+        ObserveCommand::Specs {
+            dir,
+            offset,
+            limit,
+            include_excerpts,
+            anchor_path,
+            start_line,
+            end_line,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_specs_and_governance(
+                &root,
+                &obs::SpecsProjectionQuery {
+                    offset,
+                    limit,
+                    include_excerpts,
+                    anchor_path,
+                    start_line,
+                    end_line,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_specs_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Timeline {
+            dir,
+            after_seq,
+            limit,
+            stream,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_activity_timeline(
+                &root,
+                &obs::TimelineProjectionQuery {
+                    after_seq,
+                    limit,
+                    stream,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_timeline_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Workspace {
+            dir,
+            offset,
+            limit,
+            anchor_path,
+            start_line,
+            end_line,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_workspace_observation(
+                &root,
+                &obs::WorkspaceProjectionQuery {
+                    offset,
+                    limit,
+                    anchor_path,
+                    start_line,
+                    end_line,
+                    ..obs::WorkspaceProjectionQuery::default()
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_workspace_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::ValidationPlan {
+            dir,
+            accepted_requirements,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_validation_plan(
+                &root,
+                &obs::ValidationPlanQuery {
+                    accepted_requirements,
+                    ..obs::ValidationPlanQuery::default()
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_validation_plan_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::PrManifest {
+            dir,
+            planned_scope_files,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_pr_manifest(
+                &root,
+                &obs::PrManifestQuery {
+                    planned_scope_files,
+                    ..obs::PrManifestQuery::default()
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_pr_manifest_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::ContextProvenance {
+            dir,
+            offset,
+            limit,
+            task_id,
+            repo_id,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_context_provenance(
+                &root,
+                &obs::ContextProvenanceQuery {
+                    offset,
+                    limit,
+                    task_id,
+                    expected_repo_id: repo_id,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_context_provenance_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Serve {
+            dir,
+            bind,
+            token_stdin,
+            auth_token,
+            allow_remote,
+            max_requests,
+            max_body_bytes,
+            tenant_id,
+            allowed_repo_ids,
+            revoked_token_ids,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let token = if token_stdin {
+                let mut buf = String::new();
+                io::stdin().read_to_string(&mut buf)?;
+                buf.trim().to_string()
+            } else {
+                auth_token
+                    .or_else(|| std::env::var("DECAPOD_OBSERVE_TOKEN").ok())
+                    .ok_or_else(|| {
+                        error::DecapodError::ValidationError(
+                            "authenticated observe server requires --token-stdin, --auth-token, or DECAPOD_OBSERVE_TOKEN"
+                                .to_string(),
+                        )
+                    })?
+            };
+            let mut options = obs::ObserveServeOptions::loopback_default(token);
+            options.bind = bind;
+            options.allow_remote = allow_remote;
+            options.max_requests = max_requests;
+            options.max_body_bytes = max_body_bytes;
+            options.policy.require_loopback = !allow_remote;
+            options.policy.tenant_id = tenant_id;
+            options.policy.allowed_repo_ids = allowed_repo_ids;
+            options.policy.revoked_token_ids = revoked_token_ids;
+            obs::serve_observe_http(&root, options)?;
+            Ok(())
+        }
+    }
+}
+
 fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodError> {
     match cli.command {
         IntegrationCommand::Preview { dir, format } => {
@@ -12414,11 +12904,13 @@ fn run_workspace_command(
     match cli.command {
         WorkspaceCommand::Diagnose {
             json,
+            format,
             offline,
             pr,
             operation,
         } => {
-            core::workspace_diagnostic::run(project_root, &operation, pr, offline, json)?;
+            let machine = json || format == "json";
+            core::workspace_diagnostic::run(project_root, &operation, pr, offline, machine)?;
         }
         WorkspaceCommand::Ensure { branch, container } => {
             let agent_id =
@@ -12476,11 +12968,31 @@ fn run_workspace_command(
         WorkspaceCommand::Publish {
             title,
             description,
+            pr,
+            branch,
+            mode,
+            dry_run,
             snapshot_resume,
             provider_artifacts,
         } => {
-            core::validation_runtime::require_full_readiness_environment()?;
             let workspace_root = project_root;
+            let options = workspace::PublishOptions {
+                title,
+                description,
+                target_pr: pr,
+                target_branch: branch,
+                mode,
+                dry_run,
+            };
+            if dry_run {
+                let plan = workspace::plan_workspace_publish(workspace_root, &options)?;
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&plan).map_err(io::Error::other)?
+                );
+                return Ok(());
+            }
+            core::validation_runtime::require_full_readiness_environment()?;
             if !crate::cli::DecapodProjectConfig::load(workspace_root)?
                 .proof
                 .uses_remote_preflight()
@@ -12516,20 +13028,19 @@ fn run_workspace_command(
                 provider_artifacts,
                 target: None,
             };
-            let result = workspace::publish_workspace_with_readiness(
-                workspace_root,
-                title,
-                description,
-                &invocation,
-            )?;
+            let result =
+                workspace::publish_workspace_with_options(workspace_root, options, &invocation)?;
             println!(
                 "{}",
                 serde_json::json!({
                     "status": "ok",
+                    "dry_run": false,
+                    "mode": result.mode,
                     "branch": result.branch,
                     "commit_hash": result.commit_hash,
                     "remote_url": result.remote_url,
                     "pr_url": result.pr_url,
+                    "pr_reused": result.pr_reused,
                     "remote_verified": result.remote_verified,
                     "pr_verified": result.pr_verified,
                     "warnings": result.warnings,
@@ -14514,6 +15025,34 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_observe(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        match crate::core::observability_projections::dispatch_observe_rpc_op(
+            ctx.project_root,
+            &ctx.request.op,
+            &ctx.request.params,
+        ) {
+            Ok((data, _snapshot_id)) => Ok(success_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                Some(data),
+                vec![],
+                None,
+                vec![],
+                ctx.mandates.clone(),
+            )),
+            Err(err) => Ok(error_response(
+                ctx.request.id.clone(),
+                ctx.request.op.clone(),
+                ctx.request.params.clone(),
+                "observe_error".to_string(),
+                err.to_string(),
+                None,
+                ctx.mandates.clone(),
+            )),
+        }
+    }
+
     pub(crate) fn handle_interop_manifest(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -15680,13 +16219,20 @@ fn run_rpc_command(
                 )
             })?;
         let root = project_root.to_path_buf();
-        return core::http_transport::serve(
+        let canonical_repo = std::fs::canonicalize(&root)
+            .unwrap_or_else(|_| root.clone())
+            .display()
+            .to_string();
+        let config = core::http_transport::HttpTransportConfig::for_rpc(
             &cli.listen,
             &token,
             cli.allow_remote,
             cli.max_body_bytes,
-            move |body| http_rpc_handler(&root, body),
-        )
+            canonical_repo,
+        );
+        return core::http_transport::serve_with_config(config, move |req| {
+            http_rpc_handler(&root, &req.body)
+        })
         .map_err(error::DecapodError::IoError);
     }
 
@@ -15795,6 +16341,12 @@ fn run_rpc_command(
         "constitution.overlay.status" => {
             rpc_handlers::handle_constitution_overlay_status(&rpc_ctx)?
         }
+        "observe.specs"
+        | "observe.timeline"
+        | "observe.workspace"
+        | "observe.validation_plan"
+        | "observe.pr_manifest"
+        | "observe.context_provenance" => rpc_handlers::handle_observe(&rpc_ctx)?,
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,
@@ -15832,52 +16384,77 @@ fn run_rpc_command(
     rpc_validation_exit_status(&request.op, response.success)
 }
 
-/// Execute HTTP requests through the exact local stdin RPC path. This keeps
-/// semantic envelopes, session checks, mandates, and repository authority in
-/// one implementation while making HTTP an explicitly opt-in adapter.
-fn http_rpc_handler(project_root: &Path, body: &[u8]) -> core::http_transport::HttpResponse {
-    let output = match std::process::Command::new(
-        std::env::current_exe().unwrap_or_else(|_| PathBuf::from("decapod")),
-    )
-    .current_dir(project_root)
-    .args(["rpc", "--stdin"])
-    .stdin(std::process::Stdio::piped())
-    .stdout(std::process::Stdio::piped())
-    .stderr(std::process::Stdio::piped())
-    .spawn()
-    {
-        Ok(mut child) => {
-            if let Some(mut stdin) = child.stdin.take() {
-                let _ = stdin.write_all(body);
+/// Execute HTTP requests through the exact local stdin RPC path using
+/// `bounded_process` process-group ownership, explicit timeout, and stdout/stderr
+/// byte caps (#874). Keeps semantic envelopes, session checks, mandates, and
+/// repository authority in one implementation.
+pub fn http_rpc_handler_with_limits(
+    project_root: &Path,
+    program: &Path,
+    args: &[&str],
+    body: &[u8],
+    limits: core::bounded_process::ProcessLimits,
+) -> core::http_transport::HttpResponse {
+    use core::bounded_process::{BoundedCommand, Cancellation, Termination};
+
+    let mut command = std::process::Command::new(program);
+    command.current_dir(project_root).args(args);
+    let cancel = Cancellation::default();
+    match command.bounded_capture_with_stdin(body, limits, &cancel) {
+        Ok(capture) => match capture.termination {
+            Termination::Exited if capture.output.status.success() => {
+                core::http_transport::HttpResponse::json(200, capture.output.stdout)
             }
-            child.wait_with_output()
-        }
-        Err(error) => Err(error),
-    };
-    match output {
-        Ok(output) if output.status.success() => {
-            core::http_transport::HttpResponse::json(200, output.stdout)
-        }
-        Ok(output) => {
-            let body = if output.stdout.is_empty() {
-                serde_json::json!({
-                    "success": false,
-                    "error": String::from_utf8_lossy(&output.stderr).trim()
-                })
-                .to_string()
-                .into_bytes()
-            } else {
-                output.stdout
-            };
-            core::http_transport::HttpResponse::json(400, body)
-        }
-        Err(error) => core::http_transport::HttpResponse::json(
+            Termination::Exited => {
+                let body = if capture.output.stdout.is_empty() {
+                    serde_json::json!({
+                        "success": false,
+                        "error_code": "rpc_failed",
+                        "error": String::from_utf8_lossy(&capture.output.stderr).trim()
+                    })
+                    .to_string()
+                    .into_bytes()
+                } else {
+                    capture.output.stdout
+                };
+                core::http_transport::HttpResponse::json(400, body)
+            }
+            Termination::TimedOut => core::http_transport::HttpResponse::json_uncertain(
+                504,
+                core::http_transport::error_code_json(
+                    "rpc_timeout_unknown_outcome",
+                    "RPC child exceeded deadline; owned process group terminated and reaped; outcome is unknown",
+                ),
+            ),
+            Termination::OutputLimit => core::http_transport::HttpResponse::json_uncertain(
+                502,
+                core::http_transport::error_code_json(
+                    "rpc_output_limit_exceeded",
+                    "RPC child output exceeded configured byte cap; owned process group terminated and reaped",
+                ),
+            ),
+            Termination::Cancelled => core::http_transport::HttpResponse::json_uncertain(
+                503,
+                core::http_transport::error_code_json(
+                    "rpc_cancelled_unknown_outcome",
+                    "RPC child was cancelled; owned process group terminated and reaped; outcome is unknown",
+                ),
+            ),
+        },
+        Err(error) => core::http_transport::HttpResponse::json_uncertain(
             500,
-            serde_json::json!({"success": false, "error": error.to_string()})
-                .to_string()
-                .into_bytes(),
+            core::http_transport::error_code_json("rpc_spawn_failed", &error.to_string()),
         ),
     }
+}
+
+fn http_rpc_handler(project_root: &Path, body: &[u8]) -> core::http_transport::HttpResponse {
+    let program = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("decapod"));
+    let limits = core::bounded_process::ProcessLimits {
+        timeout: std::time::Duration::from_secs(30),
+        max_output_bytes: core::http_transport::DEFAULT_MAX_RESPONSE_BYTES,
+    };
+    http_rpc_handler_with_limits(project_root, &program, &["rpc", "--stdin"], body, limits)
 }
 
 fn maybe_bind_capsule_to_workunit_state_ref(

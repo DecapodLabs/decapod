@@ -99,6 +99,14 @@ pub enum DbMaintenanceCapability {
     #[serde(rename = "db.backup")]
     #[clap(name = "db.backup", alias = "backup")]
     Backup,
+    /// Bounded non-destructive SQLite PASSIVE WAL checkpoint.
+    #[serde(rename = "db.wal.checkpoint")]
+    #[clap(
+        name = "db.wal.checkpoint",
+        alias = "wal-checkpoint",
+        alias = "wal.checkpoint"
+    )]
+    WalCheckpoint,
     /// Logical dump/reload replacement; reserved for repository `owner` repair (#1590).
     #[serde(rename = "db.recover")]
     #[clap(name = "db.recover", alias = "recover")]
@@ -116,13 +124,14 @@ pub enum MaintenanceAuthorityTier {
 }
 
 impl DbMaintenanceCapability {
-    pub const ALL: [Self; 7] = [
+    pub const ALL: [Self; 8] = [
         Self::Inspect,
         Self::Verify,
         Self::LockDiagnose,
         Self::LockRetry,
         Self::LockReleaseOwn,
         Self::Backup,
+        Self::WalCheckpoint,
         Self::Recover,
     ];
 
@@ -142,6 +151,7 @@ impl DbMaintenanceCapability {
             Self::LockRetry => "db.lock.retry",
             Self::LockReleaseOwn => "db.lock.release_own",
             Self::Backup => "db.backup",
+            Self::WalCheckpoint => "db.wal.checkpoint",
             Self::Recover => "db.recover",
         }
     }
@@ -154,6 +164,7 @@ impl DbMaintenanceCapability {
             "db.lock.retry" => Some(Self::LockRetry),
             "db.lock.release_own" => Some(Self::LockReleaseOwn),
             "db.backup" => Some(Self::Backup),
+            "db.wal.checkpoint" => Some(Self::WalCheckpoint),
             "db.recover" => Some(Self::Recover),
             _ => None,
         }
@@ -166,13 +177,17 @@ impl DbMaintenanceCapability {
             | Self::LockDiagnose
             | Self::LockRetry
             | Self::LockReleaseOwn
-            | Self::Backup => MaintenanceAuthorityTier::ProjectMaintenanceOptIn,
+            | Self::Backup
+            | Self::WalCheckpoint => MaintenanceAuthorityTier::ProjectMaintenanceOptIn,
             Self::Recover => MaintenanceAuthorityTier::Owner,
         }
     }
 
     pub fn is_mutating(self) -> bool {
-        matches!(self, Self::LockReleaseOwn | Self::Backup | Self::Recover)
+        matches!(
+            self,
+            Self::LockReleaseOwn | Self::Backup | Self::WalCheckpoint | Self::Recover
+        )
     }
 
     pub fn summary(self) -> &'static str {
@@ -192,6 +207,9 @@ impl DbMaintenanceCapability {
             }
             Self::Backup => {
                 "Create a Dactyl online SQLite backup under the repository .decapod/backups boundary"
+            }
+            Self::WalCheckpoint => {
+                "Execute a bounded non-destructive SQLite PASSIVE WAL checkpoint without deleting sidecars or interrupting readers"
             }
             Self::Recover => {
                 "Logical dump/reload database replacement; requires repository owner repair authority (#1590) and is never granted by db_maintenance opt-in alone"
@@ -859,6 +877,7 @@ pub fn resolve_canonical_policy(
     let policy_sha256 = format!("sha256:{:x}", Sha256::digest(&effective_bytes));
     let repo_identity = derive_repo_identity(&main_root, &effective_cfg);
     let main_store_root = main_root.join(".decapod").join("data");
+    let maintenance_config = effective_cfg.effective_db_maintenance()?;
 
     Ok(CanonicalMaintenancePolicy {
         main_root,
@@ -868,7 +887,7 @@ pub fn resolve_canonical_policy(
         backend: effective_cfg.repo.effective_backend(),
         policy_sha256,
         canonical_revision,
-        config: effective_cfg.governance.db_maintenance,
+        config: maintenance_config,
         unmerged_branch_violation: unmerged_violation,
     })
 }
@@ -1928,6 +1947,66 @@ pub fn run_maintain_lock_release_own(
             "automatic_repair": false,
         }),
         Some("<repo>/.decapod/data/decapod.db.lock".to_string()),
+    ))
+}
+
+/// Execute `db.wal.checkpoint` (bounded non-destructive SQLite PASSIVE WAL checkpoint).
+///
+/// Uses `PRAGMA wal_checkpoint(PASSIVE)` under a bounded shared `StorageLock` and bounded
+/// connection busy timeout. Never deletes `-wal`/`-shm` sidecars, never escalates to
+/// `TRUNCATE`/`RESTART`, and never interrupts concurrent readers.
+pub fn run_maintain_wal_checkpoint(
+    policy: &CanonicalMaintenancePolicy,
+    timeout_ms: u64,
+) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    if timeout_ms > 5_000 {
+        return Err((
+            "WAL_CHECKPOINT_TIMEOUT_OUT_OF_RANGE",
+            "timeout_ms must be between 0 and 5000".to_string(),
+        ));
+    }
+    crate::core::dactyl::ensure_local_sqlite_runtime()
+        .map_err(|e| ("SQLITE_RUNTIME_UNAVAILABLE", e.to_string()))?;
+    let db_path = crate::core::events::canonical_db_path(&policy.main_store_root);
+    if !db_path.is_file() {
+        return Ok((
+            serde_json::json!({
+                "status": "missing",
+                "mode": "passive",
+                "database": crate::core::schemas::LOCAL_DB_NAME,
+                "busy": false,
+                "log_frames": 0,
+                "checkpointed_frames": 0,
+                "automatic_repair": false,
+            }),
+            Some("<repo>/.decapod/data/decapod.db".to_string()),
+        ));
+    }
+    let bounded = Duration::from_millis(timeout_ms.max(50));
+    let _lock = StorageLock::acquire(&db_path, StorageLockMode::Shared, bounded)
+        .map_err(|e| ("WAL_CHECKPOINT_LOCK_CONTENTION", e.to_string()))?;
+    let conn =
+        crate::core::db::Connection::open_with_options(&db_path, AccessMode::ReadWrite, bounded)
+            .map_err(|e| {
+                let dec = DecapodError::from(e);
+                classify_dactyl_op_error("WAL_CHECKPOINT_OPEN_FAILED", &dec)
+            })?;
+    let (busy, log_frames, checkpointed_frames): (i64, i64, i64) = conn
+        .query_row("PRAGMA wal_checkpoint(PASSIVE)", [], |row| {
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+        })
+        .map_err(|e| ("WAL_CHECKPOINT_FAILED", e.to_string()))?;
+    Ok((
+        serde_json::json!({
+            "status": "ok",
+            "mode": "passive",
+            "database": crate::core::schemas::LOCAL_DB_NAME,
+            "busy": busy != 0,
+            "log_frames": log_frames,
+            "checkpointed_frames": checkpointed_frames,
+            "automatic_repair": false,
+        }),
+        Some("<repo>/.decapod/data/decapod.db".to_string()),
     ))
 }
 

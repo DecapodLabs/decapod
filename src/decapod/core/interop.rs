@@ -347,6 +347,12 @@ rpc_catalog![
         description: "Governed db.lock.release_own relinquish of an explicitly registered idle current-process lease",
     },
     OpMeta {
+        op: "data.database.wal_checkpoint",
+        read_only: false,
+        session_required: true,
+        description: "Governed db.wal.checkpoint bounded non-destructive SQLite PASSIVE WAL checkpoint",
+    },
+    OpMeta {
         op: "data.database.audit",
         read_only: true,
         session_required: true,
@@ -483,6 +489,42 @@ rpc_catalog![
         read_only: true,
         session_required: false,
         description: "Inspect 4-layer constitution authority precedence and organization overlay trust/freshness status (read-only)",
+    },
+    OpMeta {
+        op: "observe.specs",
+        read_only: true,
+        session_required: false,
+        description: "Read-only repository-bounded specs, manifest, governance state, and intent-to-receipt traversal projection",
+    },
+    OpMeta {
+        op: "observe.timeline",
+        read_only: true,
+        session_required: false,
+        description: "Read-only multi-agent activity, custody, witnessed-vs-declared path, and proof timeline projection",
+    },
+    OpMeta {
+        op: "observe.workspace",
+        read_only: true,
+        session_required: false,
+        description: "Read-only consistent Git + SQLite live workspace inventory, workunit activity, and immutable source anchors",
+    },
+    OpMeta {
+        op: "observe.validation_plan",
+        read_only: true,
+        session_required: false,
+        description: "Read-only validation-plan applicability, requirement coverage, joint checks, and constraint relation consistency projection",
+    },
+    OpMeta {
+        op: "observe.pr_manifest",
+        read_only: true,
+        session_required: false,
+        description: "Read-only prospective PR manifest and verified publication correspondence projection",
+    },
+    OpMeta {
+        op: "observe.context_provenance",
+        read_only: true,
+        session_required: false,
+        description: "Read-only redacted provenance for agent context consultations linked to canonical intent lineage",
     },
     OpMeta {
         op: "state.resolve",

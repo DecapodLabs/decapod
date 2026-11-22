@@ -18,6 +18,12 @@ pub struct DecapodProjectConfig {
     pub context: DeclaredContextConfig,
     #[serde(default, skip_serializing_if = "WorkspaceConfigSection::is_default")]
     pub workspace: WorkspaceConfigSection,
+    /// Optional top-level shorthand for `[governance.db_maintenance]` (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
@@ -70,6 +76,15 @@ redacted NDJSON audit entry (`implies_validation_ready = false`).
 `[laya] mode = "disabled"` is the default. Set `mode = "required"`
 and install the reviewed profile to opt in to post-proof Laya judgment.
 Required accepted policy cannot be silently disabled.
+
+## Direct main-merge policy (#1468)
+
+`[governance].main_merge` defaults to `false` (fail-closed) and is omitted when
+false. A human maintainer may explicitly opt in to direct merge to main after
+full validation passes by setting `main_merge = true` in the accepted base
+repository's `.decapod/config.toml`. A candidate workbranch cannot self-authorize
+`main_merge = true` beyond accepted policy (`POLICY_SELF_AUTHORIZATION_REJECTED`),
+and direct merge always fails closed if the target base moves after validation.
 
 ## Cooperative shared-claim policy
 

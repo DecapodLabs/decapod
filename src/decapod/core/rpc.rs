@@ -491,6 +491,31 @@ pub struct DatabaseLockReleaseOwnParams {
     pub actor: Option<String>,
 }
 
+fn default_wal_checkpoint_timeout_ms() -> u64 {
+    500
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct DatabaseWalCheckpointParams {
+    #[serde(default = "default_wal_checkpoint_timeout_ms")]
+    pub timeout_ms: u64,
+    pub operation_id: Option<String>,
+    pub expected_policy_sha256: Option<String>,
+    pub actor: Option<String>,
+}
+
+impl Default for DatabaseWalCheckpointParams {
+    fn default() -> Self {
+        Self {
+            timeout_ms: default_wal_checkpoint_timeout_ms(),
+            operation_id: None,
+            expected_policy_sha256: None,
+            actor: None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct DatabaseAuditParams {
@@ -1289,6 +1314,12 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
+                name: "data.database.wal_checkpoint".to_string(),
+                description: "Governed db.wal.checkpoint bounded non-destructive SQLite PASSIVE WAL checkpoint".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "data.database.audit".to_string(),
                 description: "Read recent redacted append-only database maintenance audit records".to_string(),
                 stability: "beta".to_string(),
@@ -1505,6 +1536,42 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
             Capability {
                 name: "constitution.overlay.status".to_string(),
                 description: "Inspect 4-layer constitution authority precedence and organization overlay trust/freshness status (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.specs".to_string(),
+                description: "Read-only repository-bounded specs, manifest, governance state, and intent-to-receipt traversal projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.timeline".to_string(),
+                description: "Read-only structured multi-agent activity, custody, witnessed-vs-declared path, and proof timeline projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.workspace".to_string(),
+                description: "Read-only consistent Git + SQLite live workspace inventory, workunit activity projection, and immutable source anchors".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.validation_plan".to_string(),
+                description: "Read-only validation-plan applicability, requirement coverage, joint checks, and constraint relation consistency projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.pr_manifest".to_string(),
+                description: "Read-only prospective PR manifest and verified publication correspondence projection".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "observe.context_provenance".to_string(),
+                description: "Read-only redacted provenance for agent context consultations linked to canonical intent lineage".to_string(),
                 stability: "beta".to_string(),
                 cost: "low".to_string(),
             },

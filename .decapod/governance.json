@@ -916,6 +916,16 @@
         "tests/fixtures/agent_interop_reference_consumer.py",
         "tests/fixtures/agent_interop_vectors.v1.json"
       ]
+    },
+    {
+      "id": "chk-interop-merge-01621",
+      "summary": "Merge origin/master (6ab03efcb v0.162.1) into PR #1921 preserving observe.* and agent_interop/mcp/a2a surfaces, regenerated docs/agent/command-contracts.md and specs with worktree binary, and verified all 66 targeted unit/conformance/doc tests.",
+      "input_digest": "sha256:ed7b90a4f636f28a110bd2abc9d3245621251198264fd2165c052b6fe560af09",
+      "proof_refs": [
+        "tests/agent_interop_conformance.rs",
+        "tests/doc_alignment.rs",
+        "tests/interop_conformance.rs"
+      ]
     }
   ],
   "intents": {
@@ -964,23 +974,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md with agent_interop.rs module structure, replay/authority isolation, MCP/A2A stdio/envelope boundaries, offline registry/compiler/composition/rules/overlap internals.",
-          "reviewed_code_fingerprint": "5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6",
-          "spec_material_hash": "64635172ff7e90482eaca317112f8293bd6eafae3a2f990c21424924b8af06a3"
+          "reason": "Reconciled ARCHITECTURE.md with origin/master (6ab03efcb v0.162.1) preserving both observability projections/governance ledger and modular agent_interop engine.",
+          "reviewed_code_fingerprint": "7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4",
+          "spec_material_hash": "8e0e480a2479e9d9069024381c8eefddf5421a70de722bd22a4131dd709eb4e2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md with decapod mcp/a2a CLI subcommands, 7 new read-only interop.* RPC ops, transport:mcp/a2a manifest status, JSON Schema, and 26-vector independent conformance fixtures.",
-          "reviewed_code_fingerprint": "5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6",
-          "spec_material_hash": "fbb609d5a4ede2754a42f9b713b92f306f01acae006cc5479997ad2b2aeab129"
+          "reason": "Reconciled INTERFACES.md with origin/master (6ab03efcb v0.162.1) preserving both observe.* and decapod mcp/a2a CLI + 7 interop.* RPC surfaces.",
+          "reviewed_code_fingerprint": "7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4",
+          "spec_material_hash": "a61545e206fa0021cb3ceb7e49100b0351f0cba3a68e88f7fac09b7592cd4ac9"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "All new interop surfaces preserve Decapod local authority isolation (imported_authority_granted=false), fail-closed session/worktree gates on mutating MCP tools, secret/rubric redaction, prompt-injection/privilege-escalation denial, and zero new security boundary relaxations.",
-          "reviewed_code_fingerprint": "5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6",
-          "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
+          "reason": "Reconciled with origin/master (6ab03efcb v0.162.1); all interop surfaces preserve local authority isolation, secret/rubric redaction, fail-closed session/worktree gates, and zero security relaxations.",
+          "reviewed_code_fingerprint": "7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4",
+          "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
       "state": "APPROVED",
@@ -991,7 +1001,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795351527Z"
+      "updated_at": "1795367701Z"
     },
     "trajectory": {
       "active_boundaries": [
