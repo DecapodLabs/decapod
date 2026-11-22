@@ -924,6 +924,14 @@
       "proof_refs": [
         "cargo update -p url --precise 2.5.9; cargo check --locked --lib --all-features; decapod govern project-check --refresh-specs (pass=200 fail=0)"
       ]
+    },
+    {
+      "id": "bazel-lockfile-url-259",
+      "summary": "Sync MODULE.bazel.lock with Cargo.lock url 2.5.9 update (bazelisk test //:cargo_inputs_policy passed)",
+      "input_digest": "sha256:a5fb09bcce738b6cfbf5f39ffcecb2bf9bdbe645008354746536485ca5ad2fd8",
+      "proof_refs": [
+        "bazelisk mod deps --lockfile_mode=update; bazelisk test //:cargo_inputs_policy (PASSED)"
+      ]
     }
   ],
   "intents": {
@@ -1014,22 +1022,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed repo signal fingerprint after url 2.5.9 security update (RUSTSEC-2026-0592) and v0.162.0 Dockerfile pin.",
-          "reviewed_code_fingerprint": "bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab",
+          "reason": "Refreshed repo signal fingerprint after MODULE.bazel.lock sync for url 2.5.9.",
+          "reviewed_code_fingerprint": "d1d8dd3cfac178b3a232a0a8a73c6f70d7f82a111a093f35727b19084eebff2a",
           "spec_material_hash": "fc804a2e41d4f29230e497f17a1b7daee0997c3a393aaf12a2d5d9d63f062e72"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed repo signal fingerprint after url 2.5.9 security update (RUSTSEC-2026-0592) and v0.162.0 Dockerfile pin.",
-          "reviewed_code_fingerprint": "bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab",
+          "reason": "Refreshed repo signal fingerprint after MODULE.bazel.lock sync for url 2.5.9.",
+          "reviewed_code_fingerprint": "d1d8dd3cfac178b3a232a0a8a73c6f70d7f82a111a093f35727b19084eebff2a",
           "spec_material_hash": "a601baa0d4fbe15ae11e0af0a6cd780104d99d4264b573fe23f1e027fe66b47f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed repo signal fingerprint after url 2.5.9 security update (RUSTSEC-2026-0592) and v0.162.0 Dockerfile pin.",
-          "reviewed_code_fingerprint": "bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab",
+          "reason": "Refreshed repo signal fingerprint after MODULE.bazel.lock sync for url 2.5.9.",
+          "reviewed_code_fingerprint": "d1d8dd3cfac178b3a232a0a8a73c6f70d7f82a111a093f35727b19084eebff2a",
           "spec_material_hash": "3df09912dde5ee86372c1a0d1ddbf57b7a6feba329dcf69e48cdfcb84d3abf3b"
         }
       ],
@@ -1041,7 +1049,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795349883Z"
+      "updated_at": "1795350489Z"
     },
     "trajectory": {
       "active_boundaries": [
