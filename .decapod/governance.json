@@ -932,6 +932,14 @@
       "proof_refs": [
         "bazelisk mod deps --lockfile_mode=update; bazelisk test //:cargo_inputs_policy (PASSED)"
       ]
+    },
+    {
+      "id": "clean-specs-fingerprint",
+      "summary": "Refresh clean specs attestation fingerprint without local bazel-* symlinks",
+      "input_digest": "sha256:d8a998815254c27fa6ec8649f07e13d8b2c6431fd93ed2a03be81af193438dc9",
+      "proof_refs": [
+        "decapod rpc --op specs.refresh (repo_signal_fingerprint=bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab)"
+      ]
     }
   ],
   "intents": {
@@ -1022,22 +1030,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed repo signal fingerprint after MODULE.bazel.lock sync for url 2.5.9.",
-          "reviewed_code_fingerprint": "d1d8dd3cfac178b3a232a0a8a73c6f70d7f82a111a093f35727b19084eebff2a",
+          "reason": "Refreshed clean codebase attestation after removing local bazel-* symlinks.",
+          "reviewed_code_fingerprint": "bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab",
           "spec_material_hash": "fc804a2e41d4f29230e497f17a1b7daee0997c3a393aaf12a2d5d9d63f062e72"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed repo signal fingerprint after MODULE.bazel.lock sync for url 2.5.9.",
-          "reviewed_code_fingerprint": "d1d8dd3cfac178b3a232a0a8a73c6f70d7f82a111a093f35727b19084eebff2a",
+          "reason": "Refreshed clean codebase attestation after removing local bazel-* symlinks.",
+          "reviewed_code_fingerprint": "bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab",
           "spec_material_hash": "a601baa0d4fbe15ae11e0af0a6cd780104d99d4264b573fe23f1e027fe66b47f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed repo signal fingerprint after MODULE.bazel.lock sync for url 2.5.9.",
-          "reviewed_code_fingerprint": "d1d8dd3cfac178b3a232a0a8a73c6f70d7f82a111a093f35727b19084eebff2a",
+          "reason": "Refreshed clean codebase attestation after removing local bazel-* symlinks.",
+          "reviewed_code_fingerprint": "bceebd49bfc242a034211c75dcad8a616b0d31566be49178ff021864f9a1b5ab",
           "spec_material_hash": "3df09912dde5ee86372c1a0d1ddbf57b7a6feba329dcf69e48cdfcb84d3abf3b"
         }
       ],
@@ -1049,7 +1057,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795350489Z"
+      "updated_at": "1795350943Z"
     },
     "trajectory": {
       "active_boundaries": [
