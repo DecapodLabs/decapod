@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,66 +869,60 @@
     }
   },
   "change": {
-    "id": "change_01M80X6REQ2PT4R77GAB3CS078",
-    "base_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "id": "change_01M81G4A6TVHKVX8YA6JPRPKCR",
+    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim_1895_parity": {
-      "statement": "Decapod #1895 provides a versioned local vs cloud logical operation/evidence parity matrix and proves multi-org isolated DB tenancy without local SQLite fallback",
-      "falsifier": "Cloud mode falls back to .decapod/data/decapod.db, leaks cross-org/unassigned-repo data, allows admin-without-seat read/write, or claims unimplemented parity",
+    "claim-1071-1064-1047-workspace-prebuild": {
+      "statement": "decapod workspace effective-state --format json exposes top-level dirty_files and ordered next_actions read-only; workspace publish supports --pr, --branch, --mode governance-only, and zero-mutation --dry-run with divergence decision gates; validate --pre-build runs fast structural checks reporting scope=pre_build and publication_ready=false.",
+      "falsifier": "effective-state mutates state, publish --dry-run mutates git/remote or allows mixed files in governance-only mode or skips divergence decision gate, or validate --pre-build claims publication_ready=true.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "tests/cloud_tenancy_parity_1895.rs"
+        "tests/analyze_readonly.rs"
       ]
     },
-    "claim_877_overlay": {
-      "statement": "Decapod #877 enforces 4-layer constitution authority precedence (embedded -> org overlay -> repo OVERRIDE.md -> task projection) with explicit provenance and fail-closed non_overridable conflict checks",
-      "falsifier": "Project OVERRIDE.md silently weakens non_overridable org controls, tampered/stale overlays pass silent, org-private policy leaks into portable bundles, or provenance is missing",
+    "claim-1279-analyze-readonly": {
+      "statement": "decapod analyze --read-only executes under OperationClass::AnalyzeReadOnly before startup/migrations/sessions, leaving uninitialized and initialized repositories (including decapod.db SHA-256 and git status) byte-identical while enforcing bounds, symlink/sensitive exclusions, prompt safety, and draft-only source-grounded inferences.",
+      "falsifier": "decapod analyze creates .decapod/, sessions, or locks, alters decapod.db SHA-256, follows escaping symlinks, leaks .env secrets, or hallucinates network architecture for local CLI/IPC repos.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/org_overlay.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "tests/analyze_readonly.rs"
+      ]
+    },
+    "claim-1568-wal-checkpoint-rbac": {
+      "statement": "Local agent DB maintenance supports opt-in db.wal.checkpoint (PASSIVE), CLI aliases (diagnose, lock-inspect, integrity-check, wal-checkpoint), top-level [maintenance] alias with ambiguity rejection, BACKEND_MISMATCH denial, db.backup retry idempotency, and unrelated datastore isolation.",
+      "falsifier": "Any unopted or disallowed maintenance command succeeds, dual config sections silently merge, worktree backend switch succeeds, backup retry duplicates/overwrites, or unrelated lock blocks canonical backup.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/sqlite_maintenance.rs"
+      ]
+    },
+    "claim-1657-legacy-todo-recovery": {
+      "statement": "decapod todo journal reconcile-legacy inspects non-empty legacy todo.db snapshots, exports deterministic JSON (--export), archives/quarantines without touching decapod.db (--quarantine), and imports only non-conflicting missing tasks with verified task-journal checkpoints (--import-missing), failing closed on conflicts while preserving #1683 zero-byte handling.",
+      "falsifier": "Export modifies either DB, --import-missing overwrites conflicting tasks or breaks task journal verification, or --quarantine mutates decapod.db.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/sqlite_maintenance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1895-877-impl",
-      "summary": "Implement #1895 multi-org cloud parity matrix/tests and #877 4-layer org constitution overlays with Living Specs and verified proofs",
-      "input_digest": "sha256:1b5c4c342c5db062d7c7714a45256e26a65a1397d886ad322e431b924c3f7859",
+      "id": "chk-maint-rbac-legacy-analyze-workspace",
+      "summary": "Implement #1568 wal-checkpoint/aliases/isolation tests, #1657 non-empty legacy TODO export/quarantine/import-missing, #1279 zero-mutation decapod analyze --read-only, #1071 workspace effective-state --format json, #1064 publish --pr/--branch/--mode/--dry-run, and #1047 validate --pre-build",
+      "input_digest": "sha256:2a171e7b67946a7860f9a55bd1499ae7ce8261c48b4e7ea1b8d400a2469fb02e",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
-      ]
-    },
-    {
-      "id": "cp-1895-877-spec-reviews",
-      "summary": "Record canonical Living Spec reviews for ARCHITECTURE.md, INTERFACES.md, and SECURITY.md (#1895, #877)",
-      "input_digest": "sha256:1297632cbe7d3af4671cf86082b024fb8a85954ed5c5c96c40a10e10382f9eca",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "cp-1895-877-merge-master",
-      "summary": "Reconcile origin/master acb44b422 (PR #1914) with #1895 and #877, docs, Living Specs, and post-merge verification",
-      "input_digest": "sha256:743de10daefed35e965261e75bf321747b57a01cb65dfc1dfebd1c1001bb888f",
-      "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "cargo_clippy_all_targets",
+        "cargo_fmt_check",
+        "tests/analyze_readonly.rs",
+        "tests/sqlite_maintenance.rs",
+        "tests/unit/core/workspace_publication_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80X6REQ2PT4R77GAB3CS078": {
+    "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -938,14 +932,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+      "id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
-      "refined_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "raw_intent": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
+      "refined_intent": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -958,7 +952,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "intent": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -968,203 +962,136 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "5b80a9a3e3f82b7beb67cfa7b5a3680cf267d4c460835b1f8967a39ae875e544"
+          "reason": "Documented db_maintenance wal_checkpoint & [maintenance] resolution, legacy_todo_recovery logical snapshot inspection/export/quarantine/journaled import, OperationClass::AnalyzeReadOnly early dispatch, workspace publish planning, and pre_build_validate",
+          "reviewed_code_fingerprint": "a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a",
+          "spec_material_hash": "d6dabeac834dc58dc958219e0cd558c344f171a793d8665573a61a9c217bd6c1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "dc76d2b2df887f463347f1706febfe811015c3ebfaf27923ea4288650ec06b63"
+          "reason": "Documented db.wal.checkpoint/CLI aliases, legacy TODO --export/--quarantine/--import-missing, decapod analyze --read-only, workspace effective-state --format json, workspace publish --pr/--branch/--mode/--dry-run, and validate --pre-build",
+          "reviewed_code_fingerprint": "a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a",
+          "spec_material_hash": "f41e06f8f0a4948a626efacb8bc3bc924eecc4862a60ae7d0260b98497b121d3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
+          "reason": "Documented opt-in PASSIVE WAL checkpoint & AMBIGUOUS_MAINTENANCE_POLICY fail-closed checks, non-overwriting legacy recovery conflict blocking, zero-mutation analyze symlink/sensitive/prompt-safety isolation, non-forced publish divergence gate, and pre_build non-substitution",
+          "reviewed_code_fingerprint": "a7382015a37eedab856904dcca6b4ab466f25646efbb1df11dbf72f4393c847a",
+          "spec_material_hash": "2079438660d9c699c7745c7ff44947a3b617b238ce93a72b07cb8184886c1995"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "title": "Decapod #1568/#1657/#1279/#1071/#1064/#1047: maintenance RBAC, legacy recovery, readonly analyze & workspace diagnostics",
       "todo_ids": [
-        "feat_01m80wsps229vtve"
+        "code_01m81fywj63agqge"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795334627Z"
+      "updated_at": "1795350733Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ba5edcac4d768d9c28921817e42720991f60d272bf0865e2f3d3b74985bd96d2",
+      "artifact_hash": "sha256:46333e562a1da675660fad7173c0afe07547b3499dd583caa07dc41e3c13859b",
       "checks": [
         {
-          "name": "capability_contract_drift",
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "check_no_default_features",
+          "name": "cargo_fmt_check",
           "status": "passed"
         },
         {
-          "name": "cli_contracts",
+          "name": "test_analyze_readonly_8",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_features",
+          "name": "test_cli_unit_17",
           "status": "passed"
         },
         {
-          "name": "cloud_supabase_boundary",
+          "name": "test_db_maintenance_unit_6",
           "status": "passed"
         },
         {
-          "name": "cloud_tenancy_parity_1895",
+          "name": "test_sqlite_maintenance_19",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
+          "name": "test_trajectory_docs_5",
           "status": "passed"
         },
         {
-          "name": "fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "interop_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "lib_targeted_47",
-          "status": "passed"
-        },
-        {
-          "name": "org_constitution_overlay_877",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_25_integration_suites",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_fmt_clippy_nofeat",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_lib_134",
-          "status": "passed"
-        },
-        {
-          "name": "rpc_golden_vectors",
+          "name": "test_workspace_publication_target_pr",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
+            "detail": "trajectory:branch_01M81G4AA8MC2CY33J9FB37HP0",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80X6RJV40ZZKZV0T1YX0STS": {
+          "branch_01M81G4AA8MC2CY33J9FB37HP0": {
             "evidence_only": true,
-            "id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "id": "branch_01M81G4AA8MC2CY33J9FB37HP0",
+            "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_project.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/cloud_parity_matrix.rs",
-                  "src/decapod/core/org_overlay.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/constitution_cli.rs",
-                  "src/decapod/core/context_capsule.rs",
-                  "src/decapod/core/context_bundle.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/docs_cli.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/legacy_todo_recovery.rs",
+                  "src/decapod/core/analyze.rs",
+                  "src/decapod/core/pre_build_validate.rs",
+                  "src/decapod/core/workspace_diagnostic.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "src/decapod/core/workspace.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_tenancy_parity_1895.rs",
-                  "tests/org_constitution_overlay_877.rs",
-                  "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
+                  "tests/analyze_readonly.rs",
+                  "tests/sqlite_maintenance.rs"
                 ],
                 "proof_refs": [
-                  "fmt_check",
-                  "check_no_default_features",
-                  "clippy_all_targets_features",
-                  "lib_targeted_47",
-                  "cloud_tenancy_parity_1895",
-                  "org_constitution_overlay_877",
-                  "cloud_supabase_boundary",
-                  "cli_contracts",
-                  "doc_alignment",
-                  "interop_conformance",
-                  "capability_contract_drift",
-                  "rpc_golden_vectors"
+                  "cargo_fmt_check",
+                  "cargo_clippy_all_targets",
+                  "test_analyze_readonly_8",
+                  "test_sqlite_maintenance_19",
+                  "test_db_maintenance_unit_6",
+                  "test_workspace_publication_target_pr",
+                  "test_cli_unit_17",
+                  "test_trajectory_docs_5"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites."
-                ],
-                "proof_refs": [
-                  "post_merge_fmt_clippy_nofeat",
-                  "post_merge_lib_134",
-                  "post_merge_25_integration_suites"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1173,35 +1100,21 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites.",
-        "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
-      ],
-      "inspected_files": [
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/validate.rs"
-      ],
-      "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M81G4A6TVHKVX8YA6JPRPKCR",
       "modified_files": [
-        "docs/agent/command-contracts.md",
         "src/decapod/cli.rs",
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/constitution_cli.rs",
-        "src/decapod/core/context_bundle.rs",
-        "src/decapod/core/context_capsule.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/org_overlay.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
+        "src/decapod/core/analyze.rs",
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/legacy_todo_recovery.rs",
+        "src/decapod/core/pre_build_validate.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/core/workspace_diagnostic.rs",
+        "src/decapod/core/workspace_publication.rs",
         "src/decapod/lib.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "tests/analyze_readonly.rs",
+        "tests/sqlite_maintenance.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1209,10 +1122,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
+      "run_id": "branch_01M81G4AA8MC2CY33J9FB37HP0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80wsps229vtve",
+      "task_id": "code_01m81fywj63agqge",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

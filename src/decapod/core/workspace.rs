@@ -2261,8 +2261,14 @@ pub struct PublishResult {
     pub commit_hash: String,
     /// Remote URL the branch was pushed to
     pub remote_url: String,
-    /// PR URL if one was created
+    /// PR URL if one was created or reused
     pub pr_url: Option<String>,
+    /// True when an existing matching open PR was reused rather than newly created (#1064).
+    #[serde(default)]
+    pub pr_reused: bool,
+    /// Publication mode executed (`full` or `governance-only`).
+    #[serde(default)]
+    pub mode: crate::cli::WorkspacePublishMode,
     /// Exact pushed commit and final remote diff were read back.
     #[serde(default)]
     pub remote_verified: bool,
@@ -2272,6 +2278,38 @@ pub struct PublishResult {
     pub pr_verified: bool,
     /// Non-blocking publication limitations; never substitutes for failed proof.
     #[serde(default)]
+    pub warnings: Vec<String>,
+}
+
+/// Options for governed workspace publication and dry-run planning (#1064).
+#[derive(Debug, Clone, Default)]
+pub struct PublishOptions {
+    pub title: Option<String>,
+    pub description: Option<String>,
+    pub target_pr: Option<u64>,
+    pub target_branch: Option<String>,
+    pub mode: crate::cli::WorkspacePublishMode,
+    pub dry_run: bool,
+}
+
+/// Non-mutating structured dry-run plan returned by `decapod workspace publish --dry-run` (#1064).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PublishDryRunPlan {
+    pub schema_version: String,
+    pub dry_run: bool,
+    pub mode: crate::cli::WorkspacePublishMode,
+    pub branch: String,
+    pub base_branch: String,
+    pub remote_url: String,
+    pub local_head: String,
+    pub remote_head: Option<String>,
+    pub divergence: String,
+    pub target_pr: Option<serde_json::Value>,
+    pub action: String,
+    pub changed_paths: Vec<String>,
+    pub governance_only_valid: bool,
+    pub disallowed_paths: Vec<String>,
+    pub blockers: Vec<serde_json::Value>,
     pub warnings: Vec<String>,
 }
 
@@ -2715,12 +2753,256 @@ pub fn pr_admission_warnings(repo_root: &Path) -> Vec<String> {
     ]
 }
 
+/// Compute the exact structured publication plan without mutating git, remote, or PRs (#1064).
+pub fn plan_workspace_publish(
+    repo_root: &Path,
+    options: &PublishOptions,
+) -> Result<PublishDryRunPlan, DecapodError> {
+    let status = get_workspace_status(repo_root)?;
+    let mut blockers = Vec::new();
+    let mut warnings = Vec::new();
+    let dir = repo_root.to_str().unwrap_or(".");
+
+    if !status.git.in_worktree {
+        blockers.push(serde_json::json!({
+            "code": "WORKTREE_REQUIRED",
+            "message": "Cannot publish: not in a git worktree. Run `decapod workspace ensure` first."
+        }));
+    }
+    if status.git.is_protected {
+        blockers.push(serde_json::json!({
+            "code": "PROTECTED_BRANCH_BLOCKED",
+            "message": format!("Cannot publish from protected branch '{}'.", status.git.current_branch)
+        }));
+    }
+    if let Some(expected_branch) = options.target_branch.as_deref()
+        && expected_branch != status.git.current_branch
+    {
+        blockers.push(serde_json::json!({
+            "code": "TARGET_BRANCH_MISMATCH",
+            "message": format!(
+                "Requested --branch '{}' does not match active workspace branch '{}'; Decapod publishes the same branch without rewriting history.",
+                expected_branch, status.git.current_branch
+            )
+        }));
+    }
+
+    let base_branch = resolve_base_branch(repo_root, None);
+    let local_head = Command::new("git")
+        .env("GIT_OPTIONAL_LOCKS", "0")
+        .args(["-C", dir, "rev-parse", "HEAD"])
+        .bounded_output(CONTROL_TIMEOUT)
+        .ok()
+        .filter(|o| o.status.success())
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_default();
+
+    let base_ref =
+        base_ref_for_branch(repo_root, &base_branch).unwrap_or_else(|| base_branch.clone());
+    let mut changed_set =
+        publication::branch_changed_paths(repo_root, &base_ref, "HEAD").unwrap_or_default();
+    if status.git.has_local_mods {
+        let porcelain = Command::new("git")
+            .env("GIT_OPTIONAL_LOCKS", "0")
+            .args(["-C", dir, "status", "--porcelain", "-z"])
+            .bounded_output(CONTROL_TIMEOUT)
+            .ok()
+            .filter(|o| o.status.success())
+            .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+            .unwrap_or_default();
+        for entry in porcelain.split('\0').filter(|e| e.len() > 3) {
+            changed_set.insert(entry[3..].to_string());
+        }
+        warnings.push("Workspace has uncommitted local changes; commit and validate before actual publication.".to_string());
+    }
+    let changed_paths: Vec<String> = changed_set.into_iter().collect();
+    let disallowed_paths: Vec<String> = changed_paths
+        .iter()
+        .filter(|p| !publication::is_governance_only_path(p))
+        .cloned()
+        .collect();
+    let governance_only_valid = disallowed_paths.is_empty();
+    if options.mode == crate::cli::WorkspacePublishMode::GovernanceOnly && !governance_only_valid {
+        blockers.push(serde_json::json!({
+            "code": "GOVERNANCE_ONLY_MODE_VIOLATION",
+            "message": format!(
+                "--mode governance-only refuses {} non-governance path(s); use --mode full or separate implementation changes.",
+                disallowed_paths.len()
+            ),
+            "disallowed_paths": disallowed_paths,
+        }));
+    }
+
+    let remote_resolved = resolve_publish_remote(repo_root);
+    let (remote_url_raw, remote_url_redacted) = match &remote_resolved {
+        Ok(r) => (Some(r.url.clone()), publication::redact_remote(&r.url)),
+        Err(_) => {
+            // Fallback to origin URL for read-only local/bare-remote dry-run planning.
+            let origin = Command::new("git")
+                .env("GIT_OPTIONAL_LOCKS", "0")
+                .args(["-C", dir, "remote", "get-url", "origin"])
+                .bounded_output(CONTROL_TIMEOUT)
+                .ok()
+                .filter(|o| o.status.success())
+                .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+                .filter(|u| !u.is_empty());
+            match origin {
+                Some(url) => {
+                    let redacted = publication::redact_remote(&url);
+                    warnings.push(
+                        "Remote is non-GitHub or local; forge PR verification is unavailable for this remote."
+                            .to_string(),
+                    );
+                    (Some(url), redacted)
+                }
+                None => {
+                    blockers.push(serde_json::json!({
+                        "code": "PUBLISH_REMOTE_UNAVAILABLE",
+                        "message": "No publish remote could be resolved."
+                    }));
+                    (None, String::new())
+                }
+            }
+        }
+    };
+
+    let (remote_head, divergence) = match remote_url_raw.as_deref() {
+        Some(url) if !local_head.is_empty() => {
+            match publication::classify_remote_divergence(
+                repo_root,
+                url,
+                &status.git.current_branch,
+                &local_head,
+            ) {
+                Ok((sha, div)) => (sha, div.to_string()),
+                Err(_) => {
+                    warnings.push(
+                        "Could not reach remote to check divergence (offline or unauthenticated)."
+                            .to_string(),
+                    );
+                    (None, "remote_unverified".to_string())
+                }
+            }
+        }
+        _ => (None, "remote_unverified".to_string()),
+    };
+
+    if divergence == "diverged_decision_gate" {
+        blockers.push(serde_json::json!({
+            "code": "REMOTE_BRANCH_DIVERGED",
+            "decision_gate": true,
+            "message": format!(
+                "Remote branch '{}' has diverged from local HEAD ({}). Decapod never force-pushes silently; fetch, inspect divergence, reconcile in this workspace, rerun `decapod validate`, and retry.",
+                status.git.current_branch, local_head
+            )
+        }));
+    }
+
+    let slug = github_repo_slug(&remote_url_redacted);
+    let target_pr = match (slug.as_deref(), options.target_pr) {
+        (Some(slug), Some(pr_num)) => {
+            match publication::diagnostic_read_pr(repo_root, slug, pr_num) {
+                Ok(pr_info) => {
+                    if pr_info["state"] != "open"
+                        || pr_info["head_branch"].as_str()
+                            != Some(status.git.current_branch.as_str())
+                        || pr_info["base_branch"].as_str() != Some(base_branch.as_str())
+                    {
+                        blockers.push(serde_json::json!({
+                            "code": "PR_TARGET_MISMATCH",
+                            "message": format!(
+                                "Target PR #{pr_num} does not match open branch '{}' -> '{}'.",
+                                status.git.current_branch, base_branch
+                            )
+                        }));
+                    }
+                    Some(pr_info)
+                }
+                Err(_) => {
+                    blockers.push(serde_json::json!({
+                        "code": "PR_TARGET_UNVERIFIED",
+                        "message": format!("Unable to verify requested target PR #{pr_num} on '{slug}'.")
+                    }));
+                    None
+                }
+            }
+        }
+        (Some(slug), None) => {
+            match publication::find_open_pr_for_branch(repo_root, slug, &status.git.current_branch)
+            {
+                Ok(Some(pr_num)) => publication::diagnostic_read_pr(repo_root, slug, pr_num).ok(),
+                _ => None,
+            }
+        }
+        (None, Some(pr_num)) => {
+            blockers.push(serde_json::json!({
+                "code": "PR_TARGET_UNVERIFIED",
+                "message": format!("Requested --pr #{pr_num} requires a GitHub remote.")
+            }));
+            None
+        }
+        (None, None) => None,
+    };
+
+    let action = if !blockers.is_empty() {
+        "blocked"
+    } else if target_pr.is_some() {
+        "reuse_existing_pr"
+    } else {
+        "create_new_pr"
+    }
+    .to_string();
+
+    Ok(PublishDryRunPlan {
+        schema_version: "decapod.workspace-publish-plan.v1".to_string(),
+        dry_run: true,
+        mode: options.mode,
+        branch: status.git.current_branch,
+        base_branch,
+        remote_url: remote_url_redacted,
+        local_head,
+        remote_head,
+        divergence,
+        target_pr,
+        action,
+        changed_paths,
+        governance_only_valid,
+        disallowed_paths,
+        blockers,
+        warnings,
+    })
+}
+
 pub(crate) fn publish_workspace_with_readiness(
     repo_root: &Path,
     title: Option<String>,
     description: Option<String>,
     readiness_invocation: &crate::ReadinessInvocation,
 ) -> Result<PublishResult, DecapodError> {
+    publish_workspace_with_options(
+        repo_root,
+        PublishOptions {
+            title,
+            description,
+            target_pr: None,
+            target_branch: None,
+            mode: crate::cli::WorkspacePublishMode::Full,
+            dry_run: false,
+        },
+        readiness_invocation,
+    )
+}
+
+pub(crate) fn publish_workspace_with_options(
+    repo_root: &Path,
+    options: PublishOptions,
+    readiness_invocation: &crate::ReadinessInvocation,
+) -> Result<PublishResult, DecapodError> {
+    let title = options.title;
+    let description = options.description;
+    let target_pr = options.target_pr;
+    let target_branch = options.target_branch;
+    let mode = options.mode;
     crate::core::validation_runtime::require_full_readiness_environment()?;
     readiness_invocation.validate()?;
     let status = get_workspace_status(repo_root)?;
@@ -2736,6 +3018,14 @@ pub(crate) fn publish_workspace_with_readiness(
         return Err(DecapodError::ValidationError(format!(
             "Cannot publish: on protected branch '{}'. Work must be on a feature branch.",
             status.git.current_branch
+        )));
+    }
+    if let Some(expected_branch) = target_branch.as_deref()
+        && expected_branch != status.git.current_branch
+    {
+        return Err(DecapodError::ValidationError(format!(
+            "TARGET_BRANCH_MISMATCH: requested --branch '{}' does not match active workspace branch '{}'",
+            expected_branch, status.git.current_branch
         )));
     }
     verify_trajectory_binding_for_readiness(repo_root, &status.git.current_branch)?;
@@ -2832,10 +3122,40 @@ pub(crate) fn publish_workspace_with_readiness(
         .to_string();
 
     publication::verify_committed_bundle(repo_root, &commit_hash)?;
+    if mode == crate::cli::WorkspacePublishMode::GovernanceOnly {
+        let base_ref =
+            base_ref_for_branch(repo_root, &base_branch).unwrap_or_else(|| base_branch.clone());
+        let branch_paths = publication::branch_changed_paths(repo_root, &base_ref, &commit_hash)?;
+        let disallowed: Vec<String> = branch_paths
+            .into_iter()
+            .filter(|p| !publication::is_governance_only_path(p))
+            .collect();
+        if !disallowed.is_empty() {
+            return Err(DecapodError::ValidationError(format!(
+                "GOVERNANCE_ONLY_MODE_VIOLATION: --mode governance-only refuses non-governance changes ({}); use --mode full or isolate governance commits.",
+                disallowed.join(", ")
+            )));
+        }
+    }
     verify_current_governance_for_publish(repo_root)?;
     // Preflight against the same base that publication will use. This runs
     // before any push or PR creation and never mutates the worktree.
     check_merge_conflicts(repo_root, &base_branch)?;
+
+    // Decision gate on remote branch divergence before any push attempt.
+    if let Ok((Some(remote_sha), "diverged_decision_gate")) =
+        publication::classify_remote_divergence(
+            repo_root,
+            &publish_remote.url,
+            &status.git.current_branch,
+            &commit_hash,
+        )
+    {
+        return Err(DecapodError::ValidationError(format!(
+            "REMOTE_BRANCH_DIVERGED: remote {}/{} is at {remote_sha} which is not an ancestor of local HEAD {commit_hash}. Decapod never force-pushes silently; fetch, reconcile divergence in this workspace, rerun `decapod validate`, and retry.",
+            publish_remote.name, status.git.current_branch
+        )));
+    }
 
     // Auto-commit above changes HEAD. Evaluate the current committed work
     // branch now, immediately before its first publication, through the same
@@ -2878,10 +3198,10 @@ pub(crate) fn publish_workspace_with_readiness(
         &commit_hash,
     )
     .map_err(publication::after_push)?;
-    let (pr_url, mut warnings) = if let Some(slug) =
+    let (pr_url, pr_reused, mut warnings) = if let Some(slug) =
         github_repo_slug(&publication::redact_remote(&publish_remote.url))
     {
-        let url = publication::ensure_and_verify_pr(
+        let (url, reused) = publication::ensure_and_verify_pr_for_target(
             repo_root,
             &publish_remote.url,
             &slug,
@@ -2891,13 +3211,18 @@ pub(crate) fn publish_workspace_with_readiness(
             &readiness,
             title.as_deref(),
             description.as_deref(),
+            target_pr,
         )
         .map_err(publication::after_push)?;
         // The publisher's final admission callback rechecks remote and local
         // proof; failures there quarantine the existing PR before returning.
-        (Some(url), pr_admission_warnings(repo_root))
+        (Some(url), reused, pr_admission_warnings(repo_root))
     } else {
-        (None, vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()])
+        (
+            None,
+            false,
+            vec!["Branch verified remotely; PR verification is unavailable for this non-GitHub remote. This is not a publish-ready PR.".to_string()],
+        )
     };
 
     if pr_url.is_some()
@@ -2911,6 +3236,8 @@ pub(crate) fn publish_workspace_with_readiness(
         commit_hash,
         remote_url: publication::redact_remote(&publish_remote.url),
         pr_verified: pr_url.is_some(),
+        pr_reused,
+        mode,
         pr_url,
         remote_verified: true,
         warnings,
