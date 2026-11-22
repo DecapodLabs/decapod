@@ -1,5 +1,21 @@
 # Interfaces
 
+## Agent interoperability CLI, RPC, schema, and independent conformance surfaces (#870–#878, #1715–#1718, #1724, #1725, #1733, #1735)
+
+- **Bounded transport CLI subcommands (`src/decapod/cli.rs::{McpCli, A2aCli}`, `src/decapod/lib.rs::{run_mcp_command, run_a2a_command}`)**:
+  - `decapod mcp serve [--one-shot] [--max-requests <N>] [--max-frame-bytes <N>] [--framing auto|jsonl|content-length]`: finite, daemonless local stdio JSON-RPC 2.0 server handling `initialize`, `notifications/initialized`, `notifications/cancelled`, `ping`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, and `shutdown`.
+  - `decapod mcp schema [--format json|text]`: exports `McpSurfaceSchema` (tools, resources, supported protocol versions, authority boundary).
+  - `decapod mcp config [--root <PATH>] [--executable <PATH>]`: emits scoped `mcpServers.decapod` JSON configuration.
+  - `decapod a2a card [--format json|text]`: prints `A2aAgentCard` advertising only executable local skills and separate `conformance_layers`.
+  - `decapod a2a handoff (--input <FILE> | --json <JSON>)`: validates `{ "envelope", "local_context" }` via unique-key JSON parsing, exiting non-zero on stale proof, contradictory ownership, tampered digests, or `claims_local_authority = true`.
+- **Read-only JSON RPC ops (`src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/core/rpc.rs`, `src/decapod/lib.rs`)**:
+  - Registers 7 read-only, session-free, storage-independent RPC operations: `interop.envelope.verify`, `interop.drift.check`, `interop.registry.query`, `interop.skills.select`, `interop.rules.evaluate`, `interop.rules.taxonomy`, and `interop.overlap.classify`.
+  - Updates `transport:mcp` and `transport:a2a` in `interop::builtin_manifest()` to `implementation_status = "implemented"` with truthful `evidence.state = "not_run"`, while `transport:acp` remains `intentionally_not_used`.
+- **Normative schema, fixtures, docs & conformance suite**:
+  - `assets/schemas/agent-interop-envelope-v1.schema.json`: Draft 2020-12 JSON Schema for `decapod.governance-envelope:v1`.
+  - `tests/fixtures/agent_interop_vectors.v1.json` + `tests/fixtures/agent_interop_reference_consumer.py` + `tests/agent_interop_conformance.rs`: 26 pinned adversarial and positive-twin vectors verified across Decapod, an independent raw-JSON Rust verifier, and an independent Python stdlib consumer.
+  - `docs/conformance/governance-envelope-v1.md` and `docs/architecture/agent-interop-adr.md`: normative profile specification and `#1735`-aligned `proven / partial / target` ADR cross-reference.
+
 ## Cloud parity inspection, constitution overlays, and precedence RPCs (#1895, #877)
 
 - **Parity CLI and RPC (`#1895`)**: Adds `decapod capabilities parity [--dir <PATH>] [--format text|json]` and read-only RPC `interop.cloud_parity` returning `decapod.cloud-parity-report.v1`, plus explicit unsupported Cloud lease renewal refusal (`CLOUD_LEASE_RENEW_UNSUPPORTED`) in `src/decapod/core/cloud_parity_matrix.rs` and `src/decapod/core/interop.rs`.
@@ -1672,8 +1688,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (259 files), `tests/` (274 files)
+- Repository signal fingerprint: `5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (264 files), `tests/` (276 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

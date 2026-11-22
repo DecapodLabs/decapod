@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "accepted_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -869,66 +869,57 @@
     }
   },
   "change": {
-    "id": "change_01M80X6REQ2PT4R77GAB3CS078",
-    "base_commit": "a53f2eb7d0b301eaa628661e4cd48ef1993ca90b",
+    "id": "change_01M81GTZ010E8CRS51DQ0T3RMW",
+    "base_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim_1895_parity": {
-      "statement": "Decapod #1895 provides a versioned local vs cloud logical operation/evidence parity matrix and proves multi-org isolated DB tenancy without local SQLite fallback",
-      "falsifier": "Cloud mode falls back to .decapod/data/decapod.db, leaks cross-org/unassigned-repo data, allows admin-without-seat read/write, or claims unimplemented parity",
+    "claim:agent-interop-envelope-and-conformance": {
+      "statement": "Four-plane governance envelope v1 (#870), observed-conformance receipts and two-way dispatcher/authorization drift detection (#871), and expanded adversarial conformance vectors (#1733) enforce authority isolation, replay/freshness checks, tampered-environment detection, and summary-fiction rejection with agreement across independent consumers.",
+      "falsifier": "An untrusted producer, replayed/stale/tampered envelope, authority-widening child grant, summary-only digest list without raw receipts, or dispatcher-vs-guard drift is accepted as verified or grants local authority, or two independent consumers disagree on verdict or reason class.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "tests/cloud_tenancy_parity_1895.rs"
+        "src/decapod/core/agent_interop.rs",
+        "tests/agent_interop_conformance.rs",
+        "tests/fixtures/agent_interop_reference_consumer.py",
+        "tests/fixtures/agent_interop_vectors.v1.json"
       ]
     },
-    "claim_877_overlay": {
-      "statement": "Decapod #877 enforces 4-layer constitution authority precedence (embedded -> org overlay -> repo OVERRIDE.md -> task projection) with explicit provenance and fail-closed non_overridable conflict checks",
-      "falsifier": "Project OVERRIDE.md silently weakens non_overridable org controls, tampered/stale overlays pass silent, org-private policy leaks into portable bundles, or provenance is missing",
+    "claim:capability-skill-manifest-rule-overlap": {
+      "statement": "Offline capability registry (#1715), deterministic skill discovery and bounded context bundle compiler (#1716), canonical manifest compiler with source maps and conflict detection (#1717), safe markdown fragment composition (#1718), harness packaging (#875), machine-readable 8-domain rule taxonomy (#1724), rule metadata/precedence evaluator (#1725), and 6-state semantic task-scope overlap classifier (#878) operate deterministically offline while rejecting prompt injection, privilege escalation, policy conflicts, and false serialization.",
+      "falsifier": "An unlicensed/cyclic registry entry, prompt-injection or privilege-escalating markdown fragment, contradictory manifest policy, invalid rule metadata, or conflicting task-scope invariant is accepted, or safe overlap is falsely serialized or clean-merge semantic failure passes combined integration.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/org_overlay.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "src/decapod/core/agent_interop/registry.rs",
+        "src/decapod/core/agent_interop/rules.rs",
+        "tests/agent_interop_conformance.rs"
+      ]
+    },
+    "claim:mcp-a2a-bounded-adapters": {
+      "statement": "Bounded stdio MCP JSON-RPC 2.0 server (#872) and bounded A2A Agent Card and handoff validator (#873) expose only executable governance capabilities, redact secrets/hidden rubrics, preserve local kernel authority gates, and exit cleanly without leaving background daemons.",
+      "falsifier": "Oversized/malformed/duplicate-key MCP frames, unsupported protocol versions, secret/path-traversal resource reads, unauthorized tool mutations, or stale/conflicting A2A handoffs succeed or import remote authority.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/agent_interop/a2a.rs",
+        "src/decapod/core/agent_interop/mcp.rs",
+        "tests/agent_interop_conformance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1895-877-impl",
-      "summary": "Implement #1895 multi-org cloud parity matrix/tests and #877 4-layer org constitution overlays with Living Specs and verified proofs",
-      "input_digest": "sha256:1b5c4c342c5db062d7c7714a45256e26a65a1397d886ad322e431b924c3f7859",
+      "id": "chk-agent-interop-shard4",
+      "summary": "Implement modular agent_interop engine (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735): 4-plane envelope v1, observed conformance receipts, drift check, bounded MCP/A2A adapters, offline capability/skill/manifest/composition/rule/overlap engines, 26-vector independent consumer conformance, docs, and living specs.",
+      "input_digest": "sha256:3a73023816d06325fc36d3e06c876806862021d6ea275a2909a2153ccd9f5e77",
       "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
-      ]
-    },
-    {
-      "id": "cp-1895-877-spec-reviews",
-      "summary": "Record canonical Living Spec reviews for ARCHITECTURE.md, INTERFACES.md, and SECURITY.md (#1895, #877)",
-      "input_digest": "sha256:1297632cbe7d3af4671cf86082b024fb8a85954ed5c5c96c40a10e10382f9eca",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "cp-1895-877-merge-master",
-      "summary": "Reconcile origin/master acb44b422 (PR #1914) with #1895 and #877, docs, Living Specs, and post-merge verification",
-      "input_digest": "sha256:743de10daefed35e965261e75bf321747b57a01cb65dfc1dfebd1c1001bb888f",
-      "proof_refs": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/org_overlay.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "tests/agent_interop_conformance.rs",
+        "tests/fixtures/agent_interop_reference_consumer.py",
+        "tests/fixtures/agent_interop_vectors.v1.json"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M80X6REQ2PT4R77GAB3CS078": {
+    "intent:change_01M81GTZ010E8CRS51DQ0T3RMW": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -938,14 +929,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+      "id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
-      "refined_intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "raw_intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
+      "refined_intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -958,9 +949,14 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "intent": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
       "phases": [],
       "proof_hooks": [
+        "cargo fmt --all -- --check",
+        "cargo clippy --all-targets -- -D warnings",
+        "cargo test --lib agent_interop",
+        "cargo test --lib core::interop",
+        "cargo test --test agent_interop_conformance",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -968,203 +964,146 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "5b80a9a3e3f82b7beb67cfa7b5a3680cf267d4c460835b1f8967a39ae875e544"
+          "reason": "Updated ARCHITECTURE.md with agent_interop.rs module structure, replay/authority isolation, MCP/A2A stdio/envelope boundaries, offline registry/compiler/composition/rules/overlap internals.",
+          "reviewed_code_fingerprint": "5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6",
+          "spec_material_hash": "64635172ff7e90482eaca317112f8293bd6eafae3a2f990c21424924b8af06a3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
-          "spec_material_hash": "dc76d2b2df887f463347f1706febfe811015c3ebfaf27923ea4288650ec06b63"
+          "reason": "Updated INTERFACES.md with decapod mcp/a2a CLI subcommands, 7 new read-only interop.* RPC ops, transport:mcp/a2a manifest status, JSON Schema, and 26-vector independent conformance fixtures.",
+          "reviewed_code_fingerprint": "5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6",
+          "spec_material_hash": "fbb609d5a4ede2754a42f9b713b92f306f01acae006cc5479997ad2b2aeab129"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled #1895/#877 Living Specs with merged origin/master acb44b422 (PR #1914) and verified against full post-merge test suite.",
-          "reviewed_code_fingerprint": "0439fd6dcd55dbaade2b1fb077b36d1ae7a60af7a54525733d56918510a00ecb",
+          "reason": "All new interop surfaces preserve Decapod local authority isolation (imported_authority_granted=false), fail-closed session/worktree gates on mutating MCP tools, secret/rubric redaction, prompt-injection/privilege-escalation denial, and zero new security boundary relaxations.",
+          "reviewed_code_fingerprint": "5ba1228920a9b01c3d514dc355f0180e4114677c054d25b2c7c40cf3d78577a6",
           "spec_material_hash": "333361864527a73d56014c59be61bb2b6468f1ccf98829520e4d1460d122c6a5"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement #1895 multi-org cloud parity matrix/tests and #877 org constitution overlays",
+      "title": "Decapod interop: MCP/A2A adapters, capability/skill/rule registry, manifest compiler & conformance (#870-#878 #1715-#1718 #1724 #1725 #1733 #1735)",
       "todo_ids": [
-        "feat_01m80wsps229vtve"
+        "code_01m81gnkzncv9qsk"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795334627Z"
+      "updated_at": "1795351527Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ba5edcac4d768d9c28921817e42720991f60d272bf0865e2f3d3b74985bd96d2",
+      "artifact_hash": "sha256:b4ee527fba0b92bcdadf24ec0d2ba9a7bd7945011ad153b510f3576c532679b2",
       "checks": [
         {
-          "name": "capability_contract_drift",
+          "name": "advertised_rpc_sessions_1",
           "status": "passed"
         },
         {
-          "name": "check_no_default_features",
+          "name": "agent_interop_conformance_8",
           "status": "passed"
         },
         {
-          "name": "cli_contracts",
+          "name": "agent_interop_unit_5",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_features",
+          "name": "assets_schema_contract_4",
           "status": "passed"
         },
         {
-          "name": "cloud_supabase_boundary",
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "cloud_tenancy_parity_1895",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "doc_alignment",
+          "name": "core_interop_unit_25",
           "status": "passed"
         },
         {
-          "name": "fmt_check",
+          "name": "interop_conformance_discovery_1",
           "status": "passed"
         },
         {
-          "name": "interop_conformance",
-          "status": "passed"
-        },
-        {
-          "name": "lib_targeted_47",
-          "status": "passed"
-        },
-        {
-          "name": "org_constitution_overlay_877",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_25_integration_suites",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_fmt_clippy_nofeat",
-          "status": "passed"
-        },
-        {
-          "name": "post_merge_lib_134",
-          "status": "passed"
-        },
-        {
-          "name": "rpc_golden_vectors",
+          "name": "rpc_golden_vectors_6",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
+            "detail": "trajectory:branch_01M81GTZ3EYNYEARANGQDE3N98",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M80X6RJV40ZZKZV0T1YX0STS": {
+          "branch_01M81GTZ3EYNYEARANGQDE3N98": {
             "evidence_only": true,
-            "id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
-            "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
+            "id": "branch_01M81GTZ3EYNYEARANGQDE3N98",
+            "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_project.rs",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/cloud_parity_matrix.rs",
-                  "src/decapod/core/org_overlay.rs",
-                  "src/decapod/core/assets.rs",
-                  "src/decapod/core/docs.rs",
-                  "src/decapod/core/constitution_cli.rs",
-                  "src/decapod/core/context_capsule.rs",
-                  "src/decapod/core/context_bundle.rs",
                   "src/decapod/core/interop.rs",
                   "src/decapod/core/rpc.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/docs_cli.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_tenancy_parity_1895.rs",
-                  "tests/org_constitution_overlay_877.rs",
-                  "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
+                  "src/decapod/core/agent_interop.rs",
+                  "src/decapod/core/agent_interop/mcp.rs",
+                  "src/decapod/core/agent_interop/a2a.rs",
+                  "src/decapod/core/agent_interop/registry.rs",
+                  "src/decapod/core/agent_interop/rules.rs",
+                  "src/decapod/core/interop.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "tests/agent_interop_conformance.rs",
+                  "tests/fixtures/agent_interop_vectors.v1.json",
+                  "tests/fixtures/agent_interop_reference_consumer.py"
                 ],
                 "proof_refs": [
-                  "fmt_check",
-                  "check_no_default_features",
-                  "clippy_all_targets_features",
-                  "lib_targeted_47",
-                  "cloud_tenancy_parity_1895",
-                  "org_constitution_overlay_877",
-                  "cloud_supabase_boundary",
-                  "cli_contracts",
-                  "doc_alignment",
-                  "interop_conformance",
-                  "capability_contract_drift",
-                  "rpc_golden_vectors"
+                  "cargo_fmt",
+                  "cargo_clippy_all_targets",
+                  "agent_interop_unit_5",
+                  "core_interop_unit_25",
+                  "advertised_rpc_sessions_1",
+                  "agent_interop_conformance_8",
+                  "interop_conformance_discovery_1",
+                  "rpc_golden_vectors_6",
+                  "assets_schema_contract_4"
                 ],
                 "scope": [
                   "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "verification",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites."
-                ],
-                "proof_refs": [
-                  "post_merge_fmt_clippy_nofeat",
-                  "post_merge_lib_134",
-                  "post_merge_25_integration_suites"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1173,35 +1112,27 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "Merged origin/master acb44b422 (PR #1914); regenerated docs/specs; passed fmt, no-default-features, clippy -D warnings, 134 --lib tests, and all 25 targeted integration suites.",
-        "cargo fmt --check, no-default-features, clippy -D warnings, 47 lib unit tests, and 22 integration targets passed after final edit; cloud_tenancy_parity_1895 exercises local 2-org/2-DB gateway simulation rather than live Supabase/Propodus clusters"
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/validate.rs"
-      ],
-      "intent_id": "intent:change_01M80X6REQ2PT4R77GAB3CS078",
-      "modified_files": [
-        "docs/agent/command-contracts.md",
         "src/decapod/cli.rs",
-        "src/decapod/core/assets.rs",
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/constitution_cli.rs",
-        "src/decapod/core/context_bundle.rs",
-        "src/decapod/core/context_capsule.rs",
-        "src/decapod/core/docs.rs",
-        "src/decapod/core/docs_cli.rs",
         "src/decapod/core/interop.rs",
-        "src/decapod/core/org_overlay.rs",
         "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
+        "src/decapod/lib.rs"
+      ],
+      "intent_id": "intent:change_01M81GTZ010E8CRS51DQ0T3RMW",
+      "modified_files": [
+        "src/decapod/cli.rs",
+        "src/decapod/core/agent_interop.rs",
+        "src/decapod/core/agent_interop/a2a.rs",
+        "src/decapod/core/agent_interop/mcp.rs",
+        "src/decapod/core/agent_interop/registry.rs",
+        "src/decapod/core/agent_interop/rules.rs",
+        "src/decapod/core/interop.rs",
+        "src/decapod/core/rpc.rs",
         "src/decapod/lib.rs",
-        "tests/cloud_tenancy_parity_1895.rs",
-        "tests/org_constitution_overlay_877.rs"
+        "tests/agent_interop_conformance.rs",
+        "tests/fixtures/agent_interop_reference_consumer.py",
+        "tests/fixtures/agent_interop_vectors.v1.json"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
@@ -1209,10 +1140,10 @@
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M80X6RJV40ZZKZV0T1YX0STS",
+      "run_id": "branch_01M81GTZ3EYNYEARANGQDE3N98",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m80wsps229vtve",
+      "task_id": "code_01m81gnkzncv9qsk",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -265,6 +265,12 @@ Live validation and readback remain owned by `workspace publish`.
 - **Restore (`decapod integration restore`):** Restores removed generated files and `.gitignore` entries byte-for-byte from the restoration manifest while refusing to overwrite conflicting newly authored files or symlinks.
 - **Authority boundaries:** Permanent deletion of `.decapod/data` (`--purge-state`) and protected governance removal (`--remove-protected-governance`) are refused by integration removal and remain separate explicit authority boundaries.
 
+## `decapod mcp`
+- **Intent:** Bounded local stdio MCP JSON-RPC 2.0 adapter and schema/config exporter (#872)
+
+## `decapod a2a`
+- **Intent:** Bounded A2A Agent Card and task/handoff envelope validator (#873)
+
 # RPC Operations (Auto-generated)
 
 ### Operation: `AgentInit`

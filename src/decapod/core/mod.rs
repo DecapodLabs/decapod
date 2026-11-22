@@ -4,6 +4,7 @@
 //! and shared primitives live here.
 
 pub mod agent_eval;
+pub mod agent_interop;
 pub mod ansi;
 pub mod assets;
 pub mod assurance;

@@ -1461,6 +1461,48 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
+                name: "interop.envelope.verify".to_string(),
+                description: "Verify a 4-plane Governance Envelope v1 under local trust policy without importing authority (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.drift.check".to_string(),
+                description: "Run two-way dispatcher-vs-manifest-vs-session-guard drift check (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.registry.query".to_string(),
+                description: "Query offline capability registry entries and graph validation (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.skills.select".to_string(),
+                description: "Deterministically select admissible skills and compile a bounded context bundle (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.rules.evaluate".to_string(),
+                description: "Evaluate canonical coding-rule metadata, conflict precedence, and prompt-injection rejection (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.rules.taxonomy".to_string(),
+                description: "Export machine-readable 8-domain coding-rule taxonomy and gap analysis matrix (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
+                name: "interop.overlap.classify".to_string(),
+                description: "Classify concurrent task-scope overlap across 6 semantic states (read-only)".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "constitution.overlay.status".to_string(),
                 description: "Inspect 4-layer constitution authority precedence and organization overlay trust/freshness status (read-only)".to_string(),
                 stability: "beta".to_string(),

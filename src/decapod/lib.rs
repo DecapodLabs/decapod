@@ -3693,6 +3693,12 @@ pub fn run() -> Result<(), error::DecapodError> {
         Command::Cloud(cloud_cli) => {
             run_cloud_command(cloud_cli)?;
         }
+        Command::Mcp(mcp_cli) => {
+            run_mcp_command(mcp_cli)?;
+        }
+        Command::A2a(a2a_cli) => {
+            run_a2a_command(a2a_cli)?;
+        }
         Command::Release(release_cli) => {
             let project_root = decapod_root_option?;
             run_release_command(release_cli, &project_root)?;
@@ -4186,6 +4192,13 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "interop.project"
                     | "interop.capability_contracts"
                     | "interop.cloud_parity"
+                    | "interop.envelope.verify"
+                    | "interop.drift.check"
+                    | "interop.registry.query"
+                    | "interop.skills.select"
+                    | "interop.rules.evaluate"
+                    | "interop.rules.taxonomy"
+                    | "interop.overlap.classify"
                     | "constitution.overlay.status"
                     | "cloud.orgs"
                     | "cloud.members"
@@ -4415,6 +4428,13 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "policy.grant.explain"
             | "interop.capability_contracts"
             | "interop.cloud_parity"
+            | "interop.envelope.verify"
+            | "interop.drift.check"
+            | "interop.registry.query"
+            | "interop.skills.select"
+            | "interop.rules.evaluate"
+            | "interop.rules.taxonomy"
+            | "interop.overlap.classify"
             | "constitution.overlay.status"
             | "cloud.orgs"
             | "cloud.members"
@@ -4500,6 +4520,13 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "policy.grant.explain"
             | "interop.capability_contracts"
             | "interop.cloud_parity"
+            | "interop.envelope.verify"
+            | "interop.drift.check"
+            | "interop.registry.query"
+            | "interop.skills.select"
+            | "interop.rules.evaluate"
+            | "interop.rules.taxonomy"
+            | "interop.overlap.classify"
             | "constitution.overlay.status"
             | "cloud.orgs"
             | "cloud.members"
@@ -4544,7 +4571,9 @@ fn requires_session_token(command: &Command) -> bool {
         | Command::Release(_)
         | Command::Trace(_)
         | Command::System(_)
-        | Command::Integration(_) => false,
+        | Command::Integration(_)
+        | Command::Mcp(_)
+        | Command::A2a(_) => false,
         Command::Context(ContextGroupCli {
             command: ContextGroupCommand::Preflight(_) | ContextGroupCommand::Impact(_),
         }) => false,
@@ -4581,6 +4610,143 @@ fn advertised_rpc_sessions_match_the_actual_entry_guards() {
             "session descriptor differs from entry enforcement for {}",
             mapping.op
         );
+    }
+}
+
+fn run_mcp_command(mcp_cli: McpCli) -> Result<(), error::DecapodError> {
+    use core::agent_interop::mcp::{
+        McpFramingMode, McpServer, McpServerConfig, export_mcp_schema, generate_mcp_host_config,
+    };
+    match mcp_cli.command {
+        McpCommand::Serve {
+            one_shot,
+            max_requests,
+            max_frame_bytes,
+            framing,
+        } => {
+            let repo_root = std::env::current_dir()?;
+            let mut cfg = McpServerConfig::bounded_for_root(repo_root);
+            cfg.one_shot = one_shot;
+            cfg.max_requests = max_requests;
+            cfg.max_frame_bytes = max_frame_bytes;
+            cfg.framing = match framing.as_str() {
+                "jsonl" => McpFramingMode::Jsonl,
+                "content-length" => McpFramingMode::ContentLength,
+                _ => McpFramingMode::Auto,
+            };
+            let mut server = McpServer::new(cfg);
+            let stdin = io::stdin();
+            let stdout = io::stdout();
+            server.serve_stdio(stdin.lock(), stdout.lock())?;
+            Ok(())
+        }
+        McpCommand::Schema { format } => {
+            let schema = export_mcp_schema();
+            if format == "text" {
+                println!(
+                    "decapod MCP stdio adapter v{} ({} tools, {} resources)",
+                    schema.server_version,
+                    schema.tools.len(),
+                    schema.resources.len()
+                );
+                for tool in &schema.tools {
+                    println!(
+                        "  tool: {} (read_only={}, session={})",
+                        tool.name, tool.read_only, tool.requires_session
+                    );
+                }
+                for res in &schema.resources {
+                    println!("  resource: {} ({})", res.uri, res.mime_type);
+                }
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&schema).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        McpCommand::Config { root, executable } => {
+            let repo_root = match root {
+                Some(r) => r,
+                None => std::env::current_dir()?,
+            };
+            let exe = match executable {
+                Some(e) => e,
+                None => std::env::current_exe()?,
+            };
+            let cfg = generate_mcp_host_config(&exe, &repo_root)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&cfg).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
+    }
+}
+
+fn run_a2a_command(a2a_cli: A2aCli) -> Result<(), error::DecapodError> {
+    use core::agent_interop::a2a::{
+        A2aHandoffEnvelope, LocalHandoffContext, builtin_agent_card, validate_a2a_handoff,
+    };
+    match a2a_cli.command {
+        A2aCommand::Card { format } => {
+            let card = builtin_agent_card();
+            if format == "text" {
+                println!(
+                    "A2A Agent Card: {} v{} (protocol {}, {} skills)",
+                    card.name,
+                    card.version,
+                    card.protocol_version,
+                    card.skills.len()
+                );
+                for skill in &card.skills {
+                    println!("  skill: {} -> {}", skill.id, skill.backing_surface);
+                }
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&card).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        A2aCommand::Handoff { input, json } => {
+            let raw = match (input, json) {
+                (Some(path), None) => fs::read(&path)?,
+                (None, Some(inline)) => inline.into_bytes(),
+                _ => {
+                    return Err(error::DecapodError::ValidationError(
+                        "provide either --input <FILE> or --json <JSON>".to_string(),
+                    ));
+                }
+            };
+            let parsed_val = core::json::unique_value(&raw).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid handoff JSON: {e}"))
+            })?;
+            #[derive(serde::Deserialize)]
+            #[serde(deny_unknown_fields)]
+            struct HandoffValidatePayload {
+                envelope: A2aHandoffEnvelope,
+                local_context: LocalHandoffContext,
+            }
+            let payload: HandoffValidatePayload =
+                serde_json::from_value(parsed_val).map_err(|e| {
+                    error::DecapodError::ValidationError(format!("Invalid handoff payload: {e}"))
+                })?;
+            let report = validate_a2a_handoff(&payload.envelope, &payload.local_context);
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(io::Error::other)?
+            );
+            if !report.admissible_for_continuation {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "A2A handoff rejected: {}",
+                    report.reason_codes.join(", ")
+                )));
+            }
+            Ok(())
+        }
     }
 }
 
@@ -9148,6 +9314,13 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "policy.grant.explain"
             | "interop.capability_contracts"
             | "interop.cloud_parity"
+            | "interop.envelope.verify"
+            | "interop.drift.check"
+            | "interop.registry.query"
+            | "interop.skills.select"
+            | "interop.rules.evaluate"
+            | "interop.rules.taxonomy"
+            | "interop.overlap.classify"
             | "constitution.overlay.status"
             | "cloud.orgs"
             | "cloud.members"
@@ -14586,6 +14759,251 @@ mod rpc_handlers {
         ))
     }
 
+    pub(crate) fn handle_interop_envelope_verify(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        #[derive(serde::Deserialize)]
+        struct Params {
+            envelope: crate::core::agent_interop::GovernanceEnvelopeV1,
+            trust_policy: crate::core::agent_interop::LocalTrustPolicy,
+            #[serde(default)]
+            now_epoch: u64,
+        }
+        let params: Params = match serde_json::from_value(ctx.request.params.clone()) {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let mut ledger = crate::core::agent_interop::ReplayLedger::new();
+        let report = crate::core::agent_interop::import_external_envelope(
+            &params.envelope,
+            &params.trust_policy,
+            &mut ledger,
+            params.now_epoch,
+        );
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(report).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_drift_check(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let manifest = crate::core::interop::builtin_manifest();
+        let report = crate::core::agent_interop::check_dispatcher_authorization_drift(
+            &manifest,
+            crate::core::interop::RPC_OPS,
+            |op| op != "data.database.inspect" && !super::rpc_op_bypasses_session(op),
+        );
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(report).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_registry_query(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        #[derive(serde::Deserialize)]
+        struct Params {
+            #[serde(default)]
+            entries: Vec<crate::core::agent_interop::registry::CapabilityEntry>,
+            #[serde(default)]
+            query: crate::core::agent_interop::registry::RegistryQuery,
+        }
+        let params: Params = match serde_json::from_value(ctx.request.params.clone()) {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let mut reg = crate::core::agent_interop::registry::CapabilityRegistry::new();
+        for entry in params.entries {
+            let _ = reg.register(entry);
+        }
+        let graph_errors = reg.validate_graph().err().unwrap_or_default();
+        let hits = reg.search(&params.query);
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::json!({
+                "hits": hits,
+                "quarantined": reg.quarantined,
+                "graph_errors": graph_errors,
+            })),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_skills_select(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        #[derive(serde::Deserialize)]
+        struct Params {
+            #[serde(default)]
+            entries: Vec<crate::core::agent_interop::registry::CapabilityEntry>,
+            request: crate::core::agent_interop::registry::SkillSelectionRequest,
+        }
+        let params: Params = match serde_json::from_value(ctx.request.params.clone()) {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let mut reg = crate::core::agent_interop::registry::CapabilityRegistry::new();
+        for entry in params.entries {
+            let _ = reg.register(entry);
+        }
+        let bundle = crate::core::agent_interop::registry::select_skills_and_compile_bundle(
+            &reg,
+            &params.request,
+        );
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(bundle).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_rules_evaluate(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        #[derive(serde::Deserialize)]
+        struct Params {
+            rules: Vec<crate::core::agent_interop::rules::CodingRuleMetadata>,
+            context: crate::core::agent_interop::rules::RuleEvaluationContext,
+        }
+        let params: Params = match serde_json::from_value(ctx.request.params.clone()) {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let report = crate::core::agent_interop::rules::evaluate_rule_applicability(
+            &params.rules,
+            &params.context,
+        );
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(report).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_rules_taxonomy(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        let matrix = crate::core::agent_interop::rules::coding_rule_taxonomy_matrix();
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(matrix).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
+    pub(crate) fn handle_interop_overlap_classify(
+        ctx: &RpcCtx,
+    ) -> Result<RpcResponse, error::DecapodError> {
+        #[derive(serde::Deserialize)]
+        struct Params {
+            task_a: crate::core::agent_interop::rules::TaskScopeDeclaration,
+            task_b: crate::core::agent_interop::rules::TaskScopeDeclaration,
+        }
+        let params: Params = match serde_json::from_value(ctx.request.params.clone()) {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(error_response(
+                    ctx.request.id.clone(),
+                    ctx.request.op.clone(),
+                    ctx.request.params.clone(),
+                    "invalid_params".to_string(),
+                    format!("Invalid params: {e}"),
+                    None,
+                    ctx.mandates.clone(),
+                ));
+            }
+        };
+        let report = crate::core::agent_interop::rules::classify_task_overlap(
+            &params.task_a,
+            &params.task_b,
+        );
+        Ok(success_response(
+            ctx.request.id.clone(),
+            ctx.request.op.clone(),
+            ctx.request.params.clone(),
+            Some(serde_json::to_value(report).unwrap()),
+            vec![],
+            None,
+            vec![],
+            ctx.mandates.clone(),
+        ))
+    }
+
     pub(crate) fn handle_constitution_overlay_status(
         ctx: &RpcCtx,
     ) -> Result<RpcResponse, error::DecapodError> {
@@ -15367,6 +15785,13 @@ fn run_rpc_command(
             rpc_handlers::handle_interop_capability_contracts(&rpc_ctx)?
         }
         "interop.cloud_parity" => rpc_handlers::handle_interop_cloud_parity(&rpc_ctx)?,
+        "interop.envelope.verify" => rpc_handlers::handle_interop_envelope_verify(&rpc_ctx)?,
+        "interop.drift.check" => rpc_handlers::handle_interop_drift_check(&rpc_ctx)?,
+        "interop.registry.query" => rpc_handlers::handle_interop_registry_query(&rpc_ctx)?,
+        "interop.skills.select" => rpc_handlers::handle_interop_skills_select(&rpc_ctx)?,
+        "interop.rules.evaluate" => rpc_handlers::handle_interop_rules_evaluate(&rpc_ctx)?,
+        "interop.rules.taxonomy" => rpc_handlers::handle_interop_rules_taxonomy(&rpc_ctx)?,
+        "interop.overlap.classify" => rpc_handlers::handle_interop_overlap_classify(&rpc_ctx)?,
         "constitution.overlay.status" => {
             rpc_handlers::handle_constitution_overlay_status(&rpc_ctx)?
         }
