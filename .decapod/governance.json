@@ -897,6 +897,17 @@
         "tests/ci_event_context_policy.rs",
         "tests/unit/core/proof_tests.rs"
       ]
+    },
+    {
+      "id": "pr1890-merge-295f0af39",
+      "summary": "Merge origin/master (295f0af39, PR A #1908) into #1890 and re-verify readiness/policy/proof tests",
+      "input_digest": "sha256:276c729d27bc735dc8429690af6b8f2937b435c2ea556ef2b27e0b9434aae6fe",
+      "proof_refs": [
+        "src/decapod/core/repository_policy_approval.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/proof_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -940,23 +951,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #1890 accepted GitHub Actions preflight carrier, authority checks, and config schema updates on v0.160.0",
-          "reviewed_code_fingerprint": "b9fdf78ee583a46b743beae555c55bcc4b17247ef425e4ba6ef1044c1c030682",
-          "spec_material_hash": "4da4ecb47aca0ae5b1fdc449777c264efd75da53e4e3f888cb9c9495f2d7b0d8"
+          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1833+#1832 (295f0af39)",
+          "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
+          "spec_material_hash": "883b5a130e6e8f78da30589e96839ebdd4ce459e4b352a2ab807a08ef3c77359"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented #1890 accepted GitHub Actions preflight carrier, authority checks, and config schema updates on v0.160.0",
-          "reviewed_code_fingerprint": "b9fdf78ee583a46b743beae555c55bcc4b17247ef425e4ba6ef1044c1c030682",
-          "spec_material_hash": "d9dee592edac0acf2ee1389aeb164c2d16cc3b8ddc54338e1f49948f7485fc2d"
+          "reason": "Reconciled #1890 GitHub Actions preflight carrier specs with merged #1833+#1832 (295f0af39)",
+          "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
+          "spec_material_hash": "dc938eb998aea2045109af673b9bb07afb3ca23ced424138afe68884a64850df"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No semantic delta in #1890 GitHub Actions preflight carrier beyond refreshed codebase attestation",
-          "reviewed_code_fingerprint": "b9fdf78ee583a46b743beae555c55bcc4b17247ef425e4ba6ef1044c1c030682",
-          "spec_material_hash": "6ad4791978ddd39be2770c8e21ca080f1275a78fc9439e6c0e81ea64be4f8193"
+          "reason": "Integrated #1833+#1832 (295f0af39) security spec updates alongside #1890 refreshed attestation",
+          "reviewed_code_fingerprint": "c1eaed065f02a800d02f7951019a4d3e34309f6673fb6660b15563d05337c27c",
+          "spec_material_hash": "22e4b9cb14e2ce910956e0ea59c12147cf7f3c1d6645e28c11dc07be82afcf18"
         }
       ],
       "state": "APPROVED",
@@ -967,7 +978,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795313124Z"
+      "updated_at": "1795315039Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -8025,15 +8025,24 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
                 .into(),
         ));
     }
+    let governance_root = find_governance_root(workspace_root);
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: governance_root.join(".decapod/data"),
+    };
+    let publication_failure = |mut reason: String| {
+        if let Some(diagnostic) =
+            core::validation_history::current_target_only_diagnostic(workspace_root, &store)
+        {
+            reason.push('\n');
+            reason.push_str(&diagnostic);
+        }
+        error::DecapodError::ValidationError(reason)
+    };
     if !crate::cli::DecapodProjectConfig::load(workspace_root)?
         .proof
         .uses_remote_preflight()
     {
-        let governance_root = find_governance_root(workspace_root);
-        let store = Store {
-            kind: StoreKind::Repo,
-            root: governance_root.join(".decapod/data"),
-        };
         let project = run_validation_bounded_with_receipt(
             &store,
             &governance_root,
@@ -8044,7 +8053,7 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
             false,
         )?;
         if project.fail_count != 0 {
-            return Err(error::DecapodError::ValidationError("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
+            return Err(publication_failure("PUBLICATION_NOT_READY: project prerequisite checks failed; continue working on the branch".into()));
         }
     }
     if core::workspace::resolve_readiness_repository(workspace_root)?
@@ -8055,14 +8064,10 @@ pub(crate) fn enforce_workbranch_readiness_before_push(
             "LOCAL_TARGET_PUBLICATION_UNSUPPORTED: local merge readiness does not prove the forge target; establish independently verified target equivalence and publication authority".into(),
         ));
     }
-    let store = Store {
-        kind: StoreKind::Repo,
-        root: find_governance_root(workspace_root).join(".decapod/data"),
-    };
     let binding = core::validation_history::capture_task_binding(&store, workspace_root)?;
     let readiness = run_current_workbranch_readiness_with(workspace_root, invocation);
     if !readiness.publication_ready() {
-        return Err(error::DecapodError::ValidationError(format!(
+        return Err(publication_failure(format!(
             "PUBLICATION_NOT_READY: {}",
             serde_json::to_string(&readiness)
                 .map_err(|e| error::DecapodError::ValidationError(e.to_string()))?,
@@ -9005,7 +9010,9 @@ fn run_govern_command(
             project_store,
             ValidationScope::ProjectPrerequisites,
         )?,
-        GovernCommand::Policy(policy_cli) => policy::run_policy_cli(project_store, policy_cli)?,
+        GovernCommand::Policy(policy_cli) => {
+            policy::run_policy_cli_in_workspace(project_store, workspace_root, policy_cli)?
+        }
         GovernCommand::Health(health_cli) => health::run_health_cli(project_store, health_cli)?,
         GovernCommand::Proof(proof_cli) => proof::execute_proof_cli(&proof_cli, store_root)?,
         GovernCommand::Watcher(watcher_cli) => match watcher_cli.command {

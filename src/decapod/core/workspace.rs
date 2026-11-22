@@ -2511,6 +2511,9 @@ fn canonical_local_readiness_repository(
         &candidate.proof.commands,
         accepted.proof.repository_contract.as_ref(),
         candidate.proof.repository_contract.as_ref(),
+        crate::core::repository_profile::transition_approval::ApprovalInput::from_environment(
+            crate::ValidationScope::public_validate() == crate::ValidationScope::CiLocal,
+        ),
     )
     .map_err(|_| denied())?;
     // A location-bound local identity is intentionally nonportable. Moving the

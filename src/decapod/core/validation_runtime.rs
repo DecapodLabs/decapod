@@ -804,6 +804,7 @@ fn load_project(options: &Options, budget: &mut RuntimeBudget<'_>) -> io::Result
             &configuration.commands,
             accepted.repository_contract.as_ref(),
             configuration.repository_contract.as_ref(),
+            super::repository_profile::transition_approval::ApprovalInput::from_environment(false),
         )
         .map_err(io::Error::other)?;
     }
