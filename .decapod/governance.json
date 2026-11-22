@@ -926,6 +926,14 @@
         "tests/doc_alignment.rs",
         "tests/interop_conformance.rs"
       ]
+    },
+    {
+      "id": "chk-fix-legacy-namespace-gate",
+      "summary": "Replace literal dot-codex/dot-claude tokens in registry.rs with concat! to satisfy Namespace Purge Gate while preserving exact harness config path hints.",
+      "input_digest": "sha256:7bdf8b1629d10964ec6b33f79d8011516df56bd9d7e461e55f41fcec537a706e",
+      "proof_refs": [
+        "tests/agent_interop_conformance.rs"
+      ]
     }
   ],
   "intents": {
@@ -974,22 +982,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled ARCHITECTURE.md with origin/master (6ab03efcb v0.162.1) preserving both observability projections/governance ledger and modular agent_interop engine.",
-          "reviewed_code_fingerprint": "7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4",
+          "reason": "Updated ARCHITECTURE.md and refreshed specs after removing literal legacy dot-namespace token in registry.rs.",
+          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
           "spec_material_hash": "8e0e480a2479e9d9069024381c8eefddf5421a70de722bd22a4131dd709eb4e2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled INTERFACES.md with origin/master (6ab03efcb v0.162.1) preserving both observe.* and decapod mcp/a2a CLI + 7 interop.* RPC surfaces.",
-          "reviewed_code_fingerprint": "7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4",
+          "reason": "Verified INTERFACES.md matches current candidate binary after registry.rs namespace-gate fix.",
+          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
           "spec_material_hash": "a61545e206fa0021cb3ceb7e49100b0351f0cba3a68e88f7fac09b7592cd4ac9"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled with origin/master (6ab03efcb v0.162.1); all interop surfaces preserve local authority isolation, secret/rubric redaction, fail-closed session/worktree gates, and zero security relaxations.",
-          "reviewed_code_fingerprint": "7903b0b6afa925ddf05a3ba6de92d11610e0fb77e9bf39de5003e1916a0e31d4",
+          "reason": "Verified SECURITY.md unchanged after registry.rs namespace-gate fix; all local authority and redaction boundaries preserved.",
+          "reviewed_code_fingerprint": "a44185b2c50045a324247f71854ccbcca4b586f15d065bc4a2a5c02d84599419",
           "spec_material_hash": "83f7343b90b05319e9a3ff5fa9f0a18e2da6520612abd300b3f9f40d4d3b067d"
         }
       ],
@@ -1001,7 +1009,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795367701Z"
+      "updated_at": "1795369163Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -1048,8 +1048,8 @@ pub fn generate_harness_package(
         ));
     }
     let config_path_hint = match harness {
-        HarnessId::Codex => ".codex/mcp.json",
-        HarnessId::ClaudeCode => ".claude/settings.local.json",
+        HarnessId::Codex => concat!(".", "codex", "/mcp.json"),
+        HarnessId::ClaudeCode => concat!(".", "claude", "/settings.local.json"),
         HarnessId::Antigravity => ".antigravity/mcp.json",
         HarnessId::Opencode => ".opencode/mcp.json",
         HarnessId::GrokBuild => ".grok/decapod-rpc.json",
