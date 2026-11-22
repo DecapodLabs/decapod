@@ -731,20 +731,38 @@ fn self_weaken_worktree_and_unaccepted_root_cannot_grant_maintenance_rbac_shared
         combined(&journal_recover)
     );
 
-    // 3. Unknown privilege flag `main_merge = true` must be rejected by strict schema validation.
+    // 3. Candidate-authored `main_merge = true` (#1468) must be rejected when accepted base
+    // policy keeps the fail-closed default (`main_merge = false`), and unknown privilege keys
+    // must still fail strict schema validation (`INVALID_CONFIG_SCHEMA`).
     git(&repo.root, &["checkout", "master"]);
     repo.update_toml(&worktree, |doc| {
         ensure_table(doc, "governance").insert("main_merge".into(), toml::Value::Boolean(true));
+    });
+    let main_merge_out = repo.cmd(&worktree, &["govern", "project-check"], Some(&attacker));
+    let main_merge_txt = combined(&main_merge_out);
+    assert!(
+        !main_merge_out.status.success(),
+        "candidate-authored main_merge=true must fail closed: {main_merge_txt}"
+    );
+    assert!(
+        main_merge_txt.contains("POLICY_SELF_AUTHORIZATION_REJECTED"),
+        "expected POLICY_SELF_AUTHORIZATION_REJECTED for candidate main_merge=true: {main_merge_txt}"
+    );
+
+    repo.update_toml(&worktree, |doc| {
+        let gov = ensure_table(doc, "governance");
+        gov.remove("main_merge");
+        gov.insert("auto_approve_pr".into(), toml::Value::Boolean(true));
     });
     let schema_out = repo.cmd(&worktree, &["govern", "project-check"], Some(&attacker));
     let schema_txt = combined(&schema_out);
     assert!(
         !schema_out.status.success(),
-        "main_merge=true must fail: {schema_txt}"
+        "unknown privilege flag auto_approve_pr=true must fail: {schema_txt}"
     );
     assert!(
         schema_txt.contains("INVALID_CONFIG_SCHEMA"),
-        "expected INVALID_CONFIG_SCHEMA for unknown privilege key main_merge: {schema_txt}"
+        "expected INVALID_CONFIG_SCHEMA for unknown privilege key auto_approve_pr: {schema_txt}"
     );
 }
 

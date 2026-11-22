@@ -1,5 +1,12 @@
 # Intent
 
+## Obligation ledger, clarity/STE validation, escalation admissibility, offline historical exceptions, and opt-in formal obligations (#1083, #1084, #1093, #1097, #1365, #1468, #1569, #1691, #1726, #1729, #1761, #1762, #1768, #1907; Refs #1095, #1772, #1774, #1796)
+
+- **Escalation admissibility in canonical entrypoints and embedded constitution (`#1691`)**: Aligns `src/decapod/core/assets.rs` (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `CODEX.md`) and `assets/constitution.json` (all 16 routing-pass sites and `interfaces/PROCEDURAL_NORMS`) so freshly initialized agents investigate ordinary uncertainty locally via bounded reflection (`decapod govern plan reflect`) and escalate to a human only when escalation admission confirms irreducible ambiguity, conflicting requirements, or missing authority.
+- **Opt-in accepted-policy `governance.main_merge = true` (`#1468`)**: Supports explicit human-authored `governance.main_merge = true` in `.decapod/config.toml` while keeping the default `false` (omitted when serialized), rejecting candidate-branch self-authorization (`POLICY_SELF_AUTHORIZATION_REJECTED`), and failing closed on target or candidate movement after validation.
+- **Offline verifiable historical-exception authority and semantic governance integrity (`#1569`, `#1093`)**: Replaces hardcoded `"exception_authorized": false` in `src/decapod/core/governance_document.rs` with offline Ed25519 verification against accepted-base `.decapod/historical-exception-signers.json` while strictly preserving `history_proven = false` for all exceptions, and enforces semantic `plan`/`claims` integrity checks (`todo_ids`, substantive intent/purpose, executable `proof_hooks`, governing `authority.source_issue`, and whitespace/timestamp theater-diff detection).
+- **Derived obligation ledger, stagnation detection, outcome claims, 4D completion, canonical approvals, trusted grader, root conservation, clarity/STE validator, and opt-in formal obligations**: Adds `src/decapod/core/obligation_ledger.rs`, `src/decapod/core/artifact_clarity.rs` (`decapod validate --clarity --profile ste-lite|ste-strict|custom`, explicitly disclaiming formal ASD-STE100 certification), and `src/decapod/core/formal_obligations.rs` (disabled by default; Lean/Kani/Verus transcript & hole verification plus finite-capacity conservation state machine), alongside deterministic offline benchmark/telemetry harnesses referencing `#1095`, `#1772`, `#1774`, and `#1796` whose live paired real-agent or maintainer reviews remain external.
+
 ## Maintenance RBAC extensions, non-empty legacy TODO recovery, read-only analysis, and workspace/pre-build diagnostics (#1568, #1657, #1279, #1071, #1064, #1047)
 
 - **Project-opted local database maintenance RBAC completion (`Refs #1568`)**: Extends `[governance.db_maintenance]` (and equivalent single-source top-level `[maintenance]` shorthand, failing closed with `AMBIGUOUS_MAINTENANCE_POLICY` when both are configured) with bounded non-destructive `db.wal.checkpoint` (`PRAGMA wal_checkpoint(PASSIVE)` under explicit allowlisting) and operator-ergonomic CLI aliases (`diagnose`, `lock-inspect`, `integrity-check`, `wal-checkpoint`) routed through the centralized RBAC gate, backed by regression tests for `BACKEND_MISMATCH`, `db.backup` mutator-retry idempotency, and unrelated-datastore lock isolation. Cloud delegated maintenance remains gated on Propodus `#88` and is not claimed here.
@@ -815,8 +822,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1220830526e6d8bf331f5776f2fefe20a0439e853a4f9780193b7fd9839ccbad`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (262 files), `tests/` (276 files)
+- Repository signal fingerprint: `3f84b9029376861c487e6d1239170a2ffbab966c722c5596361a4a5863036250`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `docs/` (3 files), `src/` (267 files), `tests/` (277 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -74,6 +74,12 @@ pub(crate) struct ValidateCli {
     /// Reports scope=pre_build and publication_ready=false; never substitutes for full validation.
     #[clap(long = "pre-build")]
     pub pre_build: bool,
+    /// Run the deterministic mechanical clarity validator (#1097, #1365) on durable governance artifacts.
+    #[clap(long)]
+    pub clarity: bool,
+    /// Mechanical clarity profile: 'ste-lite' (default), 'ste-strict', or 'custom'.
+    #[clap(long, value_name = "PROFILE", requires = "clarity")]
+    pub profile: Option<String>,
 }
 
 #[derive(clap::Args, Debug)]
@@ -512,6 +518,9 @@ pub(crate) struct InitWithCli {
     /// Preserve the configured shared-claim policy during reinitialization.
     #[clap(skip)]
     pub existing_allow_basic_shared_claims: bool,
+    /// Preserve the configured direct main-merge opt-in policy during reinitialization.
+    #[clap(skip)]
+    pub existing_main_merge: bool,
     /// Preserve human-authored exceptional grants during init refresh.
     #[clap(skip)]
     pub existing_rbac: GovernanceRbac,
@@ -677,6 +686,10 @@ pub struct GovernanceConfig {
     /// Cooperative opt-in for basic-trust secondary shared claims. False by default.
     #[serde(default, skip_serializing_if = "is_false")]
     pub allow_basic_shared_claims: bool,
+    /// Human-opted direct merge to main after full validation passes (#1468).
+    /// Defaults to false (fail-closed) and cannot be self-authorized by a candidate branch.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub main_merge: bool,
     /// Human-authored, fail-closed role grants for exceptional operations.
     #[serde(default, skip_serializing_if = "GovernanceRbac::is_default")]
     pub rbac: GovernanceRbac,
