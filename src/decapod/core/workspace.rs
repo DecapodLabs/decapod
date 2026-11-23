@@ -426,7 +426,10 @@ fn check_git_status(repo_root: &Path) -> Result<GitStatus, DecapodError> {
 }
 
 fn check_container_status(_repo_root: &Path) -> Result<ContainerStatus, DecapodError> {
-    let in_container = Path::new("/.dockerenv").exists() || std::env::var("CONTAINER_ID").is_ok();
+    let in_container = Path::new("/.dockerenv").exists()
+        || Path::new("/run/.containerenv").exists()
+        || std::env::var("CONTAINER_ID").is_ok()
+        || std::env::var("DECAPOD_CONTAINER").ok().as_deref() == Some("1");
 
     let container_id = if in_container {
         std::fs::read_to_string("/etc/hostname")

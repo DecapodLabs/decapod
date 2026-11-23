@@ -2320,3 +2320,83 @@ fn classify_container_failure_distinguishes_cgroup_from_workspace_permissions() 
     );
     assert_eq!(code, "container_workspace_permission_denied");
 }
+
+#[test]
+fn prepare_container_signer_server_splices_flags_before_image_arg() {
+    let temp = tempdir().unwrap();
+    let repo = temp.path().join("repo");
+    let ws = temp.path().join("ws");
+    fs::create_dir_all(repo.join(".decapod/data")).unwrap();
+    fs::create_dir_all(ws.join(".decapod/managed")).unwrap();
+    let status = Command::new("git")
+        .args(["init", "-q"])
+        .current_dir(&repo)
+        .status()
+        .unwrap();
+    assert!(status.success());
+    let status = Command::new("git")
+        .args([
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/DecapodLabs/decapod.git",
+        ])
+        .current_dir(&repo)
+        .status()
+        .unwrap();
+    assert!(status.success());
+    let mut cfg = crate::cli::DecapodProjectConfig::default();
+    cfg.workspace.credentials.propodus_cloud = Some("signer-broker".to_string());
+    fs::write(
+        repo.join(".decapod/config.toml"),
+        toml::to_string_pretty(&cfg).unwrap(),
+    )
+    .unwrap();
+
+    let mut spec = build_docker_spec(
+        "podman",
+        &repo,
+        &ws,
+        "localhost/decapod-test:latest",
+        "test-agent",
+        "echo ok",
+        "agent/test/branch",
+        "master",
+        "2g",
+        "1.0",
+        None,
+        Some("code_01test"),
+        false,
+        true,
+    )
+    .unwrap();
+
+    assert!(
+        spec.args
+            .iter()
+            .any(|a| a == "DECAPOD_WORKSPACE_IMAGE=localhost/decapod-test:latest")
+    );
+    assert!(spec.args.iter().any(|a| a == "DECAPOD_CONTAINER=1"));
+
+    let server =
+        prepare_container_signer_server(&repo, &ws, "podman", "inv-01", &mut spec).unwrap();
+    assert!(server.is_some(), "expected HostContainerSignerServer bound");
+
+    let img_idx = spec
+        .args
+        .iter()
+        .position(|a| a == "localhost/decapod-test:latest")
+        .expect("image positional arg present");
+    let sock_env_idx = spec
+        .args
+        .iter()
+        .position(|a| a.starts_with("DECAPOD_CONTAINER_SIGNER_SOCKET="))
+        .expect("signer socket env present");
+    assert!(
+        sock_env_idx < img_idx,
+        "signer socket flags must be spliced before the image positional arg; args={:?}",
+        spec.args
+    );
+    assert_eq!(spec.args[img_idx + 1], "/bin/sh");
+    assert_eq!(spec.args[img_idx + 2], "-c");
+}

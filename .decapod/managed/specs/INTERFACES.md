@@ -15,6 +15,18 @@
   - `@decapodlabs/pi-decapod@0.163.0` exports `createPiDecapodExtension` with `onPromptReceived`, `onContextResolve`, `onToolResult`, `beforeMutation`, `onSettlement`, `onResume`, `beforeValidationAndAdmission`, `switchModelOrHarness`, and `classifyDirectHostWrite`.
   - `tests/fixtures/darkmatter_readonly_snapshot.v1.json` provides the canonical offline read-only consumer snapshot verified by both Rust (`tests/houseboat_engine.rs`) and TypeScript (`bindings/typescript/test/client.test.ts`).
 
+## Podman container-custody & Propodus Cloud Admin wire contract updates (#1379, #1859, #1886, #1896)
+
+- **Propodus Edge JSON request contracts (`src/decapod/core/cloud_admin.rs`)**:
+  - `/org-admins` (`AccountOperation::OrgAdmins`): sends `"operation": "list"|"grant"|"revoke"`.
+  - `/org-recovery` (`AccountOperation::OrgRecovery`): sends `"operation": "status"|"initiate"|"confirm"|"cancel"` and `"recovery_request_id"`, reading either `recovery_request_id` or `recovery_id` from server responses.
+  - `/policy-templates` (`AccountOperation::PolicyTemplates`): sends `"operation": "audit_list"|"export"|"import"|"delete"`.
+  - `/org-upgrades` (`AccountOperation::OrgUpgrades`): sends `"operation": "status"|"schedule"|"approve"|"cancel"`.
+- **Error taxonomy & container status contracts (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/workspace.rs`, `src/decapod/plugins/container.rs`)**:
+  - Adds `CloudAuthErrorCode::InvalidRequest` (`"invalid_request"`) mapped to `CloudAuthStatus::ActionRequired`, preserving session custody on HTTP 400 parameter errors.
+  - Preserves structured `billing_not_configured` on non-mutating `decapod cloud orgs` billing probes rather than flattening into `OutcomeUnknown`.
+  - `decapod workspace status` recognizes `/run/.containerenv` and `DECAPOD_CONTAINER=1` for Podman `in_container: true`, and `decapod auto container run` exports `DECAPOD_WORKSPACE_IMAGE` and `DECAPOD_CONTAINER=1` while splicing `DECAPOD_CONTAINER_SIGNER_SOCKET` flags before the image positional argument.
+
 ## Execution telemetry CLI/RPC/HTTP and MCP `--allow-mutations` interfaces (#1095, #872, #871)
 
 - **Read-only telemetry CLI (`src/decapod/cli.rs::ObserveCommand::Telemetry`, `src/decapod/lib.rs::run_observe_command`)**:
@@ -1764,7 +1776,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab`
+- Repository signal fingerprint: `f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

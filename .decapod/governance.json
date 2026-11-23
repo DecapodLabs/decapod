@@ -921,6 +921,19 @@
         "tests/observability_projections.rs",
         "tests/single_datastore.rs"
       ]
+    },
+    {
+      "id": "wave7-shard-b-merge-826f263e",
+      "summary": "Merge origin/master 826f263e0b (PR #1930) into PR #1928 with refreshed docs/specs, re-bound spec reviews, fmt, clippy, and verified single-checkpoint merge commit",
+      "input_digest": "sha256:c06ae70b23dc3ee69a401d7816eb543e38ca11b2b4eb3302acaeb2b2fa67eaca",
+      "proof_refs": [
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/cli_contracts.rs",
+        "tests/datastore_relational_compaction.rs",
+        "tests/doc_alignment.rs",
+        "tests/single_datastore.rs"
+      ]
     }
   ],
   "intents": {
@@ -964,22 +977,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved PR #1927 and Wave 7 Shard B architecture sections after merging origin/master b774df83dd",
-          "reviewed_code_fingerprint": "64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab",
-          "spec_material_hash": "a8de437ff52801fb248c45caa1511fbe9a768e25dbafb73f3daa8d93dd9842ef"
+          "reason": "Preserved PR #1930, PR #1927, and Wave 7 Shard B architecture sections after merging origin/master 826f263e0b",
+          "reviewed_code_fingerprint": "f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19",
+          "spec_material_hash": "e9f080d9d618d4674894b84fd8618db6f0b9d69f1827d3628ade16a7895cf2ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved PR #1927 and Wave 7 Shard B CLI/RPC/TS/Pi interface sections after merging origin/master b774df83dd",
-          "reviewed_code_fingerprint": "64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab",
-          "spec_material_hash": "93dd1afe2a2e542182d83052452b9925dc507fccf191c93269f2f328be0bb10c"
+          "reason": "Preserved PR #1930, PR #1927, and Wave 7 Shard B CLI/RPC/TS/Pi interface sections after merging origin/master 826f263e0b",
+          "reviewed_code_fingerprint": "f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19",
+          "spec_material_hash": "9365a461b35057ad2ae1bf093b7d79d3c67e0e1aaabbcb10a62bbde07b59bc42"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved Wave 7 Shard B security boundaries after merging origin/master b774df83dd",
-          "reviewed_code_fingerprint": "64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab",
+          "reason": "Preserved Wave 7 Shard B security boundaries after merging origin/master 826f263e0b",
+          "reviewed_code_fingerprint": "f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19",
           "spec_material_hash": "7ba7bf9f7e9a4b87bc82f5ef9d7b0cb94f38709d92a268e53e00e57e4437fcbe"
         }
       ],
@@ -991,7 +1004,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795395823Z"
+      "updated_at": "1795396606Z"
     },
     "trajectory": {
       "active_boundaries": [
