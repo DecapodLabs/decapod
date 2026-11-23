@@ -189,7 +189,11 @@ pub fn verify(repo: &Path, event: &str, base: &str, head: &str) -> Check<()> {
         &["diff", "--quiet", "--no-ext-diff", head, "HEAD", "--"],
     )?;
     let mut allowed: BTreeSet<_> = entrypoints::ENTRYPOINT_FILES.into_iter().collect();
-    allowed.extend([DOCKERFILE, specs::LOCAL_PROJECT_SPECS_MANIFEST]);
+    allowed.extend([
+        DOCKERFILE,
+        specs::LOCAL_PROJECT_SPECS_MANIFEST,
+        specs::LEGACY_PROJECT_SPECS_MANIFEST,
+    ]);
     allowed.extend(specs::LOCAL_PROJECT_SPECS.iter().map(|spec| spec.path));
     check_changed_paths(repo, head, &allowed)?;
     let cargo: toml::Value = toml::from_str(&blob(repo, head, "Cargo.toml")?)?;
@@ -197,10 +201,12 @@ pub fn verify(repo: &Path, event: &str, base: &str, head: &str) -> Check<()> {
         return Err("checker binary does not match the classified release version".into());
     }
 
-    let mut expected: Value =
-        serde_json::from_str(&blob(repo, head, specs::LOCAL_PROJECT_SPECS_MANIFEST)?)?;
-    let actual: Value =
-        serde_json::from_str(&read_regular(repo, specs::LOCAL_PROJECT_SPECS_MANIFEST)?)?;
+    let expected_raw = blob(repo, head, specs::LOCAL_PROJECT_SPECS_MANIFEST)
+        .or_else(|_| blob(repo, head, specs::LEGACY_PROJECT_SPECS_MANIFEST))?;
+    let mut expected: Value = serde_json::from_str(&expected_raw)?;
+    let actual_raw = read_regular(repo, specs::LOCAL_PROJECT_SPECS_MANIFEST)
+        .or_else(|_| read_regular(repo, specs::LEGACY_PROJECT_SPECS_MANIFEST))?;
+    let actual: Value = serde_json::from_str(&actual_raw)?;
     let old_release = expected["decapod_release"]
         .as_str()
         .ok_or("missing manifest release")?

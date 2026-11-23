@@ -1721,11 +1721,19 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Data integrity validation after recovery
 <!-- decapod:capability-overlay:persistent-state:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
+- Integration test targets (168): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+152 more)
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
+- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -2835,3 +2843,11 @@ Standalone validation passed on `59526e792` before the v0.158.0 cut at `1bdb1e6e
 - **Publication privacy & stale target movement (`tests/unit/core/publication_privacy_tests.rs`, `src/decapod/core/snapshot_provider/automatic/tests.rs`)**: Unit tests verify literal redacting matches across local `.decapod/data/publication-deny.txt` and `[governance].publication_deny_identifiers` (without self-flagging `.decapod/config.toml`) and verify `verify_pending_accepted_target` returns `STALE_ACCEPTED_BASE` when the remote target advances.
 - **Linux `ETXTBSY` fixture isolation & headless macOS Podman (`tests/unit/plugins/container_tests.rs`)**: Shared `write_executable_fixture` child-process writer covers all fake runtime shell fixtures in `container_tests.rs`; `verify_headless_podman_machine_args` and `verify_headless_vfkit_args` regressions reject `--log-level=debug`, `--gui`, and `virtio-gpu`/`virtio-input` display/input devices while verifying env scrubbing and headless diagnostics.
 - **README badge (`tests/unit/lib_init_prompt_tests.rs`)**: Unit test verifies `[init].readme_badge` default `true`, config roundtrip opt-out, `protected_paths` respect, and idempotent version upgrades.
+
+## Wave 7 Shard A Verification Matrix (#1079, #1122, #1047, #1134, #1388, #1626, #1672, #1879, #1890, #1573)
+
+- **Manifest migration & content-bumping refresh (`tests/unit/core/project_specs_tests.rs`, `tests/projection_consistency.rs`, `tests/init_validate_green_field.rs`)**: Verifies backward-compatible read fallback from `.decapod/managed/specs/.manifest.json`, migration to `.decapod/managed/.manifest.json` with legacy cleanup, deterministic `codebase-contract` updates on module additions, authored-prose preservation, and idempotence.
+- **Pre-build structural & SHA-256 gate (`tests/analyze_readonly.rs`, `assets/tools/source_ci/pre-build-validate.sh`)**: Verifies `decapod validate --pre-build` fails fast on missing governance, missing manifest, or missing/invalid 64-hex entrypoint `decapod-fingerprint` SHAs without mutating the repository.
+- **CI workflow, sharding, release-cut, and Nix tag policies (`tests/source_ci_profile_policy.rs`, `tests/release_metadata_policy.rs`, `src/decapod/core/readiness_profile/tests.rs`)**: Verifies all 44 finite PR job instances, balanced 3-way core and CLI shard partitioning covering every original Bazel target with `Tests (core)` / `Tests (cli)` aggregators, release-only scheduling for `test-core`/`test-core-status`/`supabase-consumer`, and native Cachix publication gating for squash/linear/merge releases and SemVer `refs/tags/v*` tags.
+- **Governed docs auto-sync (`tests/docs_sync_checkpoint_boundary.rs`)**: Exercises all six lifecycle scenarios against a real bare Git remote and compiled `decapod` binary (no-drift, first PR, repeated open-PR updates, post-merge reset, validation failure fail-closed, concurrent/diverged branch fail-closed).
+- **ETag conditional polling & GHA carrier policy (`src/decapod/core/snapshot_provider/github_quota.rs`, `src/decapod/core/snapshot_provider/public_buildkite/ci_attested/real_metadata_tests.rs`)**: Verifies `If-None-Match` / HTTP 304 zero-quota revalidation, fail-closed unexpected 304 handling, and `.decapod/config.toml` GitHub Actions carrier selection without Buildkite `ci_attested`.

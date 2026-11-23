@@ -619,7 +619,7 @@ fn exclusions_are_recomputed_from_source_facts_not_provider_skip_results() {
     assert!(
         docs.exclusions
             .iter()
-            .any(|o| o.key.profile.ends_with("selective-core"))
+            .any(|o| o.key.profile.ends_with("selective-core-1"))
     );
 }
 
@@ -953,8 +953,16 @@ fn modified_known_workflow_cannot_be_blessed_by_only_repinning_project_config() 
 #[test]
 fn source_matrix_keys_preserve_actual_workflow_axes() {
     assert_eq!(
-        matrix("test", Some("core")).unwrap(),
-        [("target".into(), "core".into())].into()
+        matrix("test", Some("plugins")).unwrap(),
+        [("target".into(), "plugins".into())].into()
+    );
+    assert_eq!(
+        matrix("test-core", Some("core-1")).unwrap(),
+        [("shard".into(), "core-1".into())].into()
+    );
+    assert_eq!(
+        matrix("test-cli", Some("cli-1")).unwrap(),
+        [("shard".into(), "cli-1".into())].into()
     );
     assert_eq!(
         matrix("musl-publication", Some("x86_64-unknown-linux-musl")).unwrap(),

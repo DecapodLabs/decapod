@@ -520,6 +520,9 @@ pub(super) fn source_dependencies(
 fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<String> {
     let simple = match (workflow, job) {
         (".github/workflows/ci.yml", "release-metadata") => "Release Metadata Classification",
+        (".github/workflows/ci.yml", "pre-build-validate") => {
+            "Pre-Build Structural & Fingerprint Gate"
+        }
         (".github/workflows/ci.yml", "commit-lint") => "Commit Lint",
         (".github/workflows/ci.yml", "governance-artifacts") => {
             "Governance Checkpoints (every authored commit)"
@@ -539,6 +542,8 @@ fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<Strin
         (".github/workflows/ci.yml", "deps-lint") => "Lint (dependencies)",
         (".github/workflows/ci.yml", "health") => "Decapod Validate",
         (".github/workflows/ci.yml", "setup") => "Setup & Build Shared Binary",
+        (".github/workflows/ci.yml", "test-core-status") => "Tests (core)",
+        (".github/workflows/ci.yml", "test-cli-status") => "Tests (cli)",
         (".github/workflows/ci.yml", "integration-prepare") => "Prepare Integration Tests",
         (".github/workflows/ci.yml", "integration-status") => "Tests (integration)",
         (".github/workflows/ci.yml", "test-rpc-suite") => "Tests (RPC Suite)",
@@ -571,6 +576,22 @@ fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<Strin
                 .filter(|m| ["core", "plugins", "cli"].contains(m))
                 .map(|m| format!("Tests ({m})"))
                 .ok_or_else(|| invalid("unknown test source matrix"));
+        }
+        (".github/workflows/ci.yml", "test-core") => {
+            return match matrix {
+                Some("core-1") => Ok("Tests (core 1/3)".into()),
+                Some("core-2") => Ok("Tests (core 2/3)".into()),
+                Some("core-3") => Ok("Tests (core 3/3)".into()),
+                _ => Err(invalid("unknown core shard source matrix")),
+            };
+        }
+        (".github/workflows/ci.yml", "test-cli") => {
+            return match matrix {
+                Some("cli-1") => Ok("Tests (cli 1/3)".into()),
+                Some("cli-2") => Ok("Tests (cli 2/3)".into()),
+                Some("cli-3") => Ok("Tests (cli 3/3)".into()),
+                _ => Err(invalid("unknown cli shard source matrix")),
+            };
         }
         (".github/workflows/ci.yml", "test-integration") => {
             return matrix

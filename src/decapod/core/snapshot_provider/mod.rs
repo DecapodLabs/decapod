@@ -498,11 +498,39 @@ pub(crate) fn public_network_environment(command: &mut Command) {
 /// already be installed/trusted. User curl config, environment, cookies, netrc,
 /// external auth helpers are unavailable to this narrow client. Only the exact
 /// job-log endpoint may follow up to three provider-issued HTTPS redirects.
+/// Bounded in-process ETag validator cache (#1573). Never persisted across runs;
+/// every poll still performs a live TLS conditional GET (`If-None-Match`) against
+/// `api.github.com` and fails closed on unexpected 304 or invalid ETag syntax.
+const PUBLIC_GITHUB_ETAG_CACHE_MAX_ENTRIES: usize = 64;
+const PUBLIC_GITHUB_ETAG_CACHE_MAX_BODY_BYTES: usize = 2 * 1024 * 1024;
+
+fn parse_valid_etag(bytes: &[u8]) -> Option<String> {
+    let end = bytes.windows(4).position(|w| w == b"\r\n\r\n")?;
+    if end > 64 * 1024 {
+        return None;
+    }
+    let headers = std::str::from_utf8(&bytes[..end]).ok()?;
+    let mut values = headers.split("\r\n").skip(1).filter_map(|line| {
+        let (key, value) = line.split_once(':')?;
+        key.eq_ignore_ascii_case("etag").then_some(value.trim())
+    });
+    let value = values.next()?;
+    if values.next().is_some()
+        || value.len() < 2
+        || value.len() > 256
+        || !value.bytes().all(|b| (0x21..=0x7e).contains(&b))
+    {
+        return None;
+    }
+    Some(value.to_string())
+}
+
 pub struct PublicGithubReads<R> {
     curl: PathBuf,
     repository: Repository,
     other: R,
     authorize: AuthorizationCheck,
+    etag_cache: std::collections::BTreeMap<String, (String, Vec<u8>)>,
 }
 impl<R: Runner> PublicGithubReads<R> {
     pub fn new<A>(curl: PathBuf, repository: Repository, other: R, authorize: A) -> Result<Self>
@@ -518,6 +546,7 @@ impl<R: Runner> PublicGithubReads<R> {
             repository,
             other,
             authorize: Box::new(authorize),
+            etag_cache: std::collections::BTreeMap::new(),
         })
     }
 }
@@ -566,6 +595,10 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
             "--header",
             "Accept: application/vnd.github+json",
         ]);
+        let cached_etag = self.etag_cache.get(&path).map(|(etag, _)| etag.clone());
+        if let Some(etag) = &cached_etag {
+            command.args(["--header", &format!("If-None-Match: {etag}")]);
+        }
         command.args([
             "--max-redirs",
             "0",
@@ -593,11 +626,34 @@ impl<R: Runner> Runner for PublicGithubReads<R> {
                     ));
                 }
                 let (status, _, body) = public_buildkite::http_response(&output.output.stdout)?;
+                if status == 304 {
+                    let (_, cached_body) = self.etag_cache.get(&path).ok_or_else(|| {
+                        invalid(
+                            "public GitHub endpoint returned HTTP 304 without a matching in-process ETag",
+                        )
+                    })?;
+                    budget.observe_public_github_not_modified(&output.output.stdout)?;
+                    return Ok(Reply {
+                        exit_code: 0,
+                        stdout: cached_body.clone(),
+                    });
+                }
                 ensure(
                     status == 200,
                     "public GitHub endpoint did not return HTTP 200",
                 )?;
                 budget.observe_public_github_quota(&output.output.stdout)?;
+                if let Some(etag) = parse_valid_etag(&output.output.stdout)
+                    && body.len() <= PUBLIC_GITHUB_ETAG_CACHE_MAX_BODY_BYTES
+                {
+                    if self.etag_cache.len() >= PUBLIC_GITHUB_ETAG_CACHE_MAX_ENTRIES
+                        && !self.etag_cache.contains_key(&path)
+                        && let Some(oldest) = self.etag_cache.keys().next().cloned()
+                    {
+                        self.etag_cache.remove(&oldest);
+                    }
+                    self.etag_cache.insert(path, (etag, body.to_vec()));
+                }
                 Ok(Reply {
                     exit_code: 0,
                     stdout: body.to_vec(),

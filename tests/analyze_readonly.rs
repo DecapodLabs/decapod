@@ -317,7 +317,6 @@ fn pre_build_validate_passes_complete_structure_and_fails_missing_governance() {
     )
     .unwrap();
     for spec in [
-        ".manifest.json",
         "README.md",
         "INTENT.md",
         "ARCHITECTURE.md",
@@ -333,9 +332,26 @@ fn pre_build_validate_passes_complete_structure_and_fails_missing_governance() {
         )
         .unwrap();
     }
+    let valid_sha = "a".repeat(64);
+    fs::write(
+        dir.path().join(".decapod/managed/.manifest.json"),
+        serde_json::json!({
+            "schema_version": "1.1.0",
+            "template_version": "1.0.0",
+            "generated_at": "1700000000Z",
+            "repo_signal_fingerprint": valid_sha,
+            "config_input_hash": valid_sha,
+            "spec_input_hash": valid_sha,
+            "decapod_release": "0.163.0",
+            "entrypoints": [],
+            "files": []
+        })
+        .to_string(),
+    )
+    .unwrap();
     fs::write(
         dir.path().join("AGENTS.md"),
-        "<!-- decapod-release: 0.162.0 -->\n# AGENTS.md\n",
+        format!("<!-- decapod-release: 0.163.0 -->\n<!-- decapod-fingerprint: {valid_sha} -->\n# AGENTS.md\n"),
     )
     .unwrap();
     let tree_before = snapshot_tree(dir.path());
@@ -356,6 +372,31 @@ fn pre_build_validate_passes_complete_structure_and_fails_missing_governance() {
     assert_eq!(report["proof_ready"], false);
     assert_eq!(report["passed"], true);
     assert_eq!(snapshot_tree(dir.path()), tree_before);
+
+    // Removing the entrypoint fingerprint SHA fails fast (#1134)
+    fs::write(
+        dir.path().join("AGENTS.md"),
+        "<!-- decapod-release: 0.163.0 -->\n# AGENTS.md\n",
+    )
+    .unwrap();
+    let missing_fp = decapod_cmd(dir.path())
+        .args(["validate", "--pre-build", "--format", "json"])
+        .output()
+        .expect("pre-build validate missing fingerprint");
+    assert!(!missing_fp.status.success());
+    let missing_fp_report: Value = serde_json::from_slice(&missing_fp.stdout).unwrap();
+    assert!(
+        missing_fp_report["checks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|c| c["id"] == "agent_entrypoints" && c["status"] == "fail")
+    );
+    fs::write(
+        dir.path().join("AGENTS.md"),
+        format!("<!-- decapod-release: 0.163.0 -->\n<!-- decapod-fingerprint: {valid_sha} -->\n# AGENTS.md\n"),
+    )
+    .unwrap();
 
     // Removing governance.json fails fast before any build
     fs::remove_file(dir.path().join(".decapod/governance.json")).unwrap();

@@ -698,7 +698,7 @@ fn seed_publication_bundle(dir: &Path) {
     let specs = dir.join(".decapod/managed/specs");
     fs::create_dir_all(&specs).expect("specs");
     fs::write(specs.join("INTENT.md"), "# Intent\n\nBase.\n").expect("intent");
-    fs::write(specs.join(".manifest.json"), "{}\n").expect("manifest");
+    fs::write(dir.join(".decapod/managed/.manifest.json"), "{}\n").expect("manifest");
 
     research_claims::ensure_template(dir, false).expect("claims template");
     let plan = GovernedPlan {
@@ -907,7 +907,7 @@ fn scoped_source_currency_preserves_headers_without_waiving_other_bundle_checks(
             )
             .unwrap();
         }
-        let manifest = dir.join(".decapod/managed/specs/.manifest.json");
+        let manifest = dir.join(".decapod/managed/.manifest.json");
         fs::write(
             &manifest,
             serde_json::json!({"decapod_release": env!("CARGO_PKG_VERSION")}).to_string(),
@@ -985,7 +985,7 @@ fn scoped_source_currency_preserves_headers_without_waiving_other_bundle_checks(
             let detail = failures.join("\n");
             let expected = match defect {
                 "missing_docker" => "missing .decapod/managed/Dockerfile.decapod",
-                "missing_manifest" => "missing .decapod/managed/specs/.manifest.json",
+                "missing_manifest" => "missing .decapod/managed/.manifest.json",
                 "invalid_base_manifest" => "specs manifest",
                 _ => "AGENTS.md",
             };
@@ -1008,7 +1008,7 @@ fn source_currency_refreshes_only_generated_pins_when_evaluating_release_changes
         )
         .unwrap();
     }
-    let manifest = dir.join(".decapod/managed/specs/.manifest.json");
+    let manifest = dir.join(".decapod/managed/.manifest.json");
     let docker = dir.join(".decapod/managed/Dockerfile.decapod");
     fs::write(&manifest, "{\"decapod_release\":\"0.0.0\"}").unwrap();
     fs::write(&docker, "ARG DECAPOD_VERSION=0.0.0\n").unwrap();
@@ -1022,7 +1022,7 @@ fn source_currency_refreshes_only_generated_pins_when_evaluating_release_changes
     validate_publication_bundle_currency(&stale, dir).unwrap();
     let failures = stale.fails.lock().unwrap().join("\n");
     assert!(
-        failures.contains("Dockerfile.decapod") && failures.contains("specs/.manifest.json"),
+        failures.contains("Dockerfile.decapod") && failures.contains("managed/.manifest.json"),
         "{failures}"
     );
     assert!(

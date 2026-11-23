@@ -1753,6 +1753,27 @@ fn inspect_decapod_internal_files(
         }
     }
 
+    // Canonical specs manifest under .decapod/managed/.manifest.json (#1079)
+    let canonical_manifest = repo_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
+    if canonical_manifest.is_file() {
+        handled_paths.insert(LOCAL_PROJECT_SPECS_MANIFEST.into());
+        if specs_manifest.is_some() {
+            let bytes = fs::read(&canonical_manifest).map_err(DecapodError::IoError)?;
+            generated.push(ClassifiedResource {
+                path: LOCAL_PROJECT_SPECS_MANIFEST.into(),
+                kind: "specs_manifest".into(),
+                classification: ResourceClass::Generated,
+                ownership_evidence: "specs_manifest_present".into(),
+                sha256: Some(sha256_bytes(&bytes)),
+                expected_sha256: None,
+                diagnostic: "Decapod living-specs manifest".into(),
+                owned_entries: Vec::new(),
+                preserved_entries: Vec::new(),
+            });
+            removable_files.push((LOCAL_PROJECT_SPECS_MANIFEST.into(), "specs_manifest".into()));
+        }
+    }
+
     // Living specs under .decapod/managed/specs/
     let specs_dir = repo_root.join(LOCAL_PROJECT_SPECS_DIR);
     if specs_dir.is_dir() {

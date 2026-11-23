@@ -121,8 +121,21 @@ pub const CHECKS: &[Check] = &[
     },
     Check {
         selection: Selection::Core,
-        matrix: Some("core"),
-        ..check!("selective-core", "test", &["bazelisk"])
+        matrix: Some("core-1"),
+        skipped_for_release_only: false,
+        ..check!("selective-core-1", "test-core", &["bazelisk"])
+    },
+    Check {
+        selection: Selection::Core,
+        matrix: Some("core-2"),
+        skipped_for_release_only: false,
+        ..check!("selective-core-2", "test-core", &["bazelisk"])
+    },
+    Check {
+        selection: Selection::Core,
+        matrix: Some("core-3"),
+        skipped_for_release_only: false,
+        ..check!("selective-core-3", "test-core", &["bazelisk"])
     },
     Check {
         selection: Selection::Plugins,
@@ -131,14 +144,27 @@ pub const CHECKS: &[Check] = &[
     },
     Check {
         selection: Selection::Cli,
-        matrix: Some("cli"),
-        ..check!("selective-cli", "test", &["bazelisk"])
+        matrix: Some("cli-1"),
+        ..check!("selective-cli-1", "test-cli", &["bazelisk"])
     },
-    check!(
-        "supabase-consumer",
-        "supabase-consumer",
-        &["cargo", "rustc:1.96.1"]
-    ),
+    Check {
+        selection: Selection::Cli,
+        matrix: Some("cli-2"),
+        ..check!("selective-cli-2", "test-cli", &["bazelisk"])
+    },
+    Check {
+        selection: Selection::Cli,
+        matrix: Some("cli-3"),
+        ..check!("selective-cli-3", "test-cli", &["bazelisk"])
+    },
+    Check {
+        skipped_for_release_only: false,
+        ..check!(
+            "supabase-consumer",
+            "supabase-consumer",
+            &["cargo", "rustc:1.96.1"]
+        )
+    },
     check!(
         "workspace-lifecycle-docker",
         "workspace-lifecycle-docker",
@@ -250,6 +276,36 @@ pub const CHECKS: &[Check] = &[
         capabilities: &["bash", "git", "rustc:1.96.1"],
         selection: Selection::Always,
         skipped_for_release_only: false,
+    },
+    Check {
+        id: "pre-build-validate",
+        workflow: "ci.yml",
+        job: "pre-build-validate",
+        matrix: None,
+        platform: Platform::LinuxX86_64,
+        capabilities: &["bash", "python3"],
+        selection: Selection::Always,
+        skipped_for_release_only: false,
+    },
+    Check {
+        id: "selective-core-status",
+        workflow: "ci.yml",
+        job: "test-core-status",
+        matrix: None,
+        platform: Platform::LinuxX86_64,
+        capabilities: &["bash"],
+        selection: Selection::Always,
+        skipped_for_release_only: false,
+    },
+    Check {
+        id: "selective-cli-status",
+        workflow: "ci.yml",
+        job: "test-cli-status",
+        matrix: None,
+        platform: Platform::LinuxX86_64,
+        capabilities: &["bash"],
+        selection: Selection::Always,
+        skipped_for_release_only: true,
     },
     Check {
         id: "commit-lint",
@@ -450,6 +506,7 @@ fn shared_test_inputs(path: &str) -> bool {
 
 fn core_test_inputs(path: &str) -> bool {
     shared_test_inputs(path)
+        || matches!(path, "Cargo.toml" | "Cargo.lock")
         || [
             "todo_enforcement",
             "validate_termination",
@@ -716,14 +773,24 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "contracts" => vec![bazel(&["test", "//:contract_conformance", "--test_arg=--test-threads=1"]), bazel(&["test", "//:constitution_claims", "--test_arg=--test-threads=1"])],
         "cli-contracts" => vec![bazel(&["test", "//:cli_contract_enforcement", "--test_arg=--test-threads=1"])],
         "migration-tests" => vec![bazel(&["test", "//:core_tests", "--test_arg=migration_", "--test_arg=--ignored", "--test_arg=--test-threads=1"])],
-        "selective-core" if core_full(paths) => vec![
+        "selective-core-1" if core_full(paths) => vec![
             bazel(&["test", "//:group_broker", "--test_arg=committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry", "--test_arg=--exact", "--test_arg=--nocapture", "--test_output=all"]),
             bazel(&["test", "//:group_broker", "--test_arg=broker_no_sqlite_busy_surfaced_under_concurrent_mutators", "--test_arg=--exact", "--test_arg=--nocapture", "--test_output=all"]),
-            bazel(&["test", "//:todo_enforcement", "//:validate_termination", "//:workspace_interlock", "//:spec_workspace_ownership", "//:workspace_prune_regression", "//:hermes_governance_substrate", "//:group_broker", "//:group_broker_strict", "//:workunit_cli", "//:context_capsule_cli", "//:interop_conformance", "--test_arg=--test-threads=1"]),
+            bazel(&["test", "//:todo_enforcement", "//:validate_termination", "//:group_broker", "//:group_broker_strict", "--test_arg=--test-threads=1"]),
         ],
-        "selective-core" => vec![bazel(&["test", "//:entrypoint_correctness", "--test_arg=--test-threads=1"])],
+        "selective-core-1" => vec![bazel(&["test", "//:entrypoint_correctness", "--test_arg=--test-threads=1"])],
+        "selective-core-2" if core_full(paths) => vec![
+            bazel(&["test", "//:workspace_interlock", "//:spec_workspace_ownership", "//:workspace_prune_regression", "//:hermes_governance_substrate", "--test_arg=--test-threads=1"]),
+        ],
+        "selective-core-2" => vec![],
+        "selective-core-3" if core_full(paths) => vec![
+            bazel(&["test", "//:workunit_cli", "//:context_capsule_cli", "//:interop_conformance", "--test_arg=--test-threads=1"]),
+        ],
+        "selective-core-3" => vec![],
         "selective-plugins" => vec![bazel(&["test", "//:plugins_todo_tests", "//:plugins_policy_tests", "//:plugins_health_tests", "//:plugins_aptitude_tests", "//:plugins_internalize_tests", "//:plugins_federation_tests", "//:plugins_decide_tests", "//:plugins_obligation_tests", "--test_arg=--test-threads=1"])],
-        "selective-cli" => vec![bazel(&["test", "//:cli_contract_enforcement", "//:entrypoint_correctness", "//:cli_contracts", "--test_arg=--test-threads=1"])],
+        "selective-cli-1" => vec![bazel(&["test", "//:cli_contract_enforcement", "--test_arg=--test-threads=1"])],
+        "selective-cli-2" => vec![bazel(&["test", "//:entrypoint_correctness", "--test_arg=--test-threads=1"])],
+        "selective-cli-3" => vec![bazel(&["test", "//:cli_contracts", "--test_arg=--test-threads=1"])],
         "supabase-consumer" => vec![
             cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates", "--", "--exact", "--nocapture"]),
             cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "--test", "cloud_supabase_boundary", "--test", "cloud_dactyl_boundary", "--test", "release_dependency_policy", "--test", "cloud_cli_boundary", "--test", "cloud_command_path", "--test", "cloud_todo_resume_wire", "--test", "propodus_contract", "--test", "supabase_service"]),
@@ -1134,6 +1201,7 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
     };
     for job in [
         "release-metadata",
+        "pre-build-validate",
         "commit-lint",
         "governance-artifacts",
         "material-specs",
@@ -1145,6 +1213,8 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
         "deps-lint",
         "health",
         "setup",
+        "test-core-status",
+        "test-cli-status",
         "integration-prepare",
         "integration-status",
         "test-rpc-suite",
@@ -1152,7 +1222,8 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
         "migration-script-tests",
     ] {
         let applicable = match job {
-            "release-metadata" | "health" | "setup" => true,
+            "release-metadata" | "pre-build-validate" | "health" | "setup"
+            | "supabase-consumer" | "test-core-status" => true,
             "migration-script-tests" => !release_only && migration_changed(paths),
             _ => !release_only,
         };
@@ -1169,8 +1240,12 @@ pub fn inventory(paths: &[String], release_only: bool) -> Vec<JobInstance> {
             !release_only,
         );
     }
-    for target in ["core", "plugins", "cli"] {
-        add("ci.yml", "test", Some(target), !release_only);
+    for shard in ["core-1", "core-2", "core-3"] {
+        add("ci.yml", "test-core", Some(shard), true);
+    }
+    add("ci.yml", "test", Some("plugins"), !release_only);
+    for shard in ["cli-1", "cli-2", "cli-3"] {
+        add("ci.yml", "test-cli", Some(shard), !release_only);
     }
     for shard in [
         "gatling-0",

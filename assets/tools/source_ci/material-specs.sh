@@ -29,6 +29,10 @@ patterns = [
         re.S,
     ),
     re.compile(
+        r"<!-- decapod:codebase-contract:start -->.*?<!-- decapod:codebase-contract:end -->",
+        re.S,
+    ),
+    re.compile(
         r"<!-- decapod:declared-capabilities:start -->.*?<!-- decapod:declared-capabilities:end -->",
         re.S,
     ),

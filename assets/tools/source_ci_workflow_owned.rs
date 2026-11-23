@@ -44,12 +44,20 @@ pub const SOURCES: &[(&str, &[u8])] = &[
         include_bytes!("source_ci/migration-detection.sh"),
     ),
     (
+        "assets/tools/source_ci/pre-build-validate.sh",
+        include_bytes!("source_ci/pre-build-validate.sh"),
+    ),
+    (
         "assets/tools/source_ci/private-checkout.sh",
         include_bytes!("source_ci/private-checkout.sh"),
     ),
     (
         "assets/tools/source_ci/release-metadata.sh",
         include_bytes!("source_ci/release-metadata.sh"),
+    ),
+    (
+        "assets/tools/source_ci/shard-status.sh",
+        include_bytes!("source_ci/shard-status.sh"),
     ),
     (
         "assets/tools/source_ci/standalone-validation.sh",
@@ -68,6 +76,9 @@ pub const SOURCES: &[(&str, &[u8])] = &[
 pub fn script(check: &Check) -> Option<&'static str> {
     Some(match check.id {
         "release-metadata" => "assets/tools/source_ci/release-metadata.sh",
+        "pre-build-validate" => "assets/tools/source_ci/pre-build-validate.sh",
+        "selective-core-status" => "assets/tools/source_ci/shard-status.sh",
+        "selective-cli-status" => "assets/tools/source_ci/shard-status.sh",
         "commit-lint" => "assets/tools/source_ci/commit-lint.sh",
         "governance-artifacts" => "assets/tools/source_ci/governance-artifacts.sh",
         "material-specs" => "assets/tools/source_ci/material-specs.sh",

@@ -1,8 +1,7 @@
 //! Regression captures are minimized provider metadata, not raw responses or
 //! execution custody. See fixtures/README.md for sources and transformations.
 use super::*;
-use crate::core::readiness_evidence::{CheckKey, Provider};
-use crate::core::readiness_profile::{REQUIRED_PROFILE, source};
+use crate::core::readiness_profile::REQUIRED_PROFILE;
 use serde::Deserialize;
 use serde_json::json;
 
@@ -117,8 +116,11 @@ impl PublicReader for MetadataOnlyReader {
 #[derive(Deserialize)]
 struct AcceptedJob {
     workflow: String,
+    #[allow(dead_code)]
     job: String,
+    #[allow(dead_code)]
     matrix: BTreeMap<String, String>,
+    #[allow(dead_code)]
     checks: Vec<String>,
     step_key: String,
 }
@@ -394,117 +396,25 @@ fn branch_changes_rederive_concurrency_keys_and_cannot_reuse_successful_old_gate
 }
 
 #[test]
-fn activated_policy_matches_all_five_workflows_and_the_entire_unfiltered_catalog() {
+fn activated_policy_selects_github_actions_preflights_without_buildkite_ci_attested() {
     let config = crate::core::validation_runtime::proof_configuration(include_bytes!(
         "../../../../../../.decapod/config.toml"
     ))
     .unwrap();
-    assert!(config.validation_buildkite_preflights);
-    let configured = config
-        .ci_attested
-        .expect("reviewed activation policy is checked in");
+    assert!(!config.validation_buildkite_preflights);
+    assert!(config.validation_github_actions_preflights);
+    assert!(config.ci_attested.is_none());
+    let profile = config
+        .required_profile
+        .expect("strict required profile remains configured");
+    assert_eq!(profile.id, REQUIRED_PROFILE);
+}
+
+#[test]
+fn frozen_buildkite_fixture_mapping_preserves_historical_five_workflow_structure() {
     let frozen = accepted_mapping();
     let expected_workflows: BTreeSet<_> = frozen.iter().map(|row| row.workflow.as_str()).collect();
-    let actual_workflows: BTreeSet<_> = configured
-        .workflows
-        .iter()
-        .map(|workflow| workflow.path.as_str())
-        .collect();
     assert_eq!(expected_workflows.len(), 5);
-    assert_eq!(actual_workflows.len(), configured.workflows.len());
-    assert_eq!(actual_workflows, expected_workflows);
-    for workflow in &configured.workflows {
-        let mut actual_keys = workflow.required_step_keys.clone();
-        actual_keys.sort();
-        let mut expected_keys: Vec<_> = frozen
-            .iter()
-            .filter(|row| row.workflow == workflow.path)
-            .map(|row| row.step_key.clone())
-            .collect();
-        expected_keys.sort();
-        assert_eq!(actual_keys, expected_keys, "{} native jobs", workflow.path);
-        assert!(workflow.auxiliary_step_keys.is_empty());
-        let trigger = workflow
-            .pipeline_trigger
-            .as_ref()
-            .expect("explicit bootstrap trust");
-        assert_eq!(trigger.contract, PipelineTriggerContract::BuildkiteGha01027);
-        if workflow.path == WORKFLOW {
-            assert_eq!(trigger, &policy());
-        } else {
-            assert!(trigger.concurrency_group.is_none());
-        }
-    }
-    // No changed-path, release-only or applicability selection may trim the
-    // accepted job mapping. Compare against the entire compiled source catalog.
-    let expected_ids: BTreeSet<_> = frozen
-        .iter()
-        .flat_map(|row| row.checks.iter().map(String::as_str))
-        .collect();
-    let catalog_ids: BTreeSet<_> = source::CHECKS.iter().map(|check| check.id).collect();
-    assert_eq!(expected_ids, catalog_ids);
-    let mut expected = BTreeMap::new();
-    for row in frozen {
-        for check in row.checks {
-            let source_check = source::CHECKS.iter().find(|item| item.id == check).unwrap();
-            assert_eq!(
-                row.workflow,
-                format!(".github/workflows/{}", source_check.workflow)
-            );
-            assert_eq!(row.job, source_check.job);
-            let mut catalog_matrix = BTreeMap::new();
-            if let Some(value) = source_check.matrix {
-                let axis = match source_check.job {
-                    "musl-publication" | "test" => "target",
-                    "state-commit-golden-vectors" => "os",
-                    "test-integration" => "shard",
-                    other => panic!("unreviewed matrix job {other}"),
-                };
-                catalog_matrix.insert(axis.to_string(), value.to_string());
-                if source_check.job == "musl-publication" {
-                    let execution = match value {
-                        "x86_64-unknown-linux-musl" => "native",
-                        "aarch64-unknown-linux-musl" => "QEMU user-mode",
-                        other => panic!("unreviewed musl matrix {other}"),
-                    };
-                    catalog_matrix.insert("execution".into(), execution.into());
-                }
-            }
-            assert_eq!(row.matrix, catalog_matrix, "{check} matrix");
-            let key = CheckKey {
-                provider: Provider::Buildkite,
-                workflow: row.workflow.clone(),
-                job: row.job.clone(),
-                matrix: row.matrix.clone(),
-                profile: format!("{REQUIRED_PROFILE}/{check}"),
-            };
-            assert!(expected.insert(key, row.step_key.clone()).is_none());
-        }
-    }
-    expected.insert(
-        CheckKey {
-            provider: Provider::Buildkite,
-            workflow: WORKFLOW.into(),
-            job: "candidate-build".into(),
-            matrix: BTreeMap::new(),
-            profile: format!("{REQUIRED_PROFILE}/fresh-candidate-build"),
-        },
-        "gha-b803fcb7f17ed923-setup".into(),
-    );
-    let actual: BTreeMap<_, _> = configured
-        .workflows
-        .iter()
-        .flat_map(|workflow| &workflow.checks)
-        .map(|mapping| (mapping.check.clone(), mapping.step_key.clone()))
-        .collect();
-    assert_eq!(
-        actual.len(),
-        configured
-            .workflows
-            .iter()
-            .map(|workflow| workflow.checks.len())
-            .sum::<usize>(),
-        "duplicate check mapping"
-    );
-    assert_eq!(actual, expected);
+    assert!(expected_workflows.contains(WORKFLOW));
+    assert!(frozen.iter().all(|row| !row.step_key.is_empty()));
 }

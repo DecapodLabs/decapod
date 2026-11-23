@@ -574,3 +574,101 @@ fn managed_specs_and_generated_spec_context_exclude_maintainer_entrypoint_drift_
         );
     }
 }
+
+#[test]
+fn manifest_reads_legacy_fallback_and_refresh_migrates_to_managed_root() {
+    let dir = tempfile::tempdir().unwrap();
+    let legacy_path = dir.path().join(LEGACY_PROJECT_SPECS_MANIFEST);
+    let canonical_path = dir.path().join(LOCAL_PROJECT_SPECS_MANIFEST);
+    fs::create_dir_all(legacy_path.parent().unwrap()).unwrap();
+    fs::write(
+        dir.path().join(LOCAL_PROJECT_SPECS_INTENT),
+        "# Intent\n\nAuthored purpose.\n",
+    )
+    .unwrap();
+    fs::write(
+        &legacy_path,
+        serde_json::json!({
+            "schema_version": LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA,
+            "template_version": "legacy-v1",
+            "generated_at": "1700000000Z",
+            "repo_signal_fingerprint": "a".repeat(64),
+            "files": []
+        })
+        .to_string(),
+    )
+    .unwrap();
+
+    // Backward-compatible read falls back to legacy `.decapod/managed/specs/.manifest.json`.
+    let loaded = read_specs_manifest(dir.path())
+        .unwrap()
+        .expect("legacy manifest");
+    assert_eq!(loaded.template_version, "legacy-v1");
+    assert_eq!(
+        resolve_specs_manifest_path(dir.path()).as_deref(),
+        Some(legacy_path.as_path())
+    );
+
+    // Refresh writes canonical `.decapod/managed/.manifest.json` and removes legacy file (#1079).
+    let refreshed = refresh_specs_manifest(dir.path(), &[]).unwrap();
+    assert_eq!(refreshed.template_version, "legacy-v1");
+    assert!(canonical_path.is_file());
+    assert!(!legacy_path.exists());
+    assert_eq!(
+        resolve_specs_manifest_path(dir.path()).as_deref(),
+        Some(canonical_path.as_path())
+    );
+}
+
+#[test]
+fn specs_refresh_bumps_bounded_codebase_contract_content_while_preserving_authored_prose() {
+    let dir = tempfile::tempdir().unwrap();
+    let arch_path = dir.path().join(LOCAL_PROJECT_SPECS_ARCHITECTURE);
+    let iface_path = dir.path().join(LOCAL_PROJECT_SPECS_INTERFACES);
+    fs::create_dir_all(arch_path.parent().unwrap()).unwrap();
+    fs::create_dir_all(dir.path().join("src/decapod/core")).unwrap();
+    fs::write(
+        dir.path().join("src/decapod/core/alpha.rs"),
+        "pub fn alpha() {}\n",
+    )
+    .unwrap();
+    fs::write(dir.path().join("src/decapod/cli.rs"), "pub struct Cli;\n").unwrap();
+
+    let authored_arch = "# Architecture\n\nAuthored architectural invariants.\n";
+    let authored_iface = "# Interfaces\n\nAuthored interface contract.\n";
+    fs::write(&arch_path, authored_arch).unwrap();
+    fs::write(&iface_path, authored_iface).unwrap();
+
+    refresh_specs_from_codebase(dir.path(), &[]).unwrap();
+    let arch_v1 = fs::read_to_string(&arch_path).unwrap();
+    let iface_v1 = fs::read_to_string(&iface_path).unwrap();
+    assert!(arch_v1.contains("Authored architectural invariants."));
+    assert!(arch_v1.contains("<!-- decapod:codebase-contract:start -->"));
+    assert!(arch_v1.contains("`alpha`"));
+    assert!(iface_v1.contains("`src/decapod/cli.rs`"));
+    // Material body still equals authored prose (generated contract block cannot spoof #1183).
+    assert!(!material_spec_bodies_differ(authored_arch, &arch_v1));
+
+    // Adding a new core module and RPC surface bumps the spec contents deterministically (#1122).
+    fs::write(
+        dir.path().join("src/decapod/core/beta.rs"),
+        "pub fn beta() {}\n",
+    )
+    .unwrap();
+    fs::write(dir.path().join("src/decapod/rpc.rs"), "pub struct Rpc;\n").unwrap();
+
+    refresh_specs_from_codebase(dir.path(), &[]).unwrap();
+    let arch_v2 = fs::read_to_string(&arch_path).unwrap();
+    let iface_v2 = fs::read_to_string(&iface_path).unwrap();
+    assert_ne!(arch_v1, arch_v2);
+    assert_ne!(iface_v1, iface_v2);
+    assert!(arch_v2.contains("`beta`"));
+    assert!(iface_v2.contains("`src/decapod/rpc.rs`"));
+    assert!(arch_v2.contains("Authored architectural invariants."));
+    assert!(iface_v2.contains("Authored interface contract."));
+
+    // Idempotent second refresh produces zero diff.
+    refresh_specs_from_codebase(dir.path(), &[]).unwrap();
+    assert_eq!(arch_v2, fs::read_to_string(&arch_path).unwrap());
+    assert_eq!(iface_v2, fs::read_to_string(&iface_path).unwrap());
+}

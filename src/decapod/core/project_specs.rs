@@ -18,7 +18,8 @@ pub const LOCAL_PROJECT_SPECS_VALIDATION: &str = ".decapod/managed/specs/VALIDAT
 pub const LOCAL_PROJECT_SPECS_SEMANTICS: &str = ".decapod/managed/specs/SEMANTICS.md";
 pub const LOCAL_PROJECT_SPECS_OPERATIONS: &str = ".decapod/managed/specs/OPERATIONS.md";
 pub const LOCAL_PROJECT_SPECS_SECURITY: &str = ".decapod/managed/specs/SECURITY.md";
-pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/managed/specs/.manifest.json";
+pub const LOCAL_PROJECT_SPECS_MANIFEST: &str = ".decapod/managed/.manifest.json";
+pub const LEGACY_PROJECT_SPECS_MANIFEST: &str = ".decapod/managed/specs/.manifest.json";
 pub const LOCAL_PROJECT_SPECS_MANIFEST_SCHEMA: &str = "1.1.0";
 pub const CAPABILITY_DEFINITION_VERSION: &str = "1.0.0";
 
@@ -672,13 +673,26 @@ pub(crate) fn repo_signal_fingerprint_with_io(
     hash_repo_signal(root, files, &mut |path| io.read(path))
 }
 
+/// Resolve the specs manifest path, preferring the canonical `.decapod/managed/.manifest.json`
+/// location (#1079) with backward-compatible read fallback to `.decapod/managed/specs/.manifest.json`.
+pub fn resolve_specs_manifest_path(project_root: &Path) -> Option<PathBuf> {
+    let canonical = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
+    if canonical.is_file() {
+        return Some(canonical);
+    }
+    let legacy = project_root.join(LEGACY_PROJECT_SPECS_MANIFEST);
+    if legacy.is_file() {
+        return Some(legacy);
+    }
+    None
+}
+
 pub fn read_specs_manifest(
     project_root: &Path,
 ) -> Result<Option<ProjectSpecsManifest>, error::DecapodError> {
-    let path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
-    if !path.exists() {
+    let Some(path) = resolve_specs_manifest_path(project_root) else {
         return Ok(None);
-    }
+    };
     let raw = fs::read_to_string(path).map_err(error::DecapodError::IoError)?;
     let manifest: ProjectSpecsManifest = serde_json::from_str(&raw).map_err(|e| {
         error::DecapodError::ValidationError(format!("Invalid project specs manifest: {e}"))
@@ -789,28 +803,43 @@ pub fn refresh_specs_manifest(
     };
 
     let manifest_path = project_root.join(LOCAL_PROJECT_SPECS_MANIFEST);
+    if let Some(parent) = manifest_path.parent() {
+        crate::core::fs_permissions::ensure_private_dir(parent)
+            .map_err(error::DecapodError::IoError)?;
+    }
     let manifest_body = serde_json::to_string_pretty(&manifest).map_err(|e| {
         error::DecapodError::ValidationError(format!("Failed to serialize specs manifest: {e}"))
     })?;
-    crate::core::fs_permissions::write_private(manifest_path, manifest_body)
+    crate::core::fs_permissions::write_private(&manifest_path, manifest_body)
         .map_err(error::DecapodError::IoError)?;
+
+    // Clean up legacy `.decapod/managed/specs/.manifest.json` after writing the
+    // canonical `.decapod/managed/.manifest.json` (#1079).
+    let legacy_path = project_root.join(LEGACY_PROJECT_SPECS_MANIFEST);
+    if legacy_path.is_file() {
+        let _ = fs::remove_file(&legacy_path);
+    }
 
     Ok(manifest)
 }
 
 const CODEBASE_ATTESTATION_START: &str = "<!-- decapod:codebase-attestation:start -->";
 const CODEBASE_ATTESTATION_END: &str = "<!-- decapod:codebase-attestation:end -->";
+const CODEBASE_CONTRACT_START: &str = "<!-- decapod:codebase-contract:start -->";
+const CODEBASE_CONTRACT_END: &str = "<!-- decapod:codebase-contract:end -->";
 const DECLARED_CAPABILITIES_START: &str = "<!-- decapod:declared-capabilities:start -->";
 const DECLARED_CAPABILITIES_END: &str = "<!-- decapod:declared-capabilities:end -->";
 const CAPABILITY_OVERLAY_MARKER_PREFIX: &str = "<!-- decapod:capability-overlay:";
 
 /// Auto-generated living-spec blocks that must not count as material prose.
 ///
-/// Fingerprint/attestation refresh and capability overlay reconciliation are
-/// necessary hygiene, but they are not evidence that agents rewrote project
-/// contracts for the change under review (GitHub #1183).
+/// Fingerprint/attestation refresh, codebase contract summaries (#1122), and
+/// capability overlay reconciliation are necessary hygiene, but they are not
+/// evidence that agents rewrote project contracts for the change under review
+/// (GitHub #1183).
 const AUTO_GENERATED_SPEC_BLOCK_MARKERS: &[(&str, &str)] = &[
     (CODEBASE_ATTESTATION_START, CODEBASE_ATTESTATION_END),
+    (CODEBASE_CONTRACT_START, CODEBASE_CONTRACT_END),
     (DECLARED_CAPABILITIES_START, DECLARED_CAPABILITIES_END),
 ];
 
@@ -1046,6 +1075,286 @@ fn codebase_surface_summary(project_root: &Path) -> Result<String, error::Decapo
         .join(", "))
 }
 
+fn format_bounded_list(items: &std::collections::BTreeSet<String>, limit: usize) -> String {
+    if items.is_empty() {
+        return "none detected".to_string();
+    }
+    let total = items.len();
+    let mut rendered: Vec<String> = items
+        .iter()
+        .take(limit)
+        .map(|item| format!("`{item}`"))
+        .collect();
+    if total > limit {
+        rendered.push(format!("(+{} more)", total - limit));
+    }
+    rendered.join(", ")
+}
+
+struct CodebaseContractSnapshot {
+    total_significant_files: usize,
+    top_dirs: BTreeMap<String, usize>,
+    core_modules: std::collections::BTreeSet<String>,
+    plugin_modules: std::collections::BTreeSet<String>,
+    interface_files: std::collections::BTreeSet<String>,
+    workflows: std::collections::BTreeSet<String>,
+    test_targets: std::collections::BTreeSet<String>,
+    state_schema_files: std::collections::BTreeSet<String>,
+    ops_files: std::collections::BTreeSet<String>,
+    security_files: std::collections::BTreeSet<String>,
+    build_manifests: std::collections::BTreeSet<String>,
+}
+
+impl CodebaseContractSnapshot {
+    fn collect(project_root: &Path) -> Result<Self, error::DecapodError> {
+        let mut files = Vec::new();
+        collect_significant_repo_paths(project_root, project_root, &mut files)?;
+
+        let mut top_dirs = BTreeMap::<String, usize>::new();
+        let mut core_modules = std::collections::BTreeSet::new();
+        let mut plugin_modules = std::collections::BTreeSet::new();
+        let mut interface_files = std::collections::BTreeSet::new();
+        let mut workflows = std::collections::BTreeSet::new();
+        let mut test_targets = std::collections::BTreeSet::new();
+        let mut state_schema_files = std::collections::BTreeSet::new();
+        let mut ops_files = std::collections::BTreeSet::new();
+        let mut security_files = std::collections::BTreeSet::new();
+        let mut build_manifests = std::collections::BTreeSet::new();
+
+        for path in &files {
+            let rel = path
+                .strip_prefix(project_root)
+                .unwrap_or(path.as_path())
+                .components()
+                .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                .collect::<Vec<_>>()
+                .join("/");
+            let surface = rel.split('/').next().unwrap_or(".").to_string();
+            *top_dirs.entry(surface).or_default() += 1;
+
+            let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+            if matches!(
+                file_name,
+                "Cargo.toml"
+                    | "package.json"
+                    | "pyproject.toml"
+                    | "go.mod"
+                    | "BUILD.bazel"
+                    | "Makefile"
+                    | "flake.nix"
+            ) {
+                build_manifests.insert(rel.clone());
+            }
+
+            if let Some(rest) = rel.strip_prefix("src/decapod/core/") {
+                if let Some(module) = rest.split('/').next() {
+                    let stem = module.trim_end_matches(".rs");
+                    if !stem.is_empty() && stem != "mod" {
+                        core_modules.insert(stem.to_string());
+                    }
+                }
+            } else if let Some(rest) = rel.strip_prefix("src/decapod/plugins/") {
+                if let Some(module) = rest.split('/').next() {
+                    let stem = module.trim_end_matches(".rs");
+                    if !stem.is_empty() && stem != "mod" {
+                        plugin_modules.insert(stem.to_string());
+                    }
+                }
+            } else if let Some(rest) = rel.strip_prefix("src/")
+                && let Some(module) = rest.split('/').next()
+            {
+                let stem = module.trim_end_matches(".rs");
+                if !stem.is_empty() && stem != "mod" && stem != "decapod" {
+                    core_modules.insert(stem.to_string());
+                }
+            }
+
+            let lower = rel.to_ascii_lowercase();
+            if rel.starts_with("api/")
+                || rel.starts_with("bindings/")
+                || rel.starts_with("packages/")
+                || matches!(
+                    file_name,
+                    "cli.rs" | "rpc.rs" | "main.rs" | "lib.rs" | "interop.rs"
+                )
+                || lower.contains("mcp")
+                || lower.contains("a2a")
+                || lower.contains("http_rpc")
+                || lower.contains("server")
+            {
+                interface_files.insert(rel.clone());
+            }
+
+            if rel.starts_with(".github/workflows/")
+                && (rel.ends_with(".yml") || rel.ends_with(".yaml"))
+            {
+                workflows.insert(rel.clone());
+            }
+
+            if rel.starts_with("tests/") && rel.ends_with(".rs") && !rel.starts_with("tests/unit/")
+            {
+                test_targets.insert(rel.clone());
+            }
+
+            if rel.ends_with(".sql")
+                || lower.contains("schema")
+                || lower.contains("migration")
+                || lower.contains("broker")
+                || lower.contains("state")
+                || lower.contains("workunit")
+            {
+                state_schema_files.insert(rel.clone());
+            }
+
+            if rel.starts_with("infra/")
+                || rel.starts_with("deploy/")
+                || rel.starts_with("k8s/")
+                || lower.contains("dockerfile")
+                || lower.contains("compose")
+                || file_name == "flake.nix"
+                || rel.starts_with(".github/workflows/")
+            {
+                ops_files.insert(rel.clone());
+            }
+
+            if lower.contains("security")
+                || lower.contains("rbac")
+                || lower.contains("auth")
+                || lower.contains("trust")
+                || lower.contains("eval")
+                || lower.contains("policy")
+                || lower.contains("signing")
+            {
+                security_files.insert(rel.clone());
+            }
+        }
+
+        // Also detect top-level flake.nix / BUILD.bazel if present outside significant_repo_path.
+        for extra in ["flake.nix", "BUILD.bazel"] {
+            if project_root.join(extra).is_file() {
+                build_manifests.insert(extra.to_string());
+                if extra == "flake.nix" {
+                    ops_files.insert(extra.to_string());
+                }
+            }
+        }
+
+        Ok(Self {
+            total_significant_files: files.len(),
+            top_dirs,
+            core_modules,
+            plugin_modules,
+            interface_files,
+            workflows,
+            test_targets,
+            state_schema_files,
+            ops_files,
+            security_files,
+            build_manifests,
+        })
+    }
+
+    fn summary_lines_for(&self, spec_path: &str) -> Vec<String> {
+        match spec_path {
+            LOCAL_PROJECT_SPECS_ARCHITECTURE => vec![
+                format!(
+                    "- Core modules ({}): {}",
+                    self.core_modules.len(),
+                    format_bounded_list(&self.core_modules, 16)
+                ),
+                format!(
+                    "- Plugin/extension modules ({}): {}",
+                    self.plugin_modules.len(),
+                    format_bounded_list(&self.plugin_modules, 12)
+                ),
+                format!(
+                    "- Build manifests ({}): {}",
+                    self.build_manifests.len(),
+                    format_bounded_list(&self.build_manifests, 8)
+                ),
+            ],
+            LOCAL_PROJECT_SPECS_INTERFACES => vec![
+                format!(
+                    "- CLI/RPC/protocol surfaces ({}): {}",
+                    self.interface_files.len(),
+                    format_bounded_list(&self.interface_files, 16)
+                ),
+                format!("- Manifest authority path: `{LOCAL_PROJECT_SPECS_MANIFEST}`"),
+            ],
+            LOCAL_PROJECT_SPECS_VALIDATION => vec![
+                format!(
+                    "- CI workflows ({}): {}",
+                    self.workflows.len(),
+                    format_bounded_list(&self.workflows, 12)
+                ),
+                format!(
+                    "- Integration test targets ({}): {}",
+                    self.test_targets.len(),
+                    format_bounded_list(&self.test_targets, 16)
+                ),
+            ],
+            LOCAL_PROJECT_SPECS_SEMANTICS => vec![format!(
+                "- State/schema/migration modules ({}): {}",
+                self.state_schema_files.len(),
+                format_bounded_list(&self.state_schema_files, 16)
+            )],
+            LOCAL_PROJECT_SPECS_OPERATIONS => vec![format!(
+                "- Operational/deployment/workflow surfaces ({}): {}",
+                self.ops_files.len(),
+                format_bounded_list(&self.ops_files, 16)
+            )],
+            LOCAL_PROJECT_SPECS_SECURITY => vec![format!(
+                "- Security/policy/auth surfaces ({}): {}",
+                self.security_files.len(),
+                format_bounded_list(&self.security_files, 16)
+            )],
+            _ => {
+                let surfaces = self
+                    .top_dirs
+                    .iter()
+                    .map(|(k, v)| format!("`{k}/` ({v})"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                vec![
+                    format!(
+                        "- Tracked significant codebase files: {} across {}",
+                        self.total_significant_files,
+                        if surfaces.is_empty() {
+                            "none detected".to_string()
+                        } else {
+                            surfaces
+                        }
+                    ),
+                    format!(
+                        "- Core modules: {} | Workflows: {} | Integration targets: {}",
+                        self.core_modules.len(),
+                        self.workflows.len(),
+                        self.test_targets.len()
+                    ),
+                ]
+            }
+        }
+    }
+}
+
+fn update_codebase_contract(
+    body: &str,
+    spec_path: &str,
+    snapshot: &CodebaseContractSnapshot,
+) -> String {
+    let lines = snapshot.summary_lines_for(spec_path).join("\n");
+    let section = format!(
+        "{CODEBASE_CONTRACT_START}\n## Codebase Contract Snapshot\n\n{lines}\n{CODEBASE_CONTRACT_END}"
+    );
+    let cleaned = strip_all_marked_blocks(body, CODEBASE_CONTRACT_START, CODEBASE_CONTRACT_END);
+    if let Some(att_pos) = cleaned.find(CODEBASE_ATTESTATION_START) {
+        let before = cleaned[..att_pos].trim_end();
+        let after = &cleaned[att_pos..];
+        return format!("{before}\n\n{section}\n\n{after}");
+    }
+    format!("{}\n\n{}\n", cleaned.trim_end(), section)
+}
+
 fn update_codebase_attestation(body: &str, fingerprint: &str, surfaces: &str) -> String {
     let section = format!(
         "{CODEBASE_ATTESTATION_START}\n## Codebase Attestation\n\n- Repository signal fingerprint: `{fingerprint}`\n- Significant implementation surfaces: {surfaces}\n- Refreshed from the current codebase by `decapod rpc --op specs.refresh`\n{CODEBASE_ATTESTATION_END}"
@@ -1133,8 +1442,9 @@ fn is_generated_attestation_line(line: &str) -> bool {
 /// Re-evaluate existing living specs against the current repository.
 ///
 /// This intentionally preserves each document's authored content and updates
-/// only the codebase-derived attestation block plus manifest hashes. Scaffold
-/// rendering belongs exclusively to fresh `decapod init`.
+/// the bounded codebase-derived contract snapshot (#1122), codebase attestation
+/// block, capability overlays, and manifest hashes. Scaffold rendering belongs
+/// exclusively to fresh `decapod init`.
 pub fn refresh_specs_from_codebase(
     project_root: &Path,
     declared_capabilities: &[String],
@@ -1142,6 +1452,7 @@ pub fn refresh_specs_from_codebase(
     crate::core::workspace::ensure_isolated_workspace_for_projection_mutation(project_root)?;
     let fingerprint = repo_signal_fingerprint(project_root)?;
     let surfaces = codebase_surface_summary(project_root)?;
+    let contract_snapshot = CodebaseContractSnapshot::collect(project_root)?;
     let mut updates = Vec::new();
     for spec in LOCAL_PROJECT_SPECS {
         let path = project_root.join(spec.path);
@@ -1151,6 +1462,7 @@ pub fn refresh_specs_from_codebase(
         let body = fs::read_to_string(&path).map_err(error::DecapodError::IoError)?;
         let updated = reconcile_capability_overlays(spec.path, body.clone(), declared_capabilities);
         let updated = update_codebase_attestation(&updated, &fingerprint, &surfaces);
+        let updated = update_codebase_contract(&updated, spec.path, &contract_snapshot);
         let updated = normalize_markdown_heading_boundaries(&updated);
         ensure_authored_refresh_preserved(spec.path, &body, &updated)?;
         if updated != body {

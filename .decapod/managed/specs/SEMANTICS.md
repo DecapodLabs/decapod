@@ -403,11 +403,18 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- State/schema/migration modules (30): `src/decapod/core/broker.rs`, `src/decapod/core/constitution_schema.rs`, `src/decapod/core/group_broker.rs`, `src/decapod/core/migration.rs`, `src/decapod/core/schemas.rs`, `src/decapod/core/sql/todo_one_shot_column_migration.sql`, `src/decapod/core/sql/todo_task_id_v15_migration.sql`, `src/decapod/core/state.rs`, `src/decapod/core/state_commit.rs`, `src/decapod/core/workunit.rs`, `tests/assets_schema_contract.rs`, `tests/context_capsule_schema.rs`, `tests/fixtures/migration/legacy_tasks.sql`, `tests/fixtures/state_commit_repo/exec_test.rs`, `tests/group_broker.rs`, `tests/group_broker_strict.rs`, (+14 more)
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
+- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

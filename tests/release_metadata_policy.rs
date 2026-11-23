@@ -389,13 +389,14 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
         "clippy",
         "deps-lint",
         "test",
+        "test-cli",
+        "test-cli-status",
         "integration-prepare",
         "test-integration",
         "integration-status",
         "test-master",
         "test-rpc-suite",
         "contracts",
-        "supabase-consumer",
         "workspace-lifecycle-docker",
         "state-commit-golden-vectors",
     ] {
@@ -405,6 +406,17 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
             "{job}"
         );
     }
+    let test_core = workflow_job(workflow, "test-core");
+    assert!(test_core.contains("if: needs.release-metadata.outputs.pr_like == 'true'"));
+    assert!(!test_core.contains("outputs.release_only"));
+    let test_core_status = workflow_job(workflow, "test-core-status");
+    assert!(test_core_status.contains("name: Tests (core)"));
+    assert!(!test_core_status.contains("outputs.release_only"));
+    let consumer = workflow_job(workflow, "supabase-consumer");
+    assert!(!consumer.contains("outputs.release_only"));
+    assert!(consumer.contains("run-ci --check supabase-consumer"));
+    let pre_build = workflow_job(workflow, "pre-build-validate");
+    assert!(pre_build.contains("run-ci --check pre-build-validate"));
     let health = workflow_job(workflow, "health");
     assert!(health.contains("run-ci --check health"));
     assert!(
@@ -431,7 +443,7 @@ fn workflow_keeps_validation_and_release_build_on_the_slim_path() {
     assert!(release.contains("!contains(needs.*.result, 'failure')"));
     assert!(
         release.contains(
-            "test, integration-prepare, test-integration, integration-status, test-master"
+            "test, test-core, test-core-status, test-cli, test-cli-status, integration-prepare, test-integration, integration-status, test-master"
         )
     );
     let integration = workflow_job(workflow, "integration-status");
@@ -741,4 +753,77 @@ fn nix_gates_recognize_squash_linear_and_ordinary_release_commits() {
         run_nix_gate(&repo, &head, false, "workflow_dispatch", true),
         "run=true\n"
     );
+}
+
+#[test]
+fn nix_gates_publish_for_semver_release_tags_on_squash_and_merge_releases() {
+    for (shape, expected) in [
+        ("squash", true),
+        ("release-merge", true),
+        ("ordinary", false),
+    ] {
+        let repo = Repo::new();
+        let head = match shape {
+            "squash" => {
+                repo.version("0.107.3");
+                repo.commit("chore: release v0.107.3 (#1624)")
+            }
+            "release-merge" => {
+                repo.git(&["checkout", "-q", "-b", "release-topic"]);
+                repo.version("0.107.3");
+                repo.commit("chore: release v0.107.3");
+                repo.git(&["checkout", "-q", "master"]);
+                repo.git(&[
+                    "merge",
+                    "--no-ff",
+                    "-q",
+                    "release-topic",
+                    "-m",
+                    "Merge pull request #1624",
+                ]);
+                repo.git(&["rev-parse", "HEAD"])
+            }
+            _ => repo.commit("fix: ordinary commit"),
+        };
+        repo.git(&["update-ref", "refs/heads/master", &head]);
+        repo.git(&["update-ref", "refs/tags/v0.107.3", &head]);
+
+        let run = tempfile::tempdir().unwrap();
+        let output_path = run.path().join("github-output");
+        let result = Command::new("bash")
+            .arg("-c")
+            .arg(nix_gate_script("Authorize native release publication"))
+            .current_dir(run.path())
+            .env("GITHUB_OUTPUT", &output_path)
+            .env("GITHUB_SHA", &head)
+            .env("GITHUB_EVENT_NAME", "push")
+            .env("GITHUB_REF", "refs/tags/v0.107.3")
+            .env("GITHUB_ACTIONS", "true")
+            .env("RUNNER_ENVIRONMENT", "github-hosted")
+            .env_remove("BUILDKITE")
+            .env_remove("BUILDKITE_BUILD_ID")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_SYSTEM", "/dev/null")
+            .env("GIT_CONFIG_COUNT", "1")
+            .env(
+                "GIT_CONFIG_KEY_0",
+                format!("url.{}.insteadOf", repo.0.display()),
+            )
+            .env(
+                "GIT_CONFIG_VALUE_0",
+                "https://github.com/DecapodLabs/decapod.git",
+            )
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success(),
+            "tag owner/{shape}: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+        assert_eq!(
+            fs::read_to_string(&output_path).unwrap(),
+            format!("publish={expected}\n"),
+            "tag owner/{shape}"
+        );
+    }
 }

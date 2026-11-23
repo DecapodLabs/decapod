@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "8633114615665b8de10043a01b961c1b841e211d",
+    "accepted_commit": "254428be219f1e0568e0161d222ffeb361818d53",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -819,6 +819,7 @@
       "trajectory:85ab507d85803a47": "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
       "trajectory:89475bf5c998bfde": "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
+      "trajectory:8a398ed4692dcd67": "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push.",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
       "trajectory:8a97ab0f9510847b": "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
@@ -869,92 +870,85 @@
     }
   },
   "change": {
-    "id": "change_01M81S9CA1R9HQV3PJB35WZJSK",
-    "base_commit": "8633114615665b8de10043a01b961c1b841e211d",
+    "id": "w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+    "base_commit": "254428be219f1e0568e0161d222ffeb361818d53",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:dactyl-019-cloud-admin": {
-      "statement": "Decapod upgrades cleanly to dactyl-db =0.19.0 (with url pinned at 2.5.9 and MODULE.bazel.lock synchronized), wires all 6 new AccountOperations (RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades), maps 0.19.0 problem/grant/seat/lifecycle codes, and stages explicit opt-in FIRST_PARTY_CLOUD_ORIGIN without touching local SQLite.",
-      "falsifier": "Any of the 6 new AccountOperations fails to route through its Dactyl 0.19.0 endpoint, fails to preserve zero-SQLite or HTTPS/secret boundaries, breaks Bazel cargo_inputs_policy, leaks physical origin URLs in local cloud status, or drops existing CLI/RPC/Cloud contracts.",
+    "ci-shards-release-ruleset-nix-etag": {
+      "statement": "Tests (core) and Tests (cli) are sharded 3-way with fail-closed aggregators (#1672), release-only retains required core/supabase checks (#1879), nix-flake covers v* tags (#1626), GHA preflights activated (#1890), and PublicGithubReads uses bounded ETag/304 conditional polling (#1573)",
+      "falsifier": "Workflow YAML, readiness_profile digests, release_metadata_policy, source_ci_profile_policy, or github_quota tests fail",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_client.rs",
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs"
+        "github_quota",
+        "readiness_profile_tests",
+        "release_metadata_policy",
+        "source_ci_profile_policy"
       ]
     },
-    "claim:dpop-e2e-gateway-1878": {
-      "statement": "Operational Cloud connect, query, batch, control, refresh, container signing, and logout execute end-to-end with sender-constrained RFC 9449 DPoP proofs and repository-bound device session sidecars without downgrading human-bearer admin calls or creating SQLite stores.",
-      "falsifier": "Any operational Cloud call downgrades to unsigned Bearer in strict DPoP mode, leaks or reuses a revoked/replayed device session, sends DPoP headers to human-bearer /account-status, permits container signing of /device-enroll or admin endpoints, or initializes .decapod/data/decapod.db.",
+    "governed-docs-autosync-1388": {
+      "statement": "docs_autosync.yml runs a full governed PR lifecycle via docs_autosync_governed.sh across all 6 lifecycle scenarios without raw create-pull-request or force-push",
+      "falsifier": "Any of the 6 real-git scenarios fails or produces uncheckpointed/force-pushed history",
       "status": "supported",
       "proof_refs": [
-        "tests/cloud_dpop_e2e_1878.rs",
-        "tests/unit/core/cloud_dpop_tests.rs",
-        "tests/unit/core/cloud_session_tests.rs",
-        "tests/unit/core/container_signer_tests.rs"
+        "docs_sync_checkpoint_boundary"
+      ]
+    },
+    "manifest-relocation-1079": {
+      "statement": "Canonical specs manifest moved to .decapod/managed/.manifest.json with legacy read fallback and cleanup on refresh",
+      "falsifier": "Legacy fallback fails or refresh leaves duplicate .decapod/managed/specs/.manifest.json",
+      "status": "supported",
+      "proof_refs": [
+        "decapod_release_projection_drift",
+        "project_specs_tests",
+        "projection_consistency"
+      ]
+    },
+    "pre-build-gate-1047-1134": {
+      "statement": "pre-build-validate CI job and decapod validate --pre-build fail fast on missing/stale specs, manifest hashes, governance document, or entrypoint SHA-256 markers before build/lint/test jobs",
+      "falsifier": "pre-build-validate passes with stale hashes or missing required surfaces",
+      "status": "supported",
+      "proof_refs": [
+        "analyze_readonly",
+        "pre_build_validate_unit_tests"
+      ]
+    },
+    "specs-refresh-content-1122": {
+      "statement": "specs.refresh deterministically updates bounded codebase-contract sections in living specs while preserving authored prose and keeping material-specs enforcement intact",
+      "falsifier": "specs.refresh drops authored prose or satisfies material-specs without authored edits",
+      "status": "supported",
+      "proof_refs": [
+        "material_specs_sh",
+        "project_specs_tests"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-dpop-1878-dactyl-019",
-      "summary": "Port #1878 DPoP E2E device gateway lifecycle and wire dactyl-db =0.19.0 Cloud Admin operations",
-      "input_digest": "sha256:b9b0ee8366fe52395cf5e9e191165951a93081a787ebcb9ea2478391b6ae442a",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
-      ]
-    },
-    {
-      "id": "chk-dpop-1878-dactyl-019-reconciled",
-      "summary": "Reconciled origin/master (PR #1918), refreshed specs/docs/manifest, and verified #1878 + dactyl-db 0.19.0",
-      "input_digest": "sha256:e89a76002170c26cce7fe8adddbf8ccacfb208eee911eeba52a6876d0ddabe29",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
-      ]
-    },
-    {
-      "id": "chk-dpop-1878-reconcile-9453ebe97",
-      "summary": "Reconcile origin/master (9453ebe97, Wave 6 PRs #1917-#1926) with #1878 DPoP E2E and dactyl-db =0.19.0",
-      "input_digest": "sha256:6ea497b0e7a79eec33c8843965fd39b5364c61a91549a7007d8660653c19c095",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
-      ]
-    },
-    {
-      "id": "chk-dpop-1878-release-dep-policy-019",
-      "summary": "Update tests/release_dependency_policy.rs to pin dactyl-db =0.19.0 and matching crates.io checksum",
-      "input_digest": "sha256:08d1a9b1b242830c99e29b739caa0fcd533e989dc14263d42de1bf0b0fe05525",
-      "proof_refs": [
-        "tests/release_dependency_policy.rs"
-      ]
+      "id": "w7-ci-workflows-final",
+      "summary": "Wave 7 Shard A: CI workflows, .manifest.json relocation (#1079), codebase-contract specs.refresh (#1122), pre-build CI gate (#1047/#1134), governed docs_autosync (#1388), 3-way test sharding (#1672), release-only ruleset alignment (#1879), Nix v* tag publication (#1626), GHA preflight config (#1890), ETag/304 polling (#1573)",
+      "input_digest": "sha256:d56f657d08f4f0933755a03718bff4cc026a707473215184f1da92f33bc72e29"
     }
   ],
   "intents": {
-    "intent:change_01M81S9CA1R9HQV3PJB35WZJSK": {
+    "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Workflows, assets/tools, readiness_profile, project_specs, pre_build_validate, release_projection_drift, snapshot_provider, validation_runtime, validate, scaffold, .decapod/config.toml, living specs, and tests only"
       ],
       "constraints": [
-        "root"
+        "ci-workflows-readiness-specs-manifest"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+      "id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
-      "refined_intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "raw_intent": "Own DecapodLabs/decapod Wave 7 Shard A CI workflows, readiness profile, pre-build gate, .manifest.json move, specs.refresh content, governed docs_autosync, Nix tag publication, test sharding, GHA preflight config, and ETag polling",
+      "refined_intent": "Implement and verify all Wave 7 Shard A changes in isolated worktree with dual-root CI compatibility, updated workflow/inventory digests, full formatting/clippy/test suites, and governed checkpoints",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -967,69 +961,63 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "intent": "Deliver Wave 7 Shard A CI/workflow/governance/spec-refresh improvements with dual-root compatibility, zero Buildkite reliance, and full unit/integration/clippy verification",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo_fmt",
+        "cargo_clippy_all_targets",
+        "pre_build_validate",
+        "release_metadata_policy",
+        "docs_sync_checkpoint_boundary",
+        "source_ci_profile_policy",
+        "unit_and_integration_suites"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; architecture prose already reflects #1878 DPoP E2E and dactyl-db 0.19.0",
-          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
-          "spec_material_hash": "1136777d9a864b1ad24a13eb87507c9a6c695e5bbe8eaa3904aba8932c75fa79"
+          "reason": "Documented canonical .decapod/managed/.manifest.json relocation (#1079), bounded codebase-contract refresh (#1122), pre-build CI gate (#1047/#1134), governed docs_autosync (#1388), 3-way test sharding (#1672), release-only ruleset alignment (#1879), Nix SemVer tags (#1626), GHA preflights (#1890), and ETag/304 polling (#1573)",
+          "reviewed_code_fingerprint": "8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88",
+          "spec_material_hash": "01cf2d81d8fe16d9aa59ca2e63c63e9acc56f0c898e368c149fdb4a0acd0375d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; interface prose already reflects #1878 and dactyl-db 0.19.0 contracts",
-          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
-          "spec_material_hash": "95a10a300478a56bcb6c0178d83d5d5fa0d68e542542d220a0c25eae0058e8cb"
+          "reason": "Documented canonical manifest path, codebase-contract markers, pre-build-validate CLI/CI check, shard-status/docs_autosync_governed scripts, and PublicGithubReads ETag conditional revalidation",
+          "reviewed_code_fingerprint": "8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88",
+          "spec_material_hash": "ebd6f0230df9b871b7022ff2fc67a50caf4bfa69ff64b0a1a9e213f52ad49ec5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; security prose already reflects #1878 DPoP custody and dactyl-db 0.19.0 lockfile integrity",
-          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
-          "spec_material_hash": "81a91ba784970d5006af60593a71899a8576e9da7f143cf5b315c63714ad3664"
+          "reason": "Documented fail-closed ETag/304 validation, non-force governed docs_autosync custody, and native-only Nix SemVer tag publication",
+          "reviewed_code_fingerprint": "8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88",
+          "spec_material_hash": "d03e27ac99195fb6b8c9cd8709efd5849bbca2edd6a9dab85749026c7592fbac"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "title": "Wave 7 Shard A: CI Workflows, Manifest Move (#1079), Specs Refresh (#1122), Pre-Build Gate (#1047/#1134), Governed Docs Sync (#1388), Shards (#1672), Release Ruleset (#1879), Nix Tags (#1626), GHA Preflight (#1890), ETag Polling (#1573)",
       "todo_ids": [
-        "feat_01m81s3sm3jet4vj"
+        "cicd_01m82r3tj9w64mfa"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795376453Z"
+      "updated_at": "1795395558Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Workflows, assets/tools, readiness_profile, project_specs, pre_build_validate, release_projection_drift, snapshot_provider, validation_runtime, validate, scaffold, .decapod/config.toml, living specs, and tests only"
       ],
-      "artifact_hash": "sha256:7a137467a1b3a857cb4b004bdfec3b3f988ed624f69df937f3ed950195fe9502",
+      "artifact_hash": "sha256:55c5f63046fc8fe50d32fe3f7a8ce909c35c320cf61377bc136c5fedb9a50150",
       "checks": [
         {
-          "name": "bazel-cargo-inputs-policy",
+          "name": "analyze_readonly",
           "status": "passed"
         },
         {
-          "name": "cargo-check-no-default-features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_clippy",
+          "name": "cargo_clippy_all_targets",
           "status": "passed"
         },
         {
@@ -1037,158 +1025,88 @@
           "status": "passed"
         },
         {
-          "name": "cli-contracts",
+          "name": "decapod_release_projection_drift",
           "status": "passed"
         },
         {
-          "name": "cloud-admin-boundary",
+          "name": "docs_sync_checkpoint_boundary",
           "status": "passed"
         },
         {
-          "name": "cloud-dpop-e2e-1878",
+          "name": "github_quota",
           "status": "passed"
         },
         {
-          "name": "cloud-supabase-boundary",
+          "name": "projection_consistency",
           "status": "passed"
         },
         {
-          "name": "cloud-unit-tests",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-wave-parity",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-workspace-validation-1886",
-          "status": "passed"
-        },
-        {
-          "name": "container-signer-unit-tests",
-          "status": "passed"
-        },
-        {
-          "name": "doc-alignment",
-          "status": "passed"
-        },
-        {
-          "name": "interop-conformance",
-          "status": "passed"
-        },
-        {
-          "name": "release_dependency_policy",
+          "name": "release_metadata_policy",
           "status": "passed"
         }
       ],
-      "current_phase": "verify",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
+            "detail": "trajectory:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M81S9CD71FHEA712TH1V283Z": {
+          "w7-ci-workflows-cicd_01m82r3tj9w64mfa": {
             "evidence_only": true,
-            "id": "branch_01M81S9CD71FHEA712TH1V283Z",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "id": "w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
             "steps": [
               {
-                "action": "verify",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_admin.rs",
-                  "src/decapod/core/cloud_dpop.rs",
-                  "src/decapod/core/cloud_session.rs",
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/core/dactyl.rs",
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_admin.rs",
-                  "src/decapod/core/cloud_dpop.rs",
-                  "src/decapod/core/cloud_session.rs",
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/core/dactyl.rs",
-                  "src/decapod/core/error.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_dpop_e2e_1878.rs",
-                  "tests/cloud_admin_boundary.rs",
-                  "tests/cli_contracts.rs",
-                  "cargo fmt --check, clippy -D warnings, --no-default-features, bazelisk //:cargo_inputs_policy, --lib cloud_ (93/93), container_signer (2/2), core::interop (25/25), advertised_rpc_sessions (1/1), cloud_dpop_e2e_1878 (2/2), cloud_admin_boundary (7/7), cloud_supabase_boundary (52/52), cloud_wave_parity (5/5), cloud_workspace_validation_1886 (4/4), cli_contracts (134/134), doc_alignment (5/5), interop_conformance (12/12) all passed"
+                  ".github/workflows/ci.yml",
+                  ".github/workflows/docs_autosync.yml",
+                  ".github/workflows/nix-flake.yml",
+                  ".decapod/config.toml",
+                  ".decapod/managed/.manifest.json",
+                  "assets/tools/source_ci_profile.rs",
+                  "assets/tools/docs_autosync_governed.sh",
+                  "src/decapod/core/project_specs.rs",
+                  "src/decapod/core/pre_build_validate.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/snapshot_provider/mod.rs"
                 ],
                 "proof_refs": [
-                  "cargo-fmt",
-                  "cargo-clippy",
-                  "cargo-check-no-default-features",
-                  "bazel-cargo-inputs-policy",
-                  "cloud-unit-tests",
-                  "container-signer-unit-tests",
-                  "cloud-dpop-e2e-1878",
-                  "cloud-admin-boundary",
-                  "cloud-supabase-boundary",
-                  "cloud-wave-parity",
-                  "cloud-workspace-validation-1886",
-                  "cli-contracts",
-                  "doc-alignment",
-                  "interop-conformance"
+                  "cargo_fmt",
+                  "cargo_clippy_all_targets",
+                  "release_metadata_policy",
+                  "docs_sync_checkpoint_boundary",
+                  "projection_consistency",
+                  "analyze_readonly",
+                  "github_quota",
+                  "decapod_release_projection_drift"
                 ],
                 "scope": [
-                  "root"
+                  "ci-workflows-readiness-specs-manifest"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "tests/release_dependency_policy.rs"
-                ],
-                "proof_refs": [
-                  "release_dependency_policy",
-                  "cargo_fmt",
-                  "cargo_clippy"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1196,54 +1114,35 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [
-        "cargo fmt --check, clippy -D warnings, --no-default-features, bazelisk //:cargo_inputs_policy, --lib cloud_ (93/93), container_signer (2/2), core::interop (25/25), advertised_rpc_sessions (1/1), cloud_dpop_e2e_1878 (2/2), cloud_admin_boundary (7/7), cloud_supabase_boundary (52/52), cloud_wave_parity (5/5), cloud_workspace_validation_1886 (4/4), cli_contracts (134/134), doc_alignment (5/5), interop_conformance (12/12) all passed"
-      ],
-      "inspected_files": [
-        "src/decapod/core/cloud_admin.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
-        "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/core/dactyl.rs"
-      ],
-      "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+      "destination": "Governed non-draft PR targeting master for Wave 7 merge slot #3",
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
       "modified_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/cloud_admin.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
-        "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/core/dactyl.rs",
-        "src/decapod/core/error.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs",
-        "tests/release_dependency_policy.rs"
+        ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
+        ".github/workflows/ci.yml",
+        ".github/workflows/docs_autosync.yml",
+        ".github/workflows/nix-flake.yml",
+        "assets/tools/docs_autosync_governed.sh",
+        "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/pre_build_validate.rs",
+        "src/decapod/core/project_specs.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/snapshot_provider/mod.rs"
       ],
       "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "publication"
       ],
       "repo_scope": [
-        "root"
+        "ci-workflows-readiness-specs-manifest"
       ],
-      "run_id": "branch_01M81S9CD71FHEA712TH1V283Z",
+      "run_id": "w7-ci-workflows-cicd_01m82r3tj9w64mfa",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m81s3sm3jet4vj",
+      "task_id": "cicd_01m82r3tj9w64mfa",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

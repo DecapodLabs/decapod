@@ -924,11 +924,18 @@ No credential, daemon registration, new external audience, or remote service
 is introduced. These are candidate invariants with regression coverage authored;
 execution evidence remains required before publication readiness.
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Security/policy/auth surfaces (35): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, `tests/ci_checkout_policy.rs`, (+19 more)
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
+- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
@@ -1554,3 +1561,10 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 - **Fail-closed release-only boundary (`src/decapod/core/repository_profile.rs`)**: `qualifies_release_only_inventory_transition` never waives command/execution/coverage review (`commands_preserved` and exact `reviewed_commands_digest` equality remain required) and never permits candidate-authored edits to `Cargo.toml`, `Cargo.lock`, workflows, or other inventoried sources. Both line-level exact-diff checks and `toml::Value` AST roundtrips verify that only `[package].version` (`new > old` strict SemVer `X.Y.Z`) and the root `[[package]]` entry in `Cargo.lock` (with no `source` or `checksum`) changed between the bounded first-parent ancestor and `accepted_base_sha`. Any deviation, downgrade, dependency change, workflow edit, missing ancestor, or symlink/size-cap violation fails closed to `ACCEPTED_REPOSITORY_CONTRACT_CHANGED`.
 - **Redacted public-boundary privacy lint (`src/decapod/core/validation_runtime/publication_privacy.rs`, `src/decapod/core/effective_grant.rs`)**: Local deny rules in private `.decapod/data/publication-deny.txt` (enforced via `fs_permissions::open_private_file`) and repo-configured `[governance].publication_deny_identifiers` (protected against candidate removal in `effective_grant.rs`) are matched literally against commit messages and non-deletion diffs. Findings fail closed with `PUBLICATION_PRIVATE_IDENTIFIER` referencing only the rule index/line and never echoing the matched secret/identifier back into logs.
 - **Headless hypervisor boundary (`src/decapod/plugins/container.rs`)**: `start_podman_machine_quietly` scrubs `PODMAN_LOG_LEVEL` and `CONTAINERS_LOG_LEVEL` and rejects `--log-level=debug`/`--log-level=trace`/`--gui` so automatic workspace/validation startup cannot spawn a `vfkit` GUI window or steal desktop focus on macOS (#1417).
+
+## Wave 7 Shard A Security & Custody Boundaries (#1047, #1134, #1388, #1573, #1626, #1890)
+
+- **Fail-closed pre-build and shard aggregation gates (`assets/tools/source_ci/pre-build-validate.sh`, `assets/tools/source_ci/shard-status.sh`)**: Missing/tampered entrypoint or living-spec SHA-256 hashes terminate CI prior to build execution; shard aggregators (`Tests (core)`, `Tests (cli)`) reject skipped, cancelled, or failed prerequisites/shards.
+- **Governed automation custody (`assets/tools/docs_autosync_governed.sh`)**: Scheduled docs sync never force-pushes, never skips exact-material checkpoints, verifies `govern artifacts verify-checkpoints --publication-material` before pushing, and fails closed with a drift report on concurrent branch movement or verification failure.
+- **In-process ETag validation (`src/decapod/core/snapshot_provider/mod.rs`)**: ETag headers are strictly validated as printable ASCII (length 2..=256, single header, no CR/LF) to prevent header injection; the validator map is strictly in-process (max 64 entries, never persisted), always performs live TLS revalidation, and fails closed on unexpected HTTP 304 without prior ETag.
+- **Native-only Cachix tag publication (`.github/workflows/nix-flake.yml`)**: `publication-owner` restricts SemVer `refs/tags/v*` publication to `github-hosted` native Actions runners with non-Buildkite identity and valid 1-parent or 2-parent `chore: release v*` commits, keeping `secrets.CACHIX_AUTH_TOKEN` isolated to the single `publish` job.

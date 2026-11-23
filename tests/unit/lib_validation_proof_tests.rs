@@ -45,7 +45,7 @@ fn absent_runtime_policy_cache_does_not_rewrite_tracked_scaffolding() {
             .join(crate::core::capsule_policy::GENERATED_POLICY_REL_PATH)
             .exists()
     );
-    let manifest = root.path().join(".decapod/managed/specs/.manifest.json");
+    let manifest = root.path().join(".decapod/managed/.manifest.json");
     let before = std::fs::read(&manifest).unwrap();
     assert!(heal_validation_scaffold(root.path()).unwrap().is_none());
     assert_eq!(std::fs::read(manifest).unwrap(), before);
