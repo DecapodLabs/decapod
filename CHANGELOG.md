@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.164.1](https://github.com/DecapodLabs/decapod/compare/v0.164.0...v0.164.1) - 2026-11-23
+
+### Added
+
+- *(ci,specs)* Wave 7 Shard A CI workflows, manifest move ([#1079](https://github.com/DecapodLabs/decapod/pull/1079)), specs.refresh ([#1122](https://github.com/DecapodLabs/decapod/pull/1122)), pre-build gate (#1047/#1134), governed docs_autosync ([#1388](https://github.com/DecapodLabs/decapod/pull/1388))
+
+### Fixed
+
+- *(tests)* isolate PATH from podman/docker in docs_sync_checkpoint_boundary fixture
+- *(bazel,tests)* include docs_autosync assets in Bazel sandbox and materialize script in test scratch dir
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w7-ci/cicd_01m82r3tj9w64mfa-ci-workflows
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w7-ci/cicd_01m82r3tj9w64mfa-ci-workflows
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w7-ci/cicd_01m82r3tj9w64mfa-ci-workflows
+
 ## [0.164.0](https://github.com/DecapodLabs/decapod/compare/v0.163.0...v0.164.0) - 2026-11-23
 
 ### Added
