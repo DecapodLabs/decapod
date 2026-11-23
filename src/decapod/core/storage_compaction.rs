@@ -7,6 +7,7 @@
 //! Physical `VACUUM` page reclamation is never executed automatically on hot CLI
 //! paths or implicit startup migrations; it requires an explicit operator call.
 
+use crate::core::broker::DbBroker;
 use crate::core::db::{Connection, OptionalExtension, params};
 use crate::core::error::DecapodError;
 use crate::core::events;
@@ -17,6 +18,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
+use std::path::Path;
+
+pub const DATA_COMPACTION_REPORT_SCHEMA_VERSION: &str = "decapod.data-compaction-report.v1";
 
 pub const V2_COMPACTION_MIGRATION_ID: &str = "sqlite.compact_lossless_storage.v002";
 pub const STORAGE_FORMAT_VERSION_KEY: &str = "format_version";
@@ -598,12 +602,8 @@ pub fn gc_unreferenced_components(
         });
     }
 
-    let started_tx = if conn.is_autocommit() {
-        if dry_run {
-            conn.execute_batch("BEGIN DEFERRED")?;
-        } else {
-            conn.execute_batch("BEGIN IMMEDIATE")?;
-        }
+    let started_tx = if !dry_run && conn.is_autocommit() {
+        conn.execute_batch("BEGIN IMMEDIATE")?;
         true
     } else {
         false
@@ -1147,4 +1147,207 @@ fn compact_summaries(conn: &Connection) -> Result<(), DecapodError> {
         }
     }
     Ok(())
+}
+
+/// Measured byte and page snapshot of the local canonical SQLite datastore.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DataCompactionByteSnapshot {
+    pub main_db_bytes: u64,
+    pub wal_sidecar_bytes: u64,
+    pub shm_sidecar_bytes: u64,
+    pub page_size: u64,
+    pub page_count: u64,
+    pub freelist_count: u64,
+    pub live_bytes: u64,
+    pub reclaimable_bytes: u64,
+}
+
+/// Measured lossless compaction report returned by `decapod data compact` / RPC `data.compact` (#1630).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DataCompactionReport {
+    pub schema_version: String,
+    pub binary_version: String,
+    pub storage_format_version: u32,
+    pub backend_scope: String,
+    pub hosted_backend_status: String,
+    pub dry_run: bool,
+    pub reclaim_pages_requested: bool,
+    pub reclaim_executed: bool,
+    pub lossless_verified: bool,
+    pub events_logical_count: u64,
+    pub events_logical_sha256: String,
+    pub before: DataCompactionByteSnapshot,
+    pub after: DataCompactionByteSnapshot,
+    pub main_db_bytes_delta: i64,
+    pub live_bytes_delta: i64,
+    pub events_compacted: u64,
+    pub prompts_deduplicated: usize,
+    pub components_collected: usize,
+    pub manifest_sha256: Option<String>,
+}
+
+#[must_use]
+fn file_size_or_zero(path: &Path) -> u64 {
+    std::fs::metadata(path).map(|m| m.len()).unwrap_or(0)
+}
+
+fn measure_datastore_bytes(
+    conn: &Connection,
+    db_path: &Path,
+) -> Result<DataCompactionByteSnapshot, DecapodError> {
+    let page_size: u64 = conn.query_row("PRAGMA page_size", [], |r| r.get::<_, i64>(0))? as u64;
+    let page_count: u64 = conn.query_row("PRAGMA page_count", [], |r| r.get::<_, i64>(0))? as u64;
+    let freelist_count: u64 =
+        conn.query_row("PRAGMA freelist_count", [], |r| r.get::<_, i64>(0))? as u64;
+    let live_pages = page_count.saturating_sub(freelist_count);
+    let wal_path = Path::new(&format!("{}-wal", db_path.display())).to_path_buf();
+    let shm_path = Path::new(&format!("{}-shm", db_path.display())).to_path_buf();
+    Ok(DataCompactionByteSnapshot {
+        main_db_bytes: file_size_or_zero(db_path),
+        wal_sidecar_bytes: file_size_or_zero(&wal_path),
+        shm_sidecar_bytes: file_size_or_zero(&shm_path),
+        page_size,
+        page_count,
+        freelist_count,
+        live_bytes: live_pages.saturating_mul(page_size),
+        reclaimable_bytes: freelist_count.saturating_mul(page_size),
+    })
+}
+
+fn count_uncompacted_events_readonly(conn: &Connection) -> Result<u64, DecapodError> {
+    if !conn.has_table("events")? {
+        return Ok(0);
+    }
+    let mut stmt =
+        conn.prepare("SELECT stream, payload FROM events WHERE stream != 'federation'")?;
+    let rows = stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?;
+    let mut candidates = 0u64;
+    for row in rows {
+        let (_stream, payload) = row?;
+        if let Ok(parsed) = serde_json::from_str::<Value>(&payload)
+            && !is_already_compact_event_payload(&parsed)
+        {
+            candidates += 1;
+        }
+    }
+    Ok(candidates)
+}
+
+fn count_duplicate_prompt_rows_readonly(conn: &Connection) -> Result<usize, DecapodError> {
+    if !conn.has_table("agent_prompts")? {
+        return Ok(0);
+    }
+    let total: i64 = conn.query_row("SELECT COUNT(*) FROM agent_prompts", [], |r| r.get(0))?;
+    let distinct = distinct_agent_prompt_groups(conn)? as i64;
+    Ok(total.saturating_sub(distinct).max(0) as usize)
+}
+
+/// Run measured, lossless compaction across canonical `.decapod/data/decapod.db`
+/// through `DbBroker` (#1630).
+///
+/// - Fails closed on `backend = "cloud"` (hosted PostgreSQL compaction is
+///   server-managed and never substituted with local SQLite).
+/// - In `dry_run = true`, performs zero mutations and returns exact candidate
+///   counts and current byte/page measurements.
+/// - Physical page reclamation (`VACUUM`) only runs when `reclaim_pages = true`.
+pub fn compact_datastore_lossless(
+    store_root: &Path,
+    dry_run: bool,
+    reclaim_pages: bool,
+) -> Result<DataCompactionReport, DecapodError> {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
+        return Err(DecapodError::ValidationError(
+            "DATA_COMPACT_CLOUD_UNSUPPORTED: backend=cloud compaction runs on the hosted PostgreSQL service; local SQLite compaction is unavailable in cloud mode".into(),
+        ));
+    }
+    let db_path = events::canonical_db_path(store_root);
+    if !db_path.is_file() {
+        return Err(DecapodError::NotFound(format!(
+            "canonical local datastore missing at {}",
+            db_path.display()
+        )));
+    }
+
+    if dry_run {
+        let conn = crate::core::db::db_connect_readonly_bounded(
+            &db_path.to_string_lossy(),
+            std::time::Duration::from_secs(5),
+        )?;
+        check_read_compatibility(&conn)?;
+        let before = measure_datastore_bytes(&conn, &db_path)?;
+        let (pre_count, pre_sha) = logical_events_inventory(&conn)?;
+        let candidate_events = count_uncompacted_events_readonly(&conn)?;
+        let candidate_prompts = count_duplicate_prompt_rows_readonly(&conn)?;
+        let gc_preview = gc_unreferenced_components(&conn, true)?;
+        return Ok(DataCompactionReport {
+            schema_version: DATA_COMPACTION_REPORT_SCHEMA_VERSION.to_string(),
+            binary_version: env!("CARGO_PKG_VERSION").to_string(),
+            storage_format_version: schemas::STORAGE_FORMAT_VERSION,
+            backend_scope: "local_sqlite".to_string(),
+            hosted_backend_status: "unavailable_local_only".to_string(),
+            dry_run: true,
+            reclaim_pages_requested: reclaim_pages,
+            reclaim_executed: false,
+            lossless_verified: true,
+            events_logical_count: pre_count,
+            events_logical_sha256: pre_sha,
+            after: before.clone(),
+            before,
+            main_db_bytes_delta: 0,
+            live_bytes_delta: 0,
+            events_compacted: candidate_events,
+            prompts_deduplicated: candidate_prompts,
+            components_collected: gc_preview.deleted_components,
+            manifest_sha256: None,
+        });
+    }
+
+    broker.with_conn(&db_path, "decapod", None, "data.compact", |conn| {
+        check_storage_format_compatibility(conn)?;
+        let before = measure_datastore_bytes(conn, &db_path)?;
+        let (pre_count, pre_sha) = logical_events_inventory(conn)?;
+
+        let manifest = apply_v2_compaction_migration(conn)?;
+        let gc = gc_unreferenced_components(conn, false)?;
+        let reclaim_executed = if reclaim_pages {
+            let _vac = reclaim_pages_explicit(conn)?;
+            true
+        } else {
+            false
+        };
+
+        let (post_count, post_sha) = logical_events_inventory(conn)?;
+        if post_count != pre_count || post_sha != pre_sha {
+            return Err(unsafe_schema(
+                "logical event count or SHA-256 digest changed after data.compact",
+            ));
+        }
+
+        let after = measure_datastore_bytes(conn, &db_path)?;
+        let main_db_bytes_delta = after.main_db_bytes as i64 - before.main_db_bytes as i64;
+        let live_bytes_delta = after.live_bytes as i64 - before.live_bytes as i64;
+
+        Ok(DataCompactionReport {
+            schema_version: DATA_COMPACTION_REPORT_SCHEMA_VERSION.to_string(),
+            binary_version: env!("CARGO_PKG_VERSION").to_string(),
+            storage_format_version: schemas::STORAGE_FORMAT_VERSION,
+            backend_scope: "local_sqlite".to_string(),
+            hosted_backend_status: "unavailable_local_only".to_string(),
+            dry_run: false,
+            reclaim_pages_requested: reclaim_pages,
+            reclaim_executed,
+            lossless_verified: true,
+            events_logical_count: post_count,
+            events_logical_sha256: post_sha,
+            before,
+            after,
+            main_db_bytes_delta,
+            live_bytes_delta,
+            events_compacted: manifest.event_compaction.compacted_rows,
+            prompts_deduplicated: manifest.prompt_dedupe.duplicate_rows_removed,
+            components_collected: gc.deleted_components,
+            manifest_sha256: Some(manifest.manifest_sha256),
+        })
+    })
 }

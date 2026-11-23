@@ -129,6 +129,6 @@ pub fn schema() -> serde_json::Value {
             { "name": "add", "parameters": ["source", "text", "links"] },
             { "name": "propose", "description": "Generate a preference proposal based on feedback" }
         ],
-        "storage": ["feedback.db"]
+        "storage": ["decapod.db"]
     })
 }

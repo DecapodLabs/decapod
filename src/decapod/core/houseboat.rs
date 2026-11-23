@@ -2093,6 +2093,7 @@ pub struct CrashReconciliationOutcome {
     pub reason: String,
 }
 
+#[must_use]
 pub fn reconcile_after_crash(
     record: &InterruptedExecutionRecord,
     current_instruction_revision: &str,

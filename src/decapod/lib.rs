@@ -2574,6 +2574,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
         },
         workspace: crate::cli::WorkspaceConfigSection::default(),
         maintenance: Default::default(),
+        agent_maintenance: Default::default(),
         laya: init.existing_laya.clone(),
     }
 }
@@ -3563,6 +3564,17 @@ pub fn run() -> Result<(), error::DecapodError> {
         }) if should_dispatch_governed_database_cli(&std::env::current_dir()?, &db_cmd) => {
             return run_governed_database_cli(&std::env::current_dir()?, db_cmd);
         }
+        Command::Data(DataCli {
+            command:
+                DataCommand::Compact {
+                    dry_run,
+                    reclaim_pages,
+                    format,
+                },
+        }) => {
+            let root = find_decapod_project_root(&std::env::current_dir()?)?;
+            return run_storage_compaction_cli(&root, dry_run, reclaim_pages, &format);
+        }
         command => command,
     };
     let predecoded_rpc_request = match &command {
@@ -3616,6 +3628,12 @@ pub fn run() -> Result<(), error::DecapodError> {
     {
         let root = find_decapod_project_root(&std::env::current_dir()?)?;
         return run_storage_inventory_rpc(&root, request);
+    }
+    if let Some(request) = predecoded_rpc_request.as_ref()
+        && request.op == "data.compact"
+    {
+        let root = find_decapod_project_root(&std::env::current_dir()?)?;
+        return run_storage_compaction_rpc(&root, request);
     }
     if let Some(request) = predecoded_rpc_request.as_ref()
         && is_governed_db_maintenance_rpc_op(&request.op)
@@ -4454,7 +4472,7 @@ fn is_storage_independent_command(command: &Command) -> bool {
         // Dactyl contract and must not run startup migrations or presence
         // clock-in before they acquire their own bounded coordination lock.
         Command::Data(DataCli {
-            command: DataCommand::Database(_),
+            command: DataCommand::Database(_) | DataCommand::Compact { .. },
         }) => true,
         _ => false,
     }
@@ -11178,6 +11196,9 @@ fn run_data_command(
                 println!("{}", serde_json::to_string_pretty(&report).unwrap());
             }
         },
+        DataCommand::Compact { .. } => {
+            unreachable!("data compact dispatched before startup")
+        }
         DataCommand::Database(database_cli) => match database_cli.command {
             DatabaseCommand::Inspect { .. } => {
                 unreachable!("read-only inventory dispatched before startup")
@@ -11254,6 +11275,104 @@ fn run_storage_inventory(
         ));
     }
     Ok(())
+}
+
+fn run_storage_compaction_cli(
+    project_root: &Path,
+    dry_run: bool,
+    reclaim_pages: bool,
+    format: &str,
+) -> Result<(), error::DecapodError> {
+    let report = core::storage_compaction::compact_datastore_lossless(
+        &inventory_data_root(project_root),
+        dry_run,
+        reclaim_pages,
+    )?;
+    if format == "text" {
+        println!(
+            "data.compact (dry_run={}): main_bytes {} -> {} (delta {}), live_bytes {} -> {}, events_compacted={}, prompts_deduplicated={}, components_collected={}, reclaim_executed={}, lossless_verified={}",
+            report.dry_run,
+            report.before.main_db_bytes,
+            report.after.main_db_bytes,
+            report.main_db_bytes_delta,
+            report.before.live_bytes,
+            report.after.live_bytes,
+            report.events_compacted,
+            report.prompts_deduplicated,
+            report.components_collected,
+            report.reclaim_executed,
+            report.lossless_verified,
+        );
+    } else {
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&report)
+                .map_err(|_| error::DecapodError::ValidationError("COMPACT_ENCODING".into()))?
+        );
+    }
+    Ok(())
+}
+
+fn run_storage_compaction_rpc(
+    project_root: &Path,
+    request: &core::rpc::RpcRequest,
+) -> Result<(), error::DecapodError> {
+    let outcome = (|| -> Result<serde_json::Value, error::DecapodError> {
+        let params: core::rpc::StorageCompactParams = if request.params.is_null() {
+            core::rpc::StorageCompactParams::default()
+        } else {
+            serde_json::from_value(request.params.clone()).map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "COMPACT_PARAMETERS: expected optional dry_run and reclaim_pages booleans"
+                        .into(),
+                )
+            })?
+        };
+        let report = core::storage_compaction::compact_datastore_lossless(
+            &inventory_data_root(project_root),
+            params.dry_run,
+            params.reclaim_pages,
+        )?;
+        serde_json::to_value(report)
+            .map_err(|_| error::DecapodError::ValidationError("COMPACT_ENCODING".into()))
+    })();
+    match outcome {
+        Ok(value) => {
+            let response = core::rpc::success_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                Some(value),
+                vec![],
+                None,
+                vec![],
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response)
+                    .map_err(|_| error::DecapodError::ValidationError("COMPACT_ENCODING".into()))?
+            );
+            Ok(())
+        }
+        Err(error) => {
+            let response = core::rpc::error_response(
+                request.id.clone(),
+                request.op.clone(),
+                request.params.clone(),
+                "DATA_COMPACT_FAILED".into(),
+                error.to_string(),
+                None,
+                vec![],
+            );
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&response)
+                    .map_err(|_| error::DecapodError::ValidationError("COMPACT_ENCODING".into()))?
+            );
+            Err(error)
+        }
+    }
 }
 
 fn run_storage_inventory_rpc(

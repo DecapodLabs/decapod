@@ -1521,7 +1521,7 @@ pub fn schema() -> serde_json::Value {
             { "name": "init", "description": "Initialize decisions database" },
             { "name": "schema", "description": "Print subsystem schema" }
         ],
-        "storage": ["decisions.db"],
+        "storage": ["decapod.db"],
         "trees": decision_trees().iter().map(|t| serde_json::json!({
             "id": t.id,
             "name": t.name,

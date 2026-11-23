@@ -1,5 +1,18 @@
 # Security
 
+## Wave 7 compaction, delegated RBAC generation checks, knowledge attestation, and TypeScript/Pi trust boundaries (#1630, #1568, #657, #1277, #1711)
+
+- **Fail-closed compaction & explicit-only page reclamation (`src/decapod/core/storage_compaction.rs`)**:
+  - `compact_datastore_lossless` refuses `backend = "cloud"` (`DATA_COMPACT_CLOUD_UNSUPPORTED`) rather than touching local SQLite, runs zero mutations under `--dry-run`, executes `VACUUM` strictly when `--reclaim-pages` is explicitly requested, and aborts/rolls back if pre/post logical event count or SHA-256 digests diverge.
+- **Ambiguity refusal & Propodus `037` delegated grant revocation/generation checks (`src/decapod/cli.rs`, `src/decapod/core/db_maintenance.rs`)**:
+  - Configuring multiple maintenance policy tables (`[governance.db_maintenance]`, `[maintenance]`, `[agent_maintenance]`) fails closed with `AMBIGUOUS_MAINTENANCE_POLICY`.
+  - `evaluate_cloud_capability_with_delegated_grant` fails closed on missing server grant (`CLOUD_DELEGATED_GRANT_REQUIRED`), cross-repository mismatch (`CROSS_REPO_AUTHORITY_DENIED`), revocation (`CLOUD_DELEGATED_GRANT_REVOKED`), expiry (`CLOUD_DELEGATED_GRANT_EXPIRED`), zero or mismatched `revocation_generation`/`policy_generation`/`session_generation` (`CLOUD_DELEGATED_GRANT_GENERATION_STALE`), or operations outside the monotonically narrowed grant (`CLOUD_DELEGATED_OPERATION_NOT_GRANTED`).
+- **Knowledge provenance integrity & anti-self-promotion (`src/decapod/plugins/knowledge.rs`)**:
+  - Write-time `knowledge.write_attestation` events bind repository-relative `file:` digests without widening advisory records into binding policy (`authority = "advisory_below_current_intent_and_policy"`). Superseded bodies never enter operative context; `hurt` outcome feedback surfaces visible caution without allowing `helped` counts to bypass the procedural promotion firewall.
+- **TypeScript/Pi & Darkmatter containment (`bindings/typescript/src/index.ts`, `packages/pi-decapod/src/index.ts`)**:
+  - `@decapodlabs/decapod-client` keeps per-client isolated env/cwd with zero `process.exit` calls and explicitly reports `cli_process` fallback rather than silently claiming native N-API loading; `validateDarkmatterSnapshot` rejects `read_only != true`, `mutation_endpoints_exposed != false`, `ui_generated_proof_allowed != false`, `..`/absolute path escapes, and non-`sha256:` evidence digests.
+  - `@decapodlabs/pi-decapod` refuses autonomous mutation, resume, and completion settlement while a Decision Gate or unresolved conflict is open or repository proof is unverified, and labels unobserved direct host writes `outside_native_enforcement`.
+
 ## DPoP sender-constrained gateway custody, container signer isolation & `dactyl-db 0.19.0` fail-closed boundaries (#1878)
 
 - **Sidecar DPoP session binding & fail-closed revocation (`src/decapod/core/cloud_session.rs`, `src/decapod/core/cloud_client.rs`)**:
@@ -928,8 +941,8 @@ execution evidence remains required before publication readiness.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
+- Repository signal fingerprint: `3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (283 files), `tests/` (282 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

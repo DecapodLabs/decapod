@@ -24,6 +24,12 @@ pub struct DecapodProjectConfig {
         skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
     )]
     pub maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
+    /// Optional top-level `[agent_maintenance]` shorthand for `[governance.db_maintenance]` (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub agent_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"

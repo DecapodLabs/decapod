@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "8633114615665b8de10043a01b961c1b841e211d",
+    "accepted_commit": "254428be219f1e0568e0161d222ffeb361818d53",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -819,6 +819,7 @@
       "trajectory:85ab507d85803a47": "Actual9a5source39passedandGitHubCIgreen, thenpublicGithubObjectscommitrecheck403quotareset1792469427before native. Preserve report, do not auth-fallback/newprerequisite. Usewaitforreversible27-line shared final-gate/refREADMEcorrection; current noindependentreadinesslabels, no modelclaims. Reviewedd6cb helperinventory with unchangedd6d98runrecipe. Existingpublicationregression exercisesextractedfunction; no modelgateweakening. Retryplainvalidateafter04:10:27UTCresetexactnewsource/target, no identicalexposedv2run.",
       "trajectory:89475bf5c998bfde": "The accepted source executor closure changed in merged PR1462; final publication requires an official controller independently supporting that accepted closure, not this candidate authorizing itself",
       "trajectory:8a2fbdef1f3ce7d9": "All project tests and verification remain owned by plain decapod validate with Buildkite enabled",
+      "trajectory:8a398ed4692dcd67": "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push.",
       "trajectory:8a7663240329d9ea": "Before any numerical observations: independent reference supports only dense single text prompts up to512tokens, rawblocks13/19 without finalnorm. Provisional component tolerance0.005+0.001abs(reference) and normalizedRMS<=0.002 for raw samples and real pooled features; existing conditional-engine/calibration tolerances unchanged. Report all errors and unsupported long/chunked/multimodal cases; no threshold adjustment after outputs without recorded rationale/revalidation.",
       "trajectory:8a97ab0f9510847b": "Author shared projection seam and regression coverage; preserve all scientific failures and production authority. User requires complete functional integration, rejects prior inactive-stage proposal. Public related execution/release issues are consumed boundaries, not automatically closure scope.",
       "trajectory:92d20e7a29fe6436": "CompilerreportedoneResulttypeerrorinnewproductioncollector; use?andOk tocoerceIOerrorintoBoxerror. Source39and1463librarytests didpass304; no nativeunit/modeltest ran because separate worker compilationfailed. Preserve allfailedreports, no manualCargo workerbuild/test, noauthfallback, nosciencecriterionwaiver. Same originalclaimedtask/branch; checkpointthenrerunfullvalidate. No newprerequisite or PR.",
@@ -869,75 +870,46 @@
     }
   },
   "change": {
-    "id": "change_01M81S9CA1R9HQV3PJB35WZJSK",
-    "base_commit": "8633114615665b8de10043a01b961c1b841e211d",
+    "id": "change_01M82R8AKDD1Q6G3T44VMSTJ0B",
+    "base_commit": "254428be219f1e0568e0161d222ffeb361818d53",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:dactyl-019-cloud-admin": {
-      "statement": "Decapod upgrades cleanly to dactyl-db =0.19.0 (with url pinned at 2.5.9 and MODULE.bazel.lock synchronized), wires all 6 new AccountOperations (RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades), maps 0.19.0 problem/grant/seat/lifecycle codes, and stages explicit opt-in FIRST_PARTY_CLOUD_ORIGIN without touching local SQLite.",
-      "falsifier": "Any of the 6 new AccountOperations fails to route through its Dactyl 0.19.0 endpoint, fails to preserve zero-SQLite or HTTPS/secret boundaries, breaks Bazel cargo_inputs_policy, leaks physical origin URLs in local cloud status, or drops existing CLI/RPC/Cloud contracts.",
+    "claim:wave7-storage-compaction-rbac-knowledge-ts": {
+      "statement": "Local storage consolidation migrates legacy sidecars into decapod.db, data.compact performs lossless measured compaction with explicit-only VACUUM, [agent_maintenance] and Propodus 037 delegated grants fail closed on ambiguity/revocation/generation drift, knowledge add_attested_knowledge detects file drift and surfaces outcome feedback without self-promotion, and @decapodlabs/{decapod-client,pi-decapod} enforce real-binary CLI/RPC and Darkmatter read-only contracts.",
+      "falsifier": "Any legacy feedback.db/broker.dedupe.db row is lost, validate reads todo.db instead of decapod.db, data.compact alters logical event SHA-256 or runs implicit VACUUM or runs locally in cloud mode, ambiguous maintenance sections or stale Propodus 037 generations are admitted, mutated attested files fail to surface source_changed_since_write, or TS/Pi/Darkmatter clients bypass Decision Gates or path containment.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/cloud_client.rs",
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
         "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs"
-      ]
-    },
-    "claim:dpop-e2e-gateway-1878": {
-      "statement": "Operational Cloud connect, query, batch, control, refresh, container signing, and logout execute end-to-end with sender-constrained RFC 9449 DPoP proofs and repository-bound device session sidecars without downgrading human-bearer admin calls or creating SQLite stores.",
-      "falsifier": "Any operational Cloud call downgrades to unsigned Bearer in strict DPoP mode, leaks or reuses a revoked/replayed device session, sends DPoP headers to human-bearer /account-status, permits container signing of /device-enroll or admin endpoints, or initializes .decapod/data/decapod.db.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/cloud_dpop_e2e_1878.rs",
-        "tests/unit/core/cloud_dpop_tests.rs",
-        "tests/unit/core/cloud_session_tests.rs",
-        "tests/unit/core/container_signer_tests.rs"
+        "tests/datastore_relational_compaction.rs",
+        "tests/doc_alignment.rs",
+        "tests/houseboat_engine.rs",
+        "tests/knowledge_promotion_cli.rs",
+        "tests/single_datastore.rs",
+        "tests/sqlite_maintenance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-dpop-1878-dactyl-019",
-      "summary": "Port #1878 DPoP E2E device gateway lifecycle and wire dactyl-db =0.19.0 Cloud Admin operations",
-      "input_digest": "sha256:b9b0ee8366fe52395cf5e9e191165951a93081a787ebcb9ea2478391b6ae442a",
+      "id": "wave7-shard-b-storage-rbac",
+      "summary": "Wave 7 Shard B: single-SQLite consolidation, lossless data.compact, maintenance RBAC Propodus 037 delegation, write-time knowledge attestation & feedback, TS/Pi 0.163.0 contracts, Darkmatter offline fixture, and must_use quality cleanup",
+      "input_digest": "sha256:5950bbd9b2b14186180dd6964fc54cd5d0c8d99ebf8aca0e95db0797f0853572",
       "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
-      ]
-    },
-    {
-      "id": "chk-dpop-1878-dactyl-019-reconciled",
-      "summary": "Reconciled origin/master (PR #1918), refreshed specs/docs/manifest, and verified #1878 + dactyl-db 0.19.0",
-      "input_digest": "sha256:e89a76002170c26cce7fe8adddbf8ccacfb208eee911eeba52a6876d0ddabe29",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
-      ]
-    },
-    {
-      "id": "chk-dpop-1878-reconcile-9453ebe97",
-      "summary": "Reconcile origin/master (9453ebe97, Wave 6 PRs #1917-#1926) with #1878 DPoP E2E and dactyl-db =0.19.0",
-      "input_digest": "sha256:6ea497b0e7a79eec33c8843965fd39b5364c61a91549a7007d8660653c19c095",
-      "proof_refs": [
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs"
-      ]
-    },
-    {
-      "id": "chk-dpop-1878-release-dep-policy-019",
-      "summary": "Update tests/release_dependency_policy.rs to pin dactyl-db =0.19.0 and matching crates.io checksum",
-      "input_digest": "sha256:08d1a9b1b242830c99e29b739caa0fcd533e989dc14263d42de1bf0b0fe05525",
-      "proof_refs": [
-        "tests/release_dependency_policy.rs"
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/datastore_relational_compaction.rs",
+        "tests/houseboat_engine.rs",
+        "tests/knowledge_promotion_cli.rs",
+        "tests/single_datastore.rs",
+        "tests/sqlite_maintenance.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M81S9CA1R9HQV3PJB35WZJSK": {
+    "intent:change_01M82R8AKDD1Q6G3T44VMSTJ0B": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -947,14 +919,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+      "id": "intent:change_01M82R8AKDD1Q6G3T44VMSTJ0B",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
-      "refined_intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "raw_intent": "Wave 7 Shard B: single-SQLite consolidation, compaction, RBAC, knowledge provenance, TS/Pi, and quality cleanup",
+      "refined_intent": "Wave 7 Shard B: single-SQLite consolidation, compaction, RBAC, knowledge provenance, TS/Pi, and quality cleanup",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -967,7 +939,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "intent": "Wave 7 Shard B: single-SQLite consolidation, compaction, RBAC, knowledge provenance, TS/Pi, and quality cleanup",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -977,273 +949,80 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; architecture prose already reflects #1878 DPoP E2E and dactyl-db 0.19.0",
-          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
-          "spec_material_hash": "1136777d9a864b1ad24a13eb87507c9a6c695e5bbe8eaa3904aba8932c75fa79"
+          "reason": "Documented Wave 7 single-SQLite consolidation, data.compact, [agent_maintenance] + Propodus 037 delegated grants, write-time knowledge attestation/feedback, and TypeScript/Pi contracts",
+          "reviewed_code_fingerprint": "3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda",
+          "spec_material_hash": "93f7437e76fb736757a6dd4b63b1b7863b135d55957431c4a30b0870b06b08e2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; interface prose already reflects #1878 and dactyl-db 0.19.0 contracts",
-          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
-          "spec_material_hash": "95a10a300478a56bcb6c0178d83d5d5fa0d68e542542d220a0c25eae0058e8cb"
+          "reason": "Documented decapod data compact / data.compact RPC, [agent_maintenance] config alias, add_attested_knowledge, Darkmatter offline fixture, and @decapodlabs/{decapod-client,pi-decapod} 0.163.0 contracts",
+          "reviewed_code_fingerprint": "3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda",
+          "spec_material_hash": "7f91be8d0e80c58044ae0671499b0670cca51b1d83fa8b807f703bc1c0cf9cf1"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Updated release_dependency_policy test for dactyl-db =0.19.0 pin/checksum; security prose already reflects #1878 DPoP custody and dactyl-db 0.19.0 lockfile integrity",
-          "reviewed_code_fingerprint": "4986be24a8590b662bc464658fbdef241582877aa1864511cee1d7817d583e9f",
-          "spec_material_hash": "81a91ba784970d5006af60593a71899a8576e9da7f143cf5b315c63714ad3664"
+          "reason": "Documented fail-closed compaction cloud boundary, AMBIGUOUS_MAINTENANCE_POLICY, Propodus 037 generation/revocation enforcement, knowledge anti-self-promotion, and TS/Pi/Darkmatter containment",
+          "reviewed_code_fingerprint": "3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda",
+          "spec_material_hash": "7ba7bf9f7e9a4b87bc82f5ef9d7b0cb94f38709d92a268e53e00e57e4437fcbe"
         }
       ],
       "state": "DRAFT",
       "stop_conditions": [],
-      "title": "Implement #1878 DPoP E2E and dactyl-db 0.19.0 Cloud Admin wiring",
+      "title": "Wave 7 Shard B: single-SQLite consolidation, compaction, RBAC, knowledge provenance, TS/Pi, and quality cleanup",
       "todo_ids": [
-        "feat_01m81s3sm3jet4vj"
+        "refa_01m82r48qybtzak5"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795376453Z"
+      "updated_at": "1795393814Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:7a137467a1b3a857cb4b004bdfec3b3f988ed624f69df937f3ed950195fe9502",
-      "checks": [
-        {
-          "name": "bazel-cargo-inputs-policy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-check-no-default-features",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cli-contracts",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-admin-boundary",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-dpop-e2e-1878",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-supabase-boundary",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-unit-tests",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-wave-parity",
-          "status": "passed"
-        },
-        {
-          "name": "cloud-workspace-validation-1886",
-          "status": "passed"
-        },
-        {
-          "name": "container-signer-unit-tests",
-          "status": "passed"
-        },
-        {
-          "name": "doc-alignment",
-          "status": "passed"
-        },
-        {
-          "name": "interop-conformance",
-          "status": "passed"
-        },
-        {
-          "name": "release_dependency_policy",
-          "status": "passed"
-        }
-      ],
-      "current_phase": "verify",
+      "artifact_hash": "sha256:45f8b0b835d5d162ddc17d74dec721a0b61e3ec6b46a0f35df62ea3a9250fb64",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "intent_id": "intent:change_01M82R8AKDD1Q6G3T44VMSTJ0B",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
+            "intent_id": "intent:change_01M82R8AKDD1Q6G3T44VMSTJ0B",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M81S9CD71FHEA712TH1V283Z",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 3,
         "schema_version": "1.1.0",
-        "trajectories": {
-          "branch_01M81S9CD71FHEA712TH1V283Z": {
-            "evidence_only": true,
-            "id": "branch_01M81S9CD71FHEA712TH1V283Z",
-            "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
-            "steps": [
-              {
-                "action": "verify",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_admin.rs",
-                  "src/decapod/core/cloud_dpop.rs",
-                  "src/decapod/core/cloud_session.rs",
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/core/dactyl.rs",
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "src/decapod/core/cloud_client.rs",
-                  "src/decapod/core/cloud_admin.rs",
-                  "src/decapod/core/cloud_dpop.rs",
-                  "src/decapod/core/cloud_session.rs",
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/core/dactyl.rs",
-                  "src/decapod/core/error.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/interop.rs",
-                  "src/decapod/lib.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_dpop_e2e_1878.rs",
-                  "tests/cloud_admin_boundary.rs",
-                  "tests/cli_contracts.rs",
-                  "cargo fmt --check, clippy -D warnings, --no-default-features, bazelisk //:cargo_inputs_policy, --lib cloud_ (93/93), container_signer (2/2), core::interop (25/25), advertised_rpc_sessions (1/1), cloud_dpop_e2e_1878 (2/2), cloud_admin_boundary (7/7), cloud_supabase_boundary (52/52), cloud_wave_parity (5/5), cloud_workspace_validation_1886 (4/4), cli_contracts (134/134), doc_alignment (5/5), interop_conformance (12/12) all passed"
-                ],
-                "proof_refs": [
-                  "cargo-fmt",
-                  "cargo-clippy",
-                  "cargo-check-no-default-features",
-                  "bazel-cargo-inputs-policy",
-                  "cloud-unit-tests",
-                  "container-signer-unit-tests",
-                  "cloud-dpop-e2e-1878",
-                  "cloud-admin-boundary",
-                  "cloud-supabase-boundary",
-                  "cloud-wave-parity",
-                  "cloud-workspace-validation-1886",
-                  "cli-contracts",
-                  "doc-alignment",
-                  "interop-conformance"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": [
-                  "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
-                ]
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "tests/release_dependency_policy.rs"
-                ],
-                "proof_refs": [
-                  "release_dependency_policy",
-                  "cargo_fmt",
-                  "cargo_clippy"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "cargo fmt --check, clippy -D warnings, --no-default-features, bazelisk //:cargo_inputs_policy, --lib cloud_ (93/93), container_signer (2/2), core::interop (25/25), advertised_rpc_sessions (1/1), cloud_dpop_e2e_1878 (2/2), cloud_admin_boundary (7/7), cloud_supabase_boundary (52/52), cloud_wave_parity (5/5), cloud_workspace_validation_1886 (4/4), cli_contracts (134/134), doc_alignment (5/5), interop_conformance (12/12) all passed"
-      ],
-      "inspected_files": [
-        "src/decapod/core/cloud_admin.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
-        "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/core/dactyl.rs"
-      ],
-      "intent_id": "intent:change_01M81S9CA1R9HQV3PJB35WZJSK",
-      "modified_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/cloud_admin.rs",
-        "src/decapod/core/cloud_client.rs",
-        "src/decapod/core/cloud_dpop.rs",
-        "src/decapod/core/cloud_session.rs",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/core/dactyl.rs",
-        "src/decapod/core/error.rs",
-        "src/decapod/core/interop.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs",
-        "tests/cli_contracts.rs",
-        "tests/cloud_admin_boundary.rs",
-        "tests/cloud_dpop_e2e_1878.rs",
-        "tests/release_dependency_policy.rs"
-      ],
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M82R8AKDD1Q6G3T44VMSTJ0B",
+      "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M81S9CD71FHEA712TH1V283Z",
+      "run_id": "branch_01M82R8AQH0P75P8PY293JSHXD",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m81s3sm3jet4vj",
+      "task_id": "refa_01m82r48qybtzak5",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Hosted Propodus/Supabase/Stripe live deployments are outside offline loopback tests; Buildkite waived per operator instruction; GitHub Actions CI executes on PR push."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

@@ -7038,57 +7038,77 @@ fn validate_plan_governed_execution_gate(
 fn collect_active_todo_handoff_comments(
     store_root: &Path,
 ) -> Result<Vec<String>, error::DecapodError> {
-    let db_path = store_root.join(crate::core::schemas::TODO_DB_NAME);
-    if DbBroker::new(store_root).is_cloud() || !db_path.exists() {
+    let broker = DbBroker::new(store_root);
+    if broker.is_cloud() {
         return Ok(Vec::new());
     }
+    let canonical_path = crate::core::events::canonical_db_path(store_root);
+    let legacy_path = store_root.join(crate::core::schemas::TODO_DB_NAME);
+    let db_path = if canonical_path.exists() {
+        canonical_path
+    } else if legacy_path.exists() {
+        legacy_path
+    } else {
+        return Ok(Vec::new());
+    };
 
-    let conn = db::db_connect(&db_path.to_string_lossy())?;
-    let mut stmt = conn
-        .prepare(
-            "SELECT t.id, t.assigned_to, e.payload
-             FROM tasks t
-             JOIN events e ON e.subject_id = t.id AND e.stream = 'todo' AND e.subject_kind = 'task'
-             WHERE t.status NOT IN ('done', 'archived')
-               AND t.assigned_to != ''
-               AND e.event_type = 'task.comment'
-             ORDER BY e.ts ASC, e.event_id ASC",
-        )
-        .map_err(error::DecapodError::StorageError)?;
-    let rows = stmt
-        .query_map([], |row| {
-            Ok((
-                row.get::<_, String>(0)?,
-                row.get::<_, String>(1)?,
-                row.get::<_, String>(2)?,
-            ))
-        })
-        .map_err(error::DecapodError::StorageError)?;
+    broker.with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "validate.todo_handoff_comments",
+        |conn| {
+            if !conn.has_table("tasks")? || !conn.has_table("events")? {
+                return Ok(Vec::new());
+            }
+            let mut stmt = conn
+                .prepare(
+                    "SELECT t.id, t.assigned_to, e.payload
+                     FROM tasks t
+                     JOIN events e ON e.subject_id = t.id AND e.stream = 'todo' AND e.subject_kind = 'task'
+                     WHERE t.status NOT IN ('done', 'archived')
+                       AND t.assigned_to != ''
+                       AND e.event_type = 'task.comment'
+                     ORDER BY e.ts ASC, e.event_id ASC",
+                )
+                .map_err(error::DecapodError::StorageError)?;
+            let rows = stmt
+                .query_map([], |row| {
+                    Ok((
+                        row.get::<_, String>(0)?,
+                        row.get::<_, String>(1)?,
+                        row.get::<_, String>(2)?,
+                    ))
+                })
+                .map_err(error::DecapodError::StorageError)?;
 
-    let mut comments = Vec::new();
-    for row in rows {
-        let (todo_id, assigned_to, payload) = row.map_err(error::DecapodError::StorageError)?;
-        let raw: serde_json::Value =
-            serde_json::from_str(&payload).unwrap_or(serde_json::Value::Null);
-        // New writers store full TodoEvent; migrated task_events used inner payload only.
-        let payload = if raw.get("kind").is_some() || raw.get("comment").is_some() {
-            raw
-        } else if let Some(inner) = raw.get("payload") {
-            inner.clone()
-        } else {
-            raw
-        };
-        if payload.get("kind").and_then(|v| v.as_str()) != Some("fuzzy-consolidation") {
-            continue;
-        }
-        let comment = payload
-            .get("comment")
-            .and_then(|v| v.as_str())
-            .unwrap_or("fuzzy-consolidation comment");
-        comments.push(format!("{todo_id} assigned_to={assigned_to}: {comment}"));
-    }
+            let mut comments = Vec::new();
+            for row in rows {
+                let (todo_id, assigned_to, payload) =
+                    row.map_err(error::DecapodError::StorageError)?;
+                let raw: serde_json::Value =
+                    serde_json::from_str(&payload).unwrap_or(serde_json::Value::Null);
+                // New writers store full TodoEvent; migrated task_events used inner payload only.
+                let payload = if raw.get("kind").is_some() || raw.get("comment").is_some() {
+                    raw
+                } else if let Some(inner) = raw.get("payload") {
+                    inner.clone()
+                } else {
+                    raw
+                };
+                if payload.get("kind").and_then(|v| v.as_str()) != Some("fuzzy-consolidation") {
+                    continue;
+                }
+                let comment = payload
+                    .get("comment")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("fuzzy-consolidation comment");
+                comments.push(format!("{todo_id} assigned_to={assigned_to}: {comment}"));
+            }
 
-    Ok(comments)
+            Ok(comments)
+        },
+    )
 }
 
 fn validate_git_protected_branch(
