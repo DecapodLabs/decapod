@@ -113,13 +113,38 @@ fn scheduled_docs_autosync_workflow_uses_governed_lifecycle_not_raw_pr_action() 
 #[test]
 fn scheduled_docs_autosync_governed_lifecycle_covers_all_six_scenarios() {
     use std::fs;
-    use std::os::unix::fs::PermissionsExt;
+    use std::os::unix::fs::{PermissionsExt, symlink};
     use std::path::Path;
     use std::process::Command;
 
     let raw_bin = Path::new(env!("CARGO_BIN_EXE_decapod"));
     let bin = fs::canonicalize(raw_bin).unwrap_or_else(|_| raw_bin.to_path_buf());
     let tmp = tempfile::tempdir().unwrap();
+    // Build a minimal PATH excluding container runtimes (`podman`, `docker`) so
+    // `todo claim` never initializes rootless overlay storage under disposable `$HOME`
+    // in CI sandboxes (where subordinate UIDs break build_lifecycle scratch cleanup).
+    let safe_bin = tmp.path().join("safe-bin");
+    fs::create_dir_all(&safe_bin).unwrap();
+    if let Some(orig_path) = std::env::var_os("PATH") {
+        let search_dirs: Vec<_> = std::env::split_paths(&orig_path).collect();
+        for tool in [
+            "git", "bash", "sh", "python3", "date", "dirname", "basename", "mktemp", "rm", "cp",
+            "mv", "cat", "tr", "sed", "awk", "grep", "printf", "true", "env", "pwd", "mkdir",
+            "chmod", "head", "tail", "wc", "sort", "uname", "touch", "ln", "ls", "sleep", "cut",
+            "find",
+        ] {
+            for dir in &search_dirs {
+                let candidate = dir.join(tool);
+                if candidate.is_file() {
+                    let link_path = safe_bin.join(tool);
+                    if !link_path.exists() {
+                        let _ = symlink(&candidate, &link_path);
+                    }
+                    break;
+                }
+            }
+        }
+    }
     // Materialize the governed script into the fixture scratch directory so
     // relocated Bazel integration shards never depend on repo-root layout.
     let script = tmp.path().join("docs_autosync_governed.sh");
@@ -166,6 +191,7 @@ fn scheduled_docs_autosync_governed_lifecycle_covers_all_six_scenarios() {
     fs::write(work.join("docs/guide.md"), "# Guide v1\n").unwrap();
     let init_out = Command::new(&bin)
         .current_dir(&work)
+        .env("PATH", &safe_bin)
         .env("DECAPOD_AGENT_ID", "docs-autosync-bot")
         .env("DECAPOD_SESSION_PASSWORD", "docs-autosync-test-session")
         .args([
@@ -196,6 +222,7 @@ fn scheduled_docs_autosync_governed_lifecycle_covers_all_six_scenarios() {
         let mut cmd = Command::new("bash");
         cmd.arg(&script)
             .current_dir(&work)
+            .env("PATH", &safe_bin)
             .env("DECAPOD_BIN", &bin)
             .env("DECAPOD_AGENT_ID", "docs-autosync-bot")
             .env("DECAPOD_SESSION_PASSWORD", "docs-autosync-test-session")
