@@ -1191,6 +1191,7 @@ fn cli_observe_subcommands_and_rpc_ops_end_to_end() {
         "validation-plan",
         "pr-manifest",
         "context-provenance",
+        "telemetry",
     ] {
         let json_out = Command::new(&bin)
             .current_dir(&root)
@@ -1260,4 +1261,55 @@ fn cli_observe_subcommands_and_rpc_ops_end_to_end() {
         .unwrap();
     assert!(!non_loopback.status.success());
     assert!(String::from_utf8_lossy(&non_loopback.stderr).contains("--allow-remote"));
+}
+
+#[test]
+fn issue_1095_execution_telemetry_projection_is_deterministic_readonly_and_denies_cross_scope() {
+    let (_tmp, root, _base) = init_fixture_repo();
+    let status_before = Command::new("git")
+        .current_dir(&root)
+        .args(["status", "--porcelain"])
+        .output()
+        .unwrap();
+    let proj_a = obs::project_execution_telemetry(&root, &obs::TelemetryProjectionQuery::default())
+        .expect("telemetry projection");
+    let proj_b = obs::project_execution_telemetry(&root, &obs::TelemetryProjectionQuery::default())
+        .expect("second telemetry projection");
+    assert!(proj_a.read_only);
+    assert!(!proj_a.authoritative);
+    assert_eq!(
+        proj_a.telemetry_schema_version,
+        "decapod.execution-telemetry.v1"
+    );
+    assert_eq!(proj_a.series, proj_b.series);
+    assert_eq!(proj_a.total_invocations, proj_b.total_invocations);
+    assert_eq!(proj_a.useful_work.human_attention_denominator, None);
+    assert!(
+        proj_a
+            .missing_measurements
+            .contains(&"human_attention_denominator".to_string())
+    );
+    assert!(proj_a.retained_governance_bytes > 0);
+
+    // Cross-scope repository ID mismatch must fail closed.
+    let err = obs::project_execution_telemetry(
+        &root,
+        &obs::TelemetryProjectionQuery {
+            expected_repo_id: Some("repo:wrong-tenant-id".to_string()),
+            ..Default::default()
+        },
+    )
+    .expect_err("mismatched expected_repo_id must fail closed");
+    assert!(err.to_string().contains("CROSS_SCOPE_DENIED"));
+
+    // Verify zero mutation of git working tree state.
+    let status_after = Command::new("git")
+        .current_dir(&root)
+        .args(["status", "--porcelain"])
+        .output()
+        .unwrap();
+    assert_eq!(
+        status_before.stdout, status_after.stdout,
+        "telemetry projection must never mutate repository state"
+    );
 }

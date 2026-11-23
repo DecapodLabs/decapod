@@ -19,6 +19,9 @@ use crate::core::observability_projections::snapshot::compute_repo_id;
 use crate::core::observability_projections::specs::{
     SpecsProjectionQuery, project_specs_and_governance,
 };
+use crate::core::observability_projections::telemetry::{
+    TelemetryProjectionQuery, project_execution_telemetry,
+};
 use crate::core::observability_projections::timeline::{
     TimelineProjectionQuery, project_activity_timeline,
 };
@@ -43,6 +46,7 @@ pub const ALLOWLISTED_OBSERVE_RPC_OPS: &[&str] = &[
     "observe.validation_plan",
     "observe.pr_manifest",
     "observe.context_provenance",
+    "observe.telemetry",
 ];
 
 /// Data contract and least-privilege authorization policy for optional
@@ -296,6 +300,30 @@ pub fn dispatch_observe_http_request(
                     p.snapshot.snapshot_id.clone()
                 })
             }
+            "/observe/v1/telemetry" => {
+                let after_seq = params
+                    .get("after_seq")
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(0);
+                let bucket_seconds = params
+                    .get("bucket_seconds")
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .unwrap_or(60);
+                let q = TelemetryProjectionQuery {
+                    after_seq,
+                    limit,
+                    bucket_seconds,
+                    task_id: params.get("task_id").cloned(),
+                    expected_repo_id: params
+                        .get("repo_id")
+                        .cloned()
+                        .or_else(|| Some(repo_id.to_string())),
+                    expected_head_sha: params.get("expected_head_sha").cloned(),
+                };
+                encode_projection_result(project_execution_telemetry(repo_root, &q), |p| {
+                    p.snapshot.snapshot_id.clone()
+                })
+            }
             _ => HttpResponse::json(
                 404,
                 error_code_json("unknown_projection", "unknown /observe/v1 projection route"),
@@ -450,6 +478,17 @@ pub fn dispatch_observe_rpc_op(
             let q: ContextProvenanceQuery =
                 serde_json::from_value(params.clone()).unwrap_or_default();
             let proj = project_context_provenance(repo_root, &q)?;
+            let snap = proj.snapshot.snapshot_id.clone();
+            Ok((
+                serde_json::to_value(proj)
+                    .map_err(|e| DecapodError::ValidationError(e.to_string()))?,
+                snap,
+            ))
+        }
+        "observe.telemetry" => {
+            let q: TelemetryProjectionQuery =
+                serde_json::from_value(params.clone()).unwrap_or_default();
+            let proj = project_execution_telemetry(repo_root, &q)?;
             let snap = proj.snapshot.snapshot_id.clone();
             Ok((
                 serde_json::to_value(proj)
