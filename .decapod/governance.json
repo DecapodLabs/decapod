@@ -938,6 +938,11 @@
       "id": "w7-ci-workflows-reconcile-7a30f895",
       "summary": "Reconcile Wave 7 Shard A with origin/master (7a30f89584, PRs #1927, #1930, #1928)",
       "input_digest": "sha256:208891b072f368c04b3054199568131d6e26a1de630fa95fdbecfe114a60bbde"
+    },
+    {
+      "id": "w7-ci-workflows-reconcile-v0164",
+      "summary": "Reconcile Wave 7 Shard A with origin/master v0.164.0 (5153fa67c6, updated reviewed_sources_digest and 0.164.0 projections)",
+      "input_digest": "sha256:de6f653f4a834fd0932b4f538ffa354d3f526a6eed9a4e6e834926ac9d0f1959"
     }
   ],
   "intents": {
@@ -987,22 +992,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled Wave 7 Shard A with origin/master (7a30f89584, PRs #1927, #1930, #1928)",
-          "reviewed_code_fingerprint": "b9612b20da40ec2a96093f277279f66b3297e120cc46c02c9ffbeb3804855e7d",
+          "reason": "Reconciled Wave 7 Shard A with origin/master v0.164.0 (5153fa67c6)",
+          "reviewed_code_fingerprint": "abb9e6993a7fc8ada3c13cca00ad92c19c57be3229eeb297324a73b741281991",
           "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled Wave 7 Shard A with origin/master (7a30f89584, PRs #1927, #1930, #1928)",
-          "reviewed_code_fingerprint": "b9612b20da40ec2a96093f277279f66b3297e120cc46c02c9ffbeb3804855e7d",
+          "reason": "Reconciled Wave 7 Shard A with origin/master v0.164.0 (5153fa67c6)",
+          "reviewed_code_fingerprint": "abb9e6993a7fc8ada3c13cca00ad92c19c57be3229eeb297324a73b741281991",
           "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled Wave 7 Shard A with origin/master (7a30f89584, PRs #1927, #1930, #1928)",
-          "reviewed_code_fingerprint": "b9612b20da40ec2a96093f277279f66b3297e120cc46c02c9ffbeb3804855e7d",
+          "reason": "Reconciled Wave 7 Shard A with origin/master v0.164.0 (5153fa67c6)",
+          "reviewed_code_fingerprint": "abb9e6993a7fc8ada3c13cca00ad92c19c57be3229eeb297324a73b741281991",
           "spec_material_hash": "7a4d93d6114cc8ca068b4580520554698c64eec64c4146ff7240382161d9f996"
         }
       ],
@@ -1014,7 +1019,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795400903Z"
+      "updated_at": "1795402581Z"
     },
     "trajectory": {
       "active_boundaries": [

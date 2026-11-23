@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.164.0](https://github.com/DecapodLabs/decapod/compare/v0.163.0...v0.164.0) - 2026-11-23
+
+### Added
+
+- *(storage,rbac,knowledge,ts)* Wave 7 Shard B consolidation, data.compact, Propodus 037 RBAC, knowledge attestation, and TS/Pi contracts
+- *(interop,observe,studies)* execution telemetry, MCP custody parity, observed receipts, polyglot init, and real-host/reviewer studies
+
+### Fixed
+
+- *(rpc)* mark data.compact session_required=true to match entry guard
+- *(cloud,container)* Podman signer-socket splice/detection & Propodus Cloud Admin wire alignment
+
+### Other
+
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w7-storage/refa_01m82r48qybtzak5-storage-rbac
+- Merge remote-tracking branch 'origin/master' into agent/swarm-w7-storage/refa_01m82r48qybtzak5-storage-rbac
+
 ## [0.163.0](https://github.com/DecapodLabs/decapod/compare/v0.162.1...v0.163.0) - 2026-11-22
 
 ### Added
