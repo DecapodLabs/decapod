@@ -1,5 +1,12 @@
 # Architecture
 
+## Live Podman container-custody & Propodus Cloud Admin wire fixes (#1379, #1859, #1886, #1896)
+
+- **Podman container runtime & signer relay wiring (`src/decapod/plugins/container.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)**:
+  `build_docker_spec` appends `[image, "/bin/sh", "-c", script]` (4 elements) and sets `DECAPOD_WORKSPACE_IMAGE` and `DECAPOD_CONTAINER=1`; `prepare_container_signer_server` canonicalizes the socket parent directory, bind-mounts that dedicated private socket directory (excluding `/tmp` and `/private/tmp`), and splices `HostContainerSignerServer` `-v`/`-e` arguments at `spec.args.len().saturating_sub(4)` immediately before `image` so `podman run` / `docker run` bind-mount the socket directory instead of executing `-v` inside `crun`. `workspace::check_container_status` and `cloud_workspace` container admission detect Podman's `/run/.containerenv` marker alongside `/.dockerenv`, `CONTAINER_ID`, and `DECAPOD_CONTAINER=1`.
+- **Propodus Wave 2+4 wire alignment & non-destructive error classification (`src/decapod/core/cloud_admin.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/error.rs`)**:
+  `cloud_admin::{org_admins, org_recovery, policy_templates, org_upgrades}` serialize live Propodus `"operation"` verbs (`list`/`grant`/`revoke`, `status`/`initiate`/`confirm`/`cancel` with `recovery_request_id`, `audit_list`/`export`/`import`/`delete`, `status`/`schedule`/`approve`/`cancel`) rather than `"action"`. `cloud_client::admin_transport_error` restricts `MutationOutcome::Uncertain -> CloudAuthStatus::OutcomeUnknown` to `mutating == true` so read-only `decapod cloud orgs` probes preserve structured `billing_not_configured` for `is_benign_billing_probe_error`, and `diagnostic_for_status_code` maps `"invalid_request"` to `CloudAuthStatus::ActionRequired` (`CloudAuthErrorCode::InvalidRequest`) so `account_result` does not transition a valid human session into `RestartRequired` on HTTP 400.
+
 ## Execution telemetry projection, MCP custody verification, and gate/resilience verification (#1095, #872, #1763, #1367, #1772, #1774, #1024)
 
 - **Deterministic execution telemetry (`src/decapod/core/observability_projections/telemetry.rs`, `src/decapod/core/observability_projections.rs`, `src/decapod/core/observability_projections/server.rs`)**:
@@ -1384,7 +1391,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `27e699a3fcbcace1180ed8d6862ea8e7de7086db98aa92e06578adb59739dc0d`
+- Repository signal fingerprint: `f881db5602abd2a65efb6c888f33bd754d8f6caf741c0b4d991b276ebe72b336`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

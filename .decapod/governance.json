@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "254428be219f1e0568e0161d222ffeb361818d53",
+    "accepted_commit": "b774df83dd390e780ef55f502c3bf0e6f02a4fe8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,36 +870,48 @@
     }
   },
   "change": {
-    "id": "change_01M82RBH9GV0NJX2B9F64SVYV5",
-    "base_commit": "254428be219f1e0568e0161d222ffeb361818d53",
+    "id": "code_01m82r4t7be8fa5n",
+    "base_commit": "b774df83dd390e780ef55f502c3bf0e6f02a4fe8",
     "target_base": "origin/master"
+  },
+  "claims": {
+    "claim:podman-signer-and-cloud-admin-wire-alignment": {
+      "statement": "Container signer flags splice before the image argument with canonicalized private socket-dir mounts, Podman /run/.containerenv is detected as in_container, Cloud Admin Wave 2+4 routes emit Propodus operation fields, and read-only billing probes / HTTP 400 invalid_request preserve live human session custody.",
+      "falsifier": "Any signer-broker container launch splices -v after the image arg or fails on macOS /tmp socket mounts; Podman /run/.containerenv reports in_container=false; /org-admins,/org-recovery,/policy-templates,/org-upgrades send action instead of operation; or read-only billing_not_configured/invalid_request maps to OutcomeUnknown or wipes a valid session.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/cloud_client.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/unit/plugins/container_tests.rs"
+      ]
+    }
   },
   "checkpoints": [
     {
-      "id": "ckpt-w7-hosts-studies",
-      "summary": "Wave 7 Shard C: execution telemetry projection (#1095), MCP --allow-mutations custody parity (#872), observed interop receipts (#870/#871/#1733), polyglot init (#1024), gate/resilience/constitution tests (#1763/#1367/#1772/#1774), and real-host/reviewer studies (#880/#1888/#1796).",
-      "input_digest": "sha256:17f70fc11f05c571720a4b0a1954c88057446b7533a45de725dc02f31165e42c"
+      "id": "pilot-podman-cloud-wire-fix",
+      "summary": "Fix Podman signer-socket splice/mount & /run/.containerenv detection, align Propodus Cloud Admin operation wire contracts, and prevent read-only OutcomeUnknown & 400 session wipes.",
+      "input_digest": "sha256:c53d7beaa010de539b6cdd887cdbfc0a482979313be6d7e068636eb5cfd609fa"
     }
   ],
   "intents": {
-    "intent:change_01M82RBH9GV0NJX2B9F64SVYV5": {
+    "intent:run-w7-pilot-01m82r": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Only cloud_admin.rs, cloud_client.rs, cloud_workspace.rs, workspace.rs, error.rs, container.rs, tests, and living specs; zero root checkout mutation."
       ],
       "constraints": [
-        "root"
+        "src/decapod/plugins/container.rs,src/decapod/core/workspace.rs,src/decapod/core/cloud_workspace.rs,src/decapod/core/cloud_admin.rs,src/decapod/core/cloud_client.rs,src/decapod/core/error.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M82RBH9GV0NJX2B9F64SVYV5",
+      "id": "intent:run-w7-pilot-01m82r",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Wave 7 Shard C: Real Host Activation, MCP/A2A/Harness Observed Conformance, Gate Admission & Constitution Studies",
-      "refined_intent": "Wave 7 Shard C: Real Host Activation, MCP/A2A/Harness Observed Conformance, Gate Admission & Constitution Studies",
+      "raw_intent": "Execute Podman container-custody proof (#1379), verify/close #1835 and #1836, run live hosted Cloud Pilot against goyxpcmxetztjlrrcwew (039), and fix discovered defects via governed PR.",
+      "refined_intent": "Fix live Podman container-signer splice & socket-dir mount, Podman /run/.containerenv detection, Propodus Wave 2+4 Cloud Admin operation payloads, and read-only OutcomeUnknown + invalid_request session preservation.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -912,9 +924,12 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Wave 7 Shard C: Real Host Activation, MCP/A2A/Harness Observed Conformance, Gate Admission & Constitution Studies",
+      "intent": "Fix live defects uncovered during Podman container-custody proof (#1379) and live goyxpcmxetztjlrrcwew (039) Cloud Pilot (#1859, #1886, #1896): container signer flag splice off-by-one + macOS socket-dir mount, Podman /run/.containerenv detection, Propodus operation wire field in cloud_admin.rs, and non-mutating OutcomeUnknown + 400 invalid_request session custody preservation in cloud_client.rs.",
       "phases": [],
       "proof_hooks": [
+        "cargo test --lib cloud_",
+        "cargo test --lib plugins::container",
+        "cargo test --features supabase-cloud --test cloud_admin_boundary --test cloud_supabase_boundary --test cloud_dpop_e2e_1878",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -922,78 +937,159 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented telemetry.rs read-only aggregator, MCP session/worktree verification binding, and new conformance/resilience integration suites.",
-          "reviewed_code_fingerprint": "27e699a3fcbcace1180ed8d6862ea8e7de7086db98aa92e06578adb59739dc0d",
-          "spec_material_hash": "eba98372273ad6fb757c4edce1038e3e4cc106603bb547d186be02a993046762"
+          "reason": "Documented Podman signer-socket splice index, socket-dir mount, /run/.containerenv detection, and Propodus Cloud Admin wire & error architecture.",
+          "reviewed_code_fingerprint": "f881db5602abd2a65efb6c888f33bd754d8f6caf741c0b4d991b276ebe72b336",
+          "spec_material_hash": "27a4e91b95612b55d7e0853f643633304999a43a1a7f433d112246ba7f3033aa"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod observe telemetry CLI, observe.telemetry RPC, GET /observe/v1/telemetry HTTP route, and decapod mcp serve --allow-mutations.",
-          "reviewed_code_fingerprint": "27e699a3fcbcace1180ed8d6862ea8e7de7086db98aa92e06578adb59739dc0d",
-          "spec_material_hash": "91decbdb90ff4c11b2b1410fb3e08f8ee69dac036e3722411cbb54675adb64e1"
+          "reason": "Documented Propodus Edge JSON operation contracts, InvalidRequest error code, and container workspace status/env contracts.",
+          "reviewed_code_fingerprint": "f881db5602abd2a65efb6c888f33bd754d8f6caf741c0b4d991b276ebe72b336",
+          "spec_material_hash": "4fef798c3567d6e87c5322d8790fcf556c518fa607772214ce7a214c612c3fb3"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Telemetry projection is strictly read-only with secret redaction and cross-scope denial; MCP --allow-mutations keeps default read-only fail-closed and enforces canonical local session and isolated worktree checks.",
-          "reviewed_code_fingerprint": "27e699a3fcbcace1180ed8d6862ea8e7de7086db98aa92e06578adb59739dc0d",
+          "reason": "No security posture weakening; zero secret env leakage preserved, private socket dir mount excludes /tmp and /private/tmp, and non-destructive 400 error handling preserves fail-closed auth.",
+          "reviewed_code_fingerprint": "f881db5602abd2a65efb6c888f33bd754d8f6caf741c0b4d991b276ebe72b336",
           "spec_material_hash": "81a91ba784970d5006af60593a71899a8576e9da7f143cf5b315c63714ad3664"
         }
       ],
-      "state": "DRAFT",
+      "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Wave 7 Shard C: Real Host Activation, MCP/A2A/Harness Observed Conformance, Gate Admission & Constitution Studies",
+      "title": "Fix live Podman container-signer splice & /run/.containerenv detection and Propodus Cloud Admin wire alignment",
       "todo_ids": [
-        "code_01m82r70b5yc5fvt"
+        "code_01m82r4t7be8fa5n"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795392764Z"
+      "updated_at": "1795394769Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Only cloud_admin.rs, cloud_client.rs, cloud_workspace.rs, workspace.rs, error.rs, container.rs, tests, and living specs; zero root checkout mutation."
       ],
-      "artifact_hash": "sha256:91516b7ffd6ed7214c9726ec71660fe4c38ee66e43b4b7bc934fe1b32c9bc523",
-      "checks": [],
-      "current_phase": "intent",
+      "artifact_hash": "sha256:7e74b3a8d207a08e05ae4314b1f25bde1e81a25eb61733d964fafa17f881ab08",
+      "checks": [
+        {
+          "name": "cargo_clippy_all_targets",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_admin_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_dpop_e2e_1878",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_supabase_boundary",
+          "status": "passed"
+        },
+        {
+          "name": "lib_cloud_tests",
+          "status": "passed"
+        },
+        {
+          "name": "lib_container_tests",
+          "status": "passed"
+        },
+        {
+          "name": "live_podman_signer_broker_launch",
+          "status": "passed"
+        }
+      ],
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M82RBH9GV0NJX2B9F64SVYV5",
+            "intent_id": "intent:run-w7-pilot-01m82r",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M82RBH9GV0NJX2B9F64SVYV5",
+            "intent_id": "intent:run-w7-pilot-01m82r",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:run-w7-pilot-01m82r",
+            "event_id": "event:4",
+            "intent_id": "intent:run-w7-pilot-01m82r",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
-        "trajectories": {}
+        "trajectories": {
+          "run-w7-pilot-01m82r": {
+            "evidence_only": true,
+            "id": "run-w7-pilot-01m82r",
+            "intent_id": "intent:run-w7-pilot-01m82r",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "src/decapod/plugins/container.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/cloud_admin.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/error.rs",
+                  "tests/cloud_admin_boundary.rs",
+                  "tests/unit/plugins/container_tests.rs"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy_all_targets",
+                  "lib_cloud_tests",
+                  "lib_container_tests",
+                  "cloud_admin_boundary",
+                  "cloud_supabase_boundary",
+                  "cloud_dpop_e2e_1878",
+                  "live_podman_signer_broker_launch"
+                ],
+                "scope": [
+                  "src/decapod/plugins/container.rs,src/decapod/core/workspace.rs,src/decapod/core/cloud_workspace.rs,src/decapod/core/cloud_admin.rs,src/decapod/core/cloud_client.rs,src/decapod/core/error.rs"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:change_01M82RBH9GV0NJX2B9F64SVYV5",
-      "modified_files": [],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+      "intent_id": "intent:run-w7-pilot-01m82r",
+      "modified_files": [
+        "src/decapod/core/cloud_admin.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/plugins/container.rs",
+        "tests/cloud_admin_boundary.rs",
+        "tests/unit/plugins/container_tests.rs"
       ],
       "repo_scope": [
-        "root"
+        "src/decapod/plugins/container.rs,src/decapod/core/workspace.rs,src/decapod/core/cloud_workspace.rs,src/decapod/core/cloud_admin.rs,src/decapod/core/cloud_client.rs,src/decapod/core/error.rs"
       ],
-      "run_id": "branch_01M82RBHDDJNP1BDF4YW972AD3",
+      "run_id": "run-w7-pilot-01m82r",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m82r70b5yc5fvt",
+      "task_id": "code_01m82r4t7be8fa5n",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
