@@ -2895,6 +2895,9 @@ pub(crate) enum McpCommand {
         /// Framing mode: auto, jsonl, or content-length
         #[clap(long, default_value = "auto", value_parser = ["auto", "jsonl", "content-length"])]
         framing: String,
+        /// Opt-in mutating tool gate evaluation (verifies active local session and isolated worktree custody; fails closed otherwise)
+        #[clap(long)]
+        allow_mutations: bool,
     },
     /// Export deterministic MCP tool and resource schemas
     Schema {
@@ -3025,6 +3028,25 @@ pub(crate) enum ObserveCommand {
         task_id: Option<String>,
         #[clap(long)]
         repo_id: Option<String>,
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Read-only deterministic time-series execution telemetry over governance and trajectory events (#1095)
+    Telemetry {
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        #[clap(long, default_value_t = 0)]
+        after_seq: u64,
+        #[clap(long, default_value_t = 256)]
+        limit: usize,
+        #[clap(long, default_value_t = 60)]
+        bucket_seconds: u64,
+        #[clap(long)]
+        task_id: Option<String>,
+        #[clap(long)]
+        repo_id: Option<String>,
+        #[clap(long)]
+        expected_head_sha: Option<String>,
         #[clap(long, default_value = "json", value_parser = ["text", "json"])]
         format: String,
     },

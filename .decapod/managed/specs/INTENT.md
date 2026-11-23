@@ -1,5 +1,13 @@
 # Intent
 
+## Execution telemetry projection, MCP worktree/session gate parity, observed interop receipts, real-host activation, and empirical studies (#870, #871, #872, #873, #875, #880, #1888, #1733, #1735, #1763, #1772, #1774, #1796, #1095, #1367, #1024)
+
+Extends Decapod's local-first, daemonless observability and interoperability planes with deterministic execution telemetry, real worktree/session gate parity on stdio MCP mutations, polyglot initialization tests, multi-process cold-context handoff and TOCTOU gate-denial controls, and empirically observed host/reviewer studies:
+
+- **Deterministic execution telemetry projection (`#1095`)**: Exposes strictly read-only, bounded, secret-redacted time-series execution telemetry (`decapod observe telemetry`, RPC `observe.telemetry`, and loopback HTTP `GET /observe/v1/telemetry`) over existing governance, trajectory, and timeline records without adding a telemetry database or default network upload. Separates independently verified useful work (`verified_useful_work_numerator`) from unreviewed human attention (`human_attention_denominator = null` rather than fabricated zero), preserves partial/cancelled runs, deduplicates duplicate event IDs, flags mismatched task/source joins, and tags evidence origin classes (`DeterministicMock`, `InstrumentedRealAgent`, `OperatorReported`, `IndependentVerification`, `RecordedKernelFact`).
+- **Real stdio MCP mutation gate parity & observed conformance receipts (`#870`, `#871`, `#872`, `#873`, `#875`, `#1733`, `#1735`)**: Adds opt-in `decapod mcp serve --allow-mutations` wired to canonical local session verification (`verify_strict_local_agent_session`) and real Git worktree custody checks (`workspace::get_workspace_status`), keeping default `decapod mcp serve` fail-closed read-only (`read_only_session_denied`) while verifying `session_required`, `worktree_isolation_required`, and isolated-worktree `admitted_for_kernel_dispatch` parity end-to-end. Records real `v0.163.0` observed stdio MCP (`Content-Length` + `JSONL`), multi-process A2A Agent Card + 9-case handoff matrix, standalone Python reference consumer (`26/26` vectors), and live `@decapodlabs/pi-decapod` Node `v24.18.0` receipts in `docs/conformance/observed-interop-receipts-v0.163.md` and updates `docs/architecture/agent-interop-adr.md` honestly.
+- **Real host activation, independent read-only review benchmark, gate admission, cold-context handoff, constitution controls, and polyglot init (`#880`, `#1888`, `#1796`, `#1763`, `#1367`, `#1772`, `#1774`, `#1024`)**: Captures real authenticated `codex-cli 0.169.0` baseline vs governed trials (cold `master` fail-closed refusal + prepared isolated worktree completion with 10x rejected-B negative control) and truthful unauthenticated `claude 2.1.311` (`loggedIn: false`) deferral (`docs/research/host-outcome-pilot/wave7-host-activation-2026-11-22.md`); executes a 4-task real fresh-context read-only reviewer benchmark (`docs/studies/independent-task-first-review-1796.md`, `1.00` precision / `1.00` recall vs `0.00` baseline recall); codifies the end-state enforcement table and multi-process TOCTOU/cold-context/constitution negative controls (`tests/gate_admission_and_resilience.rs`, `docs/studies/phase-gate-admission-audit-1763.md`); and adds Cargo/Node/Go/Python/mixed-monorepo polyglot `init` reconciliation and non-mutating `--dry-run` coverage (`tests/init_reconciliation.rs`).
+
 ## End-to-end DPoP device gateway lifecycle and `dactyl-db = "0.19.0"` Cloud Admin wiring (#1878, #1835, #1836, #1896, #1895, #1859, #1369)
 
 Completes sender-constrained RFC 9449 DPoP operational transport end-to-end across Decapod Cloud and upgrades the storage/onboarding control plane to `dactyl-db = "=0.19.0"` without breaking human-bearer admin custody or touching local SQLite:
@@ -843,8 +851,8 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (283 files), `tests/` (282 files)
+- Repository signal fingerprint: `64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

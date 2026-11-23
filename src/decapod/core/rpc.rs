@@ -1651,6 +1651,12 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 cost: "low".to_string(),
             },
             Capability {
+                name: "observe.telemetry".to_string(),
+                description: "Read-only deterministic time-series execution telemetry projection over governance, trajectory, and trace events".to_string(),
+                stability: "beta".to_string(),
+                cost: "low".to_string(),
+            },
+            Capability {
                 name: "cloud.orgs".to_string(),
                 description: "List verified cloud organizations, org-admin roles vs paid repository seat access (#215), and paid repo counts".to_string(),
                 stability: "beta".to_string(),

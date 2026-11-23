@@ -17,6 +17,15 @@
   - `@decapodlabs/decapod-client` (`0.163.0`) implements `DecapodTransport` (`evalPrompt`, `orient`, `resolveContext`, `preflight`, `validateInference`, `validate`, `dataCompact`, `dbMaintenanceCapabilities`, `houseboatStatus`, `verifyDarkmatterSnapshot`, `rpc`), explicit `probeTransport` (`cli_process` fallback visibility), `classifyDecapodError`, and read-only `validateDarkmatterSnapshot`.
   - `@decapodlabs/pi-decapod` (`0.163.0`) implements `onPromptReceived`, `onContextResolve`, `onToolResult`, `beforeMutation`, `onSettlement`, `onResume`, and `beforeValidationAndAdmission` with explicit Decision Gate stops, transport visibility, and `outside_native_enforcement` classification. Native N-API npm publishing (`#1277`) and the dedicated `DecapodLabs/darkmatter` UI repo (`#1711`) remain tracked externally.
 
+## Execution telemetry projection, MCP custody verification, and gate/resilience verification (#1095, #872, #1763, #1367, #1772, #1774, #1024)
+
+- **Deterministic execution telemetry (`src/decapod/core/observability_projections/telemetry.rs`, `src/decapod/core/observability_projections.rs`, `src/decapod/core/observability_projections/server.rs`)**:
+  `project_execution_telemetry` composes `project_activity_timeline`, `load_raw_governance_json_readonly`, and read-only governance/spec byte sizing under `capture_observation_with`, delegating pure aggregation to `aggregate_telemetry_samples`. Bucket keys derive deterministically from `epoch_secs / bucket_seconds * bucket_seconds` (or explicit `unbucketed:no_timestamp`), every string passes through `core::trace::redact_string` (emitting `secret_redacted` findings on match), duplicate `event_id`s emit `duplicate_event_id`, mismatched `task_id` / `expected_head_sha` emit `mismatched_task_join` / `mismatched_source_join`, self-declared passes without independent verification emit `uncorroborated_declared_claim` and never increment `verified_useful_work_numerator`, and unavailable metrics (`human_attention_denominator`, `unnecessary_questions_observed`, `active_human_seconds`, `context_tokens_observed`, `elapsed_ms_observed`) remain `None` and listed in `missing_measurements`. `expected_repo_id` mismatches fail closed with `CROSS_SCOPE_DENIED`.
+- **Real MCP session and worktree custody binding (`src/decapod/cli.rs::McpCommand::Serve`, `src/decapod/lib.rs::run_mcp_command`)**:
+  `decapod mcp serve` retains `read_only_session = true` by default. When `--allow-mutations` is explicitly supplied, `run_mcp_command` sets `read_only_session = false`, authenticates `DECAPOD_AGENT_ID` + `DECAPOD_SESSION_PASSWORD` via `verify_strict_local_agent_session(&project_root, &main_root, ...)`, and sets `in_managed_worktree` strictly from `core::workspace::get_workspace_status(&repo_root)` (`ws.git.in_worktree && !ws.git.is_protected && ws.can_work`), ensuring CLI/RPC gate parity in `McpServer::handle_tools_call("decapod_governed_mutate")`.
+- **Conformance, polyglot reconciliation, and empirical study suites (`tests/agent_interop_conformance.rs`, `tests/observability_projections.rs`, `tests/init_reconciliation.rs`, `tests/gate_admission_and_resilience.rs`, `docs/conformance/observed-interop-receipts-v0.163.md`, `docs/studies/`, `docs/research/host-outcome-pilot/wave7-host-activation-2026-11-22.md`)**:
+  Adds end-to-end black-box tests binding real candidate binary SHA-256 and MCP stdio transcripts into `ObservedConformanceReceipt`, polyglot Cargo/Node/Go/Python/mixed-monorepo `init` reconciliation + non-mutating `--dry-run`, TOCTOU head/base movement refusals (`PUBLICATION_MATERIAL_BASE_CHANGED`), multi-process cold-context handoff recovery & `ReplayLedger` deduplication, and constitution relevance/binding negative controls alongside versioned real-host and independent-reviewer study records.
+
 ## DPoP device session gateway & `dactyl-db 0.19.0` Cloud Admin architecture (#1878)
 
 - **Repository-scoped DPoP sidecar custody & operational session upgrade (`src/decapod/core/cloud_session.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_dpop.rs`, `src/decapod/core/dactyl.rs`)**:
@@ -1392,8 +1401,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (283 files), `tests/` (282 files)
+- Repository signal fingerprint: `64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

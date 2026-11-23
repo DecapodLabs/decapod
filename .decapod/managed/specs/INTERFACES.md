@@ -15,6 +15,16 @@
   - `@decapodlabs/pi-decapod@0.163.0` exports `createPiDecapodExtension` with `onPromptReceived`, `onContextResolve`, `onToolResult`, `beforeMutation`, `onSettlement`, `onResume`, `beforeValidationAndAdmission`, `switchModelOrHarness`, and `classifyDirectHostWrite`.
   - `tests/fixtures/darkmatter_readonly_snapshot.v1.json` provides the canonical offline read-only consumer snapshot verified by both Rust (`tests/houseboat_engine.rs`) and TypeScript (`bindings/typescript/test/client.test.ts`).
 
+## Execution telemetry CLI/RPC/HTTP and MCP `--allow-mutations` interfaces (#1095, #872, #871)
+
+- **Read-only telemetry CLI (`src/decapod/cli.rs::ObserveCommand::Telemetry`, `src/decapod/lib.rs::run_observe_command`)**:
+  - `decapod observe telemetry [--dir <PATH>] [--after-seq <N>] [--limit <N>] [--bucket-seconds <N>] [--task-id <ID>] [--repo-id <ID>] [--expected-head-sha <SHA>] [--format json|text]`
+  - Emits `ExecutionTelemetryProjection` (`schema_version = "decapod.observe.v1"`, `telemetry_schema_version = "decapod.execution-telemetry.v1"`, `read_only = true`, `authoritative = false`) or human-readable text via `render_telemetry_human`.
+- **Read-only RPC & loopback HTTP (`src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/core/rpc.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/lib.rs`)**:
+  - Registers `observe.telemetry` (`read_only = true`, `session_required = false`) across `RPC_OPS`, `builtin_manifest()`, `rpc::Capability`, `ALLOWLISTED_OBSERVE_RPC_OPS`, `lib.rs` dispatch/bypass arms, and `GET /observe/v1/telemetry` on `decapod observe serve`, preserving zero two-way dispatcher/authorization drift (`check_dispatcher_authorization_drift`).
+- **MCP stdio mutation gate opt-in (`src/decapod/cli.rs::McpCommand::Serve`)**:
+  - Adds `--allow-mutations` (default `false`) to `decapod mcp serve`. Without `--allow-mutations`, `decapod_governed_mutate` returns `read_only_session_denied`; with `--allow-mutations`, missing/invalid session credentials return `session_required`, protected/root checkouts return `worktree_isolation_required`, and authenticated isolated `.decapod/workspaces/*` worktrees return `admitted_for_kernel_dispatch`.
+
 ## DPoP device gateway & `dactyl-db 0.19.0` Cloud Admin CLI/RPC contracts (#1878)
 
 - **Expanded `decapod cloud` CLI subcommands (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
@@ -1754,8 +1764,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (283 files), `tests/` (282 files)
+- Repository signal fingerprint: `64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

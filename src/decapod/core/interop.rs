@@ -533,6 +533,12 @@ rpc_catalog![
         description: "Read-only redacted provenance for agent context consultations linked to canonical intent lineage",
     },
     OpMeta {
+        op: "observe.telemetry",
+        read_only: true,
+        session_required: false,
+        description: "Read-only deterministic time-series execution telemetry projection over governance, trajectory, and trace events",
+    },
+    OpMeta {
         op: "state.resolve",
         read_only: true,
         session_required: false,

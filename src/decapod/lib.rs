@@ -4547,6 +4547,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                     | "observe.validation_plan"
                     | "observe.pr_manifest"
                     | "observe.context_provenance"
+                    | "observe.telemetry"
                     | "cloud.orgs"
                     | "cloud.members"
                     | "cloud.invites"
@@ -4801,6 +4802,7 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
             | "observe.validation_plan"
             | "observe.pr_manifest"
             | "observe.context_provenance"
+            | "observe.telemetry"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -4904,6 +4906,7 @@ fn rpc_op_bypasses_session(op: &str) -> bool {
             | "observe.validation_plan"
             | "observe.pr_manifest"
             | "observe.context_provenance"
+            | "observe.telemetry"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -5007,9 +5010,10 @@ fn run_mcp_command(mcp_cli: McpCli) -> Result<(), error::DecapodError> {
             max_requests,
             max_frame_bytes,
             framing,
+            allow_mutations,
         } => {
             let repo_root = std::env::current_dir()?;
-            let mut cfg = McpServerConfig::bounded_for_root(repo_root);
+            let mut cfg = McpServerConfig::bounded_for_root(&repo_root);
             cfg.one_shot = one_shot;
             cfg.max_requests = max_requests;
             cfg.max_frame_bytes = max_frame_bytes;
@@ -5018,6 +5022,27 @@ fn run_mcp_command(mcp_cli: McpCli) -> Result<(), error::DecapodError> {
                 "content-length" => McpFramingMode::ContentLength,
                 _ => McpFramingMode::Auto,
             };
+            if allow_mutations {
+                cfg.read_only_session = false;
+                let project_root =
+                    find_decapod_project_root(&repo_root).unwrap_or_else(|_| repo_root.clone());
+                let main_root = find_governance_root(&project_root);
+                let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_default();
+                let password = std::env::var("DECAPOD_SESSION_PASSWORD").unwrap_or_default();
+                if !agent_id.trim().is_empty() && !password.trim().is_empty() {
+                    cfg.session_authenticated = verify_strict_local_agent_session(
+                        &project_root,
+                        &main_root,
+                        agent_id.trim(),
+                        password.trim(),
+                    )
+                    .is_ok();
+                }
+                if let Ok(ws) = core::workspace::get_workspace_status(&repo_root) {
+                    cfg.in_managed_worktree =
+                        ws.git.in_worktree && !ws.git.is_protected && ws.can_work;
+                }
+            }
             let mut server = McpServer::new(cfg);
             let stdin = io::stdin();
             let stdout = io::stdout();
@@ -9768,6 +9793,7 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
             | "observe.validation_plan"
             | "observe.pr_manifest"
             | "observe.context_provenance"
+            | "observe.telemetry"
             | "cloud.orgs"
             | "cloud.members"
             | "cloud.invites"
@@ -12854,6 +12880,38 @@ fn run_observe_command(cli: ObserveCli) -> Result<(), error::DecapodError> {
             )?;
             if format == "text" {
                 print!("{}", obs::render_context_provenance_human(&proj));
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&proj).map_err(io::Error::other)?
+                );
+            }
+            Ok(())
+        }
+        ObserveCommand::Telemetry {
+            dir,
+            after_seq,
+            limit,
+            bucket_seconds,
+            task_id,
+            repo_id,
+            expected_head_sha,
+            format,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let proj = obs::project_execution_telemetry(
+                &root,
+                &obs::TelemetryProjectionQuery {
+                    after_seq,
+                    limit,
+                    bucket_seconds,
+                    task_id,
+                    expected_repo_id: repo_id,
+                    expected_head_sha,
+                },
+            )?;
+            if format == "text" {
+                print!("{}", obs::render_telemetry_human(&proj));
             } else {
                 println!(
                     "{}",
@@ -16816,7 +16874,8 @@ fn run_rpc_command(
         | "observe.workspace"
         | "observe.validation_plan"
         | "observe.pr_manifest"
-        | "observe.context_provenance" => rpc_handlers::handle_observe(&rpc_ctx)?,
+        | "observe.context_provenance"
+        | "observe.telemetry" => rpc_handlers::handle_observe(&rpc_ctx)?,
         "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
         "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,

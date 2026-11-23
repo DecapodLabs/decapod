@@ -906,6 +906,21 @@
         "tests/single_datastore.rs",
         "tests/sqlite_maintenance.rs"
       ]
+    },
+    {
+      "id": "wave7-shard-b-merge-b774df83",
+      "summary": "Merge origin/master b774df83dd (PR #1927) into PR #1928 with refreshed docs/specs, re-bound spec reviews, and verified Rust + TS/Pi tests",
+      "input_digest": "sha256:a0daef23fd71edc7eb9b82eae525b4833304b1fe5a48f9ea7515498b29e42994",
+      "proof_refs": [
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/cli_contracts.rs",
+        "tests/datastore_relational_compaction.rs",
+        "tests/doc_alignment.rs",
+        "tests/interop_conformance.rs",
+        "tests/observability_projections.rs",
+        "tests/single_datastore.rs"
+      ]
     }
   ],
   "intents": {
@@ -949,22 +964,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented Wave 7 single-SQLite consolidation, data.compact, [agent_maintenance] + Propodus 037 delegated grants, write-time knowledge attestation/feedback, and TypeScript/Pi contracts",
-          "reviewed_code_fingerprint": "3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda",
-          "spec_material_hash": "93f7437e76fb736757a6dd4b63b1b7863b135d55957431c4a30b0870b06b08e2"
+          "reason": "Preserved PR #1927 and Wave 7 Shard B architecture sections after merging origin/master b774df83dd",
+          "reviewed_code_fingerprint": "64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab",
+          "spec_material_hash": "a8de437ff52801fb248c45caa1511fbe9a768e25dbafb73f3daa8d93dd9842ef"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented decapod data compact / data.compact RPC, [agent_maintenance] config alias, add_attested_knowledge, Darkmatter offline fixture, and @decapodlabs/{decapod-client,pi-decapod} 0.163.0 contracts",
-          "reviewed_code_fingerprint": "3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda",
-          "spec_material_hash": "7f91be8d0e80c58044ae0671499b0670cca51b1d83fa8b807f703bc1c0cf9cf1"
+          "reason": "Preserved PR #1927 and Wave 7 Shard B CLI/RPC/TS/Pi interface sections after merging origin/master b774df83dd",
+          "reviewed_code_fingerprint": "64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab",
+          "spec_material_hash": "93dd1afe2a2e542182d83052452b9925dc507fccf191c93269f2f328be0bb10c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented fail-closed compaction cloud boundary, AMBIGUOUS_MAINTENANCE_POLICY, Propodus 037 generation/revocation enforcement, knowledge anti-self-promotion, and TS/Pi/Darkmatter containment",
-          "reviewed_code_fingerprint": "3bffe6e2d1334489ae825b4285e3452eacdf624ae148e86e084eab1ee5503dda",
+          "reason": "Preserved Wave 7 Shard B security boundaries after merging origin/master b774df83dd",
+          "reviewed_code_fingerprint": "64d4a8436a692532ea75b8c7b59cb72c8e345441d1b0ca2cc2d0e819dc254dab",
           "spec_material_hash": "7ba7bf9f7e9a4b87bc82f5ef9d7b0cb94f38709d92a268e53e00e57e4437fcbe"
         }
       ],
@@ -976,7 +991,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795393814Z"
+      "updated_at": "1795395823Z"
     },
     "trajectory": {
       "active_boundaries": [
