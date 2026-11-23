@@ -928,6 +928,11 @@
       "id": "w7-ci-workflows-final",
       "summary": "Wave 7 Shard A: CI workflows, .manifest.json relocation (#1079), codebase-contract specs.refresh (#1122), pre-build CI gate (#1047/#1134), governed docs_autosync (#1388), 3-way test sharding (#1672), release-only ruleset alignment (#1879), Nix v* tag publication (#1626), GHA preflight config (#1890), ETag/304 polling (#1573)",
       "input_digest": "sha256:d56f657d08f4f0933755a03718bff4cc026a707473215184f1da92f33bc72e29"
+    },
+    {
+      "id": "w7-ci-workflows-reconcile-b774df83",
+      "summary": "Reconcile Wave 7 Shard A with origin/master (b774df83dd, PR #1927)",
+      "input_digest": "sha256:cc240ba7c34dac93bebfa08f0ee746d901011b966907dbbbb7e4233fd42a1b74"
     }
   ],
   "intents": {
@@ -977,22 +982,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented canonical .decapod/managed/.manifest.json relocation (#1079), bounded codebase-contract refresh (#1122), pre-build CI gate (#1047/#1134), governed docs_autosync (#1388), 3-way test sharding (#1672), release-only ruleset alignment (#1879), Nix SemVer tags (#1626), GHA preflights (#1890), and ETag/304 polling (#1573)",
-          "reviewed_code_fingerprint": "8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88",
-          "spec_material_hash": "01cf2d81d8fe16d9aa59ca2e63c63e9acc56f0c898e368c149fdb4a0acd0375d"
+          "reason": "Reconciled Wave 7 Shard A & Shard C (PR #1927) architecture specs",
+          "reviewed_code_fingerprint": "b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f",
+          "spec_material_hash": "e7157d0f1df74659b05b76a2ef8f0fe866272affbcb4b801109ebb932163887c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented canonical manifest path, codebase-contract markers, pre-build-validate CLI/CI check, shard-status/docs_autosync_governed scripts, and PublicGithubReads ETag conditional revalidation",
-          "reviewed_code_fingerprint": "8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88",
-          "spec_material_hash": "ebd6f0230df9b871b7022ff2fc67a50caf4bfa69ff64b0a1a9e213f52ad49ec5"
+          "reason": "Reconciled Wave 7 Shard A & Shard C (PR #1927) interface specs",
+          "reviewed_code_fingerprint": "b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f",
+          "spec_material_hash": "97ecadd78b7111252bc46f0c08dd1f3d60f317562de8978c14b29484741d2edc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented fail-closed ETag/304 validation, non-force governed docs_autosync custody, and native-only Nix SemVer tag publication",
-          "reviewed_code_fingerprint": "8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88",
+          "reason": "Reconciled Wave 7 Shard A & Shard C (PR #1927) security specs",
+          "reviewed_code_fingerprint": "b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f",
           "spec_material_hash": "d03e27ac99195fb6b8c9cd8709efd5849bbca2edd6a9dab85749026c7592fbac"
         }
       ],
@@ -1004,7 +1009,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795395558Z"
+      "updated_at": "1795395851Z"
     },
     "trajectory": {
       "active_boundaries": [

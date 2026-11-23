@@ -448,6 +448,53 @@ host-specific `LD_LIBRARY_PATH`; when no library is found, the
 `LOCAL_SQLITE_RUNTIME_REQUIRED` error names this flake output as the supported
 setup alongside the OS package and the `SQLITE_LIBRARY_ENV` override.
 
+## Source validation and documentation delivery
+
+Constitution schema validation in `.github/workflows/constitution-sync.yml` runs
+on ordinary branch pushes and pull requests. A release tag names an already
+validated source commit; it does not provide a branch comparison range. The
+workflow excludes tag pushes while retaining the immutable source-context
+verifier and both ordinary and accepted-tip schema checks.
+
+Documentation builds remain measured source checks on GitHub Actions and
+Buildkite. In `.github/workflows/docs.yml`, the build job records a positive
+native hosted-runner identity before uploading a Pages artifact. The deployment
+job requires that output and the master branch before it can be scheduled.
+GitHub-compatible environment variables or missing Buildkite markers alone do
+not establish native ownership. Imported builds retain a generic site artifact
+and validation custody, without starting the GitHub Pages deployment job.
+
+## Recover work from immutable checkpoint gaps
+
+First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
+--head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
+branch/task and returned failures. A later checkpoint cannot prove a checkpoint
+existed in an earlier immutable commit. Unavailable input is not a proven gap.
+
+Create and claim a new task, use normal `workspace ensure` from the accepted
+target, and enter its returned verified checkout. Before advancing that branch,
+run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
+<reviewed-rationale>`. Review/reauthor selected source without importing old
+governance or invalid ancestry. Run `govern plan review-spec` for current
+interfaces/architecture/security, refresh projections, then stage, checkpoint
+and commit the present observation. Resolve its returned `history-recovery:<sha>`
+obligation with the archived observation and relevant current evidence references;
+checkpoint/commit that resolution and run complete independent validation.
+This recovers current work. It leaves old history unproven and enables no waiver.
+
+## PR1663 integrated storage behavior
+
+Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.
+
+## Projection performance budgets and bounded retention operations (#1734)
+
+- **Reproducible baseline measurement:** Run `cargo test --test projection_performance_budgets_1734 -- --ignored --nocapture` (optionally setting `DECAPOD_PROJECTION_BENCH_REPORT=<path>`) against disposable temporary stores to reproduce the measured baselines for indexed vs. unindexed subject cursor queries, unbounded vs. bounded event pages, concurrent WAL writer/reader contention, and multi-worktree enumeration. Always-on CI coverage runs via `cargo test --test projection_performance_budgets_1734` and `cargo test --lib core::projection_budget`.
+- **Degraded-mode triage:** When a read-only observer receives `status = "degraded"` on `EventProjectionPage` or `WorktreeProjectionPage`, inspect `degraded_reasons` rather than treating the response as complete:
+  - `response_byte_budget_exceeded` / `scan_budget_exceeded` / `worktree_budget_exceeded` / `wall_time_budget_exceeded`: resume incrementally from `cursor.next_seq` or `next_cursor`, or raise the caller budget within `HARD_MAX_*` limits. When the very first single event exceeds `max_response_bytes`, `next_seq` stays pinned before that record so no event is silently skipped.
+  - `reader_contention_deferred`: an exclusive maintenance lock or heavy write burst held the datastore beyond `reader_lock_timeout_ms`; retry with backoff without interfering with writers.
+  - `cursor_behind_retention_floor`: explicit bounded retention pruned events through `cursor.retention_floor_seq`; verify `cursor.retention_anchor_sha256` against the prior window and resume from the retained floor.
+- **Explicit bounded event retention:** `core/projection_budget.rs::apply_bounded_event_retention` is explicit-only and never runs implicitly on read paths. It computes a chained SHA-256 `EventRetentionAnchor` in `meta(namespace='event_retention')` inside `BEGIN IMMEDIATE` before deleting cold rows, preserves original surviving `seq` numbers, and ensures future `events::append_on_conn` calls remain strictly monotonic even after a full `keep_latest = 0` prune.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -500,54 +547,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
+- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## Source validation and documentation delivery
-
-Constitution schema validation in `.github/workflows/constitution-sync.yml` runs
-on ordinary branch pushes and pull requests. A release tag names an already
-validated source commit; it does not provide a branch comparison range. The
-workflow excludes tag pushes while retaining the immutable source-context
-verifier and both ordinary and accepted-tip schema checks.
-
-Documentation builds remain measured source checks on GitHub Actions and
-Buildkite. In `.github/workflows/docs.yml`, the build job records a positive
-native hosted-runner identity before uploading a Pages artifact. The deployment
-job requires that output and the master branch before it can be scheduled.
-GitHub-compatible environment variables or missing Buildkite markers alone do
-not establish native ownership. Imported builds retain a generic site artifact
-and validation custody, without starting the GitHub Pages deployment job.
-
-## Recover work from immutable checkpoint gaps
-
-First use `govern artifacts verify-checkpoints --base-branch <accepted-sha>
---head-ref <source-sha> --target-base <branch> --format json`. Preserve the source
-branch/task and returned failures. A later checkpoint cannot prove a checkpoint
-existed in an earlier immutable commit. Unavailable input is not a proven gap.
-
-Create and claim a new task, use normal `workspace ensure` from the accepted
-target, and enter its returned verified checkout. Before advancing that branch,
-run `govern artifacts record-history-recovery --source-ref <source-sha> --reason
-<reviewed-rationale>`. Review/reauthor selected source without importing old
-governance or invalid ancestry. Run `govern plan review-spec` for current
-interfaces/architecture/security, refresh projections, then stage, checkpoint
-and commit the present observation. Resolve its returned `history-recovery:<sha>`
-obligation with the archived observation and relevant current evidence references;
-checkpoint/commit that resolution and run complete independent validation.
-This recovers current work. It leaves old history unproven and enables no waiver.
-
-## PR1663 integrated storage behavior
-
-Do not install or run the compaction candidate against the machine coordination store while repairing this PR. Existing forward migration, backup/parity and format guards are part of the proposed behavior and must be exercised on disposable hosted fixtures. VACUUM remains explicit-only; historical benchmark percentages are not a new production measurement.
-
-## Projection performance budgets and bounded retention operations (#1734)
-
-- **Reproducible baseline measurement:** Run `cargo test --test projection_performance_budgets_1734 -- --ignored --nocapture` (optionally setting `DECAPOD_PROJECTION_BENCH_REPORT=<path>`) against disposable temporary stores to reproduce the measured baselines for indexed vs. unindexed subject cursor queries, unbounded vs. bounded event pages, concurrent WAL writer/reader contention, and multi-worktree enumeration. Always-on CI coverage runs via `cargo test --test projection_performance_budgets_1734` and `cargo test --lib core::projection_budget`.
-- **Degraded-mode triage:** When a read-only observer receives `status = "degraded"` on `EventProjectionPage` or `WorktreeProjectionPage`, inspect `degraded_reasons` rather than treating the response as complete:
-  - `response_byte_budget_exceeded` / `scan_budget_exceeded` / `worktree_budget_exceeded` / `wall_time_budget_exceeded`: resume incrementally from `cursor.next_seq` or `next_cursor`, or raise the caller budget within `HARD_MAX_*` limits. When the very first single event exceeds `max_response_bytes`, `next_seq` stays pinned before that record so no event is silently skipped.
-  - `reader_contention_deferred`: an exclusive maintenance lock or heavy write burst held the datastore beyond `reader_lock_timeout_ms`; retry with backoff without interfering with writers.
-  - `cursor_behind_retention_floor`: explicit bounded retention pruned events through `cursor.retention_floor_seq`; verify `cursor.retention_anchor_sha256` against the prior window and resume from the retained floor.
-- **Explicit bounded event retention:** `core/projection_budget.rs::apply_bounded_event_retention` is explicit-only and never runs implicitly on read paths. It computes a chained SHA-256 `EventRetentionAnchor` in `meta(namespace='event_retention')` inside `BEGIN IMMEDIATE` before deleting cold rows, preserves original surviving `seq` numbers, and ensures future `events::append_on_conn` calls remain strictly monotonic even after a full `keep_latest = 0` prune.

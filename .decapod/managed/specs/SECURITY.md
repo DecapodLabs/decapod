@@ -924,22 +924,6 @@ No credential, daemon registration, new external audience, or remote service
 is introduced. These are candidate invariants with regression coverage authored;
 execution evidence remains required before publication readiness.
 
-<!-- decapod:codebase-contract:start -->
-
-## Codebase Contract Snapshot
-
-- Security/policy/auth surfaces (35): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, `tests/ci_checkout_policy.rs`, (+19 more)
-<!-- decapod:codebase-contract:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Inventory privacy and authority
 
 Native inspection uses caller OS authority, the existing lifecycle lock and a
@@ -1568,3 +1552,19 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 - **Governed automation custody (`assets/tools/docs_autosync_governed.sh`)**: Scheduled docs sync never force-pushes, never skips exact-material checkpoints, verifies `govern artifacts verify-checkpoints --publication-material` before pushing, and fails closed with a drift report on concurrent branch movement or verification failure.
 - **In-process ETag validation (`src/decapod/core/snapshot_provider/mod.rs`)**: ETag headers are strictly validated as printable ASCII (length 2..=256, single header, no CR/LF) to prevent header injection; the validator map is strictly in-process (max 64 entries, never persisted), always performs live TLS revalidation, and fails closed on unexpected HTTP 304 without prior ETag.
 - **Native-only Cachix tag publication (`.github/workflows/nix-flake.yml`)**: `publication-owner` restricts SemVer `refs/tags/v*` publication to `github-hosted` native Actions runners with non-Buildkite identity and valid 1-parent or 2-parent `chore: release v*` commits, keeping `secrets.CACHIX_AUTH_TOKEN` isolated to the single `publish` job.
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Security/policy/auth surfaces (35): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, `tests/ci_checkout_policy.rs`, (+19 more)
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

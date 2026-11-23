@@ -1677,67 +1677,6 @@ Human-intent questions, requirement markers, stable hashes and changed-source
 inventory are advisory: none may satisfy a proof gate or change
 `semantic_alignment: not_proven`.
 
-<!-- decapod:capability-overlay:background-processing:start -->
-
-Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Background Processing Validation Overlay
-
-### Duplicate Delivery Tests
-- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Persistent State Validation Overlay
-
-### Migration Proof Command
-- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
-- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
-
-### Migration Tests
-- All migrations MUST have integration tests
-- Rollback procedures MUST be tested
-- Data integrity checks post-migration
-
-### Persistence Integration Tests
-- Repository abstraction tested against real database
-- Transaction boundary tests
-- Concurrency conflict tests
-- Data integrity validation after recovery
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-<!-- decapod:codebase-contract:start -->
-
-## Codebase Contract Snapshot
-
-- CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
-- Integration test targets (168): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+152 more)
-<!-- decapod:codebase-contract:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Native inventory qualification
 
 The required CLI suite includes seven inventory regressions: UTF-8/reuse and
@@ -2851,3 +2790,64 @@ Standalone validation passed on `59526e792` before the v0.158.0 cut at `1bdb1e6e
 - **CI workflow, sharding, release-cut, and Nix tag policies (`tests/source_ci_profile_policy.rs`, `tests/release_metadata_policy.rs`, `src/decapod/core/readiness_profile/tests.rs`)**: Verifies all 44 finite PR job instances, balanced 3-way core and CLI shard partitioning covering every original Bazel target with `Tests (core)` / `Tests (cli)` aggregators, release-only scheduling for `test-core`/`test-core-status`/`supabase-consumer`, and native Cachix publication gating for squash/linear/merge releases and SemVer `refs/tags/v*` tags.
 - **Governed docs auto-sync (`tests/docs_sync_checkpoint_boundary.rs`)**: Exercises all six lifecycle scenarios against a real bare Git remote and compiled `decapod` binary (no-drift, first PR, repeated open-PR updates, post-merge reset, validation failure fail-closed, concurrent/diverged branch fail-closed).
 - **ETag conditional polling & GHA carrier policy (`src/decapod/core/snapshot_provider/github_quota.rs`, `src/decapod/core/snapshot_provider/public_buildkite/ci_attested/real_metadata_tests.rs`)**: Verifies `If-None-Match` / HTTP 304 zero-quota revalidation, fail-closed unexpected 304 handling, and `.decapod/config.toml` GitHub Actions carrier selection without Buildkite `ci_attested`.
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
+- Integration test targets (169): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+153 more)
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

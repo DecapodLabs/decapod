@@ -1605,3 +1605,270 @@ fn task_overlap_six_states_and_combined_integration() {
         Some(DecisionDisposition::AuthorityRequired)
     );
 }
+
+#[test]
+fn mcp_stdio_allow_mutations_enforces_real_session_and_worktree_custody_and_emits_observed_receipt()
+{
+    use sha2::{Digest, Sha256};
+
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path();
+    let git = |dir: &std::path::Path, args: &[&str]| {
+        let out = Command::new("git")
+            .current_dir(dir)
+            .args(args)
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+    git(repo, &["init", "-b", "master"]);
+    git(repo, &["config", "user.email", "mcp@decapod.local"]);
+    git(repo, &["config", "user.name", "MCP Conformance"]);
+    std::fs::write(repo.join("README.md"), "# MCP Conformance Fixture\n").unwrap();
+    git(repo, &["add", "."]);
+    git(repo, &["commit", "-m", "seed"]);
+
+    let bin = decapod_bin();
+    let init_out = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "init",
+            "--force",
+            "--no-ci",
+            "--no-specs",
+            "--no-container-workspaces",
+        ])
+        .env("DECAPOD_AGENT_ID", "mcp-conformance-agent")
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .output()
+        .unwrap();
+    assert!(
+        init_out.status.success(),
+        "init failed: {}",
+        String::from_utf8_lossy(&init_out.stderr)
+    );
+    git(repo, &["add", "."]);
+    git(repo, &["commit", "-m", "decapod init"]);
+
+    let sess_out = Command::new(&bin)
+        .current_dir(repo)
+        .args(["session", "acquire"])
+        .env("DECAPOD_AGENT_ID", "mcp-conformance-agent")
+        .output()
+        .unwrap();
+    assert!(sess_out.status.success());
+    let sess_stdout = String::from_utf8_lossy(&sess_out.stdout);
+    let pw = sess_stdout
+        .lines()
+        .find_map(|l| l.strip_prefix("Password:"))
+        .map(str::trim)
+        .expect("session password")
+        .to_string();
+
+    let mutate_session = concat!(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\"}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"decapod_governed_mutate\",\"arguments\":{\"op\":\"specs.refresh\",\"params\":{}}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"shutdown\",\"params\":{}}\n"
+    );
+
+    let run_mcp = |dir: &std::path::Path,
+                   args: &[&str],
+                   agent: Option<&str>,
+                   pass: Option<&str>|
+     -> Vec<Value> {
+        let mut cmd = Command::new(&bin);
+        cmd.current_dir(dir)
+            .args(args)
+            .env_remove("DECAPOD_AGENT_ID")
+            .env_remove("DECAPOD_SESSION_PASSWORD")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        if let Some(a) = agent {
+            cmd.env("DECAPOD_AGENT_ID", a);
+        }
+        if let Some(p) = pass {
+            cmd.env("DECAPOD_SESSION_PASSWORD", p);
+        }
+        let mut child = cmd.spawn().unwrap();
+        child
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(mutate_session.as_bytes())
+            .unwrap();
+        let out = child.wait_with_output().unwrap();
+        assert!(
+            out.status.success(),
+            "mcp serve failed: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8_lossy(&out.stdout)
+            .lines()
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| serde_json::from_str::<Value>(l).unwrap())
+            .collect()
+    };
+
+    // 1. Default mode (read-only) denies mutation even with valid session.
+    let res_ro = run_mcp(
+        repo,
+        &["mcp", "serve", "--framing", "jsonl"],
+        Some("mcp-conformance-agent"),
+        Some(&pw),
+    );
+    assert_eq!(res_ro[1]["result"]["isError"], true);
+    assert_eq!(
+        res_ro[1]["result"]["structuredContent"]["code"],
+        "read_only_session_denied"
+    );
+
+    // 2. --allow-mutations without authenticated session denies fail-closed.
+    let res_no_sess = run_mcp(
+        repo,
+        &["mcp", "serve", "--framing", "jsonl", "--allow-mutations"],
+        Some("mcp-conformance-agent"),
+        None,
+    );
+    assert_eq!(res_no_sess[1]["result"]["isError"], true);
+    assert_eq!(
+        res_no_sess[1]["result"]["structuredContent"]["code"],
+        "session_required"
+    );
+
+    // 3. --allow-mutations with valid session on protected master denies fail-closed.
+    let res_master = run_mcp(
+        repo,
+        &["mcp", "serve", "--framing", "jsonl", "--allow-mutations"],
+        Some("mcp-conformance-agent"),
+        Some(&pw),
+    );
+    assert_eq!(res_master[1]["result"]["isError"], true);
+    assert_eq!(
+        res_master[1]["result"]["structuredContent"]["code"],
+        "worktree_isolation_required"
+    );
+
+    // 4. Create isolated managed worktree + verify --allow-mutations admits governed dispatch.
+    let todo_out = Command::new(&bin)
+        .current_dir(repo)
+        .args(["todo", "add", "MCP worktree custody parity"])
+        .env("DECAPOD_AGENT_ID", "mcp-conformance-agent")
+        .env("DECAPOD_SESSION_PASSWORD", &pw)
+        .output()
+        .unwrap();
+    assert!(todo_out.status.success());
+    let task_id = serde_json::from_slice::<Value>(&todo_out.stdout).unwrap()["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let claim_out = Command::new(&bin)
+        .current_dir(repo)
+        .args(["todo", "claim", "--id", &task_id])
+        .env("DECAPOD_AGENT_ID", "mcp-conformance-agent")
+        .env("DECAPOD_SESSION_PASSWORD", &pw)
+        .env("DECAPOD_CLAIM_AUTORUN", "0")
+        .output()
+        .unwrap();
+    assert!(claim_out.status.success());
+    let ws_out = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "workspace",
+            "ensure",
+            "--branch",
+            &format!("agent/mcp-conformance-agent/{task_id}-mcp-gate"),
+        ])
+        .env("DECAPOD_AGENT_ID", "mcp-conformance-agent")
+        .env("DECAPOD_SESSION_PASSWORD", &pw)
+        .output()
+        .unwrap();
+    assert!(
+        ws_out.status.success(),
+        "workspace ensure failed: {}",
+        String::from_utf8_lossy(&ws_out.stderr)
+    );
+    let ws_json: Value = serde_json::from_str(
+        String::from_utf8_lossy(&ws_out.stdout)
+            .lines()
+            .last()
+            .unwrap(),
+    )
+    .unwrap();
+    let wt_path = PathBuf::from(ws_json["worktree_path"].as_str().unwrap());
+
+    let res_wt = run_mcp(
+        &wt_path,
+        &["mcp", "serve", "--framing", "jsonl", "--allow-mutations"],
+        Some("mcp-conformance-agent"),
+        Some(&pw),
+    );
+    assert_eq!(res_wt[1]["result"]["isError"], false);
+    assert_eq!(
+        res_wt[1]["result"]["structuredContent"]["status"],
+        "admitted_for_kernel_dispatch"
+    );
+    assert_eq!(res_wt[2]["result"]["shutdown"], true);
+
+    // 5. Bind real observed binary + raw transcript bytes into ObservedConformanceReceipt (#871/#872).
+    let bin_bytes = std::fs::read(&bin).unwrap();
+    let bin_sha = format!("{:x}", Sha256::digest(&bin_bytes));
+    let raw_transcript = serde_json::to_string(&res_wt).unwrap();
+    let mut producers = BTreeSet::new();
+    producers.insert("local-blackbox-mcp-conformance".to_string());
+    let ctx = CurrentBuildContext {
+        schema_version: interop::INTEROP_MANIFEST_SCHEMA_VERSION.to_string(),
+        profile_id: interop::INTEROP_PROFILE_ID.to_string(),
+        profile_version: interop::INTEROP_PROFILE_VERSION.to_string(),
+        implementation_version: env!("CARGO_PKG_VERSION").to_string(),
+        binary_sha256: bin_sha.clone(),
+        source_commit_sha: "c".repeat(40),
+        transport: "stdio-mcp-2025-03-26".to_string(),
+        now_epoch: 1_700_000_100,
+    };
+    let receipt = ObservedConformanceReceipt {
+        receipt_id: "rcpt-mcp-live-001".to_string(),
+        schema_version: ctx.schema_version.clone(),
+        profile_id: ctx.profile_id.clone(),
+        profile_version: ctx.profile_version.clone(),
+        implementation_version: ctx.implementation_version.clone(),
+        binary_sha256: bin_sha,
+        source_commit_sha: ctx.source_commit_sha.clone(),
+        transport: ctx.transport.clone(),
+        producer_id: "local-blackbox-mcp-conformance".to_string(),
+        producer_trust_class: ProducerTrustClass::IndependentExecutor,
+        executed_at_epoch: 1_700_000_000,
+        max_age_secs: 3600,
+        results: vec![ObservedCapabilityResult {
+            capability_id: "transport:mcp".to_string(),
+            conformance_test:
+                "agent_interop_conformance::mcp_stdio_allow_mutations_enforces_real_session_and_worktree_custody_and_emits_observed_receipt"
+                    .to_string(),
+            passed: true,
+            raw_evidence: RawEvidenceReceipt::from_raw("ev-mcp-live", &raw_transcript),
+        }],
+        receipt_sha256: String::new(),
+    }
+    .with_computed_digest();
+    let projected =
+        project_manifest_with_receipt(&interop::builtin_manifest(), &receipt, &ctx, &producers);
+    assert!(projected.receipt_accepted, "{}", projected.reason);
+    assert_eq!(
+        projected
+            .manifest
+            .capabilities
+            .iter()
+            .find(|c| c.id == "transport:mcp")
+            .unwrap()
+            .evidence
+            .state,
+        interop::VerificationState::Verified
+    );
+}

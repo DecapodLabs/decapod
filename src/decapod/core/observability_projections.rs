@@ -13,6 +13,7 @@ pub mod provenance;
 pub mod server;
 pub mod snapshot;
 pub mod specs;
+pub mod telemetry;
 pub mod timeline;
 pub mod validation_plan;
 pub mod workspace;
@@ -46,6 +47,11 @@ pub use specs::{
     PaginationMetadata, PlanSummaryProjection, ReceiptIntegrityProjection, SpecFileProjection,
     SpecSecurityFlags, SpecsGovernanceProjection, SpecsManifestProjection, SpecsProjectionQuery,
     TraversalEdge, inspect_spec_text_security, project_specs_and_governance,
+};
+pub use telemetry::{
+    EvidenceOriginClass, ExecutionTelemetryProjection, TelemetryBucket, TelemetryEventSample,
+    TelemetryIntegrityFinding, TelemetryPagination, TelemetryProjectionQuery, UsefulWorkRatio,
+    aggregate_telemetry_samples, project_execution_telemetry,
 };
 pub use timeline::{
     ActivityTimelineProjection, ObjectiveEvidenceEdge, ProofApplicability, TimelineCursor,
@@ -170,5 +176,34 @@ pub fn render_context_provenance_human(proj: &ContextProvenanceProjection) -> St
         proj.intent_context.origin_trust,
         proj.pagination.returned,
         proj.pagination.total,
+    )
+}
+
+pub fn render_telemetry_human(proj: &ExecutionTelemetryProjection) -> String {
+    format!(
+        "Decapod Execution Telemetry ({} / {})\n  snapshot_id: {} (consistent={})\n  verified_useful_work: {} | human_attention: {} | invocations: {} | denials: {} | passes: {} | failures: {} | recoveries: {} | cancelled_or_partial: {}\n  retained_governance_bytes: {} | buckets: {} | findings: {} | missing: {}\n",
+        proj.schema_version,
+        proj.telemetry_schema_version,
+        proj.snapshot.snapshot_id,
+        proj.snapshot.consistency.consistent,
+        proj.useful_work.verified_useful_work_numerator,
+        proj.useful_work
+            .human_attention_denominator
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "<unreviewed>".to_string()),
+        proj.total_invocations,
+        proj.policy_denials,
+        proj.verification_passes,
+        proj.verification_failures,
+        proj.recovery_transitions,
+        proj.cancelled_or_partial_runs,
+        proj.retained_governance_bytes,
+        proj.series.len(),
+        proj.integrity_findings.len(),
+        if proj.missing_measurements.is_empty() {
+            "none".to_string()
+        } else {
+            proj.missing_measurements.join(", ")
+        },
     )
 }

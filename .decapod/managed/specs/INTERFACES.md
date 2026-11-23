@@ -1,5 +1,15 @@
 # Interfaces
 
+## Execution telemetry CLI/RPC/HTTP and MCP `--allow-mutations` interfaces (#1095, #872, #871)
+
+- **Read-only telemetry CLI (`src/decapod/cli.rs::ObserveCommand::Telemetry`, `src/decapod/lib.rs::run_observe_command`)**:
+  - `decapod observe telemetry [--dir <PATH>] [--after-seq <N>] [--limit <N>] [--bucket-seconds <N>] [--task-id <ID>] [--repo-id <ID>] [--expected-head-sha <SHA>] [--format json|text]`
+  - Emits `ExecutionTelemetryProjection` (`schema_version = "decapod.observe.v1"`, `telemetry_schema_version = "decapod.execution-telemetry.v1"`, `read_only = true`, `authoritative = false`) or human-readable text via `render_telemetry_human`.
+- **Read-only RPC & loopback HTTP (`src/decapod/core/interop.rs::RPC_OPS`, `src/decapod/core/rpc.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/lib.rs`)**:
+  - Registers `observe.telemetry` (`read_only = true`, `session_required = false`) across `RPC_OPS`, `builtin_manifest()`, `rpc::Capability`, `ALLOWLISTED_OBSERVE_RPC_OPS`, `lib.rs` dispatch/bypass arms, and `GET /observe/v1/telemetry` on `decapod observe serve`, preserving zero two-way dispatcher/authorization drift (`check_dispatcher_authorization_drift`).
+- **MCP stdio mutation gate opt-in (`src/decapod/cli.rs::McpCommand::Serve`)**:
+  - Adds `--allow-mutations` (default `false`) to `decapod mcp serve`. Without `--allow-mutations`, `decapod_governed_mutate` returns `read_only_session_denied`; with `--allow-mutations`, missing/invalid session credentials return `session_required`, protected/root checkouts return `worktree_isolation_required`, and authenticated isolated `.decapod/workspaces/*` worktrees return `admitted_for_kernel_dispatch`.
+
 ## DPoP device gateway & `dactyl-db 0.19.0` Cloud Admin CLI/RPC contracts (#1878)
 
 - **Expanded `decapod cloud` CLI subcommands (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
@@ -1735,23 +1745,6 @@ Invalid symbolic, absent or non-ancestor bases return a validation error.
 The original empty-parameter report stays version 1.0.0 without an impact
 field. Nothing in this operation authorizes a mutation, approval or completion.
 
-<!-- decapod:codebase-contract:start -->
-
-## Codebase Contract Snapshot
-
-- CLI/RPC/protocol surfaces (21): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/interop.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/core/rpc.rs`, `src/decapod/lib.rs`, (+5 more)
-- Manifest authority path: `.decapod/managed/.manifest.json`
-<!-- decapod:codebase-contract:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Bounded local storage inspection
 
 CLI `data database inspect` and RPC `data.database.inspect` expose
@@ -2517,3 +2510,20 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **Pre-build validation surface (`decapod validate --pre-build` & CI `pre-build-validate`)**: Validates `.decapod/config.toml`, `.decapod/governance.json` (`claims`, `sections.plan`, `sections.trajectory`), `.decapod/managed/.manifest.json` JSON + 64-hex SHA-256 `repo_signal_fingerprint`/`config_input_hash`/`spec_input_hash`/file `content_hash`, and configured agent entrypoint `decapod-release` + 64-hex `decapod-fingerprint` markers (`#1047`, `#1134`).
 - **Source-CI check IDs**: `pre-build-validate`, `selective-core-1`, `selective-core-2`, `selective-core-3`, `selective-core-status` (`Tests (core)`), `selective-cli-1`, `selective-cli-2`, `selective-cli-3`, `selective-cli-status` (`Tests (cli)`), and `selective-plugins` (`Tests (plugins)`).
 - **Configured strict preflight carrier (`.decapod/config.toml`)**: `[proof].validation_buildkite_preflights = false` and `[proof].validation_github_actions_preflights = true` with `[proof.required_profile].id = "decapod.pr-readiness.v1"` and reconciled `reviewed_sources_digest` (`#1890`).
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CLI/RPC/protocol surfaces (21): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/interop.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/core/rpc.rs`, `src/decapod/lib.rs`, (+5 more)
+- Manifest authority path: `.decapod/managed/.manifest.json`
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

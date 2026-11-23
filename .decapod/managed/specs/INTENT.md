@@ -1,5 +1,13 @@
 # Intent
 
+## Execution telemetry projection, MCP worktree/session gate parity, observed interop receipts, real-host activation, and empirical studies (#870, #871, #872, #873, #875, #880, #1888, #1733, #1735, #1763, #1772, #1774, #1796, #1095, #1367, #1024)
+
+Extends Decapod's local-first, daemonless observability and interoperability planes with deterministic execution telemetry, real worktree/session gate parity on stdio MCP mutations, polyglot initialization tests, multi-process cold-context handoff and TOCTOU gate-denial controls, and empirically observed host/reviewer studies:
+
+- **Deterministic execution telemetry projection (`#1095`)**: Exposes strictly read-only, bounded, secret-redacted time-series execution telemetry (`decapod observe telemetry`, RPC `observe.telemetry`, and loopback HTTP `GET /observe/v1/telemetry`) over existing governance, trajectory, and timeline records without adding a telemetry database or default network upload. Separates independently verified useful work (`verified_useful_work_numerator`) from unreviewed human attention (`human_attention_denominator = null` rather than fabricated zero), preserves partial/cancelled runs, deduplicates duplicate event IDs, flags mismatched task/source joins, and tags evidence origin classes (`DeterministicMock`, `InstrumentedRealAgent`, `OperatorReported`, `IndependentVerification`, `RecordedKernelFact`).
+- **Real stdio MCP mutation gate parity & observed conformance receipts (`#870`, `#871`, `#872`, `#873`, `#875`, `#1733`, `#1735`)**: Adds opt-in `decapod mcp serve --allow-mutations` wired to canonical local session verification (`verify_strict_local_agent_session`) and real Git worktree custody checks (`workspace::get_workspace_status`), keeping default `decapod mcp serve` fail-closed read-only (`read_only_session_denied`) while verifying `session_required`, `worktree_isolation_required`, and isolated-worktree `admitted_for_kernel_dispatch` parity end-to-end. Records real `v0.163.0` observed stdio MCP (`Content-Length` + `JSONL`), multi-process A2A Agent Card + 9-case handoff matrix, standalone Python reference consumer (`26/26` vectors), and live `@decapodlabs/pi-decapod` Node `v24.18.0` receipts in `docs/conformance/observed-interop-receipts-v0.163.md` and updates `docs/architecture/agent-interop-adr.md` honestly.
+- **Real host activation, independent read-only review benchmark, gate admission, cold-context handoff, constitution controls, and polyglot init (`#880`, `#1888`, `#1796`, `#1763`, `#1367`, `#1772`, `#1774`, `#1024`)**: Captures real authenticated `codex-cli 0.169.0` baseline vs governed trials (cold `master` fail-closed refusal + prepared isolated worktree completion with 10x rejected-B negative control) and truthful unauthenticated `claude 2.1.311` (`loggedIn: false`) deferral (`docs/research/host-outcome-pilot/wave7-host-activation-2026-11-22.md`); executes a 4-task real fresh-context read-only reviewer benchmark (`docs/studies/independent-task-first-review-1796.md`, `1.00` precision / `1.00` recall vs `0.00` baseline recall); codifies the end-state enforcement table and multi-process TOCTOU/cold-context/constitution negative controls (`tests/gate_admission_and_resilience.rs`, `docs/studies/phase-gate-admission-audit-1763.md`); and adds Cargo/Node/Go/Python/mixed-monorepo polyglot `init` reconciliation and non-mutating `--dry-run` coverage (`tests/init_reconciliation.rs`).
+
 ## End-to-end DPoP device gateway lifecycle and `dactyl-db = "0.19.0"` Cloud Admin wiring (#1878, #1835, #1836, #1896, #1895, #1859, #1369)
 
 Completes sender-constrained RFC 9449 DPoP operational transport end-to-end across Decapod Cloud and upgrades the storage/onboarding control plane to `dactyl-db = "=0.19.0"` without breaking human-bearer admin custody or touching local SQLite:
@@ -820,42 +828,6 @@ unmapped code change remains explicitly unmapped, incomplete or unsupported
 inputs remain unproven, and the harness owns any proposed code/spec repair.
 The kernel retains independent review, validation and publication authority.
 
-<!-- decapod:declared-capabilities:start -->
-
-## Declared Capability Surfaces
-
-These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
-
-- `agent-helper`
-- `authentication`
-- `authorization`
-- `background-processing`
-- `control-plane`
-- `event-driven`
-- `external-integrations`
-- `governance-kernel`
-- `persistent-state`
-- `scheduled-jobs`
-
-<!-- decapod:declared-capabilities:end -->
-
-<!-- decapod:codebase-contract:start -->
-
-## Codebase Contract Snapshot
-
-- Tracked significant codebase files: 630 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (4), `docs/` (3), `packages/` (3), `src/` (283), `tests/` (282)
-- Core modules: 147 | Workflows: 9 | Integration targets: 168
-<!-- decapod:codebase-contract:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `8a8e397f289e684206dc112c6aaa79e4c300b947c5fe6db7d37252dfdc159e88`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (283 files), `tests/` (282 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Bounded native storage inventory (#1630)
 
 Measure Decapod, Dactyl and Propodus dogfooding stores before selecting a compact
@@ -1389,8 +1361,44 @@ Decapod's local-first governance kernel now exposes decoupled Houseboat primitiv
 ## CI Workflows, Dual-Root Readiness Profile, Manifest Relocation, and Governed Automation (#1079, #1122, #1047, #1134, #1388, #1626, #1672, #1879, #1890, #1573)
 
 - **Specs manifest relocation (`#1079`)**: `.decapod/managed/.manifest.json` is now the canonical living-specs manifest path across `src/decapod/core/project_specs.rs` (`LOCAL_PROJECT_SPECS_MANIFEST`), scaffolding, `.gitignore`, `validate.rs`, `pre_build_validate.rs`, `release_projection_drift.rs`, `integration_removal.rs`, and CI scripts (`health.sh`, `standalone-validation.sh`), with backward-compatible read fallback to legacy `.decapod/managed/specs/.manifest.json` and automatic cleanup on refresh.
-- **Content-bumping `specs.refresh` (`#1122`)**: `project_specs::refresh_specs_from_codebase` deterministically updates a bounded source-derived `<!-- decapod:codebase-contract:start -->` block in each living spec (modules, CLI/RPC surfaces, workflows, integration test targets, state/ops/security surfaces) while preserving 100% of authored semantic prose and keeping generated blocks excluded from `material_spec_body()` so `#1183` still requires authored prose.
+- **Content-bumping `specs.refresh` (`#1122`)**: `project_specs::refresh_specs_from_codebase` deterministically updates a bounded source-derived `codebase-contract` marker block in each living spec (modules, CLI/RPC surfaces, workflows, integration test targets, state/ops/security surfaces) while preserving 100% of authored semantic prose and keeping generated blocks excluded from `material_spec_body()` so `#1183` still requires authored prose.
 - **Fast pre-build CI gate (`#1047`, `#1134`)**: `.github/workflows/ci.yml` executes `pre-build-validate` (`assets/tools/source_ci/pre-build-validate.sh`) immediately after `release-metadata` and before heavy build/test/lint jobs, failing fast when `.decapod/config.toml`, `.decapod/governance.json`, `.decapod/managed/.manifest.json`, living-spec hashes, or 64-hex `decapod-fingerprint` entrypoint SHAs are missing or stale; `src/decapod/core/pre_build_validate.rs` enforces the same structural and SHA-256 checks locally.
 - **Parallel core/CLI CI sharding & release-cut ruleset alignment (`#1672`, `#1879`)**: `Tests (core)` and `Tests (cli)` split into three parallel shards each (`test-core` `1/3..3/3`, `test-cli` `1/3..3/3`) with fail-closed aggregator jobs retaining the exact `Tests (core)` and `Tests (cli)` check names; `test-core`, `test-core-status`, and `supabase-consumer` remain scheduled on version-only release cuts so ruleset `12701816` receives both required named checks.
 - **Governed scheduled docs auto-sync (`#1388`) & Nix tag publication (`#1626`)**: `.github/workflows/docs_autosync.yml` replaces raw `create-pull-request` with `assets/tools/docs_autosync_governed.sh` (`begin-pr`, trajectory init/record, `specs.refresh`, exact-material `checkpoint`, `verify-checkpoints --publication-material`, non-force push, fail-closed drift report); `.github/workflows/nix-flake.yml` covers squash-merged commits and SemVer `v*` release tags under native-only publication ownership.
 - **Non-Buildkite GitHub Actions preflight activation (`#1890`) & ETag conditional polling (`#1573`)**: `.decapod/config.toml` transitions from Buildkite (`validation_buildkite_preflights = false`, `[proof.ci_attested]` retired) to the independently reviewed GitHub Actions carrier (`validation_github_actions_preflights = true`); `PublicGithubReads` (`src/decapod/core/snapshot_provider/mod.rs`) and `github_quota.rs` support bounded in-process `If-None-Match` ETag revalidation so HTTP 304 polls preserve anonymous rate-limit quota without caching across runs.
+
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
+
+- `agent-helper`
+- `authentication`
+- `authorization`
+- `background-processing`
+- `control-plane`
+- `event-driven`
+- `external-integrations`
+- `governance-kernel`
+- `persistent-state`
+- `scheduled-jobs`
+
+<!-- decapod:declared-capabilities:end -->
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Tracked significant codebase files: 632 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (4), `docs/` (3), `packages/` (3), `src/` (284), `tests/` (283)
+- Core modules: 147 | Workflows: 9 | Integration targets: 169
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->
