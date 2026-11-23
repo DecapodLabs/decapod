@@ -4,7 +4,7 @@
 
 - **Lossless compaction CLI & RPC (`src/decapod/cli.rs::DataCommand::Compact`, `src/decapod/core/rpc.rs::StorageCompactParams`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs`)**:
   - CLI: `decapod data compact [--dry-run] [--reclaim-pages] [--format json|text]` outputs `DataCompactionReport` (`decapod.data-compaction-report.v1`) with exact pre/post byte & page counts, `events_compacted`, `prompts_deduplicated`, `components_collected`, `reclaim_executed`, `lossless_verified`, and `hosted_backend_status: "unavailable_local_only"`.
-  - RPC: registers `data.compact` (`read_only = false`, `session_required = false`) accepting `{ dry_run?: bool, reclaim_pages?: bool }`.
+  - RPC: registers `data.compact` (`read_only = false`, `session_required = true`, aligned with `INV-SESSION-AUTH` entry enforcement) accepting `{ dry_run?: bool, reclaim_pages?: bool }`.
 - **Maintenance policy & Cloud delegated grant contract (`src/decapod/cli.rs`, `src/decapod/core/db_maintenance.rs`)**:
   - `.decapod/config.toml` accepts `[agent_maintenance]` as an exclusive shorthand alongside `[governance.db_maintenance]` and `[maintenance]`; configuring more than one fails closed with `AMBIGUOUS_MAINTENANCE_POLICY`.
   - Adds `DELEGATED_GRANTS_CONTROL_OP = "propodus_delegated_grants_v1"`, `CloudDelegatedGrantStatus`, `fetch_cloud_delegated_grant_status`, `parse_cloud_delegated_grant_status`, and `evaluate_cloud_capability_with_delegated_grant`.
@@ -1776,7 +1776,7 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19`
+- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

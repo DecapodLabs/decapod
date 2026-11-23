@@ -301,7 +301,7 @@ rpc_catalog![
     OpMeta {
         op: "data.compact",
         read_only: false,
-        session_required: false,
+        session_required: true,
         description: "Run lossless measured compaction (and optional explicit page reclamation) on canonical decapod.db",
     },
     OpMeta {

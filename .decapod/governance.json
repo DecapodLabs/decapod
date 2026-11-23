@@ -934,6 +934,11 @@
         "tests/doc_alignment.rs",
         "tests/single_datastore.rs"
       ]
+    },
+    {
+      "id": "w7-storage-fix-data-compact-session-auth",
+      "summary": "Align data.compact RPC OpMeta.session_required=true with INV-SESSION-AUTH entry enforcement and INTERFACES.md",
+      "input_digest": "sha256:0270d34df42860ba31de31a255108b29cf8ced9159160f6d26f0a35f801abfe5"
     }
   ],
   "intents": {
@@ -977,22 +982,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Preserved PR #1930, PR #1927, and Wave 7 Shard B architecture sections after merging origin/master 826f263e0b",
-          "reviewed_code_fingerprint": "f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19",
+          "reason": "Re-verified post-fix for data.compact session_required=true alignment.",
+          "reviewed_code_fingerprint": "90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3",
           "spec_material_hash": "e9f080d9d618d4674894b84fd8618db6f0b9d69f1827d3628ade16a7895cf2ec"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserved PR #1930, PR #1927, and Wave 7 Shard B CLI/RPC/TS/Pi interface sections after merging origin/master 826f263e0b",
-          "reviewed_code_fingerprint": "f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19",
-          "spec_material_hash": "9365a461b35057ad2ae1bf093b7d79d3c67e0e1aaabbcb10a62bbde07b59bc42"
+          "reason": "Updated data.compact RPC session_required=true to match INV-SESSION-AUTH entry enforcement.",
+          "reviewed_code_fingerprint": "90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3",
+          "spec_material_hash": "82f161f987ed5fa0d3e5476e81ab47ede920f75a58d90f56990fed461abf98e5"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved Wave 7 Shard B security boundaries after merging origin/master 826f263e0b",
-          "reviewed_code_fingerprint": "f8ccd87fbdc034de8bda19fc6c97279dedd53b6fb58d3d2dfc997aa9347f3b19",
+          "reason": "Re-verified data.compact session_required=true aligns with INV-SESSION-AUTH.",
+          "reviewed_code_fingerprint": "90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3",
           "spec_material_hash": "7ba7bf9f7e9a4b87bc82f5ef9d7b0cb94f38709d92a268e53e00e57e4437fcbe"
         }
       ],
@@ -1004,7 +1009,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795396606Z"
+      "updated_at": "1795398428Z"
     },
     "trajectory": {
       "active_boundaries": [
