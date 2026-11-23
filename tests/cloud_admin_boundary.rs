@@ -1607,6 +1607,22 @@ mod cloud_admin_proofs {
         let seat_diag: Value = serde_json::from_slice(&seat_err.stdout).unwrap();
         assert_eq!(seat_diag["error"]["code"], "seat_revoked");
 
+        let recorded = server.recorded();
+        let req_for = |suffix: &str| {
+            recorded
+                .iter()
+                .find(|r| r.path.ends_with(suffix))
+                .unwrap_or_else(|| panic!("missing recorded request for {suffix}"))
+        };
+        assert_eq!(req_for("/org-admins").body["operation"], "grant");
+        assert!(req_for("/org-admins").body.get("action").is_none());
+        assert_eq!(req_for("/org-recovery").body["operation"], "initiate");
+        assert!(req_for("/org-recovery").body.get("action").is_none());
+        assert_eq!(req_for("/policy-templates").body["operation"], "import");
+        assert!(req_for("/policy-templates").body.get("action").is_none());
+        assert_eq!(req_for("/org-upgrades").body["operation"], "schedule");
+        assert!(req_for("/org-upgrades").body.get("action").is_none());
+
         assert_no_sqlite_created(root.path());
     }
 }

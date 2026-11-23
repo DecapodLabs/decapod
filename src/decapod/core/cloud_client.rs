@@ -241,6 +241,12 @@ pub(crate) fn diagnostic_for_status_code(
             CloudAuthErrorCode::from_code_str(code)
                 .unwrap_or(CloudAuthErrorCode::BillingUnavailable),
         ),
+        "invalid_request" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "The cloud service rejected the request parameters (`invalid_request`).",
+            "Verify the command parameters and organization/project identifiers, then retry without resetting sign-in.",
+        )
+        .with_error_code(CloudAuthErrorCode::InvalidRequest),
         "registration_required" => CloudAuthDiagnostic::new(
             CloudAuthStatus::RegistrationRequired,
             "The service has not registered this account.",
@@ -554,17 +560,17 @@ pub(crate) fn admin_transport_error(
 ) -> DecapodError {
     use dactyl_db::{AdapterErrorKind, MutationOutcome};
 
-    if error.mutation_outcome() == MutationOutcome::Uncertain
-        || (mutating
-            && (error.adapter_code() == Some("outcome_unknown")
-                || matches!(
-                    error.adapter_kind(),
-                    Some(
-                        AdapterErrorKind::Transport
-                            | AdapterErrorKind::Timeout
-                            | AdapterErrorKind::Unavailable
-                    )
-                )))
+    if mutating
+        && (error.mutation_outcome() == MutationOutcome::Uncertain
+            || error.adapter_code() == Some("outcome_unknown")
+            || matches!(
+                error.adapter_kind(),
+                Some(
+                    AdapterErrorKind::Transport
+                        | AdapterErrorKind::Timeout
+                        | AdapterErrorKind::Unavailable
+                )
+            ))
     {
         return DecapodError::CloudAuth(
             CloudAuthDiagnostic::new(
@@ -2351,6 +2357,41 @@ mod cloud_admin_client_tests {
                 assert_eq!(diag.status, CloudAuthStatus::Offline);
             }
             other => panic!("expected CloudAuth Offline for read, got {other:?}"),
+        }
+
+        // Read-only billing probe (`decapod cloud orgs` -> AccountOperation::Manage `status`)
+        // must preserve structured `billing_not_configured` even when Dactyl tags the
+        // transport operation with `MutationOutcome::Uncertain`.
+        let uncertain_billing = DactylError::Adapter {
+            kind: AdapterErrorKind::Unavailable,
+            code: Some("billing_not_configured".into()),
+            message: "remote state uncertain: billing_not_configured".into(),
+        };
+        let billing_err =
+            admin_transport_error(uncertain_billing, Some("owner/repo"), false, false, None);
+        match billing_err {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::ProviderUnavailable);
+                assert_eq!(diag.error_code_str(), Some("billing_not_configured"));
+            }
+            other => panic!("expected ProviderUnavailable billing_not_configured, got {other:?}"),
+        }
+
+        // `400 invalid_request` must map to ActionRequired (`invalid_request`), never
+        // `AuthRequired`, so `account_result` does not destroy a valid live session.
+        let invalid_req = DactylError::Adapter {
+            kind: AdapterErrorKind::Authentication,
+            code: Some("invalid_request".into()),
+            message: "invalid_request".into(),
+        };
+        let invalid_err =
+            admin_transport_error(invalid_req, Some("owner/repo"), false, false, None);
+        match invalid_err {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::ActionRequired);
+                assert_eq!(diag.error_code_str(), Some("invalid_request"));
+            }
+            other => panic!("expected ActionRequired invalid_request, got {other:?}"),
         }
     }
 

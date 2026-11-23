@@ -68,6 +68,7 @@ pub enum CloudAuthErrorCode {
     BillingUnavailable,
     Conflict,
     NotFound,
+    InvalidRequest,
     // dactyl-db 0.19.0 problem codes (#132, #133, #134, #136, #139, #140)
     UseDpopNonce,
     InvalidDpopProof,
@@ -129,6 +130,7 @@ impl CloudAuthErrorCode {
             Self::BillingUnavailable => "billing_unavailable",
             Self::Conflict => "conflict",
             Self::NotFound => "not_found",
+            Self::InvalidRequest => "invalid_request",
             Self::UseDpopNonce => "use_dpop_nonce",
             Self::InvalidDpopProof => "invalid_dpop_proof",
             Self::DpopAudMismatch => "dpop_aud_mismatch",
@@ -189,6 +191,7 @@ impl CloudAuthErrorCode {
             "billing_unavailable" => Some(Self::BillingUnavailable),
             "conflict" => Some(Self::Conflict),
             "not_found" => Some(Self::NotFound),
+            "invalid_request" => Some(Self::InvalidRequest),
             "use_dpop_nonce" => Some(Self::UseDpopNonce),
             "invalid_dpop_proof" => Some(Self::InvalidDpopProof),
             "dpop_aud_mismatch" => Some(Self::DpopAudMismatch),

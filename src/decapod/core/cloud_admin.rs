@@ -1764,7 +1764,7 @@ pub fn org_admins(
                             dactyl_db::AccountOperation::OrgAdmins,
                             &json!({
                                 "version": 1,
-                                "action": "list",
+                                "operation": "list",
                                 "organization_id": org_id,
                             }),
                             repo,
@@ -1799,7 +1799,7 @@ pub fn org_admins(
                         )?;
                         let mut body = json!({
                             "version": 1,
-                            "action": "grant",
+                            "operation": "grant",
                             "organization_id": org_id,
                             "member_account_id": member_id,
                         });
@@ -1849,7 +1849,7 @@ pub fn org_admins(
                         )?;
                         let mut body = json!({
                             "version": 1,
-                            "action": "revoke",
+                            "operation": "revoke",
                             "organization_id": org_id,
                             "member_account_id": member_id,
                         });
@@ -1927,7 +1927,7 @@ pub fn org_recovery(
                             dactyl_db::AccountOperation::OrgRecovery,
                             &json!({
                                 "version": 1,
-                                "action": "status",
+                                "operation": "status",
                                 "organization_id": org_id,
                             }),
                             repo,
@@ -1959,7 +1959,7 @@ pub fn org_recovery(
                         )?;
                         let mut body = json!({
                             "version": 1,
-                            "action": "initiate",
+                            "operation": "initiate",
                             "organization_id": org_id,
                         });
                         if let Some(r) = reason {
@@ -1991,7 +1991,11 @@ pub fn org_recovery(
                             "schema_version": CLOUD_RECOVERY_SCHEMA_VERSION,
                             "operation": "initiate",
                             "organization_id": org_id,
-                            "recovery_id": safe.get("recovery_id").cloned().unwrap_or(Value::Null),
+                            "recovery_id": safe
+                                .get("recovery_request_id")
+                                .or_else(|| safe.get("recovery_id"))
+                                .cloned()
+                                .unwrap_or(Value::Null),
                             "status": safe.get("status").cloned().unwrap_or_else(|| json!("recovery_initiated")),
                             "response": safe,
                         })
@@ -2015,9 +2019,9 @@ pub fn org_recovery(
                             dactyl_db::AccountOperation::OrgRecovery,
                             &json!({
                                 "version": 1,
-                                "action": "approve",
+                                "operation": "confirm",
                                 "organization_id": org_id,
-                                "recovery_id": rec_id,
+                                "recovery_request_id": rec_id,
                             }),
                             repo,
                             true,
@@ -2054,9 +2058,9 @@ pub fn org_recovery(
                             dactyl_db::AccountOperation::OrgRecovery,
                             &json!({
                                 "version": 1,
-                                "action": "cancel",
+                                "operation": "cancel",
                                 "organization_id": org_id,
-                                "recovery_id": rec_id,
+                                "recovery_request_id": rec_id,
                             }),
                             repo,
                             true,
@@ -2118,7 +2122,7 @@ pub fn policy_templates(
                             dactyl_db::AccountOperation::PolicyTemplates,
                             &json!({
                                 "version": 1,
-                                "action": "list",
+                                "operation": "audit_list",
                                 "organization_id": org_id,
                             }),
                             repo,
@@ -2154,7 +2158,7 @@ pub fn policy_templates(
                             dactyl_db::AccountOperation::PolicyTemplates,
                             &json!({
                                 "version": 1,
-                                "action": "get",
+                                "operation": "export",
                                 "organization_id": org_id,
                                 "template_id": tid,
                             }),
@@ -2189,7 +2193,7 @@ pub fn policy_templates(
                         )?;
                         let mut body = json!({
                             "version": 1,
-                            "action": "apply",
+                            "operation": "import",
                             "organization_id": org_id,
                             "template_id": tid,
                         });
@@ -2241,7 +2245,7 @@ pub fn policy_templates(
                             dactyl_db::AccountOperation::PolicyTemplates,
                             &json!({
                                 "version": 1,
-                                "action": "delete",
+                                "operation": "delete",
                                 "organization_id": org_id,
                                 "template_id": tid,
                             }),
@@ -2305,7 +2309,7 @@ pub fn org_upgrades(
                             dactyl_db::AccountOperation::OrgUpgrades,
                             &json!({
                                 "version": 1,
-                                "action": "status",
+                                "operation": "status",
                                 "organization_id": org_id,
                             }),
                             repo,
@@ -2342,7 +2346,7 @@ pub fn org_upgrades(
                             dactyl_db::AccountOperation::OrgUpgrades,
                             &json!({
                                 "version": 1,
-                                "action": "request",
+                                "operation": "schedule",
                                 "organization_id": org_id,
                                 "target_tier": tier,
                             }),
@@ -2382,7 +2386,7 @@ pub fn org_upgrades(
                             dactyl_db::AccountOperation::OrgUpgrades,
                             &json!({
                                 "version": 1,
-                                "action": "apply",
+                                "operation": "approve",
                                 "organization_id": org_id,
                                 "upgrade_id": uid,
                             }),
@@ -2421,7 +2425,7 @@ pub fn org_upgrades(
                             dactyl_db::AccountOperation::OrgUpgrades,
                             &json!({
                                 "version": 1,
-                                "action": "cancel",
+                                "operation": "cancel",
                                 "organization_id": org_id,
                                 "upgrade_id": uid,
                             }),
