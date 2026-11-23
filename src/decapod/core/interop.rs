@@ -299,6 +299,12 @@ rpc_catalog![
         description: "Inspect repository-local storage with bounded snapshot reads and explicit coverage",
     },
     OpMeta {
+        op: "data.compact",
+        read_only: false,
+        session_required: true,
+        description: "Run lossless measured compaction (and optional explicit page reclamation) on canonical decapod.db",
+    },
+    OpMeta {
         op: "data.database.capabilities",
         read_only: true,
         session_required: true,

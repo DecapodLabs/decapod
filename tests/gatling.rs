@@ -1581,7 +1581,7 @@ fn t295_decide_schema() {
     let (success, output) = run(&dir, &["decide", "schema"]);
     assert!(success, "decide schema failed:\n{output}");
     assert!(output.contains("decide"));
-    assert!(output.contains("decisions.db"));
+    assert!(output.contains("decapod.db"));
 }
 
 #[test]

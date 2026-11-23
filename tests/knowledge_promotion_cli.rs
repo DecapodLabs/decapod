@@ -236,3 +236,166 @@ fn procedural_knowledge_add_accepts_valid_promotion_event_provenance() {
         String::from_utf8_lossy(&add.stderr)
     );
 }
+
+#[test]
+fn knowledge_write_attestation_supersession_and_outcome_feedback_end_to_end() {
+    let temp = TempDir::new().unwrap();
+    let repo_root = temp.path();
+    let data_dir = repo_root.join(".decapod/data");
+    std::fs::create_dir_all(&data_dir).unwrap();
+    decapod::core::todo::initialize_todo_db(&data_dir).unwrap();
+    decapod::core::db::initialize_knowledge_db(&data_dir).unwrap();
+    let store = decapod::core::store::Store {
+        kind: decapod::core::store::StoreKind::Repo,
+        root: data_dir,
+    };
+
+    let guide = repo_root.join("ARCHITECTURE_NOTE.md");
+    std::fs::write(&guide, "Use option A for storage transactions.\n").unwrap();
+
+    // 1. Seed rejected choice B repeated 20 times, then supersede with attested A.
+    let repeated_b = "Prefer legacy option B. ".repeat(20);
+    decapod::plugins::knowledge::add_attested_knowledge(
+        &store,
+        repo_root,
+        decapod::plugins::knowledge::AddKnowledgeParams {
+            id: "K_B",
+            title: "Storage choice B",
+            content: &repeated_b,
+            provenance: "file:ARCHITECTURE_NOTE.md#L1",
+            claim_id: None,
+            merge_key: Some("storage-tx-choice"),
+            conflict_policy: decapod::plugins::knowledge::KnowledgeConflictPolicy::Supersede,
+            status: "active",
+            ttl_policy: "persistent",
+            expires_ts: None,
+        },
+        "root",
+    )
+    .unwrap();
+
+    let res = decapod::plugins::knowledge::add_attested_knowledge(
+        &store,
+        repo_root,
+        decapod::plugins::knowledge::AddKnowledgeParams {
+            id: "K_A",
+            title: "Storage choice A",
+            content: "Human accepted option A over B for transactional safety.",
+            provenance: "file:ARCHITECTURE_NOTE.md#L1",
+            claim_id: None,
+            merge_key: Some("storage-tx-choice"),
+            conflict_policy: decapod::plugins::knowledge::KnowledgeConflictPolicy::Supersede,
+            status: "active",
+            ttl_policy: "persistent",
+            expires_ts: None,
+        },
+        "root",
+    )
+    .unwrap();
+    assert_eq!(res.action, "superseded");
+    assert_eq!(res.superseded_ids, vec!["K_B".to_string()]);
+
+    // Fresh operative packet must contain ONLY A, with write-time attestation & supersedes_id = K_B.
+    let pkt1 = decapod::plugins::knowledge::resolve_context(
+        &store,
+        repo_root,
+        Some("storage option"),
+        None,
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(pkt1.status, "advisory_knowledge_selected");
+    assert_eq!(pkt1.records.len(), 1);
+    let rec = &pkt1.records[0];
+    assert_eq!(rec.id, "K_A");
+    assert_eq!(rec.supersedes_id.as_deref(), Some("K_B"));
+    assert_eq!(rec.provenance_class, "write_time_source_attested");
+    assert_eq!(rec.freshness, "source_attested_current");
+    assert!(!rec.excerpt.contains("Prefer legacy option B"));
+
+    // Historical B remains explicitly auditable by ID and history event.
+    let hist_b = decapod::plugins::knowledge::get_knowledge(&store, "K_B")
+        .unwrap()
+        .expect("superseded B retained for audit");
+    assert_eq!(hist_b.status, "superseded");
+    assert!(hist_b.content.contains("Prefer legacy option B"));
+    let audit = decapod::plugins::knowledge::knowledge_history(&store, "K_B").unwrap();
+    assert_eq!(audit.len(), 1);
+
+    // 2. Mutating the attested source file must surface `source_changed_since_write`.
+    std::fs::write(&guide, "Updated note after write.\n").unwrap();
+    let pkt2 = decapod::plugins::knowledge::resolve_context(
+        &store,
+        repo_root,
+        Some("storage option"),
+        None,
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(pkt2.records[0].freshness, "source_changed_since_write");
+    assert!(
+        pkt2.records[0]
+            .reasons
+            .iter()
+            .any(|r| r == "source_file_modified_since_attestation")
+    );
+
+    // 3. Add a second independent entry K_C, mark K_A with `hurt` outcome feedback:
+    // K_A must carry visible caution and sort behind K_C without self-promoting K_C.
+    decapod::plugins::knowledge::add_attested_knowledge(
+        &store,
+        repo_root,
+        decapod::plugins::knowledge::AddKnowledgeParams {
+            id: "K_C",
+            title: "Storage checklist",
+            content: "Always check storage option invariants.",
+            provenance: "file:ARCHITECTURE_NOTE.md#L1",
+            claim_id: None,
+            merge_key: Some("storage-checklist"),
+            conflict_policy: decapod::plugins::knowledge::KnowledgeConflictPolicy::Supersede,
+            status: "active",
+            ttl_policy: "persistent",
+            expires_ts: None,
+        },
+        "root",
+    )
+    .unwrap();
+    decapod::plugins::knowledge::log_retrieval_feedback(
+        &store,
+        "storage option",
+        &["K_A".to_string(), "K_C".to_string()],
+        &["K_A".to_string()],
+        "hurt",
+        "manual_feedback",
+    )
+    .unwrap();
+
+    let pkt3 = decapod::plugins::knowledge::resolve_context(
+        &store,
+        repo_root,
+        Some("storage option"),
+        None,
+        &[],
+        None,
+    )
+    .unwrap();
+    assert_eq!(pkt3.records.len(), 2);
+    assert_eq!(pkt3.records[0].id, "K_C");
+    assert_eq!(pkt3.records[1].id, "K_A");
+    assert_eq!(
+        pkt3.records[1].feedback_summary.as_ref().map(|f| f.hurt),
+        Some(1)
+    );
+    assert!(
+        pkt3.records[1]
+            .reasons
+            .iter()
+            .any(|r| r == "prior_retrieval_outcome_hurt")
+    );
+    assert_eq!(
+        pkt3.records[0].authority,
+        "advisory_below_current_intent_and_policy"
+    );
+}

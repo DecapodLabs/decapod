@@ -1024,11 +1024,11 @@ impl MentorEngine {
                 confidence,
             } => Obligation {
                 kind: ObligationKind::DocAnchor,
-                ref_path: format!("aptitude.db/preferences/{category}.{key}"),
+                ref_path: format!("decapod.db/preferences/{category}.{key}"),
                 title: format!("Preference: {category}.{key}"),
                 why_short: format!("User preference (confidence {confidence}%): {value}"),
                 evidence: Evidence {
-                    source: "aptitude.db".to_string(),
+                    source: "decapod.db".to_string(),
                     id: format!("{category}.{key}"),
                     hash: None,
                     timestamp: None,

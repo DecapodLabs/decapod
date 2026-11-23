@@ -1338,6 +1338,7 @@ pub fn check_cloud_authoring(
     }
     if record.container_expected
         && !Path::new("/.dockerenv").exists()
+        && !Path::new("/run/.containerenv").exists()
         && std::env::var("DECAPOD_CONTAINER").ok().as_deref() != Some("1")
     {
         if let (Some(rt), Some(cname), Some(inv)) = (

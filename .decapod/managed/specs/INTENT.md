@@ -1,5 +1,12 @@
 # Intent
 
+## Live Podman container-custody & Propodus Cloud Admin wire alignment (#1379, #1859, #1886, #1896)
+
+Resolves four defects uncovered during live Podman container-custody execution and live hosted Cloud Pilot verification against `goyxpcmxetztjlrrcwew` (`039`) on `decapod v0.163.0`:
+
+- **Podman container-signer argument splice, socket-dir mount & `/run/.containerenv` detection (`#1379`, `#1886`)**: Fixes `prepare_container_signer_server` (`src/decapod/plugins/container.rs`) so `-v` and `-e DECAPOD_CONTAINER_SIGNER_SOCKET=...` flags splice immediately before the positional container image argument (`spec.args.len().saturating_sub(4)` instead of `saturating_sub(3)`, which previously passed `-v` as the container command and crashed `crun` with exit 127), canonicalizes `/tmp` -> `/private/tmp` and bind-mounts the dedicated private socket directory for macOS Podman virtio-fs compatibility, emits `DECAPOD_WORKSPACE_IMAGE` and `DECAPOD_CONTAINER=1` from `build_docker_spec`, and recognizes Podman's standard `/run/.containerenv` marker alongside `/.dockerenv` in `src/decapod/core/workspace.rs` and `src/decapod/core/cloud_workspace.rs`.
+- **Live Propodus Cloud Admin wire contract & session-custody preservation (`#1859`, `#1896`)**: Aligns `src/decapod/core/cloud_admin.rs` (`OrgAdmins`, `OrgRecovery`, `PolicyTemplates`, `OrgUpgrades`) to live Propodus `accounts.js` `"operation"` / `"recovery_request_id"` request envelopes, gates `MutationOutcome::Uncertain -> OutcomeUnknown` in `cloud_client::admin_transport_error` strictly on mutating requests so read-only `decapod cloud orgs` billing probes gracefully handle `503 billing_not_configured`, and maps `"invalid_request"` (`CloudAuthErrorCode::InvalidRequest`) to `CloudAuthStatus::ActionRequired` instead of `AuthRequired` so HTTP 400 parameter errors never wipe a valid live human Cloud session.
+
 ## Execution telemetry projection, MCP worktree/session gate parity, observed interop receipts, real-host activation, and empirical studies (#870, #871, #872, #873, #875, #880, #1888, #1733, #1735, #1763, #1772, #1774, #1796, #1095, #1367, #1024)
 
 Extends Decapod's local-first, daemonless observability and interoperability planes with deterministic execution telemetry, real worktree/session gate parity on stdio MCP mutations, polyglot initialization tests, multi-process cold-context handoff and TOCTOU gate-denial controls, and empirically observed host/reviewer studies:
@@ -1390,7 +1397,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 632 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (4), `docs/` (3), `packages/` (3), `src/` (284), `tests/` (283)
+- Tracked significant codebase files: 634 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (284), `tests/` (283)
 - Core modules: 147 | Workflows: 9 | Integration targets: 169
 <!-- decapod:codebase-contract:end -->
 
@@ -1398,7 +1405,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `b9612b20da40ec2a96093f277279f66b3297e120cc46c02c9ffbeb3804855e7d`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -491,3 +491,88 @@ fn stale_legacy_sqlite_sidecars_are_migrated_without_touching_unknown_files() {
     );
     assert!(data.join(schemas::LOCAL_DB_NAME).is_file());
 }
+
+#[test]
+fn legacy_feedback_and_dot_broker_dedupe_migrate_losslessly_into_single_datastore() {
+    let temp = tempdir().unwrap();
+    let decapod_root = temp.path().join(".decapod");
+    let data = decapod_root.join("data");
+    std::fs::create_dir_all(&data).unwrap();
+
+    // Seed legacy feedback.db and broker.dedupe.db (dot-separated legacy filename)
+    {
+        let fb = db::db_connect(&data.join(schemas::FEEDBACK_DB_NAME).to_string_lossy()).unwrap();
+        fb.execute_batch(schemas::FEEDBACK_DB_SCHEMA).unwrap();
+        fb.execute(
+            "INSERT INTO feedback(id, source, text, links, created_at) VALUES(?1, ?2, ?3, ?4, ?5)",
+            db::params![
+                "fb_01",
+                "operator",
+                "keep single sqlite",
+                "",
+                "2026-11-22T00:00:00Z"
+            ],
+        )
+        .unwrap();
+    }
+    {
+        let dedupe = db::db_connect(&data.join("broker.dedupe.db").to_string_lossy()).unwrap();
+        dedupe
+            .execute_batch(
+                "CREATE TABLE request_dedupe (
+                    request_id TEXT PRIMARY KEY,
+                    payload_hash TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    commit_marker TEXT,
+                    result_envelope TEXT NOT NULL,
+                    retry_after_ms_hint INTEGER,
+                    created_at TEXT NOT NULL
+                );",
+            )
+            .unwrap();
+        dedupe
+            .execute(
+                "INSERT INTO request_dedupe(request_id, payload_hash, status, result_envelope, created_at)
+                 VALUES(?1, ?2, ?3, ?4, ?5)",
+                db::params![
+                    "req_01",
+                    "sha256:abc",
+                    "committed",
+                    "{\"ok\":true}",
+                    "2026-11-22T00:00:00Z"
+                ],
+            )
+            .unwrap();
+    }
+
+    migration::check_and_migrate_with_backup(&decapod_root, |_| Ok(())).unwrap();
+    // Re-running migration must be idempotent.
+    migration::check_and_migrate_with_backup(&decapod_root, |_| Ok(())).unwrap();
+
+    assert!(data.join(schemas::LOCAL_DB_NAME).is_file());
+    assert!(!data.join(schemas::FEEDBACK_DB_NAME).exists());
+    assert!(!data.join("broker.dedupe.db").exists());
+
+    let conn = db::db_connect(&data.join(schemas::LOCAL_DB_NAME).to_string_lossy()).unwrap();
+    let fb_text: String = conn
+        .query_row("SELECT text FROM feedback WHERE id = 'fb_01'", [], |r| {
+            r.get(0)
+        })
+        .unwrap();
+    assert_eq!(fb_text, "keep single sqlite");
+
+    let dedupe_status: String = conn
+        .query_row(
+            "SELECT status FROM request_dedupe WHERE request_id = 'req_01'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    assert_eq!(dedupe_status, "committed");
+
+    // Plugin schemas must advertise canonical decapod.db, not legacy sidecars.
+    let fb_schema = decapod::plugins::feedback::schema();
+    assert_eq!(fb_schema["storage"], serde_json::json!(["decapod.db"]));
+    let decide_schema = decapod::plugins::decide::schema();
+    assert_eq!(decide_schema["storage"], serde_json::json!(["decapod.db"]));
+}

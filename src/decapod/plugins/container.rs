@@ -2145,6 +2145,10 @@ fn build_docker_spec(
         "DECAPOD_PR=0".to_string(),
         "-e".to_string(),
         format!("DECAPOD_WORKSPACE={}", workspace_str),
+        "-e".to_string(),
+        format!("DECAPOD_WORKSPACE_IMAGE={}", image),
+        "-e".to_string(),
+        "DECAPOD_CONTAINER=1".to_string(),
         "-v".to_string(),
         format!("{}:{}", workspace_str, workspace_str),
         "-w".to_string(),
@@ -2380,11 +2384,29 @@ fn prepare_container_signer_server(
     let server = crate::core::container_signer::HostContainerSignerServer::bind_with_relay(
         &sock_path, policy, relay,
     )?;
-    let sock_str = server.socket_path().to_string_lossy().to_string();
-    let insert_idx = spec.args.len().saturating_sub(3);
+    // Canonicalize the parent directory so symlinks like `/tmp -> /private/tmp`
+    // on macOS resolve to the VM-shared path (`/private/tmp/...`) for Podman/Docker.
+    let host_sock_path = server
+        .socket_path()
+        .parent()
+        .and_then(|p| p.canonicalize().ok())
+        .and_then(|p| server.socket_path().file_name().map(|f| p.join(f)))
+        .unwrap_or_else(|| server.socket_path().to_path_buf());
+    let sock_str = host_sock_path.to_string_lossy().to_string();
+    // Bind-mount the dedicated private socket directory rather than the raw socket
+    // inode when available: macOS Podman virtio-fs rejects `statfs()` on individual
+    // Unix socket files (`EOPNOTSUPP`) while allowing directory bind mounts.
+    let mount_path = host_sock_path
+        .parent()
+        .filter(|p| *p != Path::new("/tmp") && *p != Path::new("/private/tmp"))
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|| sock_str.clone());
+    // `build_docker_spec` appends `[image, "/bin/sh", "-c", script]` (4 items);
+    // runtime `-v`/`-e` flags must be spliced immediately before `image`.
+    let insert_idx = spec.args.len().saturating_sub(4);
     let mut spliced = vec![
         "-v".to_string(),
-        format!("{sock_str}:{sock_str}"),
+        format!("{mount_path}:{mount_path}"),
         "-e".to_string(),
         format!("DECAPOD_CONTAINER_SIGNER_SOCKET={sock_str}"),
         "-e".to_string(),

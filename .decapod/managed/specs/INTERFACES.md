@@ -1,5 +1,32 @@
 # Interfaces
 
+## Wave 7 datastore compaction, `[agent_maintenance]` config, knowledge attestation, and TypeScript/Pi contracts (#1630, #1568, #657, #1277, #1711, #1118)
+
+- **Lossless compaction CLI & RPC (`src/decapod/cli.rs::DataCommand::Compact`, `src/decapod/core/rpc.rs::StorageCompactParams`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs`)**:
+  - CLI: `decapod data compact [--dry-run] [--reclaim-pages] [--format json|text]` outputs `DataCompactionReport` (`decapod.data-compaction-report.v1`) with exact pre/post byte & page counts, `events_compacted`, `prompts_deduplicated`, `components_collected`, `reclaim_executed`, `lossless_verified`, and `hosted_backend_status: "unavailable_local_only"`.
+  - RPC: registers `data.compact` (`read_only = false`, `session_required = true`, aligned with `INV-SESSION-AUTH` entry enforcement) accepting `{ dry_run?: bool, reclaim_pages?: bool }`.
+- **Maintenance policy & Cloud delegated grant contract (`src/decapod/cli.rs`, `src/decapod/core/db_maintenance.rs`)**:
+  - `.decapod/config.toml` accepts `[agent_maintenance]` as an exclusive shorthand alongside `[governance.db_maintenance]` and `[maintenance]`; configuring more than one fails closed with `AMBIGUOUS_MAINTENANCE_POLICY`.
+  - Adds `DELEGATED_GRANTS_CONTROL_OP = "propodus_delegated_grants_v1"`, `CloudDelegatedGrantStatus`, `fetch_cloud_delegated_grant_status`, `parse_cloud_delegated_grant_status`, and `evaluate_cloud_capability_with_delegated_grant`.
+- **Knowledge provenance & feedback projection (`src/decapod/plugins/knowledge.rs`)**:
+  - Adds `add_attested_knowledge(store, repo_root, args, scope)` and extends `KnowledgeContextRecord` with optional `supersedes_id` and `feedback_summary` (`KnowledgeFeedbackSummary`), emitting `freshness = "source_attested_current" | "source_changed_since_write" | "source_unavailable" | "not_captured_at_write"`.
+- **TypeScript client & Pi extension packages (`bindings/typescript/**`, `packages/pi-decapod/**`, `tests/fixtures/darkmatter_readonly_snapshot.v1.json`)**:
+  - `@decapodlabs/decapod-client@0.163.0` exports `DecapodTransport`, `DecapodClient`, `probeTransport`, `classifyDecapodError`, `createPromptProvenance`, `validateDarkmatterSnapshot`, and `DARKMATTER_SNAPSHOT_SCHEMA_VERSION`.
+  - `@decapodlabs/pi-decapod@0.163.0` exports `createPiDecapodExtension` with `onPromptReceived`, `onContextResolve`, `onToolResult`, `beforeMutation`, `onSettlement`, `onResume`, `beforeValidationAndAdmission`, `switchModelOrHarness`, and `classifyDirectHostWrite`.
+  - `tests/fixtures/darkmatter_readonly_snapshot.v1.json` provides the canonical offline read-only consumer snapshot verified by both Rust (`tests/houseboat_engine.rs`) and TypeScript (`bindings/typescript/test/client.test.ts`).
+
+## Podman container-custody & Propodus Cloud Admin wire contract updates (#1379, #1859, #1886, #1896)
+
+- **Propodus Edge JSON request contracts (`src/decapod/core/cloud_admin.rs`)**:
+  - `/org-admins` (`AccountOperation::OrgAdmins`): sends `"operation": "list"|"grant"|"revoke"`.
+  - `/org-recovery` (`AccountOperation::OrgRecovery`): sends `"operation": "status"|"initiate"|"confirm"|"cancel"` and `"recovery_request_id"`, reading either `recovery_request_id` or `recovery_id` from server responses.
+  - `/policy-templates` (`AccountOperation::PolicyTemplates`): sends `"operation": "audit_list"|"export"|"import"|"delete"`.
+  - `/org-upgrades` (`AccountOperation::OrgUpgrades`): sends `"operation": "status"|"schedule"|"approve"|"cancel"`.
+- **Error taxonomy & container status contracts (`src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/workspace.rs`, `src/decapod/plugins/container.rs`)**:
+  - Adds `CloudAuthErrorCode::InvalidRequest` (`"invalid_request"`) mapped to `CloudAuthStatus::ActionRequired`, preserving session custody on HTTP 400 parameter errors.
+  - Preserves structured `billing_not_configured` on non-mutating `decapod cloud orgs` billing probes rather than flattening into `OutcomeUnknown`.
+  - `decapod workspace status` recognizes `/run/.containerenv` and `DECAPOD_CONTAINER=1` for Podman `in_container: true`, and `decapod auto container run` exports `DECAPOD_WORKSPACE_IMAGE` and `DECAPOD_CONTAINER=1` while splicing `DECAPOD_CONTAINER_SIGNER_SOCKET` flags before the image positional argument.
+
 ## Execution telemetry CLI/RPC/HTTP and MCP `--allow-mutations` interfaces (#1095, #872, #871)
 
 - **Read-only telemetry CLI (`src/decapod/cli.rs::ObserveCommand::Telemetry`, `src/decapod/lib.rs::run_observe_command`)**:
@@ -2515,7 +2542,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Contract Snapshot
 
-- CLI/RPC/protocol surfaces (21): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/interop.rs`, `src/decapod/core/observability_projections/server.rs`, `src/decapod/core/rpc.rs`, `src/decapod/lib.rs`, (+5 more)
+- CLI/RPC/protocol surfaces (23): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/README.md`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/README.md`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/interop.rs`, `src/decapod/core/observability_projections/server.rs`, (+7 more)
 - Manifest authority path: `.decapod/managed/.manifest.json`
 <!-- decapod:codebase-contract:end -->
 
@@ -2523,7 +2550,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b30601911fe9c657bd3b9d19f0fe738905037a6af95900da1d47b66178dadf2f`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `b9612b20da40ec2a96093f277279f66b3297e120cc46c02c9ffbeb3804855e7d`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
