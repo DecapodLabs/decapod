@@ -158,3 +158,158 @@ fn first_run_agent_init_reports_fresh_reconciliation_after_source_change() {
     );
     assert_eq!(report["merge_ready"], false);
 }
+
+#[test]
+fn polyglot_fixtures_reconcile_without_cloud_and_preserve_authored_files() {
+    // Cargo (Rust), Node/TypeScript, Go, Python, and mixed monorepo fixtures (#1024).
+    let fixtures: &[(&str, &[(&str, &str)])] = &[
+        (
+            "cargo-rust",
+            &[
+                (
+                    "Cargo.toml",
+                    "[package]\nname = \"polyglot-rust\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+                ),
+                ("src/lib.rs", "pub fn ok() -> bool { true }\n"),
+            ],
+        ),
+        (
+            "node-ts",
+            &[
+                (
+                    "package.json",
+                    "{\"name\":\"polyglot-node\",\"version\":\"1.0.0\",\"scripts\":{\"test\":\"node --test\"}}\n",
+                ),
+                ("index.mjs", "export const ok = true;\n"),
+            ],
+        ),
+        (
+            "go-mod",
+            &[
+                ("go.mod", "module example.com/polyglotgo\n\ngo 1.22\n"),
+                ("main.go", "package main\nfunc main() {}\n"),
+            ],
+        ),
+        (
+            "python-pyproject",
+            &[
+                (
+                    "pyproject.toml",
+                    "[project]\nname = \"polyglot-py\"\nversion = \"0.1.0\"\n",
+                ),
+                ("app.py", "def ok():\n    return True\n"),
+            ],
+        ),
+        (
+            "mixed-monorepo",
+            &[
+                ("Cargo.toml", "[workspace]\nmembers = [\"crates/core\"]\n"),
+                (
+                    "crates/core/Cargo.toml",
+                    "[package]\nname = \"core\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+                ),
+                (
+                    "crates/core/src/lib.rs",
+                    "pub fn core_ok() -> bool { true }\n",
+                ),
+                (
+                    "web/package.json",
+                    "{\"name\":\"web\",\"version\":\"1.0.0\",\"scripts\":{\"test\":\"node --test\"}}\n",
+                ),
+                (
+                    ".github/workflows/ci.yml",
+                    "name: Existing Authored CI\non: [push]\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo authored\n",
+                ),
+            ],
+        ),
+    ];
+
+    for (name, files) in fixtures {
+        let root = tempdir().unwrap();
+        for (rel, body) in *files {
+            let full = root.path().join(rel);
+            if let Some(parent) = full.parent() {
+                fs::create_dir_all(parent).unwrap();
+            }
+            fs::write(&full, body).unwrap();
+        }
+
+        // Dry-run must be strictly non-mutating (#1024).
+        let dry = run(
+            root.path(),
+            &["init", "--dry-run", "--proof", "--no-ci", "--no-specs"],
+        );
+        assert!(
+            dry.status.success(),
+            "dry-run failed for {name}: {}",
+            String::from_utf8_lossy(&dry.stderr)
+        );
+        assert!(
+            !root.path().join(".decapod").exists(),
+            "init --dry-run mutated {name} by creating .decapod/"
+        );
+
+        // Local-first init works offline with zero cloud credentials/env.
+        let stdout = init(
+            root.path(),
+            &[
+                "init",
+                "--proof",
+                "--no-ci",
+                "--no-specs",
+                "--no-container-workspaces",
+            ],
+        );
+        assert!(
+            stdout.contains("merge-ready: false"),
+            "{name} init must not claim merge readiness before proof: {stdout}"
+        );
+        assert!(
+            stdout.contains("proof: not_run"),
+            "{name} init must report proof: not_run: {stdout}"
+        );
+
+        // Preserve authored OVERRIDE.md across forced re-init (#1024).
+        let custom_override = "# Custom Project Override\nKeep project lifecycle intact.\n";
+        fs::write(root.path().join(".decapod/OVERRIDE.md"), custom_override).unwrap();
+        let _reinit = init(
+            root.path(),
+            &[
+                "init",
+                "--proof",
+                "--force",
+                "--no-ci",
+                "--no-specs",
+                "--no-container-workspaces",
+            ],
+        );
+        assert_eq!(
+            fs::read_to_string(root.path().join(".decapod/OVERRIDE.md")).unwrap(),
+            custom_override,
+            "{name} re-init overwrote authored OVERRIDE.md"
+        );
+
+        // Verify all authored source and CI files survived untouched.
+        for (rel, body) in *files {
+            assert_eq!(
+                fs::read_to_string(root.path().join(rel)).unwrap(),
+                *body,
+                "{name} init/re-init mutated authored file {rel}"
+            );
+        }
+
+        // Verify agent.init produces fresh deterministic reconciliation without cloud auth.
+        let agent_init = run(root.path(), &["rpc", "--op", "agent.init"]);
+        assert!(
+            agent_init.status.success(),
+            "{name} agent.init failed offline: {}",
+            String::from_utf8_lossy(&agent_init.stderr)
+        );
+        let parsed: serde_json::Value = serde_json::from_slice(&agent_init.stdout).unwrap();
+        assert_eq!(parsed["result"]["reconciliation"]["merge_ready"], false);
+        assert_eq!(
+            parsed["result"]["reconciliation"]["proof_status"],
+            "not_run"
+        );
+    }
+}
