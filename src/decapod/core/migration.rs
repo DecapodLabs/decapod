@@ -33,7 +33,12 @@ const LEGACY_LOCAL_DATABASES: &[&str] = &[
     schemas::APTITUDE_DB_NAME,
     schemas::CRON_DB_NAME,
     schemas::REFLEX_DB_NAME,
+    schemas::HEALTH_DB_NAME,
+    schemas::POLICY_DB_NAME,
+    schemas::FEEDBACK_DB_NAME,
+    schemas::ARCHIVE_DB_NAME,
     "broker_dedupe.db",
+    "broker.dedupe.db",
 ];
 
 /// Migration definition
@@ -2248,7 +2253,15 @@ fn migrate_consolidate_single_datastore(decapod_root: &Path) -> Result<(), error
         ),
         (schemas::CRON_DB_NAME, &["cron_jobs"][..]),
         (schemas::REFLEX_DB_NAME, &["reflexes"][..]),
+        (
+            schemas::HEALTH_DB_NAME,
+            &["claims", "proof_events", "health_cache"][..],
+        ),
+        (schemas::POLICY_DB_NAME, &["approvals"][..]),
+        (schemas::FEEDBACK_DB_NAME, &["feedback"][..]),
+        (schemas::ARCHIVE_DB_NAME, &["archives"][..]),
         ("broker_dedupe.db", &["request_dedupe"][..]),
+        ("broker.dedupe.db", &["request_dedupe"][..]),
     ];
 
     for (source_name, tables) in sources {

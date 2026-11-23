@@ -406,6 +406,14 @@ impl Default for StorageInventoryParams {
     }
 }
 
+/// Parameters for lossless measured datastore compaction (`data.compact`, #1630).
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct StorageCompactParams {
+    pub dry_run: bool,
+    pub reclaim_pages: bool,
+}
+
 /// Governed capability discovery for local agent database maintenance (#1568).
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
@@ -1325,6 +1333,12 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
                 description: "Bounded read-only local storage inventory without startup migrations or maintenance".to_string(),
                 stability: "beta".to_string(),
                 cost: "bounded_scan".to_string(),
+            },
+            Capability {
+                name: "data.compact".to_string(),
+                description: "Lossless measured compaction and optional explicit page reclamation on canonical decapod.db".to_string(),
+                stability: "beta".to_string(),
+                cost: "medium".to_string(),
             },
             Capability {
                 name: "data.database.capabilities".to_string(),

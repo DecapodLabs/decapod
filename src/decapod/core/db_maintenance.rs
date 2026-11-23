@@ -397,6 +397,232 @@ pub fn execute_cloud_owner_repair_batch(
 
 pub const REPOSITORY_ACCESS_CONTROL_OP: &str = "propodus_repository_access_v1";
 
+/// Propodus migration 037 (`#219`) server-verified delegated operation grants RPC.
+pub const DELEGATED_GRANTS_CONTROL_OP: &str = "propodus_delegated_grants_v1";
+
+/// Server-verified delegated operation grant snapshot from Propodus migration 037
+/// (`propodus.delegated_operation_grants`, `#1568`, `#219`).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CloudDelegatedGrantStatus {
+    pub grant_id: String,
+    pub repository: String,
+    pub revoked: bool,
+    pub expired: bool,
+    pub revocation_generation: u64,
+    pub observed_revocation_generation: u64,
+    pub policy_generation: u64,
+    pub observed_policy_generation: u64,
+    pub session_generation: u64,
+    pub observed_session_generation: u64,
+    pub grant_policy_digest: Option<String>,
+    pub allowed_operations: BTreeSet<String>,
+}
+
+/// Query a server-verified delegated operation grant via `dactyl-db 0.19.0`
+/// `CloudConnector::control_request("propodus_delegated_grants_v1", ..., Read)` (`#1568`, `#219`).
+#[cfg(feature = "supabase-cloud")]
+pub fn fetch_cloud_delegated_grant_status(
+    connector: &dactyl_db::CloudConnector,
+    bearer: &str,
+    project_id: &str,
+    grant_id: &str,
+) -> Result<CloudDelegatedGrantStatus, DecapodError> {
+    let payload = serde_json::json!({
+        "version": 1,
+        "action": "get_grant",
+        "project_id": project_id,
+        "grant_id": grant_id,
+    });
+    let resp = connector
+        .control_request(
+            DELEGATED_GRANTS_CONTROL_OP,
+            &payload,
+            Some(bearer),
+            dactyl_db::OperationKind::Read,
+            dactyl_db::ResourceBudget::default(),
+        )
+        .map_err(crate::core::cloud_client::transport_error)?;
+    parse_cloud_delegated_grant_status(&resp)
+}
+
+pub fn parse_cloud_delegated_grant_status(
+    value: &serde_json::Value,
+) -> Result<CloudDelegatedGrantStatus, DecapodError> {
+    let root = value.get("grant").unwrap_or(value);
+    let grant_id = root
+        .get("grant_id")
+        .or_else(|| root.get("id"))
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| {
+            DecapodError::ValidationError(
+                "CLOUD_DELEGATED_GRANT_INVALID: server response missing grant_id".to_string(),
+            )
+        })?
+        .to_string();
+    let repository = root
+        .get("repository")
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| {
+            DecapodError::ValidationError(
+                "CLOUD_DELEGATED_GRANT_INVALID: server response missing repository".to_string(),
+            )
+        })?
+        .to_string();
+    let revoked = root
+        .get("revoked")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(true);
+    let expired = root
+        .get("expired")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(true);
+    let u64_field = |key: &str| -> u64 {
+        root.get(key)
+            .and_then(serde_json::Value::as_u64)
+            .unwrap_or(0)
+    };
+    let revocation_generation = u64_field("revocation_generation");
+    let observed_revocation_generation = root
+        .get("observed_revocation_generation")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(revocation_generation);
+    let policy_generation = u64_field("policy_generation");
+    let observed_policy_generation = root
+        .get("observed_policy_generation")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(policy_generation);
+    let session_generation = u64_field("session_generation");
+    let observed_session_generation = root
+        .get("observed_session_generation")
+        .and_then(serde_json::Value::as_u64)
+        .unwrap_or(session_generation);
+    let grant_policy_digest = root
+        .get("grant_policy_digest")
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_string);
+    let allowed_operations = root
+        .get("allowed_operations")
+        .and_then(serde_json::Value::as_array)
+        .map(|arr| {
+            arr.iter()
+                .filter_map(serde_json::Value::as_str)
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect::<BTreeSet<_>>()
+        })
+        .unwrap_or_default();
+
+    Ok(CloudDelegatedGrantStatus {
+        grant_id,
+        repository,
+        revoked,
+        expired,
+        revocation_generation,
+        observed_revocation_generation,
+        policy_generation,
+        observed_policy_generation,
+        session_generation,
+        observed_session_generation,
+        grant_policy_digest,
+        allowed_operations,
+    })
+}
+
+/// Evaluate cloud database maintenance admission intersecting canonical project policy,
+/// server-verified repository access status (`propodus_repository_access_v1`), AND
+/// server-verified delegated operation grant generations (`propodus_delegated_grants_v1`,
+/// Propodus migration 037 / `#1568`). Always fails closed on revocation, expiry,
+/// generation drift, cross-repo mismatch, or ungranted operations.
+#[must_use]
+pub fn evaluate_cloud_capability_with_delegated_grant(
+    policy: &CanonicalMaintenancePolicy,
+    capability: DbMaintenanceCapability,
+    expected_policy_sha256: Option<&str>,
+    server_access: Option<&CloudRepositoryAccessStatus>,
+    delegated_grant: Option<&CloudDelegatedGrantStatus>,
+) -> (CapabilityDecision, &'static str, String) {
+    let base = evaluate_cloud_capability_decision_with_access(
+        policy,
+        capability,
+        expected_policy_sha256,
+        server_access,
+    );
+    if base.0 != CapabilityDecision::Allowed {
+        return base;
+    }
+    let Some(grant) = delegated_grant else {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_DELEGATED_GRANT_REQUIRED",
+            "cloud delegated maintenance requires a server-verified propodus_delegated_grants_v1 grant".to_string(),
+        );
+    };
+    if grant.repository != policy.repo_identity {
+        return (
+            CapabilityDecision::Denied,
+            "CROSS_REPO_AUTHORITY_DENIED",
+            format!(
+                "delegated grant repository '{}' does not match canonical repository '{}'",
+                grant.repository, policy.repo_identity
+            ),
+        );
+    }
+    if grant.revoked {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_DELEGATED_GRANT_REVOKED",
+            format!("delegated grant '{}' has been revoked", grant.grant_id),
+        );
+    }
+    if grant.expired {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_DELEGATED_GRANT_EXPIRED",
+            format!("delegated grant '{}' has expired", grant.grant_id),
+        );
+    }
+    if grant.revocation_generation == 0
+        || grant.policy_generation == 0
+        || grant.session_generation == 0
+        || grant.revocation_generation != grant.observed_revocation_generation
+        || grant.policy_generation != grant.observed_policy_generation
+        || grant.session_generation != grant.observed_session_generation
+    {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_DELEGATED_GRANT_GENERATION_STALE",
+            format!(
+                "delegated grant '{}' generation mismatch (revocation {}!={}, policy {}!={}, session {}!={})",
+                grant.grant_id,
+                grant.revocation_generation,
+                grant.observed_revocation_generation,
+                grant.policy_generation,
+                grant.observed_policy_generation,
+                grant.session_generation,
+                grant.observed_session_generation
+            ),
+        );
+    }
+    if !grant.allowed_operations.contains(capability.as_str()) {
+        return (
+            CapabilityDecision::Denied,
+            "CLOUD_DELEGATED_OPERATION_NOT_GRANTED",
+            format!(
+                "capability '{}' is not permitted by monotonically narrowed delegated grant '{}'",
+                capability.as_str(),
+                grant.grant_id
+            ),
+        );
+    }
+    base
+}
+
 /// Query current repository access tier and owner-repair policy via `dactyl-db 0.18.0`
 /// `CloudConnector::control_request("propodus_repository_access_v1", ..., Read)` (`#1590`, `dactyl#123`).
 #[cfg(feature = "supabase-cloud")]
@@ -665,6 +891,7 @@ pub struct DbMaintenanceConfig {
 }
 
 impl DbMaintenanceConfig {
+    #[must_use]
     pub fn is_default(&self) -> bool {
         !self.enabled
             && self.allowed.is_none()
@@ -672,6 +899,7 @@ impl DbMaintenanceConfig {
             && self.required_tier.is_none()
     }
 
+    #[must_use]
     pub fn effective_safe_allowlist(&self) -> BTreeSet<DbMaintenanceCapability> {
         if !self.enabled {
             return BTreeSet::new();
@@ -1361,6 +1589,7 @@ pub fn verify_actor_and_custody(
 }
 
 /// Evaluate capability admissibility for a single modeled capability against the canonical policy.
+#[must_use]
 pub fn evaluate_capability_decision(
     policy: &CanonicalMaintenancePolicy,
     capability: DbMaintenanceCapability,
@@ -2068,6 +2297,7 @@ pub fn run_maintain_backup(
 /// Evaluate cloud database maintenance admission against server-verified repository
 /// access tiers (`read` / `write` / `owner`). Fails closed when unverified,
 /// mismatched to canonical policy, unmerged, or lacking the required tier.
+#[must_use]
 pub fn evaluate_cloud_capability_decision_with_access(
     policy: &CanonicalMaintenancePolicy,
     capability: DbMaintenanceCapability,
@@ -3347,5 +3577,141 @@ mod tests {
         assert!(redacted.contains("<repo>/.decapod/data/decapod.db"));
         assert!(!redacted.contains("sbp_secret12345"));
         assert!(!redacted.contains("local_01M7XYZ"));
+    }
+
+    #[test]
+    fn agent_maintenance_config_alias_resolves_and_rejects_ambiguity() {
+        let base_toml = toml::to_string(&DecapodProjectConfig::default()).expect("default toml");
+        let toml_alias = format!(
+            "{base_toml}\n[agent_maintenance]\nenabled = true\nallowed = [\"db.inspect\", \"db.verify\"]\n"
+        );
+        let parsed = DecapodProjectConfig::parse(&toml_alias).expect("valid [agent_maintenance]");
+        let eff = parsed
+            .effective_db_maintenance()
+            .expect("resolves [agent_maintenance]");
+        assert!(eff.enabled);
+        assert_eq!(
+            eff.effective_safe_allowlist(),
+            BTreeSet::from([
+                DbMaintenanceCapability::Inspect,
+                DbMaintenanceCapability::Verify,
+            ])
+        );
+
+        let ambiguous = format!("{toml_alias}\n[governance.db_maintenance]\nenabled = true\n");
+        let parsed_amb = DecapodProjectConfig::parse(&ambiguous).expect("schema parses");
+        let err = parsed_amb
+            .effective_db_maintenance()
+            .expect_err("multiple maintenance sections must fail closed");
+        assert_eq!(err.0, "AMBIGUOUS_MAINTENANCE_POLICY");
+    }
+
+    #[test]
+    fn cloud_delegated_grant_enforces_propodus_037_generations_and_narrowing() {
+        let policy = CanonicalMaintenancePolicy {
+            main_root: PathBuf::from("/tmp/repo"),
+            workspace_root: PathBuf::from("/tmp/repo/.decapod/workspaces/wt"),
+            main_store_root: PathBuf::from("/tmp/repo/.decapod/data"),
+            repo_identity: "DecapodLabs/decapod".to_string(),
+            backend: BackendType::Cloud,
+            policy_sha256: "sha256:pol123".to_string(),
+            canonical_revision: "deadbeef:clean".to_string(),
+            config: DbMaintenanceConfig {
+                enabled: true,
+                allowed: Some(vec![
+                    DbMaintenanceCapability::Inspect,
+                    DbMaintenanceCapability::Verify,
+                    DbMaintenanceCapability::Backup,
+                ]),
+                owner_repair_enabled: false,
+                required_tier: None,
+            },
+            unmerged_branch_violation: None,
+        };
+        let access = CloudRepositoryAccessStatus {
+            repository: "DecapodLabs/decapod".to_string(),
+            effective_tier: RepoAccessTier::Write,
+            seat_authorized: true,
+            policy_bound: true,
+            policy_revision: Some(5),
+            policy_hash: Some("sha256:pol123".to_string()),
+            accepted_commit: Some("deadbeef".to_string()),
+            max_delegated_tier: RepoAccessTier::Write,
+            require_owner_for_repair: true,
+            authority_generation: Some(3),
+            repair_eligible: false,
+        };
+        let valid_grant = CloudDelegatedGrantStatus {
+            grant_id: "grant_01".to_string(),
+            repository: "DecapodLabs/decapod".to_string(),
+            revoked: false,
+            expired: false,
+            revocation_generation: 3,
+            observed_revocation_generation: 3,
+            policy_generation: 5,
+            observed_policy_generation: 5,
+            session_generation: 2,
+            observed_session_generation: 2,
+            grant_policy_digest: Some("sha256:pol123".to_string()),
+            allowed_operations: BTreeSet::from(["db.verify".to_string()]),
+        };
+
+        // Narrowed operation allowed when all server generations match.
+        let (dec, _, _) = evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some("sha256:pol123"),
+            Some(&access),
+            Some(&valid_grant),
+        );
+        assert_eq!(dec, CapabilityDecision::Allowed);
+
+        // Capability in project allowlist but outside narrowed grant is denied.
+        let (dec, code, _) = evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Backup,
+            Some("sha256:pol123"),
+            Some(&access),
+            Some(&valid_grant),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_OPERATION_NOT_GRANTED");
+
+        // Revoked grant fails closed immediately.
+        let mut revoked = valid_grant.clone();
+        revoked.revoked = true;
+        let (dec, code, _) = evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some("sha256:pol123"),
+            Some(&access),
+            Some(&revoked),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_GRANT_REVOKED");
+
+        // Stale revocation/policy/session generation fails closed immediately.
+        let mut stale_gen = valid_grant.clone();
+        stale_gen.observed_policy_generation = 6;
+        let (dec, code, _) = evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some("sha256:pol123"),
+            Some(&access),
+            Some(&stale_gen),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_GRANT_GENERATION_STALE");
+
+        // Missing grant fails closed.
+        let (dec, code, _) = evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some("sha256:pol123"),
+            Some(&access),
+            None,
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_GRANT_REQUIRED");
     }
 }

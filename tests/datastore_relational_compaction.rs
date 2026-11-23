@@ -1041,3 +1041,181 @@ fn legacy_v2_store_stamped_0_141_0_is_safely_restamped_on_activate_and_open_with
     assert_eq!(journal_after["status"], "ok");
     assert_eq!(journal_after["journal_valid"], true);
 }
+
+#[test]
+fn data_compact_lossless_measured_dry_run_apply_and_explicit_reclaim_across_real_data() {
+    use decapod::core::{db, events, storage_compaction, todo};
+    use tempfile::tempdir;
+
+    let temp = tempdir().unwrap();
+    let data = temp.path().join(".decapod/data");
+    std::fs::create_dir_all(&data).unwrap();
+    todo::initialize_todo_db(&data).unwrap();
+
+    // Populate real Decapod tasks and legacy verbose events + duplicate agent_prompts.
+    for idx in 0..8 {
+        let cmd = todo::TodoCommand::Add {
+            title: format!("Compaction workload item {idx}"),
+            description: format!(
+                "Repeated governance payload {}: {}",
+                idx,
+                "custody-trajectory-proof-evidence-".repeat(12)
+            ),
+            tags: "compaction,storage".to_string(),
+            owner: "compact-agent".to_string(),
+            due: None,
+            r#ref: format!("ref:compact:{idx}"),
+            scope: format!("paths:[\"src/mod_{}.rs\"]", idx % 3),
+            dir: Some(temp.path().to_string_lossy().to_string()),
+            priority: "medium".to_string(),
+            depends_on: String::new(),
+            blocks: String::new(),
+            parent: None,
+            one_shot: 0,
+        };
+        let added = todo::add_task(&data, &cmd).unwrap();
+        let id = added["id"].as_str().unwrap();
+        let _ = todo::claim_task(&data, id, "compact-agent", todo::ClaimMode::Exclusive).unwrap();
+        let _ = todo::release_task_as_actor(&data, id, "compact-agent").unwrap();
+    }
+
+    // Inject uncompacted legacy verbose non-federation events and duplicate prompts.
+    {
+        let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+        conn.execute_batch(schemas::APTITUDE_DB_SCHEMA_AGENT_PROMPTS)
+            .unwrap();
+        for idx in 0..6 {
+            conn.execute(
+                "INSERT INTO agent_prompts(id, context, prompt_text, priority, active, created_at)
+                 VALUES(?1, 'compaction-context', 'repeated-system-prompt-body', 1, 1, '2026-11-22T00:00:00Z')",
+                db::params![format!("prompt_dup_{idx}")],
+            )
+            .unwrap();
+            let ev_id = format!("EV_COMPACT_LEGACY_{idx:03}");
+            let verbose = serde_json::json!({
+                "event_id": ev_id,
+                "ts": "2026-11-22T00:00:00Z",
+                "event_type": "broker.audit",
+                "status": "ok",
+                "actor": "compact-agent",
+                "op": "todo.add",
+                "detail": "verbose-envelope-payload",
+            });
+            conn.execute(
+                "INSERT INTO events(event_id, stream, seq, ts, event_type, actor, payload)
+                 VALUES(?1, 'broker', ?2, '2026-11-22T00:00:00Z', 'broker.audit', 'compact-agent', ?3)",
+                db::params![ev_id, 500 + idx as i64, serde_json::to_string(&verbose).unwrap()],
+            )
+            .unwrap();
+        }
+    }
+
+    let events_before = events::query(&data, "broker", usize::MAX).unwrap();
+    let todo_events_before = events::query(&data, "todo", usize::MAX).unwrap();
+
+    // 1) Dry-run must preview compaction without mutating bytes or running VACUUM.
+    let preview = storage_compaction::compact_datastore_lossless(&data, true, false).unwrap();
+    assert!(preview.dry_run);
+    assert!(!preview.reclaim_executed);
+    assert!(preview.lossless_verified);
+    assert!(preview.events_compacted >= 6);
+    assert!(preview.prompts_deduplicated >= 5);
+    assert_eq!(preview.main_db_bytes_delta, 0);
+    assert_eq!(preview.hosted_backend_status, "unavailable_local_only");
+
+    // 2) Apply without reclaim_pages: compacts losslessly without implicit VACUUM.
+    let applied = storage_compaction::compact_datastore_lossless(&data, false, false).unwrap();
+    assert!(!applied.dry_run);
+    assert!(!applied.reclaim_executed);
+    assert!(applied.lossless_verified);
+    assert!(applied.events_compacted >= 6);
+    assert!(applied.prompts_deduplicated >= 5);
+    assert!(applied.manifest_sha256.is_some());
+    assert!(
+        applied.events_logical_count >= preview.events_logical_count,
+        "broker-audited compaction must preserve every pre-existing event"
+    );
+
+    // 3) Explicit reclaim_pages runs VACUUM and preserves exact logical history.
+    let reclaimed = storage_compaction::compact_datastore_lossless(&data, false, true).unwrap();
+    assert!(reclaimed.reclaim_executed);
+    assert!(reclaimed.lossless_verified);
+    assert_eq!(reclaimed.prompts_deduplicated, 0);
+    assert!(reclaimed.events_logical_count >= applied.events_logical_count);
+    assert_eq!(reclaimed.after.freelist_count, 0);
+
+    // Verify 100% lossless logical event reconstruction (all original broker & todo events preserved).
+    let broker_after = events::query(&data, "broker", usize::MAX).unwrap();
+    for ev in &events_before {
+        assert!(
+            broker_after.contains(ev),
+            "original broker event must survive lossless compaction"
+        );
+    }
+    assert_eq!(
+        events::query(&data, "todo", usize::MAX).unwrap(),
+        todo_events_before
+    );
+}
+
+#[test]
+fn propodus_dactyl_logical_compaction_parity_preserves_envelopes_and_labels_hosted_unavailable() {
+    use decapod::core::events;
+    use tempfile::tempdir;
+
+    // Verify that compact `_ce_v1` event envelopes round-trip identically to the
+    // canonical logical event representation shared across local SQLite (Dactyl)
+    // and Propodus logical schema, while honestly labeling live hosted PG as unavailable.
+    let canonical_event = serde_json::json!({
+        "event_id": "01M82PARITY0000000000000001",
+        "ts": "2026-11-22T15:00:00Z",
+        "event_type": "task.claim",
+        "status": "ok",
+        "actor": "swarm-w7-storage",
+        "subject_kind": "task",
+        "subject_id": "refa_01m82r48qybtzak5",
+        "payload": {
+            "mode": "exclusive",
+            "lease_seconds": 1800
+        }
+    });
+
+    let compact = events::compact_envelope_for_storage(
+        events::TODO,
+        "01M82PARITY0000000000000001",
+        "2026-11-22T15:00:00Z",
+        "task.claim",
+        "swarm-w7-storage",
+        Some("task"),
+        Some("refa_01m82r48qybtzak5"),
+        &canonical_event,
+    );
+    assert!(events::is_compact_envelope_value(&compact));
+    let compact_str = serde_json::to_string(&compact).unwrap();
+    assert!(
+        compact_str.len() < serde_json::to_string(&canonical_event).unwrap().len(),
+        "compact envelope must omit repeated envelope metadata columns"
+    );
+
+    let reconstructed = events::reconstruct_stored_payload(
+        events::TODO,
+        "01M82PARITY0000000000000001",
+        "2026-11-22T15:00:00Z",
+        "task.claim",
+        "swarm-w7-storage",
+        Some("task"),
+        Some("refa_01m82r48qybtzak5"),
+        &compact_str,
+    )
+    .unwrap();
+    assert_eq!(reconstructed, canonical_event);
+
+    // Local benchmark harness must also keep hosted PG status explicit.
+    let scratch = tempdir().unwrap();
+    let bench = decapod::core::houseboat::run_local_storage_compaction_benchmark(scratch.path(), 4)
+        .unwrap();
+    assert_eq!(bench.hosted_backend_status, "unavailable_local_only");
+    assert!(bench.workload_operations >= 12);
+    assert!(bench.before_compaction.main_db_bytes > 0);
+    assert!(bench.after_explicit_reclaim.freelist_count == 0);
+}

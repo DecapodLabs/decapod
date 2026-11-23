@@ -1338,3 +1338,28 @@ fn houseboat_1763_three_worktree_combined_candidate_negative_control() {
             .any(|b| b.contains("COMBINED_RECONCILIATION_FAILED"))
     );
 }
+
+#[test]
+fn darkmatter_offline_readonly_snapshot_fixture_verifies_strictly() {
+    let fixture_path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures/darkmatter_readonly_snapshot.v1.json");
+    let raw = fs::read_to_string(&fixture_path).expect("read darkmatter fixture");
+    let snapshot: DarkmatterReadonlySnapshot =
+        serde_json::from_str(&raw).expect("parse darkmatter snapshot fixture");
+    validate_darkmatter_snapshot(&snapshot).expect("canonical offline fixture must pass");
+    assert!(snapshot.read_only);
+    assert!(!snapshot.mutation_endpoints_exposed);
+    assert!(!snapshot.ui_generated_proof_allowed);
+    assert!(!snapshot.outstanding_obligations.is_empty());
+
+    // Negative control: mutating read_only or adding path escape must fail closed.
+    let mut bad = snapshot.clone();
+    bad.mutation_endpoints_exposed = true;
+    bad.relevant_files.push("../outside.rs".to_string());
+    let errs = validate_darkmatter_snapshot(&bad).expect_err("must reject boundary violation");
+    assert!(
+        errs.iter()
+            .any(|e| e.contains("DARKMATTER_BOUNDARY_VIOLATION"))
+    );
+    assert!(errs.iter().any(|e| e.contains("PATH_ESCAPE")));
+}

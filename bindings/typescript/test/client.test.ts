@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import test from "node:test";
 import {
   DecapodClient,
+  classifyDecapodError,
   createPromptProvenance,
   sha256Digest,
+  validateDarkmatterSnapshot,
+  type DarkmatterReadonlySnapshot,
 } from "../src/index.ts";
 
 test("createPromptProvenance keeps raw prompt distinct from interpretation and never authenticates approval", () => {
@@ -18,6 +23,24 @@ test("createPromptProvenance keeps raw prompt distinct from interpretation and n
   assert.equal(prov.agentInterpretation, "Run local compaction tests only");
   assert.equal(prov.rawPromptSha256, sha256Digest(prov.rawHumanPrompt));
   assert.equal(prov.humanApprovalAuthenticated, false);
+});
+
+test("DecapodClient exposes explicit cli_process fallback metadata when native addon is absent", () => {
+  const client = new DecapodClient({
+    binaryPath: process.execPath,
+    cwd: process.cwd(),
+    agentId: "agent-transport",
+  });
+  const info = client.transportInfo();
+  assert.equal(info.kind, "cli_process");
+  assert.equal(info.fallbackActive, true);
+  assert.ok(info.reason.includes("process carrier"));
+});
+
+test("classifyDecapodError preserves Decision Gate, protected workspace, and session categories", () => {
+  assert.equal(classifyDecapodError(1, "DECISION_GATE: human required", "").code, "DECISION_GATE");
+  assert.equal(classifyDecapodError(1, "PROTECTED_BRANCH master", "").code, "PROTECTED_WORKSPACE");
+  assert.equal(classifyDecapodError(1, "INVALID session password", "").code, "INVALID_SESSION");
 });
 
 test("DecapodClient supports concurrent invocations with isolated agent env and zero global state", async () => {
@@ -62,4 +85,57 @@ test("DecapodClient honours AbortSignal cancellation cleanly without process.exi
   await assert.rejects(promise, (err: unknown) => {
     return err instanceof DOMException && err.name === "AbortError";
   });
+});
+
+test("validateDarkmatterSnapshot accepts canonical offline fixture and rejects boundary violations (#1711)", () => {
+  const fixturePath = resolve(
+    process.cwd(),
+    "../../tests/fixtures/darkmatter_readonly_snapshot.v1.json",
+  );
+  const snapshot = JSON.parse(readFileSync(fixturePath, "utf8")) as DarkmatterReadonlySnapshot;
+  const ok = validateDarkmatterSnapshot(snapshot);
+  assert.equal(ok.ok, true);
+  assert.deepEqual(ok.errors, []);
+
+  const invalid = validateDarkmatterSnapshot({
+    ...snapshot,
+    read_only: false,
+    governance_json_path: "../escape.json",
+  });
+  assert.equal(invalid.ok, false);
+  assert.ok(invalid.errors.some((e) => e.includes("DARKMATTER_BOUNDARY_VIOLATION")));
+  assert.ok(invalid.errors.some((e) => e.includes("PATH_ESCAPE")));
+});
+
+test("DecapodClient real-binary RPC and CLI contract verification when DECAPOD_TEST_BIN is set", async () => {
+  const bin = process.env.DECAPOD_TEST_BIN;
+  if (!bin) {
+    return;
+  }
+  const repoRoot = resolve(process.cwd(), "../..");
+  const client = new DecapodClient({
+    binaryPath: bin,
+    cwd: repoRoot,
+    agentId: "ts-contract-test",
+  });
+
+  const prov = createPromptProvenance({
+    turnId: "ts-bin-1",
+    rawHumanPrompt: "Inspect storage compaction status safely.",
+    sourceChannel: "harness_observed",
+  });
+  const evalRes = await client.evalPrompt(prov);
+  assert.equal(evalRes.allowed, true);
+  assert.equal(evalRes.status, "allow");
+  assert.equal(evalRes.transport?.kind, "cli_process");
+
+  const status = await client.houseboatStatus();
+  assert.equal(status.schema_version, "decapod.houseboat.v1");
+
+  const fixturePath = resolve(repoRoot, "tests/fixtures/darkmatter_readonly_snapshot.v1.json");
+  const dm = await client.verifyDarkmatterSnapshot(fixturePath);
+  assert.equal(dm.ok, true);
+
+  const schemaRpc = await client.rpc("schema.get", {});
+  assert.equal(schemaRpc.ok, true);
 });

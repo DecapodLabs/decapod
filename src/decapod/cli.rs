@@ -594,6 +594,12 @@ pub struct DecapodProjectConfig {
         skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
     )]
     pub maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
+    /// Optional top-level `[agent_maintenance]` shorthand for `[governance.db_maintenance]` (#1568).
+    #[serde(
+        default,
+        skip_serializing_if = "crate::core::db_maintenance::DbMaintenanceConfig::is_default"
+    )]
+    pub agent_maintenance: crate::core::db_maintenance::DbMaintenanceConfig,
     #[serde(
         default,
         skip_serializing_if = "crate::core::laya_readiness::Configuration::is_default"
@@ -1069,21 +1075,26 @@ fn default_container_workspaces_true() -> bool {
 }
 
 impl DecapodProjectConfig {
-    /// Resolve the single authoritative `[governance.db_maintenance]` or top-level
-    /// `[maintenance]` section. Fails closed if both are configured simultaneously.
+    /// Resolve the single authoritative `[governance.db_maintenance]`, top-level
+    /// `[maintenance]`, or `[agent_maintenance]` section. Fails closed if more
+    /// than one is configured simultaneously.
     pub fn effective_db_maintenance(
         &self,
     ) -> Result<crate::core::db_maintenance::DbMaintenanceConfig, (&'static str, String)> {
         let has_gov = !self.governance.db_maintenance.is_default();
         let has_top = !self.maintenance.is_default();
-        if has_gov && has_top {
+        let has_agent = !self.agent_maintenance.is_default();
+        let configured_count = usize::from(has_gov) + usize::from(has_top) + usize::from(has_agent);
+        if configured_count > 1 {
             return Err((
                 "AMBIGUOUS_MAINTENANCE_POLICY",
-                "both [governance.db_maintenance] and [maintenance] are configured; keep a single canonical maintenance policy section".to_string(),
+                "multiple maintenance policy sections ([governance.db_maintenance], [maintenance], [agent_maintenance]) are configured; keep a single canonical maintenance policy section".to_string(),
             ));
         }
         if has_top {
             Ok(self.maintenance.clone())
+        } else if has_agent {
+            Ok(self.agent_maintenance.clone())
         } else {
             Ok(self.governance.db_maintenance.clone())
         }
@@ -1133,6 +1144,7 @@ impl Default for DecapodProjectConfig {
             context: DeclaredContextConfig::default(),
             workspace: WorkspaceConfigSection::default(),
             maintenance: crate::core::db_maintenance::DbMaintenanceConfig::default(),
+            agent_maintenance: crate::core::db_maintenance::DbMaintenanceConfig::default(),
             laya: crate::core::laya_readiness::Configuration::default(),
         }
     }
@@ -2330,6 +2342,19 @@ pub(crate) enum DataCommand {
     /// Explicit maintenance workflows for the canonical local datastore
     #[clap(alias = "db")]
     Database(DatabaseCli),
+
+    /// Lossless measured compaction and explicit page reclamation for canonical decapod.db (#1630)
+    Compact {
+        /// Preview compaction candidates and current byte metrics without mutating storage.
+        #[clap(long)]
+        dry_run: bool,
+        /// Explicitly run SQLite VACUUM page reclamation after transactional compaction.
+        #[clap(long)]
+        reclaim_pages: bool,
+        /// Output format: json or text.
+        #[clap(long, default_value = "json", value_parser = ["json", "text"])]
+        format: String,
+    },
 
     /// Aptitude memory and preferences
     #[clap(aliases = ["memory"])]

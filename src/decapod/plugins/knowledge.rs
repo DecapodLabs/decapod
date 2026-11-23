@@ -20,6 +20,14 @@ pub struct KnowledgeContext {
     pub valid_until: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
+pub struct KnowledgeFeedbackSummary {
+    pub helped: usize,
+    pub neutral: usize,
+    pub hurt: usize,
+    pub unknown: usize,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct KnowledgeContextRecord {
     pub id: String,
@@ -34,6 +42,10 @@ pub struct KnowledgeContextRecord {
     pub source_hash: String,
     pub reasons: Vec<String>,
     pub source_observation: BTreeMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub supersedes_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub feedback_summary: Option<KnowledgeFeedbackSummary>,
 }
 
 fn context_json(value: &impl Serialize) -> Result<Vec<u8>, error::DecapodError> {
@@ -85,20 +97,53 @@ pub fn resolve_context(
             }
         }
     }
-    let (entries, typed_available, knowledge_available) = DbBroker::new(&store.root).with_conn(&knowledge_db_path(&store.root),
-        "decapod", None, "knowledge.context", |conn| {
-        let table_exists = |name: &str| conn.query_row("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1", [name], |row| row.get::<_, i64>(0)).map(|count| count == 1);
-        let typed_available = table_exists("nodes")?;
-        if !table_exists("knowledge")? { return Ok((Vec::new(), typed_available, false)); }
-        let placeholders = (1..=scopes.len()).map(|i| format!("?{i}")).collect::<Vec<_>>().join(",");
-        let sql = format!("SELECT id, title, content, provenance, claim_id, created_at, updated_at,
+    let (entries, typed_available, knowledge_available, write_attestations, feedback_by_entry) =
+        DbBroker::new(&store.root).with_conn(
+            &knowledge_db_path(&store.root),
+            "decapod",
+            None,
+            "knowledge.context",
+            |conn| {
+                let table_exists = |name: &str| {
+                    conn.query_row(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+                        [name],
+                        |row| row.get::<_, i64>(0),
+                    )
+                    .map(|count| count == 1)
+                };
+                let typed_available = table_exists("nodes")?;
+                let (attestations, feedback) = if table_exists("events")? {
+                    read_attestations_and_feedback_on_conn(conn)?
+                } else {
+                    (BTreeMap::new(), BTreeMap::new())
+                };
+                if !table_exists("knowledge")? {
+                    return Ok((Vec::new(), typed_available, false, attestations, feedback));
+                }
+                let placeholders = (1..=scopes.len())
+                    .map(|i| format!("?{i}"))
+                    .collect::<Vec<_>>()
+                    .join(",");
+                let sql = format!(
+                    "SELECT id, title, content, provenance, claim_id, created_at, updated_at,
             status, merge_key, ttl_policy, expires_ts, supersedes_id, scope FROM knowledge
-            WHERE scope IN ({placeholders}) AND status IN ('active', 'disputed') ORDER BY id LIMIT 257");
-        let mut statement = conn.prepare(&sql)?;
-        let rows = statement.query_map(crate::core::db::params_from_iter(scopes.iter()), |row|
-            Ok((entry_from_row(row)?, row.get::<_, String>(12)?)))?;
-        Ok((rows.collect::<crate::core::db::Result<Vec<_>>>()?, typed_available, true))
-    })?;
+            WHERE scope IN ({placeholders}) AND status IN ('active', 'disputed') ORDER BY id LIMIT 257"
+                );
+                let mut statement = conn.prepare(&sql)?;
+                let rows = statement.query_map(
+                    crate::core::db::params_from_iter(scopes.iter()),
+                    |row| Ok((entry_from_row(row)?, row.get::<_, String>(12)?)),
+                )?;
+                Ok((
+                    rows.collect::<crate::core::db::Result<Vec<_>>>()?,
+                    typed_available,
+                    true,
+                    attestations,
+                    feedback,
+                ))
+            },
+        )?;
     if !knowledge_available {
         packet
             .excluded
@@ -151,6 +196,11 @@ pub fn resolve_context(
                 .push((entry.id.clone(), entry.content.clone()));
         }
         let source_hash = format!("{:x}", Sha256::digest(context_json(&entry)?));
+        let entry_feedback = feedback_by_entry.get(&entry.id).cloned();
+        let mut reasons = vec!["applicable_repository_scope".into()];
+        if entry_feedback.as_ref().is_some_and(|fb| fb.hurt > 0) {
+            reasons.push("prior_retrieval_outcome_hurt".into());
+        }
         candidates.push(KnowledgeContextRecord {
             id: entry.id,
             title: entry.title,
@@ -162,8 +212,10 @@ pub fn resolve_context(
             freshness: "not_captured_at_write".into(),
             authority: "advisory_below_current_intent_and_policy".into(),
             source_hash,
-            reasons: vec!["applicable_repository_scope".into()],
+            reasons,
             source_observation: BTreeMap::new(),
+            supersedes_id: entry.supersedes_id.filter(|s| !s.is_empty()),
+            feedback_summary: entry_feedback,
         });
     }
     // Typed decisions/preferences/lessons remain owned by federation. A confidence
@@ -250,6 +302,8 @@ pub fn resolve_context(
             source_hash,
             reasons: vec!["applicable_typed_knowledge".into()],
             source_observation: BTreeMap::new(),
+            supersedes_id: None,
+            feedback_summary: None,
         });
     }
     let mut conflict_ids = BTreeSet::new();
@@ -290,7 +344,11 @@ pub fn resolve_context(
         .into_iter()
         .take(32)
         .collect();
-    candidates.sort_by(|a, b| a.id.cmp(&b.id));
+    candidates.sort_by(|a, b| {
+        let a_hurt = a.feedback_summary.as_ref().is_some_and(|fb| fb.hurt > 0);
+        let b_hurt = b.feedback_summary.as_ref().is_some_and(|fb| fb.hurt > 0);
+        a_hurt.cmp(&b_hurt).then_with(|| a.id.cmp(&b.id))
+    });
     for mut record in candidates {
         let excluded = if record.status == "disputed" || conflict_ids.contains(&record.id) {
             Some("unresolved_conflict")
@@ -314,12 +372,32 @@ pub fn resolve_context(
             *packet.excluded.entry(reason.into()).or_default() += 1;
             continue;
         }
+        let attested_sources = write_attestations.get(&record.id);
         for source in &record.provenance {
             if let Some(file) = source.strip_prefix("file:") {
                 let file = file.split('#').next().unwrap_or("");
                 let observed = observe_source(repo_root, file);
                 if observed == "unavailable" {
                     record.freshness = "source_unavailable".into();
+                } else if let Some(attested_sha) = attested_sources.and_then(|map| map.get(source))
+                {
+                    record.provenance_class = "write_time_source_attested".into();
+                    if attested_sha == &observed {
+                        if record.freshness == "not_captured_at_write" {
+                            record.freshness = "source_attested_current".into();
+                        }
+                    } else {
+                        record.freshness = "source_changed_since_write".into();
+                        if !record
+                            .reasons
+                            .iter()
+                            .any(|r| r == "source_file_modified_since_attestation")
+                        {
+                            record
+                                .reasons
+                                .push("source_file_modified_since_attestation".into());
+                        }
+                    }
                 }
                 record.source_observation.insert(source.clone(), observed);
             }
@@ -396,6 +474,73 @@ fn observe_source(repo_root: &Path, relative: &str) -> String {
         ))
     })();
     observed.unwrap_or_else(|| "unavailable".into())
+}
+
+type WriteAttestationMap = BTreeMap<String, BTreeMap<String, String>>;
+type FeedbackSummaryMap = BTreeMap<String, KnowledgeFeedbackSummary>;
+
+fn read_attestations_and_feedback_on_conn(
+    conn: &crate::core::db::Connection,
+) -> Result<(WriteAttestationMap, FeedbackSummaryMap), crate::core::db::Error> {
+    let mut attestations: WriteAttestationMap = BTreeMap::new();
+    let mut feedback: FeedbackSummaryMap = BTreeMap::new();
+    let mut stmt = conn.prepare(
+        "SELECT event_type, payload FROM events
+         WHERE stream = 'knowledge'
+         ORDER BY seq ASC, event_id ASC
+         LIMIT 2048",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok((row.get::<_, Option<String>>(0)?, row.get::<_, String>(1)?))
+    })?;
+    for row in rows {
+        let (ev_type, raw) = row?;
+        let Ok(val) = serde_json::from_str::<serde_json::Value>(&raw) else {
+            continue;
+        };
+        let effective_type = ev_type
+            .as_deref()
+            .or_else(|| val.get("event_type").and_then(serde_json::Value::as_str))
+            .unwrap_or("");
+        if effective_type == "knowledge.write_attestation" {
+            if let (Some(entry_id), Some(prov), Some(sha)) = (
+                val.get("entry_id").and_then(serde_json::Value::as_str),
+                val.get("provenance").and_then(serde_json::Value::as_str),
+                val.get("observed_source_sha256")
+                    .and_then(serde_json::Value::as_str),
+            ) && sha != "unavailable"
+            {
+                attestations
+                    .entry(entry_id.to_string())
+                    .or_default()
+                    .insert(prov.to_string(), sha.to_string());
+            }
+            continue;
+        }
+        if let (Some(outcome), Some(ids)) = (
+            val.get("outcome").and_then(serde_json::Value::as_str),
+            val.get("used_ids")
+                .and_then(serde_json::Value::as_array)
+                .filter(|arr| !arr.is_empty())
+                .or_else(|| {
+                    val.get("returned_ids")
+                        .and_then(serde_json::Value::as_array)
+                }),
+        ) {
+            for id_val in ids {
+                if let Some(id) = id_val.as_str() {
+                    let summary = feedback.entry(id.to_string()).or_default();
+                    match outcome {
+                        "helped" => summary.helped += 1,
+                        "neutral" => summary.neutral += 1,
+                        "hurt" => summary.hurt += 1,
+                        _ => summary.unknown += 1,
+                    }
+                }
+            }
+        }
+    }
+    Ok((attestations, feedback))
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -506,6 +651,40 @@ pub fn add_knowledge(
     args: AddKnowledgeParams<'_>,
 ) -> Result<AddKnowledgeResult, error::DecapodError> {
     add_scoped_knowledge(store, args, "root")
+}
+
+/// Add a scoped knowledge entry and bind an append-only write-time source
+/// attestation event (`knowledge.write_attestation`) for `file:` provenance
+/// against `repo_root` so later `resolve_context` calls can distinguish
+/// `source_attested_current` from `source_changed_since_write` (#657).
+pub fn add_attested_knowledge(
+    store: &Store,
+    repo_root: &Path,
+    args: AddKnowledgeParams<'_>,
+    scope: &str,
+) -> Result<AddKnowledgeResult, error::DecapodError> {
+    let result = add_scoped_knowledge(store, args.clone(), scope)?;
+    let observed_source_sha256 = if let Some(file) = args.provenance.strip_prefix("file:") {
+        observe_source(repo_root, file.split('#').next().unwrap_or(""))
+    } else {
+        "unavailable".to_string()
+    };
+    let content_sha256 = format!("sha256:{:x}", Sha256::digest(args.content.as_bytes()));
+    events::append(
+        &store.root,
+        events::KNOWLEDGE,
+        &serde_json::json!({
+            "event_id": crate::core::ulid::new_ulid(),
+            "ts": now_iso(),
+            "event_type": "knowledge.write_attestation",
+            "entry_id": result.id,
+            "scope": scope,
+            "provenance": args.provenance,
+            "content_sha256": content_sha256,
+            "observed_source_sha256": observed_source_sha256,
+        }),
+    )?;
+    Ok(result)
 }
 
 /// Scope is an applicability label, never an authorization or promotion claim.

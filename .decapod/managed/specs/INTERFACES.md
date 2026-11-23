@@ -1,5 +1,20 @@
 # Interfaces
 
+## Wave 7 datastore compaction, `[agent_maintenance]` config, knowledge attestation, and TypeScript/Pi contracts (#1630, #1568, #657, #1277, #1711, #1118)
+
+- **Lossless compaction CLI & RPC (`src/decapod/cli.rs::DataCommand::Compact`, `src/decapod/core/rpc.rs::StorageCompactParams`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs`)**:
+  - CLI: `decapod data compact [--dry-run] [--reclaim-pages] [--format json|text]` outputs `DataCompactionReport` (`decapod.data-compaction-report.v1`) with exact pre/post byte & page counts, `events_compacted`, `prompts_deduplicated`, `components_collected`, `reclaim_executed`, `lossless_verified`, and `hosted_backend_status: "unavailable_local_only"`.
+  - RPC: registers `data.compact` (`read_only = false`, `session_required = true`, aligned with `INV-SESSION-AUTH` entry enforcement) accepting `{ dry_run?: bool, reclaim_pages?: bool }`.
+- **Maintenance policy & Cloud delegated grant contract (`src/decapod/cli.rs`, `src/decapod/core/db_maintenance.rs`)**:
+  - `.decapod/config.toml` accepts `[agent_maintenance]` as an exclusive shorthand alongside `[governance.db_maintenance]` and `[maintenance]`; configuring more than one fails closed with `AMBIGUOUS_MAINTENANCE_POLICY`.
+  - Adds `DELEGATED_GRANTS_CONTROL_OP = "propodus_delegated_grants_v1"`, `CloudDelegatedGrantStatus`, `fetch_cloud_delegated_grant_status`, `parse_cloud_delegated_grant_status`, and `evaluate_cloud_capability_with_delegated_grant`.
+- **Knowledge provenance & feedback projection (`src/decapod/plugins/knowledge.rs`)**:
+  - Adds `add_attested_knowledge(store, repo_root, args, scope)` and extends `KnowledgeContextRecord` with optional `supersedes_id` and `feedback_summary` (`KnowledgeFeedbackSummary`), emitting `freshness = "source_attested_current" | "source_changed_since_write" | "source_unavailable" | "not_captured_at_write"`.
+- **TypeScript client & Pi extension packages (`bindings/typescript/**`, `packages/pi-decapod/**`, `tests/fixtures/darkmatter_readonly_snapshot.v1.json`)**:
+  - `@decapodlabs/decapod-client@0.163.0` exports `DecapodTransport`, `DecapodClient`, `probeTransport`, `classifyDecapodError`, `createPromptProvenance`, `validateDarkmatterSnapshot`, and `DARKMATTER_SNAPSHOT_SCHEMA_VERSION`.
+  - `@decapodlabs/pi-decapod@0.163.0` exports `createPiDecapodExtension` with `onPromptReceived`, `onContextResolve`, `onToolResult`, `beforeMutation`, `onSettlement`, `onResume`, `beforeValidationAndAdmission`, `switchModelOrHarness`, and `classifyDirectHostWrite`.
+  - `tests/fixtures/darkmatter_readonly_snapshot.v1.json` provides the canonical offline read-only consumer snapshot verified by both Rust (`tests/houseboat_engine.rs`) and TypeScript (`bindings/typescript/test/client.test.ts`).
+
 ## Podman container-custody & Propodus Cloud Admin wire contract updates (#1379, #1859, #1886, #1896)
 
 - **Propodus Edge JSON request contracts (`src/decapod/core/cloud_admin.rs`)**:
@@ -1761,8 +1776,8 @@ field. Nothing in this operation authorizes a mutation, approval or completion.
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f881db5602abd2a65efb6c888f33bd754d8f6caf741c0b4d991b276ebe72b336`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

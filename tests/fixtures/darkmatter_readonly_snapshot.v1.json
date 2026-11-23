@@ -4,50 +4,57 @@
   "mutation_endpoints_exposed": false,
   "ui_generated_proof_allowed": false,
   "repository": "DecapodLabs/decapod",
-  "head_commit": "9fbf3c3107fbdb0d8fab1d26a99103686516e688",
-  "human_requested_intent": "Provide a read-only cockpit contract tracing human intent through agent objectives, task scope, files, and proof receipts without mutating Decapod state.",
-  "current_agent_objective": "Publish and verify the decapod.darkmatter-readonly-snapshot.v1 offline fixture and repository-bounded read contract.",
-  "task_id": "code_01m81me586f0pmvj",
+  "head_commit": "254428be219f1e0568e0161d222ffeb361818d53",
+  "human_requested_intent": "Consolidate local storage into decapod.db, ship lossless data.compact, complete maintenance RBAC delegation, provenance-aware knowledge attestation, and TypeScript/Pi harness contracts without mutating main.",
+  "current_agent_objective": "Deliver Wave 7 Shard B storage, compaction, RBAC, knowledge provenance, and TypeScript/Pi contracts with verified proof.",
+  "task_id": "refa_01m82r48qybtzak5",
   "task_scope": [
-    "docs/architecture/darkmatter-readonly-contract.md",
-    "tests/fixtures/darkmatter_readonly_snapshot.v1.json",
-    "src/decapod/core/houseboat.rs"
+    "src/decapod/core/migration.rs",
+    "src/decapod/core/storage_compaction.rs",
+    "src/decapod/core/db_maintenance.rs",
+    "src/decapod/plugins/knowledge.rs",
+    "bindings/typescript",
+    "packages/pi-decapod"
   ],
   "dependencies": [
-    "issue:#1714",
-    "issue:#1735"
+    "dactyl-db@0.19.0",
+    "propodus@037_delegated_operation_grants_and_effect_provenance"
   ],
   "relevant_files": [
     ".decapod/governance.json",
-    ".decapod/managed/specs/INTENT.md",
     ".decapod/managed/specs/ARCHITECTURE.md",
     ".decapod/managed/specs/INTERFACES.md",
-    "docs/architecture/darkmatter-readonly-contract.md",
-    "src/decapod/core/houseboat.rs",
-    "tests/fixtures/darkmatter_readonly_snapshot.v1.json"
+    "src/decapod/core/storage_compaction.rs",
+    "src/decapod/core/db_maintenance.rs",
+    "src/decapod/plugins/knowledge.rs"
   ],
   "governance_json_path": ".decapod/governance.json",
   "completion_evidence": [
     {
-      "evidence_id": "ev:darkmatter-contract-schema-check",
-      "kind": "unit_and_integration_test",
+      "evidence_id": "ev_single_datastore_01",
+      "kind": "integration_test",
       "status": "passed",
-      "digest": "sha256:9fbf3c3107fbdb0d8fab1d26a99103686516e688000000000000000000000001",
-      "path": "tests/houseboat_engine.rs"
+      "digest": "sha256:4a7c2e9f1b8d3065e2a1f4c79b0d8e3f2a1c4b5d6e7f8a9b0c1d2e3f4a5b6c7d",
+      "path": "tests/single_datastore.rs"
     },
     {
-      "evidence_id": "ev:governance-document-custody",
-      "kind": "governance_snapshot",
-      "status": "recorded",
-      "digest": "sha256:9fbf3c3107fbdb0d8fab1d26a99103686516e688000000000000000000000002",
-      "path": ".decapod/governance.json"
+      "evidence_id": "ev_compaction_02",
+      "kind": "integration_test",
+      "status": "passed",
+      "digest": "sha256:9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b",
+      "path": "tests/datastore_relational_compaction.rs"
     }
   ],
   "outstanding_obligations": [
     {
-      "obligation_id": "obl:darkmatter-external-repo-ui",
-      "description": "Implement web (localhost:3000) and TUI presentation layers in DecapodLabs/darkmatter against this read-only contract.",
-      "status": "open_external_repo"
+      "obligation_id": "obl_darkmatter_repo",
+      "description": "Web/TUI cockpit implementation lives in dedicated DecapodLabs/darkmatter repository (#1711).",
+      "status": "external_repo_pending"
+    },
+    {
+      "obligation_id": "obl_hosted_pg_compaction",
+      "description": "Live hosted PostgreSQL compaction observations remain separately authorized (#1630).",
+      "status": "unavailable_local_only"
     }
   ]
 }

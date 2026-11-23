@@ -1,5 +1,22 @@
 # Architecture
 
+## Wave 7 single-SQLite consolidation, lossless compaction, maintenance RBAC delegation, provenance knowledge, and TypeScript/Pi bindings (#1118, #1132, #1120, #1630, #1568, #657, #1277, #1711, #630, #1220, #1221)
+
+- **Single-SQLite consolidation & legacy migration closure (`src/decapod/core/migration.rs`, `src/decapod/core/validate.rs`, `src/decapod/core/mentor.rs`, `src/decapod/plugins/feedback.rs`, `src/decapod/plugins/decide.rs`)**:
+  - `migration::LEGACY_LOCAL_DATABASES` and `migrate_legacy_databases_into_single_datastore` now also migrate direct pre-consolidation sidecars (`health.db`, `policy.db`, `feedback.db`, `archive.db`) and dot-separated `broker.dedupe.db` alongside `broker_dedupe.db` idempotently into canonical `.decapod/data/decapod.db`.
+  - `validate::collect_active_todo_handoff_comments` now reads active `task.comment` handoff entries from canonical `events::canonical_db_path(store_root)` (`decapod.db`) through `DbBroker::with_conn` (with read-only legacy `todo.db` fallback only when `decapod.db` is absent), removing the stale `todo.db`-only read path.
+  - `feedback::schema()`, `decide::schema()`, and `mentor.rs` preference provenance now advertise `decapod.db` consistently rather than legacy sidecar filenames. Live hosted Neon/Propodus parity (`#1118`, `#1132`, `#1120`, `#1221`) and the pure-Rust no-SQLite-family engine cutover (`#1220`) remain explicitly tracked outside this local SQLite consolidation slice.
+- **Lossless measured compaction surface (`src/decapod/core/storage_compaction.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**:
+  - `storage_compaction::compact_datastore_lossless` runs through `DbBroker` on canonical `.decapod/data/decapod.db`, captures pre/post `DataCompactionByteSnapshot` metrics (`main_db_bytes`, `wal_sidecar_bytes`, `shm_sidecar_bytes`, `page_size`, `page_count`, `freelist_count`, `live_bytes`, `reclaimable_bytes`), supports side-effect-free `--dry-run` previews, runs `apply_v2_compaction_migration` + `gc_unreferenced_components`, executes SQLite `VACUUM` (`reclaim_pages_explicit`) strictly when `--reclaim-pages` is passed, and verifies pre/post logical event count and SHA-256 identity byte-for-byte. `backend = "cloud"` fails closed with `DATA_COMPACT_CLOUD_UNSUPPORTED` and reports `hosted_backend_status = "unavailable_local_only"`.
+- **Maintenance RBAC `[agent_maintenance]` alias & Propodus migration `037` delegated grants (`src/decapod/cli.rs`, `src/decapod/core/db_maintenance.rs`)**:
+  - `DecapodProjectConfig` accepts top-level `[agent_maintenance]` alongside `[governance.db_maintenance]` and `[maintenance]`; `effective_db_maintenance()` enforces single-section exclusivity and fails closed with `AMBIGUOUS_MAINTENANCE_POLICY` if more than one section is configured.
+  - `db_maintenance::DELEGATED_GRANTS_CONTROL_OP` (`propodus_delegated_grants_v1`), `CloudDelegatedGrantStatus`, `fetch_cloud_delegated_grant_status`, `parse_cloud_delegated_grant_status`, and `#[must_use] evaluate_cloud_capability_with_delegated_grant` intersect canonical project policy, server-verified `CloudRepositoryAccessStatus`, and Propodus migration `037` (`#219`) grant generations (`revocation_generation`, `policy_generation`, `session_generation`) and monotonically narrowed `allowed_operations`.
+- **Write-time knowledge attestation, supersession linkage, and outcome feedback (`src/decapod/plugins/knowledge.rs`)**:
+  - `add_attested_knowledge` appends a `knowledge.write_attestation` event on `events::KNOWLEDGE` binding write-time `observed_source_sha256` and `content_sha256` for `file:` provenance. `resolve_context` reads bounded write attestations and retrieval feedback events (`read_attestations_and_feedback_on_conn`), classifies `source_attested_current` vs `source_changed_since_write` (preserving `not_captured_at_write` for legacy unattested rows), emits bounded `supersedes_id` on operative records without re-emitting superseded bodies, and surfaces `feedback_summary` + `"prior_retrieval_outcome_hurt"` caution ordering without self-promoting `helped` entries into binding authority.
+- **TypeScript client binding, Pi harness extension & Darkmatter offline fixture (`bindings/typescript/**`, `packages/pi-decapod/**`, `tests/fixtures/darkmatter_readonly_snapshot.v1.json`)**:
+  - `@decapodlabs/decapod-client` (`0.163.0`) implements `DecapodTransport` (`evalPrompt`, `orient`, `resolveContext`, `preflight`, `validateInference`, `validate`, `dataCompact`, `dbMaintenanceCapabilities`, `houseboatStatus`, `verifyDarkmatterSnapshot`, `rpc`), explicit `probeTransport` (`cli_process` fallback visibility), `classifyDecapodError`, and read-only `validateDarkmatterSnapshot`.
+  - `@decapodlabs/pi-decapod` (`0.163.0`) implements `onPromptReceived`, `onContextResolve`, `onToolResult`, `beforeMutation`, `onSettlement`, `onResume`, and `beforeValidationAndAdmission` with explicit Decision Gate stops, transport visibility, and `outside_native_enforcement` classification. Native N-API npm publishing (`#1277`) and the dedicated `DecapodLabs/darkmatter` UI repo (`#1711`) remain tracked externally.
+
 ## Live Podman container-custody & Propodus Cloud Admin wire fixes (#1379, #1859, #1886, #1896)
 
 - **Podman container runtime & signer relay wiring (`src/decapod/plugins/container.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)**:
@@ -1391,8 +1408,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f881db5602abd2a65efb6c888f33bd754d8f6caf741c0b4d991b276ebe72b336`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (4 files), `docs/` (3 files), `packages/` (3 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 
