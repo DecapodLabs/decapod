@@ -1677,59 +1677,6 @@ Human-intent questions, requirement markers, stable hashes and changed-source
 inventory are advisory: none may satisfy a proof gate or change
 `semantic_alignment: not_proven`.
 
-<!-- decapod:capability-overlay:background-processing:start -->
-
-Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Background Processing Validation Overlay
-
-### Duplicate Delivery Tests
-- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
-- Idempotency key verification
-- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
-
-### Retry Tests
-- Configured retry/backoff policy verified
-- Configured retry bound or unbounded policy verified
-- Poison-work handling verified when the project declares it
-
-### Shutdown Tests
-- Graceful drain on signal
-- In-flight job completion or safe requeue
-- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Persistent State Validation Overlay
-
-### Migration Proof Command
-- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
-- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
-
-### Migration Tests
-- All migrations MUST have integration tests
-- Rollback procedures MUST be tested
-- Data integrity checks post-migration
-
-### Persistence Integration Tests
-- Repository abstraction tested against real database
-- Transaction boundary tests
-- Concurrency conflict tests
-- Data integrity validation after recovery
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Native inventory qualification
 
 The required CLI suite includes seven inventory regressions: UTF-8/reuse and
@@ -2835,3 +2782,72 @@ Standalone validation passed on `59526e792` before the v0.158.0 cut at `1bdb1e6e
 - **Publication privacy & stale target movement (`tests/unit/core/publication_privacy_tests.rs`, `src/decapod/core/snapshot_provider/automatic/tests.rs`)**: Unit tests verify literal redacting matches across local `.decapod/data/publication-deny.txt` and `[governance].publication_deny_identifiers` (without self-flagging `.decapod/config.toml`) and verify `verify_pending_accepted_target` returns `STALE_ACCEPTED_BASE` when the remote target advances.
 - **Linux `ETXTBSY` fixture isolation & headless macOS Podman (`tests/unit/plugins/container_tests.rs`)**: Shared `write_executable_fixture` child-process writer covers all fake runtime shell fixtures in `container_tests.rs`; `verify_headless_podman_machine_args` and `verify_headless_vfkit_args` regressions reject `--log-level=debug`, `--gui`, and `virtio-gpu`/`virtio-input` display/input devices while verifying env scrubbing and headless diagnostics.
 - **README badge (`tests/unit/lib_init_prompt_tests.rs`)**: Unit test verifies `[init].readme_badge` default `true`, config roundtrip opt-out, `protected_paths` respect, and idempotent version upgrades.
+
+## Wave 7 Shard A Verification Matrix (#1079, #1122, #1047, #1134, #1388, #1626, #1672, #1879, #1890, #1573)
+
+- **Manifest migration & content-bumping refresh (`tests/unit/core/project_specs_tests.rs`, `tests/projection_consistency.rs`, `tests/init_validate_green_field.rs`)**: Verifies backward-compatible read fallback from `.decapod/managed/specs/.manifest.json`, migration to `.decapod/managed/.manifest.json` with legacy cleanup, deterministic `codebase-contract` updates on module additions, authored-prose preservation, and idempotence.
+- **Pre-build structural & SHA-256 gate (`tests/analyze_readonly.rs`, `assets/tools/source_ci/pre-build-validate.sh`)**: Verifies `decapod validate --pre-build` fails fast on missing governance, missing manifest, or missing/invalid 64-hex entrypoint `decapod-fingerprint` SHAs without mutating the repository.
+- **CI workflow, sharding, release-cut, and Nix tag policies (`tests/source_ci_profile_policy.rs`, `tests/release_metadata_policy.rs`, `src/decapod/core/readiness_profile/tests.rs`)**: Verifies all 44 finite PR job instances, balanced 3-way core and CLI shard partitioning covering every original Bazel target with `Tests (core)` / `Tests (cli)` aggregators, release-only scheduling for `test-core`/`test-core-status`/`supabase-consumer`, and native Cachix publication gating for squash/linear/merge releases and SemVer `refs/tags/v*` tags.
+- **Governed docs auto-sync (`tests/docs_sync_checkpoint_boundary.rs`)**: Exercises all six lifecycle scenarios against a real bare Git remote and compiled `decapod` binary (no-drift, first PR, repeated open-PR updates, post-merge reset, validation failure fail-closed, concurrent/diverged branch fail-closed).
+- **ETag conditional polling & GHA carrier policy (`src/decapod/core/snapshot_provider/github_quota.rs`, `src/decapod/core/snapshot_provider/public_buildkite/ci_attested/real_metadata_tests.rs`)**: Verifies `If-None-Match` / HTTP 304 zero-quota revalidation, fail-closed unexpected 304 handling, and `.decapod/config.toml` GitHub Actions carrier selection without Buildkite `ci_attested`.
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Background Processing Validation Overlay
+
+### Duplicate Delivery Tests
+- Test repeated delivery against the declared duplicate-handling semantics, including side effects and limitations
+- Idempotency key verification
+- Verify the declared delivery guarantee; do not claim exactly-once behavior without proof
+
+### Retry Tests
+- Configured retry/backoff policy verified
+- Configured retry bound or unbounded policy verified
+- Poison-work handling verified when the project declares it
+
+### Shutdown Tests
+- Graceful drain on signal
+- In-flight job completion or safe requeue
+- Verify the declared durability and loss boundary on forced termination; record unsupported guarantees
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Persistent State Validation Overlay
+
+### Migration Proof Command
+- Configure `repo.migration_validation.command` and its arguments as the executable migration proof; file presence is not proof
+- The configured command MUST define its working directory, timeout, expected exit code, and evidence output
+
+### Migration Tests
+- All migrations MUST have integration tests
+- Rollback procedures MUST be tested
+- Data integrity checks post-migration
+
+### Persistence Integration Tests
+- Repository abstraction tested against real database
+- Transaction boundary tests
+- Concurrency conflict tests
+- Data integrity validation after recovery
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
+- Integration test targets (169): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+153 more)
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

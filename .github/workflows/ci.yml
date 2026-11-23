@@ -94,9 +94,46 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
           compression-level: 0
+  pre-build-validate:
+    name: Pre-Build Structural & Fingerprint Gate
+    needs: release-metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Verify governance, manifest, and spec/entrypoint SHA-256 fingerprints
+        env:
+          RELEASE_ONLY: ${{ needs.release-metadata.outputs.release_only }}
+        run: |
+          set -euo pipefail
+          if [ -n "${{ steps.ci-context.outputs.base }}" ] && "$RUNNER_TEMP/source-ci-profile" plan --base "${{ steps.ci-context.outputs.base }}" --head "${{ steps.ci-context.outputs.head }}" 2>/dev/null | grep -q '"id":"pre-build-validate"'; then
+            "$RUNNER_TEMP/source-ci-profile" run-ci --check pre-build-validate
+          else
+            bash assets/tools/source_ci/pre-build-validate.sh
+          fi
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   commit-lint:
     name: Commit Lint
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     steps:
@@ -265,8 +302,7 @@ jobs:
           compression-level: 0
   supabase-consumer:
     name: Supabase consumer (offline fixtures)
-    needs: release-metadata
-    if: needs.release-metadata.outputs.release_only != 'true'
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -304,7 +340,7 @@ jobs:
           compression-level: 0
   workspace-lifecycle-docker:
     name: Workspace lifecycle (actual Docker)
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -346,7 +382,7 @@ jobs:
           compression-level: 0
   musl-publication:
     name: Musl build and atomic publication (${{ matrix.target }}, ${{ matrix.execution }})
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -416,7 +452,7 @@ jobs:
           compression-level: 0
   fmt:
     name: Lint (fmt)
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -452,7 +488,7 @@ jobs:
           compression-level: 0
   clippy:
     name: Lint (clippy)
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -493,7 +529,7 @@ jobs:
           compression-level: 0
   deps-lint:
     name: Lint (dependencies)
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -630,7 +666,7 @@ jobs:
           compression-level: 0
   state-commit-golden-vectors:
     name: Golden Vectors (${{ matrix.os }})
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ${{ matrix.os }}
     env:
@@ -671,7 +707,7 @@ jobs:
           compression-level: 0
   setup:
     name: Setup & Build Shared Binary
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -737,14 +773,14 @@ jobs:
           compression-level: 0
   test:
     name: Tests (${{ matrix.target }})
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        target: [core, plugins, cli]
+        target: [plugins]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -794,9 +830,222 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
           compression-level: 0
+  test-core:
+    name: Tests (core ${{ matrix.label }})
+    needs: [release-metadata, pre-build-validate]
+    runs-on: ubuntu-latest
+    # Expand core shards on release cuts so GitHub reports the required Tests (core) check (#1879, #1672).
+    if: needs.release-metadata.outputs.pr_like == 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - label: "1/3"
+            shard: core-1
+            check: selective-core-1
+          - label: "2/3"
+            shard: core-2
+            check: selective-core-2
+          - label: "3/3"
+            shard: core-3
+            check: selective-core-3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Run selective core shard
+        env:
+          CHANGE_BASE: ${{ steps.ci-context.outputs.base }}
+          CHANGE_HEAD: ${{ steps.ci-context.outputs.head }}
+        run: |
+          set -euo pipefail
+          if "$RUNNER_TEMP/source-ci-profile" plan --base "$CHANGE_BASE" --head "$CHANGE_HEAD" 2>/dev/null | grep -q '"id":"${{ matrix.check }}"'; then
+            "$RUNNER_TEMP/source-ci-profile" run-ci --check "${{ matrix.check }}" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
+          else
+            rustc --edition=2024 -O assets/tools/source_ci_profile.rs -o "$RUNNER_TEMP/candidate-source-ci-profile"
+            "$RUNNER_TEMP/candidate-source-ci-profile" run --check "${{ matrix.check }}" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
+          fi
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
+  test-core-status:
+    name: Tests (core)
+    needs: [release-metadata, pre-build-validate, test-core]
+    runs-on: ubuntu-latest
+    if: always() && (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.result == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Require all core shards to succeed
+        env:
+          CUSTODY_PREPARE_RESULT: ${{ needs.pre-build-validate.result }}
+          CUSTODY_WORKER_RESULT: ${{ needs.test-core.result }}
+        run: |
+          set -euo pipefail
+          if "$RUNNER_TEMP/source-ci-profile" plan --base "${{ steps.ci-context.outputs.base }}" --head "${{ steps.ci-context.outputs.head }}" 2>/dev/null | grep -q '"id":"selective-core-status"'; then
+            "$RUNNER_TEMP/source-ci-profile" run-ci --check selective-core-status
+          else
+            bash assets/tools/source_ci/shard-status.sh
+          fi
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
+  test-cli:
+    name: Tests (cli ${{ matrix.label }})
+    needs: [release-metadata, pre-build-validate]
+    runs-on: ubuntu-latest
+    if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include:
+          - label: "1/3"
+            shard: cli-1
+            check: selective-cli-1
+          - label: "2/3"
+            shard: cli-2
+            check: selective-cli-2
+          - label: "3/3"
+            shard: cli-3
+            check: selective-cli-3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Install Bazelisk
+        run: |
+          set -euo pipefail
+          bazelisk_dir="${HOME}/.local/bin"
+          mkdir -p "$bazelisk_dir"
+          if ! command -v bazelisk >/dev/null 2>&1; then
+            curl --fail --silent --show-error --location \
+              "https://github.com/bazelbuild/bazelisk/releases/download/v1.26.0/bazelisk-linux-amd64" \
+              --output "$bazelisk_dir/bazelisk"
+            chmod +x "$bazelisk_dir/bazelisk"
+          fi
+          echo "$bazelisk_dir" >> "$GITHUB_PATH"
+          echo "PATH=$bazelisk_dir:$PATH" >> "$GITHUB_ENV"
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Run selective CLI shard
+        env:
+          CHANGE_BASE: ${{ steps.ci-context.outputs.base }}
+          CHANGE_HEAD: ${{ steps.ci-context.outputs.head }}
+        run: |
+          set -euo pipefail
+          if "$RUNNER_TEMP/source-ci-profile" plan --base "$CHANGE_BASE" --head "$CHANGE_HEAD" 2>/dev/null | grep -q '"id":"${{ matrix.check }}"'; then
+            "$RUNNER_TEMP/source-ci-profile" run-ci --check "${{ matrix.check }}" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
+          else
+            rustc --edition=2024 -O assets/tools/source_ci_profile.rs -o "$RUNNER_TEMP/candidate-source-ci-profile"
+            "$RUNNER_TEMP/candidate-source-ci-profile" run --check "${{ matrix.check }}" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
+          fi
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
+  test-cli-status:
+    name: Tests (cli)
+    needs: [release-metadata, pre-build-validate, test-cli]
+    runs-on: ubuntu-latest
+    if: always() && (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.result == 'success' && needs.release-metadata.outputs.release_only != 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable CI context
+        id: ci-context
+        uses: ./.github/actions/ci-context
+        with:
+          pre-pr: ${{ inputs.pre-pr && 'true' || 'false' }}
+          base: ${{ inputs.base || '' }}
+          head: ${{ inputs.head || '' }}
+      - name: Prepare shared source-CI profile
+        uses: ./.github/actions/source-ci-profile
+      - name: Require all CLI shards to succeed
+        env:
+          CUSTODY_PREPARE_RESULT: ${{ needs.pre-build-validate.result }}
+          CUSTODY_WORKER_RESULT: ${{ needs.test-cli.result }}
+        run: |
+          set -euo pipefail
+          if "$RUNNER_TEMP/source-ci-profile" plan --base "${{ steps.ci-context.outputs.base }}" --head "${{ steps.ci-context.outputs.head }}" 2>/dev/null | grep -q '"id":"selective-cli-status"'; then
+            "$RUNNER_TEMP/source-ci-profile" run-ci --check selective-cli-status
+          else
+            bash assets/tools/source_ci/shard-status.sh
+          fi
+      - name: Upload measured source-CI custody
+        if: always() && env.SOURCE_CI_CUSTODY_ARTIFACT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.SOURCE_CI_CUSTODY_ARTIFACT }}
+          path: ${{ runner.temp }}/source-ci-evidence
+          if-no-files-found: ignore
+          retention-days: 1
+          compression-level: 0
   integration-prepare:
     name: Prepare Integration Tests
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.pr_like == 'true') && needs.release-metadata.outputs.release_only != 'true'
     outputs:
@@ -1080,7 +1329,7 @@ jobs:
           compression-level: 0
   test-master:
     name: Tests (Full)
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     runs-on: ubuntu-latest
     if: (needs.release-metadata.outputs.event == 'push' && github.ref == 'refs/heads/master') && needs.release-metadata.outputs.release_only != 'true'
     steps:
@@ -1114,7 +1363,7 @@ jobs:
   # Runtime checks execute sequentially, sharing compilation without test contention.
   test-rpc-suite:
     name: Tests (RPC Suite)
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -1167,7 +1416,7 @@ jobs:
           compression-level: 0
   contracts:
     name: Contract Conformance
-    needs: release-metadata
+    needs: [release-metadata, pre-build-validate]
     if: needs.release-metadata.outputs.release_only != 'true'
     runs-on: ubuntu-latest
     steps:
@@ -1270,7 +1519,7 @@ jobs:
       needs.release-metadata.outputs.pre_pr == 'false' &&
       needs.release-metadata.result == 'success' && needs.health.result == 'success' &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [release-metadata, fmt, clippy, deps-lint, test, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, workspace-lifecycle-docker, contracts, health, musl-publication]
+    needs: [release-metadata, pre-build-validate, fmt, clippy, deps-lint, test, test-core, test-core-status, test-cli, test-cli-status, integration-prepare, test-integration, integration-status, test-master, test-rpc-suite, workspace-lifecycle-docker, contracts, health, musl-publication]
     steps:
       - uses: actions/checkout@v4
         with:

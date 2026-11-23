@@ -359,6 +359,23 @@ versioned JSON report (`schema_version = "1.0.0"`,
 `target/governance-fault-detection/report-1795.json` (or
 `$GOVERNANCE_FAULT_REPORT_PATH`).
 
+## PR1663 integrated storage behavior
+
+Keep lossless decoded event and task projection semantics across compaction, v1/v2 journals and self-contained transfers. A changed encoding or schema never grants task ownership, publication authority or successful proof; current evidence remains bound to its actual candidate and accepted target.
+
+## Shared-State Transition Semantics (#1247)
+
+Decapod enforces single-writer custody, atomic task+event commits, and fail-closed proof/cloud boundaries across both local SQLite (`src/decapod/core/todo.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/task_journal.rs`) and Dactyl/Propodus HTTP storage (`src/decapod/core/dactyl_todo.rs`, `src/decapod/core/cloud_todo_operation.rs`):
+
+1. **Single-winner exclusive arbitration and shared-claim policy:** Concurrent exclusive claims (`claim_task_with_lease`, `DactylTodoStore::claim_task`) admit at most one durable primary assignee (`tasks.assigned_to` / `task_owners` `claim_type = 'primary'`), returning inspectable conflict/contention outcomes to all losing contenders without emitting phantom claim events. Shared claims (`ClaimMode::Shared`) preserve the primary owner and require verified trust (or an explicit `[governance].allow_basic_shared_claims` main-repo policy digest).
+2. **Monotonic fencing, stale custody, and strict session enforcement:** Exclusive custody advances monotonic `lease_generation` and `tasks.revision` fences across expiry/reclaim, ABA re-claim, owner/recovery handoffs (`handoff_task_as` / `todo.handoff` policy + exact-target bounded approval), and authoring bindings (`admit_authoring` / `check_authoring`). Expired, reclaimed, or handed-off fences fail closed (`stale_task_revision`, `not_assignee`, `AUTHORING_CUSTODY_STALE`), cross-task checkpoint substitution is rejected (`TASK_JOURNAL_CONFLICT` / `WORKUNIT_CHECKPOINT_REQUIRED`), and strict local/cloud session checks (`verify_strict_local_agent_session`, `CloudAuthStatus::Revoked`) refuse forged or revoked credentials.
+3. **Atomic state + event commits and lost-ack reconciliation:**
+   - Local SQLite executes `tasks` updates, `events` insertion, and `task_journal` checkpoints inside one transaction; `edit_task` returns early when `changed == 0` so missing task IDs never emit phantom `task.edit` events, and `claim_task_with_lease` / `renew_claim_lease` / `yield_claim_lease` / `add_task_owner` / `remove_task_owner` attribute journal/owner records to the actual acting agent rather than `"decapod"`.
+   - `DactylTodoStore::operation_timestamp` uses a per-process monotonic `AtomicU64` nanosecond floor, and `DactylTodoStore::atomic_mutation` requires both `tasks.updated_at == event_params.event_ts` and an `event_type`-scoped static SQL post-condition inside the `INSERT INTO events ... WHERE EXISTS (...)` guard so a losing concurrent write cannot emit a phantom event while remaining statically provable by `gatekeeper::sql_context`.
+   - Cloud operations distinguish `Outcome::BlockedBeforeSubmit` (no server write) from `Outcome::OutcomeUnknown` (dispatched batch whose ack/reconcile outcome is uncertain), prohibit unproved auto-replay or payload mutation under an existing `operation_id` (`OperationRecord::new`), and reconcile same-ID retries via event lookup without executing a second write.
+4. **Proof and validation binding:** `judge_completion`, `judge_stored_verification`, `WorkUnitManifest`, and `get_work_claim` bind completion and publication to exact candidate commit SHA (`canonical_head` / `head`), `rules_fingerprint`, `verifier`, reconstructed `file_artifacts` + `receipt_hash`, `task_revision`, `accepted_target`, and checkpoint material. Advancing `HEAD`, altering `rules_fingerprint`, or materially editing a completed task transitions proof to `Stale` / `Blocked` while preserving readable historical `proof_refs` and event records.
+5. **Cloud fail-closed boundary (no local fallback) and hosted boundary:** Cloud authorization denials (`401`/`403`) and transport/provider unavailability (`503` or unreachable endpoint) fail closed in `run_cloud_todo_command_with_store` without creating or mutating local `.decapod/data/{decapod,todo}.db`. Conformance suite `tests/shared_state_semantics_1247.rs` verifies all five invariants against local SQLite and mock/denial Dactyl HTTP boundaries; live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent.
+
 <!-- decapod:capability-overlay:background-processing:start -->
 
 Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -403,28 +420,18 @@ Generated capability obligations: `persistent-state` is declared for this projec
 - Recovery test cadence MUST be selected for the project and recorded as a proof obligation
 <!-- decapod:capability-overlay:persistent-state:end -->
 
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- State/schema/migration modules (30): `src/decapod/core/broker.rs`, `src/decapod/core/constitution_schema.rs`, `src/decapod/core/group_broker.rs`, `src/decapod/core/migration.rs`, `src/decapod/core/schemas.rs`, `src/decapod/core/sql/todo_one_shot_column_migration.sql`, `src/decapod/core/sql/todo_task_id_v15_migration.sql`, `src/decapod/core/state.rs`, `src/decapod/core/state_commit.rs`, `src/decapod/core/workunit.rs`, `tests/assets_schema_contract.rs`, `tests/context_capsule_schema.rs`, `tests/fixtures/migration/legacy_tasks.sql`, `tests/fixtures/state_commit_repo/exec_test.rs`, `tests/group_broker.rs`, `tests/group_broker_strict.rs`, (+14 more)
+<!-- decapod:codebase-contract:end -->
+
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
+- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-
-## PR1663 integrated storage behavior
-
-Keep lossless decoded event and task projection semantics across compaction, v1/v2 journals and self-contained transfers. A changed encoding or schema never grants task ownership, publication authority or successful proof; current evidence remains bound to its actual candidate and accepted target.
-
-## Shared-State Transition Semantics (#1247)
-
-Decapod enforces single-writer custody, atomic task+event commits, and fail-closed proof/cloud boundaries across both local SQLite (`src/decapod/core/todo.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/task_journal.rs`) and Dactyl/Propodus HTTP storage (`src/decapod/core/dactyl_todo.rs`, `src/decapod/core/cloud_todo_operation.rs`):
-
-1. **Single-winner exclusive arbitration and shared-claim policy:** Concurrent exclusive claims (`claim_task_with_lease`, `DactylTodoStore::claim_task`) admit at most one durable primary assignee (`tasks.assigned_to` / `task_owners` `claim_type = 'primary'`), returning inspectable conflict/contention outcomes to all losing contenders without emitting phantom claim events. Shared claims (`ClaimMode::Shared`) preserve the primary owner and require verified trust (or an explicit `[governance].allow_basic_shared_claims` main-repo policy digest).
-2. **Monotonic fencing, stale custody, and strict session enforcement:** Exclusive custody advances monotonic `lease_generation` and `tasks.revision` fences across expiry/reclaim, ABA re-claim, owner/recovery handoffs (`handoff_task_as` / `todo.handoff` policy + exact-target bounded approval), and authoring bindings (`admit_authoring` / `check_authoring`). Expired, reclaimed, or handed-off fences fail closed (`stale_task_revision`, `not_assignee`, `AUTHORING_CUSTODY_STALE`), cross-task checkpoint substitution is rejected (`TASK_JOURNAL_CONFLICT` / `WORKUNIT_CHECKPOINT_REQUIRED`), and strict local/cloud session checks (`verify_strict_local_agent_session`, `CloudAuthStatus::Revoked`) refuse forged or revoked credentials.
-3. **Atomic state + event commits and lost-ack reconciliation:**
-   - Local SQLite executes `tasks` updates, `events` insertion, and `task_journal` checkpoints inside one transaction; `edit_task` returns early when `changed == 0` so missing task IDs never emit phantom `task.edit` events, and `claim_task_with_lease` / `renew_claim_lease` / `yield_claim_lease` / `add_task_owner` / `remove_task_owner` attribute journal/owner records to the actual acting agent rather than `"decapod"`.
-   - `DactylTodoStore::operation_timestamp` uses a per-process monotonic `AtomicU64` nanosecond floor, and `DactylTodoStore::atomic_mutation` requires both `tasks.updated_at == event_params.event_ts` and an `event_type`-scoped static SQL post-condition inside the `INSERT INTO events ... WHERE EXISTS (...)` guard so a losing concurrent write cannot emit a phantom event while remaining statically provable by `gatekeeper::sql_context`.
-   - Cloud operations distinguish `Outcome::BlockedBeforeSubmit` (no server write) from `Outcome::OutcomeUnknown` (dispatched batch whose ack/reconcile outcome is uncertain), prohibit unproved auto-replay or payload mutation under an existing `operation_id` (`OperationRecord::new`), and reconcile same-ID retries via event lookup without executing a second write.
-4. **Proof and validation binding:** `judge_completion`, `judge_stored_verification`, `WorkUnitManifest`, and `get_work_claim` bind completion and publication to exact candidate commit SHA (`canonical_head` / `head`), `rules_fingerprint`, `verifier`, reconstructed `file_artifacts` + `receipt_hash`, `task_revision`, `accepted_target`, and checkpoint material. Advancing `HEAD`, altering `rules_fingerprint`, or materially editing a completed task transitions proof to `Stale` / `Blocked` while preserving readable historical `proof_refs` and event records.
-5. **Cloud fail-closed boundary (no local fallback) and hosted boundary:** Cloud authorization denials (`401`/`403`) and transport/provider unavailability (`503` or unreachable endpoint) fail closed in `run_cloud_todo_command_with_store` without creating or mutating local `.decapod/data/{decapod,todo}.db`. Conformance suite `tests/shared_state_semantics_1247.rs` verifies all five invariants against local SQLite and mock/denial Dactyl HTTP boundaries; live hosted Propodus Postgres execution remains externally bounded when hosted credentials and live Propodus endpoints are absent.

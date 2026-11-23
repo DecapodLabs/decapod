@@ -123,7 +123,7 @@ fn docs_owner_selector_rejects_sanitized_importers_and_incomplete_identity() {
 #[test]
 fn dependency_tool_preparation_keeps_both_fresh_measured_checks() {
     let lint = job(CI, "deps-lint");
-    assert!(lint.contains("needs: release-metadata"));
+    assert!(lint.contains("needs: [release-metadata, pre-build-validate]"));
     assert!(lint.contains("if: needs.release-metadata.outputs.release_only != 'true'"));
     assert!(!lint.contains("cargo install"));
     assert!(!lint.contains("command -v cargo-"));
@@ -517,8 +517,8 @@ fn any_new_workflow_requires_explicit_inventory_review() {
 #[test]
 fn finite_inventory_exactly_covers_pr_jobs_and_explicitly_excludes_other_jobs() {
     let full = inventory(&full_paths(), false);
-    assert_eq!(full.len(), 37);
-    assert_eq!(full.iter().filter(|j| j.workflow == "ci.yml").count(), 33);
+    assert_eq!(full.len(), 44);
+    assert_eq!(full.iter().filter(|j| j.workflow == "ci.yml").count(), 40);
     assert!(full.iter().all(|j| j.applicable));
     let excluded: BTreeMap<&str, &[&str]> = BTreeMap::from([
         (
@@ -583,7 +583,13 @@ fn each_matrix_member_is_present_exactly_once() {
     let full = inventory(&full_paths(), false);
     let keys: BTreeSet<_> = full.iter().map(|j| (j.workflow, j.job, j.matrix)).collect();
     assert_eq!(keys.len(), full.len());
-    assert!(job(CI, "test").contains("target: [core, plugins, cli]"));
+    assert!(job(CI, "test").contains("target: [plugins]"));
+    for shard in ["core-1", "core-2", "core-3"] {
+        assert!(job(CI, "test-core").contains(&format!("shard: {shard}")));
+    }
+    for shard in ["cli-1", "cli-2", "cli-3"] {
+        assert!(job(CI, "test-cli").contains(&format!("shard: {shard}")));
+    }
     assert!(job(CI, "state-commit-golden-vectors").contains("os: [ubuntu-latest, macos-latest]"));
     let musl = job(CI, "musl-publication");
     let targets: Vec<_> = musl
@@ -620,8 +626,10 @@ fn every_shared_check_is_called_by_the_actual_workflow_job() {
     assert_eq!(ids.len(), CHECKS.len());
     for check in CHECKS {
         let body = job(workflow(check.workflow), check.job);
-        let reference = if check.id.starts_with("selective-") {
+        let reference = if check.job == "test" {
             "run-ci --check \"selective-${{ matrix.target }}\"".to_string()
+        } else if matches!(check.job, "test-core" | "test-cli") {
+            "run-ci --check \"${{ matrix.check }}\"".to_string()
         } else if check.job == "test-integration" {
             "run-ci --check integration-${{ matrix.shard }}".to_string()
         } else {
@@ -703,7 +711,7 @@ fn grouped_runtime_checks_keep_each_recipe_receipt_and_applicability() {
         );
     }
     let body = job(CI, "test-rpc-suite");
-    assert!(body.contains("needs: release-metadata"));
+    assert!(body.contains("needs: [release-metadata, pre-build-validate]"));
     assert!(body.contains("needs.release-metadata.outputs.release_only != 'true'"));
     assert_eq!(body.matches("uses: actions/checkout@v4").count(), 1);
     assert_eq!(
@@ -822,8 +830,18 @@ fn immutable_path_consumers_share_one_read_only_diff_implementation() {
 fn selectors_preserve_unanchored_source_patterns_and_exact_migration_path() {
     for (id, matching, nonmatching) in [
         (
-            "selective-core",
+            "selective-core-1",
             "tests/fixtures/src/decapod/core/hash.rs",
+            "src/decapod/plugins/hash.rs",
+        ),
+        (
+            "selective-core-2",
+            "tests/fixtures/src/decapod/core/todo.rs",
+            "src/decapod/plugins/hash.rs",
+        ),
+        (
+            "selective-core-3",
+            "tests/fixtures/src/decapod/core/todo.rs",
             "src/decapod/plugins/hash.rs",
         ),
         (
@@ -832,7 +850,17 @@ fn selectors_preserve_unanchored_source_patterns_and_exact_migration_path() {
             "src/decapod/core/todo.rs",
         ),
         (
-            "selective-cli",
+            "selective-cli-1",
+            "tests/fixtures/src/main.rs",
+            "src/bin/other.rs",
+        ),
+        (
+            "selective-cli-2",
+            "tests/fixtures/src/main.rs",
+            "src/bin/other.rs",
+        ),
+        (
+            "selective-cli-3",
             "tests/fixtures/src/main.rs",
             "src/bin/other.rs",
         ),
@@ -847,15 +875,29 @@ fn selectors_preserve_unanchored_source_patterns_and_exact_migration_path() {
         assert!(!selected(c, &paths(&[nonmatching]), false));
         assert!(commands(c, &paths(&[nonmatching])).unwrap().is_empty());
     }
-    let core = find_check("selective-core").unwrap();
+    let core1 = find_check("selective-core-1").unwrap();
+    let core2 = find_check("selective-core-2").unwrap();
+    let core3 = find_check("selective-core-3").unwrap();
     assert_eq!(
-        commands(core, &paths(&["src/decapod/core/todo.rs"]))
+        commands(core1, &paths(&["src/decapod/core/todo.rs"]))
             .unwrap()
             .len(),
         3
     );
     assert_eq!(
-        commands(core, &paths(&["src/decapod/core/hash.rs"]))
+        commands(core2, &paths(&["src/decapod/core/todo.rs"]))
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        commands(core3, &paths(&["src/decapod/core/todo.rs"]))
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(
+        commands(core1, &paths(&["src/decapod/core/hash.rs"]))
             .unwrap()
             .len(),
         1
@@ -872,7 +914,7 @@ fn selectors_preserve_unanchored_source_patterns_and_exact_migration_path() {
 }
 
 #[test]
-fn release_only_keeps_build_validation_constitution_and_docs_obligations() {
+fn release_only_keeps_required_checks_and_release_obligations() {
     let jobs = inventory(&full_paths(), true);
     let active: BTreeSet<_> = jobs
         .iter()
@@ -883,8 +925,12 @@ fn release_only_keeps_build_validation_constitution_and_docs_obligations() {
         active,
         BTreeSet::from([
             ("ci.yml", "release-metadata"),
+            ("ci.yml", "pre-build-validate"),
             ("ci.yml", "health"),
             ("ci.yml", "setup"),
+            ("ci.yml", "test-core"),
+            ("ci.yml", "test-core-status"),
+            ("ci.yml", "supabase-consumer"),
             ("ci.yml", "musl-publication"),
             ("constitution-sync.yml", "validate-constitution"),
             ("decapod-validate.yml", "validate"),
@@ -904,6 +950,24 @@ fn release_only_keeps_build_validation_constitution_and_docs_obligations() {
     ));
     assert!(!selected(find_check("fmt").unwrap(), &[], true));
     assert!(selected(find_check("docs-build").unwrap(), &[], true));
+
+    let release = paths(&["CHANGELOG.md", "Cargo.lock", "Cargo.toml"]);
+    for id in ["selective-core-1", "selective-core-2", "selective-core-3"] {
+        let core = find_check(id).unwrap();
+        assert!(selected(core, &release, true), "{id}");
+        assert!(!commands(core, &release).unwrap().is_empty(), "{id}");
+    }
+    let consumer = find_check("supabase-consumer").unwrap();
+    assert!(selected(consumer, &release, true));
+    assert!(!commands(consumer, &release).unwrap().is_empty());
+    for job_id in ["test-core", "test-core-status", "supabase-consumer"] {
+        assert!(
+            !job(CI, job_id).contains("needs.release-metadata.outputs.release_only"),
+            "release classification must not suppress {job_id}"
+        );
+    }
+    assert!(job(CI, "test-core-status").contains("name: Tests (core)"));
+    assert!(job(CI, "test-cli-status").contains("name: Tests (cli)"));
 }
 
 #[test]
@@ -1332,7 +1396,7 @@ fn plugin_test_changes_select_the_existing_complete_plugin_recipe() {
 
 #[test]
 fn rust_justfile_regressions_are_selected_on_linux_and_required_on_macos() {
-    let cli = find_check("selective-cli").unwrap();
+    let cli = find_check("selective-cli-3").unwrap();
     for path in [
         "tests/cli_contracts.rs",
         "tests/support/justfile_inventory.rs",
@@ -2246,7 +2310,7 @@ fn storage_and_broker_changes_select_unfiltered_runtime_regressions() {
             profile::core_full(&changed),
             "missing core regression selection for {area}"
         );
-        let recipe = commands(find_check("selective-core").unwrap(), &changed).unwrap();
+        let recipe = commands(find_check("selective-core-1").unwrap(), &changed).unwrap();
         let serialized = format!("{recipe:?}");
         assert!(serialized.contains("//:group_broker"));
         assert!(serialized.contains("//:validate_termination"));
@@ -2318,14 +2382,67 @@ fn publication_regressions_are_always_owned_by_the_full_library_recipe() {
 
 #[test]
 fn required_test_source_changes_retain_the_complete_owning_recipe() {
-    let core = find_check("selective-core").unwrap();
-    let cli = find_check("selective-cli").unwrap();
-    let core_recipe = commands(core, &paths(&["src/decapod/core/todo.rs"])).unwrap();
-    let cli_recipe = commands(cli, &paths(&["src/decapod/lib.rs"])).unwrap();
-    for (check, expected, changed) in [
+    let core_checks = [
+        find_check("selective-core-1").unwrap(),
+        find_check("selective-core-2").unwrap(),
+        find_check("selective-core-3").unwrap(),
+    ];
+    let cli_checks = [
+        find_check("selective-cli-1").unwrap(),
+        find_check("selective-cli-2").unwrap(),
+        find_check("selective-cli-3").unwrap(),
+    ];
+    let core_recipes: Vec<_> = core_checks
+        .iter()
+        .map(|c| commands(c, &paths(&["src/decapod/core/todo.rs"])).unwrap())
+        .collect();
+    let cli_recipes: Vec<_> = cli_checks
+        .iter()
+        .map(|c| commands(c, &paths(&["src/decapod/lib.rs"])).unwrap())
+        .collect();
+    // Verify all 11 core targets and 3 cli targets appear in exact shard partition (no drops or duplicates).
+    let core_all_targets: Vec<&str> = core_recipes
+        .iter()
+        .flat_map(|r| r.iter())
+        .flat_map(|inv| inv.args.iter().copied())
+        .filter(|arg| arg.starts_with("//:"))
+        .collect();
+    for target in [
+        "//:todo_enforcement",
+        "//:validate_termination",
+        "//:workspace_interlock",
+        "//:spec_workspace_ownership",
+        "//:workspace_prune_regression",
+        "//:hermes_governance_substrate",
+        "//:group_broker",
+        "//:group_broker_strict",
+        "//:workunit_cli",
+        "//:context_capsule_cli",
+        "//:interop_conformance",
+    ] {
+        assert!(
+            core_all_targets.contains(&target),
+            "missing core target {target}"
+        );
+    }
+    let cli_all_targets: Vec<&str> = cli_recipes
+        .iter()
+        .flat_map(|r| r.iter())
+        .flat_map(|inv| inv.args.iter().copied())
+        .filter(|arg| arg.starts_with("//:"))
+        .collect();
+    assert_eq!(
+        cli_all_targets,
+        vec![
+            "//:cli_contract_enforcement",
+            "//:entrypoint_correctness",
+            "//:cli_contracts"
+        ]
+    );
+    for (checks, expected, changed) in [
         (
-            core,
-            &core_recipe,
+            &core_checks[..],
+            &core_recipes,
             vec![
                 "tests/todo_enforcement.rs",
                 "tests/validate_termination.rs",
@@ -2342,8 +2459,8 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             ],
         ),
         (
-            cli,
-            &cli_recipe,
+            &cli_checks[..],
+            &cli_recipes,
             vec![
                 "tests/cli_contract_enforcement.rs",
                 "tests/entrypoint_correctness.rs",
@@ -2367,25 +2484,36 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             ".config/build/decapod.BUILD.bzl",
         ]) {
             let changed = paths(&[path]);
-            assert!(
-                selected(check, &changed, false),
-                "missing {} for {path}",
-                check.id
-            );
-            assert_eq!(&commands(check, &changed).unwrap(), expected, "{path}");
             let required = inventory(&changed, false);
-            assert!(
-                required
-                    .iter()
-                    .any(|job| { job.applicable && job.checks.contains(&check.id) }),
-                "test recipe must be in the required inventory: {path}"
-            );
-            assert!(!selected(check, &changed, true));
+            for (check, expected_recipe) in checks.iter().zip(expected.iter()) {
+                assert!(
+                    selected(check, &changed, false),
+                    "missing {} for {path}",
+                    check.id
+                );
+                assert_eq!(
+                    &commands(check, &changed).unwrap(),
+                    expected_recipe,
+                    "{path} / {}",
+                    check.id
+                );
+                assert!(
+                    required
+                        .iter()
+                        .any(|job| { job.applicable && job.checks.contains(&check.id) }),
+                    "test recipe must be in the required inventory: {path} / {}",
+                    check.id
+                );
+                assert_eq!(
+                    selected(check, &changed, true),
+                    check.selection == profile::Selection::Core
+                );
+            }
         }
     }
     for path in ["docs/agent/README.md", "tests/unrelated_example.rs"] {
         let changed = paths(&[path]);
-        for check in [core, cli] {
+        for check in core_checks.iter().chain(cli_checks.iter()) {
             assert!(!selected(check, &changed, false), "unrelated input: {path}");
             assert!(commands(check, &changed).unwrap().is_empty());
         }

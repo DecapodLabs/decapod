@@ -6,6 +6,7 @@ on:
   # the shell gate below retains the release-merge-only behavior.
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 permissions:
@@ -36,7 +37,7 @@ jobs:
              [ "${BUILDKITE:-}" != "true" ] &&
              [ "${GITHUB_ACTIONS:-}" = "true" ] &&
              [ "${GITHUB_EVENT_NAME:-}" = "push" ] &&
-             [ "${GITHUB_REF:-}" = "refs/heads/master" ]; then
+             { [ "${GITHUB_REF:-}" = "refs/heads/master" ] || [[ "${GITHUB_REF:-}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; }; then
             # Fetch only the protected pushed commit and its immediate
             # parents, anonymously: this owner has no GITHUB_TOKEN permissions.
             git init -q .
@@ -54,7 +55,7 @@ jobs:
             fi
             if [[ "$subject" == chore:\ release\ v* ]]; then
               publish=true
-              echo "Native release commit detected: $subject"
+              echo "Native release commit detected (${GITHUB_REF}): $subject"
             fi
           fi
           printf 'publish=%s\n' "$publish" >> "$GITHUB_OUTPUT"
@@ -67,7 +68,7 @@ jobs:
   # repository-pinned Rust channel. Fail closed; CI never mutates flake.lock.
   build:
     name: nix (${{ matrix.os }})
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) || github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -170,7 +171,7 @@ jobs:
   publish:
     name: cachix (${{ matrix.os }})
     needs: [publication-owner, build]
-    if: needs.publication-owner.outputs.publish == 'true' && needs.build.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: needs.publication-owner.outputs.publish == 'true' && needs.build.result == 'success' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

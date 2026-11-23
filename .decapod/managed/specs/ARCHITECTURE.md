@@ -233,7 +233,8 @@ history:
   exact file bytes and `.gitignore` delta before unlinking any owned file, then
   transitions to `"applied"` and prunes only empty `.decapod/managed/`
   directories. Re-init (`decapod init`) detects absent
-  `.decapod/managed/specs/.manifest.json` and regenerates missing scaffold specs
+  `.decapod/managed/.manifest.json` (with read-only fallback for legacy
+  `.decapod/managed/specs/.manifest.json`) and regenerates missing scaffold specs
   without overwriting authored spec prose.
 
 ## Cloud control-plane, DPoP custody, Dactyl 0.18.0, and Local/Cloud branding (#1809, #1808, #1769, #1667, #1777, #1778, #1590, #1066, #1158)
@@ -1382,37 +1383,6 @@ and whitespace. Oversized, unsupported or unavailable observations fail closed
 or explicitly mark the impact incomplete. No new persistence, scheduler, proof
 record or cross-document authority is introduced.
 
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Persistent State Architecture Overlay
-
-### State Ownership
-- Each entity type MUST have a designated state owner
-- State ownership boundaries MUST be explicitly documented
-- Cross-boundary state access MUST go through defined interfaces
-
-### Transaction Boundaries
-- Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store
-- Transaction boundaries MUST be documented in ARCHITECTURE.md
-- Document compensation or other partial-failure treatment if distributed operations exist
-
-### Storage Abstraction
-- Storage ownership, consistency behavior, and access boundaries MUST be explicit
-- Portability or swappable implementations are project decisions, not universal requirements
-- Migration and rollback treatment MUST match the selected storage technology
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Native inventory boundary
 
 `core::storage_inventory` owns semantic measurement, sampling and redaction;
@@ -2037,3 +2007,51 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
   - `KnowledgeAttestation` (`#657`), `reconcile_after_crash` (`#1367`), `run_local_storage_compaction_benchmark` (`#1630`), and `validate_darkmatter_snapshot` (`#1711`).
 - **Consumer & harness surfaces (`#1711`, `#1277`)**: `docs/architecture/darkmatter-readonly-contract.md` + `tests/fixtures/darkmatter_readonly_snapshot.v1.json` specify the read-only cockpit contract; `bindings/typescript/` (`@decapodlabs/decapod-client`) and `packages/pi-decapod/` (`@decapodlabs/pi-decapod`) implement pure-TypeScript process/RPC bindings and Pi lifecycle hooks verified with `tsc --noEmit` and `node --test`.
 - **Verification**: `tests/houseboat_engine.rs` exercises all Houseboat subsystems, real SQLite compaction/recovery/downgrade refusal, offline multi-provider/non-Rust/monorepo/version-skew init matrix (`#1024`), Darkmatter CLI fixture verification, and a 3-worktree combined-candidate negative control (`#1763`).
+
+## Wave 7 Shard A: CI Topology, Manifest Layout, Codebase Contract Refresh, and Non-Buildkite Qualification (#1079, #1122, #1047, #1134, #1388, #1626, #1672, #1879, #1890, #1573)
+
+- **Manifest ownership (`src/decapod/core/project_specs.rs`, `src/decapod/core/validate.rs`, `src/decapod/core/release_projection_drift.rs`)**: `LOCAL_PROJECT_SPECS_MANIFEST` moves from `.decapod/managed/specs/.manifest.json` to `.decapod/managed/.manifest.json` (`#1079`). `resolve_specs_manifest_path` and `read_specs_manifest` preserve backward-compatible read fallback to `LEGACY_PROJECT_SPECS_MANIFEST`, while `refresh_specs_manifest` writes the canonical root manifest and removes any stale legacy file.
+- **Bounded source-derived spec contracts (`src/decapod/core/project_specs.rs`, `assets/tools/source_ci/material-specs.sh`)**: `CodebaseContractSnapshot` scans significant repository paths deterministically (without reading Cargo version numbers, preserving `release_projection_drift` stability on version-only cuts) and updates `` in each spec during `refresh_specs_from_codebase` (`#1122`). Both Rust `strip_auto_generated_spec_blocks` and CI `material-specs.sh` exclude this generated block from `#1183` material-rewrite detection.
+- **Sharded source-CI catalog & dual-root readiness (`assets/tools/source_ci_profile.rs`, `assets/tools/source_ci_workflow_owned.rs`, `src/decapod/core/readiness_profile.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: Adds `pre-build-validate`, splits `selective-core` into `selective-core-1..3` + `selective-core-status` (`Tests (core)`), splits `selective-cli` into `selective-cli-1..3` + `selective-cli-status` (`Tests (cli)`), retains `selective-core-*` and `supabase-consumer` on release-only cuts (`#1879`), updates `reviewed_workflow_digests()`, and maps all new job names in `source_import::job_name` and `readiness_profile::matrix`.
+- **Governed docs sync & Nix release tag gating (`assets/tools/docs_autosync_governed.sh`, `.github/workflows/docs_autosync.yml`, `.github/workflows/nix-flake.yml`)**: Encapsulates scheduled docs sync in a testable script enforcing `begin-pr` -> `docs build` -> `trajectory` -> `specs.refresh` -> `checkpoint` -> `verify-checkpoints --publication-material` -> non-force push (`#1388`), and extends `nix-flake.yml` to accept native SemVer `refs/tags/v*` release pushes alongside squash/linear and merge-commit `master` pushes (`#1626`).
+- **ETag conditional polling (`src/decapod/core/snapshot_provider/mod.rs`, `src/decapod/core/snapshot_provider/github_quota.rs`)**: `PublicGithubReads` maintains a bounded 64-entry in-process ETag validator cache (`If-None-Match`), handling HTTP 304 Not Modified without charging rate-limit request counts (`observe_not_modified`) while failing closed on unexpected 304s or malformed ETag headers (`#1573`).
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Persistent State Architecture Overlay
+
+### State Ownership
+- Each entity type MUST have a designated state owner
+- State ownership boundaries MUST be explicitly documented
+- Cross-boundary state access MUST go through defined interfaces
+
+### Transaction Boundaries
+- Multi-entity mutation atomicity and partial-failure treatment MUST be documented and proven for the selected store
+- Transaction boundaries MUST be documented in ARCHITECTURE.md
+- Document compensation or other partial-failure treatment if distributed operations exist
+
+### Storage Abstraction
+- Storage ownership, consistency behavior, and access boundaries MUST be explicit
+- Portability or swappable implementations are project decisions, not universal requirements
+- Migration and rollback treatment MUST match the selected storage technology
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Core modules (147): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+131 more)
+- Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
+- Build manifests (9): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, `tests/fixtures/justfile_consumer/Cargo.toml`, (+1 more)
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

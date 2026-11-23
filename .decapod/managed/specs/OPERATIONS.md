@@ -448,56 +448,6 @@ host-specific `LD_LIBRARY_PATH`; when no library is found, the
 `LOCAL_SQLITE_RUNTIME_REQUIRED` error names this flake output as the supported
 setup alongside the OS package and the `SQLITE_LIBRARY_ENV` override.
 
-<!-- decapod:capability-overlay:background-processing:start -->
-
-Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Background Processing Operations Overlay
-
-### Queue Visibility
-- Queue depth, processing rate, and latency MUST be monitored
-- If a dead-letter queue exists, define visibility and alerting obligations for it
-- Worker health and processing rate metrics required
-
-### Shutdown Behavior
-- Graceful shutdown: stop accepting new work, finish current job
-- Drain behavior and timeout MUST be selected for the deployment
-- Termination and requeue behavior MUST be selected and proven for the deployment
-
-### Worker Health
-- Worker liveness and readiness probes
-- Queue depth alerts for backpressure detection
-- Processing latency percentiles (p50, p95, p99)
-<!-- decapod:capability-overlay:background-processing:end -->
-
-<!-- decapod:capability-overlay:persistent-state:start -->
-
-Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
-
-## Persistent State Operations Overlay
-
-### Backup & Recovery
-- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
-- Recovery point objectives MUST be explicit project decisions, not assumed values
-- Recovery time objectives MUST be explicit project decisions, not assumed values
-- Restore verification cadence MUST be recorded with the operational proof plan
-
-### Migration Operations
-- All schema changes via migration files
-- Migration rollback procedures documented
-- Migration downtime and availability effects MUST be declared; zero downtime requires project-specific proof
-- Migration health checks and rollback triggers
-<!-- decapod:capability-overlay:persistent-state:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Source validation and documentation delivery
 
 Constitution schema validation in `.github/workflows/constitution-sync.yml` runs
@@ -544,3 +494,60 @@ Do not install or run the compaction candidate against the machine coordination 
   - `reader_contention_deferred`: an exclusive maintenance lock or heavy write burst held the datastore beyond `reader_lock_timeout_ms`; retry with backoff without interfering with writers.
   - `cursor_behind_retention_floor`: explicit bounded retention pruned events through `cursor.retention_floor_seq`; verify `cursor.retention_anchor_sha256` against the prior window and resume from the retained floor.
 - **Explicit bounded event retention:** `core/projection_budget.rs::apply_bounded_event_retention` is explicit-only and never runs implicitly on read paths. It computes a chained SHA-256 `EventRetentionAnchor` in `meta(namespace='event_retention')` inside `BEGIN IMMEDIATE` before deleting cold rows, preserves original surviving `seq` numbers, and ensures future `events::append_on_conn` calls remain strictly monotonic even after a full `keep_latest = 0` prune.
+
+<!-- decapod:capability-overlay:background-processing:start -->
+
+Generated capability obligations: `background-processing` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Background Processing Operations Overlay
+
+### Queue Visibility
+- Queue depth, processing rate, and latency MUST be monitored
+- If a dead-letter queue exists, define visibility and alerting obligations for it
+- Worker health and processing rate metrics required
+
+### Shutdown Behavior
+- Graceful shutdown: stop accepting new work, finish current job
+- Drain behavior and timeout MUST be selected for the deployment
+- Termination and requeue behavior MUST be selected and proven for the deployment
+
+### Worker Health
+- Worker liveness and readiness probes
+- Queue depth alerts for backpressure detection
+- Processing latency percentiles (p50, p95, p99)
+<!-- decapod:capability-overlay:background-processing:end -->
+
+<!-- decapod:capability-overlay:persistent-state:start -->
+
+Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
+
+## Persistent State Operations Overlay
+
+### Backup & Recovery
+- Backup scope, schedule, retention, and restore evidence MUST be selected for the project
+- Recovery point objectives MUST be explicit project decisions, not assumed values
+- Recovery time objectives MUST be explicit project decisions, not assumed values
+- Restore verification cadence MUST be recorded with the operational proof plan
+
+### Migration Operations
+- All schema changes via migration files
+- Migration rollback procedures documented
+- Migration downtime and availability effects MUST be declared; zero downtime requires project-specific proof
+- Migration health checks and rollback triggers
+<!-- decapod:capability-overlay:persistent-state:end -->
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Operational/deployment/workflow surfaces (12): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`, `flake.nix`, `src/decapod/plugins/container/Dockerfile.template`, `tests/unit/lib_generated_dockerfile_heal_tests.rs`
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

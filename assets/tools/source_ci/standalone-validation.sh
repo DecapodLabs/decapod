@@ -54,7 +54,10 @@ if [ "$RELEASE_ONLY" = "true" ]; then
     --repo . --event "$CHANGE_EVENT" --base "$CHANGE_BASE" --head "$CHANGE_HEAD"
   exit 0
 fi
-MANIFEST=".decapod/managed/specs/.manifest.json"
+MANIFEST=".decapod/managed/.manifest.json"
+if [ ! -f "${MANIFEST}" ] && [ -f ".decapod/managed/specs/.manifest.json" ]; then
+  MANIFEST=".decapod/managed/specs/.manifest.json"
+fi
 if git cat-file -e "HEAD:${MANIFEST}" 2>/dev/null && [ -f "${MANIFEST}" ]; then
   OLD=$(git show "HEAD:${MANIFEST}" | sed -n 's/.*"generated_at": "\([^"]*\)".*/\1/p' | head -1)
   if [ -n "${OLD}" ]; then

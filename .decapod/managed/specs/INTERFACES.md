@@ -1772,15 +1772,6 @@ Invalid symbolic, absent or non-ancestor bases return a validation error.
 The original empty-parameter report stays version 1.0.0 without an impact
 field. Nothing in this operation authorizes a mutation, approval or completion.
 
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Bounded local storage inspection
 
 CLI `data database inspect` and RPC `data.database.inspect` expose
@@ -2539,3 +2530,27 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **TypeScript Binding & Pi Extension (`bindings/typescript/`, `packages/pi-decapod/`)**:
   - `DecapodClient` (`bindings/typescript/src/index.ts`): concurrent, `AbortSignal`-cancellable wrapper around `decapod` CLI/RPC with per-instance `cwd`, `agentId`, and `sessionPassword` isolation and zero `process.exit` calls.
   - `createPiDecapodExtension` (`packages/pi-decapod/src/index.ts`): captures raw human prompts separately from agent interpretation across model/harness switches, enforces preparation/pre-mutation/validation-admission gates without equating plan drafting to human approval, and classifies unobserved direct host writes as `outside_native_enforcement`.
+
+## Wave 7 Shard A Interface & Contract Updates (#1079, #1122, #1047, #1134, #1388, #1672, #1879, #1890)
+
+- **Canonical manifest path**: `.decapod/managed/.manifest.json` (`LOCAL_PROJECT_SPECS_MANIFEST`); legacy `.decapod/managed/specs/.manifest.json` remains readable via `project_specs::resolve_specs_manifest_path` until refreshed (`#1079`).
+- **Pre-build validation surface (`decapod validate --pre-build` & CI `pre-build-validate`)**: Validates `.decapod/config.toml`, `.decapod/governance.json` (`claims`, `sections.plan`, `sections.trajectory`), `.decapod/managed/.manifest.json` JSON + 64-hex SHA-256 `repo_signal_fingerprint`/`config_input_hash`/`spec_input_hash`/file `content_hash`, and configured agent entrypoint `decapod-release` + 64-hex `decapod-fingerprint` markers (`#1047`, `#1134`).
+- **Source-CI check IDs**: `pre-build-validate`, `selective-core-1`, `selective-core-2`, `selective-core-3`, `selective-core-status` (`Tests (core)`), `selective-cli-1`, `selective-cli-2`, `selective-cli-3`, `selective-cli-status` (`Tests (cli)`), and `selective-plugins` (`Tests (plugins)`).
+- **Configured strict preflight carrier (`.decapod/config.toml`)**: `[proof].validation_buildkite_preflights = false` and `[proof].validation_github_actions_preflights = true` with `[proof.required_profile].id = "decapod.pr-readiness.v1"` and reconciled `reviewed_sources_digest` (`#1890`).
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- CLI/RPC/protocol surfaces (23): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/README.md`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/README.md`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/interop.rs`, `src/decapod/core/observability_projections/server.rs`, (+7 more)
+- Manifest authority path: `.decapod/managed/.manifest.json`
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

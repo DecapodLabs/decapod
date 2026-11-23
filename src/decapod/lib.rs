@@ -7514,9 +7514,9 @@ fn should_scaffold_validation_surfaces(project_root: &Path) -> bool {
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/VALIDATION.md",
-        ".decapod/managed/specs/.manifest.json",
     ];
     required.iter().any(|rel| !project_root.join(rel).exists())
+        || core::project_specs::resolve_specs_manifest_path(project_root).is_none()
 }
 
 fn heal_agents_contract(

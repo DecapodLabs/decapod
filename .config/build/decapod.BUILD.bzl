@@ -379,8 +379,10 @@ def decapod_targets():
                 "docs/agent/contribution-conventions.md",
             ] if path == "tests/specs_refresh_docs.rs" else [
                 ".github/workflows/docs_sync.yml",
+                ".github/workflows/docs_autosync.yml",
                 ".github/actions/docs-drift/action.yml",
                 "assets/tools/docs_sync.rs",
+                "assets/tools/docs_autosync_governed.sh",
                 "tests/fixtures/docs_sync_fixture.rs",
             ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [
                 ".github/actions/source-ci-profile/action.yml",
@@ -429,7 +431,7 @@ def decapod_targets():
                 # tests create the managed surfaces they need at runtime.
                 ".decapod/managed/**/*",
                 ".decapod/governance.json",
-            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else [":docs_sync_fixture"] if path == "tests/docs_sync_checkpoint_boundary.rs" else [":created_context_fixture", ":created_profile_fixture"] if path == "tests/created_branch_workflow_policy.rs" else []),
+            ], allow_empty = True) + ([":native_proof_fixture"] if path == "tests/native_proof_execution.rs" else [":integration_custody_fixture"] if path == "tests/integration_custody_policy.rs" else [":docs_sync_fixture", "assets/tools/docs_autosync_governed.sh"] if path == "tests/docs_sync_checkpoint_boundary.rs" else [":created_context_fixture", ":created_profile_fixture"] if path == "tests/created_branch_workflow_policy.rs" else []),
             deps = [
                 ":decapod_lib",
             ] + all_crate_deps(normal = True, normal_dev = True),

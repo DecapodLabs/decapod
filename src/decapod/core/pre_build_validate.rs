@@ -23,7 +23,6 @@ use std::time::Duration;
 pub const PRE_BUILD_VALIDATE_SCHEMA_VERSION: &str = "decapod.pre-build-validate.v1";
 
 const REQUIRED_SPEC_FILES: &[&str] = &[
-    ".manifest.json",
     "README.md",
     "INTENT.md",
     "ARCHITECTURE.md",
@@ -33,6 +32,25 @@ const REQUIRED_SPEC_FILES: &[&str] = &[
     "VALIDATION.md",
     "SEMANTICS.md",
 ];
+
+fn is_hex_sha256(value: &str) -> bool {
+    value.len() == 64 && value.bytes().all(|b| b.is_ascii_hexdigit())
+}
+
+fn extract_html_marker<'a>(body: &'a str, prefix: &str) -> Option<&'a str> {
+    for line in body.lines().take(12) {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix(prefix)
+            && let Some(val) = rest.strip_suffix("-->")
+        {
+            let trimmed_val = val.trim();
+            if !trimmed_val.is_empty() {
+                return Some(trimmed_val);
+            }
+        }
+    }
+    None
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PreBuildCheck {
@@ -191,7 +209,7 @@ pub fn evaluate(repo_root: &Path) -> PreBuildValidateReport {
         }
     }
 
-    // 3. Living specs completeness under `.decapod/managed/specs/`
+    // 3. Living specs completeness under `.decapod/managed/specs/` and manifest integrity (#1079, #1134)
     let specs_required = parsed_config.as_ref().map(|c| c.init.specs).unwrap_or(true);
     if specs_required {
         let specs_dir = repo_root.join(".decapod/managed/specs");
@@ -226,6 +244,113 @@ pub fn evaluate(repo_root: &Path) -> PreBuildValidateReport {
                 "Author living specs and refresh projections via `decapod rpc --op specs.refresh`",
             );
         }
+
+        // 3b. Specs manifest presence, schema, and SHA256 fingerprint integrity (#1079, #1134)
+        match project_specs::resolve_specs_manifest_path(repo_root) {
+            Some(manifest_path) => match project_specs::read_specs_manifest(repo_root) {
+                Ok(Some(manifest)) => {
+                    let mut manifest_issues = Vec::new();
+                    if !is_hex_sha256(&manifest.repo_signal_fingerprint) {
+                        manifest_issues
+                            .push("invalid or missing repo_signal_fingerprint SHA-256".to_string());
+                    }
+                    if !manifest.spec_input_hash.is_empty()
+                        && !is_hex_sha256(&manifest.spec_input_hash)
+                    {
+                        manifest_issues.push("invalid spec_input_hash SHA-256".to_string());
+                    }
+                    if !manifest.config_input_hash.is_empty()
+                        && !is_hex_sha256(&manifest.config_input_hash)
+                    {
+                        manifest_issues.push("invalid config_input_hash SHA-256".to_string());
+                    }
+                    for entry in &manifest.files {
+                        if !is_hex_sha256(&entry.content_hash) {
+                            manifest_issues
+                                .push(format!("missing/invalid content_hash for {}", entry.path));
+                            continue;
+                        }
+                        let file_path = repo_root.join(&entry.path);
+                        if let Ok(body) = fs::read_to_string(&file_path) {
+                            let actual = project_specs::hash_text(&body);
+                            if actual != entry.content_hash {
+                                manifest_issues
+                                    .push(format!("stale content_hash for {}", entry.path));
+                            }
+                        }
+                    }
+                    for entry in &manifest.entrypoints {
+                        if !is_hex_sha256(&entry.fingerprint) {
+                            manifest_issues.push(format!(
+                                "missing/invalid entrypoint fingerprint SHA-256 for {}",
+                                entry.path
+                            ));
+                        }
+                        if !entry.content_hash.is_empty() {
+                            let file_path = repo_root.join(&entry.path);
+                            if let Ok(body) = fs::read_to_string(&file_path) {
+                                let actual = project_specs::hash_text(&body);
+                                if actual != entry.content_hash {
+                                    manifest_issues.push(format!(
+                                        "stale entrypoint content_hash for {}",
+                                        entry.path
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                    let rel_display = manifest_path
+                        .strip_prefix(repo_root)
+                        .unwrap_or(&manifest_path)
+                        .to_string_lossy();
+                    if manifest_issues.is_empty() {
+                        push_pass(
+                            &mut checks,
+                            "specs_manifest",
+                            format!(
+                                "{rel_display} is valid and matches spec/entrypoint SHA-256 hashes"
+                            ),
+                        );
+                    } else {
+                        push_fail(
+                            &mut checks,
+                            &mut failures,
+                            "specs_manifest",
+                            format!(
+                                "{rel_display} integrity failure: {}",
+                                manifest_issues.join("; ")
+                            ),
+                            "Run `decapod rpc --op specs.refresh` and commit refreshed manifest and projections",
+                        );
+                    }
+                }
+                Ok(None) => push_fail(
+                    &mut checks,
+                    &mut failures,
+                    "specs_manifest",
+                    format!("{} is missing", project_specs::LOCAL_PROJECT_SPECS_MANIFEST),
+                    "Run `decapod rpc --op specs.refresh` to generate .decapod/managed/.manifest.json",
+                ),
+                Err(err) => push_fail(
+                    &mut checks,
+                    &mut failures,
+                    "specs_manifest",
+                    format!("Specs manifest failed JSON validation: {err}"),
+                    "Run `decapod rpc --op specs.refresh` to regenerate .decapod/managed/.manifest.json",
+                ),
+            },
+            None => push_fail(
+                &mut checks,
+                &mut failures,
+                "specs_manifest",
+                format!(
+                    "Missing {} (and legacy {})",
+                    project_specs::LOCAL_PROJECT_SPECS_MANIFEST,
+                    project_specs::LEGACY_PROJECT_SPECS_MANIFEST
+                ),
+                "Run `decapod rpc --op specs.refresh` to generate .decapod/managed/.manifest.json",
+            ),
+        }
     } else {
         push_pass(
             &mut checks,
@@ -234,7 +359,7 @@ pub fn evaluate(repo_root: &Path) -> PreBuildValidateReport {
         );
     }
 
-    // 4. Configured agent entrypoints
+    // 4. Configured agent entrypoints and fingerprint SHA-256 markers (#1134)
     let entrypoints: Vec<String> = parsed_config
         .as_ref()
         .map(|c| c.init.entrypoints.clone())
@@ -242,6 +367,7 @@ pub fn evaluate(repo_root: &Path) -> PreBuildValidateReport {
         .unwrap_or_else(|| vec!["AGENTS.md".to_string()]);
     let mut missing_ep = Vec::new();
     let mut unanchored_ep = Vec::new();
+    let mut missing_fp_ep = Vec::new();
     for ep in &entrypoints {
         let p = repo_root.join(ep);
         match fs::read_to_string(&p) {
@@ -249,16 +375,22 @@ pub fn evaluate(repo_root: &Path) -> PreBuildValidateReport {
                 if !body.contains("decapod-release:") && !body.contains("Decapod") {
                     unanchored_ep.push(ep.clone());
                 }
+                if body.contains("decapod-release:") {
+                    match extract_html_marker(&body, "<!-- decapod-fingerprint:") {
+                        Some(fp) if is_hex_sha256(fp) => {}
+                        _ => missing_fp_ep.push(ep.clone()),
+                    }
+                }
             }
             Err(_) => missing_ep.push(ep.clone()),
         }
     }
-    if missing_ep.is_empty() && unanchored_ep.is_empty() {
+    if missing_ep.is_empty() && unanchored_ep.is_empty() && missing_fp_ep.is_empty() {
         push_pass(
             &mut checks,
             "agent_entrypoints",
             format!(
-                "All configured agent entrypoints present with Decapod anchors ({})",
+                "All configured agent entrypoints present with Decapod release and fingerprint SHA-256 markers ({})",
                 entrypoints.join(", ")
             ),
         );
@@ -273,12 +405,18 @@ pub fn evaluate(repo_root: &Path) -> PreBuildValidateReport {
                 unanchored_ep.join(", ")
             ));
         }
+        if !missing_fp_ep.is_empty() {
+            parts.push(format!(
+                "missing or invalid decapod-fingerprint SHA-256: {}",
+                missing_fp_ep.join(", ")
+            ));
+        }
         push_fail(
             &mut checks,
             &mut failures,
             "agent_entrypoints",
             parts.join("; "),
-            "Refresh entrypoints through Decapod initialization or validation",
+            "Refresh entrypoints through Decapod initialization or validation (`decapod validate --refresh-specs`)",
         );
     }
 

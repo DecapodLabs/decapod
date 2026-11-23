@@ -57,6 +57,18 @@ impl GithubQuota {
         self.reset_unix = decimal_header(bytes, "x-ratelimit-reset");
     }
 
+    /// HTTP 304 Not Modified conditional polls do not consume GitHub's public
+    /// rate-limit quota (#1573). Still refresh advisory rate-limit headers when
+    /// present without counting the zero-cost revalidation against poll pacing.
+    fn observe_not_modified(&mut self, bytes: &[u8]) {
+        if let Some(remaining) = decimal_header(bytes, "x-ratelimit-remaining") {
+            self.remaining = Some(remaining);
+        }
+        if let Some(reset) = decimal_header(bytes, "x-ratelimit-reset") {
+            self.reset_unix = Some(reset);
+        }
+    }
+
     fn request_delay(&self, now: u64) -> Result<Duration> {
         if self.remaining != Some(0) {
             return Ok(Duration::ZERO);
@@ -98,6 +110,14 @@ impl Budget<'_> {
             .lock()
             .map_err(|_| invalid("public GitHub quota tracking unavailable"))?
             .observe(bytes);
+        Ok(())
+    }
+
+    pub(super) fn observe_public_github_not_modified(&self, bytes: &[u8]) -> Result<()> {
+        self.github_quota
+            .lock()
+            .map_err(|_| invalid("public GitHub quota tracking unavailable"))?
+            .observe_not_modified(bytes);
         Ok(())
     }
 
@@ -321,6 +341,76 @@ mod tests {
                 assert!(error.contains("no automatic retry or alternate authentication route"));
                 assert_eq!(std::fs::read(temp.path().join("requests")).unwrap(), b"x");
             }
+        }
+
+        #[test]
+        fn conditional_etag_revalidation_uses_if_none_match_and_preserves_quota_on_304() {
+            let temp = tempfile::tempdir().unwrap();
+            let curl = temp.path().join("synthetic-curl-etag");
+            // First call returns 200 + ETag + body; second call with matching If-None-Match
+            // returns 304 Not Modified without consuming rate limit; third call simulates
+            // updated resource returning 200 with a new ETag and body.
+            std::fs::write(
+                &curl,
+                r#"#!/bin/sh
+printf '%s\n' "$*" >> argv.log
+count=$(wc -l < argv.log | tr -d ' ')
+if [ "$count" -eq 1 ]; then
+  printf 'HTTP/2 200\r\nETag: W/"etag-v1"\r\nX-RateLimit-Remaining: 59\r\nX-RateLimit-Reset: 1899999999\r\n\r\n{"state":"pending"}'
+elif [ "$count" -eq 2 ]; then
+  case "$*" in
+    *'If-None-Match: W/"etag-v1"'*)
+      printf 'HTTP/2 304\r\nETag: W/"etag-v1"\r\nX-RateLimit-Remaining: 59\r\nX-RateLimit-Reset: 1899999999\r\n\r\n'
+      ;;
+    *)
+      printf 'HTTP/2 500\r\n\r\nmissing-if-none-match'
+      exit 22
+      ;;
+  esac
+else
+  printf 'HTTP/2 200\r\nETag: W/"etag-v2"\r\nX-RateLimit-Remaining: 58\r\nX-RateLimit-Reset: 1899999999\r\n\r\n{"state":"completed"}'
+fi
+"#,
+            )
+            .unwrap();
+            std::fs::set_permissions(&curl, std::fs::Permissions::from_mode(0o700)).unwrap();
+            let mut reader = PublicGithubReads::new(
+                curl,
+                Repository::new("org", "repo").unwrap(),
+                NoFallback,
+                |spec, _| {
+                    spec.authorize_provider_read()?;
+                    Ok(())
+                },
+            )
+            .unwrap();
+            let cancel = Cancellation::default();
+            let budget = Budget::new(Duration::from_secs(5), 4096, &cancel).unwrap();
+            let spec = provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7");
+
+            let r1 = reader.execute(&spec, &budget).unwrap();
+            assert_eq!(r1.stdout, br#"{"state":"pending"}"#);
+            assert_eq!(budget.public_github_requests().unwrap(), 1);
+
+            // Second poll returns 304 Not Modified -> exact cached body returned and zero quota charged!
+            let r2 = reader.execute(&spec, &budget).unwrap();
+            assert_eq!(r2.stdout, br#"{"state":"pending"}"#);
+            assert_eq!(budget.public_github_requests().unwrap(), 1);
+
+            // Third poll returns 200 with updated body -> cache refreshed and quota incremented.
+            let r3 = reader.execute(&spec, &budget).unwrap();
+            assert_eq!(r3.stdout, br#"{"state":"completed"}"#);
+            assert_eq!(budget.public_github_requests().unwrap(), 2);
+        }
+
+        #[test]
+        fn unexpected_304_without_prior_etag_fails_closed() {
+            let (temp, mut reader) = fixture(304, 0, "1899999999");
+            let cancel = Cancellation::default();
+            let budget = Budget::new(Duration::from_secs(5), 4096, &cancel).unwrap();
+            let spec = provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7");
+            let error = reader.execute(&spec, &budget).unwrap_err().to_string();
+            assert!(error.contains("HTTP 304 without a matching in-process ETag"));
         }
     }
 }

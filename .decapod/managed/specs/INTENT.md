@@ -835,34 +835,6 @@ unmapped code change remains explicitly unmapped, incomplete or unsupported
 inputs remain unproven, and the harness owns any proposed code/spec repair.
 The kernel retains independent review, validation and publication authority.
 
-<!-- decapod:declared-capabilities:start -->
-
-## Declared Capability Surfaces
-
-These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
-
-- `agent-helper`
-- `authentication`
-- `authorization`
-- `background-processing`
-- `control-plane`
-- `event-driven`
-- `external-integrations`
-- `governance-kernel`
-- `persistent-state`
-- `scheduled-jobs`
-
-<!-- decapod:declared-capabilities:end -->
-
-<!-- decapod:codebase-attestation:start -->
-
-## Codebase Attestation
-
-- Repository signal fingerprint: `90079850ab7321a14dbe2388ffc5029807003538bfce45d6f8e457ab1566d6c3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
-- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
-<!-- decapod:codebase-attestation:end -->
-
 ## Bounded native storage inventory (#1630)
 
 Measure Decapod, Dactyl and Propodus dogfooding stores before selecting a compact
@@ -1392,3 +1364,48 @@ Decapod's local-first governance kernel now exposes decoupled Houseboat primitiv
 - **Principal-level resource budgets & uncertain-effect holds (`#859`)**: `ResourceBudgetLedger` enforces atomic principal ceilings and per-child limits (`6+6 vs 10`, `3x4 vs 10`, `5+5` exact fit) and keeps `UncertainHold` allocations occupied past expiry until reconciled by an authoritative owner with a matching fence token.
 - **Darkmatter read-only boundary (`#1711`) & TS/Pi SDK (`#1277`)**: `docs/architecture/darkmatter-readonly-contract.md` and `tests/fixtures/darkmatter_readonly_snapshot.v1.json` define the repository-bounded read-only snapshot contract (keeping UI assets strictly out of `DecapodLabs/decapod`); `bindings/typescript/` and `packages/pi-decapod/` provide a zero-dependency library-safe TypeScript client (`AbortSignal`, isolated env, zero `process.exit`) and Pi lifecycle extension that keep raw observed human prompts distinct from agent interpretation and classify direct host writes honestly as `outside_native_enforcement`.
 - **Storage, knowledge attestation, init matrix & crash recovery (`#1630`, `#657`, `#1024`, `#1367`)**: Local SQLite compaction benchmarking (`run_local_storage_compaction_benchmark` + `docs/datastore-v2/compaction-benchmarks-v0.162.0.md`) explicitly separates measured local SQLite metrics from unavailable hosted PostgreSQL coverage; `KnowledgeAttestation` enforces write-time source attestation, secret rejection, and human+evidence promotion gates; `reconcile_after_crash` refuses stale repository HEADs, changed instruction revisions, and pending unknown outcomes. Live multi-host/hosted/external-repo arms remain explicitly open and tracked via `Refs`.
+
+## CI Workflows, Dual-Root Readiness Profile, Manifest Relocation, and Governed Automation (#1079, #1122, #1047, #1134, #1388, #1626, #1672, #1879, #1890, #1573)
+
+- **Specs manifest relocation (`#1079`)**: `.decapod/managed/.manifest.json` is now the canonical living-specs manifest path across `src/decapod/core/project_specs.rs` (`LOCAL_PROJECT_SPECS_MANIFEST`), scaffolding, `.gitignore`, `validate.rs`, `pre_build_validate.rs`, `release_projection_drift.rs`, `integration_removal.rs`, and CI scripts (`health.sh`, `standalone-validation.sh`), with backward-compatible read fallback to legacy `.decapod/managed/specs/.manifest.json` and automatic cleanup on refresh.
+- **Content-bumping `specs.refresh` (`#1122`)**: `project_specs::refresh_specs_from_codebase` deterministically updates a bounded source-derived `codebase-contract` marker block in each living spec (modules, CLI/RPC surfaces, workflows, integration test targets, state/ops/security surfaces) while preserving 100% of authored semantic prose and keeping generated blocks excluded from `material_spec_body()` so `#1183` still requires authored prose.
+- **Fast pre-build CI gate (`#1047`, `#1134`)**: `.github/workflows/ci.yml` executes `pre-build-validate` (`assets/tools/source_ci/pre-build-validate.sh`) immediately after `release-metadata` and before heavy build/test/lint jobs, failing fast when `.decapod/config.toml`, `.decapod/governance.json`, `.decapod/managed/.manifest.json`, living-spec hashes, or 64-hex `decapod-fingerprint` entrypoint SHAs are missing or stale; `src/decapod/core/pre_build_validate.rs` enforces the same structural and SHA-256 checks locally.
+- **Parallel core/CLI CI sharding & release-cut ruleset alignment (`#1672`, `#1879`)**: `Tests (core)` and `Tests (cli)` split into three parallel shards each (`test-core` `1/3..3/3`, `test-cli` `1/3..3/3`) with fail-closed aggregator jobs retaining the exact `Tests (core)` and `Tests (cli)` check names; `test-core`, `test-core-status`, and `supabase-consumer` remain scheduled on version-only release cuts so ruleset `12701816` receives both required named checks.
+- **Governed scheduled docs auto-sync (`#1388`) & Nix tag publication (`#1626`)**: `.github/workflows/docs_autosync.yml` replaces raw `create-pull-request` with `assets/tools/docs_autosync_governed.sh` (`begin-pr`, trajectory init/record, `specs.refresh`, exact-material `checkpoint`, `verify-checkpoints --publication-material`, non-force push, fail-closed drift report); `.github/workflows/nix-flake.yml` covers squash-merged commits and SemVer `v*` release tags under native-only publication ownership.
+- **Non-Buildkite GitHub Actions preflight activation (`#1890`) & ETag conditional polling (`#1573`)**: `.decapod/config.toml` transitions from Buildkite (`validation_buildkite_preflights = false`, `[proof.ci_attested]` retired) to the independently reviewed GitHub Actions carrier (`validation_github_actions_preflights = true`); `PublicGithubReads` (`src/decapod/core/snapshot_provider/mod.rs`) and `github_quota.rs` support bounded in-process `If-None-Match` ETag revalidation so HTTP 304 polls preserve anonymous rate-limit quota without caching across runs.
+
+<!-- decapod:declared-capabilities:start -->
+
+## Declared Capability Surfaces
+
+These declarations select authoring and proof obligations; they do not attest implemented runtime guarantees.
+
+- `agent-helper`
+- `authentication`
+- `authorization`
+- `background-processing`
+- `control-plane`
+- `event-driven`
+- `external-integrations`
+- `governance-kernel`
+- `persistent-state`
+- `scheduled-jobs`
+
+<!-- decapod:declared-capabilities:end -->
+
+<!-- decapod:codebase-contract:start -->
+
+## Codebase Contract Snapshot
+
+- Tracked significant codebase files: 634 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (284), `tests/` (283)
+- Core modules: 147 | Workflows: 9 | Integration targets: 169
+<!-- decapod:codebase-contract:end -->
+
+<!-- decapod:codebase-attestation:start -->
+
+## Codebase Attestation
+
+- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Refreshed from the current codebase by `decapod rpc --op specs.refresh`
+<!-- decapod:codebase-attestation:end -->

@@ -55,7 +55,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
     &[
         (
             ".github/workflows/ci.yml",
-            "sha256:95625705ed672de81ee3ea337f928dd945d96508549e40995ac4b3a0c3d538a8",
+            "sha256:8629c055f0aa3e8152367ec42ba2df3260dae0ce770ca9eb9903a5bc00763f65",
         ),
         (
             ".github/workflows/constitution-sync.yml",
@@ -71,7 +71,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/docs_autosync.yml",
-            "sha256:a638976699a517b079fe38a855f78ccc00570b22f1664ec7112a7b734c031ee3",
+            "sha256:22b8536d04e9a2c48978f156832ebc8cb1f69f2d5ecbdd6ddeb5eec43e380056",
         ),
         (
             ".github/workflows/docs_sync.yml",
@@ -79,7 +79,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/nix-flake.yml",
-            "sha256:b11a09ea05a915b7aeb85175f016e4842c9cd91f1ab2ebe6fb9c3c0f86752a44",
+            "sha256:9c873a15df5cab5860e9ff6e68191db5654b11785253bb551e1e1c10c3e8ab5b",
         ),
         (
             ".github/workflows/release.yml",
@@ -489,7 +489,7 @@ fn matrix(job: &str, value: Option<&str>) -> Result<BTreeMap<String, String>, Pl
     let axis = match job {
         "musl-publication" | "test" => "target",
         "state-commit-golden-vectors" => "os",
-        "test-integration" => "shard",
+        "test-integration" | "test-core" | "test-cli" => "shard",
         _ => return Err(PlanningFailure::SourceContractChanged),
     };
     let mut axes: BTreeMap<String, String> = [(axis.into(), value.into())].into();

@@ -711,6 +711,7 @@ pub fn is_generated_artifact_path(rel_path: &str) -> bool {
     let norm = rel_path.replace('\\', "/");
     norm.ends_with(".lock")
         || norm == "Cargo.lock"
+        || norm.starts_with(".decapod/managed/.manifest.json")
         || norm.starts_with(".decapod/managed/specs/.manifest.json")
         || norm.starts_with("target/")
         || norm.starts_with("dist/")
