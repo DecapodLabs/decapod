@@ -215,9 +215,9 @@ def decapod_targets():
 
     rust_test(
         name = "core_tests",
-        srcs = ["tests/core/core.rs", "tests/datastore_relational_compaction.rs", "tests/datastore_contract.rs", "tests/datastore_scope.rs"],
+        srcs = ["tests/core/core.rs", "tests/datastore_encoding_compat_1937.rs", "tests/datastore_relational_compaction.rs", "tests/datastore_contract.rs", "tests/datastore_scope.rs"],
         edition = "2024",
-        compile_data = ["docs/datastore-v2/logical_contract_v1.json"],
+        compile_data = ["docs/datastore-v2/logical_contract_v1.json", "docs/encoding-compatibility.md"] + native.glob(["tests/fixtures/migration/**"]),
         crate_features = ["supabase-cloud"],
         rustc_env_files = [":cargo_pkg_env"],
         rustc_env = {
@@ -393,7 +393,7 @@ def decapod_targets():
                 ".github/actions/source-ci-profile/action.yml",
                 "tests/fixtures/derived-release/Cargo.toml.fixture",
                 "src/decapod/core/derived_release_profile_tests.rs",
-            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + (native.glob(["tests/fixtures/justfile_consumer/**"]) if path == "tests/cli_contracts.rs" else []) + (["tests/fixtures/interop_strict_json.py", "tests/fixtures/interop_json_vectors.v1.json", "assets/schemas/interop-json-vectors.schema.json"] if path == "tests/interop_conformance.rs" else []),
+            ] + native.glob([".github/workflows/*.yml"]) if path == "tests/source_ci_profile_policy.rs" else []) + (native.glob(["tests/fixtures/justfile_consumer/**"]) if path == "tests/cli_contracts.rs" else []) + (["tests/fixtures/interop_strict_json.py", "tests/fixtures/interop_json_vectors.v1.json", "assets/schemas/interop-json-vectors.schema.json"] if path == "tests/interop_conformance.rs" else []) + (native.glob(["tests/fixtures/migration/**"]) + ["docs/encoding-compatibility.md"] if path == "tests/datastore_encoding_compat_1937.rs" else []),
             edition = "2024",
             crate_features = ["supabase-cloud"],
             rustc_env_files = [":cargo_pkg_env"],

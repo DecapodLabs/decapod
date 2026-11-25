@@ -1,0 +1,308 @@
+{
+  "schema": "decapod.task-transfer.v1",
+  "transfer_id": "01M85KTRANSFERFIXTURE00001",
+  "repository": "DecapodLabs/decapod",
+  "source_commit": "47514f8c2fa9395db2d82e7afddbc38bb28c2408",
+  "source_branch": "master",
+  "exporter": "exporter-agent",
+  "receiver": "receiver-agent",
+  "exported_at": "2026-01-10T12:10:00Z",
+  "source_watermark": 4,
+  "source_head": "ea4ccbed469d50e574a23f3095a4a53983c4362a4bf9a4b335df03b48273bb16",
+  "sealed_revision": 4,
+  "projection": {
+    "task": {
+      "id": "feat_xfer1937compat",
+      "hash": "hist19",
+      "title": "Transfer fixture task",
+      "description": "Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody.",
+      "tags": "compat,hardening",
+      "owner": "hist-agent",
+      "due": null,
+      "ref": "issue:1937",
+      "status": "in_progress",
+      "created_at": "2026-01-10T12:00:00Z",
+      "updated_at": "2026-01-10T12:10:00Z",
+      "completed_at": null,
+      "closed_at": null,
+      "dir_path": "/work/compat-fixture",
+      "scope": "paths:[\"src/decapod/core/a1b2c3d4e5f6g7h8.rs\",\"src/decapod/core/9i8j7k6l5m4n3o2p.rs\",\"src/decapod/core/q1w2e3r4t5y6u7i8.rs\",\"src/decapod/core/z9x8c7v6b5n4m3k2.rs\"]",
+      "parent_task_id": null,
+      "priority": "high",
+      "depends_on": "",
+      "blocks": "",
+      "category": "core",
+      "component": "storage",
+      "assigned_to": "",
+      "assigned_at": null,
+      "one_shot": 1,
+      "lease_expires_at": null,
+      "lease_generation": 1,
+      "lease_lifecycle": "yielded",
+      "intent_anchor": "intent:compat:1937",
+      "revision": 3
+    },
+    "owners": [],
+    "dependencies": [],
+    "tags": [
+      "compat",
+      "hardening"
+    ],
+    "verification": {
+      "proof_plan": "[\"validate_passes\"]",
+      "verification_artifacts": "{\"task_id\":\"feat_hist1937compat01\",\"proof_plan_results\":[{\"proof_gate\":\"validate_passes\",\"output_hash\":\"sha256:historical1937\"}]}",
+      "last_verified_at": "2026-01-10T12:10:00Z",
+      "last_verified_status": "passed",
+      "last_verified_notes": "Original historical verification notes stay immutable.",
+      "verification_policy_days": 90,
+      "updated_at": "2026-01-10T12:10:00Z"
+    }
+  },
+  "history": [
+    {
+      "stream": "todo",
+      "event_id": "task-journal:0f18d0a34b7d5dece07321f869bfbca5c410437fd2936e8cd6219516f2d2a6ac",
+      "ts": "2026-01-10T12:00:00Z",
+      "seq": 2,
+      "event_type": "task.journal.checkpoint",
+      "payload": {
+        "ts": "2026-01-10T12:00:00Z",
+        "event_id": "task-journal:0f18d0a34b7d5dece07321f869bfbca5c410437fd2936e8cd6219516f2d2a6ac",
+        "event_type": "task.journal.checkpoint",
+        "status": "success",
+        "task_id": "feat_xfer1937compat",
+        "actor": "exporter-agent",
+        "payload": {
+          "schema_version": 2,
+          "task_id": "feat_xfer1937compat",
+          "ordinal": 1,
+          "kind": "observed_baseline",
+          "predecessor": null,
+          "previous_digest": null,
+          "source_watermark": 1,
+          "operation": "explicit_current_state_baseline",
+          "actor": "exporter-agent",
+          "ts": "2026-01-10T12:00:00Z",
+          "projection": {
+            "task": {
+              "id": "feat_xfer1937compat",
+              "hash": "hist19",
+              "title": "Transfer fixture task",
+              "description": "",
+              "tags": "compat,hardening",
+              "owner": "hist-agent",
+              "due": null,
+              "ref": "issue:1937",
+              "status": "in_progress",
+              "created_at": "2026-01-10T12:00:00Z",
+              "updated_at": "2026-01-10T12:10:00Z",
+              "completed_at": null,
+              "closed_at": null,
+              "dir_path": "/work/compat-fixture",
+              "scope": "",
+              "parent_task_id": null,
+              "priority": "high",
+              "depends_on": "",
+              "blocks": "",
+              "category": "core",
+              "component": "storage",
+              "assigned_to": "exporter-agent",
+              "assigned_at": "2026-01-10T12:00:00Z",
+              "one_shot": 1,
+              "lease_expires_at": "9999999999Z",
+              "lease_generation": 1,
+              "lease_lifecycle": "claimed",
+              "intent_anchor": "intent:compat:1937",
+              "revision": 1
+            },
+            "owners": [
+              {
+                "id": "own_x_1",
+                "agent_id": "exporter-agent",
+                "claimed_at": "2026-01-10T12:00:00Z",
+                "claim_type": "primary"
+              }
+            ],
+            "dependencies": [],
+            "tags": [
+              "compat",
+              "hardening"
+            ],
+            "verification": {
+              "proof_plan": "[\"validate_passes\"]",
+              "verification_artifacts": "",
+              "last_verified_at": "2026-01-10T12:00:00Z",
+              "last_verified_status": "passed",
+              "last_verified_notes": "Original historical verification notes stay immutable.",
+              "verification_policy_days": 90,
+              "updated_at": "2026-01-10T12:00:00Z"
+            }
+          },
+          "component_refs": {
+            "task.description": {
+              "kind": "task.description",
+              "codec_version": 1,
+              "byte_len": 1559,
+              "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+            },
+            "task.scope": {
+              "kind": "task.scope",
+              "codec_version": 0,
+              "byte_len": 163,
+              "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+            },
+            "verification.verification_artifacts": {
+              "kind": "verification.verification_artifacts",
+              "codec_version": 0,
+              "byte_len": 129,
+              "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+            }
+          },
+          "projection_digest": "8db8b266f79da83396a60bb7ca24a38cab56c210195a83da9e7a4211f3c7794c",
+          "record_digest": "0f18d0a34b7d5dece07321f869bfbca5c410437fd2936e8cd6219516f2d2a6ac"
+        }
+      },
+      "actor": "exporter-agent"
+    },
+    {
+      "stream": "todo",
+      "event_id": "EV_XFER_YIELD_1",
+      "ts": "2026-01-10T12:10:00Z",
+      "seq": 3,
+      "event_type": "task.yield",
+      "payload": {
+        "ts": "2026-01-10T12:10:00Z",
+        "event_id": "EV_XFER_YIELD_1",
+        "event_type": "task.yield",
+        "status": "success",
+        "task_id": "feat_xfer1937compat",
+        "actor": "exporter-agent",
+        "payload": {
+          "reason": "transfer qualification fixture"
+        }
+      },
+      "actor": "exporter-agent"
+    },
+    {
+      "stream": "todo",
+      "event_id": "task-journal:ea4ccbed469d50e574a23f3095a4a53983c4362a4bf9a4b335df03b48273bb16",
+      "ts": "2026-01-10T12:10:00Z",
+      "seq": 4,
+      "event_type": "task.journal.checkpoint",
+      "payload": {
+        "ts": "2026-01-10T12:10:00Z",
+        "event_id": "task-journal:ea4ccbed469d50e574a23f3095a4a53983c4362a4bf9a4b335df03b48273bb16",
+        "event_type": "task.journal.checkpoint",
+        "status": "success",
+        "task_id": "feat_xfer1937compat",
+        "actor": "exporter-agent",
+        "payload": {
+          "schema_version": 2,
+          "task_id": "feat_xfer1937compat",
+          "ordinal": 2,
+          "kind": "transition",
+          "predecessor": "0f18d0a34b7d5dece07321f869bfbca5c410437fd2936e8cd6219516f2d2a6ac",
+          "previous_digest": "8db8b266f79da83396a60bb7ca24a38cab56c210195a83da9e7a4211f3c7794c",
+          "source_watermark": 3,
+          "operation": "task.yield",
+          "actor": "exporter-agent",
+          "ts": "2026-01-10T12:10:00Z",
+          "projection": {
+            "task": {
+              "id": "feat_xfer1937compat",
+              "hash": "hist19",
+              "title": "Transfer fixture task",
+              "description": "",
+              "tags": "compat,hardening",
+              "owner": "hist-agent",
+              "due": null,
+              "ref": "issue:1937",
+              "status": "in_progress",
+              "created_at": "2026-01-10T12:00:00Z",
+              "updated_at": "2026-01-10T12:10:00Z",
+              "completed_at": null,
+              "closed_at": null,
+              "dir_path": "/work/compat-fixture",
+              "scope": "",
+              "parent_task_id": null,
+              "priority": "high",
+              "depends_on": "",
+              "blocks": "",
+              "category": "core",
+              "component": "storage",
+              "assigned_to": "",
+              "assigned_at": null,
+              "one_shot": 1,
+              "lease_expires_at": null,
+              "lease_generation": 1,
+              "lease_lifecycle": "yielded",
+              "intent_anchor": "intent:compat:1937",
+              "revision": 3
+            },
+            "owners": [],
+            "dependencies": [],
+            "tags": [
+              "compat",
+              "hardening"
+            ],
+            "verification": {
+              "proof_plan": "[\"validate_passes\"]",
+              "verification_artifacts": "",
+              "last_verified_at": "2026-01-10T12:10:00Z",
+              "last_verified_status": "passed",
+              "last_verified_notes": "Original historical verification notes stay immutable.",
+              "verification_policy_days": 90,
+              "updated_at": "2026-01-10T12:10:00Z"
+            }
+          },
+          "component_refs": {
+            "task.description": {
+              "kind": "task.description",
+              "codec_version": 1,
+              "byte_len": 1559,
+              "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+            },
+            "task.scope": {
+              "kind": "task.scope",
+              "codec_version": 0,
+              "byte_len": 163,
+              "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+            },
+            "verification.verification_artifacts": {
+              "kind": "verification.verification_artifacts",
+              "codec_version": 0,
+              "byte_len": 129,
+              "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+            }
+          },
+          "projection_digest": "77cfd38822b2b13a3a9ea0a8a7dfa6f35997d82efebede8857aa510178552303",
+          "record_digest": "ea4ccbed469d50e574a23f3095a4a53983c4362a4bf9a4b335df03b48273bb16"
+        }
+      },
+      "actor": "exporter-agent"
+    }
+  ],
+  "components": [
+    {
+      "kind": "task.description",
+      "codec_version": 1,
+      "byte_len": 1559,
+      "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6",
+      "utf8_value": "Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody. Updated v1/v2 task description with deterministic proof custody."
+    },
+    {
+      "kind": "task.scope",
+      "codec_version": 0,
+      "byte_len": 163,
+      "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359",
+      "utf8_value": "paths:[\"src/decapod/core/a1b2c3d4e5f6g7h8.rs\",\"src/decapod/core/9i8j7k6l5m4n3o2p.rs\",\"src/decapod/core/q1w2e3r4t5y6u7i8.rs\",\"src/decapod/core/z9x8c7v6b5n4m3k2.rs\"]"
+    },
+    {
+      "kind": "verification.verification_artifacts",
+      "codec_version": 0,
+      "byte_len": 129,
+      "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f",
+      "utf8_value": "{\"task_id\":\"feat_hist1937compat01\",\"proof_plan_results\":[{\"proof_gate\":\"validate_passes\",\"output_hash\":\"sha256:historical1937\"}]}"
+    }
+  ]
+}

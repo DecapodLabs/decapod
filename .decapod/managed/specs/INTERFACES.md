@@ -1,5 +1,10 @@
 # Interfaces
 
+## Datastore encoding compatibility policy & corpus interfaces (#1937)
+
+- **Compatibility policy specification (`docs/encoding-compatibility.md`)**: Documents `STORAGE_FORMAT_VERSION = 2`, `STORAGE_MIN_READER_VERSION = "0.144.2"`, `STORAGE_MIN_WRITER_VERSION = "0.144.2"`, `_ce_v1` / `_ce_raw` event envelope reconstruction, `task.journal.checkpoint` `schema_version` `1..=2` and `storage_components` `codec_version` `0..=1`, `DCPLCM1\0` framing, `decapod.task-transfer.v1`, additive vs strict `deny_unknown_fields` rules, and local-SQLite vs hosted-PostgreSQL logical parity (`DecapodLabs/dactyl#146`, `DecapodLabs/propodus#227`).
+- **Versioned fixture manifest (`tests/fixtures/migration/corpus_manifest.json`)**: `decapod.migration-compatibility-corpus.v1` pins SHA-256 digests, byte lengths, format versions, dispositions, and expected `projection_v1_digest` / `projection_v2_digest` parity across all 9 migration/encoding fixtures.
+
 ## Wave 7 datastore compaction, `[agent_maintenance]` config, knowledge attestation, and TypeScript/Pi contracts (#1630, #1568, #657, #1277, #1711, #1118)
 
 - **Lossless compaction CLI & RPC (`src/decapod/cli.rs::DataCommand::Compact`, `src/decapod/core/rpc.rs::StorageCompactParams`, `src/decapod/core/interop.rs`, `src/decapod/lib.rs`)**:
@@ -2550,7 +2555,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (284 files)
+- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

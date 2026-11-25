@@ -1,5 +1,13 @@
 # Intent
 
+## Datastore and evidence encoding compatibility corpus, rollback fix, and qualification (#1937; Refs DecapodLabs/dactyl#146, DecapodLabs/propodus#227)
+
+Qualifies Decapod's local SQLite datastore and evidence encoding compatibility across historical upgrades, floor refusals, malformed inputs, duplicate/interrupted migrations, and local-hosted logical parity:
+
+- **Versioned fixture corpus & policy (`tests/fixtures/migration/corpus_manifest.json`, `docs/encoding-compatibility.md`)**: Adds SHA-256-pinned fixtures covering historical `v1` pre-codec stores (`v1_pre_codec_store.sql` with `schema_version: 1` inline checkpoints, verbose envelopes, duplicate `agent_prompts`, plain cold LCM summaries), stale-floor `v2` stores stamped `0.141.0` (`v2_stale_floor_0_141_0.sql`), current accepted `v2` stores (`v2_current_accepted_store.sql` with `_ce_v1`, `_ce_raw`, and `codec_version` `0`/`1` `storage_components`), `decapod.task-transfer.v1` bundles (`v2_task_transfer_bundle.json`), additive optional-field compatibility vectors (`additive_compatible.json`), version-floor policy vectors (`version_policy_vectors.json`), and fail-closed malformed vectors (`malformed_vectors.json`).
+- **Atomic migration ledger rollback fix (`src/decapod/core/migration.rs`)**: Fixes `check_and_migrate_with_backup_report` so pending compiled migrations on existing datastores acquire exclusive maintenance custody + backup, snapshot `.decapod/managed/migrations/{applied,catalog}.json` and `.decapod/managed/version_counter.json`, roll back both `.decapod/data/` and those managed migration files upon failure, and skip stale `.migration_backup_*` directories during backup/restore so interrupted runs remain cleanly recoverable.
+- **Logical parity without engine byte equality**: Documents and qualifies local SQLite vs hosted PostgreSQL logical schema parity (`storage_contracts`, `cloud_parity_matrix`) linked to `DecapodLabs/dactyl#146` and `DecapodLabs/propodus#227` without lowering compatibility floors (`0.144.2`) or imposing physical DDL equality.
+
 ## Live Podman container-custody & Propodus Cloud Admin wire alignment (#1379, #1859, #1886, #1896)
 
 Resolves four defects uncovered during live Podman container-custody execution and live hosted Cloud Pilot verification against `goyxpcmxetztjlrrcwew` (`039`) on `decapod v0.163.0`:
@@ -1397,15 +1405,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 636 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (285), `tests/` (284)
-- Core modules: 148 | Workflows: 9 | Integration targets: 170
+- Tracked significant codebase files: 640 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (285), `tests/` (288)
+- Core modules: 148 | Workflows: 9 | Integration targets: 171
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (284 files)
+- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

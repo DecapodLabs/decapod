@@ -1,0 +1,111 @@
+{
+  "schema_version": "decapod.migration-compatibility-corpus.v1",
+  "issue": "DecapodLabs/decapod#1937",
+  "related_issues": [
+    "DecapodLabs/dactyl#146",
+    "DecapodLabs/propodus#227"
+  ],
+  "policy": {
+    "storage_format_version": 2,
+    "min_reader_version": "0.144.2",
+    "min_writer_version": "0.144.2",
+    "checkpoint_schema_range": [
+      1,
+      2
+    ],
+    "supported_component_codecs": [
+      0,
+      1
+    ]
+  },
+  "expected_logical_digests": {
+    "task_id": "feat_hist1937compat01",
+    "projection_v1_digest": "f751949ae363847f3ff9b1bd2eff8056e1e814e6944424c25b6555479e2f23a9",
+    "projection_v2_digest": "f751949ae363847f3ff9b1bd2eff8056e1e814e6944424c25b6555479e2f23a9",
+    "v1_checkpoint_head_digest": "a6d21a7d5d8b5c77c091fc31a9f409f37eb7bdc9d8079288d26e6e26e09d174c",
+    "v2_checkpoint_head_digest": "ffe25bd13d9eb9ddecbdc1f02c6f09382837f209296974d345a31d8c98a49038"
+  },
+  "fixtures": [
+    {
+      "file": "additive_compatible.json",
+      "category": "additive_evolution",
+      "format_version": 2,
+      "disposition": "supported_additive",
+      "byte_len": 1950,
+      "sha256": "0ff617b68039b1114b611d68d4634e0df1c887384b6c67d7155d9952a9170caf",
+      "description": "Additive optional fields across events, federation, verification_artifacts, and migration JSON ledgers"
+    },
+    {
+      "file": "expected_todo_events.jsonl",
+      "category": "historical_v0",
+      "format_version": 0,
+      "disposition": "supported",
+      "byte_len": 496,
+      "sha256": "83567451198c8fe3dbb13142367b91b6b7ef859b1663a7babb83dac9f849509d",
+      "description": "Expected reconstructed JSONL events for legacy_tasks.sql"
+    },
+    {
+      "file": "legacy_tasks.sql",
+      "category": "historical_v0",
+      "format_version": 0,
+      "disposition": "supported",
+      "byte_len": 304,
+      "sha256": "07d431986b742c506cdc05723247b24e2b8f5abad56183de0266c389a6800712",
+      "description": "Pre-event-log legacy tasks.sql migration baseline"
+    },
+    {
+      "file": "malformed_vectors.json",
+      "category": "negative_malformed",
+      "format_version": 2,
+      "disposition": "fail_closed",
+      "byte_len": 22673,
+      "sha256": "8ab478b88c267b4a3f2e9f8d277e0b85386b71d373e1fa5cb8501cc21675763b",
+      "description": "Malformed meta stamps, _ce_v1 bitmask corruption, missing/unknown checkpoint fields"
+    },
+    {
+      "file": "v1_pre_codec_store.sql",
+      "category": "historical_v1",
+      "format_version": 1,
+      "disposition": "supported_upgrade_to_v2",
+      "byte_len": 20023,
+      "sha256": "82019bddf62992ea42db4db1c4d45763890ad34021c85ec02f157a86f8b7d8b6",
+      "description": "Pre-0.144.2 v1 store with verbose events, v1 checkpoints, duplicate prompts, and plain LCM summary"
+    },
+    {
+      "file": "v2_current_accepted_store.sql",
+      "category": "current_v2",
+      "format_version": 2,
+      "disposition": "supported",
+      "byte_len": 19076,
+      "sha256": "2a7408da064dc93e824aa4c6e0355b702ea9f3aef16e3bb41e017842707e5baa",
+      "description": "Current accepted v2 store with _ce_v1, _ce_raw collision escape, and codec 0/1 externalized components"
+    },
+    {
+      "file": "v2_stale_floor_0_141_0.sql",
+      "category": "historical_v2_stale_floor",
+      "format_version": 2,
+      "disposition": "supported_restamp_to_0_144_2",
+      "byte_len": 18638,
+      "sha256": "b8d658b864b0997cf974bd116140d0e37fc485b794f59af545787ba2cdf8b454",
+      "description": "v0.144.2..v0.148.13 v2 store stamped with stale 0.141.0 min_reader/writer floor"
+    },
+    {
+      "file": "v2_task_transfer_bundle.json",
+      "category": "current_v2_transfer",
+      "format_version": 2,
+      "disposition": "supported",
+      "byte_len": 14673,
+      "sha256": "b059cc82aaa2b2b75fa9c887fbcf25b790abe74cb0317a459c1766fa5b80dfac",
+      "description": "Valid decapod.task-transfer.v1 bundle with externalized codec 0/1 components"
+    },
+    {
+      "file": "version_policy_vectors.json",
+      "category": "version_floor_policy",
+      "format_version": 2,
+      "disposition": "policy_matrix",
+      "byte_len": 493,
+      "sha256": "fa28c72fd99c2bf76731ac1662233067343ff74b3502e2fb70e0fc8c46864473",
+      "description": "Below-floor refusal, future writer read-only admission, future reader/format fail-closed vectors"
+    }
+  ]
+}

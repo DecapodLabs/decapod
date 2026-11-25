@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "e220234fa351d57163abaafe365d0f2372c62d42",
+    "accepted_commit": "b76f30d189a1b7c013198a879fb3fdec45d12e2f",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,63 +870,53 @@
     }
   },
   "change": {
-    "id": "feat_01m87zrq2pspv20e",
-    "base_commit": "e220234fa351d57163abaafe365d0f2372c62d42",
+    "id": "pr-1939-encoding-corpus",
+    "base_commit": "b76f30d189a1b7c013198a879fb3fdec45d12e2f",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1944-trust-gate": {
-      "statement": "Decapod CLI core enforces zero default outbound egress, isolates local diagnostics and credentials from third-party auth stores/secrets, persists opt-in consent and immediate revocation across restarts, and fails closed on undeclared hosts, non-HTTPS URLs, invalid ports, or credential leaks (#1944, #1933).",
-      "falsifier": "Any default local CLI workflow emits non-loopback network egress, leaks or hashes planted credentials/secret env vars, resumes revoked collection after restart, or admits undeclared hosts, invalid ports, or non-HTTPS egress without failing trust_egress_gate.",
+    "claim:encoding-compatibility-corpus-1937": {
+      "statement": "Supported v1/v2 datastore and task-journal encodings upgrade losslessly with canonical digest parity, version-floor violations and malformed payloads fail closed without disk mutation, and interrupted migrations restore both SQLite data and managed migration ledger atomically.",
+      "falsifier": "Any v1/v2 upgrade diverges on canonical digests, an unsupported reader/writer/future version mutates disk files, a malformed payload is accepted, or a failed migration leaves applied.json out of sync with rolled-back data.",
       "status": "supported",
       "proof_refs": [
-        "docs/trust-and-egress-inventory.md",
-        "src/decapod/core/trust_egress.rs",
-        "tests/trust_egress_gate.rs"
+        "docs/encoding-compatibility.md",
+        "src/decapod/core/migration.rs",
+        "tests/datastore_encoding_compat_1937.rs",
+        "tests/fixtures/migration/corpus_manifest.json"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1944-trust-gate-rebased",
-      "summary": "Rebase Decapod #1944 permanent trust and egress gate cleanly onto post-#1945 origin/master",
-      "input_digest": "sha256:f5b57f6fc6bfc07da5e0b1f46d14e5302a1fbc8c968c205a62064b5ab611e63e",
+      "id": "cp-1939-rebased",
+      "summary": "Hardening #1937: datastore and evidence encoding compatibility corpus & qualification suite (rebased on b76f30d18)",
+      "input_digest": "sha256:24429e69d6143ccf0ddede0862e0ca26460a440459e9854652b337986d852b1d",
       "proof_refs": [
-        "docs/trust-and-egress-inventory.md",
-        "src/decapod/core/trust_egress.rs",
-        "tests/trust_egress_gate.rs"
-      ]
-    },
-    {
-      "id": "cp-1944-trust-gate-ff",
-      "summary": "Clarify pre-build validation command in SECURITY.md living spec",
-      "input_digest": "sha256:5fddb0e214c8b666ccfd74f6b0d09c3cd94de79bfbe2b63aebc22274b74569cd",
-      "proof_refs": [
-        "docs/trust-and-egress-inventory.md",
-        "src/decapod/core/trust_egress.rs",
-        "tests/trust_egress_gate.rs"
+        "docs/encoding-compatibility.md",
+        "tests/datastore_encoding_compat_1937.rs"
       ]
     }
   ],
   "intents": {
-    "intent:run-1944-trust-rebased": {
+    "intent:run-1939-rebased": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree only"
+        "PR #1939 encoding compatibility corpus"
       ],
       "constraints": [
-        "root"
+        "core"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1944-trust-rebased",
+      "id": "intent:run-1939-rebased",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement Decapod #1944 permanent trust and egress gate",
-      "refined_intent": "Rebase #1944 trust gate cleanly onto post-#1945 origin/master",
+      "raw_intent": "Hardening #1937: datastore and evidence encoding compatibility corpus & qualification suite",
+      "refined_intent": "Rebased onto origin/master (b76f30d18) preserving #1945 security audit fixes and #1946 trust/egress gate",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -939,7 +929,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement Decapod #1944 permanent trust and egress gate",
+      "intent": "Provide a SHA-256-pinned compatibility fixture corpus, rollback-consistent migration recovery, encoding compatibility documentation, and fail-closed qualification tests across v1/v2 formats, additive fields, version floors (0.144.2), malformed vectors, and local/hosted logical schema parity (DecapodLabs/dactyl#146, DecapodLabs/propodus#227).",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -947,53 +937,45 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "SECURITY.md wording alignment reviewed",
-          "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
-          "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI/RPC schema changes; SECURITY.md wording alignment reviewed",
-          "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
-          "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
+          "reason": "Documented check_and_migrate_with_backup_report atomic managed migration file rollback and compatibility corpus architecture.",
+          "reviewed_code_fingerprint": "89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9",
+          "spec_material_hash": "746480bd455e8112d8365a1ee405449beba71070eec999f59a342fd3be707bde"
         },
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented fixture corpus manifest, encoding compatibility documentation, and qualification suite interfaces.",
+          "reviewed_code_fingerprint": "89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9",
+          "spec_material_hash": "0a7cea08568cd710ac8298a6ac479a54a39db4d7b35b859543856ff274ef4729"
+        },
+        {
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Clarified pre-build validation command reference in SECURITY.md",
-          "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
+          "reason": "Security trust boundaries unchanged; fail-closed encoding/version checks reinforce existing invariants documented in SEMANTICS.md.",
+          "reviewed_code_fingerprint": "89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9",
           "spec_material_hash": "76971f4ab8c94db6b6a8628052637f004a258ae9983d708e6585a0a6fb191a97"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Implement Decapod #1944 permanent trust and egress gate",
+      "title": "Hardening #1937: datastore and evidence encoding compatibility corpus & qualification tests",
       "todo_ids": [
-        "feat_01m87zrq2pspv20e"
+        "test_01m85kh9m4peqy9e"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795574826Z"
+      "updated_at": "1795579309Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree only"
+        "PR #1939 encoding compatibility corpus"
       ],
-      "artifact_hash": "sha256:3525274dbf5902cc0671e8b9842095821366e4be01f606e27dc62d19f771d133",
+      "artifact_hash": "sha256:f92de928fab780a036bca6067d663f8608c83fe3737ea2de549e1f7c86c7e9f6",
       "checks": [
         {
-          "name": "cargo_audit_243_crates_0_vuln",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt_and_clippy_all_targets",
-          "status": "passed"
-        },
-        {
-          "name": "trust_egress_unit_4_and_gate_5",
+          "name": "rebase_master",
           "status": "passed"
         }
       ],
@@ -1001,20 +983,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1944-trust-rebased",
+            "intent_id": "intent:run-1939-rebased",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1944-trust-rebased",
+            "intent_id": "intent:run-1939-rebased",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1944-trust-rebased",
+            "detail": "trajectory:run-1939-rebased",
             "event_id": "event:4",
-            "intent_id": "intent:run-1944-trust-rebased",
+            "intent_id": "intent:run-1939-rebased",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1023,39 +1005,25 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1944-trust-rebased": {
+          "run-1939-rebased": {
             "evidence_only": true,
-            "id": "run-1944-trust-rebased",
-            "intent_id": "intent:run-1944-trust-rebased",
+            "id": "run-1939-rebased",
+            "intent_id": "intent:run-1939-rebased",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/propodus.rs",
-                  "src/decapod/core/derived_release_driver.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "docs/trust-and-egress-inventory.md",
-                  "src/decapod/core/trust_egress.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/core/propodus.rs",
-                  "src/decapod/core/derived_release_driver.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/workspace_publication.rs",
-                  "src/decapod/lib.rs",
-                  "tests/trust_egress_gate.rs",
+                  "src/decapod/core/migration.rs",
                   ".config/build/decapod.BUILD.bzl",
-                  ".decapod/managed/specs/SECURITY.md"
+                  "docs/encoding-compatibility.md",
+                  "tests/datastore_encoding_compat_1937.rs"
                 ],
                 "proof_refs": [
-                  "cargo_audit_243_crates_0_vuln",
-                  "cargo_fmt_and_clippy_all_targets",
-                  "trust_egress_unit_4_and_gate_5"
+                  "rebase_master"
                 ],
                 "scope": [
-                  "root"
+                  "core"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1067,33 +1035,21 @@
       "declared_commands": [],
       "evidence": [],
       "inspected_files": [
-        "src/decapod/core/derived_release_driver.rs",
-        "src/decapod/core/propodus.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/workspace_publication.rs",
-        "src/decapod/lib.rs"
-      ],
-      "intent_id": "intent:run-1944-trust-rebased",
-      "modified_files": [
         ".config/build/decapod.BUILD.bzl",
-        ".decapod/managed/specs/SECURITY.md",
-        "docs/trust-and-egress-inventory.md",
-        "src/decapod/core/derived_release_driver.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/core/propodus.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/trust_egress.rs",
-        "src/decapod/core/workspace_publication.rs",
-        "src/decapod/lib.rs",
-        "tests/trust_egress_gate.rs"
+        "src/decapod/core/migration.rs"
+      ],
+      "intent_id": "intent:run-1939-rebased",
+      "modified_files": [
+        "docs/encoding-compatibility.md",
+        "tests/datastore_encoding_compat_1937.rs"
       ],
       "repo_scope": [
-        "root"
+        "core"
       ],
-      "run_id": "run-1944-trust-rebased",
+      "run_id": "run-1939-rebased",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m87zrq2pspv20e",
+      "task_id": "test_01m85kh9m4peqy9e",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

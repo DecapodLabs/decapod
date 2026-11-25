@@ -1,5 +1,10 @@
 # Architecture
 
+## Datastore and evidence encoding compatibility corpus & atomic ledger rollback (#1937)
+
+- **Atomic backup & managed ledger rollback (`src/decapod/core/migration.rs`)**: `check_and_migrate_with_backup_report` checks `schema_upgrade_pending(&data_root)? || has_pending_compiled_migrations(decapod_root)?`, snapshots `GENERATED_VERSION_COUNTER`, `GENERATED_APPLIED_MIGRATIONS`, and `GENERATED_MIGRATION_CATALOG` via `snapshot_managed_migration_files` before `run_migrations`, and invokes `restore_managed_migration_files` alongside `restore_data_backup` on migration or `verify` failure. `create_data_backup` and `restore_data_backup` skip `is_migration_backup_entry` (`.migration_backup_*`) so stale crash backups are neither recursively copied nor destroyed.
+- **Versioned encoding compatibility corpus (`tests/fixtures/migration/`, `tests/datastore_encoding_compat_1937.rs`, `tests/core/core.rs`, `.config/build/decapod.BUILD.bzl`)**: Registers `v1_pre_codec_store.sql`, `v2_stale_floor_0_141_0.sql`, `v2_current_accepted_store.sql`, `v2_task_transfer_bundle.json`, `additive_compatible.json`, `version_policy_vectors.json`, `malformed_vectors.json`, and `corpus_manifest.json` (`decapod.migration-compatibility-corpus.v1`) into both standalone `datastore_encoding_compat_1937` and `core_tests` Bazel/Cargo targets, proving lossless `v1` -> `v2` upgrade, `0.141.0` -> `0.144.2` floor restamp, `DCPLCM1\0` zlib compression (`storage_codec`), `_ce_v1`/`_ce_raw` round-trips (`events`), and fail-closed refusal across `storage_compaction` and `task_journal`.
+
 ## Wave 7 single-SQLite consolidation, lossless compaction, maintenance RBAC delegation, provenance knowledge, and TypeScript/Pi bindings (#1118, #1132, #1120, #1630, #1568, #657, #1277, #1711, #630, #1220, #1221)
 
 - **Single-SQLite consolidation & legacy migration closure (`src/decapod/core/migration.rs`, `src/decapod/core/validate.rs`, `src/decapod/core/mentor.rs`, `src/decapod/plugins/feedback.rs`, `src/decapod/plugins/decide.rs`)**:
@@ -2051,7 +2056,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (284 files)
+- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
