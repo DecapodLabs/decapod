@@ -896,6 +896,16 @@
         "src/decapod/core/trust_egress.rs",
         "tests/trust_egress_gate.rs"
       ]
+    },
+    {
+      "id": "cp-1944-trust-gate-ff",
+      "summary": "Clarify pre-build validation command in SECURITY.md living spec",
+      "input_digest": "sha256:5fddb0e214c8b666ccfd74f6b0d09c3cd94de79bfbe2b63aebc22274b74569cd",
+      "proof_refs": [
+        "docs/trust-and-egress-inventory.md",
+        "src/decapod/core/trust_egress.rs",
+        "tests/trust_egress_gate.rs"
+      ]
     }
   ],
   "intents": {
@@ -939,23 +949,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Post-rebase refresh onto e220234fa reviewed",
+          "reason": "SECURITY.md wording alignment reviewed",
           "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
           "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "No CLI/RPC schema changes; post-rebase refresh onto e220234fa reviewed",
+          "reason": "No CLI/RPC schema changes; SECURITY.md wording alignment reviewed",
           "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
           "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rebased #1944 trust gate section cleanly atop #1943 security remediation section",
+          "reason": "Clarified pre-build validation command reference in SECURITY.md",
           "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
-          "spec_material_hash": "b8376b1e710debac1eb2ea6e1ee44c91f576b9cf54ddba03fbc6897853ad3cc7"
+          "spec_material_hash": "76971f4ab8c94db6b6a8628052637f004a258ae9983d708e6585a0a6fb191a97"
         }
       ],
       "state": "APPROVED",
@@ -966,7 +976,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795574586Z"
+      "updated_at": "1795574826Z"
     },
     "trajectory": {
       "active_boundaries": [
