@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.0](https://github.com/DecapodLabs/decapod/compare/v0.165.1...v0.166.0) - 2026-11-25
+
+### Fixed
+
+- *(policy)* scope repo.pr-readiness.v1 transitions and fix WAL checkpoint ([#1949](https://github.com/DecapodLabs/decapod/pull/1949))
+
 ## [0.165.1](https://github.com/DecapodLabs/decapod/compare/v0.165.0...v0.165.1) - 2026-11-25
 
 ### Other
