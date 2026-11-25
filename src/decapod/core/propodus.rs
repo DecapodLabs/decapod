@@ -416,6 +416,18 @@ impl PropodusTransport for CurlTransport {
         bearer: &str,
         body: Option<&[u8]>,
     ) -> Result<(PropodusHttpResponse, CloudDiagnosticHeaders), PropodusClientError> {
+        let default_origin = dactyl_db::CloudConnector::default_origin();
+        let default_host = default_origin
+            .strip_prefix("https://")
+            .and_then(|rest| rest.split(['/', ':']).next())
+            .filter(|h| !h.is_empty());
+        let mut extra_hosts: Vec<&str> = Vec::new();
+        if let Some(host) = default_host {
+            extra_hosts.push(host);
+        }
+        crate::core::trust_egress::validate_egress_url(url, &extra_hosts)
+            .map_err(PropodusClientError::Configuration)?;
+
         let header_file = tempfile::NamedTempFile::new().map_err(|error| {
             PropodusClientError::Transport(format!("could not allocate header buffer: {error}"))
         })?;

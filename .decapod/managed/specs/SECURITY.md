@@ -1,5 +1,15 @@
 # Security
 
+## Ecosystem Permanent Trust & Egress Gate (#1944, #1933)
+
+- **Trust & Egress Policy Contract (`docs/trust-and-egress-inventory.md`, `src/decapod/core/trust_egress.rs`)**:
+  - Establishes permanent trust enforcement across nine invariants: `Identity sovereignty`, `No identity fingerprinting`, `Credential isolation`, `Consent persistence`, `Effective revocation`, `Relay transparency`, `Distribution integrity`, `Privacy contract integrity`, and `Incident accountability`.
+  - Enforces a zero default outbound network egress baseline for Decapod CLI core initialization, idle state, session acquisition, capabilities inspection, todo workflows, RPC dispatch, and validation (`DecapodValidate`): `decapod session acquire` (`src/decapod/lib.rs`) only runs crates.io update checks when `project_config.repo.session_auto_update` is explicitly `true`, and `generate_capabilities()` (`src/decapod/core/rpc.rs`) only queries crates.io when `DECAPOD_CHECK_LATEST=1` is explicitly set.
+  - Strictly isolates local observability projections (`ExecutionTelemetryProjection` in `src/decapod/core/observability_projections/telemetry.rs`, `read_only = true`, `authoritative = false`, no default upload) as local-only diagnostics; outbound transmission of derived or hashed machine/credential identifiers is prohibited under the `No identity fingerprinting` rule.
+  - Evaluates and enforces persisted consent and immediate revocation via `trust_egress::ConsentRevocationState` loading `<repo>/.decapod/config.toml` via `DecapodProjectConfig::load` (`backend` and `repo.session_auto_update`), so revoking optional egress stops outbound traffic, clears queued outbound state immediately, and remains halted across schema/state reloads and process restarts.
+  - Enforces declared HTTPS/loopback allowlisting (`trust_egress::validate_egress_url`) with strict host/port validation across runtime outbound URL boundaries (`CurlTransport::request_with_diagnostics` in `src/decapod/core/propodus.rs`, `Context::curl` in `src/decapod/core/derived_release_driver.rs`, `get_latest_version` in `src/decapod/core/rpc.rs`, `fetch_latest_crates_version` in `src/decapod/lib.rs`, and `diagnostic_read_pr` URL construction in `src/decapod/core/workspace_publication.rs`).
+  - Rejects credential/secret ingestion or leakage (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `GITHUB_TOKEN`, Codex CLI `auth.json`, `~/.claude.json`, `~/.config/gh/hosts.yml`), undeclared outbound hosts, and non-HTTPS remotes via `tests/trust_egress_gate.rs` (including negative-control counter-tests and static inventory completeness verification).
+
 ## Dependency security audit remediation (`quinn-udp` RUSTSEC-2026-0538 & `rustix` RUSTSEC-2026-0486, #1943)
 
 - **Lockfile-only minimal remediation (`Cargo.lock`, `MODULE.bazel.lock`)**:
@@ -1577,14 +1587,14 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Contract Snapshot
 
-- Security/policy/auth surfaces (35): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, `tests/ci_checkout_policy.rs`, (+19 more)
+- Security/policy/auth surfaces (37): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/trust_egress.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, (+21 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (284 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

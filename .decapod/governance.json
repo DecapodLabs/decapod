@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "47514f8c2fa9395db2d82e7afddbc38bb28c2408",
+    "accepted_commit": "e220234fa351d57163abaafe365d0f2372c62d42",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,90 +870,53 @@
     }
   },
   "change": {
-    "id": "change_01M87ZRCVZP4RXAA42X5DYWSZR",
-    "base_commit": "47514f8c2fa9395db2d82e7afddbc38bb28c2408",
+    "id": "feat_01m87zrq2pspv20e",
+    "base_commit": "e220234fa351d57163abaafe365d0f2372c62d42",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1943-audit-clean": {
-      "statement": "Cargo.lock updates quinn-udp to 0.5.16 and rustix to 1.1.6 so cargo audit reports 0 vulnerabilities and 0 warnings, MODULE.bazel.lock matches Cargo.lock, and release_dependency_policy enforces both patched floors.",
-      "falsifier": "cargo audit reports any vulnerability/warning, cargo_inputs_policy fails, or release_dependency_policy fails.",
+    "claim-1944-trust-gate": {
+      "statement": "Decapod CLI core enforces zero default outbound egress, isolates local diagnostics and credentials from third-party auth stores/secrets, persists opt-in consent and immediate revocation across restarts, and fails closed on undeclared hosts, non-HTTPS URLs, invalid ports, or credential leaks (#1944, #1933).",
+      "falsifier": "Any default local CLI workflow emits non-loopback network egress, leaks or hashes planted credentials/secret env vars, resumes revoked collection after restart, or admits undeclared hosts, invalid ports, or non-HTTPS egress without failing trust_egress_gate.",
       "status": "supported",
       "proof_refs": [
-        "bazelisk test //:cargo_inputs_policy (PASSED)",
-        "cargo audit (0 vulnerabilities, 0 warnings)",
-        "cargo test --locked --test release_dependency_policy (5 passed)"
+        "docs/trust-and-egress-inventory.md",
+        "src/decapod/core/trust_egress.rs",
+        "tests/trust_egress_gate.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1943-security-audit",
-      "summary": "Restore cargo audit clean status: quinn-udp 0.5.16, rustix 1.1.6, MODULE.bazel.lock sync, release_dependency_policy floor, SECURITY.md update",
-      "input_digest": "sha256:73d93ee1595e55aaba8f318c48c999fcaca7288ffb804b0a624cdc308a2b6a3a",
+      "id": "cp-1944-trust-gate-rebased",
+      "summary": "Rebase Decapod #1944 permanent trust and egress gate cleanly onto post-#1945 origin/master",
+      "input_digest": "sha256:f5b57f6fc6bfc07da5e0b1f46d14e5302a1fbc8c968c205a62064b5ab611e63e",
       "proof_refs": [
-        "bazelisk test //:cargo_inputs_policy (PASSED)",
-        "cargo audit (0 vulnerabilities, 0 warnings)",
-        "cargo test --locked --features supabase-cloud (70 passed)"
-      ]
-    },
-    {
-      "id": "cp-1943-spec-reviews",
-      "summary": "Record spec reviews for INTERFACES, ARCHITECTURE, and SECURITY (#1943)",
-      "input_digest": "sha256:846dec22b4324fc8051acb22378621b30798d334e628e26ff4e01d8f7a3753af",
-      "proof_refs": [
-        "verify-checkpoints --publication-material"
-      ]
-    },
-    {
-      "id": "cp-1943-clippy-fix",
-      "summary": "Satisfy clippy manual_range_contains lint in release_dependency_policy.rs",
-      "input_digest": "sha256:c07585adf23f094bc0cc6d49a5f7c5353f3f9c3f9ecfe27afc472cdc35ce0fd1",
-      "proof_refs": [
-        "cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --locked --test release_dependency_policy (5 passed)"
-      ]
-    },
-    {
-      "id": "cp-1943-final-refresh",
-      "summary": "Refresh specs and re-review INTERFACES, ARCHITECTURE, SECURITY after clippy fix (#1943)",
-      "input_digest": "sha256:fd2e36c3e6c5db388bf217e6a05a0d533d31c718dd51ab1c2cba129360552626",
-      "proof_refs": [
-        "cargo audit (0 vulnerabilities, 0 warnings)",
-        "cargo clippy --all-targets --all-features -- -D warnings",
-        "cargo test --locked --test release_dependency_policy (5 passed)"
-      ]
-    },
-    {
-      "id": "cp-1943-clean-specs",
-      "summary": "Refresh specs without bazel-* symlinks and re-verify checkpoints (#1943)",
-      "input_digest": "sha256:03a27f83a43bfac346e11c74de7f2ecfdcc3376007f8a0c3bd7df3a8be12af93",
-      "proof_refs": [
-        "bazelisk test //:cargo_inputs_policy (PASSED)",
-        "cargo audit (0 vulnerabilities, 0 warnings)",
-        "cargo test --locked --features supabase-cloud (70 passed)"
+        "docs/trust-and-egress-inventory.md",
+        "src/decapod/core/trust_egress.rs",
+        "tests/trust_egress_gate.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR": {
+    "intent:run-1944-trust-rebased": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree only"
       ],
       "constraints": [
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
+      "id": "intent:run-1944-trust-rebased",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
-      "refined_intent": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
+      "raw_intent": "Implement Decapod #1944 permanent trust and egress gate",
+      "refined_intent": "Rebase #1944 trust gate cleanly onto post-#1945 origin/master",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -966,7 +929,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
+      "intent": "Implement Decapod #1944 permanent trust and egress gate",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -976,77 +939,72 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Clean specs refresh without untracked bazel-* symlinks; module architecture unchanged.",
-          "reviewed_code_fingerprint": "4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3",
+          "reason": "Post-rebase refresh onto e220234fa reviewed",
+          "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
           "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Clean specs refresh without untracked bazel-* symlinks; public interfaces unchanged.",
-          "reviewed_code_fingerprint": "4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3",
+          "reason": "No CLI/RPC schema changes; post-rebase refresh onto e220234fa reviewed",
+          "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
           "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed specs cleanly without bazel-* symlinks for #1943 security audit fix.",
-          "reviewed_code_fingerprint": "4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3",
-          "spec_material_hash": "f68f44108abff491df92bd705d1d48065ecb999bfc3b3c21515fb0f06f609b4c"
+          "reason": "Rebased #1944 trust gate section cleanly atop #1943 security remediation section",
+          "reviewed_code_fingerprint": "4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269",
+          "spec_material_hash": "b8376b1e710debac1eb2ea6e1ee44c91f576b9cf54ddba03fbc6897853ad3cc7"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
+      "title": "Implement Decapod #1944 permanent trust and egress gate",
       "todo_ids": [
-        "secu_01m87zq2vcdhpct8"
+        "feat_01m87zrq2pspv20e"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795565913Z"
+      "updated_at": "1795574586Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree only"
       ],
-      "artifact_hash": "sha256:fe53f874a0d31fa6de2c680e43c3ac0dbdf6b5c86cda233d86cd753336304914",
+      "artifact_hash": "sha256:3525274dbf5902cc0671e8b9842095821366e4be01f606e27dc62d19f771d133",
       "checks": [
         {
-          "name": "cargo_audit",
+          "name": "cargo_audit_243_crates_0_vuln",
           "status": "passed"
         },
         {
-          "name": "cargo_inputs_policy",
+          "name": "cargo_fmt_and_clippy_all_targets",
           "status": "passed"
         },
         {
-          "name": "release_dependency_policy",
-          "status": "passed"
-        },
-        {
-          "name": "supabase_consumer_tests",
+          "name": "trust_egress_unit_4_and_gate_5",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
+            "intent_id": "intent:run-1944-trust-rebased",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
+            "intent_id": "intent:run-1944-trust-rebased",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M87ZRD0QYJFS6Z4PMMY3JJPA",
+            "detail": "trajectory:run-1944-trust-rebased",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
+            "intent_id": "intent:run-1944-trust-rebased",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1055,25 +1013,36 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M87ZRD0QYJFS6Z4PMMY3JJPA": {
+          "run-1944-trust-rebased": {
             "evidence_only": true,
-            "id": "branch_01M87ZRD0QYJFS6Z4PMMY3JJPA",
-            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
+            "id": "run-1944-trust-rebased",
+            "intent_id": "intent:run-1944-trust-rebased",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "tests/release_dependency_policy.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/propodus.rs",
+                  "src/decapod/core/derived_release_driver.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "docs/trust-and-egress-inventory.md",
+                  "src/decapod/core/trust_egress.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/core/propodus.rs",
+                  "src/decapod/core/derived_release_driver.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "src/decapod/lib.rs",
+                  "tests/trust_egress_gate.rs",
+                  ".config/build/decapod.BUILD.bzl",
                   ".decapod/managed/specs/SECURITY.md"
                 ],
                 "proof_refs": [
-                  "cargo_audit",
-                  "cargo_inputs_policy",
-                  "supabase_consumer_tests",
-                  "release_dependency_policy"
+                  "cargo_audit_243_crates_0_vuln",
+                  "cargo_fmt_and_clippy_all_targets",
+                  "trust_egress_unit_4_and_gate_5"
                 ],
                 "scope": [
                   "root"
@@ -1086,26 +1055,35 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [],
       "inspected_files": [
-        ".decapod/managed/specs/SECURITY.md",
-        "Cargo.lock",
-        "MODULE.bazel.lock",
-        "tests/release_dependency_policy.rs"
+        "src/decapod/core/derived_release_driver.rs",
+        "src/decapod/core/propodus.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/workspace_publication.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
-      "modified_files": [],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+      "intent_id": "intent:run-1944-trust-rebased",
+      "modified_files": [
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/trust-and-egress-inventory.md",
+        "src/decapod/core/derived_release_driver.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/propodus.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/trust_egress.rs",
+        "src/decapod/core/workspace_publication.rs",
+        "src/decapod/lib.rs",
+        "tests/trust_egress_gate.rs"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M87ZRD0QYJFS6Z4PMMY3JJPA",
+      "run_id": "run-1944-trust-rebased",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m87zq2vcdhpct8",
+      "task_id": "feat_01m87zrq2pspv20e",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

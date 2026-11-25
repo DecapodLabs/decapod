@@ -298,6 +298,7 @@ impl Context<'_> {
         )
     }
     fn curl(&mut self, url: &str, destination: Option<&Path>, cwd: &Path) -> io::Result<Vec<u8>> {
+        crate::core::trust_egress::validate_egress_url(url, &[]).map_err(invalid)?;
         if !url.starts_with("https://crates.io/api/v1/crates/decapod")
             && !url.starts_with("https://static.crates.io/crates/decapod/")
         {
