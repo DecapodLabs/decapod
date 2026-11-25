@@ -899,6 +899,11 @@
         "tests/crash_durability_1934.rs",
         "tests/lease_fencing_consistency_1935.rs"
       ]
+    },
+    {
+      "id": "cp-1940-spec-symbols",
+      "summary": "Align PR #1940 living spec symbols with exact src/ signatures and error codes",
+      "input_digest": "sha256:777816eb42aa708e545653082a00de9bf823b2730e129659c67121aabe603f73"
     }
   ],
   "intents": {
@@ -942,16 +947,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #1892 active-heartbeat custody preservation, #1935/#1763 multi-process fencing tests, and #1934 crash-durability suite.",
+          "reason": "Aligned error-code symbols in ARCHITECTURE.md with actual src/ task_journal and validation_history codes.",
           "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
-          "spec_material_hash": "a081a14f710da806b18d8ad35ba8757d2db1a085f276bdcd59b98e2fb6d6673d"
+          "spec_material_hash": "7d0fd1082068327faf08330f936381dd4d4ca3a1b6dd61519b899a68fcafbf41"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented HistoricalTaskBinding::same_custody_authority, deterministic _at helpers, ValidationBinding::matches_custody_authority, docs/durability-and-fencing.md, and new test modules.",
+          "reason": "Included include_workunit: bool parameter in ValidationBinding::matches_custody_authority signature.",
           "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
-          "spec_material_hash": "915376a313f842dad07aab8cc8ee95e304fb29e126519c9ea2f72d07132f81e4"
+          "spec_material_hash": "846e6679576e55c8f95486fe3e094ccd4915acff77ac5fb024916c6790f21530"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -969,16 +974,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795582012Z"
+      "updated_at": "1795582254Z"
     },
     "trajectory": {
       "active_boundaries": [
         "PR #1940 durability and fencing"
       ],
-      "artifact_hash": "sha256:d9a6f084c4144d773211bf8e43e8415fed4742f22dc1b75ad8632296a777fa64",
+      "artifact_hash": "sha256:53b20970587d5808c24917b821744fb6364cbadc7bb18c201db75310f3e50e46",
       "checks": [
         {
           "name": "rebase_master",
+          "status": "passed"
+        },
+        {
+          "name": "spec_symbol_review",
           "status": "passed"
         }
       ],
@@ -1002,10 +1011,17 @@
             "intent_id": "intent:run-1940-rebased",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1940-rebased",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1940-rebased",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "run-1940-rebased": {
@@ -1032,6 +1048,23 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SEMANTICS.md"
+                ],
+                "proof_refs": [
+                  "spec_symbol_review"
+                ],
+                "scope": [
+                  "core"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1046,6 +1079,9 @@
       ],
       "intent_id": "intent:run-1940-rebased",
       "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SEMANTICS.md",
         "docs/durability-and-fencing.md",
         "tests/crash_durability_1934.rs",
         "tests/lease_fencing_consistency_1935.rs"
