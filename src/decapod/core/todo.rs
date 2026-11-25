@@ -87,9 +87,31 @@ pub(crate) struct HistoricalTaskBinding {
     pub lease_generation: i64,
 }
 
+impl HistoricalTaskBinding {
+    /// True when task identity, revision, status, proof contract, assignee, and
+    /// lease generation are identical (ignoring `checkpoint_digest`, which
+    /// advances on same-generation `todo.heartbeat` TTL extensions).
+    pub(crate) fn same_custody_authority(&self, other: &Self) -> bool {
+        self.task_id == other.task_id
+            && self.revision == other.revision
+            && self.status == other.status
+            && self.contract_digest == other.contract_digest
+            && self.assignee == other.assignee
+            && self.lease_generation == other.lease_generation
+    }
+}
+
 pub(crate) fn capture_validation_binding(
     store_root: &Path,
     task_id: &str,
+) -> Result<HistoricalTaskBinding, error::DecapodError> {
+    capture_validation_binding_at(store_root, task_id, &now_iso())
+}
+
+pub(crate) fn capture_validation_binding_at(
+    store_root: &Path,
+    task_id: &str,
+    now_ts: &str,
 ) -> Result<HistoricalTaskBinding, error::DecapodError> {
     let broker = DbBroker::new(store_root);
     if broker.is_cloud() {
@@ -102,7 +124,7 @@ pub(crate) fn capture_validation_binding(
         "decapod",
         None,
         "validation.history.task_binding",
-        |conn| task_journal::capture_validation_binding(conn, task_id),
+        |conn| task_journal::capture_validation_binding_at(conn, task_id, now_ts),
     )
 }
 
@@ -286,7 +308,16 @@ pub(crate) fn check_validation_binding_on_conn(
     binding: &HistoricalTaskBinding,
     allow_lifecycle_progress: bool,
 ) -> Result<(), error::DecapodError> {
-    task_journal::check_validation_binding(conn, binding, allow_lifecycle_progress)
+    check_validation_binding_at_on_conn(conn, binding, allow_lifecycle_progress, &now_iso())
+}
+
+pub(crate) fn check_validation_binding_at_on_conn(
+    conn: &Connection,
+    binding: &HistoricalTaskBinding,
+    allow_lifecycle_progress: bool,
+    now_ts: &str,
+) -> Result<(), error::DecapodError> {
+    task_journal::check_validation_binding_at(conn, binding, allow_lifecycle_progress, now_ts)
 }
 
 /// Task IDs are selected under the same write transaction as their mutation.
@@ -5248,6 +5279,24 @@ fn heartbeat_claim_lease(
     lease_seconds: Option<u64>,
     expected_generation: Option<i64>,
 ) -> Result<JsonValue, error::DecapodError> {
+    heartbeat_claim_lease_at(
+        root,
+        id,
+        agent_id,
+        lease_seconds,
+        expected_generation,
+        &now_iso(),
+    )
+}
+
+pub(crate) fn heartbeat_claim_lease_at(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+    lease_seconds: Option<u64>,
+    expected_generation: Option<i64>,
+    now_ts: &str,
+) -> Result<JsonValue, error::DecapodError> {
     if authoring::is_missing_or_unknown_actor(agent_id) || agent_id != crate::current_agent_id() {
         return Err(authoring::authoring_actor_required_error());
     }
@@ -5260,6 +5309,12 @@ fn heartbeat_claim_lease(
     let lease_secs = lease_seconds
         .unwrap_or(DEFAULT_CLAIM_LEASE_SECS)
         .clamp(1, MAX_CLAIM_LEASE_SECS);
+    let ts = now_ts.to_owned();
+    let now = parse_epoch_z(&ts).ok_or_else(|| {
+        error::DecapodError::ValidationError(
+            "LEASE_HEARTBEAT_STALE: invalid authoritative clock timestamp".into(),
+        )
+    })?;
     with_task_journal(
         &broker,
         &todo_db_path(root),
@@ -5291,8 +5346,6 @@ fn heartbeat_claim_lease(
             )
             };
             let (status, holder, previous, generation, lifecycle) = row.ok_or_else(stale)?;
-            let ts = now_iso();
-            let now = parse_epoch_z(&ts).unwrap_or_else(now_unix_secs);
             let previous_secs = previous
                 .as_deref()
                 .and_then(fleet_coord::parse_epoch_z)

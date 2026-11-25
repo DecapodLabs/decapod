@@ -1,5 +1,11 @@
 # Validation
 
+## Phase 2 durability, lease fencing, and active-renewal custody verification (#1892, #1935, #1934, #1763)
+
+Rebased onto post-`#1939` `origin/master` (`0db8ba28e`) inside isolated worktree `agent/agy-1933-decapod-p2/bugs_01m85q9m9gwmde6r-durability-fencing`:
+
+- Covers `core::validation_history::archive_tests` (`deterministic_active_lease_renewal_preserves_evidence_while_expired_and_reclaimed_fail`, `publication_readiness_survives_active_heartbeat_renewal_and_rejects_custody_rotation`), `tests/crash_durability_1934.rs` (6 scenarios), `tests/lease_fencing_consistency_1935.rs` (6 scenarios), and `tests/core/core.rs` (`core_tests` Bazel + Cargo registration), qualified by full GitHub Actions + Buildkite CI and local formatting/audit checks.
+
 ## Datastore and evidence encoding compatibility qualification (#1937)
 
 - Rebased onto post-`#1944` `origin/master` (`b76f30d18`) and re-verified with `cargo audit` (`0` vulnerabilities, `0` warnings), `cargo fmt --all -- --check`, `clippy --all-targets --all-features -- -D warnings`, `cargo test --locked --test datastore_encoding_compat_1937`, `cargo test --locked --test trust_egress_gate`, and `cargo test --locked --lib core::migration`.
@@ -2844,14 +2850,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 ## Codebase Contract Snapshot
 
 - CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
-- Integration test targets (171): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+155 more)
+- Integration test targets (173): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+157 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
+- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

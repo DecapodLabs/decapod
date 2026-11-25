@@ -1,5 +1,10 @@
 # Semantics
 
+## Lease custody authority vs checkpoint identity and crash recovery (#1892, #1935, #1934, #1763)
+
+- **Custody continuity across active heartbeat extension (`#1892`)**: Extending an active lease via `todo.heartbeat` (`todo renew --heartbeat` or `DECAPOD_VALIDATE_LEASE_TTL=renew`) preserves exclusive custody (`assignee`, `lease_generation`, `revision`, `contract_digest`) while updating `lease_expires_at` and journaling a new `checkpoint_digest`. Validation archival (`finish_archive`), current workunit proof lookup (`lookup_current_workunit`, `current_workunit_proof`), and publication readiness (`PublicationReadiness::verify_current`) treat unchanged custody with a same-generation active heartbeat as continuous custody (`same_custody_authority` / `matches_custody_authority`), whereas `todo renew` without `--heartbeat`, expiry, release, takeover, or contract mutation rotates/revokes custody and invalidates prior proof (`VALIDATION_HISTORY_TASK_STALE` / `PUBLICATION_CUSTODY_CHANGED`).
+- **Crash recovery & advisory lock non-deletion (`#1934`, `#1935`, `#1763`)**: Uncommitted SQLite WAL transactions roll back on process death (`SIGKILL`), advisory `.lock` sidecars remain on disk without unlinking while OS `flock` state returns to `Unlocked`, journal/SQLite drift or torn/missing `workunits/*.json` projections require explicit bounded recovery (`todo journal checkpoint` / `recover_workunit`), unrecognized divergent JSON projections return `WORKUNIT_PROJECTION_CONFLICT` without overwriting, and publication refuses any post-validation source, accepted-base, policy, or custody drift (`PUBLICATION_MATERIAL_CHANGED`, `PUBLICATION_MATERIAL_BASE_CHANGED`, `PUBLICATION_CUSTODY_CHANGED`).
+
 ## Datastore encoding evolution, floor refusal, and rollback semantics (#1937)
 
 - **Canonical digest invariance across lossless encodings**: Reconstructed `TaskProjection` digests (`projection_digest`) remain identical across `v1` inline and `v2` externalized (`codec_version` `0`/`1`) checkpoints, and `events_logical_sha256` remains identical across verbose legacy envelopes and `_ce_v1` compact envelopes while preserving original proof bytes (`proof_plan`, `verification_artifacts`, `last_verified_notes`).
@@ -438,7 +443,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
+- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

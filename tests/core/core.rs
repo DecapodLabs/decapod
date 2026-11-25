@@ -1,3 +1,5 @@
+#[path = "../crash_durability_1934.rs"]
+mod crash_durability_1934;
 #[path = "../datastore_contract.rs"]
 mod datastore_contract;
 #[path = "../datastore_encoding_compat_1937.rs"]
@@ -6,6 +8,8 @@ mod datastore_encoding_compat_1937;
 mod datastore_relational_compaction;
 #[path = "../datastore_scope.rs"]
 mod datastore_scope;
+#[path = "../lease_fencing_consistency_1935.rs"]
+mod lease_fencing_consistency_1935;
 
 use decapod::core::assets;
 use decapod::core::broker::{self, BrokerEvent, DbBroker};

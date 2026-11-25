@@ -215,7 +215,7 @@ def decapod_targets():
 
     rust_test(
         name = "core_tests",
-        srcs = ["tests/core/core.rs", "tests/datastore_encoding_compat_1937.rs", "tests/datastore_relational_compaction.rs", "tests/datastore_contract.rs", "tests/datastore_scope.rs"],
+        srcs = ["tests/core/core.rs", "tests/datastore_encoding_compat_1937.rs", "tests/datastore_relational_compaction.rs", "tests/datastore_contract.rs", "tests/datastore_scope.rs", "tests/lease_fencing_consistency_1935.rs", "tests/crash_durability_1934.rs"],
         edition = "2024",
         compile_data = ["docs/datastore-v2/logical_contract_v1.json", "docs/encoding-compatibility.md"] + native.glob(["tests/fixtures/migration/**"]),
         crate_features = ["supabase-cloud"],
