@@ -923,6 +923,16 @@
         "cargo clippy --all-targets --all-features -- -D warnings",
         "cargo test --locked --test release_dependency_policy (5 passed)"
       ]
+    },
+    {
+      "id": "cp-1943-clean-specs",
+      "summary": "Refresh specs without bazel-* symlinks and re-verify checkpoints (#1943)",
+      "input_digest": "sha256:03a27f83a43bfac346e11c74de7f2ecfdcc3376007f8a0c3bd7df3a8be12af93",
+      "proof_refs": [
+        "bazelisk test //:cargo_inputs_policy (PASSED)",
+        "cargo audit (0 vulnerabilities, 0 warnings)",
+        "cargo test --locked --features supabase-cloud (70 passed)"
+      ]
     }
   ],
   "intents": {
@@ -966,22 +976,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Module architecture unchanged; Cargo.lock and MODULE.bazel.lock transitive pins updated only.",
-          "reviewed_code_fingerprint": "11bbb7b3e2fb8318900663727375392fcc4baa9d0ee4ad7ba37f8ac50d5d9c6a",
+          "reason": "Clean specs refresh without untracked bazel-* symlinks; module architecture unchanged.",
+          "reviewed_code_fingerprint": "4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3",
           "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Lockfile-only dependency remediation (quinn-udp 0.5.16, rustix 1.1.6) and policy test; public CLI/RPC/storage interfaces unchanged.",
-          "reviewed_code_fingerprint": "11bbb7b3e2fb8318900663727375392fcc4baa9d0ee4ad7ba37f8ac50d5d9c6a",
+          "reason": "Clean specs refresh without untracked bazel-* symlinks; public interfaces unchanged.",
+          "reviewed_code_fingerprint": "4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3",
           "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented #1943 quinn-udp RUSTSEC-2026-0538 and rustix RUSTSEC-2026-0486 lockfile remediation and floor policy test.",
-          "reviewed_code_fingerprint": "11bbb7b3e2fb8318900663727375392fcc4baa9d0ee4ad7ba37f8ac50d5d9c6a",
+          "reason": "Refreshed specs cleanly without bazel-* symlinks for #1943 security audit fix.",
+          "reviewed_code_fingerprint": "4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3",
           "spec_material_hash": "f68f44108abff491df92bd705d1d48065ecb999bfc3b3c21515fb0f06f609b4c"
         }
       ],
@@ -993,7 +1003,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795565562Z"
+      "updated_at": "1795565913Z"
     },
     "trajectory": {
       "active_boundaries": [

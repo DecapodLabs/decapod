@@ -2044,14 +2044,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 - Core modules (147): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+131 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
-- Build manifests (113): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/Cargo.toml`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/tools/laya-native/Cargo.toml`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/bazel-out/darwin_arm64-fastbuild/bin/cargo_inputs_policy.sh.runfiles/+cargo_inputs+decapod_cargo_inputs/Cargo.toml`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/bindings/typescript/package.json`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/external/+cargo_inputs+decapod_cargo_inputs/Cargo.toml`, (+105 more)
+- Build manifests (9): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, `tests/fixtures/justfile_consumer/Cargo.toml`, (+1 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `11bbb7b3e2fb8318900663727375392fcc4baa9d0ee4ad7ba37f8ac50d5d9c6a`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/` (1440 files), `bazel-bin/` (3 files), `bazel-out/` (3 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
