@@ -1,5 +1,14 @@
 # Interfaces
 
+## Bounded diagnostic telemetry API, extended `ExecutionTelemetryProjection`, and `--device-id` CLI contract (#1095, #1938)
+
+- **Core diagnostic telemetry (`src/decapod/core/telemetry.rs`)**:
+  - Exposes `TelemetryRingBuffer`, `TelemetryRetentionPolicy` (including `allow_identifier_observation: bool`, default `false`), `RawDiagnosticSample`, `SanitizedTelemetrySample`, `DiagnosticTelemetryReport` (`decapod.diagnostic-telemetry.v1`), `DiagnosticTimeBucket`, `LatencyQuantilesUs`, `WorkloadSizeMetrics`, `ProofFreshness` / `ProofFreshnessCounts`, `DiagnosticOutcome` / `DiagnosticOutcomeCounts`, `TelemetryBoundAccounting`, `compute_latency_quantiles_us`, `sanitize_telemetry_text`, `anonymize_identifier_with_salt`, and `collect_workspace_diagnostic_telemetry`.
+- **Extended `observe.telemetry` projection (`src/decapod/core/observability_projections/telemetry.rs`)**:
+  - Extends `TelemetryEventSample` with optional `queue_wait_us`, `execution_us`, `lock_wait_us`, and `proof_freshness` (`#[serde(default)]`) and adds `operational_diagnostics: DiagnosticTelemetryReport` to `ExecutionTelemetryProjection` without breaking `decapod observe telemetry`, RPC `observe.telemetry`, or HTTP `GET /observe/v1/telemetry`.
+- **`decapod cloud revoke --device-id` (`src/decapod/cli.rs::CloudCommand::Revoke`)**:
+  - Marks `device_id` with `#[clap(long, allow_hyphen_values = true)]` so RFC 7638 base64url JWK thumbprints starting with `'-'` parse as values rather than unknown options.
+
 ## Wave 3 derived replay, compaction pagination, and knowledge firewall contracts (#1936, #1630, #657)
 
 - **Derived data & replay documentation (`docs/derived-data-and-replay.md`)**: Documents the 13 canonical `events::STREAMS`, derived task/workunit/knowledge/proof surfaces, composite `(seq, event_id)` cursor rules, duplicate/gap/uncheckpointed-suffix handling, snapshot watermarks, and immutable-proof vs. sensitive-payload retention tradeoffs.
@@ -2573,7 +2582,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
+- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

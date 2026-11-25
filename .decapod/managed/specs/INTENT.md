@@ -1,5 +1,13 @@
 # Intent
 
+## Repository-shaped kernel benchmarks, bounded diagnostic telemetry, and `--device-id` hyphen parsing (#1938, #1095)
+
+Hardens Decapod's operational observability and performance regression discipline without introducing background daemons, paid telemetry dependencies, or speculative storage engine replacement:
+
+- **Repository-shaped whole-kernel benchmark suite & regression budgets (`#1938`)**: Adds `docs/kernel-workload-baseline.md` and `tests/kernel_workload_1938.rs` (wired into `tests/core/core.rs` and `.config/build/decapod.BUILD.bzl`) exercising fixed-seed (`0xDECA_90D4_1938_0001`) small/medium/large skewed datasets across concurrent `claim`/`renew`/`release`/conflict-retry lifecycles, cold vs warm reads, full-stream replay + `task_journal_verify`, lossless `_ce_v1` event compaction + GC + explicit page reclamation, `db_maintenance` probes, and `pre_build_validate::evaluate` timing. Documents measured SQLite growth, write amplification, lock waits, RSS, and explicit scaling activation thresholds instead of speculative engine replacement.
+- **Bounded privacy-preserving execution telemetry (`#1095`)**: Adds `src/decapod/core/telemetry.rs` (`TelemetryRingBuffer`, `TelemetryRetentionPolicy`, `DiagnosticTelemetryReport`, `collect_workspace_diagnostic_telemetry`, `anonymize_identifier_with_salt`) and integrates `operational_diagnostics` into `src/decapod/core/observability_projections/telemetry.rs` (`ExecutionTelemetryProjection`). Reuses structured receipts (`BrokerEvent`, `TraceEvent`, timeline/governance receipts, and SQLite workload counts) to emit `p50`/`p95`/`p99` quantiles for `queue_wait`, `execution`, and `lock_wait`, proof freshness, denied/unknown outcome counts, and strict ring-buffer/cardinality/retention accounting while redacting prompts, secrets, raw evidence, paths, URLs, emails, and customer/repo identifiers, failing closed (`allow_identifier_observation = false`, dropping identifiers rather than hashing/retaining them unless explicitly authorized with a per-instance ephemeral salt) and unconditionally setting `can_grant_authority = false`.
+- **RFC 7638 base64url `--device-id` hyphen fix (`src/decapod/cli.rs`)**: Sets `allow_hyphen_values = true` on `CloudCommand::Revoke::device_id` so valid JWK thumbprints beginning with `'-'` parse cleanly instead of failing intermittently as unknown flags.
+
 ## Wave 3 derived projection replay, compaction growth safety, and knowledge convergence (#1936, #1630, #657)
 
 Hardens Decapod's derived-data replay, lossless storage compaction, and provenance-aware knowledge convergence without adding a second memory store or parallel event broker:
@@ -1413,15 +1421,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 643 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (285), `tests/` (291)
-- Core modules: 148 | Workflows: 9 | Integration targets: 174
+- Tracked significant codebase files: 645 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (292)
+- Core modules: 149 | Workflows: 9 | Integration targets: 175
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
+- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

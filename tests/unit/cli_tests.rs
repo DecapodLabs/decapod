@@ -418,3 +418,30 @@ fn laya_is_disabled_without_explicit_repository_policy() {
     let serialized = toml::to_string(&config).unwrap();
     assert!(!serialized.contains("[laya]"));
 }
+
+#[test]
+fn cloud_revoke_device_id_accepts_hyphen_prefixed_jwk_thumbprint() {
+    use super::{Cli, CloudCli, CloudCommand, Command};
+    use clap::Parser;
+
+    // RFC 7638 base64url JWK thumbprints can begin with '-' (1/64 probability),
+    // which clap rejects as an unknown flag unless `allow_hyphen_values = true`.
+    for thumbprint in [
+        "-Sabcdef0123456789-_XYZ",
+        "-_-jkt-leading-hyphen",
+        "k_normal_jkt",
+    ] {
+        let parsed = Cli::try_parse_from(["decapod", "cloud", "revoke", "--device-id", thumbprint])
+            .expect("cloud revoke --device-id must accept hyphen-prefixed base64url thumbprints");
+        assert!(matches!(
+            parsed.command,
+            Command::Cloud(CloudCli {
+                command: CloudCommand::Revoke {
+                    device_id: Some(ref id),
+                    ..
+                },
+                ..
+            }) if id == thumbprint
+        ));
+    }
+}

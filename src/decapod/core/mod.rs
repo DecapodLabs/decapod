@@ -116,6 +116,7 @@ pub mod storage_lock;
 pub(crate) mod storage_owner;
 pub mod storage_scope;
 pub mod store;
+pub mod telemetry;
 pub mod time;
 pub mod todo;
 pub mod trace;

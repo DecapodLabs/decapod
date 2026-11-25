@@ -1,5 +1,12 @@
 # Security
 
+## Diagnostic telemetry privacy, redaction, and non-authority invariants (`src/decapod/core/telemetry.rs`, `#1095`, `#1944`)
+
+- **Strict non-authority**: `DiagnosticTelemetryReport` sets `read_only = true`, `authoritative = false`, `can_grant_authority = false`, and `diagnostic_only = true`; telemetry counters, quantiles, and freshness summaries never authorize validation, completion, or publication.
+- **Fail-closed identifier suppression & per-instance salted anonymization**: Hashing an identifier does not exempt its observation, retention, or correlation from authorization requirements. `TelemetryRetentionPolicy::allow_identifier_observation` defaults to `false`, dropping caller-supplied `repo_identifier` values (`repo_digest = None`) and skipping workspace directory name reads in `collect_workspace_diagnostic_telemetry` and `aggregate_telemetry_samples`. Even when explicitly authorized (`allow_identifier_observation = true`), `TelemetryRingBuffer` computes `anonymize_identifier_with_salt` using a fresh per-instance 32-byte CSPRNG `ephemeral_salt` (`decapod.telemetry.anon.v2:`), preventing deterministic cross-session fingerprinting or static-salt correlation under Trust Invariant #2 (`No identity fingerprinting`).
+- **Negative text redaction**: `sanitize_telemetry_text` layers over `core::trace::redact_string` to strip multi-line blobs, prompts/raw evidence (`prompt`, `system_prompt`, `user_prompt`, `raw_evidence`, `transcript`, `stdout`, `stderr`, `diff --git`), filesystem paths, URLs, email addresses, key-value tenant/customer/repo tags, and `owner/repo` slugs, bounding label length to `64` bytes.
+- **Cardinality & retention bounds**: `TelemetryRetentionPolicy::clamped` enforces hard ceilings (`512` samples, `32` distinct stages, `128` time buckets, `7`-day retention) to prevent unbounded memory or label-cardinality exhaustion.
+
 ## Ecosystem Permanent Trust & Egress Gate (#1944, #1933)
 
 - **Trust & Egress Policy Contract (`docs/trust-and-egress-inventory.md`, `src/decapod/core/trust_egress.rs`)**:
@@ -1594,7 +1601,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
+- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
