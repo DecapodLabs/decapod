@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.165.0](https://github.com/DecapodLabs/decapod/compare/v0.164.1...v0.165.0) - 2026-11-25
+
+### Added
+
+- *(trust)* enforce permanent trust invariants and egress gate ([#1944](https://github.com/DecapodLabs/decapod/pull/1944))
+
+### Fixed
+
+- *(security)* upgrade quinn-udp 0.5.16 and rustix 1.1.6 ([#1943](https://github.com/DecapodLabs/decapod/pull/1943))
+
+### Other
+
+- *(#1938,#1095)* kernel workload benchmarks, fail-closed bounded telemetry, and --device-id hyphen fix
+- derived projection replay, compaction growth safety & knowledge convergence (#1936, #1630, #657)
+- *(specs)* align Phase 2 spec symbols with src/ codes and signatures
+- active lease renewal custody fix ([#1892](https://github.com/DecapodLabs/decapod/pull/1892)), multi-process fencing (#1935/#1763) & crash durability ([#1934](https://github.com/DecapodLabs/decapod/pull/1934))
+- Hardening #1937: datastore and evidence encoding compatibility corpus & qualification suite
+- *(specs)* clarify decapod validate --pre-build in SECURITY.md ([#1944](https://github.com/DecapodLabs/decapod/pull/1944))
+- *(specs)* refresh living specs without bazel symlinks ([#1943](https://github.com/DecapodLabs/decapod/pull/1943))
+- *(governance)* refresh specs and reviews after clippy fix ([#1943](https://github.com/DecapodLabs/decapod/pull/1943))
+- *(security)* satisfy clippy range check in dependency policy ([#1943](https://github.com/DecapodLabs/decapod/pull/1943))
+- *(governance)* record spec reviews for #1943
+
 ## [0.164.1](https://github.com/DecapodLabs/decapod/compare/v0.164.0...v0.164.1) - 2026-11-23
 
 ### Added
