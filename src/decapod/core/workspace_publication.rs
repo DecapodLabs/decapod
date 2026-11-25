@@ -503,12 +503,12 @@ pub(super) fn diagnostic_read_pr(
             "PR_TARGET_CHANGED: diagnostic PR changed during readback",
         ));
     }
-    Ok(
-        serde_json::json!({"number":pr.number,"url":format!("https://github.com/{slug}/pull/{number}"),
+    let pr_url = format!("https://github.com/{slug}/pull/{number}");
+    crate::core::trust_egress::validate_egress_url(&pr_url, &[]).map_err(failure)?;
+    Ok(serde_json::json!({"number":pr.number,"url":pr_url,
         "state":pr.state,"draft":pr.draft,"head":pr.head.sha,"head_branch":pr.head.branch,
         "base":pr.base.sha,"base_branch":pr.base.branch,"required_forge_checks":checks,
-        "admission":"not_established_by_pr_existence"}),
-    )
+        "admission":"not_established_by_pr_existence"}))
 }
 
 #[derive(serde::Deserialize, serde::Serialize)]

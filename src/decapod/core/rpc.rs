@@ -1236,7 +1236,12 @@ pub fn generate_capabilities() -> CapabilitiesReport {
         .ok()
         .and_then(|root| crate::cli::DecapodProjectConfig::load(&root).ok());
 
-    let (version_check, latest_version) = get_latest_version();
+    let (version_check, latest_version) =
+        if std::env::var("DECAPOD_CHECK_LATEST").as_deref() == Ok("1") {
+            get_latest_version()
+        } else {
+            (VersionCheckStatus::Unavailable, None)
+        };
     // #1533: `is_latest` is true only when the registry answered and reports
     // the running version as newest. When the registry is unreachable the
     // report says `version_check: "unavailable"` with `latest_version: null`;
@@ -1875,6 +1880,10 @@ pub(crate) fn static_capabilities() -> CapabilitiesReport {
 /// fallback to the running version (#1533).
 fn get_latest_version() -> (VersionCheckStatus, Option<String>) {
     use std::process::Command;
+    let url = "https://crates.io/api/v1/crates/decapod";
+    if crate::core::trust_egress::validate_egress_url(url, &[]).is_err() {
+        return (VersionCheckStatus::Unavailable, None);
+    }
     let output = Command::new("curl")
         .args([
             "-s",
@@ -1883,7 +1892,7 @@ fn get_latest_version() -> (VersionCheckStatus, Option<String>) {
             // crates.io answers HTTP 403 without an identifying User-Agent (#1533)
             "--user-agent",
             &crate::crates_io_user_agent(),
-            "https://crates.io/api/v1/crates/decapod",
+            url,
         ])
         .output();
 

@@ -5862,6 +5862,9 @@ fn parse_crates_max_version(body: &[u8]) -> Option<String> {
 }
 
 fn fetch_latest_crates_version() -> Result<String, error::DecapodError> {
+    let url = "https://crates.io/api/v1/crates/decapod";
+    crate::core::trust_egress::validate_egress_url(url, &[])
+        .map_err(error::DecapodError::ValidationError)?;
     let output = std::process::Command::new("curl")
         .args([
             "-s",
@@ -5869,7 +5872,7 @@ fn fetch_latest_crates_version() -> Result<String, error::DecapodError> {
             "2",
             "--user-agent",
             &crates_io_user_agent(),
-            "https://crates.io/api/v1/crates/decapod",
+            url,
         ])
         .output()
         .map_err(|e| {
@@ -5975,9 +5978,10 @@ fn run_session_command(session_cli: SessionCli) -> Result<(), error::DecapodErro
         (!cloud_backend).then_some(store_root.as_path()),
     )?;
 
-    // Check and update version on session acquire
+    // Check and update version on session acquire only when explicitly opted in (#1944).
     if matches!(session_cli.command, SessionCommand::Acquire)
-        && let Ok(true) = check_and_update_version(project_config.repo.session_auto_update)
+        && project_config.repo.session_auto_update
+        && let Ok(true) = check_and_update_version(true)
     {
         eprintln!(
             "{} Restart Session: decapod session acquire",

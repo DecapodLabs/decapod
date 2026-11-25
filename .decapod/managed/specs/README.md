@@ -65,15 +65,15 @@ agent documentation. The source architecture is described in
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 634 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (284), `tests/` (283)
-- Core modules: 147 | Workflows: 9 | Integration targets: 169
+- Tracked significant codebase files: 636 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (285), `tests/` (284)
+- Core modules: 148 | Workflows: 9 | Integration targets: 170
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (284 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

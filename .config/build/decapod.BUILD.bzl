@@ -385,6 +385,11 @@ def decapod_targets():
                 "assets/tools/docs_autosync_governed.sh",
                 "tests/fixtures/docs_sync_fixture.rs",
             ] if path == "tests/docs_sync_checkpoint_boundary.rs" else [
+                "docs/trust-and-egress-inventory.md",
+                "src/decapod/lib.rs",
+                "src/decapod/core/rpc.rs",
+                "src/decapod/core/observability_projections/telemetry.rs",
+            ] if path == "tests/trust_egress_gate.rs" else [
                 ".github/actions/source-ci-profile/action.yml",
                 "tests/fixtures/derived-release/Cargo.toml.fixture",
                 "src/decapod/core/derived_release_profile_tests.rs",
