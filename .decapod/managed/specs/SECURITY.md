@@ -1,5 +1,9 @@
 # Security
 
+## Dactyl `0.19.1` dependency security & transitive floor enforcement (`#1943`, `#1944`)
+
+- **Zero-advisory lockfile reconciliation (`dactyl-db 0.19.1`)**: Upgrades `dactyl-db` to `0.19.1` while asserting `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16` (RUSTSEC-2026-0538), and `rustix >= 1.1.6` (RUSTSEC-2026-0486) across all `Cargo.lock` entries (including inactive feature edges) and `cargo audit` zero-vulnerability gates.
+
 ## Diagnostic telemetry privacy, redaction, and non-authority invariants (`src/decapod/core/telemetry.rs`, `#1095`, `#1944`)
 
 - **Strict non-authority**: `DiagnosticTelemetryReport` sets `read_only = true`, `authoritative = false`, `can_grant_authority = false`, and `diagnostic_only = true`; telemetry counters, quantiles, and freshness summaries never authorize validation, completion, or publication.
@@ -1601,7 +1605,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

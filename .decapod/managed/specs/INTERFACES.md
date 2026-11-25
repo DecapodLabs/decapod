@@ -1,5 +1,9 @@
 # Interfaces
 
+## Dactyl `0.19.1` crate policy & Bazel lockfile interface (`Cargo.toml`, `Cargo.lock`, `MODULE.bazel.lock`, `tests/release_dependency_policy.rs`)
+
+- **Registry pin & checksum policy**: `Cargo.toml` pins `dactyl-db = { version = "=0.19.1", features = ["sqlite", "neon"] }` with `supabase-cloud = ["dactyl-db/supabase"]`; `tests/release_dependency_policy.rs` verifies the exact crates.io release version, SHA-256 checksum, and `quinn-proto`/`quinn-udp`/`rustix` security floors across both Cargo and Bazel lockfiles (`//:cargo_inputs_policy`).
+
 ## Bounded diagnostic telemetry API, extended `ExecutionTelemetryProjection`, and `--device-id` CLI contract (#1095, #1938)
 
 - **Core diagnostic telemetry (`src/decapod/core/telemetry.rs`)**:
@@ -2582,7 +2586,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

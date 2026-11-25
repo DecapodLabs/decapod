@@ -1,5 +1,9 @@
 # Architecture
 
+## Dactyl `0.19.1` dependency & trust boundary alignment (`Cargo.toml`, `Cargo.lock`, `MODULE.bazel.lock`)
+
+- **Canonical storage client upgrade (`dactyl-db = "=0.19.1"`)**: Aligns Decapod's `sqlite` / `neon` / `supabase-cloud` storage dependency (`Cargo.toml`, `Cargo.lock`, `MODULE.bazel.lock`) to the newly released `dactyl-db 0.19.1` crate from crates.io (incorporating Dactyl's permanent `#1944` trust/zero-egress gate and advisory lockfile updates while preserving `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16`, and `rustix >= 1.1.6`).
+
 ## Kernel workload benchmarks & bounded diagnostic telemetry (`#1938`, `#1095`, `src/decapod/core/telemetry.rs`, `tests/kernel_workload_1938.rs`)
 
 - **Bounded diagnostic telemetry core (`src/decapod/core/telemetry.rs`, `src/decapod/core/mod.rs`)**:
@@ -2088,7 +2092,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

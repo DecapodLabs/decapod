@@ -379,9 +379,9 @@ dependencies = [
 
 [[package]]
 name = "dactyl-db"
-version = "0.19.0"
+version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7c208783cb97d5a64d39f641cfc2469ce3a3eff898ccfaa2880f7ba8f817b1d"
+checksum = "fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d"
 dependencies = [
  "base64",
  "getrandom 0.2.17",
@@ -391,6 +391,7 @@ dependencies = [
  "libloading",
  "litemap",
  "quinn-proto",
+ "quinn-udp",
  "reqwest",
  "rustix",
  "serde",
@@ -398,6 +399,7 @@ dependencies = [
  "sha2",
  "thiserror 1.0.69",
  "tokio",
+ "url",
  "utf16_iter",
  "utf8_iter",
  "zeroize",
@@ -742,7 +744,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "tokio",
  "tower-service",
  "tracing",
@@ -1188,7 +1190,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.4",
  "tracing",
  "windows-sys 0.61.2",
 ]

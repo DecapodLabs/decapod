@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "41597468d42f44da28f63f493dbe9929a4347cdc",
+    "accepted_commit": "7a1c3cde778513285787b3c8baabc4bf6041e797",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,57 +870,52 @@
     }
   },
   "change": {
-    "id": "pr-1942-workload-telemetry",
-    "base_commit": "41597468d42f44da28f63f493dbe9929a4347cdc",
+    "id": "change_01M88Y5S2CD881MXQTZMQCKZBN",
+    "base_commit": "7a1c3cde778513285787b3c8baabc4bf6041e797",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:kernel-telemetry-1942": {
-      "statement": "Bounded telemetry drops identifiers fail-closed unless allow_identifier_observation is enabled with per-instance ephemeral salt, kernel workload budgets pass losslessly, and --device-id accepts leading hyphens.",
-      "falsifier": "Telemetry hashes or retains repo identifiers by default, emits static-salt correlatable digests, fails kernel regression budgets, or rejects hyphenated thumbprints.",
+    "claim:dactyl-0191-reconciliation": {
+      "statement": "Decapod pins dactyl-db =0.19.1 with matching crates.io checksum, synced MODULE.bazel.lock (//:cargo_inputs_policy), preserved quinn-proto/quinn-udp/rustix floors, and zero cargo audit vulnerabilities.",
+      "falsifier": "Cargo.toml/Cargo.lock/MODULE.bazel.lock disagree on dactyl-db 0.19.1 checksum fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d, Bazel cargo_inputs_policy or trust_egress_gate fails, or cargo audit reports any advisory.",
       "status": "supported",
       "proof_refs": [
-        "cargo audit -q",
-        "cargo test --lib cloud_revoke_device_id",
-        "cargo test --lib core::telemetry",
-        "cargo test --test kernel_workload_1938",
-        "cargo test --test trust_egress_gate"
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "tests/release_dependency_policy.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-pr1942-1",
-      "summary": "Rebased PR 1942 onto 41597468d with fail-closed allow_identifier_observation and per-instance CSPRNG anonymize_identifier_with_salt",
-      "input_digest": "sha256:e1b956724a47fe1726ca0938e48cc80edc52172c83b01936498240168e2f13b0",
+      "id": "cp-decapod-dactyl-0191",
+      "summary": "Bump dactyl-db to =0.19.1 across Cargo.toml, Cargo.lock, MODULE.bazel.lock, release_dependency_policy, and living specs",
+      "input_digest": "sha256:e1dca62038f069ce6e29f447b9dc514a33c7ca299e74813a3975d5e550ed7535",
       "proof_refs": [
-        "cargo audit -q",
-        "cargo test --lib cloud_revoke_device_id",
-        "cargo test --lib core::telemetry",
-        "cargo test --test kernel_workload_1938",
-        "cargo test --test trust_egress_gate"
+        "tests/release_dependency_policy.rs"
       ]
     }
   ],
   "intents": {
-    "intent:pr-1942-workload-telemetry": {
+    "intent:change_01M88Y5S2CD881MXQTZMQCKZBN": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Single PR in isolated Decapod worktree; no root mutations, no egress expansion, no static identifier hashing."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/telemetry.rs src/decapod/core/observability_projections/telemetry.rs src/decapod/cli.rs tests/unit/cli_tests.rs tests/kernel_workload_1938.rs tests/core/core.rs .config/build/decapod.BUILD.bzl docs/kernel-workload-baseline.md .decapod/managed/specs/"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:pr-1942-workload-telemetry",
+      "id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Deliver #1938 kernel workload benchmarks, #1095 bounded telemetry, and --device-id hyphen fix with Trust Invariant #2 privacy enforcement",
-      "refined_intent": "Rebase PR 1942 onto 41597468d, replace static-salt anonymize_identifier with fail-closed allow_identifier_observation and per-instance CSPRNG anonymize_identifier_with_salt, verify tests/audit, update specs, and prepare PR 1942.",
+      "raw_intent": "Reconcile dactyl-db dependency with latest Dactyl release",
+      "refined_intent": "Reconcile dactyl-db dependency with latest Dactyl release",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,49 +928,55 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Rebase PR 1942 onto master, enforce fail-closed allow_identifier_observation and per-instance CSPRNG ephemeral salt in core::telemetry, preserve --device-id hyphen parsing and #1938 kernel benchmarks, update living specs, and verify.",
+      "intent": "Reconcile dactyl-db dependency with latest Dactyl release",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "decapod validate"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented TelemetryRingBuffer, ephemeral CSPRNG salt, fail-closed allow_identifier_observation, kernel_workload_1938, and runtime module wiring.",
-          "reviewed_code_fingerprint": "6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b",
-          "spec_material_hash": "f81fdcf6b633ed786e2abb2ac62257b7b941ba2285cbbf420ee876d385f0c17e"
+          "reason": "Reconciled Decapod dependency to released dactyl-db =0.19.1 with Bazel and security lockfile parity.",
+          "reviewed_code_fingerprint": "c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6",
+          "spec_material_hash": "8307dbec73b8a50e8f1493757c865888ac655bd8e025c9fcf856109a1d592d05"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented telemetry public API including TelemetryRetentionPolicy::allow_identifier_observation and anonymize_identifier_with_salt, ExecutionTelemetryProjection operational_diagnostics, and CloudCommand::Revoke::device_id.",
-          "reviewed_code_fingerprint": "6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b",
-          "spec_material_hash": "d318a7e7e15224db18a6242a872531abbcc95349ed1e702153f3c14340e4e8ff"
+          "reason": "Reconciled Decapod dependency to released dactyl-db =0.19.1 with Bazel and security lockfile parity.",
+          "reviewed_code_fingerprint": "c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6",
+          "spec_material_hash": "1735816423099406933ecbadb6e689754cba9dedd12074413f261dd8c81b1bbe"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented strict non-authority, fail-closed allow_identifier_observation suppression, and per-instance CSPRNG ephemeral salt.",
-          "reviewed_code_fingerprint": "6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b",
-          "spec_material_hash": "dc3dee6cb90ce34fa2e7ff27e45e17cce34be0be2a3d87c21fcd3f9c5e06460f"
+          "reason": "Reconciled Decapod dependency to released dactyl-db =0.19.1 with Bazel and security lockfile parity.",
+          "reviewed_code_fingerprint": "c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6",
+          "spec_material_hash": "025eeb2e461b713e23581137bf1c0fde942a26b17585a056dad13f1697df5d4f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Hardening #1938/#1095 kernel benchmarks, fail-closed bounded telemetry, and --device-id hyphen fix",
+      "title": "Reconcile dactyl-db dependency with latest Dactyl release",
       "todo_ids": [
-        "bugs_01m85ykhhn1zb6ft"
+        "cicd_01m88y4wks12shvs"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795589073Z"
+      "updated_at": "1795596853Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Single PR in isolated Decapod worktree; no root mutations, no egress expansion, no static identifier hashing."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:761c8e220cc458654bf32c33b6536b1ff5b8cc6a21cb614a8aa53e0a4fdd349a",
+      "artifact_hash": "sha256:5eca62c7561729de4cd4dbec2ba95e44eb818358b93a5b5c683c5261551f9f55",
       "checks": [
+        {
+          "name": "bazel_cargo_inputs_policy",
+          "status": "passed"
+        },
         {
           "name": "cargo_audit",
           "status": "passed"
@@ -985,19 +986,7 @@
           "status": "passed"
         },
         {
-          "name": "cli_device_id_tests",
-          "status": "passed"
-        },
-        {
-          "name": "core_telemetry_tests",
-          "status": "passed"
-        },
-        {
-          "name": "kernel_workload_1938",
-          "status": "passed"
-        },
-        {
-          "name": "observability_telemetry_tests",
+          "name": "release_dependency_policy",
           "status": "passed"
         },
         {
@@ -1005,24 +994,26 @@
           "status": "passed"
         }
       ],
+      "completion_claim": "Reconciled Decapod dactyl-db dependency to 0.19.1 across Cargo and Bazel lockfiles",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:pr-1942-workload-telemetry",
+            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:pr-1942-workload-telemetry",
+            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:pr-1942-workload-telemetry",
+            "detail": "trajectory:branch_01M88Y5S6A26MY264C8E620DBN",
             "event_id": "event:4",
-            "intent_id": "intent:pr-1942-workload-telemetry",
+            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1031,45 +1022,33 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "pr-1942-workload-telemetry": {
+          "branch_01M88Y5S6A26MY264C8E620DBN": {
             "evidence_only": true,
-            "id": "pr-1942-workload-telemetry",
-            "intent_id": "intent:pr-1942-workload-telemetry",
+            "id": "branch_01M88Y5S6A26MY264C8E620DBN",
+            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/telemetry.rs",
-                  "src/decapod/core/observability_projections/telemetry.rs",
-                  "tests/kernel_workload_1938.rs",
-                  "src/decapod/core/telemetry.rs",
-                  "src/decapod/core/observability_projections/telemetry.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/mod.rs",
-                  "tests/kernel_workload_1938.rs",
-                  "tests/core/core.rs",
-                  "tests/unit/cli_tests.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "docs/kernel-workload-baseline.md",
-                  "cargo test --lib core::telemetry (5 passed)",
-                  "cargo test --lib core::observability_projections::telemetry (1 passed)",
-                  "cargo test --lib cloud_revoke_device_id (1 passed)",
-                  "cargo test --test trust_egress_gate (5 passed)",
-                  "cargo test --test kernel_workload_1938 (1 passed)",
-                  "cargo audit -q (0 vulnerabilities)"
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "tests/release_dependency_policy.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "tests/release_dependency_policy.rs",
+                  "dactyl-db 0.19.1 checksum fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d; //:cargo_inputs_policy PASS; release_dependency_policy 5/5; trust_egress_gate 5/5; cargo audit 0 vulns"
                 ],
                 "proof_refs": [
+                  "bazel_cargo_inputs_policy",
                   "cargo_fmt",
-                  "core_telemetry_tests",
-                  "observability_telemetry_tests",
-                  "cli_device_id_tests",
+                  "release_dependency_policy",
                   "trust_egress_gate",
-                  "kernel_workload_1938",
                   "cargo_audit"
                 ],
                 "scope": [
-                  "src/decapod/core/telemetry.rs src/decapod/core/observability_projections/telemetry.rs src/decapod/cli.rs tests/unit/cli_tests.rs tests/kernel_workload_1938.rs tests/core/core.rs .config/build/decapod.BUILD.bzl docs/kernel-workload-baseline.md .decapod/managed/specs/"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1079,38 +1058,32 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "cargo audit -q (0 vulnerabilities)",
-        "cargo test --lib cloud_revoke_device_id (1 passed)",
-        "cargo test --lib core::observability_projections::telemetry (1 passed)",
-        "cargo test --lib core::telemetry (5 passed)",
-        "cargo test --test kernel_workload_1938 (1 passed)",
-        "cargo test --test trust_egress_gate (5 passed)"
+        "dactyl-db 0.19.1 checksum fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d; //:cargo_inputs_policy PASS; release_dependency_policy 5/5; trust_egress_gate 5/5; cargo audit 0 vulns"
       ],
       "inspected_files": [
-        "src/decapod/core/observability_projections/telemetry.rs",
-        "src/decapod/core/telemetry.rs",
-        "tests/kernel_workload_1938.rs"
+        "Cargo.lock",
+        "Cargo.toml",
+        "tests/release_dependency_policy.rs"
       ],
-      "intent_id": "intent:pr-1942-workload-telemetry",
+      "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "docs/kernel-workload-baseline.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/core/observability_projections/telemetry.rs",
-        "src/decapod/core/telemetry.rs",
-        "tests/core/core.rs",
-        "tests/kernel_workload_1938.rs",
-        "tests/unit/cli_tests.rs"
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "tests/release_dependency_policy.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/telemetry.rs src/decapod/core/observability_projections/telemetry.rs src/decapod/cli.rs tests/unit/cli_tests.rs tests/kernel_workload_1938.rs tests/core/core.rs .config/build/decapod.BUILD.bzl docs/kernel-workload-baseline.md .decapod/managed/specs/"
+        "root"
       ],
-      "run_id": "pr-1942-workload-telemetry",
+      "run_id": "branch_01M88Y5S6A26MY264C8E620DBN",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m85ykhhn1zb6ft",
+      "task_id": "cicd_01m88y4wks12shvs",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
