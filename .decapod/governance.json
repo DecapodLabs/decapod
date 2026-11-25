@@ -904,6 +904,15 @@
       "proof_refs": [
         "verify-checkpoints --publication-material"
       ]
+    },
+    {
+      "id": "cp-1943-clippy-fix",
+      "summary": "Satisfy clippy manual_range_contains lint in release_dependency_policy.rs",
+      "input_digest": "sha256:c07585adf23f094bc0cc6d49a5f7c5353f3f9c3f9ecfe27afc472cdc35ce0fd1",
+      "proof_refs": [
+        "cargo clippy --all-targets --all-features -- -D warnings",
+        "cargo test --locked --test release_dependency_policy (5 passed)"
+      ]
     }
   ],
   "intents": {

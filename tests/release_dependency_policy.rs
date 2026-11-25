@@ -88,7 +88,7 @@ fn locked_quinn_udp_and_rustix_preserve_patched_floors_including_inactive_entrie
     assert!(!quinn_udp.is_empty(), "quinn-udp remains in the lock audit");
     for version in quinn_udp {
         assert!(
-            (version >= (0, 5, 16) && version < (0, 6, 0)) || version >= (0, 6, 3),
+            ((0, 5, 16)..(0, 6, 0)).contains(&version) || version >= (0, 6, 3),
             "unpatched quinn-udp (RUSTSEC-2026-0538): {version:?}"
         );
     }
