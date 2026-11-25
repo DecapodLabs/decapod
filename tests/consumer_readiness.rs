@@ -2571,6 +2571,39 @@ fn source_inventory_change_succeeds_after_policy_control_approval_and_full_valid
 }
 
 #[test]
+fn unreferenced_packaging_script_validates_without_manual_transition_approval() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+
+    // Add a packaging helper under scripts/ that is NOT referenced by
+    // proof.commands, Justfile, or workflows. Reconciling reviewed_sources_digest
+    // must validate and execute the unchanged proof suite without manual approval.
+    fs::write(
+        fixture.options.root.join("scripts/package-dmg.sh"),
+        "#!/bin/sh\necho package-dmg\n",
+    )
+    .unwrap();
+    let new_src = runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+        .unwrap()
+        .digest()
+        .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest = new_src;
+    save_full_config(&fixture);
+    fixture.commit("add unreferenced packaging script and reconcile reviewed_sources_digest");
+
+    let mut host = fixture.host();
+    let report = fixture.validate(&mut host);
+    assert!(report.ready && report.proof_ready, "{report:?}");
+    assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
 fn command_and_execution_upgrade_succeeds_after_policy_control_approval_and_full_validation() {
     let mut fixture = Fixture::new();
     accept_current_on_main(&fixture);

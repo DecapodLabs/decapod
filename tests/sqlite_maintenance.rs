@@ -2008,6 +2008,9 @@ fn governed_db_maintenance_wal_checkpoint_aliases_and_top_level_maintenance_conf
     let wal_json: serde_json::Value = serde_json::from_slice(&wal_cli.stdout).unwrap();
     assert_eq!(wal_json["status"], "ok");
     assert_eq!(wal_json["mode"], "passive");
+    assert!(wal_json["busy"].is_null());
+    assert!(wal_json["log_frames"].is_null());
+    assert!(wal_json["checkpointed_frames"].is_null());
     assert_eq!(wal_json["automatic_repair"], false);
 
     let wal_rpc = fixture
@@ -2030,6 +2033,31 @@ fn governed_db_maintenance_wal_checkpoint_aliases_and_top_level_maintenance_conf
     let wal_rpc_json: serde_json::Value = serde_json::from_slice(&wal_rpc.stdout).unwrap();
     assert_eq!(wal_rpc_json["success"], true);
     assert_eq!(wal_rpc_json["result"]["mode"], "passive");
+    assert!(wal_rpc_json["result"]["busy"].is_null());
+    assert!(wal_rpc_json["result"]["log_frames"].is_null());
+    assert!(wal_rpc_json["result"]["checkpointed_frames"].is_null());
+
+    // Dactyl's read-only SQL guard remains enforced on read operations even on a ReadWrite handle.
+    decapod::core::dactyl::ensure_local_sqlite_runtime().unwrap();
+    let db_path = fixture.repo_root.join(".decapod/data/decapod.db");
+    let conn = decapod::core::db::Connection::open_with_options(
+        &db_path,
+        AccessMode::ReadWrite,
+        std::time::Duration::from_millis(500),
+    )
+    .unwrap();
+    let read_guard_err = conn
+        .query_row("PRAGMA wal_checkpoint(PASSIVE)", [], |row| {
+            row.get::<_, i64>(0)
+        })
+        .expect_err("read path must continue rejecting mutating PRAGMA wal_checkpoint");
+    assert!(
+        read_guard_err
+            .to_string()
+            .contains("read operation cannot execute a mutating statement"),
+        "unexpected read-guard error: {read_guard_err}"
+    );
+    drop(conn);
 
     // 4. Ambiguous dual configuration (`[governance.db_maintenance]` AND `[maintenance]`) fails closed!
     fs::write(

@@ -8355,7 +8355,11 @@ fn run_validate_command_local(
         None
     };
 
-    let fallback_guidance = core::validation_runtime::ValidationGuidance::for_outcome(false);
+    let fallback_guidance = if report.human_authorization_required {
+        core::validation_runtime::ValidationGuidance::for_human_authorization_required()
+    } else {
+        core::validation_runtime::ValidationGuidance::for_outcome(false)
+    };
     let guidance = readiness
         .as_ref()
         .map(|result| &result.agent_guidance)
@@ -8943,7 +8947,14 @@ fn run_current_workbranch_readiness_with(
         scope: report_scope,
         target: invocation.target.clone(),
         resolved_targets: Vec::new(),
-        agent_guidance: runtime::ValidationGuidance::for_outcome(false),
+        agent_guidance: if error
+            .to_string()
+            .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED")
+        {
+            runtime::ValidationGuidance::for_human_authorization_required()
+        } else {
+            runtime::ValidationGuidance::for_outcome(false)
+        },
         stage_dispositions: Vec::new(),
         blockers: vec![runtime::Blocker::new(
             "READINESS_BLOCKED",

@@ -244,6 +244,16 @@ impl ValidationGuidance {
             ..Self::for_outcome(false)
         }
     }
+
+    pub fn for_human_authorization_required() -> Self {
+        Self {
+            owner: "human",
+            next_action: "request_human_authorization",
+            instruction: "Human authorization is required for this blocked transition. Preserve the exact blocker, transition ID, digests, and changed paths for maintainer review/authorization rather than bypassing validation or repeating unchanged commands.",
+            human_input_when: "Stop and request maintainer review/merge or exact transition authorization for the reported transition ID and changed paths.",
+            ..Self::for_outcome(false)
+        }
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -299,6 +309,12 @@ impl ValidationReport {
                 self.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
                 "CONTROLLER_CONTRACT_UNSUPPORTED"
             } else {
+                if error
+                    .to_string()
+                    .contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED")
+                {
+                    self.agent_guidance = ValidationGuidance::for_human_authorization_required();
+                }
                 "READINESS_BLOCKED"
             };
             self.blockers.push(Blocker::new(code, error.to_string()));
@@ -1263,6 +1279,12 @@ fn run(
     let selection = match host.select(&project, &budget) {
         Ok(selection) => selection,
         Err(blockers) if !blockers.is_empty() => {
+            if blockers
+                .iter()
+                .any(|b| b.detail.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"))
+            {
+                report.agent_guidance = ValidationGuidance::for_human_authorization_required();
+            }
             report.blockers = blockers;
             report.evidence_path = host.evidence_directory().map(Path::to_path_buf);
             return Ok(());

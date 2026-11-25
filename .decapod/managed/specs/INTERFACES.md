@@ -134,7 +134,7 @@
 
 ## Maintenance WAL checkpoint, legacy TODO logical recovery, read-only analyze, workspace effective-state/publish planning, and pre-build validate (#1568, #1657, #1279, #1071, #1064, #1047)
 
-- **Database maintenance CLI & RPC (`src/decapod/cli.rs::DatabaseMaintainCommand`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**: Adds `decapod data db maintain wal-checkpoint [--timeout-ms <0..=5000>]` (and RPC `data.database.wal_checkpoint` with `DatabaseWalCheckpointParams`), `lock-inspect` (`db.lock.diagnose`), plus visible aliases `diagnose` (`inspect`) and `integrity-check` (`verify`). Accepts `[maintenance]` alongside `[governance.db_maintenance]` in `.decapod/config.toml`.
+- **Database maintenance CLI & RPC (`src/decapod/cli.rs::DatabaseMaintainCommand`, `src/decapod/core/rpc.rs`, `src/decapod/core/interop.rs`)**: Adds `decapod data db maintain wal-checkpoint [--timeout-ms <0..=5000>]` (and RPC `data.database.wal_checkpoint` with `DatabaseWalCheckpointParams`, returning `null` for `busy`, `log_frames`, and `checkpointed_frames` when the DB exists because execution routes through Dactyl's write path), `lock-inspect` (`db.lock.diagnose`), plus visible aliases `diagnose` (`inspect`) and `integrity-check` (`verify`). Accepts `[maintenance]` alongside `[governance.db_maintenance]` in `.decapod/config.toml`.
 - **Legacy TODO recovery CLI (`src/decapod/core/todo.rs::TodoJournalCommand::ReconcileLegacy`)**: Extends `decapod todo journal reconcile-legacy` with `--export <PATH>`, `--quarantine`, and `--import-missing` (mutually exclusive with `--prepare-only` and requiring `--expected-review <sha256>` for mutating actions). Review responses expose `quarantine_review_sha256`, `logical_summary`, `can_quarantine`, and `can_import_missing`.
 - **Read-only analysis CLI (`src/decapod/cli.rs::Command::Analyze`, `AnalyzeCli`)**: Adds `decapod analyze [--read-only] [--format text|json] [--max-files N] [--max-bytes N] [--timeout-ms N] [--draft-spec] [PATH]` returning `decapod.analyze-readonly.v1` JSON or concise text with zero repository/SQLite/session mutations.
 - **Workspace effective-state & publication planning CLI (`src/decapod/cli.rs::WorkspaceCommand`, `WorkspacePublishMode`)**: Adds `visible_alias = "effective-state"` and `--format text|json` to `WorkspaceCommand::Diagnose`, plus `--pr <N>`, `--branch <NAME>`, `--mode full|governance-only`, and `--dry-run` (`decapod.workspace-publish-plan.v1`) on `WorkspaceCommand::Publish` (and `pr_reused` + `mode` on `PublishResult`).
@@ -2586,7 +2586,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,12 @@
 # Security
 
+## Fail-closed proof-reference boundary for `repo.pr-readiness.v1` transitions (`#1949`)
+
+- **Conservative reference & unreadable-blob fail-closed guards (`src/decapod/core/repository_profile.rs`)**:
+  - `qualifies_non_proof_source_inventory_transition` never waives `accepted_commands`, `accepted_contract` (including `reviewed_commands_digest`, `executions`, `source_coverage`, `targets`), workflows, `SOURCE_FILES`, or `catalog_source_paths()`.
+  - `path_is_proof_referenced` inspects `accepted_commands`, `accepted_contract` (including `execution.directory`-relative invocations), and every proof-relevant or directly referenced file in `accepted_base_sha`, failing closed (`true`) on exact path matches, directory globs (`dir/*`, `dir/**`), directory token matches, or non-UTF-8 / oversized blobs.
+- **No agent privilege elevation**: `decapod.policy.accepted_repository_contract` retains `OverrideEligibility::NonOverridable`, `autonomous_remediation_permitted = false`, and `human_authorization_required = true` when proof-relevant inputs or command contracts change, shifting `agent_guidance.owner` to `"human"` rather than weakening RBAC or policy control gates.
+
 ## Dactyl `0.19.1` dependency security & transitive floor enforcement (`#1943`, `#1944`)
 
 - **Zero-advisory lockfile reconciliation (`dactyl-db 0.19.1`)**: Upgrades `dactyl-db` to `0.19.1` while asserting `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16` (RUSTSEC-2026-0538), and `rustix >= 1.1.6` (RUSTSEC-2026-0486) across all `Cargo.lock` entries (including inactive feature edges) and `cargo audit` zero-vulnerability gates.
@@ -65,7 +72,7 @@
 
 ## Maintenance RBAC boundaries, non-destructive legacy recovery, read-only analysis isolation, and non-forced publish guards (#1568, #1657, #1279, #1071, #1064, #1047)
 
-- **Maintenance capability scoping & conflict rejection (`src/decapod/core/db_maintenance.rs`)**: `db.wal.checkpoint` is excluded from `DEFAULT_SAFE_ALLOWLIST`, requires explicit opt-in from canonical main-repository config, uses `PRAGMA wal_checkpoint(PASSIVE)` with a 5000ms ceiling (never `TRUNCATE`/`RESTART` or sidecar deletion), and refuses dual `[governance.db_maintenance]` + `[maintenance]` declarations (`AMBIGUOUS_MAINTENANCE_POLICY`). Worktree backend tampering continues failing closed with `BACKEND_MISMATCH`; Cloud backends remain denied (`CLOUD_PRINCIPAL_UNVERIFIED`) pending Propodus `#88`.
+- **Maintenance capability scoping & conflict rejection (`src/decapod/core/db_maintenance.rs`)**: `db.wal.checkpoint` is excluded from `DEFAULT_SAFE_ALLOWLIST`, requires explicit opt-in from canonical main-repository config, executes `PRAGMA wal_checkpoint(PASSIVE)` on Dactyl's write path (`Connection::execute`) with a 5000ms ceiling (never `TRUNCATE`/`RESTART` or sidecar deletion, preserving Dactyl's `sqlite3_stmt_readonly` read guard), and refuses dual `[governance.db_maintenance]` + `[maintenance]` declarations (`AMBIGUOUS_MAINTENANCE_POLICY`). Worktree backend tampering continues failing closed with `BACKEND_MISMATCH`; Cloud backends remain denied (`CLOUD_PRINCIPAL_UNVERIFIED`) pending Propodus `#88`.
 - **Fail-closed legacy TODO recovery (`src/decapod/core/legacy_todo_recovery.rs`)**: Live `todo.db` is never opened directly by SQLite; exports refuse overwriting existing files (`create_new(true)` with private permissions); `--import-missing` refuses any conflicting task ID (`LEGACY_TODO_CONFLICT_BLOCKED`) and archives original bytes before transactional journaled insertion; `--quarantine` never touches `decapod.db`; both require canonical `todo.legacy.reconcile` RBAC and active local session authentication.
 - **Zero-mutation read-only analysis & hostile input containment (`src/decapod/core/analyze.rs`)**: Dispatched before store/session/lock code so `.decapod/data/decapod.db` SHA-256 and Git status remain byte-identical. Never follows symlinks, excludes sensitive files (`.env*`, `id_rsa`, `*.pem`, `*.key`, credentials) without reading them, scans untrusted instruction files with `agent_eval::evaluate_prompt` without executing repository code or hooks, and redacts all output via `core::trace::redact`.
 - **Non-forced publication & pre-build non-substitution (`src/decapod/core/workspace.rs`, `src/decapod/core/pre_build_validate.rs`)**: `workspace publish` rejects `--branch`/`--pr` mismatches, mixed implementation diffs under `--mode governance-only`, and diverged remote heads (`REMOTE_BRANCH_DIVERGED` decision gate — never force-pushes). `validate --pre-build` performs zero writes and unconditionally reports `publication_ready = false` and `proof_ready = false`.
@@ -1605,7 +1612,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

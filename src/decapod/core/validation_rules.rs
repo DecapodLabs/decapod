@@ -908,9 +908,9 @@ impl RuleRegistry {
                 observed_condition: "Candidate proof differs from the accepted policy, or the accepted CI base or exact approval is unavailable".to_string(),
                 affected_paths: vec![".decapod/config.toml".to_string()],
                 required_steps: vec![
-                    "Inspect the exact candidate and accepted target. In CI, fetch the protected base under origin and validate the candidate commit.".to_string(),
-                    "Preserve the accepted proof policy or obtain an exact transition approval. Run `decapod govern policy approve --id <transition-id> --scope repo.pr-readiness.v1` for local or Cloud approval.".to_string(),
-                    "Pass a maintainer-signed receipt in DECAPOD_REPO_TRANSITION_APPROVAL for CI, or pass the authenticated Cloud decision ID in DECAPOD_REPO_TRANSITION_DECISION_ID for Cloud validation.".to_string(),
+                    "Inspect the exact candidate diff, transition ID (`<transition-id>`), and changed proof-relevant paths before PR review/merge.".to_string(),
+                    "Preserve the accepted proof policy or provide an independently verified exact transition approval for `<transition-id>` under scope `repo.pr-readiness.v1`.".to_string(),
+                    "For CI, pass a maintainer-signed receipt in DECAPOD_REPO_TRANSITION_APPROVAL; for Cloud validation, pass an authenticated Cloud decision ID in DECAPOD_REPO_TRANSITION_DECISION_ID (or merge via PR review when configured).".to_string(),
                 ],
                 autonomous_remediation_permitted: false,
                 human_authorization_required: true,
@@ -1535,6 +1535,7 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
         }
     }
 
+    let mut transition_diag: Option<PolicyTransitionDiagnostic> = None;
     let verdict = if rule.rule.forbidden_scope_hit(&context.changed_paths)
         && matches!(
             rule.effective_severity,
@@ -1553,13 +1554,17 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
             "decapod.evidence.validator" => evaluate_evidence_rule(rule, context),
             "decapod.workunit" => evaluate_workunit_rule(rule, context),
             "decapod.publication" => evaluate_publication_rule(context),
-            "decapod.policy.transition" => evaluate_policy_transition_rule(context),
+            "decapod.policy.transition" => {
+                let (verdict, diag) = evaluate_policy_transition_rule(context);
+                transition_diag = diag;
+                verdict
+            }
             _ => RuleVerdict::Unverifiable,
         }
     };
 
     let severity = rule.effective_severity.clone();
-    let remediation = if matches!(
+    let mut remediation = if matches!(
         verdict,
         RuleVerdict::Fail | RuleVerdict::Unverifiable | RuleVerdict::Stale
     ) {
@@ -1567,6 +1572,22 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
     } else {
         None
     };
+
+    if verdict == RuleVerdict::Fail
+        && let (Some(rem), Some(diag)) = (remediation.as_mut(), transition_diag.as_ref())
+    {
+        rem.observed_condition = diag.detail.clone();
+        for path in &diag.changed_paths {
+            if !rem.affected_paths.contains(path) {
+                rem.affected_paths.push(path.clone());
+            }
+        }
+        if let Some(tid) = diag.transition_id.as_deref() {
+            for step in &mut rem.required_steps {
+                *step = step.replace("<transition-id>", tid);
+            }
+        }
+    }
 
     let verdict_for_message = verdict.clone();
 
@@ -1578,10 +1599,19 @@ pub fn evaluate_rule(rule: &ResolvedRule, context: &RuleEvaluationContext) -> Ru
         evidence_refs: context.evidence_artifacts.keys().cloned().collect(),
         message: match verdict_for_message {
             RuleVerdict::Pass => "Rule passed".to_string(),
-            RuleVerdict::Fail => format!(
-                "Rule violated: {}",
-                rule.rule.remediation.violation_description
-            ),
+            RuleVerdict::Fail => {
+                if let Some(diag) = transition_diag.as_ref() {
+                    format!(
+                        "Rule violated: {} — {}",
+                        rule.rule.remediation.violation_description, diag.detail
+                    )
+                } else {
+                    format!(
+                        "Rule violated: {}",
+                        rule.rule.remediation.violation_description
+                    )
+                }
+            }
             RuleVerdict::Stale => format!(
                 "Rule stale: evidence bound to a different governing identity ({})",
                 stale_evidence.join(", ")
@@ -1931,7 +1961,15 @@ fn evaluate_publication_rule(context: &RuleEvaluationContext) -> RuleVerdict {
     }
 }
 
-fn evaluate_policy_transition_rule(context: &RuleEvaluationContext) -> RuleVerdict {
+struct PolicyTransitionDiagnostic {
+    detail: String,
+    transition_id: Option<String>,
+    changed_paths: Vec<String>,
+}
+
+fn evaluate_policy_transition_rule(
+    context: &RuleEvaluationContext,
+) -> (RuleVerdict, Option<PolicyTransitionDiagnostic>) {
     use crate::core::repository_profile::transition_approval::ApprovalInput;
     evaluate_policy_transition_with_approval(
         context,
@@ -1942,18 +1980,30 @@ fn evaluate_policy_transition_rule(context: &RuleEvaluationContext) -> RuleVerdi
 fn evaluate_policy_transition_with_approval(
     context: &RuleEvaluationContext,
     approval: crate::core::repository_profile::transition_approval::ApprovalInput,
-) -> RuleVerdict {
+) -> (RuleVerdict, Option<PolicyTransitionDiagnostic>) {
     use crate::core::repository_profile::{
-        REQUIRED_PROFILE, transition_approval::git_object, verify_accepted_transition,
+        REQUIRED_PROFILE, changed_inventory_paths_between, repo_policy_transition_id,
+        transition_approval::git_object, verify_accepted_transition,
     };
     use crate::core::validation_runtime::proof_configuration;
     use crate::core::workspace::{base_ref_for_branch, resolve_base_branch};
 
+    let fail_diag = |detail: String, transition_id: Option<String>, changed_paths: Vec<String>| {
+        (
+            RuleVerdict::Fail,
+            Some(PolicyTransitionDiagnostic {
+                detail,
+                transition_id,
+                changed_paths,
+            }),
+        )
+    };
+
     let Some(root) = context.repo_root.as_deref() else {
-        return RuleVerdict::Pass;
+        return (RuleVerdict::Pass, None);
     };
     if !root.join(".git").exists() {
-        return RuleVerdict::Pass;
+        return (RuleVerdict::Pass, None);
     }
     let config = ".decapod/config.toml";
     let git_text = |args: &[&str]| {
@@ -1964,10 +2014,22 @@ fn evaluate_policy_transition_with_approval(
     let candidate = match std::fs::read(root.join(config)) {
         Ok(bytes) => match proof_configuration(&bytes) {
             Ok(candidate) => candidate,
-            Err(_) => return RuleVerdict::Fail,
+            Err(error) => {
+                return fail_diag(
+                    format!("Candidate `.decapod/config.toml` proof config is invalid: {error}"),
+                    None,
+                    vec![],
+                );
+            }
         },
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Default::default(),
-        Err(_) => return RuleVerdict::Fail,
+        Err(error) => {
+            return fail_diag(
+                format!("Failed to read candidate `.decapod/config.toml`: {error}"),
+                None,
+                vec![],
+            );
+        }
     };
     let candidate_is_local = candidate
         .required_profile
@@ -1997,46 +2059,77 @@ fn evaluate_policy_transition_with_approval(
     } else {
         base_ref_for_branch(root, &resolve_base_branch(root, None))
     };
-    let missing_base = if context.is_ci && (candidate_is_local || approval.ci_target.is_some()) {
-        RuleVerdict::Fail
-    } else {
-        RuleVerdict::Pass
+    let missing_base = || {
+        if context.is_ci && (candidate_is_local || approval.ci_target.is_some()) {
+            fail_diag(
+                "Accepted CI base ref is unavailable under `refs/remotes/origin/` to verify the `repo.pr-readiness.v1` contract.".to_string(),
+                None,
+                vec![],
+            )
+        } else {
+            (RuleVerdict::Pass, None)
+        }
     };
     let Some(base_ref) = base_ref else {
-        return missing_base;
+        return missing_base();
     };
     let Some(base_sha) = git_text(&["rev-parse", "--verify", &format!("{base_ref}^{{commit}}")])
     else {
-        return missing_base;
+        return missing_base();
     };
     let Ok(entries) = git_object(root, &["ls-tree", &base_sha, "--", config]) else {
-        return RuleVerdict::Fail;
+        return fail_diag(
+            format!("Failed to inspect accepted `{config}` at base commit {base_sha}."),
+            None,
+            vec![],
+        );
     };
     if entries.is_empty() {
-        return RuleVerdict::Pass;
+        return (RuleVerdict::Pass, None);
     }
     let Ok(accepted_toml) = git_object(root, &["show", &format!("{base_sha}:{config}")]) else {
-        return RuleVerdict::Fail;
+        return fail_diag(
+            format!("Failed to load accepted `{config}` at base commit {base_sha}."),
+            None,
+            vec![],
+        );
     };
     let Ok(accepted) = proof_configuration(&accepted_toml) else {
-        return RuleVerdict::Fail;
+        return fail_diag(
+            format!("Accepted `{config}` at base commit {base_sha} is invalid."),
+            None,
+            vec![],
+        );
     };
     if accepted
         .required_profile
         .as_ref()
         .is_none_or(|profile| profile.id != REQUIRED_PROFILE)
     {
-        return RuleVerdict::Pass;
+        return (RuleVerdict::Pass, None);
     }
     let Some(head_sha) = git_text(&["rev-parse", "--verify", "HEAD^{commit}"]) else {
-        return RuleVerdict::Fail;
+        return fail_diag(
+            "Failed to resolve `HEAD^{commit}` for `repo.pr-readiness.v1` transition check."
+                .to_string(),
+            None,
+            vec![],
+        );
     };
     if context.is_ci {
         let Ok(bytes) = git_object(root, &["show", &format!("{head_sha}:{config}")]) else {
-            return RuleVerdict::Fail;
+            return fail_diag(
+                format!("Failed to load committed `{config}` at `HEAD` ({head_sha})."),
+                None,
+                vec![],
+            );
         };
         if !proof_configuration(&bytes).is_ok_and(|committed| candidate == committed) {
-            return RuleVerdict::Fail;
+            return fail_diag(
+                format!("Working tree `{config}` differs from committed `{head_sha}:{config}`."),
+                None,
+                vec![],
+            );
         }
     }
     match verify_accepted_transition(
@@ -2051,8 +2144,28 @@ fn evaluate_policy_transition_with_approval(
         candidate.repository_contract.as_ref(),
         approval,
     ) {
-        Ok(()) => RuleVerdict::Pass,
-        Err(_) => RuleVerdict::Fail,
+        Ok(()) => (RuleVerdict::Pass, None),
+        Err(error) => {
+            let transition_id = match (
+                accepted.required_profile.as_ref(),
+                candidate.required_profile.as_ref(),
+                accepted.repository_contract.as_ref(),
+                candidate.repository_contract.as_ref(),
+            ) {
+                (Some(ap), Some(cp), Some(ac), Some(cc)) => repo_policy_transition_id(
+                    &base_sha,
+                    &head_sha,
+                    &ap.reviewed_sources_digest,
+                    &cp.reviewed_sources_digest,
+                    &ac.reviewed_commands_digest,
+                    &cc.reviewed_commands_digest,
+                )
+                .ok(),
+                _ => None,
+            };
+            let changed_paths = changed_inventory_paths_between(root, &base_sha, &head_sha);
+            fail_diag(error.to_string(), transition_id, changed_paths)
+        }
     }
 }
 
@@ -2530,7 +2643,38 @@ mod tests {
             .unwrap();
         let mut context = terminal_test_context(None, None);
         context.repo_root = Some(root.clone());
-        assert_eq!(evaluate_rule(&rule, &context).verdict, RuleVerdict::Fail);
+        let failed_eval = evaluate_rule(&rule, &context);
+        assert_eq!(failed_eval.verdict, RuleVerdict::Fail);
+        assert!(
+            failed_eval.message.contains(&id),
+            "expected transition ID {id} in rule message: {}",
+            failed_eval.message
+        );
+        assert!(
+            failed_eval.message.contains(&previous_digest) && failed_eval.message.contains(&digest),
+            "expected old/new source digests in rule message: {}",
+            failed_eval.message
+        );
+        let failed_rem = failed_eval.remediation.expect("remediation");
+        assert!(failed_rem.human_authorization_required);
+        assert!(!failed_rem.autonomous_remediation_permitted);
+        assert!(
+            failed_rem.observed_condition.contains(&id),
+            "expected transition ID in observed_condition: {}",
+            failed_rem.observed_condition
+        );
+        assert!(
+            failed_rem
+                .required_steps
+                .iter()
+                .all(|s| !s.contains("<transition-id>")),
+            "expected concrete transition ID in required_steps: {:?}",
+            failed_rem.required_steps
+        );
+        let human_guidance =
+            crate::core::validation_runtime::ValidationGuidance::for_human_authorization_required();
+        assert_eq!(human_guidance.owner, "human");
+        assert_eq!(human_guidance.next_action, "request_human_authorization");
         let store = Store {
             kind: StoreKind::Repo,
             root: root.join(".decapod/data"),
@@ -2589,14 +2733,15 @@ mod tests {
         let now = time::OffsetDateTime::now_utc().unix_timestamp();
         let valid = || signed(&id, &maintainer, now - 10, now + 900);
         assert_eq!(
-            evaluate_policy_transition_with_approval(&context, valid()),
+            evaluate_policy_transition_with_approval(&context, valid()).0,
             RuleVerdict::Pass,
         );
         assert_eq!(
             evaluate_policy_transition_with_approval(
                 &context,
                 signed(&id, &maintainer, now - 100, now - 10)
-            ),
+            )
+            .0,
             RuleVerdict::Fail,
         );
 
@@ -2608,7 +2753,7 @@ mod tests {
         );
         let new_head = git(&ci, &["rev-parse", "HEAD"]);
         assert_eq!(
-            evaluate_policy_transition_with_approval(&context, valid()),
+            evaluate_policy_transition_with_approval(&context, valid()).0,
             RuleVerdict::Fail,
         );
         let new_id = repository_profile::repo_policy_transition_id(
@@ -2624,14 +2769,16 @@ mod tests {
             evaluate_policy_transition_with_approval(
                 &context,
                 signed(&new_id, &candidate_key, now - 10, now + 900)
-            ),
+            )
+            .0,
             RuleVerdict::Fail,
         );
         assert_eq!(
             evaluate_policy_transition_with_approval(
                 &context,
                 signed(&new_id, &maintainer, now - 10, now + 900)
-            ),
+            )
+            .0,
             RuleVerdict::Pass,
         );
     }

@@ -1,5 +1,15 @@
 # Validation
 
+## `#1949` `repo.pr-readiness.v1` transition scoping, diagnostics, guidance & `dactyl-db 0.19.1` WAL checkpoint verification
+
+Verified on `origin/master` (`84be80796`) inside isolated worktree `agent/clack-june-db301f84-74f7-46aa-8274-45c738d9489f/bugs_01m8abegxx1kjwxg-fix-1949`:
+
+- `cargo fmt --all -- --check`: passed.
+- `cargo test --lib repository_profile`: verifies `unreferenced_scripts_transition_qualifies_without_manual_approval` (`ci_local = false` and `true`) and `proof_referenced_script_and_transitively_referenced_helper_still_fail_closed_with_diagnostics`.
+- `cargo test --lib validation_rules`: verifies `RuleEvaluationResult.message`, `remediation.observed_condition`, `remediation.required_steps` transition ID substitution, and `ValidationGuidance::for_human_authorization_required()`.
+- `cargo test --test sqlite_maintenance governed_db_maintenance_wal_checkpoint`: verifies `decapod data db maintain wal-checkpoint` and RPC `data.database.wal_checkpoint` execute via `Connection::execute`, return `null` for unavailable frame counters, and preserve Dactyl's `sqlite3_stmt_readonly` read guard.
+- `cargo test --test consumer_readiness unreferenced_packaging_script`: verifies end-to-end `repo.pr-readiness.v1` validation admits unreferenced `scripts/` packaging edits without manual approval.
+
 ## Dactyl `0.19.1` dependency, Bazel lockfile & security verification
 
 - Verified `dactyl-db = "=0.19.1"` against `cargo update -p dactyl-db`, `/opt/homebrew/bin/bazelisk mod deps --lockfile_mode=update`, `/opt/homebrew/bin/bazelisk test //:cargo_inputs_policy`, `cargo fmt --all -- --check`, `cargo test --test release_dependency_policy`, `cargo test --test trust_egress_gate`, and `cargo audit -q` (`0` vulnerabilities).
@@ -2867,7 +2877,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

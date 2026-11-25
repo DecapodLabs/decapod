@@ -2181,9 +2181,13 @@ pub fn run_maintain_lock_release_own(
 
 /// Execute `db.wal.checkpoint` (bounded non-destructive SQLite PASSIVE WAL checkpoint).
 ///
-/// Uses `PRAGMA wal_checkpoint(PASSIVE)` under a bounded shared `StorageLock` and bounded
-/// connection busy timeout. Never deletes `-wal`/`-shm` sidecars, never escalates to
-/// `TRUNCATE`/`RESTART`, and never interrupts concurrent readers.
+/// Uses `PRAGMA wal_checkpoint(PASSIVE)` via Dactyl's write path (`Connection::execute`) under a
+/// bounded shared `StorageLock` and bounded connection busy timeout so `dactyl-db`'s
+/// `sqlite3_stmt_readonly` safeguard remains intact on read operations. Never deletes
+/// `-wal`/`-shm` sidecars, never escalates to `TRUNCATE`/`RESTART`, and never interrupts
+/// concurrent readers. Because `dactyl_db::Connection::write` does not return PRAGMA result rows,
+/// `busy`, `log_frames`, and `checkpointed_frames` are reported as `null` rather than fabricated
+/// zeros.
 pub fn run_maintain_wal_checkpoint(
     policy: &CanonicalMaintenancePolicy,
     timeout_ms: u64,
@@ -2220,19 +2224,19 @@ pub fn run_maintain_wal_checkpoint(
                 let dec = DecapodError::from(e);
                 classify_dactyl_op_error("WAL_CHECKPOINT_OPEN_FAILED", &dec)
             })?;
-    let (busy, log_frames, checkpointed_frames): (i64, i64, i64) = conn
-        .query_row("PRAGMA wal_checkpoint(PASSIVE)", [], |row| {
-            Ok((row.get(0)?, row.get(1)?, row.get(2)?))
-        })
-        .map_err(|e| ("WAL_CHECKPOINT_FAILED", e.to_string()))?;
+    conn.execute("PRAGMA wal_checkpoint(PASSIVE)", [])
+        .map_err(|e| {
+            let dec = DecapodError::from(e);
+            classify_dactyl_op_error("WAL_CHECKPOINT_FAILED", &dec)
+        })?;
     Ok((
         serde_json::json!({
             "status": "ok",
             "mode": "passive",
             "database": crate::core::schemas::LOCAL_DB_NAME,
-            "busy": busy != 0,
-            "log_frames": log_frames,
-            "checkpointed_frames": checkpointed_frames,
+            "busy": serde_json::Value::Null,
+            "log_frames": serde_json::Value::Null,
+            "checkpointed_frames": serde_json::Value::Null,
             "automatic_repair": false,
         }),
         Some("<repo>/.decapod/data/decapod.db".to_string()),
