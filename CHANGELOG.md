@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.165.1](https://github.com/DecapodLabs/decapod/compare/v0.165.0...v0.165.1) - 2026-11-25
+
+### Other
+
+- *(deps)* reconcile dactyl-db to =0.19.1 release
+
 ## [0.165.0](https://github.com/DecapodLabs/decapod/compare/v0.164.1...v0.165.0) - 2026-11-25
 
 ### Added
