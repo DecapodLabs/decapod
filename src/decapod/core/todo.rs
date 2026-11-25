@@ -604,10 +604,10 @@ pub fn task_journal_verify(root: &Path) -> Result<JsonValue, error::DecapodError
         return Err(error::DecapodError::NotImplemented("task journal requires the local canonical task schema; cloud mode never falls back locally".into()));
     }
     let path = todo_db_path(root);
-    let conn = crate::core::db::db_connect_for_validate(path.to_str().ok_or_else(|| {
+    let _ = path.to_str().ok_or_else(|| {
         error::DecapodError::ValidationError("task database path is not UTF-8".into())
-    })?)?;
-    task_journal::verify(&conn)
+    })?;
+    crate::core::pool::global_pool().with_read(&path, task_journal::verify)
 }
 
 pub fn task_journal_restore(

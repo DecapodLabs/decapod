@@ -1,5 +1,13 @@
 # Intent
 
+## Wave 3 derived projection replay, compaction growth safety, and knowledge convergence (#1936, #1630, #657)
+
+Hardens Decapod's derived-data replay, lossless storage compaction, and provenance-aware knowledge convergence without adding a second memory store or parallel event broker:
+
+- **Canonical stream vs. derived-view inventory & replay contracts (`#1936`, `docs/derived-data-and-replay.md`, `tests/derived_replay_1936.rs`)**: Inventories canonical `decapod.db:events` streams (`events::STREAMS`) against derived task, workunit/workspace, knowledge/context, and validation-proof views; proves clean snapshot + suffix parity against resumable budgeted cursors (`task_journal::verify_with_budget`), idempotent overlapping batch replay, fail-closed gap/out-of-order/mid-read-snapshot-drift rejection (`TASK_JOURNAL_INCOMPLETE_HISTORY`, `TASK_JOURNAL_CONFLICT`, `TASK_JOURNAL_SNAPSHOT_CHANGED`), torn/corrupt `workunits/<task_id>.json` recovery (`workunit::recover_workunit`) without granting custody or publication, and uniform `task.delegation.{policy,reserve}` suffix exemptions across `src/decapod/core/task_journal.rs`.
+- **Compaction growth safety, concurrency & multi-stream pagination (`#1630`, `src/decapod/core/storage_compaction.rs`, `src/decapod/core/events.rs`, `src/decapod/core/todo.rs`)**: Fixes composite `(seq, event_id)` keyset pagination in `compact_historical_events`, `collect_event_embedded_component_keys`, and `logical_events_inventory` (preventing multi-stream tied-`seq` skips at 256-row page boundaries), routes `events::{query,query_all_paged,actors}` and `todo::task_journal_verify` through `pool::global_pool().with_read` (eliminating concurrent reader/writer `SQLITE_IOERR_LOCK` races), reports candidate `unreferenced_components` in `compact_datastore_lossless` dry-run previews, and verifies skewed multi-stream compaction, concurrent reader/writer/compactor safety, pre/post-activation rollback, downgrade refusal, and index/freelist amplification bounds.
+- **Knowledge convergence, pagination & procedural-promotion firewall (`#657`, `src/decapod/plugins/knowledge.rs`)**: Proves full rebuild vs. incremental `KnowledgeContext` equality across added/merged/superseded/revoked/duplicated entries, replaces the 2048-row cutoff in `read_attestations_and_feedback_on_conn` with `(seq, event_id)` keyset pagination and `events::reconstruct_stored_payload`, excludes malformed provenance (`malformed_provenance`) in `resolve_context`, and enforces `ensure_promotion_source_active` (`PROMOTION_FIREWALL_BLOCKED`) across `record_promotion_event` and `procedural/` additions so obsolete/revoked/expired knowledge cannot promote.
+
 ## Datastore and evidence encoding compatibility corpus, rollback fix, and qualification (#1937; Refs DecapodLabs/dactyl#146, DecapodLabs/propodus#227)
 
 Qualifies Decapod's local SQLite datastore and evidence encoding compatibility across historical upgrades, floor refusals, malformed inputs, duplicate/interrupted migrations, and local-hosted logical parity:
@@ -1405,15 +1413,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 642 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (285), `tests/` (290)
-- Core modules: 148 | Workflows: 9 | Integration targets: 173
+- Tracked significant codebase files: 643 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (285), `tests/` (291)
+- Core modules: 148 | Workflows: 9 | Integration targets: 174
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
+- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -113,11 +113,11 @@ pub fn resolve_context(
                     .map(|count| count == 1)
                 };
                 let typed_available = table_exists("nodes")?;
-                let (attestations, feedback) = if table_exists("events")? {
-                    read_attestations_and_feedback_on_conn(conn)?
-                } else {
-                    (BTreeMap::new(), BTreeMap::new())
-                };
+        let (attestations, feedback) = if table_exists("events")? {
+            read_attestations_and_feedback_on_conn(conn)?
+        } else {
+            (BTreeMap::new(), BTreeMap::new())
+        };
                 if !table_exists("knowledge")? {
                     return Ok((Vec::new(), typed_available, false, attestations, feedback));
                 }
@@ -365,6 +365,12 @@ pub fn resolve_context(
             Some("credential_material")
         } else if record.provenance.is_empty() {
             Some("unavailable_provenance")
+        } else if record
+            .provenance
+            .iter()
+            .any(|source| !is_valid_provenance(source))
+        {
+            Some("malformed_provenance")
         } else {
             None
         };
@@ -481,60 +487,93 @@ type FeedbackSummaryMap = BTreeMap<String, KnowledgeFeedbackSummary>;
 
 fn read_attestations_and_feedback_on_conn(
     conn: &crate::core::db::Connection,
-) -> Result<(WriteAttestationMap, FeedbackSummaryMap), crate::core::db::Error> {
+) -> Result<(WriteAttestationMap, FeedbackSummaryMap), error::DecapodError> {
     let mut attestations: WriteAttestationMap = BTreeMap::new();
     let mut feedback: FeedbackSummaryMap = BTreeMap::new();
-    let mut stmt = conn.prepare(
-        "SELECT event_type, payload FROM events
-         WHERE stream = 'knowledge'
-         ORDER BY seq ASC, event_id ASC
-         LIMIT 2048",
-    )?;
-    let rows = stmt.query_map([], |row| {
-        Ok((row.get::<_, Option<String>>(0)?, row.get::<_, String>(1)?))
-    })?;
-    for row in rows {
-        let (ev_type, raw) = row?;
-        let Ok(val) = serde_json::from_str::<serde_json::Value>(&raw) else {
-            continue;
-        };
-        let effective_type = ev_type
-            .as_deref()
-            .or_else(|| val.get("event_type").and_then(serde_json::Value::as_str))
-            .unwrap_or("");
-        if effective_type == "knowledge.write_attestation" {
-            if let (Some(entry_id), Some(prov), Some(sha)) = (
-                val.get("entry_id").and_then(serde_json::Value::as_str),
-                val.get("provenance").and_then(serde_json::Value::as_str),
-                val.get("observed_source_sha256")
-                    .and_then(serde_json::Value::as_str),
-            ) && sha != "unavailable"
-            {
-                attestations
-                    .entry(entry_id.to_string())
-                    .or_default()
-                    .insert(prov.to_string(), sha.to_string());
-            }
-            continue;
+    let mut last_seq = 0u64;
+    let mut last_event_id = String::new();
+    loop {
+        let mut stmt = conn.prepare(
+            "SELECT seq, event_id, ts, event_type, actor, subject_kind, subject_id, payload
+             FROM events
+             WHERE stream = 'knowledge'
+               AND (seq > ?1 OR (seq = ?1 AND event_id > ?2))
+             ORDER BY seq ASC, event_id ASC
+             LIMIT 512",
+        )?;
+        let rows = stmt.query_map(params![last_seq, last_event_id], |row| {
+            Ok((
+                row.get::<_, u64>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, String>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, Option<String>>(6)?,
+                row.get::<_, String>(7)?,
+            ))
+        })?;
+        let batch = rows.collect::<Result<Vec<_>, _>>()?;
+        if batch.is_empty() {
+            break;
         }
-        if let (Some(outcome), Some(ids)) = (
-            val.get("outcome").and_then(serde_json::Value::as_str),
-            val.get("used_ids")
-                .and_then(serde_json::Value::as_array)
-                .filter(|arr| !arr.is_empty())
-                .or_else(|| {
-                    val.get("returned_ids")
-                        .and_then(serde_json::Value::as_array)
-                }),
-        ) {
-            for id_val in ids {
-                if let Some(id) = id_val.as_str() {
-                    let summary = feedback.entry(id.to_string()).or_default();
-                    match outcome {
-                        "helped" => summary.helped += 1,
-                        "neutral" => summary.neutral += 1,
-                        "hurt" => summary.hurt += 1,
-                        _ => summary.unknown += 1,
+        let last = batch.last().expect("non-empty batch");
+        last_seq = last.0;
+        last_event_id = last.1.clone();
+        for (_seq, event_id, ts, ev_type, actor, subject_kind, subject_id, raw) in batch {
+            let Ok(val) = events::reconstruct_stored_payload(
+                events::KNOWLEDGE,
+                &event_id,
+                &ts,
+                &ev_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &raw,
+            ) else {
+                continue;
+            };
+            let effective_type = if ev_type.is_empty() {
+                val.get("event_type")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("")
+            } else {
+                ev_type.as_str()
+            };
+            if effective_type == "knowledge.write_attestation" {
+                if let (Some(entry_id), Some(prov), Some(sha)) = (
+                    val.get("entry_id").and_then(serde_json::Value::as_str),
+                    val.get("provenance").and_then(serde_json::Value::as_str),
+                    val.get("observed_source_sha256")
+                        .and_then(serde_json::Value::as_str),
+                ) && sha != "unavailable"
+                {
+                    attestations
+                        .entry(entry_id.to_string())
+                        .or_default()
+                        .insert(prov.to_string(), sha.to_string());
+                }
+                continue;
+            }
+            if let (Some(outcome), Some(ids)) = (
+                val.get("outcome").and_then(serde_json::Value::as_str),
+                val.get("used_ids")
+                    .and_then(serde_json::Value::as_array)
+                    .filter(|arr| !arr.is_empty())
+                    .or_else(|| {
+                        val.get("returned_ids")
+                            .and_then(serde_json::Value::as_array)
+                    }),
+            ) {
+                for id_val in ids {
+                    if let Some(id) = id_val.as_str() {
+                        let summary = feedback.entry(id.to_string()).or_default();
+                        match outcome {
+                            "helped" => summary.helped += 1,
+                            "neutral" => summary.neutral += 1,
+                            "hurt" => summary.hurt += 1,
+                            _ => summary.unknown += 1,
+                        }
                     }
                 }
             }
@@ -687,6 +726,25 @@ pub fn add_attested_knowledge(
     Ok(result)
 }
 
+fn is_valid_provenance(provenance: &str) -> bool {
+    use fancy_regex::Regex;
+    let prov_re = Regex::new(
+        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9_]+)$",
+    )
+    .unwrap();
+    if !prov_re.is_match(provenance).unwrap_or(false) {
+        return false;
+    }
+    if let Some(file) = provenance.strip_prefix("file:") {
+        let rel = file.split('#').next().unwrap_or("");
+        return !rel.is_empty()
+            && Path::new(rel)
+                .components()
+                .all(|part| matches!(part, std::path::Component::Normal(_)));
+    }
+    true
+}
+
 /// Scope is an applicability label, never an authorization or promotion claim.
 pub fn add_scoped_knowledge(
     store: &Store,
@@ -702,13 +760,7 @@ pub fn add_scoped_knowledge(
             "knowledge contains credential material".into(),
         ));
     }
-    use fancy_regex::Regex;
-    let prov_re = Regex::new(
-        r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9_]+)$",
-    )
-    .unwrap();
-
-    if !prov_re.is_match(args.provenance).unwrap_or(false) {
+    if !is_valid_provenance(args.provenance) {
         return Err(error::DecapodError::ValidationError(format!(
             "Invalid provenance format: '{}'. Must match scheme (file:|url:|cmd:|commit:|event:)",
             args.provenance
@@ -764,6 +816,7 @@ pub fn add_scoped_knowledge(
                 "promotion event '{event_id}' is missing approved_by"
             )));
         }
+        ensure_promotion_source_active(store, &event.source_entry_id)?;
     }
 
     let broker = DbBroker::new(&store.root);
@@ -1096,23 +1149,59 @@ pub fn knowledge_history(
     store: &Store,
     id: &str,
 ) -> Result<Vec<serde_json::Value>, error::DecapodError> {
-    DbBroker::new(&store.root).with_conn(&knowledge_db_path(&store.root), "decapod", None,
-        "knowledge.history", |conn| {
-        let mut statement = conn.prepare("SELECT payload FROM events WHERE stream = 'knowledge'
-            AND event_type = 'knowledge.before_correction' AND json_extract(payload, '$.entry.id') = ?1
-            ORDER BY seq, event_id LIMIT 65")?;
-        let rows = statement.query_map([id], |row| row.get::<_, String>(0))?;
-        let mut history = Vec::new(); let mut bytes = 0usize;
-        for row in rows {
-            let raw = row?; bytes += raw.len();
-            if history.len() >= 64 || bytes > 1024 * 1024 {
-                return Err(error::DecapodError::ValidationError("knowledge history exceeds bounded audit; preserve existing journal for explicit recovery".into()));
+    DbBroker::new(&store.root).with_conn(
+        &knowledge_db_path(&store.root),
+        "decapod",
+        None,
+        "knowledge.history",
+        |conn| {
+            let mut statement = conn.prepare(
+                "SELECT event_id, ts, event_type, actor, subject_kind, subject_id, payload
+                 FROM events WHERE stream = 'knowledge'
+                   AND event_type = 'knowledge.before_correction'
+                   AND json_extract(payload, '$.entry.id') = ?1
+                 ORDER BY seq, event_id LIMIT 65",
+            )?;
+            let rows = statement.query_map([id], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, Option<String>>(4)?,
+                    row.get::<_, Option<String>>(5)?,
+                    row.get::<_, String>(6)?,
+                ))
+            })?;
+            let mut history = Vec::new();
+            let mut bytes = 0usize;
+            for row in rows {
+                let (event_id, ts, event_type, actor, subject_kind, subject_id, raw) = row?;
+                bytes += raw.len();
+                if history.len() >= 64 || bytes > 1024 * 1024 {
+                    return Err(error::DecapodError::ValidationError(
+                        "knowledge history exceeds bounded audit; preserve existing journal for explicit recovery"
+                            .into(),
+                    ));
+                }
+                let val = events::reconstruct_stored_payload(
+                    events::KNOWLEDGE,
+                    &event_id,
+                    &ts,
+                    &event_type,
+                    &actor,
+                    subject_kind.as_deref(),
+                    subject_id.as_deref(),
+                    &raw,
+                )
+                .map_err(|e| {
+                    error::DecapodError::ValidationError(format!("invalid knowledge history: {e}"))
+                })?;
+                history.push(val);
             }
-            history.push(serde_json::from_str(&raw).map_err(|e|
-                error::DecapodError::ValidationError(format!("invalid knowledge history: {e}")))?);
-        }
-        Ok(history)
-    })
+            Ok(history)
+        },
+    )
 }
 
 /// Log a retrieval feedback event (append-only).
@@ -1270,10 +1359,13 @@ pub fn record_promotion_event(
         ));
     }
 
+    let source_entry_id = input.source_entry_id.trim();
+    ensure_promotion_source_active(store, source_entry_id)?;
+
     let event = KnowledgePromotionEvent {
         event_id: crate::core::ulid::new_ulid(),
         ts: now_iso(),
-        source_entry_id: input.source_entry_id.trim().to_string(),
+        source_entry_id: source_entry_id.to_string(),
         target_class: "procedural".to_string(),
         evidence_refs,
         approved_by: input.approved_by.trim().to_string(),
@@ -1289,6 +1381,53 @@ pub fn record_promotion_event(
     )?;
 
     Ok(event)
+}
+
+fn ensure_promotion_source_active(
+    store: &Store,
+    source_entry_id: &str,
+) -> Result<(), error::DecapodError> {
+    let db_path = knowledge_db_path(&store.root);
+    if !db_path.exists() {
+        return Ok(());
+    }
+    let existing = DbBroker::new(&store.root).with_conn(
+        &db_path,
+        "decapod",
+        None,
+        "knowledge.get",
+        |conn| {
+            let has_knowledge = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='knowledge'",
+                    [],
+                    |r| r.get::<_, i64>(0),
+                )
+                .map(|c| c == 1)?;
+            if !has_knowledge {
+                return Ok(None);
+            }
+            read_knowledge_on_conn(conn, source_entry_id)
+        },
+    )?;
+    if let Some(entry) = existing {
+        if entry.status != "active" {
+            return Err(error::DecapodError::ValidationError(format!(
+                "PROMOTION_FIREWALL_BLOCKED: cannot promote non-active knowledge entry '{}' (status={})",
+                source_entry_id, entry.status
+            )));
+        }
+        let now_secs = parse_epoch_z(&now_iso()).unwrap_or(0);
+        if let Some(expires_ts) = entry.expires_ts.as_deref()
+            && !parse_epoch_z(expires_ts).is_ok_and(|exp| exp > now_secs)
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "PROMOTION_FIREWALL_BLOCKED: cannot promote expired knowledge entry '{}'",
+                source_entry_id
+            )));
+        }
+    }
+    Ok(())
 }
 
 fn is_procedural_entry_id(id: &str) -> bool {

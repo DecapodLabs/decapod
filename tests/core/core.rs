@@ -8,6 +8,8 @@ mod datastore_encoding_compat_1937;
 mod datastore_relational_compaction;
 #[path = "../datastore_scope.rs"]
 mod datastore_scope;
+#[path = "../derived_replay_1936.rs"]
+mod derived_replay_1936;
 #[path = "../lease_fencing_consistency_1935.rs"]
 mod lease_fencing_consistency_1935;
 

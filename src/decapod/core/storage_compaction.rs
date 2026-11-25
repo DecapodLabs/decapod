@@ -404,16 +404,18 @@ pub fn compact_historical_events(conn: &Connection) -> Result<EventCompactionRep
     }
     let mut report = EventCompactionReport::default();
     let mut last_seq = 0u64;
+    let mut last_event_id = String::new();
 
     loop {
         let mut stmt = conn.prepare(
             "SELECT seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events
-             WHERE stream <> 'federation' AND seq > ?1
-             ORDER BY seq ASC
+             WHERE stream <> 'federation'
+               AND (seq > ?1 OR (seq = ?1 AND event_id > ?2))
+             ORDER BY seq ASC, event_id ASC
              LIMIT 256",
         )?;
-        let rows = stmt.query_map([last_seq], |r| {
+        let rows = stmt.query_map(params![last_seq, last_event_id], |r| {
             Ok((
                 r.get::<_, u64>(0)?,
                 r.get::<_, String>(1)?,
@@ -430,7 +432,9 @@ pub fn compact_historical_events(conn: &Connection) -> Result<EventCompactionRep
         if batch.is_empty() {
             break;
         }
-        last_seq = batch.last().expect("non-empty batch").0;
+        let last = batch.last().expect("non-empty batch");
+        last_seq = last.0;
+        last_event_id = last.2.clone();
 
         for (
             _seq,
@@ -519,24 +523,31 @@ fn collect_event_embedded_component_keys(
         return Ok(());
     }
     let mut last_seq = 0u64;
+    let mut last_event_id = String::new();
     loop {
         let mut stmt = conn.prepare(
-            "SELECT seq, payload FROM events
+            "SELECT seq, event_id, payload FROM events
              WHERE stream = 'todo'
                AND event_type IN ('task.journal.checkpoint', 'task.transfer.exported', 'task.transfer.imported')
-               AND seq > ?1
-             ORDER BY seq ASC
+               AND (seq > ?1 OR (seq = ?1 AND event_id > ?2))
+             ORDER BY seq ASC, event_id ASC
              LIMIT 256",
         )?;
-        let rows = stmt.query_map([last_seq], |r| {
-            Ok((r.get::<_, u64>(0)?, r.get::<_, String>(1)?))
+        let rows = stmt.query_map(params![last_seq, last_event_id], |r| {
+            Ok((
+                r.get::<_, u64>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+            ))
         })?;
         let batch = rows.collect::<Result<Vec<_>, _>>()?;
         if batch.is_empty() {
             break;
         }
-        last_seq = batch.last().expect("non-empty batch").0;
-        for (_seq, raw) in batch {
+        let last = batch.last().expect("non-empty batch");
+        last_seq = last.0;
+        last_event_id = last.1.clone();
+        for (_seq, _event_id, raw) in batch {
             let Ok(val) = serde_json::from_str::<Value>(&raw) else {
                 continue;
             };
@@ -773,15 +784,16 @@ fn logical_events_inventory(conn: &Connection) -> Result<(u64, String), DecapodE
     let mut hasher = Sha256::new();
     let mut count = 0u64;
     let mut last_seq = 0u64;
+    let mut last_event_id = String::new();
     loop {
         let mut stmt = conn.prepare(
             "SELECT seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events
-             WHERE seq > ?1
+             WHERE (seq > ?1 OR (seq = ?1 AND event_id > ?2))
              ORDER BY seq ASC, event_id ASC
              LIMIT 256",
         )?;
-        let rows = stmt.query_map([last_seq], |r| {
+        let rows = stmt.query_map(params![last_seq, last_event_id], |r| {
             Ok((
                 r.get::<_, u64>(0)?,
                 r.get::<_, String>(1)?,
@@ -798,7 +810,9 @@ fn logical_events_inventory(conn: &Connection) -> Result<(u64, String), DecapodE
         if batch.is_empty() {
             break;
         }
-        last_seq = batch.last().expect("non-empty batch").0;
+        let last = batch.last().expect("non-empty batch");
+        last_seq = last.0;
+        last_event_id = last.2.clone();
         for (seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, raw) in batch {
             count += 1;
             let logical = match events::reconstruct_stored_payload(
@@ -1298,7 +1312,7 @@ pub fn compact_datastore_lossless(
             live_bytes_delta: 0,
             events_compacted: candidate_events,
             prompts_deduplicated: candidate_prompts,
-            components_collected: gc_preview.deleted_components,
+            components_collected: gc_preview.unreferenced_components,
             manifest_sha256: None,
         });
     }

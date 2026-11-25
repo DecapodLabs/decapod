@@ -8,7 +8,6 @@
 //!
 //! Schema filename constants remain solely so migrations can discover old paths.
 
-use crate::core::db;
 use crate::core::db::{Connection, OptionalExtension, params};
 use crate::core::error;
 use crate::core::schemas;
@@ -180,60 +179,61 @@ pub fn query(
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
-    crate::core::storage_compaction::check_read_compatibility(&conn)?;
-    let table_exists = conn.has_table("events")?;
-    if !table_exists {
-        return Ok(Vec::new());
-    }
-    let sql_limit = i64::try_from(limit.max(1)).unwrap_or(i64::MAX);
-    let mut stmt = conn.prepare(
-        "SELECT event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id FROM events
-         WHERE stream = ?1
-         ORDER BY seq DESC, event_id DESC LIMIT ?2",
-    )?;
-    let rows = stmt.query_map(params![stream, sql_limit], |row| {
-        let payload: String = row.get(4)?;
-        Ok((
-            row.get::<_, String>(0)?,
-            row.get::<_, String>(1)?,
-            row.get::<_, u64>(2)?,
-            row.get::<_, String>(3)?,
-            payload,
-            row.get::<_, String>(5)?,
-            row.get::<_, Option<String>>(6)?,
-            row.get::<_, Option<String>>(7)?,
-        ))
-    })?;
-    let mut events = Vec::new();
-    for row in rows {
-        let (event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id) = row?;
-        let payload = reconstruct_stored_payload(
-            stream,
-            &event_id,
-            &ts,
-            &event_type,
-            &actor,
-            subject_kind.as_deref(),
-            subject_id.as_deref(),
-            &payload,
-        )
-        .map_err(|err| {
-            error::DecapodError::ValidationError(format!(
-                "invalid canonical event payload in events for {event_id}: {err}"
+    crate::core::pool::global_pool().with_read(&path, |conn| {
+        crate::core::storage_compaction::check_read_compatibility(conn)?;
+        let table_exists = conn.has_table("events")?;
+        if !table_exists {
+            return Ok(Vec::new());
+        }
+        let sql_limit = i64::try_from(limit.max(1)).unwrap_or(i64::MAX);
+        let mut stmt = conn.prepare(
+            "SELECT event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id FROM events
+             WHERE stream = ?1
+             ORDER BY seq DESC, event_id DESC LIMIT ?2",
+        )?;
+        let rows = stmt.query_map(params![stream, sql_limit], |row| {
+            let payload: String = row.get(4)?;
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, u64>(2)?,
+                row.get::<_, String>(3)?,
+                payload,
+                row.get::<_, String>(5)?,
+                row.get::<_, Option<String>>(6)?,
+                row.get::<_, Option<String>>(7)?,
             ))
         })?;
-        events.push(StoredEvent {
-            stream: stream.to_string(),
-            event_id,
-            ts,
-            seq,
-            event_type,
-            payload,
-            actor,
-        });
-    }
-    Ok(events)
+        let mut events = Vec::new();
+        for row in rows {
+            let (event_id, ts, seq, event_type, payload, actor, subject_kind, subject_id) = row?;
+            let payload = reconstruct_stored_payload(
+                stream,
+                &event_id,
+                &ts,
+                &event_type,
+                &actor,
+                subject_kind.as_deref(),
+                subject_id.as_deref(),
+                &payload,
+            )
+            .map_err(|err| {
+                error::DecapodError::ValidationError(format!(
+                    "invalid canonical event payload in events for {event_id}: {err}"
+                ))
+            })?;
+            events.push(StoredEvent {
+                stream: stream.to_string(),
+                event_id,
+                ts,
+                seq,
+                event_type,
+                payload,
+                actor,
+            });
+        }
+        Ok(events)
+    })
 }
 
 /// Read an entire stream in bounded batches while preserving [`query`]'s
@@ -245,8 +245,7 @@ fn query_all_paged(root: &Path, stream: &str) -> Result<Vec<StoredEvent>, error:
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
-    query_all_on_conn(&conn, stream)
+    crate::core::pool::global_pool().with_read(&path, |conn| query_all_on_conn(conn, stream))
 }
 
 /// Read a stream on the caller's connection so audit repair can inspect and
@@ -621,18 +620,19 @@ pub fn actors(root: &Path, stream: &str) -> Result<Vec<String>, error::DecapodEr
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let conn = db::db_connect_for_validate(&path.to_string_lossy())?;
-    if !conn.has_table(EVENTS_TABLE)? {
-        return Ok(Vec::new());
-    }
-    let mut stmt =
-        conn.prepare("SELECT DISTINCT actor FROM events WHERE stream = ?1 ORDER BY actor ASC")?;
-    let rows = stmt.query_map([stream], |row| row.get::<_, String>(0))?;
-    let mut actors = Vec::new();
-    for row in rows {
-        actors.push(row?);
-    }
-    Ok(actors)
+    crate::core::pool::global_pool().with_read(&path, |conn| {
+        if !conn.has_table(EVENTS_TABLE)? {
+            return Ok(Vec::new());
+        }
+        let mut stmt =
+            conn.prepare("SELECT DISTINCT actor FROM events WHERE stream = ?1 ORDER BY actor ASC")?;
+        let rows = stmt.query_map([stream], |row| row.get::<_, String>(0))?;
+        let mut actors = Vec::new();
+        for row in rows {
+            actors.push(row?);
+        }
+        Ok(actors)
+    })
 }
 
 /// Line-oriented compatibility representation derived exclusively from the

@@ -1,5 +1,17 @@
 # Architecture
 
+## Wave 3 derived projection replay, compaction safety, and knowledge convergence (#1936, #1630, #657)
+
+- **Derived-data replay & uniform journal suffix exemptions (`src/decapod/core/task_journal.rs`, `src/decapod/core/events.rs`, `src/decapod/core/todo.rs`, `docs/derived-data-and-replay.md`)**:
+  - Centralizes `EXEMPT_SUFFIX_EVENT_TYPES_SQL` across `check_complete_suffix_for_task`, `record_changes`, `verify_with_budget`, and `checkpoint_with_gaps` so non-mutating `task.delegation.policy` and `task.delegation.reserve` audit events never trigger false `TASK_JOURNAL_INCOMPLETE_HISTORY` failures during paged verification or gap reconciliation.
+  - Routes `events::{query,query_all_paged,actors}` and `todo::task_journal_verify` through `pool::global_pool().with_read` so read-only verification and stream reads coordinate under `StoragePool`'s per-database operation mutex alongside `DbBroker`/`events::append` writers, preventing APFS/POSIX `SQLITE_IOERR_LOCK` contention under concurrent compaction and writes.
+- **Multi-stream keyset compaction & dry-run GC preview (`src/decapod/core/storage_compaction.rs`)**:
+  - Replaces single-column `seq > ?1` cursors in `compact_historical_events`, `collect_event_embedded_component_keys`, and `logical_events_inventory` with composite `(seq > ?1 OR (seq = ?1 AND event_id > ?2)) ORDER BY seq ASC, event_id ASC` keyset pagination so shared `seq` values across distinct streams are never dropped across 256-row page boundaries, and exposes `gc_preview.unreferenced_components` in `compact_datastore_lossless` dry-run reports.
+- **Provenance validation, keyset feedback/attestation reads & promotion firewall (`src/decapod/plugins/knowledge.rs`)**:
+  - Paginates `read_attestations_and_feedback_on_conn` with `(seq, event_id)` keyset cursors and reconstructs payloads via `events::reconstruct_stored_payload` (removing the silent 2048-event ceiling and supporting `_ce_v1`/`_ce_raw` envelopes in both `resolve_context` and `knowledge_history`).
+  - Extracts `is_valid_provenance` (including normal-component path confinement for `file:` sources) to exclude stored invalid provenance as `malformed_provenance` in `resolve_context`, and adds `ensure_promotion_source_active` (`PROMOTION_FIREWALL_BLOCKED`) in both `record_promotion_event` and `add_scoped_knowledge` (`procedural/` entries) to block promoting non-`active` or expired `knowledge` rows.
+  - Added integration verification in `tests/derived_replay_1936.rs` (wired into `tests/core/core.rs` and `.config/build/decapod.BUILD.bzl`). Live hosted PostgreSQL/Propodus compaction execution and Dactyl cross-repo generated-history alignment remain externally verified boundaries.
+
 ## Phase 2 durability, lease fencing, and active-renewal custody invariants (#1892, #1935, #1934, #1763)
 
 - **Active same-generation heartbeat custody preservation (`src/decapod/core/task_journal.rs`, `src/decapod/core/todo.rs`, `src/decapod/core/validation_history.rs`)**:
@@ -2065,7 +2077,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
+- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
