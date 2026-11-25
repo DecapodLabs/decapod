@@ -1,5 +1,9 @@
 # Validation
 
+## Dactyl `0.19.1` dependency, Bazel lockfile & security verification
+
+- Verified `dactyl-db = "=0.19.1"` against `cargo update -p dactyl-db`, `/opt/homebrew/bin/bazelisk mod deps --lockfile_mode=update`, `/opt/homebrew/bin/bazelisk test //:cargo_inputs_policy`, `cargo fmt --all -- --check`, `cargo test --test release_dependency_policy`, `cargo test --test trust_egress_gate`, and `cargo audit -q` (`0` vulnerabilities).
+
 ## Kernel benchmarks (`#1938`), diagnostic telemetry (`#1095`), and `--device-id` hyphen parsing verification
 
 - **Kernel workload & regression budget suite**: `tests/kernel_workload_1938.rs` (also wired into `tests/core/core.rs` and `.config/build/decapod.BUILD.bzl`) executes `small` (`12` tasks / `262` events), `medium` (`36` tasks / `986` events), and `large` (`48` tasks / `2,312` events) skewed datasets, asserts SHA-256 lossless event reconstruction across `compact_historical_events` + `gc_unreferenced_components` + `reclaim_pages_explicit`, verifies `task_journal_verify` and `db_maintenance` probes, and enforces reviewed `p99`, read, replay, compaction, maintenance, pre-build, bytes/event, and write-amplification budgets.
@@ -2863,7 +2867,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

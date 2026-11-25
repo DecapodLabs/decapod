@@ -1,5 +1,9 @@
 # Intent
 
+## Reconcile `dactyl-db = "=0.19.1"` release dependency & advisory floors
+
+Reconciles Decapod against the latest released `dactyl-db 0.19.1` crate (keeping `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16`, `rustix >= 1.1.6`, clean `cargo audit`, and synced Bazel `MODULE.bazel.lock` via `//:cargo_inputs_policy`) so `decapod` releases maintain latest-always Dactyl compatibility and security.
+
 ## Repository-shaped kernel benchmarks, bounded diagnostic telemetry, and `--device-id` hyphen parsing (#1938, #1095)
 
 Hardens Decapod's operational observability and performance regression discipline without introducing background daemons, paid telemetry dependencies, or speculative storage engine replacement:
@@ -1429,7 +1433,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
