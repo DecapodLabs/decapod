@@ -63,6 +63,47 @@ fn locked_quinn_proto_preserves_the_patched_floor_including_inactive_entries() {
 }
 
 #[test]
+fn locked_quinn_udp_and_rustix_preserve_patched_floors_including_inactive_entries() {
+    let lock: toml::Value =
+        toml::from_str(include_str!("../Cargo.lock")).expect("valid Cargo lockfile");
+    let packages = lock["package"].as_array().expect("locked packages");
+
+    let parse_semver = |name: &str| -> Vec<(u64, u64, u64)> {
+        packages
+            .iter()
+            .filter(|package| package["name"].as_str() == Some(name))
+            .map(|package| {
+                let version = package["version"].as_str().expect("crate version");
+                let components: Vec<u64> = version
+                    .split('.')
+                    .map(|part| part.parse().expect("numeric semver component"))
+                    .collect();
+                assert_eq!(components.len(), 3, "complete semver version: {version}");
+                (components[0], components[1], components[2])
+            })
+            .collect()
+    };
+
+    let quinn_udp = parse_semver("quinn-udp");
+    assert!(!quinn_udp.is_empty(), "quinn-udp remains in the lock audit");
+    for version in quinn_udp {
+        assert!(
+            ((0, 5, 16)..(0, 6, 0)).contains(&version) || version >= (0, 6, 3),
+            "unpatched quinn-udp (RUSTSEC-2026-0538): {version:?}"
+        );
+    }
+
+    let rustix = parse_semver("rustix");
+    assert!(!rustix.is_empty(), "rustix remains in the lock audit");
+    for version in rustix {
+        assert!(
+            version >= (1, 1, 6),
+            "unpatched rustix (RUSTSEC-2026-0486): {version:?}"
+        );
+    }
+}
+
+#[test]
 fn dactyl_release_preserves_sqlite_neon_and_default_supabase_features() {
     let manifest = manifest();
     let features = manifest["dependencies"]["dactyl-db"]["features"]

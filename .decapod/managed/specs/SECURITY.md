@@ -1,5 +1,12 @@
 # Security
 
+## Dependency security audit remediation (`quinn-udp` RUSTSEC-2026-0538 & `rustix` RUSTSEC-2026-0486, #1943)
+
+- **Lockfile-only minimal remediation (`Cargo.lock`, `MODULE.bazel.lock`)**:
+  - Updated transitive `quinn-udp` from `0.5.14` to `0.5.16` (`>=0.5.16, <0.6.0`, resolving [RUSTSEC-2026-0538](https://rustsec.org/advisories/RUSTSEC-2026-0538)) and `rustix` from `1.1.4` to `1.1.6` (`>=1.1.6`, resolving [RUSTSEC-2026-0486](https://rustsec.org/advisories/RUSTSEC-2026-0486)) without relaxing or suppressing any `cargo audit` checks.
+  - Verified `quinn-udp` is an inactive optional dependency of `reqwest 0.12.28` (`http3` feature disabled in `dactyl-db 0.19.0` / `decapod`) while keeping `Cargo.lock` and Bazel `MODULE.bazel.lock` (`//:cargo_inputs_policy`) clean (`cargo audit`: 0 vulnerabilities, 0 warnings).
+  - `tests/release_dependency_policy.rs::locked_quinn_udp_and_rustix_preserve_patched_floors_including_inactive_entries` enforces the patched floors across future lockfile updates while preserving `dactyl-db = "=0.19.0"`.
+
 ## Wave 7 compaction, delegated RBAC generation checks, knowledge attestation, and TypeScript/Pi trust boundaries (#1630, #1568, #657, #1277, #1711)
 
 - **Fail-closed compaction & explicit-only page reclamation (`src/decapod/core/storage_compaction.rs`)**:
@@ -1577,7 +1584,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
+- Repository signal fingerprint: `4e955f6c41bf1868484fbc86a8bfcd78c8601c5ca1064830adf69363000273e3`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
