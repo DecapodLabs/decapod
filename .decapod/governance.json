@@ -874,11 +874,28 @@
     "base_commit": "84be8079605d7504073a34b84cca94d6e89cb2bf",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:repo-transition-proof-scoping-1949": {
+      "statement": "repo.pr-readiness.v1 transitions affecting only unreferenced non-workflow helper scripts qualify without out-of-band operator CLI approvals while proof-referenced helpers still fail closed with exact transition_id/changed_paths diagnostics and owner=human guidance.",
+      "falsifier": "An unreferenced scripts/ helper edit still blocks validation, a directly or transitively proof-referenced script edit bypasses ACCEPTED_REPOSITORY_CONTRACT_CHANGED, PreExecution hides transition_id or changed_paths, or human_authorization_required emits owner=agent.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/validation_rules.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/repository_profile_tests.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "bugs_01m89390c7gn4182-1",
       "summary": "Fix #1949: proof-relevant repo.pr-readiness.v1 transition scoping, diagnostics, and human-auth guidance",
       "input_digest": "sha256:03abf829ee162ea2d4a58c698d083d8985f9d9afd2915d33df090d08e2285808"
+    },
+    {
+      "id": "bugs_01m89390c7gn4182-2",
+      "summary": "Record #1949 falsifiable claim and sync governance projections",
+      "input_digest": "sha256:d69f2b828edbac1e65b9b58cc805a4b07a37c6fc0f615c2de7c166a985497a36"
     }
   ],
   "intents": {
