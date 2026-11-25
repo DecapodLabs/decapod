@@ -41,7 +41,7 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -306,12 +306,17 @@ struct ValidationContext {
     skip_count: AtomicU32,
     note_count: AtomicU32,
     advisory_count: AtomicU32,
+    human_authorization_required: AtomicBool,
     fails: Mutex<Vec<String>>,
     warns: Mutex<Vec<String>>,
     notes: Mutex<Vec<String>>,
     advisories: Mutex<Vec<String>>,
     drift_findings: Mutex<Vec<DriftFinding>>,
     repo_files_cache: Mutex<Vec<(PathBuf, Vec<PathBuf>)>>,
+}
+
+fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -339,6 +344,8 @@ pub struct ValidationReport {
     pub skip_count: u32,
     pub note_count: u32,
     pub advisory_count: u32,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub human_authorization_required: bool,
     pub failures: Vec<String>,
     pub warnings: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -677,6 +684,7 @@ impl ValidationContext {
             skip_count: AtomicU32::new(0),
             note_count: AtomicU32::new(0),
             advisory_count: AtomicU32::new(0),
+            human_authorization_required: AtomicBool::new(false),
             fails: Mutex::new(Vec::new()),
             warns: Mutex::new(Vec::new()),
             notes: Mutex::new(Vec::new()),
@@ -4032,12 +4040,24 @@ fn validate_validation_rules(
                 pass(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
             }
             RuleVerdict::Fail => {
+                if result.remediation.as_ref().is_some_and(|r| {
+                    r.human_authorization_required && !r.autonomous_remediation_permitted
+                }) {
+                    ctx.human_authorization_required
+                        .store(true, Ordering::Relaxed);
+                }
                 fail(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
             }
             RuleVerdict::Unverifiable => {
                 warn(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
             }
             RuleVerdict::Stale => {
+                if result.remediation.as_ref().is_some_and(|r| {
+                    r.human_authorization_required && !r.autonomous_remediation_permitted
+                }) {
+                    ctx.human_authorization_required
+                        .store(true, Ordering::Relaxed);
+                }
                 fail(&format!("Rule {}: {}", result.rule_id, result.message), ctx);
             }
         }
@@ -8891,6 +8911,7 @@ pub fn run_validation(
         skip_count,
         note_count,
         advisory_count,
+        human_authorization_required: ctx.human_authorization_required.load(Ordering::Relaxed),
         failures: fails,
         warnings: warns,
         notes,

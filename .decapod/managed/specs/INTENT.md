@@ -1,5 +1,14 @@
 # Intent
 
+## Scope `repo.pr-readiness.v1` inventory transitions to proof-relevant inputs, surface transition diagnostics, and route governed WAL checkpoint via Dactyl write path (#1949)
+
+Eliminates dead-ends on routine packaging/version script changes, surfaces actionable transition diagnostics and accurate human-authorization guidance, and restores governed `db.wal.checkpoint` execution under `dactyl-db 0.19.1`:
+
+- **Proof-relevant inventory transition scoping (`src/decapod/core/repository_profile.rs`)**: Allows `repo.pr-readiness.v1` transitions (`qualifies_non_proof_source_inventory_transition`) without out-of-band operator CLI approvals when `accepted_commands` and `accepted_contract` are preserved verbatim and every added, modified, or removed inventoried file is a non-workflow helper under `scripts/`, `assets/scripts/`, `assets/tools/`, or `assets/build/` that is unreferenced by `accepted_commands`, `accepted_contract`, or any proof-relevant inventoried file (while still failing closed on directly or transitively proof-referenced helpers).
+- **Pre-execution transition diagnostics (`src/decapod/core/validation_rules.rs`)**: Preserves `verify_accepted_transition` diagnostics in `evaluate_policy_transition_with_approval` so `decapod.policy.accepted_repository_contract` emits the exact 64-hex `transition_id`, old-to-new digests, and `changed_paths` in `RuleEvaluationResult.message`, `remediation.observed_condition`, `remediation.affected_paths`, and `remediation.required_steps`.
+- **Truthful `agent_guidance` for human-authorization-required blockers (`src/decapod/core/validate.rs`, `src/decapod/core/validation_runtime.rs`, `src/decapod/lib.rs`)**: Emits `ValidationGuidance::for_human_authorization_required()` (`owner = "human"`, `next_action = "request_human_authorization"`) instead of `"owner": "agent"` / `"repair_and_revalidate"` whenever a non-autonomously-remediable human-authorization rule or `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocker fails validation.
+- **Governed WAL checkpoint write-path execution (`src/decapod/core/db_maintenance.rs`, `tests/sqlite_maintenance.rs`)**: Routes `PRAGMA wal_checkpoint(PASSIVE)` through Dactyl's write path (`Connection::execute`) on an `AccessMode::ReadWrite` handle so `dactyl-db 0.19.1`'s `sqlite3_stmt_readonly` guard remains intact on read operations, reporting `null` for unavailable SQLite frame counters rather than fabricating zeros.
+
 ## Reconcile `dactyl-db = "=0.19.1"` release dependency & advisory floors
 
 Reconciles Decapod against the latest released `dactyl-db 0.19.1` crate (keeping `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16`, `rustix >= 1.1.6`, clean `cargo audit`, and synced Bazel `MODULE.bazel.lock` via `//:cargo_inputs_policy`) so `decapod` releases maintain latest-always Dactyl compatibility and security.
@@ -1433,7 +1442,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

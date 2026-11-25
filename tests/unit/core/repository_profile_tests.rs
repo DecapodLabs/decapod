@@ -1884,4 +1884,247 @@ mod release_only_inventory_transition_tests {
             "unexpected error: {err}"
         );
     }
+
+    fn clack_style_swift_repo() -> (
+        tempfile::TempDir,
+        String,
+        String,
+        Vec<ProofDef>,
+        RepositoryContract,
+    ) {
+        let dir = init_repo();
+        let root = dir.path();
+        fs::create_dir_all(root.join("scripts")).unwrap();
+        fs::write(root.join("scripts/Info.plist"), "<string>0.9.17</string>\n").unwrap();
+        fs::write(
+            root.join("scripts/release-app.sh"),
+            "#!/bin/sh\necho release\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("scripts/check_helper.sh"),
+            "#!/bin/sh\necho check\n",
+        )
+        .unwrap();
+        fs::create_dir_all(root.join(".decapod")).unwrap();
+        fs::write(
+            root.join(".decapod/config.toml"),
+            "schema_version = \"1.0.0\"\n\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n\n[repo]\nbase_branch = \"main\"\nbackend = \"local\"\n",
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: baseline clack-style repo");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let cmds = vec![ProofDef {
+            name: "swift-tests".into(),
+            command: "/usr/bin/swift".into(),
+            args: vec!["test".into()],
+            description: "Run swift test".into(),
+            required: true,
+        }];
+        let mut toolchain_files = BTreeMap::new();
+        toolchain_files.insert("swift".to_string(), "/usr/bin/swift".into());
+        let mut executions = BTreeMap::new();
+        executions.insert(
+            "swift-tests".to_string(),
+            RepositoryExecution {
+                program: "/usr/bin/swift".into(),
+                toolchain_files,
+                platforms: BTreeMap::new(),
+                environment: BTreeMap::new(),
+                directory: ".".into(),
+                timeout_seconds: 720,
+            },
+        );
+        let mut repo_contract = RepositoryContract {
+            canonical_local_target: false,
+            reviewed_commands_digest: String::new(),
+            source_coverage: vec![],
+            executions,
+            targets: BTreeMap::new(),
+        };
+        repo_contract.reviewed_commands_digest =
+            command_contract_digest(&cmds, &repo_contract).unwrap();
+        (dir, base_sha, base_digest, cmds, repo_contract)
+    }
+
+    #[test]
+    fn unreferenced_scripts_transition_qualifies_without_manual_approval() {
+        let (dir, base_sha, base_digest, cmds, repo_contract) = clack_style_swift_repo();
+        let root = dir.path();
+
+        fs::write(root.join("scripts/Info.plist"), "<string>0.9.18</string>\n").unwrap();
+        fs::write(
+            root.join("scripts/release-app.sh"),
+            "#!/bin/sh\nbash ./scripts/package-dmg.sh\n",
+        )
+        .unwrap();
+        fs::write(root.join("scripts/package-dmg.sh"), "#!/bin/sh\necho dmg\n").unwrap();
+        fs::write(
+            root.join("scripts/render-dmg-background.swift"),
+            "print(\"bg\")\n",
+        )
+        .unwrap();
+        let head_sha = commit_all(root, "chore(release): bump to v0.9.18 with mascot DMG");
+        let head_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: base_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: head_digest,
+        };
+
+        for ci_local in [false, true] {
+            verify_accepted_transition(
+                root,
+                &base_sha,
+                &head_sha,
+                Some(&accepted_decl),
+                Some(&candidate_decl),
+                &cmds,
+                &cmds,
+                Some(&repo_contract),
+                Some(&repo_contract),
+                approval_input(ci_local),
+            )
+            .unwrap_or_else(|e| {
+                panic!(
+                    "expected unreferenced scripts transition to qualify (ci_local={ci_local}): {e}"
+                )
+            });
+        }
+    }
+
+    #[test]
+    fn proof_referenced_script_and_transitively_referenced_helper_still_fail_closed_with_diagnostics()
+     {
+        // 1. Direct proof.commands script reference must fail closed.
+        let (dir, _prior_sha, _prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+        fs::create_dir_all(root.join("scripts")).unwrap();
+        fs::write(root.join("scripts/hello.sh"), "#!/bin/sh\necho hi\n").unwrap();
+        fs::write(
+            root.join("scripts/lib_helper.sh"),
+            "#!/bin/sh\necho helper\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("Justfile"),
+            "check:\n    sh scripts/lib_helper.sh\n",
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: add proof-referenced scripts");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let (cmds, repo_contract) = dactyl_contract();
+
+        fs::write(root.join("scripts/hello.sh"), "#!/bin/sh\necho tampered\n").unwrap();
+        let head1 = commit_all(root, "chore: modify direct proof script");
+        let head1_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let err1 = verify_accepted_transition(
+            root,
+            &base_sha,
+            &head1,
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: base_digest.clone(),
+            }),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: head1_digest.clone(),
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        let expected_tid1 = repo_policy_transition_id(
+            &base_sha,
+            &head1,
+            &base_digest,
+            &head1_digest,
+            &repo_contract.reviewed_commands_digest,
+            &repo_contract.reviewed_commands_digest,
+        )
+        .unwrap();
+        assert!(
+            err1.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err1}"
+        );
+        assert!(
+            err1.contains(&format!("transition_id={expected_tid1}")),
+            "{err1}"
+        );
+        assert!(err1.contains("scripts/hello.sh"), "{err1}");
+
+        // 2. Helper transitively referenced from Justfile must also fail closed.
+        let root2 = init_repo();
+        let r2 = root2.path();
+        fs::create_dir_all(r2.join(".github/workflows")).unwrap();
+        fs::write(
+            r2.join(".github/workflows/rust-contract.yml"),
+            "name: Rust Contract\non: [push]\n",
+        )
+        .unwrap();
+        fs::create_dir_all(r2.join(".decapod")).unwrap();
+        fs::write(
+            r2.join(".decapod/config.toml"),
+            "schema_version = \"1.0.0\"\n\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n\n[repo]\nbase_branch = \"main\"\nbackend = \"local\"\n",
+        )
+        .unwrap();
+        fs::create_dir_all(r2.join("scripts")).unwrap();
+        fs::write(r2.join("scripts/lib_helper.sh"), "#!/bin/sh\necho ok\n").unwrap();
+        fs::write(
+            r2.join("Justfile"),
+            "check:\n    sh scripts/lib_helper.sh\n",
+        )
+        .unwrap();
+        let b2 = commit_all(r2, "chore: baseline justfile helper");
+        let b2_digest = discover_source_inventory(r2).unwrap().digest().unwrap();
+        fs::write(r2.join("scripts/lib_helper.sh"), "#!/bin/sh\necho edited\n").unwrap();
+        let h2 = commit_all(r2, "chore: modify justfile-referenced helper");
+        let h2_digest = discover_source_inventory(r2).unwrap().digest().unwrap();
+        let err2 = verify_accepted_transition(
+            r2,
+            &b2,
+            &h2,
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: b2_digest.clone(),
+            }),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: h2_digest.clone(),
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        let expected_tid2 = repo_policy_transition_id(
+            &b2,
+            &h2,
+            &b2_digest,
+            &h2_digest,
+            &repo_contract.reviewed_commands_digest,
+            &repo_contract.reviewed_commands_digest,
+        )
+        .unwrap();
+        assert!(
+            err2.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err2}"
+        );
+        assert!(
+            err2.contains(&format!("transition_id={expected_tid2}")),
+            "{err2}"
+        );
+        assert!(err2.contains("scripts/lib_helper.sh"), "{err2}");
+    }
 }

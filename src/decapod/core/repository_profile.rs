@@ -451,12 +451,20 @@ pub(crate) fn verify_accepted_transition(
     }
     if commands_preserved
         && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest
-        && qualifies_release_only_inventory_transition(
+        && (qualifies_release_only_inventory_transition(
             checkout_root,
             accepted_base_sha,
             &accepted_decl.reviewed_sources_digest,
             &candidate_decl.reviewed_sources_digest,
-        )
+        ) || qualifies_non_proof_source_inventory_transition(
+            checkout_root,
+            accepted_base_sha,
+            candidate_head_sha,
+            &accepted_decl.reviewed_sources_digest,
+            &candidate_decl.reviewed_sources_digest,
+            accepted_commands,
+            accepted,
+        ))
     {
         return Ok(());
     }
@@ -497,8 +505,10 @@ pub(crate) fn verify_accepted_transition(
     if approved {
         return Ok(());
     }
+    let changed_paths =
+        changed_inventory_paths_between(checkout_root, accepted_base_sha, candidate_head_sha);
     Err(invalid(format!(
-        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or source inventory changed without an active transition approval (base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}). Review the exact diff. A local or Cloud maintainer can use `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}`. CI requires a signed approval in {}. Cloud verification uses a decision ID in {} or a signed approval.",
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or proof-relevant source inventory changed without an active transition approval (transition_id={transition_id}, base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}, changed_paths={changed_paths:?}). Review the exact diff at PR review/merge or pass a maintainer-signed receipt in {} / authenticated Cloud decision ID in {} (local/Cloud operator approval scope `{POLICY_TRANSITION_SCOPE}`: `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}`).",
         accepted_decl.reviewed_sources_digest,
         candidate_decl.reviewed_sources_digest,
         accepted.reviewed_commands_digest,
@@ -1080,6 +1090,259 @@ pub(crate) fn qualifies_release_only_inventory_transition(
     }
 
     false
+}
+
+fn compute_inventory_diff_paths(
+    base_tree: &GitTreeInventory,
+    head_tree: &GitTreeInventory,
+) -> Vec<String> {
+    let all_paths: BTreeSet<&str> = base_tree
+        .entries
+        .keys()
+        .chain(head_tree.entries.keys())
+        .map(String::as_str)
+        .collect();
+    let mut changed = Vec::new();
+    for path in all_paths {
+        let base_entry = base_tree.entries.get(path);
+        let head_entry = head_tree.entries.get(path);
+        let base_digest = base_tree.inventory.files.get(path);
+        let head_digest = head_tree.inventory.files.get(path);
+        let differs = match (base_entry, head_entry) {
+            (Some(b), Some(h)) => b.mode != h.mode || b.oid != h.oid || base_digest != head_digest,
+            _ => true,
+        };
+        if differs {
+            changed.push(path.to_owned());
+        }
+    }
+    changed
+}
+
+pub(crate) fn changed_inventory_paths_between(
+    checkout_root: &Path,
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+) -> Vec<String> {
+    let mut blob_cache = BTreeMap::new();
+    let Some(base_tree) =
+        compute_git_tree_source_inventory(checkout_root, accepted_base_sha, &mut blob_cache)
+    else {
+        return Vec::new();
+    };
+    let Some(head_tree) =
+        compute_git_tree_source_inventory(checkout_root, candidate_head_sha, &mut blob_cache)
+    else {
+        return Vec::new();
+    };
+    compute_inventory_diff_paths(&base_tree, &head_tree)
+}
+
+fn is_non_ci_helper_path(path: &str) -> bool {
+    const HELPER_PREFIXES: [&str; 4] = [
+        "scripts/",
+        "assets/scripts/",
+        "assets/tools/",
+        "assets/build/",
+    ];
+    HELPER_PREFIXES
+        .iter()
+        .any(|prefix| path.starts_with(prefix))
+        && !super::init_reconciliation::is_workflow(path)
+        && !super::init_reconciliation::SOURCE_FILES.contains(&path)
+        && !super::readiness_profile::catalog_source_paths().contains(&path)
+}
+
+fn path_is_referenced_in_text(path: &str, text: &str) -> bool {
+    let clean = path.strip_prefix("./").unwrap_or(path);
+    if clean.is_empty() {
+        return false;
+    }
+    if text.contains(clean) {
+        return true;
+    }
+    let mut ancestors = Vec::new();
+    let mut cursor = clean;
+    while let Some((parent, _)) = cursor.rsplit_once('/') {
+        ancestors.push(parent);
+        cursor = parent;
+    }
+    if ancestors.is_empty() {
+        return false;
+    }
+    for dir in &ancestors {
+        if text.contains(&format!("{dir}/*")) || text.contains(&format!("{dir}/**")) {
+            return true;
+        }
+    }
+    for raw_token in text.split(|ch: char| {
+        ch.is_whitespace()
+            || matches!(
+                ch,
+                '\'' | '"' | '`' | ',' | ';' | '(' | ')' | '[' | ']' | '{' | '}' | '='
+            )
+    }) {
+        let token = raw_token.trim_end_matches(':');
+        if token.is_empty() {
+            continue;
+        }
+        let normalized = token.strip_prefix("./").unwrap_or(token);
+        let without_trailing = normalized.trim_end_matches('/');
+        if ancestors.contains(&without_trailing) {
+            return true;
+        }
+    }
+    false
+}
+
+fn contract_referenced_strings<'a>(
+    accepted_commands: &'a [ProofDef],
+    accepted_contract: &'a RepositoryContract,
+) -> Vec<&'a str> {
+    let mut texts = Vec::new();
+    for cmd in accepted_commands {
+        texts.push(cmd.command.as_str());
+        for arg in &cmd.args {
+            texts.push(arg.as_str());
+        }
+    }
+    for execution in accepted_contract.executions.values() {
+        texts.push(execution.directory.as_str());
+        if !execution.program.is_empty() {
+            texts.push(execution.program.as_str());
+        }
+        for val in execution.environment.values() {
+            texts.push(val.as_str());
+        }
+        for val in execution.toolchain_files.values() {
+            texts.push(val.as_str());
+        }
+        for platform in execution.platforms.values() {
+            texts.push(platform.program.as_str());
+            for val in platform.toolchain_files.values() {
+                texts.push(val.as_str());
+            }
+        }
+    }
+    for row in &accepted_contract.source_coverage {
+        texts.push(row.source.as_str());
+    }
+    texts
+}
+
+fn path_is_directly_referenced_in_contract(
+    path: &str,
+    accepted_commands: &[ProofDef],
+    accepted_contract: &RepositoryContract,
+) -> bool {
+    let clean = path.strip_prefix("./").unwrap_or(path);
+    if contract_referenced_strings(accepted_commands, accepted_contract)
+        .into_iter()
+        .any(|text| path_is_referenced_in_text(clean, text))
+    {
+        return true;
+    }
+    for cmd in accepted_commands {
+        let Some(execution) = accepted_contract.executions.get(&cmd.name) else {
+            continue;
+        };
+        let dir = execution.directory.trim_end_matches('/');
+        if dir.is_empty() || dir == "." {
+            continue;
+        }
+        if let Some(rel) = clean.strip_prefix(&format!("{dir}/"))
+            && (path_is_referenced_in_text(rel, &cmd.command)
+                || cmd
+                    .args
+                    .iter()
+                    .any(|arg| path_is_referenced_in_text(rel, arg))
+                || execution
+                    .environment
+                    .values()
+                    .any(|val| path_is_referenced_in_text(rel, val)))
+        {
+            return true;
+        }
+    }
+    false
+}
+
+fn path_is_proof_referenced(
+    checkout_root: &Path,
+    base_tree: &GitTreeInventory,
+    path: &str,
+    accepted_commands: &[ProofDef],
+    accepted_contract: &RepositoryContract,
+) -> bool {
+    if path_is_directly_referenced_in_contract(path, accepted_commands, accepted_contract) {
+        return true;
+    }
+    for (other, entry) in &base_tree.entries {
+        if other == path {
+            continue;
+        }
+        if !is_non_ci_helper_path(other)
+            || path_is_directly_referenced_in_contract(other, accepted_commands, accepted_contract)
+        {
+            let Some(content) = read_bounded_utf8_blob(checkout_root, entry) else {
+                // Fail closed if a proof-relevant file cannot be inspected as UTF-8.
+                return true;
+            };
+            if path_is_referenced_in_text(path, &content) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// Qualify an automatic `repo.pr-readiness.v1` source-inventory transition when
+/// `accepted_commands` and `accepted_contract` are preserved verbatim and every
+/// added, modified, or removed inventoried path between `accepted_base_sha` and
+/// `candidate_head_sha` is a non-workflow helper file under `scripts/`,
+/// `assets/scripts/`, `assets/tools/`, or `assets/build/` that is not referenced
+/// by `accepted_commands`, `accepted_contract`, or any proof-relevant inventoried
+/// file in `accepted_base_sha`.
+pub(crate) fn qualifies_non_proof_source_inventory_transition(
+    checkout_root: &Path,
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+    accepted_sources_digest: &str,
+    candidate_sources_digest: &str,
+    accepted_commands: &[ProofDef],
+    accepted_contract: &RepositoryContract,
+) -> bool {
+    if accepted_sources_digest == candidate_sources_digest {
+        return false;
+    }
+    let mut blob_cache = BTreeMap::new();
+    let Some(base_tree) =
+        compute_git_tree_source_inventory(checkout_root, accepted_base_sha, &mut blob_cache)
+    else {
+        return false;
+    };
+    let Some(head_tree) =
+        compute_git_tree_source_inventory(checkout_root, candidate_head_sha, &mut blob_cache)
+    else {
+        return false;
+    };
+    if base_tree.inventory.digest().ok().as_deref() != Some(accepted_sources_digest)
+        || head_tree.inventory.digest().ok().as_deref() != Some(candidate_sources_digest)
+    {
+        return false;
+    }
+    let changed_paths = compute_inventory_diff_paths(&base_tree, &head_tree);
+    !changed_paths.is_empty()
+        && changed_paths.iter().all(|path| {
+            is_non_ci_helper_path(path)
+                && !path_is_proof_referenced(
+                    checkout_root,
+                    &base_tree,
+                    path,
+                    accepted_commands,
+                    accepted_contract,
+                )
+        })
 }
 fn relative(path: &str) -> bool {
     !path.is_empty()
