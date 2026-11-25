@@ -1,5 +1,11 @@
 # Validation
 
+## Kernel benchmarks (`#1938`), diagnostic telemetry (`#1095`), and `--device-id` hyphen parsing verification
+
+- **Kernel workload & regression budget suite**: `tests/kernel_workload_1938.rs` (also wired into `tests/core/core.rs` and `.config/build/decapod.BUILD.bzl`) executes `small` (`12` tasks / `262` events), `medium` (`36` tasks / `986` events), and `large` (`48` tasks / `2,312` events) skewed datasets, asserts SHA-256 lossless event reconstruction across `compact_historical_events` + `gc_unreferenced_components` + `reclaim_pages_explicit`, verifies `task_journal_verify` and `db_maintenance` probes, and enforces reviewed `p99`, read, replay, compaction, maintenance, pre-build, bytes/event, and write-amplification budgets.
+- **Telemetry redaction, fail-closed identifier gating, quantile, and bound tests**: `src/decapod/core/telemetry.rs` unit tests (`negative_redaction_strips_prompts_secrets_raw_evidence_and_customer_repo_identifiers`, `explicit_authorized_identifier_observation_uses_per_instance_ephemeral_salt`) and `src/decapod/core/observability_projections/telemetry.rs` + `tests/observability_projections.rs` verify `p50`/`p95`/`p99` quantiles, `queue_wait` vs `execution` vs `lock_wait` separation, `ProofFreshness`, `denied`/`unknown` preservation, ring-buffer/cardinality/retention eviction, `can_grant_authority = false`, default fail-closed `repo_digest == None` suppression, per-instance non-correlatable `anonymize_identifier_with_salt` digests under explicit opt-in, and negative redaction of prompts, secrets, raw evidence, paths, URLs, emails, and customer/repo identifiers.
+- **CLI `--device-id` hyphen regression**: `tests/unit/cli_tests.rs::cloud_revoke_device_id_accepts_hyphen_prefixed_jwk_thumbprint` and `tests/cloud_supabase_boundary.rs` (`cloud_revoke_supports_dpop_session_logout_management_revoke_and_retry_on_failure`) verify `'-'`-prefixed RFC 7638 JWK thumbprints parse and route cleanly.
+
 ## Phase 2 durability, lease fencing, and active-renewal custody verification (#1892, #1935, #1934, #1763)
 
 Rebased onto post-`#1939` `origin/master` (`0db8ba28e`) inside isolated worktree `agent/agy-1933-decapod-p2/bugs_01m85q9m9gwmde6r-durability-fencing`:
@@ -2850,14 +2856,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 ## Codebase Contract Snapshot
 
 - CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
-- Integration test targets (174): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+158 more)
+- Integration test targets (175): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+159 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
+- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

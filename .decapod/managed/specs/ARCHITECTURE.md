@@ -1,5 +1,16 @@
 # Architecture
 
+## Kernel workload benchmarks & bounded diagnostic telemetry (`#1938`, `#1095`, `src/decapod/core/telemetry.rs`, `tests/kernel_workload_1938.rs`)
+
+- **Bounded diagnostic telemetry core (`src/decapod/core/telemetry.rs`, `src/decapod/core/mod.rs`)**:
+  - `TelemetryRingBuffer` initializes a per-instance 32-byte CSPRNG `ephemeral_salt` (`ring::rand::SystemRandom`), enforces clamped `TelemetryRetentionPolicy` caps (`HARD_RING_BUFFER_CAPACITY = 512`, `HARD_STAGE_CARDINALITY = 32` collapsing overflow stages into `"overflow:other"`, `HARD_BUCKET_CARDINALITY = 128`, `HARD_RETENTION_SECS = 7d`, `MAX_DIAGNOSTIC_LABEL_BYTES = 64`), FIFO eviction, fail-closed `allow_identifier_observation: bool` (default `false`), and explicit eviction/overflow counters (`TelemetryBoundAccounting`).
+  - `compute_latency_quantiles_us` computes exact nearest-rank `p50_us`/`p95_us`/`p99_us`/`max_us` separately for `queue_wait`, `execution`, and `lock_wait`, returning `None` when unobserved rather than fabricating zeros.
+  - `record_broker_event`, `record_trace_event`, and `collect_workspace_diagnostic_telemetry` reuse `BrokerEvent`, `TraceEvent`, `.decapod/governance.json` validation receipts, and read-only SQLite `tasks`/`agents`/`events` counts via `db::db_connect_readonly_bounded`, keeping product diagnostics strictly separate from Propodus (`#230`) service SLOs and Dactyl (`#144`) transport budgets (`SCOPE_SEPARATION_NOTE`).
+- **Projection wiring (`src/decapod/core/observability_projections/telemetry.rs`)**:
+  - `ExecutionTelemetryProjection` embeds `operational_diagnostics: DiagnosticTelemetryReport` computed over accepted `TelemetryEventSample`s (with optional `queue_wait_us`, `execution_us`, `lock_wait_us`, `proof_freshness`), passes `None` for `repo_identifier` into `TelemetryRingBuffer::report` by default, and enriches `project_execution_telemetry` with workspace `WorkloadSizeMetrics`.
+- **Whole-kernel workload harness (`tests/kernel_workload_1938.rs`, `tests/core/core.rs`, `.config/build/decapod.BUILD.bzl`, `docs/kernel-workload-baseline.md`)**:
+  - Runs deterministic fixed-seed (`0xDECA_90D4_1938_0001`) small/medium/large skewed benchmarks covering concurrent `todo` claim/renew/release + conflict retry, cold/warm subject reads, replay + `task_journal_verify`, `_ce_v1` event compaction + GC + `reclaim_pages_explicit`, `db_maintenance::{run_maintain_inspect, run_maintain_verify, run_maintain_wal_checkpoint}`, and `pre_build_validate::evaluate`, asserting SHA-256 lossless event reconstruction and compliance with reviewed regression budgets.
+
 ## Wave 3 derived projection replay, compaction safety, and knowledge convergence (#1936, #1630, #657)
 
 - **Derived-data replay & uniform journal suffix exemptions (`src/decapod/core/task_journal.rs`, `src/decapod/core/events.rs`, `src/decapod/core/todo.rs`, `docs/derived-data-and-replay.md`)**:
@@ -2068,7 +2079,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Contract Snapshot
 
-- Core modules (148): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+132 more)
+- Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
 - Build manifests (9): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, `tests/fixtures/justfile_consumer/Cargo.toml`, (+1 more)
 <!-- decapod:codebase-contract:end -->
@@ -2077,7 +2088,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
+- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

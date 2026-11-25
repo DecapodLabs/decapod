@@ -1187,7 +1187,7 @@ pub(crate) enum CloudCommand {
         #[clap(long)]
         all: bool,
         /// Optional server device key ID or thumbprint (`jkt`) to target.
-        #[clap(long)]
+        #[clap(long, allow_hyphen_values = true)]
         device_id: Option<String>,
         /// Perform a DPoP-signed session logout (`action=logout`) with the enrolled device key signer.
         #[clap(long)]

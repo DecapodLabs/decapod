@@ -10,6 +10,8 @@ mod datastore_relational_compaction;
 mod datastore_scope;
 #[path = "../derived_replay_1936.rs"]
 mod derived_replay_1936;
+#[path = "../kernel_workload_1938.rs"]
+mod kernel_workload_1938;
 #[path = "../lease_fencing_consistency_1935.rs"]
 mod lease_fencing_consistency_1935;
 

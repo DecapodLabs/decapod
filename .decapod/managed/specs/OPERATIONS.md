@@ -1,5 +1,10 @@
 # Operations
 
+## Kernel workload baseline & scaling thresholds (`docs/kernel-workload-baseline.md`, `#1938`, `#1095`)
+
+- **Reproducing kernel workload benchmarks**: Run `cargo test --offline --test kernel_workload_1938 -- --nocapture` to execute the deterministic fixed-seed `small`/`medium`/`large` skewed workloads and inspect the emitted `KERNEL_WORKLOAD_1938_REPORT` JSON.
+- **Scaling activation criteria**: Remain on single local SQLite (`storage_format_version = 2`) until `decapod observe telemetry` / `collect_workspace_diagnostic_telemetry` crosses reviewed thresholds (`claim/renew p99 > 1,500 ms` across >= 8 workers or `wal_sidecar_bytes > 16 MiB` -> passive WAL checkpointing & heartbeat coalescing; `main_db_bytes > 128 MiB` or `events > 100k`/stream -> subject archival rotation; > 16 concurrent multi-host agents or `lock_wait p99 > 2,000 ms` -> `backend = "cloud"` via Propodus `#230` / Dactyl `#144`).
+
 ## Cloud parity inspection and offline constitution overlay management (#1895, #877)
 
 - **Parity matrix inspection (`#1895`)**: Operators and tools run `decapod capabilities parity [--dir <PATH>] [--format text|json]` or RPC `interop.cloud_parity` to inspect the logical operation support matrix, unsupported Cloud actions, and placement opacity invariants without initializing local SQLite.
@@ -547,7 +552,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
+- Repository signal fingerprint: `6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

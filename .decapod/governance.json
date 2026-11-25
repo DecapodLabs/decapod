@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9fa1ad8b1e1c210c3c1ac9468f94c60f15b0a0b3",
+    "accepted_commit": "41597468d42f44da28f63f493dbe9929a4347cdc",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,56 +870,57 @@
     }
   },
   "change": {
-    "id": "pr-1941-derived-replay",
-    "base_commit": "9fa1ad8b1e1c210c3c1ac9468f94c60f15b0a0b3",
+    "id": "pr-1942-workload-telemetry",
+    "base_commit": "41597468d42f44da28f63f493dbe9929a4347cdc",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:derived-projection-replay-1936": {
-      "statement": "Canonical event streams reconstruct derived task, workunit, knowledge, and proof projections deterministically with resumable cursors, explicit gap/snapshot-drift refusal, composite (seq, event_id) multi-stream compaction, and procedural-promotion firewall.",
-      "falsifier": "Incremental budgeted replay diverges from clean snapshot+suffix digest, multi-stream tied-seq events drop at page boundaries, concurrent readers fail with SQLITE_IOERR_LOCK, or revoked/expired/malformed knowledge promotes.",
+    "claim:kernel-telemetry-1942": {
+      "statement": "Bounded telemetry drops identifiers fail-closed unless allow_identifier_observation is enabled with per-instance ephemeral salt, kernel workload budgets pass losslessly, and --device-id accepts leading hyphens.",
+      "falsifier": "Telemetry hashes or retains repo identifiers by default, emits static-salt correlatable digests, fails kernel regression budgets, or rejects hyphenated thumbprints.",
       "status": "supported",
       "proof_refs": [
-        "docs/derived-data-and-replay.md",
-        "src/decapod/core/events.rs",
-        "src/decapod/core/storage_compaction.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/plugins/knowledge.rs",
-        "tests/derived_replay_1936.rs"
+        "cargo audit -q",
+        "cargo test --lib cloud_revoke_device_id",
+        "cargo test --lib core::telemetry",
+        "cargo test --test kernel_workload_1938",
+        "cargo test --test trust_egress_gate"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1941-rebased",
-      "summary": "Hardening: derived projection replay, compaction growth safety & knowledge convergence (#1936, #1630, #657) (rebased on 9fa1ad8b1)",
-      "input_digest": "sha256:1296caa65a098f3568acdc4831dc037be989e77c4d8dec9dfa6c0bfa973cf775",
+      "id": "cp-pr1942-1",
+      "summary": "Rebased PR 1942 onto 41597468d with fail-closed allow_identifier_observation and per-instance CSPRNG anonymize_identifier_with_salt",
+      "input_digest": "sha256:e1b956724a47fe1726ca0938e48cc80edc52172c83b01936498240168e2f13b0",
       "proof_refs": [
-        "docs/derived-data-and-replay.md",
-        "tests/derived_replay_1936.rs"
+        "cargo audit -q",
+        "cargo test --lib cloud_revoke_device_id",
+        "cargo test --lib core::telemetry",
+        "cargo test --test kernel_workload_1938",
+        "cargo test --test trust_egress_gate"
       ]
     }
   ],
   "intents": {
-    "intent:run-1941-rebased": {
+    "intent:pr-1942-workload-telemetry": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "PR #1941 derived replay, compaction, and knowledge convergence"
+        "Single PR in isolated Decapod worktree; no root mutations, no egress expansion, no static identifier hashing."
       ],
       "constraints": [
-        "core"
+        "src/decapod/core/telemetry.rs src/decapod/core/observability_projections/telemetry.rs src/decapod/cli.rs tests/unit/cli_tests.rs tests/kernel_workload_1938.rs tests/core/core.rs .config/build/decapod.BUILD.bzl docs/kernel-workload-baseline.md .decapod/managed/specs/"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1941-rebased",
+      "id": "intent:pr-1942-workload-telemetry",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Wave 3 Hardening #1936 #1630 #657: Derived Replay, Compaction & Knowledge Convergence",
-      "refined_intent": "Rebased onto post-#1940 origin/master (9fa1ad8b1) preserving #1945, #1946, #1939, and #1940",
+      "raw_intent": "Deliver #1938 kernel workload benchmarks, #1095 bounded telemetry, and --device-id hyphen fix with Trust Invariant #2 privacy enforcement",
+      "refined_intent": "Rebase PR 1942 onto 41597468d, replace static-salt anonymize_identifier with fail-closed allow_identifier_observation and per-instance CSPRNG anonymize_identifier_with_salt, verify tests/audit, update specs, and prepare PR 1942.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -932,53 +933,75 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Inventory canonical streams vs derived views in docs/derived-data-and-replay.md, prove deterministic projection replay (#1936), compaction growth/interruption safety (#1630), and knowledge convergence/procedural-promotion firewall (#657) in tests/derived_replay_1936.rs, and fix any uncovered defects.",
+      "intent": "Rebase PR 1942 onto master, enforce fail-closed allow_identifier_observation and per-instance CSPRNG ephemeral salt in core::telemetry, preserve --device-id hyphen parsing and #1938 kernel benchmarks, update living specs, and verify.",
       "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented Wave 3 (#1936, #1630, #657) derived replay, multi-stream keyset compaction, StoragePool read synchronization, and knowledge promotion firewall invariants",
-          "reviewed_code_fingerprint": "d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c",
-          "spec_material_hash": "79e72c92f301d9c9c35d5682424d282f48c2d19bcd19d05ef3ae872044a2ad26"
+          "reason": "Documented TelemetryRingBuffer, ephemeral CSPRNG salt, fail-closed allow_identifier_observation, kernel_workload_1938, and runtime module wiring.",
+          "reviewed_code_fingerprint": "6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b",
+          "spec_material_hash": "f81fdcf6b633ed786e2abb2ac62257b7b941ba2285cbbf420ee876d385f0c17e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented malformed_provenance exclusion, PROMOTION_FIREWALL_BLOCKED, and dry-run components_collected interface updates",
-          "reviewed_code_fingerprint": "d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c",
-          "spec_material_hash": "28abe642bf63f4d8f8fb9d4c8a6356bd613921f601296022bec502770de371c3"
+          "reason": "Documented telemetry public API including TelemetryRetentionPolicy::allow_identifier_observation and anonymize_identifier_with_salt, ExecutionTelemetryProjection operational_diagnostics, and CloudCommand::Revoke::device_id.",
+          "reviewed_code_fingerprint": "6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b",
+          "spec_material_hash": "d318a7e7e15224db18a6242a872531abbcc95349ed1e702153f3c14340e4e8ff"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Knowledge procedural-promotion firewall (PROMOTION_FIREWALL_BLOCKED), malformed_provenance exclusion, and composite (seq, event_id) compaction preserve existing SECURITY.md invariants without altering trust boundaries",
-          "reviewed_code_fingerprint": "d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c",
-          "spec_material_hash": "76971f4ab8c94db6b6a8628052637f004a258ae9983d708e6585a0a6fb191a97"
+          "reason": "Documented strict non-authority, fail-closed allow_identifier_observation suppression, and per-instance CSPRNG ephemeral salt.",
+          "reviewed_code_fingerprint": "6dcd89561427e635686ad60e5d80f46d070e91460e3e5d56d34861697122420b",
+          "spec_material_hash": "dc3dee6cb90ce34fa2e7ff27e45e17cce34be0be2a3d87c21fcd3f9c5e06460f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Wave 3 Hardening #1936 #1630 #657: Derived Replay, Compaction & Knowledge Convergence",
+      "title": "Hardening #1938/#1095 kernel benchmarks, fail-closed bounded telemetry, and --device-id hyphen fix",
       "todo_ids": [
-        "code_01m85w2k7qazdqbg"
+        "bugs_01m85ykhhn1zb6ft"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795586451Z"
+      "updated_at": "1795589073Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "PR #1941 derived replay, compaction, and knowledge convergence"
+        "Single PR in isolated Decapod worktree; no root mutations, no egress expansion, no static identifier hashing."
       ],
-      "artifact_hash": "sha256:f682da6ae7b49ea02fda3f32589cb49751bf83c0a592340bfefa2aa3a5ec9a6b",
+      "artifact_hash": "sha256:761c8e220cc458654bf32c33b6536b1ff5b8cc6a21cb614a8aa53e0a4fdd349a",
       "checks": [
         {
-          "name": "rebase_master",
+          "name": "cargo_audit",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cli_device_id_tests",
+          "status": "passed"
+        },
+        {
+          "name": "core_telemetry_tests",
+          "status": "passed"
+        },
+        {
+          "name": "kernel_workload_1938",
+          "status": "passed"
+        },
+        {
+          "name": "observability_telemetry_tests",
+          "status": "passed"
+        },
+        {
+          "name": "trust_egress_gate",
           "status": "passed"
         }
       ],
@@ -986,20 +1009,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1941-rebased",
+            "intent_id": "intent:pr-1942-workload-telemetry",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1941-rebased",
+            "intent_id": "intent:pr-1942-workload-telemetry",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1941-rebased",
+            "detail": "trajectory:pr-1942-workload-telemetry",
             "event_id": "event:4",
-            "intent_id": "intent:run-1941-rebased",
+            "intent_id": "intent:pr-1942-workload-telemetry",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1008,28 +1031,45 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1941-rebased": {
+          "pr-1942-workload-telemetry": {
             "evidence_only": true,
-            "id": "run-1941-rebased",
-            "intent_id": "intent:run-1941-rebased",
+            "id": "pr-1942-workload-telemetry",
+            "intent_id": "intent:pr-1942-workload-telemetry",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/storage_compaction.rs",
-                  "src/decapod/core/task_journal.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/plugins/knowledge.rs",
-                  "docs/derived-data-and-replay.md",
-                  "tests/derived_replay_1936.rs"
+                  "src/decapod/core/telemetry.rs",
+                  "src/decapod/core/observability_projections/telemetry.rs",
+                  "tests/kernel_workload_1938.rs",
+                  "src/decapod/core/telemetry.rs",
+                  "src/decapod/core/observability_projections/telemetry.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/mod.rs",
+                  "tests/kernel_workload_1938.rs",
+                  "tests/core/core.rs",
+                  "tests/unit/cli_tests.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "docs/kernel-workload-baseline.md",
+                  "cargo test --lib core::telemetry (5 passed)",
+                  "cargo test --lib core::observability_projections::telemetry (1 passed)",
+                  "cargo test --lib cloud_revoke_device_id (1 passed)",
+                  "cargo test --test trust_egress_gate (5 passed)",
+                  "cargo test --test kernel_workload_1938 (1 passed)",
+                  "cargo audit -q (0 vulnerabilities)"
                 ],
                 "proof_refs": [
-                  "rebase_master"
+                  "cargo_fmt",
+                  "core_telemetry_tests",
+                  "observability_telemetry_tests",
+                  "cli_device_id_tests",
+                  "trust_egress_gate",
+                  "kernel_workload_1938",
+                  "cargo_audit"
                 ],
                 "scope": [
-                  "core"
+                  "src/decapod/core/telemetry.rs src/decapod/core/observability_projections/telemetry.rs src/decapod/cli.rs tests/unit/cli_tests.rs tests/kernel_workload_1938.rs tests/core/core.rs .config/build/decapod.BUILD.bzl docs/kernel-workload-baseline.md .decapod/managed/specs/"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1039,26 +1079,38 @@
         }
       },
       "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/storage_compaction.rs",
-        "src/decapod/core/task_journal.rs",
-        "src/decapod/core/todo.rs",
-        "src/decapod/plugins/knowledge.rs"
+      "evidence": [
+        "cargo audit -q (0 vulnerabilities)",
+        "cargo test --lib cloud_revoke_device_id (1 passed)",
+        "cargo test --lib core::observability_projections::telemetry (1 passed)",
+        "cargo test --lib core::telemetry (5 passed)",
+        "cargo test --test kernel_workload_1938 (1 passed)",
+        "cargo test --test trust_egress_gate (5 passed)"
       ],
-      "intent_id": "intent:run-1941-rebased",
+      "inspected_files": [
+        "src/decapod/core/observability_projections/telemetry.rs",
+        "src/decapod/core/telemetry.rs",
+        "tests/kernel_workload_1938.rs"
+      ],
+      "intent_id": "intent:pr-1942-workload-telemetry",
       "modified_files": [
-        "docs/derived-data-and-replay.md",
-        "tests/derived_replay_1936.rs"
+        ".config/build/decapod.BUILD.bzl",
+        "docs/kernel-workload-baseline.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/observability_projections/telemetry.rs",
+        "src/decapod/core/telemetry.rs",
+        "tests/core/core.rs",
+        "tests/kernel_workload_1938.rs",
+        "tests/unit/cli_tests.rs"
       ],
       "repo_scope": [
-        "core"
+        "src/decapod/core/telemetry.rs src/decapod/core/observability_projections/telemetry.rs src/decapod/cli.rs tests/unit/cli_tests.rs tests/kernel_workload_1938.rs tests/core/core.rs .config/build/decapod.BUILD.bzl docs/kernel-workload-baseline.md .decapod/managed/specs/"
       ],
-      "run_id": "run-1941-rebased",
+      "run_id": "pr-1942-workload-telemetry",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m85w2k7qazdqbg",
+      "task_id": "bugs_01m85ykhhn1zb6ft",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

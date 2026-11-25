@@ -15,6 +15,10 @@ use crate::core::observability_projections::timeline::{
     ProofApplicability, TimelineEntry, TimelineProjectionQuery, TrustClass,
     project_activity_timeline,
 };
+use crate::core::telemetry::{
+    DiagnosticOutcome, DiagnosticTelemetryReport, ProofFreshness, RawDiagnosticSample,
+    TelemetryRetentionPolicy, TelemetryRingBuffer, WorkloadSizeMetrics, sanitize_telemetry_text,
+};
 use crate::core::trace::redact_string;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -158,6 +162,14 @@ pub struct TelemetryEventSample {
     pub approval_decision: bool,
     #[serde(default)]
     pub cancelled_or_partial: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub queue_wait_us: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub execution_us: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lock_wait_us: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub proof_freshness: Option<ProofFreshness>,
 }
 
 /// Top-level strictly read-only execution telemetry projection (#1095).
@@ -184,6 +196,7 @@ pub struct ExecutionTelemetryProjection {
     pub elapsed_ms_observed: Option<u64>,
     pub missing_measurements: Vec<String>,
     pub series: Vec<TelemetryBucket>,
+    pub operational_diagnostics: DiagnosticTelemetryReport,
     pub integrity_findings: Vec<TelemetryIntegrityFinding>,
     pub attribution_limits: Vec<String>,
     pub pagination: TelemetryPagination,
@@ -271,11 +284,18 @@ fn sample_from_timeline_entry(
         )
         && entry.corroborated;
 
+    let proof_freshness = Some(match entry.proof_applicability {
+        ProofApplicability::Proven => ProofFreshness::Fresh,
+        ProofApplicability::Stale => ProofFreshness::Stale,
+        ProofApplicability::Failed | ProofApplicability::NotProven => ProofFreshness::Unproven,
+        ProofApplicability::Unknown => ProofFreshness::Unknown,
+    });
+
     TelemetryEventSample {
         event_id: entry.event_id.clone(),
         epoch_secs: parse_epoch_secs(&entry.timestamp),
-        stage: redact_string(&entry.stage),
-        action: redact_string(&entry.claimed_action),
+        stage: sanitize_telemetry_text(&entry.stage),
+        action: sanitize_telemetry_text(&entry.claimed_action),
         outcome: outcome.to_string(),
         origin_class: classify_timeline_origin(entry),
         task_id: entry.task_id.clone(),
@@ -286,6 +306,10 @@ fn sample_from_timeline_entry(
         human_interruption: stage_lc.contains("escalat") || action_lc.contains("question"),
         approval_decision: stage_lc.contains("approv") || transition_lc.contains("approv"),
         cancelled_or_partial: outcome == "cancelled_or_partial",
+        queue_wait_us: None,
+        execution_us: None,
+        lock_wait_us: None,
+        proof_freshness,
     }
 }
 
@@ -351,13 +375,13 @@ fn inspect_governance_for_samples(
                     .get("recorded_at")
                     .and_then(Value::as_str)
                     .and_then(parse_epoch_secs),
-                stage: redact_string(loop_type),
-                action: redact_string(
+                stage: sanitize_telemetry_text(loop_type),
+                action: sanitize_telemetry_text(
                     item.get("trigger")
                         .and_then(Value::as_str)
                         .unwrap_or("trajectory_loop"),
                 ),
-                outcome: status_lc,
+                outcome: status_lc.clone(),
                 origin_class: if independently_verified {
                     EvidenceOriginClass::IndependentVerification
                 } else {
@@ -374,6 +398,25 @@ fn inspect_governance_for_samples(
                 human_interruption: loop_type.eq_ignore_ascii_case("human_escalation"),
                 approval_decision: loop_type.eq_ignore_ascii_case("approval"),
                 cancelled_or_partial,
+                queue_wait_us: item.get("queue_wait_us").and_then(Value::as_u64),
+                execution_us: item
+                    .get("execution_us")
+                    .and_then(Value::as_u64)
+                    .or_else(|| {
+                        item.get("elapsed_ms")
+                            .and_then(Value::as_u64)
+                            .map(|ms| ms.saturating_mul(1_000))
+                    }),
+                lock_wait_us: item.get("lock_wait_us").and_then(Value::as_u64),
+                proof_freshness: Some(if independently_verified {
+                    ProofFreshness::Fresh
+                } else if status_lc == "stale" {
+                    ProofFreshness::Stale
+                } else if status_lc == "failed" || status_lc == "not_proven" {
+                    ProofFreshness::Unproven
+                } else {
+                    ProofFreshness::Unknown
+                }),
             });
         }
     }
@@ -415,10 +458,20 @@ pub fn aggregate_telemetry_samples(
     let mut any_elapsed_observed = false;
     let mut prev_failed = false;
 
+    let max_epoch = samples
+        .iter()
+        .filter_map(|s| s.epoch_secs)
+        .max()
+        .unwrap_or(0);
+    let mut ring = TelemetryRingBuffer::new(TelemetryRetentionPolicy {
+        bucket_seconds,
+        ..Default::default()
+    });
+
     for sample in samples {
         let safe_event_id = redact_string(&sample.event_id);
-        let safe_action = redact_string(&sample.action);
-        let safe_stage = redact_string(&sample.stage);
+        let safe_action = sanitize_telemetry_text(&sample.action);
+        let safe_stage = sanitize_telemetry_text(&sample.stage);
         if safe_action != sample.action
             || safe_stage != sample.stage
             || safe_event_id != sample.event_id
@@ -587,7 +640,49 @@ pub fn aggregate_telemetry_samples(
         if is_cancelled_partial {
             entry.cancelled_or_partial_runs += 1;
         }
+
+        let diag_outcome = if is_denial {
+            DiagnosticOutcome::Denied
+        } else if is_cancelled_partial {
+            DiagnosticOutcome::CancelledOrPartial
+        } else if is_fail {
+            DiagnosticOutcome::Failed
+        } else if is_pass {
+            DiagnosticOutcome::Succeeded
+        } else {
+            DiagnosticOutcome::Unknown
+        };
+        let diag_freshness = sample.proof_freshness.unwrap_or_else(|| {
+            if is_pass && sample.independently_verified && head_matches {
+                ProofFreshness::Fresh
+            } else if outcome_lc == "stale" {
+                ProofFreshness::Stale
+            } else if is_fail || outcome_lc == "not_proven" {
+                ProofFreshness::Unproven
+            } else {
+                ProofFreshness::Unknown
+            }
+        });
+        ring.record(
+            RawDiagnosticSample {
+                epoch_secs: sample.epoch_secs.unwrap_or(max_epoch),
+                stage: safe_stage,
+                operation: safe_action,
+                outcome: diag_outcome,
+                proof_freshness: diag_freshness,
+                queue_wait_us: sample.queue_wait_us,
+                execution_us: sample
+                    .execution_us
+                    .or_else(|| sample.elapsed_ms.map(|ms| ms.saturating_mul(1_000))),
+                lock_wait_us: sample.lock_wait_us,
+                lock_contended: sample.lock_wait_us.is_some_and(|w| w > 0),
+                repo_identifier: None,
+            },
+            max_epoch,
+        );
     }
+
+    let operational_diagnostics = ring.report(WorkloadSizeMetrics::default(), None);
 
     let context_tokens_observed = any_tokens_observed.then_some(token_sum);
     let elapsed_ms_observed = any_elapsed_observed.then_some(elapsed_sum);
@@ -651,6 +746,7 @@ pub fn aggregate_telemetry_samples(
         elapsed_ms_observed,
         missing_measurements,
         series: buckets.into_values().collect(),
+        operational_diagnostics,
         integrity_findings,
         attribution_limits: vec![
             "Read-only local projection over recorded kernel, trajectory, and trace artifacts; never grants validation or publication authority.".to_string(),
@@ -703,15 +799,22 @@ pub fn project_execution_telemetry(
         .collect();
     samples.extend(inspect_governance_for_samples(gov_json.as_ref(), head_sha));
 
-    Ok(aggregate_telemetry_samples(
-        &samples,
-        snapshot,
-        query,
-        retained_bytes,
-        None,
-        None,
-        None,
-    ))
+    let mut proj =
+        aggregate_telemetry_samples(&samples, snapshot, query, retained_bytes, None, None, None);
+    let diag_snap = crate::core::telemetry::collect_workspace_diagnostic_telemetry(
+        repo_root,
+        samples
+            .iter()
+            .filter_map(|s| s.epoch_secs)
+            .max()
+            .unwrap_or(0),
+        TelemetryRetentionPolicy {
+            bucket_seconds: query.bucket_seconds.max(1),
+            ..Default::default()
+        },
+    );
+    proj.operational_diagnostics.workload = diag_snap.workload;
+    Ok(proj)
 }
 
 #[cfg(test)]
@@ -744,6 +847,10 @@ mod tests {
                 human_interruption: false,
                 approval_decision: false,
                 cancelled_or_partial: false,
+                queue_wait_us: None,
+                execution_us: None,
+                lock_wait_us: None,
+                proof_freshness: None,
             },
             // Duplicate event_id must be ignored and flagged.
             TelemetryEventSample {
@@ -761,6 +868,10 @@ mod tests {
                 human_interruption: false,
                 approval_decision: false,
                 cancelled_or_partial: false,
+                queue_wait_us: None,
+                execution_us: None,
+                lock_wait_us: None,
+                proof_freshness: None,
             },
             // Recovery pass with independent verification.
             TelemetryEventSample {
@@ -778,6 +889,10 @@ mod tests {
                 human_interruption: false,
                 approval_decision: true,
                 cancelled_or_partial: false,
+                queue_wait_us: Some(15),
+                execution_us: Some(250),
+                lock_wait_us: Some(10),
+                proof_freshness: None,
             },
             // Self-declared pass without independent verification must NOT increment numerator.
             TelemetryEventSample {
@@ -795,6 +910,10 @@ mod tests {
                 human_interruption: false,
                 approval_decision: false,
                 cancelled_or_partial: false,
+                queue_wait_us: None,
+                execution_us: None,
+                lock_wait_us: None,
+                proof_freshness: None,
             },
             // Cancelled run retained in denominator.
             TelemetryEventSample {
@@ -812,6 +931,10 @@ mod tests {
                 human_interruption: true,
                 approval_decision: false,
                 cancelled_or_partial: true,
+                queue_wait_us: None,
+                execution_us: None,
+                lock_wait_us: None,
+                proof_freshness: None,
             },
             // Wrong task join excluded and flagged.
             TelemetryEventSample {
@@ -829,6 +952,10 @@ mod tests {
                 human_interruption: false,
                 approval_decision: false,
                 cancelled_or_partial: false,
+                queue_wait_us: None,
+                execution_us: None,
+                lock_wait_us: None,
+                proof_freshness: None,
             },
             // Wrong source head join excluded from verified numerator and flagged.
             TelemetryEventSample {
@@ -846,6 +973,10 @@ mod tests {
                 human_interruption: false,
                 approval_decision: false,
                 cancelled_or_partial: false,
+                queue_wait_us: None,
+                execution_us: None,
+                lock_wait_us: None,
+                proof_freshness: None,
             },
         ];
         let query = TelemetryProjectionQuery {
@@ -889,5 +1020,13 @@ mod tests {
         assert!(codes.contains("partial_or_cancelled_run"));
         let serialized = serde_json::to_string(&proj).unwrap();
         assert!(!serialized.contains("ghp_1234567890abcdefghijklmnop"));
+        assert!(!proj.operational_diagnostics.can_grant_authority);
+        assert!(proj.operational_diagnostics.diagnostic_only);
+        assert!(proj.operational_diagnostics.repo_digest.is_none());
+        assert_eq!(proj.operational_diagnostics.proof_freshness.fresh, 1);
+        assert_eq!(
+            proj.operational_diagnostics.execution.map(|q| q.p50_us),
+            Some(250)
+        );
     }
 }
