@@ -1,0 +1,593 @@
+{
+  "schema_version": "decapod.malformed-encoding-vectors.v1",
+  "invalid_meta_stamps": [
+    {
+      "key": "format_version",
+      "value": "0",
+      "expect_read_err": true,
+      "expect_write_err": true
+    },
+    {
+      "key": "format_version",
+      "value": "two",
+      "expect_read_err": true,
+      "expect_write_err": true
+    },
+    {
+      "key": "min_reader_version",
+      "value": "not-semver",
+      "expect_read_err": true,
+      "expect_write_err": true
+    },
+    {
+      "key": "min_writer_version",
+      "value": "1.2",
+      "expect_read_err": false,
+      "expect_write_err": true
+    }
+  ],
+  "invalid_compact_envelopes": [
+    {
+      "name": "zero_mask",
+      "raw": "{\"_ce_v1\":0,\"payload\":{}}",
+      "subject_kind": "task",
+      "subject_id": "feat_hist1937compat01"
+    },
+    {
+      "name": "unknown_high_bit",
+      "raw": "{\"_ce_v1\":1048576,\"payload\":{}}",
+      "subject_kind": "task",
+      "subject_id": "feat_hist1937compat01"
+    },
+    {
+      "name": "conflicting_inline_event_id",
+      "raw": "{\"_ce_v1\":1,\"event_id\":\"OTHER\",\"payload\":{}}",
+      "subject_kind": "task",
+      "subject_id": "feat_hist1937compat01"
+    },
+    {
+      "name": "missing_task_subject_id",
+      "raw": "{\"_ce_v1\":16,\"payload\":{}}",
+      "subject_kind": "task",
+      "subject_id": null
+    },
+    {
+      "name": "missing_commit_subject_id",
+      "raw": "{\"_ce_v1\":32,\"payload\":{}}",
+      "subject_kind": "commit",
+      "subject_id": null
+    }
+  ],
+  "invalid_checkpoint_payloads": [
+    {
+      "name": "missing_record_digest",
+      "mutated": {
+        "schema_version": 2,
+        "task_id": "feat_hist1937compat01",
+        "ordinal": 2,
+        "kind": "transition",
+        "predecessor": "85b272aa4a895c5979b54397cb20f3492c45c99cb1413299aa3cc9911b682729",
+        "previous_digest": "96ade40a5120cf95805eaedd9797b50502ddf16789b69a28381559c883e54e58",
+        "source_watermark": 3,
+        "operation": "task.done",
+        "actor": "hist-agent",
+        "ts": "2026-01-10T12:05:00Z",
+        "projection": {
+          "task": {
+            "id": "feat_hist1937compat01",
+            "hash": "hist19",
+            "title": "Historical compat task",
+            "description": "",
+            "tags": "compat,hardening",
+            "owner": "hist-agent",
+            "due": null,
+            "ref": "issue:1937",
+            "status": "done",
+            "created_at": "2026-01-10T12:00:00Z",
+            "updated_at": "2026-01-10T12:05:00Z",
+            "completed_at": "2026-01-10T12:05:00Z",
+            "closed_at": null,
+            "dir_path": "/work/compat-fixture",
+            "scope": "",
+            "parent_task_id": null,
+            "priority": "high",
+            "depends_on": "",
+            "blocks": "",
+            "category": "core",
+            "component": "storage",
+            "assigned_to": "hist-agent",
+            "assigned_at": "2026-01-10T12:00:00Z",
+            "one_shot": 1,
+            "lease_expires_at": "9999999999Z",
+            "lease_generation": 1,
+            "lease_lifecycle": "claimed",
+            "intent_anchor": "intent:compat:1937",
+            "revision": 2
+          },
+          "owners": [
+            {
+              "id": "own_hist_1",
+              "agent_id": "hist-agent",
+              "claimed_at": "2026-01-10T12:00:00Z",
+              "claim_type": "primary"
+            }
+          ],
+          "dependencies": [],
+          "tags": [
+            "compat",
+            "hardening"
+          ],
+          "verification": {
+            "proof_plan": "[\"validate_passes\"]",
+            "verification_artifacts": "",
+            "last_verified_at": "2026-01-10T12:05:00Z",
+            "last_verified_status": "passed",
+            "last_verified_notes": "Original historical verification notes stay immutable.",
+            "verification_policy_days": 90,
+            "updated_at": "2026-01-10T12:05:00Z"
+          }
+        },
+        "component_refs": {
+          "task.description": {
+            "kind": "task.description",
+            "codec_version": 1,
+            "byte_len": 1559,
+            "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+          },
+          "task.scope": {
+            "kind": "task.scope",
+            "codec_version": 0,
+            "byte_len": 163,
+            "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+          },
+          "verification.verification_artifacts": {
+            "kind": "verification.verification_artifacts",
+            "codec_version": 0,
+            "byte_len": 129,
+            "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+          }
+        },
+        "projection_digest": "f751949ae363847f3ff9b1bd2eff8056e1e814e6944424c25b6555479e2f23a9"
+      }
+    },
+    {
+      "name": "missing_projection_digest",
+      "mutated": {
+        "schema_version": 2,
+        "task_id": "feat_hist1937compat01",
+        "ordinal": 2,
+        "kind": "transition",
+        "predecessor": "85b272aa4a895c5979b54397cb20f3492c45c99cb1413299aa3cc9911b682729",
+        "previous_digest": "96ade40a5120cf95805eaedd9797b50502ddf16789b69a28381559c883e54e58",
+        "source_watermark": 3,
+        "operation": "task.done",
+        "actor": "hist-agent",
+        "ts": "2026-01-10T12:05:00Z",
+        "projection": {
+          "task": {
+            "id": "feat_hist1937compat01",
+            "hash": "hist19",
+            "title": "Historical compat task",
+            "description": "",
+            "tags": "compat,hardening",
+            "owner": "hist-agent",
+            "due": null,
+            "ref": "issue:1937",
+            "status": "done",
+            "created_at": "2026-01-10T12:00:00Z",
+            "updated_at": "2026-01-10T12:05:00Z",
+            "completed_at": "2026-01-10T12:05:00Z",
+            "closed_at": null,
+            "dir_path": "/work/compat-fixture",
+            "scope": "",
+            "parent_task_id": null,
+            "priority": "high",
+            "depends_on": "",
+            "blocks": "",
+            "category": "core",
+            "component": "storage",
+            "assigned_to": "hist-agent",
+            "assigned_at": "2026-01-10T12:00:00Z",
+            "one_shot": 1,
+            "lease_expires_at": "9999999999Z",
+            "lease_generation": 1,
+            "lease_lifecycle": "claimed",
+            "intent_anchor": "intent:compat:1937",
+            "revision": 2
+          },
+          "owners": [
+            {
+              "id": "own_hist_1",
+              "agent_id": "hist-agent",
+              "claimed_at": "2026-01-10T12:00:00Z",
+              "claim_type": "primary"
+            }
+          ],
+          "dependencies": [],
+          "tags": [
+            "compat",
+            "hardening"
+          ],
+          "verification": {
+            "proof_plan": "[\"validate_passes\"]",
+            "verification_artifacts": "",
+            "last_verified_at": "2026-01-10T12:05:00Z",
+            "last_verified_status": "passed",
+            "last_verified_notes": "Original historical verification notes stay immutable.",
+            "verification_policy_days": 90,
+            "updated_at": "2026-01-10T12:05:00Z"
+          }
+        },
+        "component_refs": {
+          "task.description": {
+            "kind": "task.description",
+            "codec_version": 1,
+            "byte_len": 1559,
+            "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+          },
+          "task.scope": {
+            "kind": "task.scope",
+            "codec_version": 0,
+            "byte_len": 163,
+            "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+          },
+          "verification.verification_artifacts": {
+            "kind": "verification.verification_artifacts",
+            "codec_version": 0,
+            "byte_len": 129,
+            "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+          }
+        },
+        "record_digest": "ffe25bd13d9eb9ddecbdc1f02c6f09382837f209296974d345a31d8c98a49038"
+      }
+    },
+    {
+      "name": "unknown_mandatory_field_on_checkpoint",
+      "mutated": {
+        "schema_version": 2,
+        "task_id": "feat_hist1937compat01",
+        "ordinal": 2,
+        "kind": "transition",
+        "predecessor": "85b272aa4a895c5979b54397cb20f3492c45c99cb1413299aa3cc9911b682729",
+        "previous_digest": "96ade40a5120cf95805eaedd9797b50502ddf16789b69a28381559c883e54e58",
+        "source_watermark": 3,
+        "operation": "task.done",
+        "actor": "hist-agent",
+        "ts": "2026-01-10T12:05:00Z",
+        "projection": {
+          "task": {
+            "id": "feat_hist1937compat01",
+            "hash": "hist19",
+            "title": "Historical compat task",
+            "description": "",
+            "tags": "compat,hardening",
+            "owner": "hist-agent",
+            "due": null,
+            "ref": "issue:1937",
+            "status": "done",
+            "created_at": "2026-01-10T12:00:00Z",
+            "updated_at": "2026-01-10T12:05:00Z",
+            "completed_at": "2026-01-10T12:05:00Z",
+            "closed_at": null,
+            "dir_path": "/work/compat-fixture",
+            "scope": "",
+            "parent_task_id": null,
+            "priority": "high",
+            "depends_on": "",
+            "blocks": "",
+            "category": "core",
+            "component": "storage",
+            "assigned_to": "hist-agent",
+            "assigned_at": "2026-01-10T12:00:00Z",
+            "one_shot": 1,
+            "lease_expires_at": "9999999999Z",
+            "lease_generation": 1,
+            "lease_lifecycle": "claimed",
+            "intent_anchor": "intent:compat:1937",
+            "revision": 2
+          },
+          "owners": [
+            {
+              "id": "own_hist_1",
+              "agent_id": "hist-agent",
+              "claimed_at": "2026-01-10T12:00:00Z",
+              "claim_type": "primary"
+            }
+          ],
+          "dependencies": [],
+          "tags": [
+            "compat",
+            "hardening"
+          ],
+          "verification": {
+            "proof_plan": "[\"validate_passes\"]",
+            "verification_artifacts": "",
+            "last_verified_at": "2026-01-10T12:05:00Z",
+            "last_verified_status": "passed",
+            "last_verified_notes": "Original historical verification notes stay immutable.",
+            "verification_policy_days": 90,
+            "updated_at": "2026-01-10T12:05:00Z"
+          }
+        },
+        "component_refs": {
+          "task.description": {
+            "kind": "task.description",
+            "codec_version": 1,
+            "byte_len": 1559,
+            "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+          },
+          "task.scope": {
+            "kind": "task.scope",
+            "codec_version": 0,
+            "byte_len": 163,
+            "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+          },
+          "verification.verification_artifacts": {
+            "kind": "verification.verification_artifacts",
+            "codec_version": 0,
+            "byte_len": 129,
+            "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+          }
+        },
+        "projection_digest": "f751949ae363847f3ff9b1bd2eff8056e1e814e6944424c25b6555479e2f23a9",
+        "record_digest": "ffe25bd13d9eb9ddecbdc1f02c6f09382837f209296974d345a31d8c98a49038",
+        "unexpected_mandatory_field": true
+      }
+    },
+    {
+      "name": "schema_version_0",
+      "mutated": {
+        "schema_version": 0,
+        "task_id": "feat_hist1937compat01",
+        "ordinal": 1,
+        "kind": "observed_baseline",
+        "predecessor": null,
+        "previous_digest": null,
+        "source_watermark": 1,
+        "operation": "explicit_current_state_baseline",
+        "actor": "hist-agent",
+        "projection": {
+          "task": {
+            "id": "feat_hist1937compat01",
+            "hash": "hist19",
+            "title": "Historical compat task",
+            "description": "Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades. Historical v1 task description preserved across upgrades.",
+            "tags": "compat,hardening",
+            "owner": "hist-agent",
+            "due": null,
+            "ref": "issue:1937",
+            "status": "in_progress",
+            "created_at": "2026-01-10T12:00:00Z",
+            "updated_at": "2026-01-10T12:00:00Z",
+            "completed_at": null,
+            "closed_at": null,
+            "dir_path": "/work/compat-fixture",
+            "scope": "paths:[\"src/decapod/core/a1b2c3d4e5f6g7h8.rs\",\"src/decapod/core/9i8j7k6l5m4n3o2p.rs\",\"src/decapod/core/q1w2e3r4t5y6u7i8.rs\",\"src/decapod/core/z9x8c7v6b5n4m3k2.rs\"]",
+            "parent_task_id": null,
+            "priority": "high",
+            "depends_on": "",
+            "blocks": "",
+            "category": "core",
+            "component": "storage",
+            "assigned_to": "hist-agent",
+            "assigned_at": "2026-01-10T12:00:00Z",
+            "one_shot": 1,
+            "lease_expires_at": "9999999999Z",
+            "lease_generation": 1,
+            "lease_lifecycle": "claimed",
+            "intent_anchor": "intent:compat:1937",
+            "revision": 1
+          },
+          "owners": [
+            {
+              "id": "own_hist_1",
+              "agent_id": "hist-agent",
+              "claimed_at": "2026-01-10T12:00:00Z",
+              "claim_type": "primary"
+            }
+          ],
+          "dependencies": [],
+          "tags": [
+            "compat",
+            "hardening"
+          ],
+          "verification": {
+            "proof_plan": "[\"validate_passes\"]",
+            "verification_artifacts": "{\"task_id\":\"feat_hist1937compat01\",\"proof_plan_results\":[{\"proof_gate\":\"validate_passes\",\"output_hash\":\"sha256:historical1937\"}]}",
+            "last_verified_at": "2026-01-10T12:00:00Z",
+            "last_verified_status": "passed",
+            "last_verified_notes": "Original historical verification notes stay immutable.",
+            "verification_policy_days": 90,
+            "updated_at": "2026-01-10T12:00:00Z"
+          }
+        },
+        "projection_digest": "96ade40a5120cf95805eaedd9797b50502ddf16789b69a28381559c883e54e58",
+        "record_digest": "99e04734e617fa45247e2eee15b3d3c9819a396070efdbddfba1b71d333f8a74"
+      }
+    },
+    {
+      "name": "future_schema_version_3",
+      "mutated": {
+        "schema_version": 3,
+        "task_id": "feat_hist1937compat01",
+        "ordinal": 2,
+        "kind": "transition",
+        "predecessor": "85b272aa4a895c5979b54397cb20f3492c45c99cb1413299aa3cc9911b682729",
+        "previous_digest": "96ade40a5120cf95805eaedd9797b50502ddf16789b69a28381559c883e54e58",
+        "source_watermark": 3,
+        "operation": "task.done",
+        "actor": "hist-agent",
+        "ts": "2026-01-10T12:05:00Z",
+        "projection": {
+          "task": {
+            "id": "feat_hist1937compat01",
+            "hash": "hist19",
+            "title": "Historical compat task",
+            "description": "",
+            "tags": "compat,hardening",
+            "owner": "hist-agent",
+            "due": null,
+            "ref": "issue:1937",
+            "status": "done",
+            "created_at": "2026-01-10T12:00:00Z",
+            "updated_at": "2026-01-10T12:05:00Z",
+            "completed_at": "2026-01-10T12:05:00Z",
+            "closed_at": null,
+            "dir_path": "/work/compat-fixture",
+            "scope": "",
+            "parent_task_id": null,
+            "priority": "high",
+            "depends_on": "",
+            "blocks": "",
+            "category": "core",
+            "component": "storage",
+            "assigned_to": "hist-agent",
+            "assigned_at": "2026-01-10T12:00:00Z",
+            "one_shot": 1,
+            "lease_expires_at": "9999999999Z",
+            "lease_generation": 1,
+            "lease_lifecycle": "claimed",
+            "intent_anchor": "intent:compat:1937",
+            "revision": 2
+          },
+          "owners": [
+            {
+              "id": "own_hist_1",
+              "agent_id": "hist-agent",
+              "claimed_at": "2026-01-10T12:00:00Z",
+              "claim_type": "primary"
+            }
+          ],
+          "dependencies": [],
+          "tags": [
+            "compat",
+            "hardening"
+          ],
+          "verification": {
+            "proof_plan": "[\"validate_passes\"]",
+            "verification_artifacts": "",
+            "last_verified_at": "2026-01-10T12:05:00Z",
+            "last_verified_status": "passed",
+            "last_verified_notes": "Original historical verification notes stay immutable.",
+            "verification_policy_days": 90,
+            "updated_at": "2026-01-10T12:05:00Z"
+          }
+        },
+        "component_refs": {
+          "task.description": {
+            "kind": "task.description",
+            "codec_version": 1,
+            "byte_len": 1559,
+            "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+          },
+          "task.scope": {
+            "kind": "task.scope",
+            "codec_version": 0,
+            "byte_len": 163,
+            "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+          },
+          "verification.verification_artifacts": {
+            "kind": "verification.verification_artifacts",
+            "codec_version": 0,
+            "byte_len": 129,
+            "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+          }
+        },
+        "projection_digest": "f751949ae363847f3ff9b1bd2eff8056e1e814e6944424c25b6555479e2f23a9",
+        "record_digest": "ffe25bd13d9eb9ddecbdc1f02c6f09382837f209296974d345a31d8c98a49038"
+      }
+    },
+    {
+      "name": "v1_with_v2_component_refs",
+      "mutated": {
+        "schema_version": 1,
+        "task_id": "feat_hist1937compat01",
+        "ordinal": 2,
+        "kind": "transition",
+        "predecessor": "85b272aa4a895c5979b54397cb20f3492c45c99cb1413299aa3cc9911b682729",
+        "previous_digest": "96ade40a5120cf95805eaedd9797b50502ddf16789b69a28381559c883e54e58",
+        "source_watermark": 3,
+        "operation": "task.done",
+        "actor": "hist-agent",
+        "ts": "2026-01-10T12:05:00Z",
+        "projection": {
+          "task": {
+            "id": "feat_hist1937compat01",
+            "hash": "hist19",
+            "title": "Historical compat task",
+            "description": "",
+            "tags": "compat,hardening",
+            "owner": "hist-agent",
+            "due": null,
+            "ref": "issue:1937",
+            "status": "done",
+            "created_at": "2026-01-10T12:00:00Z",
+            "updated_at": "2026-01-10T12:05:00Z",
+            "completed_at": "2026-01-10T12:05:00Z",
+            "closed_at": null,
+            "dir_path": "/work/compat-fixture",
+            "scope": "",
+            "parent_task_id": null,
+            "priority": "high",
+            "depends_on": "",
+            "blocks": "",
+            "category": "core",
+            "component": "storage",
+            "assigned_to": "hist-agent",
+            "assigned_at": "2026-01-10T12:00:00Z",
+            "one_shot": 1,
+            "lease_expires_at": "9999999999Z",
+            "lease_generation": 1,
+            "lease_lifecycle": "claimed",
+            "intent_anchor": "intent:compat:1937",
+            "revision": 2
+          },
+          "owners": [
+            {
+              "id": "own_hist_1",
+              "agent_id": "hist-agent",
+              "claimed_at": "2026-01-10T12:00:00Z",
+              "claim_type": "primary"
+            }
+          ],
+          "dependencies": [],
+          "tags": [
+            "compat",
+            "hardening"
+          ],
+          "verification": {
+            "proof_plan": "[\"validate_passes\"]",
+            "verification_artifacts": "",
+            "last_verified_at": "2026-01-10T12:05:00Z",
+            "last_verified_status": "passed",
+            "last_verified_notes": "Original historical verification notes stay immutable.",
+            "verification_policy_days": 90,
+            "updated_at": "2026-01-10T12:05:00Z"
+          }
+        },
+        "component_refs": {
+          "task.description": {
+            "kind": "task.description",
+            "codec_version": 1,
+            "byte_len": 1559,
+            "content_sha256": "9bca2890c4ec267b6ccca297faba19bfb0de77af3daf2c12cd07fc179d6ee6f6"
+          },
+          "task.scope": {
+            "kind": "task.scope",
+            "codec_version": 0,
+            "byte_len": 163,
+            "content_sha256": "8a70e2bf9b2424862262ad955a33a5c7c03646eb6d897b0877b9d67e4a861359"
+          },
+          "verification.verification_artifacts": {
+            "kind": "verification.verification_artifacts",
+            "codec_version": 0,
+            "byte_len": 129,
+            "content_sha256": "87b62d621c1e578396175c39373d39a533a89f7252f10e465b93d3b0c30f6b6f"
+          }
+        },
+        "projection_digest": "f751949ae363847f3ff9b1bd2eff8056e1e814e6944424c25b6555479e2f23a9",
+        "record_digest": "ffe25bd13d9eb9ddecbdc1f02c6f09382837f209296974d345a31d8c98a49038"
+      }
+    }
+  ]
+}

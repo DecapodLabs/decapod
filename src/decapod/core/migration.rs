@@ -1244,7 +1244,8 @@ where
     // Refuse unsafe mixed authority before acquiring exclusive maintenance or
     // opening any legacy source. The checkpoint path rechecks after admission.
     guard_legacy_todo_before_checkpointing(&data_root)?;
-    let upgrade_pending = schema_upgrade_pending(&data_root)?;
+    let upgrade_pending =
+        schema_upgrade_pending(&data_root)? || has_pending_compiled_migrations(decapod_root)?;
     // Exclusive lifecycle access excludes every shared physical-connection
     // guard across backup, migration and rollback replacement. This is not a
     // transaction lock: the foreground owner retains only shared file-lifetime
@@ -1272,6 +1273,7 @@ where
         verify(&data_root)?;
         return Ok(report);
     };
+    let managed_snapshots = snapshot_managed_migration_files(decapod_root)?;
 
     let result = (|| -> Result<MigrationReport, error::DecapodError> {
         let report = run_migrations(decapod_root)?;
@@ -1282,6 +1284,7 @@ where
     match result {
         Err(err) => {
             restore_data_backup(&data_root, &backup_dir)?;
+            restore_managed_migration_files(&managed_snapshots)?;
             let _ = fs::remove_dir_all(&backup_dir);
             Err(error::DecapodError::ValidationError(format!(
                 "Migration failed; restored .decapod/data backup from {}: {}",
@@ -1332,6 +1335,59 @@ fn reconcile_post_consolidation_artifacts(decapod_root: &Path) -> Result<(), err
     // original consolidation. Re-run the existing idempotent copier so newer
     // rows reach decapod.db before the retired files are removed.
     migrate_consolidate_single_datastore(decapod_root)
+}
+
+fn has_pending_compiled_migrations(decapod_root: &Path) -> Result<bool, error::DecapodError> {
+    let migrations = all_migrations();
+    let applied = load_applied_migrations(decapod_root)?;
+    let applied_ids = applied.applied_ids();
+    let pending = plan_pending_migrations(DECAPOD_VERSION, &migrations, &applied_ids)?;
+    Ok(!pending.is_empty())
+}
+
+type ManagedFileSnapshot = (PathBuf, Option<Vec<u8>>);
+
+fn snapshot_managed_migration_files(
+    decapod_root: &Path,
+) -> Result<Vec<ManagedFileSnapshot>, error::DecapodError> {
+    let mut snapshots = Vec::with_capacity(3);
+    for rel in [
+        GENERATED_VERSION_COUNTER,
+        GENERATED_APPLIED_MIGRATIONS,
+        GENERATED_MIGRATION_CATALOG,
+    ] {
+        let path = decapod_root.join(rel);
+        let bytes = if path.exists() {
+            Some(fs::read(&path).map_err(error::DecapodError::IoError)?)
+        } else {
+            None
+        };
+        snapshots.push((path, bytes));
+    }
+    Ok(snapshots)
+}
+
+fn restore_managed_migration_files(
+    snapshots: &[ManagedFileSnapshot],
+) -> Result<(), error::DecapodError> {
+    for (path, prior) in snapshots {
+        match prior {
+            Some(bytes) => {
+                if let Some(parent) = path.parent() {
+                    crate::core::fs_permissions::ensure_private_dir(parent)
+                        .map_err(error::DecapodError::IoError)?;
+                }
+                crate::core::atomic::write_atomic(path, bytes)
+                    .map_err(error::DecapodError::IoError)?;
+            }
+            None => {
+                if path.exists() {
+                    fs::remove_file(path).map_err(error::DecapodError::IoError)?;
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn schema_upgrade_pending(data_root: &Path) -> Result<bool, error::DecapodError> {
@@ -1452,7 +1508,10 @@ fn create_data_backup(data_root: &Path) -> Result<Option<std::path::PathBuf>, er
         for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
             let entry = entry.map_err(error::DecapodError::IoError)?;
             let path = entry.path();
-            if path == backup_dir || is_runtime_coordination_entry(&path) {
+            if path == backup_dir
+                || is_runtime_coordination_entry(&path)
+                || is_migration_backup_entry(&path)
+            {
                 continue;
             }
             let name = entry.file_name().to_string_lossy().to_string();
@@ -1471,7 +1530,10 @@ fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error:
     // The caller retains _maintenance_lock until this restore completes.
     for entry in fs::read_dir(data_root).map_err(error::DecapodError::IoError)? {
         let entry = entry.map_err(error::DecapodError::IoError)?;
-        if entry.path() == backup_dir || is_runtime_coordination_entry(&entry.path()) {
+        if entry.path() == backup_dir
+            || is_runtime_coordination_entry(&entry.path())
+            || is_migration_backup_entry(&entry.path())
+        {
             continue;
         }
         remove_data_entry(&entry.path())?;
@@ -1481,12 +1543,19 @@ fn restore_data_backup(data_root: &Path, backup_dir: &Path) -> Result<(), error:
         let name = entry.file_name();
         // Older backups may contain copied lock markers. Never replace the
         // live exclusion inode with a historical copy.
-        if is_runtime_coordination_entry(&entry.path()) {
+        if is_runtime_coordination_entry(&entry.path()) || is_migration_backup_entry(&entry.path())
+        {
             continue;
         }
         copy_data_entry(&entry.path(), &data_root.join(name))?;
     }
     Ok(())
+}
+
+fn is_migration_backup_entry(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.starts_with(".migration_backup_"))
 }
 
 fn is_runtime_coordination_entry(path: &Path) -> bool {

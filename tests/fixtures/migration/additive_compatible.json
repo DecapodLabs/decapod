@@ -1,0 +1,73 @@
+{
+  "schema_version": "decapod.additive-compat-vectors.v1",
+  "verbose_event_with_additive_fields": {
+    "event_id": "EV_ADDITIVE_1",
+    "ts": "2026-01-10T12:00:00Z",
+    "event_type": "task.comment",
+    "actor": "hist-agent",
+    "task_id": "feat_hist1937compat01",
+    "status": "success",
+    "trace_id": "tr_01m85k_additive",
+    "client_sdk": {
+      "name": "decapod-client",
+      "version": "0.164.1"
+    },
+    "payload": {
+      "comment": "Additive envelope test",
+      "extension_meta": {
+        "tier": "post-cutover"
+      }
+    }
+  },
+  "federation_with_additive_fields": {
+    "node_id": "node_additive_1",
+    "title": "Additive federation node",
+    "body": "Preserves optional extension fields",
+    "dactyl_envelope_version": "0.19.0",
+    "optional_hints": [
+      "preserve-unknown-keys"
+    ]
+  },
+  "verification_artifacts_with_additive_fields": {
+    "task_id": "feat_hist1937compat01",
+    "proof_plan_results": [
+      {
+        "proof_gate": "validate_passes",
+        "output_hash": "sha256:additive"
+      }
+    ],
+    "runner_metadata": {
+      "arch": "arm64",
+      "os": "macos",
+      "extra_annotations": [
+        "non-breaking"
+      ]
+    }
+  },
+  "applied_migration_ledger_with_additive_fields": {
+    "schema_version": "1.0.0",
+    "additive_ledger_note": "ignored cleanly by serde",
+    "entries": [
+      {
+        "id": "todo.events.reconstruct.v001",
+        "sequence": 100,
+        "scope": "todo",
+        "kind": "rust",
+        "script_path": null,
+        "min_version": "0.1.7",
+        "target_version": "0.1.7",
+        "applied_at": "1700000000Z",
+        "applied_by_version": "0.144.2",
+        "additive_entry_tag": "ok"
+      }
+    ]
+  },
+  "version_counter_with_additive_fields": {
+    "schema_version": "1.0.0",
+    "version_count": 2,
+    "initialized_with_version": "0.144.2",
+    "last_seen_version": "0.164.1",
+    "updated_at": "1795484591Z",
+    "additive_observer": "ok"
+  }
+}

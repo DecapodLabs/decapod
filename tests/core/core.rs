@@ -1,5 +1,7 @@
 #[path = "../datastore_contract.rs"]
 mod datastore_contract;
+#[path = "../datastore_encoding_compat_1937.rs"]
+mod datastore_encoding_compat_1937;
 #[path = "../datastore_relational_compaction.rs"]
 mod datastore_relational_compaction;
 #[path = "../datastore_scope.rs"]

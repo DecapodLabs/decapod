@@ -1,5 +1,12 @@
 # Semantics
 
+## Datastore encoding evolution, floor refusal, and rollback semantics (#1937)
+
+- **Canonical digest invariance across lossless encodings**: Reconstructed `TaskProjection` digests (`projection_digest`) remain identical across `v1` inline and `v2` externalized (`codec_version` `0`/`1`) checkpoints, and `events_logical_sha256` remains identical across verbose legacy envelopes and `_ce_v1` compact envelopes while preserving original proof bytes (`proof_plan`, `verification_artifacts`, `last_verified_notes`).
+- **Non-mutating fail-closed compatibility guards**: Below-floor binaries (`< 0.144.2`), future `format_version > 2`, future `min_reader_version`, or malformed `storage.*` metadata refuse reads and writes (`STORAGE_FORMAT_INCOMPATIBLE`) without mutating `decapod.db`; future `min_writer_version` admits read-only queries while refusing all write/migration entrypoints.
+- **Additive vs strict proof-bound deserialization**: Event payloads (`events.payload`, including `_ce_v1` and `federation`), `verification_artifacts` JSON, and migration JSON ledgers preserve additive optional fields losslessly, whereas proof-bound `Checkpoint` and `task_transfer::Bundle` structs enforce `#[serde(deny_unknown_fields)]` and fail closed on missing mandatory or unknown structural fields.
+- **Atomic upgrade rollback**: Failed or aborted upgrades under `migration::check_and_migrate_with_backup_report` roll back both `.decapod/data/` and `.decapod/managed/migrations/{applied,catalog}.json` + `.decapod/managed/version_counter.json` so retries recover cleanly.
+
 ## Cloud parity boundaries and 4-layer constitution precedence (#1895, #877)
 
 - **Logical parity vs unsupported Cloud operations (`#1895`)**: `decapod.cloud-parity-matrix.v1` strictly separates supported Cloud equivalents (task lifecycle, ordered events, single-winner CAS claims, repository-bound `operation_id` idempotency, stale `task_revision` rejection, commit/policy-bound submit captures) from unsupported operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`), preventing blanket parity claims or silent local SQLite fallback.
@@ -424,14 +431,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Contract Snapshot
 
-- State/schema/migration modules (30): `src/decapod/core/broker.rs`, `src/decapod/core/constitution_schema.rs`, `src/decapod/core/group_broker.rs`, `src/decapod/core/migration.rs`, `src/decapod/core/schemas.rs`, `src/decapod/core/sql/todo_one_shot_column_migration.sql`, `src/decapod/core/sql/todo_task_id_v15_migration.sql`, `src/decapod/core/state.rs`, `src/decapod/core/state_commit.rs`, `src/decapod/core/workunit.rs`, `tests/assets_schema_contract.rs`, `tests/context_capsule_schema.rs`, `tests/fixtures/migration/legacy_tasks.sql`, `tests/fixtures/state_commit_repo/exec_test.rs`, `tests/group_broker.rs`, `tests/group_broker_strict.rs`, (+14 more)
+- State/schema/migration modules (33): `src/decapod/core/broker.rs`, `src/decapod/core/constitution_schema.rs`, `src/decapod/core/group_broker.rs`, `src/decapod/core/migration.rs`, `src/decapod/core/schemas.rs`, `src/decapod/core/sql/todo_one_shot_column_migration.sql`, `src/decapod/core/sql/todo_task_id_v15_migration.sql`, `src/decapod/core/state.rs`, `src/decapod/core/state_commit.rs`, `src/decapod/core/workunit.rs`, `tests/assets_schema_contract.rs`, `tests/context_capsule_schema.rs`, `tests/fixtures/migration/legacy_tasks.sql`, `tests/fixtures/migration/v1_pre_codec_store.sql`, `tests/fixtures/migration/v2_current_accepted_store.sql`, `tests/fixtures/migration/v2_stale_floor_0_141_0.sql`, (+17 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4575bcd1960efd1d98eafdfd2acafac9cc5ef8b7a6f6674478b2f37965195269`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (284 files)
+- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

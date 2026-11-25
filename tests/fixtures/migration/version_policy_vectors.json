@@ -1,0 +1,24 @@
+{
+  "schema_version": "decapod.version-policy-vectors.v1",
+  "current_format_version": 2,
+  "min_reader_version": "0.144.2",
+  "min_writer_version": "0.144.2",
+  "below_floor_versions": [
+    "0.1.0",
+    "0.141.0",
+    "0.143.2",
+    "0.144.1"
+  ],
+  "supported_versions": [
+    "0.144.2",
+    "0.148.13",
+    "0.164.1"
+  ],
+  "future_min_writer_version": "99.0.0",
+  "future_min_reader_version": "99.0.0",
+  "future_format_versions": [
+    3,
+    99
+  ],
+  "higher_valid_floor": "0.146.0"
+}
