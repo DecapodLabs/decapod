@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "b76f30d189a1b7c013198a879fb3fdec45d12e2f",
+    "accepted_commit": "0db8ba28e3e9795ddd46f8296f957fe158628ba7",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,53 +870,61 @@
     }
   },
   "change": {
-    "id": "pr-1939-encoding-corpus",
-    "base_commit": "b76f30d189a1b7c013198a879fb3fdec45d12e2f",
+    "id": "pr-1940-durability-fencing",
+    "base_commit": "0db8ba28e3e9795ddd46f8296f957fe158628ba7",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:encoding-compatibility-corpus-1937": {
-      "statement": "Supported v1/v2 datastore and task-journal encodings upgrade losslessly with canonical digest parity, version-floor violations and malformed payloads fail closed without disk mutation, and interrupted migrations restore both SQLite data and managed migration ledger atomically.",
-      "falsifier": "Any v1/v2 upgrade diverges on canonical digests, an unsupported reader/writer/future version mutates disk files, a malformed payload is accepted, or a failed migration leaves applied.json out of sync with rolled-back data.",
+    "claim:durability-fencing-1892-1934-1935": {
+      "statement": "Active same-generation todo.heartbeat renewals preserve validation custody continuity without bypassing rotation/expiry/release fencing, uncommitted WAL/projection/staging crashes recover atomically without unlinking live .lock sidecars, and delayed-publication fences reject stale custody or moved targets.",
+      "falsifier": "Any heartbeat renewal returns VALIDATION_HISTORY_TASK_STALE, an expired/rotated/reclaimed lease succeeds, a live .lock inode is unlinked, or crash recovery fails integrity checks.",
       "status": "supported",
       "proof_refs": [
-        "docs/encoding-compatibility.md",
-        "src/decapod/core/migration.rs",
-        "tests/datastore_encoding_compat_1937.rs",
-        "tests/fixtures/migration/corpus_manifest.json"
+        "docs/durability-and-fencing.md",
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/validation_history.rs",
+        "tests/crash_durability_1934.rs",
+        "tests/lease_fencing_consistency_1935.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1939-rebased",
-      "summary": "Hardening #1937: datastore and evidence encoding compatibility corpus & qualification suite (rebased on b76f30d18)",
-      "input_digest": "sha256:24429e69d6143ccf0ddede0862e0ca26460a440459e9854652b337986d852b1d",
+      "id": "cp-1940-rebased",
+      "summary": "hardening: active lease renewal custody fix (#1892), multi-process fencing (#1935/#1763) & crash durability (#1934) (rebased on 0db8ba28e)",
+      "input_digest": "sha256:7201b6481136f4e57c7656ff316f729c43da01c764d0e4397831fc72f7cbc4bf",
       "proof_refs": [
-        "docs/encoding-compatibility.md",
-        "tests/datastore_encoding_compat_1937.rs"
+        "docs/durability-and-fencing.md",
+        "tests/crash_durability_1934.rs",
+        "tests/lease_fencing_consistency_1935.rs"
       ]
+    },
+    {
+      "id": "cp-1940-spec-symbols",
+      "summary": "Align PR #1940 living spec symbols with exact src/ signatures and error codes",
+      "input_digest": "sha256:777816eb42aa708e545653082a00de9bf823b2730e129659c67121aabe603f73"
     }
   ],
   "intents": {
-    "intent:run-1939-rebased": {
+    "intent:run-1940-rebased": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "PR #1939 encoding compatibility corpus"
+        "PR #1940 durability and fencing"
       ],
       "constraints": [
         "core"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1939-rebased",
+      "id": "intent:run-1940-rebased",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Hardening #1937: datastore and evidence encoding compatibility corpus & qualification suite",
-      "refined_intent": "Rebased onto origin/master (b76f30d18) preserving #1945 security audit fixes and #1946 trust/egress gate",
+      "raw_intent": "Phase 2 Hardening (#1892, #1935, #1934, #1763)",
+      "refined_intent": "Rebased onto post-#1939 origin/master (0db8ba28e) preserving #1945, #1946, and #1939",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -929,7 +937,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Provide a SHA-256-pinned compatibility fixture corpus, rollback-consistent migration recovery, encoding compatibility documentation, and fail-closed qualification tests across v1/v2 formats, additive fields, version floors (0.144.2), malformed vectors, and local/hosted logical schema parity (DecapodLabs/dactyl#146, DecapodLabs/propodus#227).",
+      "intent": "Fix #1892 stale history on renewed lease; implement #1935/#1763 multi-process fencing tests and #1934 crash durability tests; document durability & fencing",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -939,43 +947,47 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented check_and_migrate_with_backup_report atomic managed migration file rollback and compatibility corpus architecture.",
-          "reviewed_code_fingerprint": "89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9",
-          "spec_material_hash": "746480bd455e8112d8365a1ee405449beba71070eec999f59a342fd3be707bde"
+          "reason": "Aligned error-code symbols in ARCHITECTURE.md with actual src/ task_journal and validation_history codes.",
+          "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
+          "spec_material_hash": "7d0fd1082068327faf08330f936381dd4d4ca3a1b6dd61519b899a68fcafbf41"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented fixture corpus manifest, encoding compatibility documentation, and qualification suite interfaces.",
-          "reviewed_code_fingerprint": "89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9",
-          "spec_material_hash": "0a7cea08568cd710ac8298a6ac479a54a39db4d7b35b859543856ff274ef4729"
+          "reason": "Included include_workunit: bool parameter in ValidationBinding::matches_custody_authority signature.",
+          "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
+          "spec_material_hash": "846e6679576e55c8f95486fe3e094ccd4915acff77ac5fb024916c6790f21530"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Security trust boundaries unchanged; fail-closed encoding/version checks reinforce existing invariants documented in SEMANTICS.md.",
-          "reviewed_code_fingerprint": "89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9",
+          "reason": "Fail-closed custody rotation, expired lease refusal, and live OS lock preservation boundaries remain intact.",
+          "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
           "spec_material_hash": "76971f4ab8c94db6b6a8628052637f004a258ae9983d708e6585a0a6fb191a97"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Hardening #1937: datastore and evidence encoding compatibility corpus & qualification tests",
+      "title": "Phase 2 Hardening (#1892, #1935, #1934, #1763)",
       "todo_ids": [
-        "test_01m85kh9m4peqy9e"
+        "bugs_01m85q9m9gwmde6r"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795579309Z"
+      "updated_at": "1795582254Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "PR #1939 encoding compatibility corpus"
+        "PR #1940 durability and fencing"
       ],
-      "artifact_hash": "sha256:f92de928fab780a036bca6067d663f8608c83fe3737ea2de549e1f7c86c7e9f6",
+      "artifact_hash": "sha256:53b20970587d5808c24917b821744fb6364cbadc7bb18c201db75310f3e50e46",
       "checks": [
         {
           "name": "rebase_master",
+          "status": "passed"
+        },
+        {
+          "name": "spec_symbol_review",
           "status": "passed"
         }
       ],
@@ -983,41 +995,50 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1939-rebased",
+            "intent_id": "intent:run-1940-rebased",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1939-rebased",
+            "intent_id": "intent:run-1940-rebased",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1939-rebased",
+            "detail": "trajectory:run-1940-rebased",
             "event_id": "event:4",
-            "intent_id": "intent:run-1939-rebased",
+            "intent_id": "intent:run-1940-rebased",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1940-rebased",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1940-rebased",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1939-rebased": {
+          "run-1940-rebased": {
             "evidence_only": true,
-            "id": "run-1939-rebased",
-            "intent_id": "intent:run-1939-rebased",
+            "id": "run-1940-rebased",
+            "intent_id": "intent:run-1940-rebased",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/migration.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "docs/encoding-compatibility.md",
-                  "tests/datastore_encoding_compat_1937.rs"
+                  "src/decapod/core/task_journal.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/validation_history.rs",
+                  "docs/durability-and-fencing.md",
+                  "tests/crash_durability_1934.rs",
+                  "tests/lease_fencing_consistency_1935.rs"
                 ],
                 "proof_refs": [
                   "rebase_master"
@@ -1027,6 +1048,23 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SEMANTICS.md"
+                ],
+                "proof_refs": [
+                  "spec_symbol_review"
+                ],
+                "scope": [
+                  "core"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1035,21 +1073,26 @@
       "declared_commands": [],
       "evidence": [],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "src/decapod/core/migration.rs"
+        "src/decapod/core/task_journal.rs",
+        "src/decapod/core/todo.rs",
+        "src/decapod/core/validation_history.rs"
       ],
-      "intent_id": "intent:run-1939-rebased",
+      "intent_id": "intent:run-1940-rebased",
       "modified_files": [
-        "docs/encoding-compatibility.md",
-        "tests/datastore_encoding_compat_1937.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SEMANTICS.md",
+        "docs/durability-and-fencing.md",
+        "tests/crash_durability_1934.rs",
+        "tests/lease_fencing_consistency_1935.rs"
       ],
       "repo_scope": [
         "core"
       ],
-      "run_id": "run-1939-rebased",
+      "run_id": "run-1940-rebased",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m85kh9m4peqy9e",
+      "task_id": "bugs_01m85q9m9gwmde6r",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

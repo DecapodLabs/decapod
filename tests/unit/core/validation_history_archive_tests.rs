@@ -460,3 +460,325 @@ fn capture_task_binding_with_budget_can_extend_a_lease_without_rotating_custody(
         .unwrap();
     assert!(refreshed_exp >= now_secs + 1800);
 }
+
+#[test]
+fn deterministic_active_lease_renewal_preserves_evidence_while_expired_and_reclaimed_fail() {
+    let _agent_guard = crate::core::todo::test_current_agent_id_guard("archive-boundary-agent");
+    let (_temp, _repo, store, _accepted_base) = fixture();
+    let agent_id = crate::current_agent_id();
+
+    // Seed a deterministic clock/lease-generation/revision fixture:
+    // t=1000Z claim, expires=2800Z, lease_generation=1, revision=1.
+    DbBroker::new(&store.root)
+        .with_conn(
+            &todo::todo_db_path(&store.root),
+            "test",
+            None,
+            "test.1892.seed",
+            |conn| {
+                conn.execute(
+                    "UPDATE tasks
+                     SET lease_expires_at = '2800Z',
+                         lease_generation = 1,
+                         lease_lifecycle = 'claimed',
+                         revision = 1,
+                         updated_at = '1000Z',
+                         assigned_at = '1000Z'
+                     WHERE id = ?1",
+                    db::params![TASK],
+                )?;
+                conn.execute("DELETE FROM events WHERE stream = 'todo'", [])?;
+                Ok(())
+            },
+        )
+        .unwrap();
+    todo::task_journal_checkpoint(&store.root, None).unwrap();
+
+    let binding_at_1000 = todo::capture_validation_binding_at(&store.root, TASK, "1000Z").unwrap();
+    assert_eq!(binding_at_1000.lease_generation, 1);
+    assert_eq!(binding_at_1000.revision, 1);
+
+    // Positive fresh renewal at t=2500Z (before 2800Z expiry) on the same generation/evidence.
+    let heartbeat =
+        todo::heartbeat_claim_lease_at(&store.root, TASK, &agent_id, Some(1800), Some(1), "2500Z")
+            .unwrap();
+    assert_eq!(heartbeat["status"], "ok");
+    assert_eq!(heartbeat["result"]["extended"], true);
+    assert_eq!(heartbeat["result"]["lease_expires_at"], "4300Z");
+    assert_eq!(heartbeat["result"]["lease_generation"], 1);
+
+    // Independently read persisted lease and journal after renewal.
+    DbBroker::new(&store.root)
+        .with_conn(
+            &todo::todo_db_path(&store.root),
+            "test",
+            None,
+            "test.1892.verify_persisted",
+            |conn| {
+                let (exp, lease_gen, rev, assignee): (String, i64, i64, String) = conn.query_row(
+                    "SELECT lease_expires_at, lease_generation, revision, assigned_to FROM tasks WHERE id = ?1",
+                    db::params![TASK],
+                    |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
+                )?;
+                assert_eq!(exp, "4300Z");
+                assert_eq!(lease_gen, 1);
+                assert_eq!(rev, 1);
+                assert_eq!(assignee, agent_id);
+                // Positive control: binding captured before heartbeat remains valid at t=2500Z.
+                todo::check_validation_binding_at_on_conn(conn, &binding_at_1000, false, "2500Z")?;
+                // Negative control 1: once clock reaches t=4300Z (expired), binding MUST fail.
+                let expired_err = todo::check_validation_binding_at_on_conn(
+                    conn,
+                    &binding_at_1000,
+                    false,
+                    "4300Z",
+                )
+                .unwrap_err()
+                .to_string();
+                assert!(
+                    expired_err.contains("VALIDATION_HISTORY_TASK_STALE")
+                        && expired_err.contains("TASK_LEASE_EXPIRED_OR_RELEASED"),
+                    "expected expired custody failure, got: {expired_err}"
+                );
+                Ok(())
+            },
+        )
+        .unwrap();
+
+    // Negative control 2: heartbeat at t=4300Z (expired) must refuse.
+    let expired_hb_err =
+        todo::heartbeat_claim_lease_at(&store.root, TASK, &agent_id, Some(1800), Some(1), "4300Z")
+            .unwrap_err()
+            .to_string();
+    assert!(
+        expired_hb_err.contains("LEASE_HEARTBEAT_STALE"),
+        "expected LEASE_HEARTBEAT_STALE on expired lease, got: {expired_hb_err}"
+    );
+
+    // Negative control 3: reclaimed lease (generation bumped to 2, new owner) invalidates gen-1 binding.
+    todo::with_task_journal(
+        &DbBroker::new(&store.root),
+        &todo::todo_db_path(&store.root),
+        "competing-agent",
+        None,
+        "todo.claim",
+        todo::TaskJournalSelection::Ids(vec![TASK.into()]),
+        |conn| {
+            conn.execute(
+                "UPDATE tasks SET assigned_to='competing-agent', lease_expires_at='9999999999Z',
+                 lease_generation=2, lease_lifecycle='reclaimed', revision=revision+1 WHERE id=?1",
+                db::params![TASK],
+            )?;
+            Ok(())
+        },
+    )
+    .unwrap();
+    DbBroker::new(&store.root)
+        .with_conn(
+            &todo::todo_db_path(&store.root),
+            "test",
+            None,
+            "test.1892.reclaimed_check",
+            |conn| {
+                let err = todo::check_validation_binding_at_on_conn(
+                    conn,
+                    &binding_at_1000,
+                    false,
+                    "2600Z",
+                )
+                .unwrap_err()
+                .to_string();
+                assert!(
+                    err.contains("VALIDATION_HISTORY_TASK_STALE"),
+                    "reclaimed lease must invalidate gen-1 binding: {err}"
+                );
+                Ok(())
+            },
+        )
+        .unwrap();
+}
+
+#[test]
+fn publication_readiness_survives_active_heartbeat_renewal_and_rejects_custody_rotation() {
+    let _agent_guard = crate::core::todo::test_current_agent_id_guard("archive-boundary-agent");
+    let (_temp, repo, store, accepted_base) = fixture();
+    let agent_id = crate::current_agent_id();
+    let head = git(&repo, &["rev-parse", "HEAD"]);
+    let now_secs = crate::core::time::now_epoch_z()
+        .trim_end_matches('Z')
+        .parse::<u64>()
+        .unwrap();
+
+    // Start with a short active lease (120s), capture pre-validation binding,
+    // then renew via heartbeat (as DECAPOD_VALIDATE_LEASE_TTL=renew does).
+    let shortened = todo::renew_claim_lease(&store.root, TASK, &agent_id, Some(120)).unwrap();
+    assert_eq!(shortened["status"], "ok");
+    let binding_before = capture_task_binding(&store, &repo).unwrap().unwrap();
+
+    let git_program = crate::readiness_installed_tool(&repo, "git").unwrap();
+    let input_identity = crate::core::native_proof::IdentityInputs {
+        root: repo.canonicalize().unwrap(),
+        git_program,
+        repository: "example/archive".into(),
+        base_branch: "master".into(),
+        accepted_base_ref: "refs/heads/master".into(),
+        declared_untracked: std::iter::once(
+            ".decapod/managed/governance-document.lock".to_string(),
+        )
+        .collect(),
+        configuration: [".decapod/config.toml", ".gitignore"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+        workflows: [".gitignore"].into_iter().map(str::to_owned).collect(),
+        candidate_inputs: ["tracked.txt"].into_iter().map(str::to_owned).collect(),
+    };
+    let captured_material = crate::core::native_proof::capture_readonly_identity(
+        &input_identity,
+        &[],
+        crate::core::native_proof::SuiteLimits {
+            timeout: std::time::Duration::from_secs(30),
+            max_checks: 1024,
+            max_hashed_bytes: 2 * 1024 * 1024 * 1024,
+            max_output_bytes: 1024 * 1024,
+            git_output_limit: 1024 * 1024,
+        },
+        &crate::core::bounded_process::Cancellation::default(),
+    )
+    .unwrap();
+    assert_eq!(captured_material.head_revision, head);
+    assert_eq!(captured_material.accepted_base_revision, accepted_base);
+    let current_inputs = CurrentEvidenceInputs::capture(
+        &input_identity,
+        &validation_runtime::ExecutionSelection {
+            policy: crate::core::readiness_profile::ExecutionPolicy {
+                buildkite_preflights: false,
+                github_actions_preflights: false,
+                executors: Default::default(),
+            },
+            bindings: Default::default(),
+            native_invocations: Default::default(),
+        },
+    )
+    .unwrap();
+    let laya_cfg = crate::core::laya_readiness::configuration(&repo).unwrap();
+
+    let governance_bytes = fs::read(repo.join(GOVERNANCE)).unwrap();
+    let raw: Value = serde_json::from_slice(&governance_bytes).unwrap();
+    let raw_trajectory_digest = evidence::digest(&raw["sections"]["trajectory"]).unwrap();
+    let mut completed = test_fixture::record().proof;
+    completed.invocation_id = crate::core::ulid::new_ulid();
+    completed.material = captured_material;
+    completed.governance_digest = format!("sha256:{:x}", Sha256::digest(&governance_bytes));
+    completed.trajectory_digest = raw_trajectory_digest;
+    completed.suite.before = completed.material.clone();
+    completed.suite.after = completed.material.clone();
+    completed.suite.facts.target_branch = completed.material.base_branch.clone();
+    for result in &mut completed.suite.results {
+        result.identity = completed.material.clone();
+    }
+    completed.suite.expected_plan_digest = completed.expected_plan.digest().unwrap();
+    completed.laya.mode = laya_cfg.mode;
+    completed.laya.binding.configuration_digest = evidence::digest(&laya_cfg).unwrap();
+    completed.laya.binding.material = completed.material.clone();
+    completed.laya.binding.governance_digest = completed.governance_digest.clone();
+    completed.laya.binding.proof_plan_digest = completed.expected_plan.digest().unwrap();
+    completed.laya.binding.evidence_digest = evidence::digest(&completed.suite).unwrap();
+    completed.laya.binding.trajectory_run_id.clear();
+    completed.laya.request_id = evidence::digest(&completed.laya.binding).unwrap();
+    let completed = CompletedReadinessEvidence::from_runtime(
+        &completed.invocation_id,
+        &completed.scope,
+        None,
+        &completed.material,
+        &completed.governance_digest,
+        &completed.trajectory_digest,
+        &completed.expected_plan,
+        &completed.suite,
+        &completed.laya,
+        Some(current_inputs),
+    )
+    .unwrap();
+    let temp_ev = tempfile::tempdir().unwrap();
+    fs::write(
+        temp_ev.path().join(PROOF_FILE),
+        serde_json::to_vec_pretty(&completed).unwrap(),
+    )
+    .unwrap();
+    let report = ValidationReport {
+        observed_path: crate::core::trajectory::path::Judgment::unavailable(
+            false,
+            "fixture has no path witness",
+        ),
+        ready: true,
+        proof_ready: true,
+        laya_readiness: Some(completed.laya.clone()),
+        scope: validation_runtime::READINESS_SCOPE,
+        target: None,
+        resolved_targets: vec![],
+        agent_guidance: validation_runtime::ValidationGuidance::for_outcome(true),
+        stage_dispositions: vec![],
+        blockers: vec![],
+        evidence_path: Some(temp_ev.path().to_path_buf()),
+        completed_evidence: Some(completed),
+    };
+
+    // Active heartbeat renewal changes checkpoint_digest without rotating generation.
+    assert!(matches!(
+        todo::ensure_validation_lease_ttl(
+            &store.root,
+            TASK,
+            1800,
+            todo::ValidationLeaseTtlMode::Renew,
+        )
+        .unwrap(),
+        todo::ValidationLeaseTtl::Renewed { lease_secs: 1800 }
+    ));
+    let binding_after_hb = capture_task_binding(&store, &repo).unwrap().unwrap();
+    assert_ne!(
+        binding_after_hb.task.checkpoint_digest,
+        binding_before.task.checkpoint_digest
+    );
+    assert_eq!(
+        binding_after_hb.task.lease_generation,
+        binding_before.task.lease_generation
+    );
+    assert_eq!(binding_after_hb.task.revision, binding_before.task.revision);
+
+    // Archive succeeds with pre-renewal binding (heartbeat during validation is valid),
+    // and PublicationReadiness::verify_current ALSO succeeds!
+    finish_archive(&store, &repo, &binding_before, &report).unwrap();
+    let persisted = lookup(&repo, &store, &head).unwrap();
+    assert_eq!(persisted.task_binding(), &binding_before.task);
+    let readiness = PublicationReadiness::from_report(report, Some(binding_before)).unwrap();
+    readiness.verify_current(&repo).unwrap();
+
+    // Independently check persisted expiry >= now_secs + 1800.
+    let exp_raw: String = DbBroker::new(&store.root)
+        .with_conn(
+            &todo::todo_db_path(&store.root),
+            "test",
+            None,
+            "test.read_exp",
+            |conn| {
+                conn.query_row(
+                    "SELECT lease_expires_at FROM tasks WHERE id = ?1",
+                    db::params![TASK],
+                    |r| r.get(0),
+                )
+                .map_err(crate::core::error::DecapodError::from)
+            },
+        )
+        .unwrap();
+    let exp_secs: u64 = exp_raw.trim_end_matches('Z').parse().unwrap();
+    assert!(exp_secs >= now_secs + 1800);
+
+    // Negative control: non-heartbeat todo renew rotates lease_generation and MUST fail verify_current.
+    let rotated = todo::renew_claim_lease(&store.root, TASK, &agent_id, Some(3600)).unwrap();
+    assert_eq!(rotated["status"], "ok");
+    let err = readiness.verify_current(&repo).unwrap_err().to_string();
+    assert!(
+        err.contains("PUBLICATION_CUSTODY_CHANGED"),
+        "generation rotation must fail PublicationReadiness::verify_current: {err}"
+    );
+}

@@ -1,5 +1,14 @@
 # Architecture
 
+## Phase 2 durability, lease fencing, and active-renewal custody invariants (#1892, #1935, #1934, #1763)
+
+- **Active same-generation heartbeat custody preservation (`src/decapod/core/task_journal.rs`, `src/decapod/core/todo.rs`, `src/decapod/core/validation_history.rs`)**:
+  - `todo::heartbeat_claim_lease_at` / `todo::ensure_validation_lease_ttl(..., ValidationLeaseTtlMode::Renew)` extends `lease_expires_at` inside a single `task.lease_heartbeat` journal transaction (`append_checkpoint_with_ts`) sharing one authoritative timestamp `ts` so domain mutation and journal checkpoint monotonicity (`at >= old`) cannot skew across clock-second boundaries, while keeping `assignee`, `lease_generation`, `revision`, and `contract_digest` invariant.
+  - `HistoricalTaskBinding::same_custody_authority` and `ValidationBinding::matches_custody_authority` / `verify_task_binding_current` preserve authoritative proof and `PublicationReadiness::verify_current` across active same-generation `todo.heartbeat` renewals (which advance `checkpoint_digest` without rotating custody), while rejecting expired leases (`TASK_LEASE_EXPIRED_OR_RELEASED`), lifecycle transitions (`TASK_LIFECYCLE_CUSTODY_CHANGED`), contract/revision mutations (`TASK_ADVANCED_DURING_VALIDATION`), assignee takeover/generation rotation (`TASK_CUSTODY_REACQUIRED`, `todo renew`, `PUBLICATION_CUSTODY_CHANGED`), or `VALIDATION_HISTORY_TASK_STALE`.
+- **Transaction, advisory lock, projection, and Git crash-boundary invariants (`docs/durability-and-fencing.md`, `tests/lease_fencing_consistency_1935.rs`, `tests/crash_durability_1934.rs`)**:
+  - Documents authoritative ordering across `claim` -> `heartbeat` -> `renew` -> `expire` -> `reclaim` -> `transfer`/`release` -> `proof` -> `publish`, single-SQLite `DbBroker` transactions (`PRAGMA journal_mode=WAL`), sidecar `.lock` non-unlinking (`StorageLock`), `workunits/*.json` recovery (`WORKUNIT_RECOVERY_REQUIRED`, `WORKUNIT_PROJECTION_CONFLICT`), and staged `.decapod/workspaces/.staging/` atomic publication (`workspace_lifecycle::reserve`).
+  - `tests/lease_fencing_consistency_1935.rs` and `tests/crash_durability_1934.rs` (wired into `tests/core/core.rs` and `.config/build/decapod.BUILD.bzl`) exercise competing OS subprocesses, `SIGSTOP`/`SIGCONT` scheduling, `SIGKILL` crash barriers, and delayed-publication fences (`#1763`).
+
 ## Datastore and evidence encoding compatibility corpus & atomic ledger rollback (#1937)
 
 - **Atomic backup & managed ledger rollback (`src/decapod/core/migration.rs`)**: `check_and_migrate_with_backup_report` checks `schema_upgrade_pending(&data_root)? || has_pending_compiled_migrations(decapod_root)?`, snapshots `GENERATED_VERSION_COUNTER`, `GENERATED_APPLIED_MIGRATIONS`, and `GENERATED_MIGRATION_CATALOG` via `snapshot_managed_migration_files` before `run_migrations`, and invokes `restore_managed_migration_files` alongside `restore_data_backup` on migration or `verify` failure. `create_data_backup` and `restore_data_backup` skip `is_migration_backup_entry` (`.migration_backup_*`) so stale crash backups are neither recursively copied nor destroyed.
@@ -2056,7 +2065,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
+- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

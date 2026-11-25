@@ -1295,9 +1295,10 @@ pub(super) fn ensure_task_full_validation_plan(
     crate::core::validation_history::ensure_full_validation_plan(&gates)
 }
 
-pub(super) fn capture_validation_binding(
+pub(super) fn capture_validation_binding_at(
     conn: &Connection,
     task_id: &str,
+    now_ts: &str,
 ) -> Result<super::HistoricalTaskBinding, DecapodError> {
     let ids = vec![task_id.to_owned()];
     let journal = read_journal(conn, Some(&ids))?;
@@ -1318,7 +1319,7 @@ pub(super) fn capture_validation_binding(
         || !matches!(task.status.as_str(), "open" | "in_progress" | "done")
         || task.lease_generation.unwrap_or(0) <= 0
         || !super::LeaseLifecycle::parse(task.lease_lifecycle.as_deref()).holds_exclusive_custody()
-        || super::fleet_coord::lease_state(task.lease_expires_at.as_deref(), &super::now_iso())
+        || super::fleet_coord::lease_state(task.lease_expires_at.as_deref(), now_ts)
             != super::fleet_coord::LeaseState::Active
     {
         return Err(invalid(
@@ -1338,10 +1339,20 @@ pub(super) fn capture_validation_binding(
 
 /// A release/completion chronology may advance revision, but changed meaning,
 /// reassignment, restored history, or a new lease can never reuse old proof.
+#[cfg(test)]
 pub(super) fn check_validation_binding(
     conn: &Connection,
     binding: &super::HistoricalTaskBinding,
     allow_lifecycle_progress: bool,
+) -> Result<(), DecapodError> {
+    check_validation_binding_at(conn, binding, allow_lifecycle_progress, &super::now_iso())
+}
+
+pub(super) fn check_validation_binding_at(
+    conn: &Connection,
+    binding: &super::HistoricalTaskBinding,
+    allow_lifecycle_progress: bool,
+    now_ts: &str,
 ) -> Result<(), DecapodError> {
     let ids = vec![binding.task_id.clone()];
     let journal = read_journal(conn, Some(&ids))?;
@@ -1364,7 +1375,7 @@ pub(super) fn check_validation_binding(
         if task.assigned_to.as_deref() != Some(binding.assignee.as_str())
             || !super::LeaseLifecycle::parse(task.lease_lifecycle.as_deref())
                 .holds_exclusive_custody()
-            || super::fleet_coord::lease_state(task.lease_expires_at.as_deref(), &super::now_iso())
+            || super::fleet_coord::lease_state(task.lease_expires_at.as_deref(), now_ts)
                 != super::fleet_coord::LeaseState::Active
         {
             return Err(invalid(
@@ -1490,6 +1501,26 @@ fn append_checkpoint(
     operation: &str,
     actor: &str,
 ) -> Result<(), DecapodError> {
+    append_checkpoint_with_ts(
+        conn,
+        journal,
+        projection,
+        source_watermark,
+        operation,
+        actor,
+        None,
+    )
+}
+
+fn append_checkpoint_with_ts(
+    conn: &Connection,
+    journal: &mut Journal,
+    projection: &TaskProjection,
+    source_watermark: u64,
+    operation: &str,
+    actor: &str,
+    ts_override: Option<&str>,
+) -> Result<(), DecapodError> {
     require_transaction(conn)?;
     validate_projection(projection)?;
     let previous = journal.heads.get(&projection.task.id);
@@ -1500,7 +1531,9 @@ fn append_checkpoint(
     {
         return Err(invalid("task revision or lease generation regressed"));
     }
-    let event_ts = super::now_iso();
+    let event_ts = ts_override
+        .map(str::to_owned)
+        .unwrap_or_else(super::now_iso);
     let projection_digest = digest(projection)?;
     let (wire_projection, component_refs, external_components) =
         prepare_externalized_projection(projection)?;
@@ -1664,13 +1697,24 @@ pub(super) fn record_changes(
         }
         // New task creation is explicitly observed current state, never a replay
         // claim that historical pre-checkpoint events were complete.
-        append_checkpoint(
+        let heartbeat_ts: Option<String> = if operation == "todo.heartbeat" {
+            conn.query_row(
+                "SELECT ts FROM events WHERE stream='todo' AND subject_id=?1 AND event_type='task.lease_heartbeat' AND seq>?2 AND seq<=?3 ORDER BY seq DESC LIMIT 1",
+                params![id, before_watermark, source_watermark],
+                |r| r.get(0),
+            )
+            .optional()?
+        } else {
+            None
+        };
+        append_checkpoint_with_ts(
             conn,
             &mut journal,
             current,
             source_watermark,
             operation,
             actor,
+            heartbeat_ts.as_deref(),
         )?;
     }
     Ok(())

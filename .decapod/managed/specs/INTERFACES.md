@@ -1,5 +1,14 @@
 # Interfaces
 
+## Lease renewal custody checks, crash boundaries, and fencing verification surfaces (#1892, #1935, #1934, #1763)
+
+- **Custody & binding interfaces (`src/decapod/core/todo.rs`, `src/decapod/core/task_journal.rs`, `src/decapod/core/validation_history.rs`)**:
+  - `HistoricalTaskBinding::same_custody_authority(&self, other: &Self) -> bool` compares durable custody identity (`task_id`, `revision`, `status`, `contract_digest`, `assignee`, `lease_generation`) independently of `checkpoint_digest` so active same-generation `todo.heartbeat` updates do not falsify pre-captured validation bindings.
+  - `todo::{capture_validation_binding_at, check_validation_binding_at_on_conn, heartbeat_claim_lease_at}` accept explicit injected RFC3339 timestamps for deterministic lease expiry and heartbeat boundary testing without mutating wall clocks.
+  - `validation_history::ValidationBinding::matches_custody_authority(&self, current: &Self, include_workunit: bool) -> bool` and `verify_task_binding_current` align `finish_archive`, `PublicationReadiness::verify_current`, `lookup_current_workunit`, and `current_workunit_proof` with active same-generation renewals while continuing to reject custody rotation, expiry, release, or contract drift.
+- **Durability & fencing reference and integration modules (`docs/durability-and-fencing.md`, `tests/lease_fencing_consistency_1935.rs`, `tests/crash_durability_1934.rs`)**:
+  - Exposed in `tests/core/core.rs` (`core_tests`) and standalone integration test targets in `.config/build/decapod.BUILD.bzl`.
+
 ## Datastore encoding compatibility policy & corpus interfaces (#1937)
 
 - **Compatibility policy specification (`docs/encoding-compatibility.md`)**: Documents `STORAGE_FORMAT_VERSION = 2`, `STORAGE_MIN_READER_VERSION = "0.144.2"`, `STORAGE_MIN_WRITER_VERSION = "0.144.2"`, `_ce_v1` / `_ce_raw` event envelope reconstruction, `task.journal.checkpoint` `schema_version` `1..=2` and `storage_components` `codec_version` `0..=1`, `DCPLCM1\0` framing, `decapod.task-transfer.v1`, additive vs strict `deny_unknown_fields` rules, and local-SQLite vs hosted-PostgreSQL logical parity (`DecapodLabs/dactyl#146`, `DecapodLabs/propodus#227`).
@@ -2555,7 +2564,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `89a3f1619c5be9a35738c413f7a2a225159137ae221bef0f1de680c8ad4d94a9`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (288 files)
+- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -291,6 +291,38 @@ pub(crate) struct ValidationBinding {
     workunit_subject: Option<super::workunit::WorkUnitValidationSubject>,
 }
 
+impl ValidationBinding {
+    fn matches_custody_authority(&self, current: &Self, include_workunit: bool) -> bool {
+        self.repository == current.repository
+            && self.candidate_sha == current.candidate_sha
+            && self.governance_digest == current.governance_digest
+            && self.trajectory_digest == current.trajectory_digest
+            && self.trajectory_run_id == current.trajectory_run_id
+            && self.epoch == current.epoch
+            && (!include_workunit || self.workunit_subject == current.workunit_subject)
+            && self.task.same_custody_authority(&current.task)
+    }
+}
+
+fn verify_task_binding_current(
+    store: &Store,
+    expected: &HistoricalTaskBinding,
+    current: &HistoricalTaskBinding,
+) -> Result<(), DecapodError> {
+    if !expected.same_custody_authority(current) {
+        return Err(invalid(
+            "VALIDATION_HISTORY_TASK_STALE: TASK_LIFECYCLE_CUSTODY_CHANGED: task revision, status, contract, assignee or lease generation changed",
+        ));
+    }
+    DbBroker::new(&store.root).with_conn(
+        &todo::todo_db_path(&store.root),
+        "decapod",
+        None,
+        "validation.history.custody_recheck",
+        |conn| todo::check_validation_binding_on_conn(conn, expected, false),
+    )
+}
+
 /// A live validation result carried to publication, never loaded from a receipt.
 /// Retains the existing proof and custody owners across push and forge I/O.
 pub(crate) struct PublicationReadiness {
@@ -421,10 +453,20 @@ impl PublicationReadiness {
                 kind: super::store::StoreKind::Repo,
                 root: super::store::find_governance_root(root).join(".decapod/data"),
             };
-            if capture_task_binding(&store, root)?.as_ref() != Some(binding) {
+            let current = capture_task_binding(&store, root)?.ok_or_else(|| {
+                invalid(
+                    "PUBLICATION_CUSTODY_CHANGED: task, lease, epoch or workunit changed after validation; revalidate",
+                )
+            })?;
+            if !binding.matches_custody_authority(&current, true) {
                 return Err(invalid(
                     "PUBLICATION_CUSTODY_CHANGED: task, lease, epoch or workunit changed after validation; revalidate",
                 ));
+            }
+            if let Err(err) = verify_task_binding_current(&store, &binding.task, &current.task) {
+                return Err(invalid(format!(
+                    "PUBLICATION_CUSTODY_CHANGED: task, lease, epoch or workunit changed after validation; revalidate ({err})"
+                )));
             }
         }
         Ok(())
@@ -930,13 +972,12 @@ pub(crate) fn finish_archive(
         {
             let current = capture_task_binding_inner(store, root, false)?
                 .ok_or_else(|| invalid("current task authority is unavailable"))?;
-            let mut original = binding.clone();
-            original.workunit_subject = None;
-            if current != original {
+            if !binding.matches_custody_authority(&current, false) {
                 return Err(invalid(
                     "task, custody or validation context changed during validation",
                 ));
             }
+            verify_task_binding_current(store, &binding.task, &current.task)?;
             super::workunit::invalidate_current_validation(root, &binding.task, subject)?;
         }
         return Ok(());
@@ -1420,7 +1461,14 @@ fn lookup_current_workunit(
                 "subject journal contains another commit or repository",
             ));
         }
-        if record.task_binding != binding.task {
+        let task_matches = if record.task_binding == binding.task {
+            true
+        } else if record.task_binding.same_custody_authority(&binding.task) {
+            todo::check_validation_binding_on_conn(&conn, &record.task_binding, false).is_ok()
+        } else {
+            false
+        };
+        if !task_matches {
             continue;
         }
         if let Some(scope) = record.proof.target_scope() {
@@ -1516,7 +1564,7 @@ pub(crate) fn current_workunit_proof(
         lookup_current_workunit(root, &store, &binding)?
     };
     let record = &proof.record;
-    if record.task_binding != binding.task
+    if !record.task_binding.same_custody_authority(&binding.task)
         || record.validation_epoch != binding.epoch
         || record.proof.governance_digest != binding.governance_digest
         || record.proof.trajectory_digest != binding.trajectory_digest
@@ -1525,6 +1573,13 @@ pub(crate) fn current_workunit_proof(
         return Err(invalid(
             "WORKUNIT_PROOF_STALE: task, custody, epoch, repository or accepted governance changed",
         ));
+    }
+    if record.task_binding != binding.task
+        && let Err(err) = verify_task_binding_current(&store, &record.task_binding, &binding.task)
+    {
+        return Err(invalid(format!(
+            "WORKUNIT_PROOF_STALE: task custody changed after observed validation; obtain fresh full validation ({err})"
+        )));
     }
     let subject = record.workunit_subject.as_ref().ok_or_else(|| {
         invalid("WORKUNIT_PROOF_UNVERIFIABLE: historical declaration or prior validation did not observe this workunit; obtain fresh full validation")
