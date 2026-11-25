@@ -896,6 +896,14 @@
         "cargo audit (0 vulnerabilities, 0 warnings)",
         "cargo test --locked --features supabase-cloud (70 passed)"
       ]
+    },
+    {
+      "id": "cp-1943-spec-reviews",
+      "summary": "Record spec reviews for INTERFACES, ARCHITECTURE, and SECURITY (#1943)",
+      "input_digest": "sha256:846dec22b4324fc8051acb22378621b30798d334e628e26ff4e01d8f7a3753af",
+      "proof_refs": [
+        "verify-checkpoints --publication-material"
+      ]
     }
   ],
   "intents": {
@@ -935,6 +943,29 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Module architecture unchanged; Cargo.lock and MODULE.bazel.lock transitive pins updated only.",
+          "reviewed_code_fingerprint": "d7760cf73e2b74c87716836e2966fbc173afbe492859a7e99fa228089046b6e6",
+          "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Lockfile-only dependency remediation (quinn-udp 0.5.16, rustix 1.1.6) and policy test; public CLI/RPC/storage interfaces unchanged.",
+          "reviewed_code_fingerprint": "d7760cf73e2b74c87716836e2966fbc173afbe492859a7e99fa228089046b6e6",
+          "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Documented #1943 quinn-udp RUSTSEC-2026-0538 and rustix RUSTSEC-2026-0486 lockfile remediation and floor policy test.",
+          "reviewed_code_fingerprint": "d7760cf73e2b74c87716836e2966fbc173afbe492859a7e99fa228089046b6e6",
+          "spec_material_hash": "f68f44108abff491df92bd705d1d48065ecb999bfc3b3c21515fb0f06f609b4c"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
@@ -943,7 +974,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795565047Z"
+      "updated_at": "1795565151Z"
     },
     "trajectory": {
       "active_boundaries": [
