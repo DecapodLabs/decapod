@@ -1,5 +1,15 @@
 # Architecture
 
+## Proof-relevant `repo.pr-readiness.v1` transition scoping, diagnostics, and human-auth guidance (`#1949`)
+
+- **Unreferenced non-workflow helper transition qualification (`src/decapod/core/repository_profile.rs`)**:
+  - `qualifies_non_proof_source_inventory_transition` checks exact `base_tree` and `head_tree` SHA-256 inventory digests via `compute_git_tree_source_inventory`, extracts `compute_inventory_diff_paths`, verifies every changed path passes `is_non_ci_helper_path` (`scripts/`, `assets/scripts/`, `assets/tools/`, `assets/build/` excluding workflows, `SOURCE_FILES`, and `catalog_source_paths()`), and checks `path_is_proof_referenced` across `accepted_commands`, `accepted_contract`, and bounded UTF-8 blobs of proof-relevant files in `accepted_base_sha`.
+  - `changed_inventory_paths_between` exposes the sorted diff paths for `verify_accepted_transition` error details (`transition_id=...`, `changed_paths=[...]`).
+- **Pre-execution diagnostic propagation (`src/decapod/core/validation_rules.rs`)**:
+  - `evaluate_policy_transition_with_approval` returns `(RuleVerdict, Option<PolicyTransitionDiagnostic>)` and `evaluate_rule` populates `RuleEvaluationResult.message`, `remediation.observed_condition`, `remediation.affected_paths`, and concrete `transition_id` substitutions in `remediation.required_steps`.
+- **Human-authorization guidance routing (`src/decapod/core/validate.rs`, `src/decapod/core/validation_runtime.rs`, `src/decapod/lib.rs`)**:
+  - `ValidationContext.human_authorization_required` tracks failed/stale rules where `human_authorization_required && !autonomous_remediation_permitted` and propagates `ValidationReport.human_authorization_required` to `lib.rs::run_validate_command`, selecting `ValidationGuidance::for_human_authorization_required()` (`owner: "human"`, `next_action: "request_human_authorization"`), matched in `validation_runtime.rs` when `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocks adapter selection or project loading.
+
 ## Dactyl `0.19.1` dependency & trust boundary alignment (`Cargo.toml`, `Cargo.lock`, `MODULE.bazel.lock`)
 
 - **Canonical storage client upgrade (`dactyl-db = "=0.19.1"`)**: Aligns Decapod's `sqlite` / `neon` / `supabase-cloud` storage dependency (`Cargo.toml`, `Cargo.lock`, `MODULE.bazel.lock`) to the newly released `dactyl-db 0.19.1` crate from crates.io (incorporating Dactyl's permanent `#1944` trust/zero-egress gate and advisory lockfile updates while preserving `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16`, and `rustix >= 1.1.6`).
@@ -2092,7 +2102,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `961232cc281d00b751f8a2c8db62160159d909dabf7b70264e26971aa93e2f12`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

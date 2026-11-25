@@ -1,5 +1,15 @@
 # Validation
 
+## `#1949` `repo.pr-readiness.v1` transition scoping, diagnostics & guidance verification
+
+Verified on `origin/master` (`84be80796`) inside isolated worktree `agent/agy-1949/bugs_01m89390c7gn4182-fix-1949` (`CARGO_TARGET_DIR=/tmp/decapod_validate/bugs_01m89390c7gn4182`):
+
+- `cargo fmt --check`: passed.
+- `cargo test --lib repository_profile`: `34 passed; 0 failed` (including `unreferenced_scripts_transition_qualifies_without_manual_approval` in both `ci_local = false` and `ci_local = true`, and `proof_referenced_script_and_transitively_referenced_helper_still_fail_closed_with_diagnostics`).
+- `cargo test --lib validation_rules`: `17 passed; 0 failed` (verifying `RuleEvaluationResult.message`, `remediation.observed_condition`, `remediation.required_steps` transition ID substitution, and `ValidationGuidance::for_human_authorization_required()`).
+- `cargo test --lib validation_runtime`: `91 passed; 0 failed; 2 ignored` (plus sub-module unit checks `1/1`, `1/1`).
+- `cargo test --test consumer_readiness`: `41 passed; 0 failed` (including `unreferenced_packaging_script_validates_without_manual_transition_approval`).
+
 ## Dactyl `0.19.1` dependency, Bazel lockfile & security verification
 
 - Verified `dactyl-db = "=0.19.1"` against `cargo update -p dactyl-db`, `/opt/homebrew/bin/bazelisk mod deps --lockfile_mode=update`, `/opt/homebrew/bin/bazelisk test //:cargo_inputs_policy`, `cargo fmt --all -- --check`, `cargo test --test release_dependency_policy`, `cargo test --test trust_egress_gate`, and `cargo audit -q` (`0` vulnerabilities).
@@ -2867,7 +2877,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `961232cc281d00b751f8a2c8db62160159d909dabf7b70264e26971aa93e2f12`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

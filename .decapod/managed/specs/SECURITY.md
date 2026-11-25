@@ -1,5 +1,12 @@
 # Security
 
+## Fail-closed proof-reference boundary for `repo.pr-readiness.v1` transitions (`#1949`)
+
+- **Conservative reference & unreadable-blob fail-closed guards (`src/decapod/core/repository_profile.rs`)**:
+  - `qualifies_non_proof_source_inventory_transition` never waives `accepted_commands`, `accepted_contract` (including `reviewed_commands_digest`, `executions`, `source_coverage`, `targets`), workflows, `SOURCE_FILES`, or `catalog_source_paths()`.
+  - `path_is_proof_referenced` inspects `accepted_commands`, `accepted_contract` (including `execution.directory`-relative invocations), and every proof-relevant or directly referenced file in `accepted_base_sha`, failing closed (`true`) on exact path matches, directory globs (`dir/*`, `dir/**`), directory token matches, or non-UTF-8 / oversized blobs.
+- **No agent privilege elevation**: `decapod.policy.accepted_repository_contract` retains `OverrideEligibility::NonOverridable`, `autonomous_remediation_permitted = false`, and `human_authorization_required = true` when proof-relevant inputs or command contracts change, shifting `agent_guidance.owner` to `"human"` rather than weakening RBAC or policy control gates.
+
 ## Dactyl `0.19.1` dependency security & transitive floor enforcement (`#1943`, `#1944`)
 
 - **Zero-advisory lockfile reconciliation (`dactyl-db 0.19.1`)**: Upgrades `dactyl-db` to `0.19.1` while asserting `quinn-proto >= 0.11.19`, `quinn-udp >= 0.5.16` (RUSTSEC-2026-0538), and `rustix >= 1.1.6` (RUSTSEC-2026-0486) across all `Cargo.lock` entries (including inactive feature edges) and `cargo audit` zero-vulnerability gates.
@@ -1605,7 +1612,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6`
+- Repository signal fingerprint: `961232cc281d00b751f8a2c8db62160159d909dabf7b70264e26971aa93e2f12`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

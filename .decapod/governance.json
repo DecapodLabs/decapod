@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "7a1c3cde778513285787b3c8baabc4bf6041e797",
+    "accepted_commit": "84be8079605d7504073a34b84cca94d6e89cb2bf",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,35 +870,19 @@
     }
   },
   "change": {
-    "id": "change_01M88Y5S2CD881MXQTZMQCKZBN",
-    "base_commit": "7a1c3cde778513285787b3c8baabc4bf6041e797",
+    "id": "change_01M8939YNE32RXP5KVD0PQC04T",
+    "base_commit": "84be8079605d7504073a34b84cca94d6e89cb2bf",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "claim:dactyl-0191-reconciliation": {
-      "statement": "Decapod pins dactyl-db =0.19.1 with matching crates.io checksum, synced MODULE.bazel.lock (//:cargo_inputs_policy), preserved quinn-proto/quinn-udp/rustix floors, and zero cargo audit vulnerabilities.",
-      "falsifier": "Cargo.toml/Cargo.lock/MODULE.bazel.lock disagree on dactyl-db 0.19.1 checksum fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d, Bazel cargo_inputs_policy or trust_egress_gate fails, or cargo audit reports any advisory.",
-      "status": "supported",
-      "proof_refs": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "tests/release_dependency_policy.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "cp-decapod-dactyl-0191",
-      "summary": "Bump dactyl-db to =0.19.1 across Cargo.toml, Cargo.lock, MODULE.bazel.lock, release_dependency_policy, and living specs",
-      "input_digest": "sha256:e1dca62038f069ce6e29f447b9dc514a33c7ca299e74813a3975d5e550ed7535",
-      "proof_refs": [
-        "tests/release_dependency_policy.rs"
-      ]
+      "id": "bugs_01m89390c7gn4182-1",
+      "summary": "Fix #1949: proof-relevant repo.pr-readiness.v1 transition scoping, diagnostics, and human-auth guidance",
+      "input_digest": "sha256:03abf829ee162ea2d4a58c698d083d8985f9d9afd2915d33df090d08e2285808"
     }
   ],
   "intents": {
-    "intent:change_01M88Y5S2CD881MXQTZMQCKZBN": {
+    "intent:change_01M8939YNE32RXP5KVD0PQC04T": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -908,14 +892,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
+      "id": "intent:change_01M8939YNE32RXP5KVD0PQC04T",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Reconcile dactyl-db dependency with latest Dactyl release",
-      "refined_intent": "Reconcile dactyl-db dependency with latest Dactyl release",
+      "raw_intent": "Fix #1949: scope repo.pr-readiness.v1 inventory transitions to proof-relevant inputs, surface transition diagnostics, and fix human-auth agent_guidance",
+      "refined_intent": "Fix #1949: scope repo.pr-readiness.v1 inventory transitions to proof-relevant inputs, surface transition diagnostics, and fix human-auth agent_guidance",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -928,7 +912,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Reconcile dactyl-db dependency with latest Dactyl release",
+      "intent": "Fix #1949: scope repo.pr-readiness.v1 inventory transitions to proof-relevant inputs, surface transition diagnostics, and fix human-auth agent_guidance",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -938,152 +922,78 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled Decapod dependency to released dactyl-db =0.19.1 with Bazel and security lockfile parity.",
-          "reviewed_code_fingerprint": "c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6",
-          "spec_material_hash": "8307dbec73b8a50e8f1493757c865888ac655bd8e025c9fcf856109a1d592d05"
+          "reason": "Documented qualifies_non_proof_source_inventory_transition, PolicyTransitionDiagnostic, and human_authorization_required propagation",
+          "reviewed_code_fingerprint": "961232cc281d00b751f8a2c8db62160159d909dabf7b70264e26971aa93e2f12",
+          "spec_material_hash": "176c2837a3c68e17c65becd18be2708e5fea1ed7f878308086b9e4081115b82a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled Decapod dependency to released dactyl-db =0.19.1 with Bazel and security lockfile parity.",
-          "reviewed_code_fingerprint": "c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6",
+          "reason": "CLI/RPC command schemas unchanged; ValidationGuidance::for_human_authorization_required and ValidationReport.human_authorization_required are additive internal/JSON fields",
+          "reviewed_code_fingerprint": "961232cc281d00b751f8a2c8db62160159d909dabf7b70264e26971aa93e2f12",
           "spec_material_hash": "1735816423099406933ecbadb6e689754cba9dedd12074413f261dd8c81b1bbe"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled Decapod dependency to released dactyl-db =0.19.1 with Bazel and security lockfile parity.",
-          "reviewed_code_fingerprint": "c17917adce6bd71fdaf83ab4f19b04d79bbd640b2e8c8c4f71ac3a9fcb33e9c6",
-          "spec_material_hash": "025eeb2e461b713e23581137bf1c0fde942a26b17585a056dad13f1697df5d4f"
+          "reason": "Documented fail-closed proof-reference inspection and preserved non-overridable policy boundary",
+          "reviewed_code_fingerprint": "961232cc281d00b751f8a2c8db62160159d909dabf7b70264e26971aa93e2f12",
+          "spec_material_hash": "a2edb4ffabdaaf182647aa36947db6e5be897c36698a3f46824c79dabca723a8"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Reconcile dactyl-db dependency with latest Dactyl release",
+      "title": "Fix #1949: scope repo.pr-readiness.v1 inventory transitions to proof-relevant inputs, surface transition diagnostics, and fix human-auth agent_guidance",
       "todo_ids": [
-        "cicd_01m88y4wks12shvs"
+        "bugs_01m89390c7gn4182"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795596853Z"
+      "updated_at": "1795602739Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:5eca62c7561729de4cd4dbec2ba95e44eb818358b93a5b5c683c5261551f9f55",
-      "checks": [
-        {
-          "name": "bazel_cargo_inputs_policy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_audit",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "release_dependency_policy",
-          "status": "passed"
-        },
-        {
-          "name": "trust_egress_gate",
-          "status": "passed"
-        }
-      ],
-      "completion_claim": "Reconciled Decapod dactyl-db dependency to 0.19.1 across Cargo and Bazel lockfiles",
+      "artifact_hash": "sha256:7b36d54bdaefb3b127a07eef6d3a825a65700d6bf9b9ca65afae049bbc4228d6",
+      "checks": [],
       "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
+            "intent_id": "intent:change_01M8939YNE32RXP5KVD0PQC04T",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
+            "intent_id": "intent:change_01M8939YNE32RXP5KVD0PQC04T",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:branch_01M88Y5S6A26MY264C8E620DBN",
-            "event_id": "event:4",
-            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 3,
         "schema_version": "1.1.0",
-        "trajectories": {
-          "branch_01M88Y5S6A26MY264C8E620DBN": {
-            "evidence_only": true,
-            "id": "branch_01M88Y5S6A26MY264C8E620DBN",
-            "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "tests/release_dependency_policy.rs",
-                  "Cargo.toml",
-                  "Cargo.lock",
-                  "MODULE.bazel.lock",
-                  "tests/release_dependency_policy.rs",
-                  "dactyl-db 0.19.1 checksum fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d; //:cargo_inputs_policy PASS; release_dependency_policy 5/5; trust_egress_gate 5/5; cargo audit 0 vulns"
-                ],
-                "proof_refs": [
-                  "bazel_cargo_inputs_policy",
-                  "cargo_fmt",
-                  "release_dependency_policy",
-                  "trust_egress_gate",
-                  "cargo_audit"
-                ],
-                "scope": [
-                  "root"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [
-        "dactyl-db 0.19.1 checksum fbc425078c3011b4f01b3e4e83fd61ae721ad61e96ecdbc932c20ce70056dd0d; //:cargo_inputs_policy PASS; release_dependency_policy 5/5; trust_egress_gate 5/5; cargo audit 0 vulns"
-      ],
-      "inspected_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "tests/release_dependency_policy.rs"
-      ],
-      "intent_id": "intent:change_01M88Y5S2CD881MXQTZMQCKZBN",
-      "modified_files": [
-        "Cargo.lock",
-        "Cargo.toml",
-        "MODULE.bazel.lock",
-        "tests/release_dependency_policy.rs"
-      ],
+      "evidence": [],
+      "inspected_files": [],
+      "intent_id": "intent:change_01M8939YNE32RXP5KVD0PQC04T",
+      "modified_files": [],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M88Y5S6A26MY264C8E620DBN",
+      "run_id": "branch_01M8939YRQM88N9RHNF0N8WY88",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m88y4wks12shvs",
+      "task_id": "bugs_01m89390c7gn4182",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
