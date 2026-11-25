@@ -1,5 +1,12 @@
 # Security
 
+## Dependency security audit remediation (`quinn-udp` RUSTSEC-2026-0538 & `rustix` RUSTSEC-2026-0486, #1943)
+
+- **Lockfile-only minimal remediation (`Cargo.lock`, `MODULE.bazel.lock`)**:
+  - Updated transitive `quinn-udp` from `0.5.14` to `0.5.16` (`>=0.5.16, <0.6.0`, resolving [RUSTSEC-2026-0538](https://rustsec.org/advisories/RUSTSEC-2026-0538)) and `rustix` from `1.1.4` to `1.1.6` (`>=1.1.6`, resolving [RUSTSEC-2026-0486](https://rustsec.org/advisories/RUSTSEC-2026-0486)) without relaxing or suppressing any `cargo audit` checks.
+  - Verified `quinn-udp` is an inactive optional dependency of `reqwest 0.12.28` (`http3` feature disabled in `dactyl-db 0.19.0` / `decapod`) while keeping `Cargo.lock` and Bazel `MODULE.bazel.lock` (`//:cargo_inputs_policy`) clean (`cargo audit`: 0 vulnerabilities, 0 warnings).
+  - `tests/release_dependency_policy.rs::locked_quinn_udp_and_rustix_preserve_patched_floors_including_inactive_entries` enforces the patched floors across future lockfile updates while preserving `dactyl-db = "=0.19.0"`.
+
 ## Wave 7 compaction, delegated RBAC generation checks, knowledge attestation, and TypeScript/Pi trust boundaries (#1630, #1568, #657, #1277, #1711)
 
 - **Fail-closed compaction & explicit-only page reclamation (`src/decapod/core/storage_compaction.rs`)**:
@@ -1570,14 +1577,14 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Contract Snapshot
 
-- Security/policy/auth surfaces (35): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, `tests/ci_checkout_policy.rs`, (+19 more)
+- Security/policy/auth surfaces (1481): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/.config/build/cargo_inputs_policy.py`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/.github/scripts/preflight-release.py`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/.github/scripts/release-tool-versions.py`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/Cargo.lock`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/Cargo.toml`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/README.md`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/benches/perf_1_1.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/benches/perf_1_2.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/benches/perf_1_3.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/build/compress_constitution.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/build/constitution_admission.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/build/constitution_index.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/tools/build_lifecycle.rs`, `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/assets/tools/build_lifecycle_tests.rs`, (+1465 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
+- Repository signal fingerprint: `d7760cf73e2b74c87716836e2966fbc173afbe492859a7e99fa228089046b6e6`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-agy-1943-todo-01m87z-agent-decapod-1943-security-audit-secu_01m87zq2vcdhpct8/` (1440 files), `bazel-bin/` (3 files), `bazel-out/` (3 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (284 files), `tests/` (283 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

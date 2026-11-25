@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "254428be219f1e0568e0161d222ffeb361818d53",
+    "accepted_commit": "47514f8c2fa9395db2d82e7afddbc38bb28c2408",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,110 +870,53 @@
     }
   },
   "change": {
-    "id": "w7-ci-workflows-cicd_01m82r3tj9w64mfa",
-    "base_commit": "254428be219f1e0568e0161d222ffeb361818d53",
+    "id": "change_01M87ZRCVZP4RXAA42X5DYWSZR",
+    "base_commit": "47514f8c2fa9395db2d82e7afddbc38bb28c2408",
     "target_base": "origin/master"
   },
   "claims": {
-    "ci-shards-release-ruleset-nix-etag": {
-      "statement": "Tests (core) and Tests (cli) are sharded 3-way with fail-closed aggregators (#1672), release-only retains required core/supabase checks (#1879), nix-flake covers v* tags (#1626), GHA preflights activated (#1890), and PublicGithubReads uses bounded ETag/304 conditional polling (#1573)",
-      "falsifier": "Workflow YAML, readiness_profile digests, release_metadata_policy, source_ci_profile_policy, or github_quota tests fail",
+    "claim-1943-audit-clean": {
+      "statement": "Cargo.lock updates quinn-udp to 0.5.16 and rustix to 1.1.6 so cargo audit reports 0 vulnerabilities and 0 warnings, MODULE.bazel.lock matches Cargo.lock, and release_dependency_policy enforces both patched floors.",
+      "falsifier": "cargo audit reports any vulnerability/warning, cargo_inputs_policy fails, or release_dependency_policy fails.",
       "status": "supported",
       "proof_refs": [
-        "github_quota",
-        "readiness_profile_tests",
-        "release_metadata_policy",
-        "source_ci_profile_policy"
-      ]
-    },
-    "governed-docs-autosync-1388": {
-      "statement": "docs_autosync.yml runs a full governed PR lifecycle via docs_autosync_governed.sh across all 6 lifecycle scenarios without raw create-pull-request or force-push",
-      "falsifier": "Any of the 6 real-git scenarios fails or produces uncheckpointed/force-pushed history",
-      "status": "supported",
-      "proof_refs": [
-        "docs_sync_checkpoint_boundary"
-      ]
-    },
-    "manifest-relocation-1079": {
-      "statement": "Canonical specs manifest moved to .decapod/managed/.manifest.json with legacy read fallback and cleanup on refresh",
-      "falsifier": "Legacy fallback fails or refresh leaves duplicate .decapod/managed/specs/.manifest.json",
-      "status": "supported",
-      "proof_refs": [
-        "decapod_release_projection_drift",
-        "project_specs_tests",
-        "projection_consistency"
-      ]
-    },
-    "pre-build-gate-1047-1134": {
-      "statement": "pre-build-validate CI job and decapod validate --pre-build fail fast on missing/stale specs, manifest hashes, governance document, or entrypoint SHA-256 markers before build/lint/test jobs",
-      "falsifier": "pre-build-validate passes with stale hashes or missing required surfaces",
-      "status": "supported",
-      "proof_refs": [
-        "analyze_readonly",
-        "pre_build_validate_unit_tests"
-      ]
-    },
-    "specs-refresh-content-1122": {
-      "statement": "specs.refresh deterministically updates bounded codebase-contract sections in living specs while preserving authored prose and keeping material-specs enforcement intact",
-      "falsifier": "specs.refresh drops authored prose or satisfies material-specs without authored edits",
-      "status": "supported",
-      "proof_refs": [
-        "material_specs_sh",
-        "project_specs_tests"
+        "bazelisk test //:cargo_inputs_policy (PASSED)",
+        "cargo audit (0 vulnerabilities, 0 warnings)",
+        "cargo test --locked --test release_dependency_policy (5 passed)"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "w7-ci-workflows-final",
-      "summary": "Wave 7 Shard A: CI workflows, .manifest.json relocation (#1079), codebase-contract specs.refresh (#1122), pre-build CI gate (#1047/#1134), governed docs_autosync (#1388), 3-way test sharding (#1672), release-only ruleset alignment (#1879), Nix v* tag publication (#1626), GHA preflight config (#1890), ETag/304 polling (#1573)",
-      "input_digest": "sha256:d56f657d08f4f0933755a03718bff4cc026a707473215184f1da92f33bc72e29"
-    },
-    {
-      "id": "w7-ci-workflows-reconcile-b774df83",
-      "summary": "Reconcile Wave 7 Shard A with origin/master (b774df83dd, PR #1927)",
-      "input_digest": "sha256:cc240ba7c34dac93bebfa08f0ee746d901011b966907dbbbb7e4233fd42a1b74"
-    },
-    {
-      "id": "w7-ci-workflows-reconcile-7a30f895",
-      "summary": "Reconcile Wave 7 Shard A with origin/master (7a30f89584, PRs #1927, #1930, #1928)",
-      "input_digest": "sha256:208891b072f368c04b3054199568131d6e26a1de630fa95fdbecfe114a60bbde"
-    },
-    {
-      "id": "w7-ci-workflows-reconcile-v0164",
-      "summary": "Reconcile Wave 7 Shard A with origin/master v0.164.0 (5153fa67c6, updated reviewed_sources_digest and 0.164.0 projections)",
-      "input_digest": "sha256:de6f653f4a834fd0932b4f538ffa354d3f526a6eed9a4e6e834926ac9d0f1959"
-    },
-    {
-      "id": "w7-ci-bazel-docs-sync-compile-data",
-      "summary": "Add docs_autosync.yml and docs_autosync_governed.sh to Bazel compile_data/data, materialize script in test scratch dir, and update reviewed_sources_digest",
-      "input_digest": "sha256:89558237221737f004e186ce552ef08ecd44009edd6fa364ed76da0c9067d7af"
-    },
-    {
-      "id": "w7-ci-docs-sync-safe-path",
-      "summary": "Use minimal safe PATH excluding container runtimes in docs_sync_checkpoint_boundary fixture",
-      "input_digest": "sha256:81bf6483a0b813f10f7d849963c4bc63a3d48e9d74aea0b1dbd43bae570db1d0"
+      "id": "cp-1943-security-audit",
+      "summary": "Restore cargo audit clean status: quinn-udp 0.5.16, rustix 1.1.6, MODULE.bazel.lock sync, release_dependency_policy floor, SECURITY.md update",
+      "input_digest": "sha256:73d93ee1595e55aaba8f318c48c999fcaca7288ffb804b0a624cdc308a2b6a3a",
+      "proof_refs": [
+        "bazelisk test //:cargo_inputs_policy (PASSED)",
+        "cargo audit (0 vulnerabilities, 0 warnings)",
+        "cargo test --locked --features supabase-cloud (70 passed)"
+      ]
     }
   ],
   "intents": {
-    "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa": {
+    "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Workflows, assets/tools, readiness_profile, project_specs, pre_build_validate, release_projection_drift, snapshot_provider, validation_runtime, validate, scaffold, .decapod/config.toml, living specs, and tests only"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "ci-workflows-readiness-specs-manifest"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+      "id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Own DecapodLabs/decapod Wave 7 Shard A CI workflows, readiness profile, pre-build gate, .manifest.json move, specs.refresh content, governed docs_autosync, Nix tag publication, test sharding, GHA preflight config, and ETag polling",
-      "refined_intent": "Implement and verify all Wave 7 Shard A changes in isolated worktree with dual-root CI compatibility, updated workflow/inventory digests, full formatting/clippy/test suites, and governed checkpoints",
+      "raw_intent": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
+      "refined_intent": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -986,109 +929,64 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deliver Wave 7 Shard A CI/workflow/governance/spec-refresh improvements with dual-root compatibility, zero Buildkite reliance, and full unit/integration/clippy verification",
+      "intent": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
       "phases": [],
       "proof_hooks": [
-        "cargo_fmt",
-        "cargo_clippy_all_targets",
-        "pre_build_validate",
-        "release_metadata_policy",
-        "docs_sync_checkpoint_boundary",
-        "source_ci_profile_policy",
-        "unit_and_integration_suites"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
-      "spec_reviews": [
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Isolated PATH in docs_sync_checkpoint_boundary test to exclude container runtimes from disposable CI HOME",
-          "reviewed_code_fingerprint": "85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b",
-          "spec_material_hash": "cab13612b774aa0076aa57bdf262b47e53082edd474ecadde23d9d0698ff40fe"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Isolated PATH in docs_sync_checkpoint_boundary test to exclude container runtimes from disposable CI HOME",
-          "reviewed_code_fingerprint": "85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b",
-          "spec_material_hash": "82531431bb06c3227b00892db043cf690b1a7a4780f2da7c8b3a1eaa145a2114"
-        },
-        {
-          "disposition": "updated",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Isolated PATH in docs_sync_checkpoint_boundary test to exclude container runtimes from disposable CI HOME",
-          "reviewed_code_fingerprint": "85792b0d7a4fde192713fe3af46622c359644f39a95d30d1af83abcf1595ea2b",
-          "spec_material_hash": "7a4d93d6114cc8ca068b4580520554698c64eec64c4146ff7240382161d9f996"
-        }
-      ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Wave 7 Shard A: CI Workflows, Manifest Move (#1079), Specs Refresh (#1122), Pre-Build Gate (#1047/#1134), Governed Docs Sync (#1388), Shards (#1672), Release Ruleset (#1879), Nix Tags (#1626), GHA Preflight (#1890), ETag Polling (#1573)",
+      "title": "Restore Rust Security Audit: quinn-udp RUSTSEC-2026-0538 and rustix warning (#1943)",
       "todo_ids": [
-        "cicd_01m82r3tj9w64mfa"
+        "secu_01m87zq2vcdhpct8"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795406214Z"
+      "updated_at": "1795565047Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Workflows, assets/tools, readiness_profile, project_specs, pre_build_validate, release_projection_drift, snapshot_provider, validation_runtime, validate, scaffold, .decapod/config.toml, living specs, and tests only"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:55c5f63046fc8fe50d32fe3f7a8ce909c35c320cf61377bc136c5fedb9a50150",
+      "artifact_hash": "sha256:fe53f874a0d31fa6de2c680e43c3ac0dbdf6b5c86cda233d86cd753336304914",
       "checks": [
         {
-          "name": "analyze_readonly",
+          "name": "cargo_audit",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy_all_targets",
+          "name": "cargo_inputs_policy",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "release_dependency_policy",
           "status": "passed"
         },
         {
-          "name": "decapod_release_projection_drift",
-          "status": "passed"
-        },
-        {
-          "name": "docs_sync_checkpoint_boundary",
-          "status": "passed"
-        },
-        {
-          "name": "github_quota",
-          "status": "passed"
-        },
-        {
-          "name": "projection_consistency",
-          "status": "passed"
-        },
-        {
-          "name": "release_metadata_policy",
+          "name": "supabase_consumer_tests",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+            "detail": "trajectory:branch_01M87ZRD0QYJFS6Z4PMMY3JJPA",
             "event_id": "event:4",
-            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1097,39 +995,28 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "w7-ci-workflows-cicd_01m82r3tj9w64mfa": {
+          "branch_01M87ZRD0QYJFS6Z4PMMY3JJPA": {
             "evidence_only": true,
-            "id": "w7-ci-workflows-cicd_01m82r3tj9w64mfa",
-            "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+            "id": "branch_01M87ZRD0QYJFS6Z4PMMY3JJPA",
+            "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".github/workflows/ci.yml",
-                  ".github/workflows/docs_autosync.yml",
-                  ".github/workflows/nix-flake.yml",
-                  ".decapod/config.toml",
-                  ".decapod/managed/.manifest.json",
-                  "assets/tools/source_ci_profile.rs",
-                  "assets/tools/docs_autosync_governed.sh",
-                  "src/decapod/core/project_specs.rs",
-                  "src/decapod/core/pre_build_validate.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/snapshot_provider/mod.rs"
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "tests/release_dependency_policy.rs",
+                  ".decapod/managed/specs/SECURITY.md"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_all_targets",
-                  "release_metadata_policy",
-                  "docs_sync_checkpoint_boundary",
-                  "projection_consistency",
-                  "analyze_readonly",
-                  "github_quota",
-                  "decapod_release_projection_drift"
+                  "cargo_audit",
+                  "cargo_inputs_policy",
+                  "supabase_consumer_tests",
+                  "release_dependency_policy"
                 ],
                 "scope": [
-                  "ci-workflows-readiness-specs-manifest"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1139,33 +1026,26 @@
         }
       },
       "declared_commands": [],
-      "destination": "Governed non-draft PR targeting master for Wave 7 merge slot #3",
+      "destination": "pull request",
       "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:w7-ci-workflows-cicd_01m82r3tj9w64mfa",
-      "modified_files": [
-        ".decapod/config.toml",
-        ".decapod/managed/.manifest.json",
-        ".github/workflows/ci.yml",
-        ".github/workflows/docs_autosync.yml",
-        ".github/workflows/nix-flake.yml",
-        "assets/tools/docs_autosync_governed.sh",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/pre_build_validate.rs",
-        "src/decapod/core/project_specs.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/snapshot_provider/mod.rs"
+      "inspected_files": [
+        ".decapod/managed/specs/SECURITY.md",
+        "Cargo.lock",
+        "MODULE.bazel.lock",
+        "tests/release_dependency_policy.rs"
       ],
+      "intent_id": "intent:change_01M87ZRCVZP4RXAA42X5DYWSZR",
+      "modified_files": [],
       "next_transitions": [
-        "publication"
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "ci-workflows-readiness-specs-manifest"
+        "root"
       ],
-      "run_id": "w7-ci-workflows-cicd_01m82r3tj9w64mfa",
+      "run_id": "branch_01M87ZRD0QYJFS6Z4PMMY3JJPA",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "cicd_01m82r3tj9w64mfa",
+      "task_id": "secu_01m87zq2vcdhpct8",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
