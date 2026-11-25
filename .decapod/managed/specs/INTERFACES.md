@@ -1,5 +1,14 @@
 # Interfaces
 
+## Wave 3 derived replay, compaction pagination, and knowledge firewall contracts (#1936, #1630, #657)
+
+- **Derived data & replay documentation (`docs/derived-data-and-replay.md`)**: Documents the 13 canonical `events::STREAMS`, derived task/workunit/knowledge/proof surfaces, composite `(seq, event_id)` cursor rules, duplicate/gap/uncheckpointed-suffix handling, snapshot watermarks, and immutable-proof vs. sensitive-payload retention tradeoffs.
+- **Compaction dry-run & multi-stream inventory (`src/decapod/core/storage_compaction.rs`)**: `DataCompactionReport::components_collected` in `compact_datastore_lossless(..., dry_run = true, ...)` now reports candidate `unreferenced_components` consistently with `events_compacted` and `prompts_deduplicated`.
+- **Knowledge retrieval & promotion firewall (`src/decapod/plugins/knowledge.rs`)**:
+  - `KnowledgeContext::excluded` adds `"malformed_provenance"` for stored records whose provenance fails `is_valid_provenance` (scheme syntax or `file:` path traversal checks), preserving `"source_unavailable"` for syntactically valid missing `file:` targets.
+  - `record_promotion_event` and `add_scoped_knowledge` (for `procedural/` IDs) emit `ValidationError("PROMOTION_FIREWALL_BLOCKED: ...")` when `source_entry_id` exists in `knowledge` with `status != "active"` or expired `expires_ts`.
+- **Verification wiring (`tests/derived_replay_1936.rs`, `tests/core/core.rs`, `.config/build/decapod.BUILD.bzl`)**: Registers 11 integration tests across both standalone `derived_replay_1936` and `core_tests`.
+
 ## Lease renewal custody checks, crash boundaries, and fencing verification surfaces (#1892, #1935, #1934, #1763)
 
 - **Custody & binding interfaces (`src/decapod/core/todo.rs`, `src/decapod/core/task_journal.rs`, `src/decapod/core/validation_history.rs`)**:
@@ -2564,7 +2573,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (290 files)
+- Repository signal fingerprint: `d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (285 files), `tests/` (291 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

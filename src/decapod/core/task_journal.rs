@@ -36,6 +36,7 @@ const MAX_RECORDS: usize = 100_000;
 const MAX_BYTES: usize = 32 * 1024 * 1024;
 const MAX_RECORD_BYTES: usize = 8 * 1024 * 1024;
 const DEFAULT_VERIFY_PAGE_SIZE: usize = 256;
+const EXEMPT_SUFFIX_EVENT_TYPES_SQL: &str = "'task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed','task.delegation.policy','task.delegation.reserve'";
 
 const COMP_TASK_DESCRIPTION: &str = "task.description";
 const COMP_TASK_SCOPE: &str = "task.scope";
@@ -1216,11 +1217,11 @@ fn check_complete_suffix_for_task(
     source_watermark: u64,
     through: u64,
 ) -> Result<(), DecapodError> {
-    let incomplete: bool = conn.query_row(
-        "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed','task.delegation.policy','task.delegation.reserve'))",
-        params![id, source_watermark, through],
-        |r| r.get(0),
-    )?;
+    let sql = format!(
+        "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ({EXEMPT_SUFFIX_EVENT_TYPES_SQL}))"
+    );
+    let incomplete: bool =
+        conn.query_row(&sql, params![id, source_watermark, through], |r| r.get(0))?;
     if incomplete {
         return Err(invalid(format!(
             "TASK_JOURNAL_INCOMPLETE_HISTORY: uncheckpointed domain-event suffix for {id}"
@@ -1671,10 +1672,11 @@ pub(super) fn record_changes(
     for (id, current) in &after {
         let prior = before.get(id);
         if prior == Some(current) {
-            let has_domain_event: bool = conn.query_row(
-                "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed'))",
-                params![id,before_watermark], |r| r.get(0),
-            )?;
+            let sql = format!(
+                "SELECT EXISTS(SELECT 1 FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND event_type NOT IN ({EXEMPT_SUFFIX_EVENT_TYPES_SQL}))"
+            );
+            let has_domain_event: bool =
+                conn.query_row(&sql, params![id, before_watermark], |r| r.get(0))?;
             if !has_domain_event {
                 continue;
             }
@@ -2142,24 +2144,18 @@ pub(crate) fn verify_with_budget(
                 .unwrap_or(0);
             let mut suffix_seq = min_watermark;
             loop {
-                let mut stmt = conn.prepare(
+                let sql = format!(
                     "SELECT seq, subject_id
                      FROM events
                      WHERE stream = 'todo'
                        AND seq > ?1
                        AND seq <= ?2
                        AND subject_id IS NOT NULL
-                       AND event_type NOT IN (
-                           'task.journal.checkpoint',
-                           'task.journal.restored',
-                           'task.journal.gap_accepted',
-                           'task.comment',
-                           'task.worker.run',
-                           'task.verify.capture_failed'
-                       )
+                       AND event_type NOT IN ({EXEMPT_SUFFIX_EVENT_TYPES_SQL})
                      ORDER BY seq ASC
-                     LIMIT 512",
-                )?;
+                     LIMIT 512"
+                );
+                let mut stmt = conn.prepare(&sql)?;
                 let rows = stmt.query_map(params![suffix_seq, wm], |r| {
                     Ok((r.get::<_, u64>(0)?, r.get::<_, String>(1)?))
                 })?;
@@ -2346,8 +2342,11 @@ pub(super) fn checkpoint_with_gaps(
                 "no checkpointed history for {id}; --accept-historical-gap only repairs journaled tasks"
             ))
         })?;
+        let suffix_sql = format!(
+            "SELECT count(*), min(seq), max(seq) FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ({EXEMPT_SUFFIX_EVENT_TYPES_SQL})"
+        );
         let (count, from_seq, through_seq): (i64, Option<u64>, Option<u64>) = conn.query_row(
-            "SELECT count(*), min(seq), max(seq) FROM events WHERE stream='todo' AND subject_id=?1 AND seq>?2 AND seq<=?3 AND event_type NOT IN ('task.journal.checkpoint','task.journal.restored','task.journal.gap_accepted','task.comment','task.worker.run','task.verify.capture_failed')",
+            &suffix_sql,
             params![id, head.source_watermark, source_watermark],
             |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
         )?;

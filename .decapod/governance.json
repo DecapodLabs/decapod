@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "0db8ba28e3e9795ddd46f8296f957fe158628ba7",
+    "accepted_commit": "9fa1ad8b1e1c210c3c1ac9468f94c60f15b0a0b3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,61 +870,56 @@
     }
   },
   "change": {
-    "id": "pr-1940-durability-fencing",
-    "base_commit": "0db8ba28e3e9795ddd46f8296f957fe158628ba7",
+    "id": "pr-1941-derived-replay",
+    "base_commit": "9fa1ad8b1e1c210c3c1ac9468f94c60f15b0a0b3",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:durability-fencing-1892-1934-1935": {
-      "statement": "Active same-generation todo.heartbeat renewals preserve validation custody continuity without bypassing rotation/expiry/release fencing, uncommitted WAL/projection/staging crashes recover atomically without unlinking live .lock sidecars, and delayed-publication fences reject stale custody or moved targets.",
-      "falsifier": "Any heartbeat renewal returns VALIDATION_HISTORY_TASK_STALE, an expired/rotated/reclaimed lease succeeds, a live .lock inode is unlinked, or crash recovery fails integrity checks.",
+    "claim:derived-projection-replay-1936": {
+      "statement": "Canonical event streams reconstruct derived task, workunit, knowledge, and proof projections deterministically with resumable cursors, explicit gap/snapshot-drift refusal, composite (seq, event_id) multi-stream compaction, and procedural-promotion firewall.",
+      "falsifier": "Incremental budgeted replay diverges from clean snapshot+suffix digest, multi-stream tied-seq events drop at page boundaries, concurrent readers fail with SQLITE_IOERR_LOCK, or revoked/expired/malformed knowledge promotes.",
       "status": "supported",
       "proof_refs": [
-        "docs/durability-and-fencing.md",
+        "docs/derived-data-and-replay.md",
+        "src/decapod/core/events.rs",
+        "src/decapod/core/storage_compaction.rs",
         "src/decapod/core/task_journal.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/core/validation_history.rs",
-        "tests/crash_durability_1934.rs",
-        "tests/lease_fencing_consistency_1935.rs"
+        "src/decapod/plugins/knowledge.rs",
+        "tests/derived_replay_1936.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1940-rebased",
-      "summary": "hardening: active lease renewal custody fix (#1892), multi-process fencing (#1935/#1763) & crash durability (#1934) (rebased on 0db8ba28e)",
-      "input_digest": "sha256:7201b6481136f4e57c7656ff316f729c43da01c764d0e4397831fc72f7cbc4bf",
+      "id": "cp-1941-rebased",
+      "summary": "Hardening: derived projection replay, compaction growth safety & knowledge convergence (#1936, #1630, #657) (rebased on 9fa1ad8b1)",
+      "input_digest": "sha256:1296caa65a098f3568acdc4831dc037be989e77c4d8dec9dfa6c0bfa973cf775",
       "proof_refs": [
-        "docs/durability-and-fencing.md",
-        "tests/crash_durability_1934.rs",
-        "tests/lease_fencing_consistency_1935.rs"
+        "docs/derived-data-and-replay.md",
+        "tests/derived_replay_1936.rs"
       ]
-    },
-    {
-      "id": "cp-1940-spec-symbols",
-      "summary": "Align PR #1940 living spec symbols with exact src/ signatures and error codes",
-      "input_digest": "sha256:777816eb42aa708e545653082a00de9bf823b2730e129659c67121aabe603f73"
     }
   ],
   "intents": {
-    "intent:run-1940-rebased": {
+    "intent:run-1941-rebased": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "PR #1940 durability and fencing"
+        "PR #1941 derived replay, compaction, and knowledge convergence"
       ],
       "constraints": [
         "core"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1940-rebased",
+      "id": "intent:run-1941-rebased",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Phase 2 Hardening (#1892, #1935, #1934, #1763)",
-      "refined_intent": "Rebased onto post-#1939 origin/master (0db8ba28e) preserving #1945, #1946, and #1939",
+      "raw_intent": "Wave 3 Hardening #1936 #1630 #657: Derived Replay, Compaction & Knowledge Convergence",
+      "refined_intent": "Rebased onto post-#1940 origin/master (9fa1ad8b1) preserving #1945, #1946, #1939, and #1940",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -937,7 +932,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1892 stale history on renewed lease; implement #1935/#1763 multi-process fencing tests and #1934 crash durability tests; document durability & fencing",
+      "intent": "Inventory canonical streams vs derived views in docs/derived-data-and-replay.md, prove deterministic projection replay (#1936), compaction growth/interruption safety (#1630), and knowledge convergence/procedural-promotion firewall (#657) in tests/derived_replay_1936.rs, and fix any uncovered defects.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -947,47 +942,43 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Aligned error-code symbols in ARCHITECTURE.md with actual src/ task_journal and validation_history codes.",
-          "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
-          "spec_material_hash": "7d0fd1082068327faf08330f936381dd4d4ca3a1b6dd61519b899a68fcafbf41"
+          "reason": "Documented Wave 3 (#1936, #1630, #657) derived replay, multi-stream keyset compaction, StoragePool read synchronization, and knowledge promotion firewall invariants",
+          "reviewed_code_fingerprint": "d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c",
+          "spec_material_hash": "79e72c92f301d9c9c35d5682424d282f48c2d19bcd19d05ef3ae872044a2ad26"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Included include_workunit: bool parameter in ValidationBinding::matches_custody_authority signature.",
-          "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
-          "spec_material_hash": "846e6679576e55c8f95486fe3e094ccd4915acff77ac5fb024916c6790f21530"
+          "reason": "Documented malformed_provenance exclusion, PROMOTION_FIREWALL_BLOCKED, and dry-run components_collected interface updates",
+          "reviewed_code_fingerprint": "d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c",
+          "spec_material_hash": "28abe642bf63f4d8f8fb9d4c8a6356bd613921f601296022bec502770de371c3"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fail-closed custody rotation, expired lease refusal, and live OS lock preservation boundaries remain intact.",
-          "reviewed_code_fingerprint": "884413b34d1d071a518c004da72512403c0f1a0a1b07b5ee4f8559450369b2dd",
+          "reason": "Knowledge procedural-promotion firewall (PROMOTION_FIREWALL_BLOCKED), malformed_provenance exclusion, and composite (seq, event_id) compaction preserve existing SECURITY.md invariants without altering trust boundaries",
+          "reviewed_code_fingerprint": "d1748a1464f51213146347016d8f31c81e7899b7e98ec73f9b20e56a08424d5c",
           "spec_material_hash": "76971f4ab8c94db6b6a8628052637f004a258ae9983d708e6585a0a6fb191a97"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Phase 2 Hardening (#1892, #1935, #1934, #1763)",
+      "title": "Wave 3 Hardening #1936 #1630 #657: Derived Replay, Compaction & Knowledge Convergence",
       "todo_ids": [
-        "bugs_01m85q9m9gwmde6r"
+        "code_01m85w2k7qazdqbg"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795582254Z"
+      "updated_at": "1795586451Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "PR #1940 durability and fencing"
+        "PR #1941 derived replay, compaction, and knowledge convergence"
       ],
-      "artifact_hash": "sha256:53b20970587d5808c24917b821744fb6364cbadc7bb18c201db75310f3e50e46",
+      "artifact_hash": "sha256:f682da6ae7b49ea02fda3f32589cb49751bf83c0a592340bfefa2aa3a5ec9a6b",
       "checks": [
         {
           "name": "rebase_master",
-          "status": "passed"
-        },
-        {
-          "name": "spec_symbol_review",
           "status": "passed"
         }
       ],
@@ -995,50 +986,44 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1940-rebased",
+            "intent_id": "intent:run-1941-rebased",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1940-rebased",
+            "intent_id": "intent:run-1941-rebased",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1940-rebased",
+            "detail": "trajectory:run-1941-rebased",
             "event_id": "event:4",
-            "intent_id": "intent:run-1940-rebased",
+            "intent_id": "intent:run-1941-rebased",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:run-1940-rebased",
-            "event_id": "event:5",
-            "intent_id": "intent:run-1940-rebased",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1940-rebased": {
+          "run-1941-rebased": {
             "evidence_only": true,
-            "id": "run-1940-rebased",
-            "intent_id": "intent:run-1940-rebased",
+            "id": "run-1941-rebased",
+            "intent_id": "intent:run-1941-rebased",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
+                  "src/decapod/core/events.rs",
+                  "src/decapod/core/storage_compaction.rs",
                   "src/decapod/core/task_journal.rs",
                   "src/decapod/core/todo.rs",
-                  "src/decapod/core/validation_history.rs",
-                  "docs/durability-and-fencing.md",
-                  "tests/crash_durability_1934.rs",
-                  "tests/lease_fencing_consistency_1935.rs"
+                  "src/decapod/plugins/knowledge.rs",
+                  "docs/derived-data-and-replay.md",
+                  "tests/derived_replay_1936.rs"
                 ],
                 "proof_refs": [
                   "rebase_master"
@@ -1048,23 +1033,6 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/SEMANTICS.md"
-                ],
-                "proof_refs": [
-                  "spec_symbol_review"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 5,
-                "validation_findings": []
               }
             ]
           }
@@ -1073,26 +1041,24 @@
       "declared_commands": [],
       "evidence": [],
       "inspected_files": [
+        "src/decapod/core/events.rs",
+        "src/decapod/core/storage_compaction.rs",
         "src/decapod/core/task_journal.rs",
         "src/decapod/core/todo.rs",
-        "src/decapod/core/validation_history.rs"
+        "src/decapod/plugins/knowledge.rs"
       ],
-      "intent_id": "intent:run-1940-rebased",
+      "intent_id": "intent:run-1941-rebased",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SEMANTICS.md",
-        "docs/durability-and-fencing.md",
-        "tests/crash_durability_1934.rs",
-        "tests/lease_fencing_consistency_1935.rs"
+        "docs/derived-data-and-replay.md",
+        "tests/derived_replay_1936.rs"
       ],
       "repo_scope": [
         "core"
       ],
-      "run_id": "run-1940-rebased",
+      "run_id": "run-1941-rebased",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m85q9m9gwmde6r",
+      "task_id": "code_01m85w2k7qazdqbg",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
