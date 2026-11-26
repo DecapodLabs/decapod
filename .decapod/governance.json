@@ -951,6 +951,11 @@
       "id": "refresh-clean-specs",
       "summary": "Refresh living specs without local bazel-* symlinks and update spec reviews.",
       "input_digest": "sha256:a12b5f68de468e1d7e561501e8596ac1bfdce3d5fa2b66eb6456dd8453ae2d7e"
+    },
+    {
+      "id": "selective-status-effective-context",
+      "summary": "Allow exact 7-key CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT=success effective context on selective-core-status and selective-cli-status in source_policy.rs; refreshed living specs and verified fmt/clippy/source_policy tests.",
+      "input_digest": "sha256:2e80ca6b127f3a35ab863cbc1091d251635efc45d42e400b2cc610e6fedcbd25"
     }
   ],
   "intents": {
@@ -994,23 +999,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Regenerated clean specs without untracked bazel-* symlinks; test(validate_termination) isolates test PATH from container runtimes while architecture is unchanged.",
-          "reviewed_code_fingerprint": "d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2",
+          "reason": "verify_non_integration_effective_context refines snapshot context validation in validation_runtime/snapshot/source_policy.rs without changing overall component architecture.",
+          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
           "spec_material_hash": "fd3527c27d3eac36aec2f3b4e46082102b5a1dd01a652d14251283df28139161"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Regenerated clean specs without untracked bazel-* symlinks; interface boundaries unchanged.",
-          "reviewed_code_fingerprint": "d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2",
+          "reason": "Selective shard status effective-context verification validates existing CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT workflow bindings without altering public interfaces.",
+          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
           "spec_material_hash": "9487951162590ade30d3d3d0bfeddbde89bc438298ce9f1786d4ed9dd3c917fd"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Regenerated clean specs without untracked bazel-* symlinks; security invariants unchanged.",
-          "reviewed_code_fingerprint": "d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2",
-          "spec_material_hash": "edd7e5782e04251ce6e81b9688791800c56ff6ad0175fc06c47d25522bbfadf2"
+          "reason": "Documented verify_non_integration_effective_context 7-key invariant for selective-core-status and selective-cli-status.",
+          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
+          "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
       "state": "APPROVED",
@@ -1021,7 +1026,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795733467Z"
+      "updated_at": "1795735718Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -5,6 +5,7 @@
 - `src/decapod/core/validation_runtime/executor_contract.rs` unit tests verify `100755 blob ` admission strictly for `.sh` scripts in `profile::definition_files()`, strict `100644 blob ` enforcement on `.rs` definitions, protocol marker, and `verify_carrier_modes`, and fail-closed rejection of symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
 - `tests/unit/core/repository_profile_tests.rs` verifies `qualifies_stale_accepted_base_inventory_reconciliation` admits stale accepted-base `reviewed_sources_digest` reconciliation when `base_tree == head_tree == candidate_sources_digest`, `changed_paths == []`, `base_oid != head_oid`, and commands are preserved verbatim, while failing closed (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`) on any candidate modification to workflows, scripts, manifests, Git file modes, or proof commands; `src/decapod/core/validation_rules.rs` (`fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade`) tests independent maintainer signature enforcement against a proof-relevant `scripts/check_source.py` change; `tests/validate_termination.rs` (`stale_accepted_base_reconciliation_cli_roundtrip`) exercises the end-to-end CLI roundtrip.
 - `.decapod/config.toml` reconciles `proof.required_profile.reviewed_sources_digest` (`sha256:526afaf8226d412781485dd66d907884b3fd2d6cde7da05447e6ac6f8e1a620c`) against `origin/master` (`ea7bd4275`, `v0.166.1`).
+- `src/decapod/core/validation_runtime/snapshot/source_policy.rs` (`selective_status_effective_context_requires_exact_seven_success_bindings`) verifies `selective-core-status` and `selective-cli-status` accept exact `CUSTODY_PREPARE_RESULT=success` and `CUSTODY_WORKER_RESULT=success` alongside the 5 `SOURCE_CI_*` bindings while rejecting failed/skipped/undeclared keys and preserving 5-key strictness on non-status checks.
 
 ## `#1949` follow-up: non-ecosystem manifest scoping, multi-hop helper closure, untruncated text diagnostics, and removal of manual human CLI prompt
 
@@ -2893,7 +2894,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2`
+- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

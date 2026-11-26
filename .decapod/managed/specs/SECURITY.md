@@ -4,6 +4,7 @@
 
 - **Executor definition vs. carrier Git mode boundary (`src/decapod/core/validation_runtime/executor_contract.rs`)**: `is_valid_definition_entry` admits `100755 blob ` strictly for `.sh` paths in `profile::definition_files()`, while non-`.sh` definitions, `assets/tools/source_ci_custody.rs` protocol markers, and `verify_carrier_modes` strictly require `100644 blob `, rejecting symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
 - **Stale accepted-base inventory reconciliation boundary (`src/decapod/core/repository_profile.rs`)**: `qualifies_stale_accepted_base_inventory_reconciliation` admits `repo.pr-readiness.v1` transitions with a stale `accepted_base` `reviewed_sources_digest` only when `base_oid != head_oid`, `commands_preserved && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`, both `base_tree.inventory.digest()` and `head_tree.inventory.digest()` equal `candidate_sources_digest`, and `compute_inventory_diff_paths(&base_tree, &head_tree)` is empty, failing closed on any candidate modification to workflows, scripts, manifests, Git file modes, or proof commands.
+- **Selective shard-status effective context boundary (`src/decapod/core/validation_runtime/snapshot/source_policy.rs`)**: `verify_non_integration_effective_context` enforces exact 7-key binding (`SOURCE_CI_*` plus `CUSTODY_PREPARE_RESULT="success"` and `CUSTODY_WORKER_RESULT="success"`) strictly for `selective-core-status` and `selective-cli-status`, while all other non-integration checks remain locked to the exact 5 `SOURCE_CI_*` keys.
 
 ## Fail-closed proof-reference boundary for `repo.pr-readiness.v1` transitions (`#1949`)
 
@@ -1617,7 +1618,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2`
+- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

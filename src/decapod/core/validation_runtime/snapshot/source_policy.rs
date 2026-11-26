@@ -95,6 +95,25 @@ fn verify_input_artifact<'a>(
     )
 }
 
+fn verify_non_integration_effective_context(
+    check: &source::Check,
+    context: &serde_json::Map<String, Value>,
+) -> io::Result<()> {
+    if matches!(check.id, "selective-core-status" | "selective-cli-status") {
+        ensure(
+            context.len() == 7
+                && context
+                    .get("CUSTODY_PREPARE_RESULT")
+                    .and_then(Value::as_str)
+                    == Some("success")
+                && context.get("CUSTODY_WORKER_RESULT").and_then(Value::as_str) == Some("success"),
+            "undeclared effective source context",
+        )
+    } else {
+        ensure(context.len() == 5, "undeclared effective source context")
+    }
+}
+
 /// The known input map is built only from independently authenticated earlier
 /// producer artifacts. A receipt cannot supply its own expected binary hashes.
 pub(super) fn verify(
@@ -154,7 +173,7 @@ pub(super) fn verify(
     if check.id.starts_with("integration-") {
         integration::preparation(project, check, expected, &measured, known_inputs)?;
     } else {
-        ensure(context.len() == 5, "undeclared effective source context")?;
+        verify_non_integration_effective_context(check, context)?;
     }
     let rows = measured
         .toolchain
@@ -548,6 +567,65 @@ mod tests {
         values.insert("RUSTC_WRAPPER".into(), Value::Null);
         values.remove("RUSTC");
         assert!(verify_environment(&Value::Object(values), &recipe).is_err());
+    }
+
+    #[test]
+    fn selective_status_effective_context_requires_exact_seven_success_bindings() {
+        let base_context: serde_json::Map<String, Value> = [
+            ("SOURCE_CI_EVENT", "pull_request"),
+            ("SOURCE_CI_BASE", "0000000000000000000000000000000000000000"),
+            ("SOURCE_CI_HEAD", "1111111111111111111111111111111111111111"),
+            (
+                "SOURCE_CI_MERGE_BASE",
+                "0000000000000000000000000000000000000000",
+            ),
+            ("SOURCE_CI_RELEASE_ONLY", "false"),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), Value::String(v.to_string())))
+        .collect();
+
+        for status_id in ["selective-core-status", "selective-cli-status"] {
+            let check = source::find_check(status_id).unwrap();
+            assert!(verify_non_integration_effective_context(check, &base_context).is_err());
+
+            let mut valid = base_context.clone();
+            valid.insert(
+                "CUSTODY_PREPARE_RESULT".into(),
+                Value::String("success".into()),
+            );
+            valid.insert(
+                "CUSTODY_WORKER_RESULT".into(),
+                Value::String("success".into()),
+            );
+            assert!(verify_non_integration_effective_context(check, &valid).is_ok());
+
+            for bad_status in ["failure", "skipped", "cancelled"] {
+                let mut bad = valid.clone();
+                bad.insert(
+                    "CUSTODY_WORKER_RESULT".into(),
+                    Value::String(bad_status.into()),
+                );
+                assert!(verify_non_integration_effective_context(check, &bad).is_err());
+            }
+
+            let mut extra = valid.clone();
+            extra.insert("UNDECLARED_VAR".into(), Value::String("1".into()));
+            assert!(verify_non_integration_effective_context(check, &extra).is_err());
+        }
+
+        let fmt = source::find_check("fmt").unwrap();
+        assert!(verify_non_integration_effective_context(fmt, &base_context).is_ok());
+        let mut with_custody = base_context;
+        with_custody.insert(
+            "CUSTODY_PREPARE_RESULT".into(),
+            Value::String("success".into()),
+        );
+        with_custody.insert(
+            "CUSTODY_WORKER_RESULT".into(),
+            Value::String("success".into()),
+        );
+        assert!(verify_non_integration_effective_context(fmt, &with_custody).is_err());
     }
     #[test]
     fn build_consumers_require_the_exact_nonempty_authenticated_producer_artifact() {
