@@ -931,6 +931,16 @@
         ".decapod/managed/specs/SECURITY.md",
         "tests/validate_termination.rs"
       ]
+    },
+    {
+      "id": "spec-reviews-08a5fb94",
+      "summary": "Record current-fingerprint spec reviews for ARCHITECTURE, INTERFACES, and SECURITY",
+      "input_digest": "sha256:0058ac520c648a8e841fd7ae3bcf1352c695449a0a44a525780bb1a81b486ab7",
+      "proof_refs": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md"
+      ]
     }
   ],
   "intents": {
@@ -973,6 +983,13 @@
       "spec_reviews": [
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Documented executor_contract .sh 100755 mode admission and qualifies_stale_accepted_base_inventory_reconciliation",
+          "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
+          "spec_material_hash": "fd3527c27d3eac36aec2f3b4e46082102b5a1dd01a652d14251283df28139161"
+        },
+        {
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Documented executor_contract .sh 100755 mode admission and verify_accepted_transition stale accepted-base reconciliation",
           "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
@@ -994,7 +1011,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795730717Z"
+      "updated_at": "1795730744Z"
     },
     "trajectory": {
       "active_boundaries": [
