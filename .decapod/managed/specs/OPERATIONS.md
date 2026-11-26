@@ -545,14 +545,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Contract Snapshot
 
-- Operational/deployment/workflow surfaces (13): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`, `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/tests/unit/lib_generated_dockerfile_heal_tests.rs`, `flake.nix`, `src/decapod/plugins/container/Dockerfile.template`, `tests/unit/lib_generated_dockerfile_heal_tests.rs`
+- Operational/deployment/workflow surfaces (12): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`, `flake.nix`, `src/decapod/plugins/container/Dockerfile.template`, `tests/unit/lib_generated_dockerfile_heal_tests.rs`
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a3910525eaec21fa3e661141bdf491d071ce07c405997b84ef9664f8cb09689`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/` (8795 files), `bazel-bin/` (3 files), `bazel-out/` (5 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

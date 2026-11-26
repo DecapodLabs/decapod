@@ -2101,14 +2101,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 - Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
-- Build manifests (359): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/Cargo.toml`, `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/assets/tools/laya-native/Cargo.toml`, `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/bindings/typescript/package.json`, `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/external/rules_rust++crate+crates__adler2-2.0.1/Cargo.toml`, `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/external/rules_rust++crate+crates__aho-corasick-1.1.4/Cargo.toml`, (+351 more)
+- Build manifests (9): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, `tests/fixtures/justfile_consumer/Cargo.toml`, (+1 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a3910525eaec21fa3e661141bdf491d071ce07c405997b84ef9664f8cb09689`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-agy-commercial-todo-01m8bt-agent-agy-commercial-code_01m8btae8yj5pbpb-executor-contract-sh-mode/` (8795 files), `bazel-bin/` (3 files), `bazel-out/` (5 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `d1987dceacd7418618a62cc13ba99c3193b90397947022a13b04d151b93690f2`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
