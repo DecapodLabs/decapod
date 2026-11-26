@@ -921,6 +921,16 @@
       "proof_refs": [
         ".decapod/config.toml"
       ]
+    },
+    {
+      "id": "cli-roundtrip-and-spec-reviews",
+      "summary": "Add CLI roundtrip regression test in tests/validate_termination.rs and record current spec reviews",
+      "input_digest": "sha256:b440f1ba4d681f36e1639a3df628c521023ea50f1684a63104add553b10557e1",
+      "proof_refs": [
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        "tests/validate_termination.rs"
+      ]
     }
   ],
   "intents": {
@@ -963,9 +973,16 @@
       "spec_reviews": [
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented executor_contract .sh 100755 mode admission and verify_accepted_transition stale accepted-base reconciliation",
+          "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
+          "spec_material_hash": "9487951162590ade30d3d3d0bfeddbde89bc438298ce9f1786d4ed9dd3c917fd"
+        },
+        {
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Documented executor_contract .sh 100755 mode bounds and qualifies_stale_accepted_base_inventory_reconciliation security invariants",
-          "reviewed_code_fingerprint": "45dffe8b012ecb91ff4224c06b641ee789b16ae780b5130adee7bde6116d613e",
+          "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
           "spec_material_hash": "edd7e5782e04251ce6e81b9688791800c56ff6ad0175fc06c47d25522bbfadf2"
         }
       ],
@@ -977,13 +994,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795728770Z"
+      "updated_at": "1795730717Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:220866a4f7d531e8e1c791254f65a3700dc74eb3e092e5151a93a1f53b748897",
+      "artifact_hash": "sha256:0e222921728ce1581a6a0c820119739ac3dda30a4f1c425a0a2bdffb09ec882c",
       "checks": [
         {
           "name": "cargo_clippy",
@@ -1007,6 +1024,10 @@
         },
         {
           "name": "executor_contract_tests",
+          "status": "passed"
+        },
+        {
+          "name": "validate_termination_cli_roundtrip",
           "status": "passed"
         }
       ],
@@ -1039,10 +1060,17 @@
             "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8BTPHPR88ASXG8G4X3NGSS9": {
@@ -1093,6 +1121,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "tests/validate_termination.rs",
+                  "tests/validate_termination.rs",
+                  "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
+                ],
+                "proof_refs": [
+                  "validate_termination_cli_roundtrip"
+                ],
+                "scope": [
+                  "core"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1102,19 +1147,22 @@
       "destination": "pull request",
       "evidence": [
         "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)",
-        "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2"
+        "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2",
+        "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
       ],
       "inspected_files": [
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs"
+        "src/decapod/core/validation_runtime/executor_contract.rs",
+        "tests/validate_termination.rs"
       ],
       "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
       "modified_files": [
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/validate_termination.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

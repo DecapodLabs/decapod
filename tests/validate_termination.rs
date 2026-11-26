@@ -1208,3 +1208,303 @@ fn validate_smoke_runtime_is_bounded_without_contention() {
         "three sequential validates should stay within bounded aggregate runtime; got {total}ms, per-run {durations_ms:?}"
     );
 }
+
+#[test]
+fn stale_accepted_base_reconciliation_cli_roundtrip() {
+    use decapod::core::init_reconciliation::discover_source_inventory;
+    use decapod::core::proof::ProofDef;
+    use decapod::core::repository_profile::{
+        RepositoryContract, RepositoryExecution, command_contract_digest,
+    };
+    use std::collections::BTreeMap;
+
+    let tmp = TempDir::new().expect("tmpdir");
+    let upstream = tmp.path().join("upstream.git");
+    let dir = tmp.path().join("repo");
+    fs::create_dir_all(&upstream).unwrap();
+    fs::create_dir_all(&dir).unwrap();
+
+    let git = |cwd: &Path, args: &[&str]| {
+        let out = Command::new("git")
+            .current_dir(cwd)
+            .env_remove("GIT_DIR")
+            .env_remove("GIT_WORK_TREE")
+            .env_remove("GIT_INDEX_FILE")
+            .env_remove("GIT_COMMON_DIR")
+            .args(args)
+            .output()
+            .expect("run git");
+        assert!(
+            out.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+
+    git(&upstream, &["init", "--bare"]);
+    git(&dir, &["init", "-b", "master"]);
+    git(&dir, &["config", "user.name", "Validation Fixture"]);
+    git(
+        &dir,
+        &["config", "user.email", "validation@example.invalid"],
+    );
+
+    let init_out = run_decapod(
+        &dir,
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Stale base reconciliation CLI regression fixture.",
+        ],
+        &[],
+    );
+    assert!(
+        init_out.status.success(),
+        "decapod init failed: {}",
+        String::from_utf8_lossy(&init_out.stderr)
+    );
+
+    fs::create_dir_all(dir.join("scripts")).unwrap();
+    fs::write(dir.join("scripts/check.sh"), "#!/bin/sh\necho ok\n").unwrap();
+
+    let commands = vec![ProofDef {
+        name: "shell-check".into(),
+        command: "/bin/sh".into(),
+        args: vec!["scripts/check.sh".into()],
+        description: "Run shell check".into(),
+        required: true,
+    }];
+    let mut toolchain_files = BTreeMap::new();
+    toolchain_files.insert("sh".into(), "/bin/sh".into());
+    let mut executions = BTreeMap::new();
+    executions.insert(
+        "shell-check".into(),
+        RepositoryExecution {
+            program: "/bin/sh".into(),
+            toolchain_files,
+            platforms: BTreeMap::new(),
+            environment: BTreeMap::new(),
+            directory: ".".into(),
+            timeout_seconds: 60,
+        },
+    );
+    let mut contract = RepositoryContract {
+        canonical_local_target: false,
+        reviewed_commands_digest: String::new(),
+        source_coverage: vec![],
+        executions,
+        targets: BTreeMap::new(),
+    };
+    contract.reviewed_commands_digest =
+        command_contract_digest(&commands, &contract).expect("command contract digest");
+
+    let write_config = |repo_root: &Path, digest: &str| {
+        let mut root_table: toml::map::Map<String, toml::Value> =
+            toml::from_str(&fs::read_to_string(repo_root.join(".decapod/config.toml")).unwrap())
+                .unwrap();
+        let repo_table = root_table
+            .entry("repo")
+            .or_insert_with(|| toml::Value::Table(Default::default()))
+            .as_table_mut()
+            .unwrap();
+        repo_table.insert("base_branch".into(), toml::Value::String("master".into()));
+        let custody_table = root_table
+            .entry("custody")
+            .or_insert_with(|| toml::Value::Table(Default::default()))
+            .as_table_mut()
+            .unwrap();
+        custody_table.insert("isolation".into(), toml::Value::String("worktree".into()));
+        let proof_table = root_table
+            .entry("proof")
+            .or_insert_with(|| toml::Value::Table(Default::default()))
+            .as_table_mut()
+            .unwrap();
+        proof_table.insert(
+            "commands".into(),
+            toml::Value::try_from(&commands).expect("serialize proof commands"),
+        );
+        proof_table.insert(
+            "repository_contract".into(),
+            toml::Value::try_from(&contract).expect("serialize repository contract"),
+        );
+        let profile = decapod::core::readiness_profile::ProfileDeclaration {
+            id: "repo.pr-readiness.v1".into(),
+            reviewed_sources_digest: digest.to_owned(),
+        };
+        proof_table.insert(
+            "required_profile".into(),
+            toml::Value::try_from(&profile).expect("serialize required profile"),
+        );
+        fs::write(
+            repo_root.join(".decapod/config.toml"),
+            toml::to_string_pretty(&root_table).unwrap(),
+        )
+        .unwrap();
+    };
+
+    // Seed origin/master with a stale reviewed_sources_digest while scripts/check.sh already exists.
+    let stale_digest = format!("sha256:{}", "0".repeat(64));
+    write_config(&dir, &stale_digest);
+    git(&dir, &["add", "-A"]);
+    git(&dir, &["commit", "-m", "base with stale digest"]);
+    git(
+        &dir,
+        &["remote", "add", "origin", upstream.to_str().unwrap()],
+    );
+    git(&dir, &["push", "-u", "origin", "master"]);
+
+    let agent = "test-agent";
+    let acquire = run_decapod(
+        &dir,
+        &["session", "acquire"],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(acquire.status.success(), "session acquire failed");
+    let password = String::from_utf8_lossy(&acquire.stdout)
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: ").map(str::trim))
+        .expect("session password")
+        .to_owned();
+
+    let add_out = run_decapod(
+        &dir,
+        &["todo", "add", "--format", "json", "Reconcile stale base"],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+        ],
+    );
+    assert!(
+        add_out.status.success(),
+        "todo add failed: {}",
+        String::from_utf8_lossy(&add_out.stderr)
+    );
+    let task_id = serde_json::from_slice::<Value>(&add_out.stdout).expect("todo add json")["id"]
+        .as_str()
+        .expect("task id")
+        .to_owned();
+
+    let claim_out = run_decapod(
+        &dir,
+        &["todo", "claim", "--id", &task_id],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+        ],
+    );
+    assert!(
+        claim_out.status.success(),
+        "todo claim failed: {}",
+        String::from_utf8_lossy(&claim_out.stderr)
+    );
+
+    let ensure_out = run_decapod(
+        &dir,
+        &[
+            "workspace",
+            "ensure",
+            "--branch",
+            &format!("agent/{agent}/{task_id}-reconcile"),
+        ],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+        ],
+    );
+    assert!(
+        ensure_out.status.success(),
+        "workspace ensure failed: {}\n{}",
+        String::from_utf8_lossy(&ensure_out.stdout),
+        String::from_utf8_lossy(&ensure_out.stderr)
+    );
+    let ensure_json: Value = serde_json::from_slice(&ensure_out.stdout).expect("ensure json");
+    let wt = PathBuf::from(
+        ensure_json["worktree_path"]
+            .as_str()
+            .or_else(|| ensure_json["git"]["worktree_path"].as_str())
+            .expect("worktree_path in workspace ensure output"),
+    );
+
+    // Candidate reconciles reviewed_sources_digest without changing any inventoried files.
+    let actual_digest = discover_source_inventory(&wt)
+        .expect("discover inventory")
+        .digest()
+        .expect("inventory digest");
+    assert_ne!(actual_digest, stale_digest);
+    write_config(&wt, &actual_digest);
+    let intent_path = wt.join(".decapod/managed/specs/INTENT.md");
+    let mut intent = fs::read_to_string(&intent_path).unwrap();
+    intent.push_str("\n## Reconcile stale digest\n\nReconciled reviewed_sources_digest.\n");
+    fs::write(&intent_path, intent).unwrap();
+    let refresh_out = run_decapod(
+        &wt,
+        &["rpc", "--op", "specs.refresh"],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+        ],
+    );
+    assert!(refresh_out.status.success(), "specs.refresh failed");
+    git(&wt, &["add", "-A"]);
+    git(
+        &wt,
+        &["commit", "-m", "reconcile stale reviewed_sources_digest"],
+    );
+
+    let ok_out = run_decapod(
+        &wt,
+        &["govern", "project-check", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    let ok_stdout = String::from_utf8_lossy(&ok_out.stdout);
+    let ok_stderr = String::from_utf8_lossy(&ok_out.stderr);
+    assert!(
+        ok_out.status.success(),
+        "expected stale accepted-base reconciliation project-check to pass; stdout:\n{ok_stdout}\nstderr:\n{ok_stderr}"
+    );
+    assert!(
+        !ok_stderr.contains("Validation Rules Gate: not in a governed agent workspace"),
+        "expected Validation Rules Gate to execute in worktree; stderr:\n{ok_stderr}"
+    );
+
+    // Modifying a proof script on the candidate branch must still fail closed.
+    fs::write(wt.join("scripts/check.sh"), "#!/bin/sh\necho tampered\n").unwrap();
+    let mutated_digest = discover_source_inventory(&wt)
+        .expect("discover mutated inventory")
+        .digest()
+        .expect("mutated digest");
+    write_config(&wt, &mutated_digest);
+    git(&wt, &["add", "scripts/check.sh", ".decapod/config.toml"]);
+    git(&wt, &["commit", "-m", "candidate mutates proof script"]);
+
+    let fail_out = run_decapod(
+        &wt,
+        &["govern", "project-check", "--format", "json"],
+        &[
+            ("DECAPOD_AGENT_ID", agent),
+            ("DECAPOD_SESSION_PASSWORD", &password),
+            ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+        ],
+    );
+    assert!(
+        !fail_out.status.success(),
+        "mutated proof script must fail closed"
+    );
+    let fail_stdout = String::from_utf8_lossy(&fail_out.stdout);
+    let fail_stderr = String::from_utf8_lossy(&fail_out.stderr);
+    let combined = format!("{fail_stdout}\n{fail_stderr}");
+    assert!(
+        combined.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED")
+            && combined.contains("scripts/check.sh"),
+        "expected ACCEPTED_REPOSITORY_CONTRACT_CHANGED mentioning scripts/check.sh; got:\n{combined}"
+    );
+}
