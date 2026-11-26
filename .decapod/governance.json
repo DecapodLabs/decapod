@@ -941,6 +941,11 @@
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/SECURITY.md"
       ]
+    },
+    {
+      "id": "safe-bin-validate-termination",
+      "summary": "Exclude container runtimes from PATH in stale_accepted_base_reconciliation_cli_roundtrip so CI Bazel build_lifecycle scratch cleanup succeeds; refreshed specs and verified fmt/clippy/validate_termination/lib tests.",
+      "input_digest": "sha256:a68812cbc5029f13b91a706e9db07e914783155097e3e34c927bedb49c46d0f2"
     }
   ],
   "intents": {
@@ -982,24 +987,24 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented executor_contract .sh 100755 mode admission and qualifies_stale_accepted_base_inventory_reconciliation",
-          "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
+          "reason": "Updated tests/validate_termination.rs only to exclude container runtimes from PATH in stale_accepted_base_reconciliation_cli_roundtrip so Bazel build_lifecycle cleanup succeeds; architecture unchanged.",
+          "reviewed_code_fingerprint": "2a3910525eaec21fa3e661141bdf491d071ce07c405997b84ef9664f8cb09689",
           "spec_material_hash": "fd3527c27d3eac36aec2f3b4e46082102b5a1dd01a652d14251283df28139161"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented executor_contract .sh 100755 mode admission and verify_accepted_transition stale accepted-base reconciliation",
-          "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
+          "reason": "Updated tests/validate_termination.rs test PATH isolation only; interface boundaries unchanged.",
+          "reviewed_code_fingerprint": "2a3910525eaec21fa3e661141bdf491d071ce07c405997b84ef9664f8cb09689",
           "spec_material_hash": "9487951162590ade30d3d3d0bfeddbde89bc438298ce9f1786d4ed9dd3c917fd"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented executor_contract .sh 100755 mode bounds and qualifies_stale_accepted_base_inventory_reconciliation security invariants",
-          "reviewed_code_fingerprint": "08a5fb94d2ed78ef3485e6271142b8eaf82e7a89b9eed704af462d461c1e5c7c",
+          "reason": "Updated tests/validate_termination.rs test PATH isolation only; security invariants unchanged.",
+          "reviewed_code_fingerprint": "2a3910525eaec21fa3e661141bdf491d071ce07c405997b84ef9664f8cb09689",
           "spec_material_hash": "edd7e5782e04251ce6e81b9688791800c56ff6ad0175fc06c47d25522bbfadf2"
         }
       ],
@@ -1011,7 +1016,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795730744Z"
+      "updated_at": "1795733216Z"
     },
     "trajectory": {
       "active_boundaries": [

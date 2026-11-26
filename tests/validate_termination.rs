@@ -1219,6 +1219,44 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
     use std::collections::BTreeMap;
 
     let tmp = TempDir::new().expect("tmpdir");
+    // Build a minimal PATH excluding container runtimes (`podman`, `docker`) so
+    // `todo claim`/`workspace ensure` never initialize rootless overlay storage under
+    // disposable `$HOME` in CI sandboxes (where subordinate UIDs break `build_lifecycle` cleanup).
+    let safe_bin = tmp.path().join("safe-bin");
+    fs::create_dir_all(&safe_bin).unwrap();
+    #[cfg(unix)]
+    if let Some(orig_path) = std::env::var_os("PATH") {
+        let search_dirs: Vec<_> = std::env::split_paths(&orig_path).collect();
+        for tool in [
+            "git", "bash", "sh", "python3", "date", "dirname", "basename", "mktemp", "rm", "cp",
+            "mv", "cat", "tr", "sed", "awk", "grep", "printf", "true", "env", "pwd", "mkdir",
+            "chmod", "head", "tail", "wc", "sort", "uname", "touch", "ln", "ls", "sleep", "cut",
+            "find",
+        ] {
+            for dir in &search_dirs {
+                let candidate = dir.join(tool);
+                if candidate.is_file() {
+                    let link_path = safe_bin.join(tool);
+                    if !link_path.exists() {
+                        let _ = std::os::unix::fs::symlink(&candidate, &link_path);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    let safe_path = if cfg!(unix) {
+        safe_bin.to_string_lossy().into_owned()
+    } else {
+        std::env::var("PATH").unwrap_or_default()
+    };
+    let run_safe = |cwd: &Path, args: &[&str], extra_envs: &[(&str, &str)]| {
+        let mut envs = Vec::with_capacity(extra_envs.len() + 1);
+        envs.extend_from_slice(extra_envs);
+        envs.push(("PATH", safe_path.as_str()));
+        run_decapod(cwd, args, &envs)
+    };
+
     let upstream = tmp.path().join("upstream.git");
     let dir = tmp.path().join("repo");
     fs::create_dir_all(&upstream).unwrap();
@@ -1250,7 +1288,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
         &["config", "user.email", "validation@example.invalid"],
     );
 
-    let init_out = run_decapod(
+    let init_out = run_safe(
         &dir,
         &[
             "init",
@@ -1356,7 +1394,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
     git(&dir, &["push", "-u", "origin", "master"]);
 
     let agent = "test-agent";
-    let acquire = run_decapod(
+    let acquire = run_safe(
         &dir,
         &["session", "acquire"],
         &[
@@ -1371,7 +1409,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
         .expect("session password")
         .to_owned();
 
-    let add_out = run_decapod(
+    let add_out = run_safe(
         &dir,
         &["todo", "add", "--format", "json", "Reconcile stale base"],
         &[
@@ -1389,7 +1427,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
         .expect("task id")
         .to_owned();
 
-    let claim_out = run_decapod(
+    let claim_out = run_safe(
         &dir,
         &["todo", "claim", "--id", &task_id],
         &[
@@ -1403,7 +1441,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
         String::from_utf8_lossy(&claim_out.stderr)
     );
 
-    let ensure_out = run_decapod(
+    let ensure_out = run_safe(
         &dir,
         &[
             "workspace",
@@ -1441,7 +1479,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
     let mut intent = fs::read_to_string(&intent_path).unwrap();
     intent.push_str("\n## Reconcile stale digest\n\nReconciled reviewed_sources_digest.\n");
     fs::write(&intent_path, intent).unwrap();
-    let refresh_out = run_decapod(
+    let refresh_out = run_safe(
         &wt,
         &["rpc", "--op", "specs.refresh"],
         &[
@@ -1456,7 +1494,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
         &["commit", "-m", "reconcile stale reviewed_sources_digest"],
     );
 
-    let ok_out = run_decapod(
+    let ok_out = run_safe(
         &wt,
         &["govern", "project-check", "--format", "json"],
         &[
@@ -1486,7 +1524,7 @@ fn stale_accepted_base_reconciliation_cli_roundtrip() {
     git(&wt, &["add", "scripts/check.sh", ".decapod/config.toml"]);
     git(&wt, &["commit", "-m", "candidate mutates proof script"]);
 
-    let fail_out = run_decapod(
+    let fail_out = run_safe(
         &wt,
         &["govern", "project-check", "--format", "json"],
         &[
