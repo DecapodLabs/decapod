@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.1](https://github.com/DecapodLabs/decapod/compare/v0.166.0...v0.166.1) - 2026-11-26
+
+### Fixed
+
+- *(policy)* complete #1949 non-proof manifest scoping, untruncated diagnostics, and no manual CLI prompt
+
+### Other
+
+- *(decapod)* refresh 0.166.0 managed manifest and Dockerfile pin
+
 ## [0.166.0](https://github.com/DecapodLabs/decapod/compare/v0.165.1...v0.166.0) - 2026-11-25
 
 ### Fixed
