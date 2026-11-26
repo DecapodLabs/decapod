@@ -1,5 +1,9 @@
 # Architecture
 
+## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
+
+- **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
+
 ## Proof-relevant `repo.pr-readiness.v1` transition scoping, diagnostics, and human-auth guidance (`#1949`)
 
 - **Unreferenced non-workflow helper & uncoupled manifest transition qualification (`src/decapod/core/repository_profile.rs`)**:
@@ -2103,7 +2107,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
+- Repository signal fingerprint: `5076852a59b3ec59cc10d2903e971ea0b835f6650bccc52684ef7a3ed1ef73d0`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

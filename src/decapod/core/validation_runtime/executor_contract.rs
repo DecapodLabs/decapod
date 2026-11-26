@@ -9,6 +9,12 @@ use super::*;
 const PROTOCOL_DECLARATION: &str =
     "pub const DUAL_ROOT_SCHEMA: &str = \"decapod.source-ci.dual-root.v1\";";
 
+fn is_valid_definition_entry(path: &str, entry: &[u8]) -> bool {
+    let valid_mode = entry.starts_with(b"100644 blob ")
+        || (path.ends_with(".sh") && entry.starts_with(b"100755 blob "));
+    valid_mode && entry.iter().filter(|v| **v == b'\n').count() == 1
+}
+
 pub(super) fn capture(
     options: &Options,
     budget: &RuntimeBudget<'_>,
@@ -53,8 +59,7 @@ pub(super) fn capture(
     let mut files = BTreeMap::new();
     for (path, _) in profile::definition_files() {
         let entry = git(options, budget, &["ls-tree", base, "--", path])?;
-        let prefix = b"100644 blob ";
-        if !entry.starts_with(prefix) || entry.iter().filter(|v| **v == b'\n').count() != 1 {
+        if !is_valid_definition_entry(path, &entry) {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
                 profile::PlanningFailure::ControllerContractUnsupported(format!(
@@ -91,4 +96,126 @@ pub(super) fn verify_carrier_modes(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn git_run(root: &Path, args: &[&str]) -> String {
+        let out = Command::new("/usr/bin/git")
+            .current_dir(root)
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .env("GIT_CONFIG_GLOBAL", "/dev/null")
+            .args(args)
+            .output()
+            .expect("git");
+        assert!(
+            out.status.success(),
+            "git {:?}: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8(out.stdout).unwrap().trim().to_owned()
+    }
+
+    #[test]
+    fn definition_entry_allows_100755_only_for_shell_scripts() {
+        let sh = "assets/tools/source_ci/pre-build-validate.sh";
+        let rs = "assets/tools/source_ci_profile.rs";
+        assert!(is_valid_definition_entry(
+            sh,
+            b"100644 blob 0123456789abcdef0123456789abcdef01234567\tassets/tools/source_ci/pre-build-validate.sh\n"
+        ));
+        assert!(is_valid_definition_entry(
+            sh,
+            b"100755 blob 0123456789abcdef0123456789abcdef01234567\tassets/tools/source_ci/pre-build-validate.sh\n"
+        ));
+        assert!(!is_valid_definition_entry(
+            sh,
+            b"120000 blob 0123456789abcdef0123456789abcdef01234567\tassets/tools/source_ci/pre-build-validate.sh\n"
+        ));
+        assert!(is_valid_definition_entry(
+            rs,
+            b"100644 blob 0123456789abcdef0123456789abcdef01234567\tassets/tools/source_ci_profile.rs\n"
+        ));
+        assert!(!is_valid_definition_entry(
+            rs,
+            b"100755 blob 0123456789abcdef0123456789abcdef01234567\tassets/tools/source_ci_profile.rs\n"
+        ));
+        assert!(!is_valid_definition_entry(sh, b""));
+    }
+
+    #[test]
+    fn capture_admits_executable_sh_definition_scripts_and_rejects_executable_rust() {
+        let tmp = tempfile::tempdir_in(std::env::temp_dir().canonicalize().unwrap()).unwrap();
+        let root = tmp.path().join("repo");
+        let evidence = tmp.path().join("evidence");
+        fs::create_dir_all(&root).unwrap();
+        fs::create_dir_all(&evidence).unwrap();
+
+        git_run(&root, &["init", "-b", "master"]);
+        git_run(&root, &["config", "user.name", "Executor Contract Test"]);
+        git_run(&root, &["config", "user.email", "test@example.invalid"]);
+        for (path, bytes) in profile::definition_files() {
+            let full = root.join(path);
+            fs::create_dir_all(full.parent().unwrap()).unwrap();
+            fs::write(&full, bytes).unwrap();
+        }
+        git_run(&root, &["add", "-A"]);
+        git_run(
+            &root,
+            &[
+                "update-index",
+                "--chmod=+x",
+                "assets/tools/source_ci/pre-build-validate.sh",
+                "assets/tools/source_ci/shard-status.sh",
+            ],
+        );
+        git_run(&root, &["commit", "-m", "init with executable sh helpers"]);
+        let base_ok = git_run(&root, &["rev-parse", "HEAD"]);
+
+        let options = Options {
+            root: root.clone(),
+            git: PathBuf::from("/usr/bin/git").canonicalize().unwrap(),
+            repository: "DecapodLabs/decapod".into(),
+            base_branch: "master".into(),
+            accepted_base_ref: "refs/remotes/origin/master".into(),
+            evidence_parent: evidence,
+            timeout: Duration::from_secs(30),
+            max_input_bytes: 32 * 1024 * 1024,
+            max_files: 5000,
+            max_output_bytes: 512 * 1024,
+            target: None,
+        };
+        let cancel = Cancellation::default();
+        let budget = RuntimeBudget {
+            deadline: Instant::now() + options.timeout,
+            cancel: &cancel,
+            max_output_bytes: options.max_output_bytes,
+            bytes_left: options.max_input_bytes,
+        };
+        let captured = capture(&options, &budget, &base_ok, true)
+            .expect("capture should admit 100755 .sh scripts")
+            .expect("dual-root executor should be captured");
+        assert_eq!(captured.revision(), base_ok);
+
+        git_run(
+            &root,
+            &[
+                "update-index",
+                "--chmod=+x",
+                "assets/tools/source_ci_profile.rs",
+            ],
+        );
+        git_run(&root, &["commit", "-m", "executable rust definition"]);
+        let base_bad = git_run(&root, &["rev-parse", "HEAD"]);
+        let err = capture(&options, &budget, &base_bad, true)
+            .expect_err("capture must still reject 100755 .rs files");
+        assert!(
+            err.to_string()
+                .contains("accepted executor mode: assets/tools/source_ci_profile.rs"),
+            "unexpected error: {err}"
+        );
+    }
 }
