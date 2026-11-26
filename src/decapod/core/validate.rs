@@ -8970,6 +8970,14 @@ pub fn predict_ci_outcome(
     }
 }
 
+pub(crate) fn untruncated_policy_transition_failures(failures: &[String]) -> Vec<&str> {
+    failures
+        .iter()
+        .filter(|failure| failure.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"))
+        .map(String::as_str)
+        .collect()
+}
+
 pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
     use crate::core::ansi::AnsiExt;
 
@@ -9075,6 +9083,13 @@ pub fn render_validation_report(report: &ValidationReport, verbose: bool) {
         println!(
             "  {} run `decapod validate -v` or `decapod validate --format json` for the full list",
             "details".bright_blue().bold()
+        );
+    }
+    for transition_failure in untruncated_policy_transition_failures(&report.failures) {
+        println!(
+            "  {} {}",
+            "transition".bright_red().bold(),
+            transition_failure
         );
     }
 

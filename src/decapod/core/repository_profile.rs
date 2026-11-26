@@ -11,7 +11,7 @@ use super::readiness_profile::{
     SourceInventory, StageDisposition, StageDispositionKind,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::{Component, Path};
 
 #[path = "repository_policy_approval.rs"]
@@ -508,7 +508,7 @@ pub(crate) fn verify_accepted_transition(
     let changed_paths =
         changed_inventory_paths_between(checkout_root, accepted_base_sha, candidate_head_sha);
     Err(invalid(format!(
-        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or proof-relevant source inventory changed without an active transition approval (transition_id={transition_id}, base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}, changed_paths={changed_paths:?}). Review the exact diff at PR review/merge or pass a maintainer-signed receipt in {} / authenticated Cloud decision ID in {} (local/Cloud operator approval scope `{POLICY_TRANSITION_SCOPE}`: `decapod govern policy approve --id {transition_id} --scope {POLICY_TRANSITION_SCOPE}`).",
+        "ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or proof-relevant source inventory changed without an active transition approval (transition_id={transition_id}, scope={POLICY_TRANSITION_SCOPE}, base={accepted_base_sha}, head={candidate_head_sha}, sources: {} -> {}, commands: {} -> {}, changed_paths={changed_paths:?}). Review and merge the exact diff at PR review, or supply an independently verified approval for scope `{POLICY_TRANSITION_SCOPE}` via maintainer-signed receipt in {} or authenticated Cloud decision ID in {}.",
         accepted_decl.reviewed_sources_digest,
         candidate_decl.reviewed_sources_digest,
         accepted.reviewed_commands_digest,
@@ -1138,6 +1138,130 @@ pub(crate) fn changed_inventory_paths_between(
     compute_inventory_diff_paths(&base_tree, &head_tree)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ManifestEcosystem {
+    Rust,
+    Node,
+    Python,
+    Go,
+    Container,
+    ReleaseMetadata,
+}
+
+fn routine_manifest_ecosystem(path: &str) -> Option<ManifestEcosystem> {
+    match path {
+        "Cargo.toml" | "Cargo.lock" => Some(ManifestEcosystem::Rust),
+        "package.json" | "package-lock.json" | "yarn.lock" | "pnpm-lock.yaml" => {
+            Some(ManifestEcosystem::Node)
+        }
+        "pyproject.toml" | "requirements.txt" | "uv.lock" | "poetry.lock" => {
+            Some(ManifestEcosystem::Python)
+        }
+        "go.mod" | "go.sum" => Some(ManifestEcosystem::Go),
+        "Dockerfile" => Some(ManifestEcosystem::Container),
+        "dist-workspace.toml"
+        | "dist.toml"
+        | ".github/release.toml"
+        | "release-plz.toml"
+        | "cliff.toml"
+        | ".releaserc"
+        | ".releaserc.json"
+        | "release-please-config.json"
+        | "release-please-manifest.json" => Some(ManifestEcosystem::ReleaseMetadata),
+        _ => None,
+    }
+}
+
+fn ecosystem_is_coupled_to_text(ecosystem: ManifestEcosystem, text: &str) -> bool {
+    let commands: &[&str] = match ecosystem {
+        ManifestEcosystem::Rust => &[
+            "cargo",
+            "rustc",
+            "rustup",
+            "rustdoc",
+            "clippy",
+            "cargo-clippy",
+            "cargo-nextest",
+            "cargo-test",
+            "cargo-check",
+            "cargo-audit",
+            "cargo-deny",
+            "bazel",
+            "bazelisk",
+        ],
+        ManifestEcosystem::Node => &[
+            "npm",
+            "npx",
+            "node",
+            "nodejs",
+            "yarn",
+            "pnpm",
+            "bun",
+            "deno",
+            "tsx",
+            "vitest",
+            "jest",
+            "mocha",
+            "eslint",
+            "tsc",
+            "playwright",
+            "turbo",
+            "nx",
+            "biome",
+            "webpack",
+            "vite",
+        ],
+        ManifestEcosystem::Python => &[
+            "python", "python3", "pytest", "uv", "poetry", "pip", "pip3", "ruff", "mypy", "tox",
+            "nox", "hatch", "pdm", "flake8", "black", "pyright", "unittest",
+        ],
+        ManifestEcosystem::Go => &["go", "gofmt", "golangci-lint", "staticcheck", "govulncheck"],
+        ManifestEcosystem::Container => &[
+            "docker",
+            "podman",
+            "buildah",
+            "nerdctl",
+            "hadolint",
+            "kaniko",
+            "docker-compose",
+            "compose",
+        ],
+        ManifestEcosystem::ReleaseMetadata => &[],
+    };
+    if commands.is_empty() {
+        return false;
+    }
+    text.split(|ch: char| {
+        ch.is_whitespace()
+            || matches!(
+                ch,
+                '\'' | '"'
+                    | '`'
+                    | ','
+                    | ';'
+                    | '('
+                    | ')'
+                    | '['
+                    | ']'
+                    | '{'
+                    | '}'
+                    | '='
+                    | ':'
+                    | '|'
+                    | '&'
+            )
+    })
+    .filter(|token| !token.is_empty())
+    .any(|token| {
+        let cmd = token
+            .rsplit('/')
+            .next()
+            .unwrap_or(token)
+            .to_ascii_lowercase();
+        commands.contains(&cmd.as_str())
+    })
+}
+
 fn is_non_ci_helper_path(path: &str) -> bool {
     const HELPER_PREFIXES: [&str; 4] = [
         "scripts/",
@@ -1151,6 +1275,56 @@ fn is_non_ci_helper_path(path: &str) -> bool {
         && !super::init_reconciliation::is_workflow(path)
         && !super::init_reconciliation::SOURCE_FILES.contains(&path)
         && !super::readiness_profile::catalog_source_paths().contains(&path)
+}
+
+fn is_candidate_non_proof_path(
+    path: &str,
+    accepted_commands: &[ProofDef],
+    accepted_contract: &RepositoryContract,
+) -> bool {
+    if is_non_ci_helper_path(path) {
+        return true;
+    }
+    let Some(eco) = routine_manifest_ecosystem(path) else {
+        return false;
+    };
+    !super::init_reconciliation::is_workflow(path)
+        && !super::readiness_profile::catalog_source_paths().contains(&path)
+        && !contract_referenced_strings(accepted_commands, accepted_contract)
+            .into_iter()
+            .any(|text| ecosystem_is_coupled_to_text(eco, text))
+}
+
+fn same_dir_helper_referenced_in_text(referrer: &str, target: &str, text: &str) -> bool {
+    if !is_non_ci_helper_path(referrer) || !is_non_ci_helper_path(target) {
+        return false;
+    }
+    let (Some((ref_dir, _)), Some((target_dir, target_base))) =
+        (referrer.rsplit_once('/'), target.rsplit_once('/'))
+    else {
+        return false;
+    };
+    if ref_dir != target_dir || target_base.is_empty() {
+        return false;
+    }
+    let slash_base = format!("/{target_base}");
+    text.split(|ch: char| {
+        ch.is_whitespace()
+            || matches!(
+                ch,
+                '\'' | '"' | '`' | ',' | ';' | '(' | ')' | '[' | ']' | '{' | '}' | '='
+            )
+    })
+    .any(|raw_token| {
+        let token = raw_token.trim_end_matches(':');
+        if token.is_empty() {
+            return false;
+        }
+        let normalized = token.strip_prefix("./").unwrap_or(token);
+        normalized == target_base
+            || normalized == slash_base
+            || (normalized.starts_with('$') && normalized.ends_with(&slash_base))
+    })
 }
 
 fn path_is_referenced_in_text(path: &str, text: &str) -> bool {
@@ -1267,42 +1441,57 @@ fn path_is_directly_referenced_in_contract(
     false
 }
 
-fn path_is_proof_referenced(
+fn collect_proof_relevant_blobs(
     checkout_root: &Path,
     base_tree: &GitTreeInventory,
-    path: &str,
     accepted_commands: &[ProofDef],
     accepted_contract: &RepositoryContract,
-) -> bool {
-    if path_is_directly_referenced_in_contract(path, accepted_commands, accepted_contract) {
-        return true;
-    }
-    for (other, entry) in &base_tree.entries {
-        if other == path {
-            continue;
-        }
-        if !is_non_ci_helper_path(other)
-            || path_is_directly_referenced_in_contract(other, accepted_commands, accepted_contract)
+) -> Option<BTreeMap<String, String>> {
+    let mut proof_relevant = BTreeMap::new();
+    let mut visited = BTreeSet::new();
+    let mut queue = VecDeque::new();
+
+    for path in base_tree.entries.keys() {
+        if !is_candidate_non_proof_path(path, accepted_commands, accepted_contract)
+            || path_is_directly_referenced_in_contract(path, accepted_commands, accepted_contract)
         {
-            let Some(content) = read_bounded_utf8_blob(checkout_root, entry) else {
-                // Fail closed if a proof-relevant file cannot be inspected as UTF-8.
-                return true;
-            };
-            if path_is_referenced_in_text(path, &content) {
-                return true;
+            visited.insert(path.clone());
+            queue.push_back(path.clone());
+        }
+    }
+
+    while let Some(current) = queue.pop_front() {
+        let entry = base_tree.entries.get(&current)?;
+        // Fail closed if any proof-relevant file cannot be inspected as bounded UTF-8.
+        let content = read_bounded_utf8_blob(checkout_root, entry)?;
+        for candidate in base_tree.entries.keys() {
+            if visited.contains(candidate) {
+                continue;
+            }
+            let referenced = path_is_referenced_in_text(candidate, &content)
+                || same_dir_helper_referenced_in_text(&current, candidate, &content)
+                || routine_manifest_ecosystem(candidate)
+                    .is_some_and(|eco| ecosystem_is_coupled_to_text(eco, &content));
+            if referenced {
+                visited.insert(candidate.clone());
+                queue.push_back(candidate.clone());
             }
         }
+        proof_relevant.insert(current, content);
     }
-    false
+
+    Some(proof_relevant)
 }
 
 /// Qualify an automatic `repo.pr-readiness.v1` source-inventory transition when
 /// `accepted_commands` and `accepted_contract` are preserved verbatim and every
 /// added, modified, or removed inventoried path between `accepted_base_sha` and
-/// `candidate_head_sha` is a non-workflow helper file under `scripts/`,
-/// `assets/scripts/`, `assets/tools/`, or `assets/build/` that is not referenced
-/// by `accepted_commands`, `accepted_contract`, or any proof-relevant inventoried
-/// file in `accepted_base_sha`.
+/// `candidate_head_sha` is either:
+/// - a non-workflow helper file under `scripts/`, `assets/scripts/`, `assets/tools/`,
+///   or `assets/build/` that is not transitively referenced by `accepted_commands`,
+///   `accepted_contract`, or any proof-relevant inventoried file in `accepted_base_sha`, or
+/// - a routine package/container/release manifest or lockfile whose ecosystem is not
+///   coupled to `accepted_commands`, `accepted_contract`, or any proof-relevant file.
 pub(crate) fn qualifies_non_proof_source_inventory_transition(
     checkout_root: &Path,
     accepted_base_sha: &str,
@@ -1332,17 +1521,28 @@ pub(crate) fn qualifies_non_proof_source_inventory_transition(
         return false;
     }
     let changed_paths = compute_inventory_diff_paths(&base_tree, &head_tree);
-    !changed_paths.is_empty()
-        && changed_paths.iter().all(|path| {
-            is_non_ci_helper_path(path)
-                && !path_is_proof_referenced(
-                    checkout_root,
-                    &base_tree,
-                    path,
-                    accepted_commands,
-                    accepted_contract,
-                )
-        })
+    if changed_paths.is_empty() {
+        return false;
+    }
+    let Some(proof_relevant) = collect_proof_relevant_blobs(
+        checkout_root,
+        &base_tree,
+        accepted_commands,
+        accepted_contract,
+    ) else {
+        return false;
+    };
+    changed_paths.iter().all(|path| {
+        is_candidate_non_proof_path(path, accepted_commands, accepted_contract)
+            && !proof_relevant.contains_key(path)
+            && !path_is_directly_referenced_in_contract(path, accepted_commands, accepted_contract)
+            && proof_relevant.iter().all(|(other, content)| {
+                !path_is_referenced_in_text(path, content)
+                    && !same_dir_helper_referenced_in_text(other, path, content)
+                    && !routine_manifest_ecosystem(path)
+                        .is_some_and(|eco| ecosystem_is_coupled_to_text(eco, content))
+            })
+    })
 }
 fn relative(path: &str) -> bool {
     !path.is_empty()

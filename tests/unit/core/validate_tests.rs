@@ -2037,3 +2037,29 @@ fn risk_map_warning_recommends_supported_cli_command_and_clears_when_present() {
     assert_eq!(present_ctx.pass_count.load(Ordering::Relaxed), 1);
     assert!(present_ctx.warns.lock().unwrap().is_empty());
 }
+
+#[test]
+fn untruncated_policy_transition_failures_preserve_full_diagnostic_line() {
+    let tid = "a".repeat(64);
+    let old_src = format!("sha256:{}", "1".repeat(64));
+    let new_src = format!("sha256:{}", "2".repeat(64));
+    let old_cmd = format!("sha256:{}", "3".repeat(64));
+    let new_cmd = format!("sha256:{}", "4".repeat(64));
+    let long_transition_failure = format!(
+        "publication_readiness: READINESS_BLOCKED: ACCEPTED_REPOSITORY_CONTRACT_CHANGED: repository proof policy or proof-relevant source inventory changed without an active transition approval (transition_id={tid}, scope=repo.pr-readiness.v1, base={}, head={}, sources: {old_src} -> {new_src}, commands: {old_cmd} -> {new_cmd}, changed_paths=[\"pyproject.toml\", \"scripts/check_source.py\"]). Review and merge the exact diff at PR review, or supply an independently verified approval for scope `repo.pr-readiness.v1` via maintainer-signed receipt in DECAPOD_REPO_TRANSITION_APPROVAL or authenticated Cloud decision ID in DECAPOD_REPO_TRANSITION_DECISION_ID.",
+        "b".repeat(40),
+        "c".repeat(40),
+    );
+    assert!(long_transition_failure.len() > 300);
+
+    let failures = vec![
+        "unrelated check failed".to_string(),
+        long_transition_failure.clone(),
+    ];
+    let extracted = super::untruncated_policy_transition_failures(&failures);
+    assert_eq!(extracted, vec![long_transition_failure.as_str()]);
+    assert!(extracted[0].contains(&format!("transition_id={tid}")));
+    assert!(extracted[0].contains(&old_src) && extracted[0].contains(&new_src));
+    assert!(extracted[0].contains("[\"pyproject.toml\", \"scripts/check_source.py\"]"));
+    assert!(!extracted[0].contains("decapod govern policy approve"));
+}

@@ -1,5 +1,15 @@
 # Validation
 
+## `#1949` follow-up: non-ecosystem manifest scoping, multi-hop helper closure, untruncated text diagnostics, and removal of manual human CLI prompt
+
+Verified on `origin/master` (`1134da6b1`, `v0.166.0`) inside isolated worktree `agent/clack-ivy-da170052-4ca1-4f15-8a7b-7cf632d83d5d/code_01m8aejkc2mfqakr-repository-work`:
+
+- `cargo fmt --all -- --check` and `CLIPPY_CONF_DIR=.config cargo clippy --tests -- -D warnings`: passed with 0 warnings.
+- `cargo test --lib repository_profile`: 37 passed, 0 failed (including `unreferenced_non_ecosystem_manifests_qualify_without_manual_approval`, `ecosystem_coupled_manifest_changes_fail_closed_without_manual_cli_prompt`, and `multi_hop_and_same_dir_transitive_helper_references_fail_closed`).
+- `cargo test --lib validation_rules`: 17 passed, 0 failed.
+- `cargo test --lib untruncated_policy_transition_failures`: 1 passed, 0 failed (verifies `validate::untruncated_policy_transition_failures` preserves full >300-char transition diagnostics without clipping).
+- `cargo test --test consumer_readiness`: 42 passed, 0 failed (including updated `source_inventory_change_succeeds_after_policy_control_approval_and_full_validation` asserting absence of `decapod govern policy approve` and new `unreferenced_non_ecosystem_manifest_qualifies_while_coupled_manifest_fails_closed`).
+
 ## `#1949` `repo.pr-readiness.v1` transition scoping, diagnostics, guidance & `dactyl-db 0.19.1` WAL checkpoint verification
 
 Verified on `origin/master` (`84be80796`) inside isolated worktree `agent/clack-june-db301f84-74f7-46aa-8274-45c738d9489f/bugs_01m8abegxx1kjwxg-fix-1949`:
@@ -2877,7 +2887,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
+- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

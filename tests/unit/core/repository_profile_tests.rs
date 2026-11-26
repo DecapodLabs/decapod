@@ -2127,4 +2127,254 @@ mod release_only_inventory_transition_tests {
         );
         assert!(err2.contains("scripts/lib_helper.sh"), "{err2}");
     }
+
+    #[test]
+    fn unreferenced_non_ecosystem_manifests_qualify_without_manual_approval() {
+        let (dir, base_sha, base_digest, cmds, repo_contract) = clack_style_swift_repo();
+        let root = dir.path();
+
+        fs::write(root.join("Dockerfile"), "FROM swift:6.0\n").unwrap();
+        fs::write(
+            root.join("package.json"),
+            "{\"name\":\"helper-tools\",\"version\":\"1.0.0\"}\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("package-lock.json"),
+            "{\"name\":\"helper-tools\",\"lockfileVersion\":3}\n",
+        )
+        .unwrap();
+        fs::write(
+            root.join("release-plz.toml"),
+            "[workspace]\npr_labels = [\"release\"]\n",
+        )
+        .unwrap();
+        let head_sha = commit_all(root, "chore: add uncoupled non-proof manifests");
+        let head_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: base_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: head_digest,
+        };
+
+        for ci_local in [false, true] {
+            verify_accepted_transition(
+                root,
+                &base_sha,
+                &head_sha,
+                Some(&accepted_decl),
+                Some(&candidate_decl),
+                &cmds,
+                &cmds,
+                Some(&repo_contract),
+                Some(&repo_contract),
+                approval_input(ci_local),
+            )
+            .unwrap_or_else(|e| {
+                panic!(
+                    "expected uncoupled non-proof manifests to qualify (ci_local={ci_local}): {e}"
+                )
+            });
+        }
+    }
+
+    #[test]
+    fn ecosystem_coupled_manifest_changes_fail_closed_without_manual_cli_prompt() {
+        let cases: &[(&str, &str, &str, &str, &[&str])] = &[
+            (
+                "Cargo.toml",
+                "[package]\nname = \"demo\"\nversion = \"0.1.0\"\n",
+                "[package]\nname = \"demo\"\nversion = \"0.1.1\"\n",
+                "/usr/bin/cargo",
+                &["test"],
+            ),
+            (
+                "package.json",
+                "{\"name\":\"demo\",\"version\":\"1.0.0\"}\n",
+                "{\"name\":\"demo\",\"version\":\"1.0.1\"}\n",
+                "/usr/bin/npm",
+                &["test"],
+            ),
+            (
+                "pyproject.toml",
+                "[project]\nname = \"demo\"\nversion = \"0.1.0\"\n",
+                "[project]\nname = \"demo\"\nversion = \"0.1.1\"\n",
+                "/usr/bin/pytest",
+                &["-q"],
+            ),
+            (
+                "go.mod",
+                "module example.com/demo\n\ngo 1.22\n",
+                "module example.com/demo\n\ngo 1.23\n",
+                "/usr/bin/go",
+                &["test", "./..."],
+            ),
+            (
+                "Dockerfile",
+                "FROM alpine:3.20\n",
+                "FROM alpine:3.21\n",
+                "/usr/bin/docker",
+                &["build", "."],
+            ),
+        ];
+
+        for (manifest_path, initial, updated, program, args) in cases {
+            let dir = init_repo();
+            let root = dir.path();
+            fs::create_dir_all(root.join(".decapod")).unwrap();
+            fs::write(
+                root.join(".decapod/config.toml"),
+                "schema_version = \"1.0.0\"\n\n[init]\ndiagram_style = \"ascii\"\nentrypoints = []\n\n[repo]\nbase_branch = \"main\"\nbackend = \"local\"\n",
+            )
+            .unwrap();
+            fs::write(root.join(manifest_path), initial).unwrap();
+            let base_sha = commit_all(root, "chore: baseline manifest");
+            let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+            fs::write(root.join(manifest_path), updated).unwrap();
+            let head_sha = commit_all(root, "chore: update ecosystem-coupled manifest");
+            let head_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+            let cmds = vec![ProofDef {
+                name: "check".into(),
+                command: (*program).into(),
+                args: args.iter().map(|s| (*s).to_owned()).collect(),
+                description: "Ecosystem check".into(),
+                required: true,
+            }];
+            let mut toolchain_files = BTreeMap::new();
+            toolchain_files.insert("tool".to_string(), (*program).into());
+            let mut executions = BTreeMap::new();
+            executions.insert(
+                "check".to_string(),
+                RepositoryExecution {
+                    program: (*program).into(),
+                    toolchain_files,
+                    platforms: BTreeMap::new(),
+                    environment: BTreeMap::new(),
+                    directory: ".".into(),
+                    timeout_seconds: 120,
+                },
+            );
+            let mut repo_contract = RepositoryContract {
+                canonical_local_target: false,
+                reviewed_commands_digest: String::new(),
+                source_coverage: vec![],
+                executions,
+                targets: BTreeMap::new(),
+            };
+            repo_contract.reviewed_commands_digest =
+                command_contract_digest(&cmds, &repo_contract).unwrap();
+
+            let err = verify_accepted_transition(
+                root,
+                &base_sha,
+                &head_sha,
+                Some(&ProfileDeclaration {
+                    id: REQUIRED_PROFILE.into(),
+                    reviewed_sources_digest: base_digest.clone(),
+                }),
+                Some(&ProfileDeclaration {
+                    id: REQUIRED_PROFILE.into(),
+                    reviewed_sources_digest: head_digest.clone(),
+                }),
+                &cmds,
+                &cmds,
+                Some(&repo_contract),
+                Some(&repo_contract),
+                approval_input(false),
+            )
+            .unwrap_err()
+            .to_string();
+
+            let expected_tid = repo_policy_transition_id(
+                &base_sha,
+                &head_sha,
+                &base_digest,
+                &head_digest,
+                &repo_contract.reviewed_commands_digest,
+                &repo_contract.reviewed_commands_digest,
+            )
+            .unwrap();
+            assert!(
+                err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+                "{manifest_path}: {err}"
+            );
+            assert!(
+                err.contains(&format!("transition_id={expected_tid}")),
+                "{manifest_path}: {err}"
+            );
+            assert!(err.contains(manifest_path), "{manifest_path}: {err}");
+            assert!(
+                !err.contains("decapod govern policy approve"),
+                "{manifest_path}: {err}"
+            );
+        }
+    }
+
+    #[test]
+    fn multi_hop_and_same_dir_transitive_helper_references_fail_closed() {
+        let (dir, _prior_sha, _prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+        fs::create_dir_all(root.join("scripts")).unwrap();
+        fs::write(
+            root.join("scripts/hello.sh"),
+            "#!/bin/sh\nsh scripts/mid.sh\n",
+        )
+        .unwrap();
+        fs::write(root.join("scripts/mid.sh"), "#!/bin/sh\n./leaf.sh\n").unwrap();
+        fs::write(root.join("scripts/leaf.sh"), "#!/bin/sh\necho leaf\n").unwrap();
+        let base_sha = commit_all(root, "chore: baseline multi-hop helper chain");
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let (cmds, repo_contract) = dactyl_contract();
+
+        fs::write(root.join("scripts/leaf.sh"), "#!/bin/sh\necho tampered\n").unwrap();
+        let head_sha = commit_all(root, "chore: tamper transitive same-dir leaf helper");
+        let head_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &head_sha,
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: base_digest.clone(),
+            }),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: head_digest.clone(),
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+
+        let expected_tid = repo_policy_transition_id(
+            &base_sha,
+            &head_sha,
+            &base_digest,
+            &head_digest,
+            &repo_contract.reviewed_commands_digest,
+            &repo_contract.reviewed_commands_digest,
+        )
+        .unwrap();
+        assert!(
+            err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err}"
+        );
+        assert!(
+            err.contains(&format!("transition_id={expected_tid}")),
+            "{err}"
+        );
+        assert!(err.contains("scripts/leaf.sh"), "{err}");
+        assert!(!err.contains("decapod govern policy approve"), "{err}");
+    }
 }
