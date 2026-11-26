@@ -2,10 +2,10 @@
 
 ## Fail-closed proof-reference boundary for `repo.pr-readiness.v1` transitions (`#1949`)
 
-- **Conservative reference & unreadable-blob fail-closed guards (`src/decapod/core/repository_profile.rs`)**:
-  - `qualifies_non_proof_source_inventory_transition` never waives `accepted_commands`, `accepted_contract` (including `reviewed_commands_digest`, `executions`, `source_coverage`, `targets`), workflows, `SOURCE_FILES`, or `catalog_source_paths()`.
-  - `path_is_proof_referenced` inspects `accepted_commands`, `accepted_contract` (including `execution.directory`-relative invocations), and every proof-relevant or directly referenced file in `accepted_base_sha`, failing closed (`true`) on exact path matches, directory globs (`dir/*`, `dir/**`), directory token matches, or non-UTF-8 / oversized blobs.
-- **No agent privilege elevation**: `decapod.policy.accepted_repository_contract` retains `OverrideEligibility::NonOverridable`, `autonomous_remediation_permitted = false`, and `human_authorization_required = true` when proof-relevant inputs or command contracts change, shifting `agent_guidance.owner` to `"human"` rather than weakening RBAC or policy control gates.
+- **Conservative reference, ecosystem coupling & unreadable-blob fail-closed guards (`src/decapod/core/repository_profile.rs`)**:
+  - `qualifies_non_proof_source_inventory_transition` never waives `accepted_commands`, `accepted_contract` (including `reviewed_commands_digest`, `executions`, `source_coverage`, `targets`), workflows, build-system inputs (`Makefile`, `Justfile`, `CMakeLists.txt`, Bazel, Nix, `rust-toolchain*`, `tox.ini`), or `catalog_source_paths()`.
+  - `collect_proof_relevant_blobs` performs a bounded BFS over `accepted_base_sha` seeded by all non-exempt or contract-referenced files, failing closed (`None`) on non-UTF-8 / oversized blobs and propagating exact path matches, directory globs (`dir/*`, `dir/**`), directory token matches, `same_dir_helper_referenced_in_text`, and `ecosystem_is_coupled_to_text` (`Rust`, `Node`, `Python`, `Go`, `Container`) across multi-hop helper and manifest chains.
+- **No agent privilege elevation or manual CLI dead-end**: `decapod.policy.accepted_repository_contract` retains `OverrideEligibility::NonOverridable`, `autonomous_remediation_permitted = false`, and `human_authorization_required = true` when proof-relevant inputs or command contracts change, shifting `agent_guidance.owner` to `"human"` and directing PR review or cryptographic/Cloud approval envs without weakening RBAC/policy gates or prompting humans for manual `decapod govern policy approve` commands.
 
 ## Dactyl `0.19.1` dependency security & transitive floor enforcement (`#1943`, `#1944`)
 
@@ -1612,7 +1612,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
+- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

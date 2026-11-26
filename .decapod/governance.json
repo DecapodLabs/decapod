@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "84be8079605d7504073a34b84cca94d6e89cb2bf",
+    "accepted_commit": "1134da6b1f96b908c0d237fb9a35febb789400ae",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,45 +870,37 @@
     }
   },
   "change": {
-    "id": "change_01M8ABGV234T01G00DPRVFGJNS",
-    "base_commit": "84be8079605d7504073a34b84cca94d6e89cb2bf",
+    "id": "change_1949_followup",
+    "base_commit": "1134da6b1f96b908c0d237fb9a35febb789400ae",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:repo-transition-proof-scoping-1949": {
-      "statement": "repo.pr-readiness.v1 transitions affecting only unreferenced non-workflow helper scripts qualify without out-of-band operator CLI approvals while proof-referenced helpers still fail closed with exact transition_id/changed_paths diagnostics and owner=human guidance.",
-      "falsifier": "An unreferenced scripts/ helper edit still blocks validation, a directly or transitively proof-referenced script edit bypasses ACCEPTED_REPOSITORY_CONTRACT_CHANGED, PreExecution hides transition_id or changed_paths, or human_authorization_required emits owner=agent.",
+    "claim:1949-non-ecosystem-scoping-and-diagnostics": {
+      "statement": "Unreferenced non-ecosystem-coupled routine manifests and unreferenced helpers qualify under repo.pr-readiness.v1, multi-hop/same-dir helper references and ecosystem-coupled manifests fail closed with concrete untruncated transition diagnostics, and ACCEPTED_REPOSITORY_CONTRACT_CHANGED never instructs humans to run manual decapod CLI commands.",
+      "falsifier": "An unreferenced non-ecosystem manifest blocks validation, an ecosystem-coupled manifest or multi-hop/same-dir referenced helper bypasses ACCEPTED_REPOSITORY_CONTRACT_CHANGED, validate text/-v truncates transition_id/digests/changed_paths, or ACCEPTED_REPOSITORY_CONTRACT_CHANGED emits decapod govern policy approve.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/validation_rules.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validate.rs",
         "tests/consumer_readiness.rs",
         "tests/unit/core/repository_profile_tests.rs"
-      ]
-    },
-    "claim:wal-checkpoint-write-path": {
-      "statement": "run_maintain_wal_checkpoint executes PRAGMA wal_checkpoint(PASSIVE) via Dactyl's write path on an AccessMode::ReadWrite handle, preserves maintenance RBAC and dactyl-db 0.19.1 sqlite3_stmt_readonly read safeguards, and reports null for unavailable SQLite frame counters instead of fabricated zeros.",
-      "falsifier": "governed_db_maintenance_wal_checkpoint_aliases_and_top_level_maintenance_config fails, unauthorized/unallowlisted maintenance calls succeed, conn.query_row on PRAGMA wal_checkpoint(PASSIVE) is permitted, or unavailable counters are fabricated as 0/false.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/db_maintenance.rs",
-        "tests/sqlite_maintenance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "bugs_01m8abegxx1kjwxg-1",
-      "summary": "Scope repo.pr-readiness.v1 transitions, surface transition diagnostics and human-auth guidance (#1949), and route PASSIVE WAL checkpoint via Dactyl write path",
-      "input_digest": "sha256:cdba4889e1172d7375d84bad639dd9e8e0d7d1cdf6cec77bb68440e3ec5703ce",
+      "id": "code_01m8aejkc2mfqakr-1",
+      "summary": "Complete #1949 follow-up: non-ecosystem manifest scoping, multi-hop helper closure, untruncated validate transition diagnostics, and removal of manual CLI approval prompt",
+      "input_digest": "sha256:454c6247891b385f5d39c100f2084143d53d7e829971b84a9b0c305e6c0e35b1",
       "proof_refs": [
         "tests/consumer_readiness.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/unit/core/validate_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:change_01M8ABGV234T01G00DPRVFGJNS": {
+    "intent:run_1949_followup": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -918,14 +910,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8ABGV234T01G00DPRVFGJNS",
+      "id": "intent:run_1949_followup",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix #1949: scope repo.pr-readiness.v1 transitions, surface diagnostics, and fix WAL checkpoint under dactyl-db 0.19.1",
-      "refined_intent": "Fix #1949: scope repo.pr-readiness.v1 transitions, surface diagnostics, and fix WAL checkpoint under dactyl-db 0.19.1",
+      "raw_intent": "Complete DecapodLabs/decapod#1949 follow-up",
+      "refined_intent": "Remove manual human CLI approval prompt from ACCEPTED_REPOSITORY_CONTRACT_CHANGED, scope non-ecosystem-coupled SOURCE_FILES transitions with multi-hop transitive helper closure, and render untruncated transition diagnostics in validate text/-v output",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -938,65 +930,72 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix #1949: scope repo.pr-readiness.v1 transitions, surface diagnostics, and fix WAL checkpoint under dactyl-db 0.19.1",
+      "intent": "Remove manual human CLI approval instructions from repo.pr-readiness.v1 diagnostics, scope unreferenced non-ecosystem SOURCE_FILES transitions with transitive helper closure, and render untruncated transition diagnostics in validate text and verbose modes",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --lib repository_profile",
+        "cargo test --lib validation_rules",
+        "cargo test --test consumer_readiness",
+        "decapod validate --pre-build --format json"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented qualifies_non_proof_source_inventory_transition, PolicyTransitionDiagnostic, human_authorization_required routing (#1949), and Connection::execute WAL checkpoint path under dactyl-db 0.19.1",
-          "reviewed_code_fingerprint": "c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88",
-          "spec_material_hash": "15906bc3699d50d44241913141f55f9db7d40a2a0e9d0f43fe56567e7aba9789"
+          "reason": "Documented ManifestEcosystem coupling, collect_proof_relevant_blobs BFS closure, same_dir_helper_referenced_in_text, and untruncated_policy_transition_failures",
+          "reviewed_code_fingerprint": "8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59",
+          "spec_material_hash": "3ed3cb0e750f2a7eb1232da09c83d80aaa687a117827d04f7328b3541e44a4cc"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented null frame counters returned by wal-checkpoint CLI/RPC via Dactyl write path and additive human_authorization_required validation report guidance",
-          "reviewed_code_fingerprint": "c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88",
-          "spec_material_hash": "a168f2903878be518d2b778d715c98faee2bc2e8dfc17047a9b72017e96f7e4c"
+          "reason": "Documented updated ACCEPTED_REPOSITORY_CONTRACT_CHANGED error contract without manual CLI prompt and untruncated transition lines in render_validation_report",
+          "reviewed_code_fingerprint": "8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59",
+          "spec_material_hash": "95a47776546bd7a2160a83a461f8cbc610de6c0999edb418a4ba8ea9479c6e39"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented fail-closed proof-reference inspection for #1949 and preserved dactyl-db sqlite3_stmt_readonly guard on WAL checkpoint",
-          "reviewed_code_fingerprint": "c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88",
-          "spec_material_hash": "1f646708328f30a5a6c0cd203d602e0603f4600ba21149352e3aeae702a1622a"
+          "reason": "Documented fail-closed ecosystem coupling and multi-hop helper closure invariants without weakening policy or RBAC gates",
+          "reviewed_code_fingerprint": "8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59",
+          "spec_material_hash": "cf3a8b0cd0a94a37c41a0be69aba73385d4f5b1887cd611d088fc3c59f9d6140"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix #1949: scope repo.pr-readiness.v1 transitions, surface diagnostics, and fix WAL checkpoint under dactyl-db 0.19.1",
+      "title": "Complete #1949 repo.pr-readiness.v1 follow-up",
       "todo_ids": [
-        "bugs_01m8abegxx1kjwxg"
+        "code_01m8aejkc2mfqakr"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795644127Z"
+      "updated_at": "1795657672Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cfb03271d15605eb6ffa3985c73d22ac93b5d7d6ec8949ca164c1a238e3b4845",
+      "artifact_hash": "sha256:23181850742d1c5058b9932516255e3e8df89979abad47d2134ccefbc881b8a8",
       "checks": [
+        {
+          "name": "cargo-clippy-tests",
+          "status": "passed"
+        },
         {
           "name": "cargo-fmt",
           "status": "passed"
         },
         {
-          "name": "cargo-test-consumer-readiness-unreferenced-packaging",
+          "name": "cargo-test-consumer-readiness",
+          "status": "passed"
+        },
+        {
+          "name": "cargo-test-core-validate",
           "status": "passed"
         },
         {
           "name": "cargo-test-repository-profile",
-          "status": "passed"
-        },
-        {
-          "name": "cargo-test-sqlite-maintenance-wal-checkpoint",
           "status": "passed"
         },
         {
@@ -1009,20 +1008,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8ABGV234T01G00DPRVFGJNS",
+            "intent_id": "intent:run_1949_followup",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8ABGV234T01G00DPRVFGJNS",
+            "intent_id": "intent:run_1949_followup",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8ABGV5T1P6P448YVMN26NQ9",
+            "detail": "trajectory:run_1949_followup",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8ABGV234T01G00DPRVFGJNS",
+            "intent_id": "intent:run_1949_followup",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1031,10 +1030,10 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8ABGV5T1P6P448YVMN26NQ9": {
+          "run_1949_followup": {
             "evidence_only": true,
-            "id": "branch_01M8ABGV5T1P6P448YVMN26NQ9",
-            "intent_id": "intent:change_01M8ABGV234T01G00DPRVFGJNS",
+            "id": "run_1949_followup",
+            "intent_id": "intent:run_1949_followup",
             "steps": [
               {
                 "action": "validation",
@@ -1043,20 +1042,30 @@
                   "src/decapod/core/repository_profile.rs",
                   "src/decapod/core/validate.rs",
                   "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/init_reconciliation/mod.rs",
                   "tests/consumer_readiness.rs",
                   "tests/unit/core/repository_profile_tests.rs",
-                  "tests/sqlite_maintenance.rs",
-                  "Verified cargo fmt, 34 repository_profile tests, 17 validation_rules tests, governed_db_maintenance_wal_checkpoint under dactyl-db 0.19.1, and consumer_readiness unreferenced_packaging_script test all pass."
+                  "tests/unit/core/validate_tests.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validate.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/unit/core/repository_profile_tests.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/SECURITY.md",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  ".decapod/managed/.manifest.json",
+                  "Verified cargo fmt, clippy --tests (-D warnings), 37 repository_profile tests, 17 validation_rules tests, 63 core::validate tests, and 42 consumer_readiness tests all pass."
                 ],
                 "proof_refs": [
                   "cargo-fmt",
+                  "cargo-clippy-tests",
                   "cargo-test-repository-profile",
                   "cargo-test-validation-rules",
-                  "cargo-test-sqlite-maintenance-wal-checkpoint",
-                  "cargo-test-consumer-readiness-unreferenced-packaging"
+                  "cargo-test-core-validate",
+                  "cargo-test-consumer-readiness"
                 ],
                 "scope": [
                   "root"
@@ -1069,33 +1078,39 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "Verified cargo fmt, 34 repository_profile tests, 17 validation_rules tests, governed_db_maintenance_wal_checkpoint under dactyl-db 0.19.1, and consumer_readiness unreferenced_packaging_script test all pass."
+        "Verified cargo fmt, clippy --tests (-D warnings), 37 repository_profile tests, 17 validation_rules tests, 63 core::validate tests, and 42 consumer_readiness tests all pass."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:change_01M8ABGV234T01G00DPRVFGJNS",
-      "modified_files": [
-        "src/decapod/core/db_maintenance.rs",
+      "inspected_files": [
+        "src/decapod/core/init_reconciliation/mod.rs",
         "src/decapod/core/repository_profile.rs",
         "src/decapod/core/validate.rs",
         "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/lib.rs",
         "tests/consumer_readiness.rs",
-        "tests/sqlite_maintenance.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+      "intent_id": "intent:run_1949_followup",
+      "modified_files": [
+        ".decapod/managed/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validate.rs",
+        "tests/consumer_readiness.rs",
+        "tests/unit/core/repository_profile_tests.rs",
+        "tests/unit/core/validate_tests.rs"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M8ABGV5T1P6P448YVMN26NQ9",
+      "run_id": "run_1949_followup",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m8abegxx1kjwxg",
+      "task_id": "code_01m8aejkc2mfqakr",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

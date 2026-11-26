@@ -2,11 +2,12 @@
 
 ## Proof-relevant `repo.pr-readiness.v1` transition scoping, diagnostics, and human-auth guidance (`#1949`)
 
-- **Unreferenced non-workflow helper transition qualification (`src/decapod/core/repository_profile.rs`)**:
-  - `qualifies_non_proof_source_inventory_transition` checks exact `base_tree` and `head_tree` SHA-256 inventory digests via `compute_git_tree_source_inventory`, extracts `compute_inventory_diff_paths`, verifies every changed path passes `is_non_ci_helper_path` (`scripts/`, `assets/scripts/`, `assets/tools/`, `assets/build/` excluding workflows, `SOURCE_FILES`, and `catalog_source_paths()`), and checks `path_is_proof_referenced` across `accepted_commands`, `accepted_contract`, and bounded UTF-8 blobs of proof-relevant files in `accepted_base_sha`.
-  - `changed_inventory_paths_between` exposes the sorted diff paths for `verify_accepted_transition` error details (`transition_id=...`, `changed_paths=[...]`).
-- **Pre-execution diagnostic propagation (`src/decapod/core/validation_rules.rs`)**:
+- **Unreferenced non-workflow helper & uncoupled manifest transition qualification (`src/decapod/core/repository_profile.rs`)**:
+  - `qualifies_non_proof_source_inventory_transition` checks exact `base_tree` and `head_tree` SHA-256 inventory digests via `compute_git_tree_source_inventory`, extracts `compute_inventory_diff_paths`, verifies every changed path passes `is_candidate_non_proof_path` (either `is_non_ci_helper_path` or a `routine_manifest_ecosystem` manifest/lockfile—`Rust`, `Node`, `Python`, `Go`, `Container`, `ReleaseMetadata`—not coupled via `ecosystem_is_coupled_to_text` to `accepted_commands` or `accepted_contract`, excluding workflows and `catalog_source_paths()`), and builds a multi-hop BFS closure via `collect_proof_relevant_blobs` (propagating exact path references, `same_dir_helper_referenced_in_text`, and ecosystem coupling across bounded UTF-8 blobs in `accepted_base_sha`).
+  - `changed_inventory_paths_between` exposes the sorted diff paths for `verify_accepted_transition` error details (`transition_id=...`, `scope=...`, `changed_paths=[...]`), directing PR review/merge or signed/Cloud decision env approvals without emitting manual `decapod govern policy approve` CLI instructions.
+- **Pre-execution diagnostic propagation & untruncated text rendering (`src/decapod/core/validation_rules.rs`, `src/decapod/core/validate.rs`)**:
   - `evaluate_policy_transition_with_approval` returns `(RuleVerdict, Option<PolicyTransitionDiagnostic>)` and `evaluate_rule` populates `RuleEvaluationResult.message`, `remediation.observed_condition`, `remediation.affected_paths`, and concrete `transition_id` substitutions in `remediation.required_steps`.
+  - `validate::untruncated_policy_transition_failures` and `validate::render_validation_report` emit every `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` failure untruncated in both default text and `-v` modes alongside the existing `issues` summary.
 - **Human-authorization guidance routing (`src/decapod/core/validate.rs`, `src/decapod/core/validation_runtime.rs`, `src/decapod/lib.rs`)**:
   - `ValidationContext.human_authorization_required` tracks failed/stale rules where `human_authorization_required && !autonomous_remediation_permitted` and propagates `ValidationReport.human_authorization_required` to `lib.rs::run_validate_command`, selecting `ValidationGuidance::for_human_authorization_required()` (`owner: "human"`, `next_action: "request_human_authorization"`), matched in `validation_runtime.rs` when `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` blocks adapter selection or project loading.
 
@@ -2102,7 +2103,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
+- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

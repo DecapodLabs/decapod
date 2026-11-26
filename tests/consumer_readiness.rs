@@ -2541,10 +2541,22 @@ fn source_inventory_change_succeeds_after_policy_control_approval_and_full_valid
         .collect::<Vec<_>>()
         .join("\n");
     assert!(
-        detail.contains(&format!(
-            "decapod govern policy approve --id {transition_id} --scope repo.pr-readiness.v1"
-        )),
-        "expected exact approval command in blocker: {detail}"
+        detail.contains(&format!("transition_id={transition_id}")),
+        "expected exact transition_id in blocker: {detail}"
+    );
+    assert!(detail.contains("repo.pr-readiness.v1"), "{detail}");
+    assert!(
+        detail.contains("DECAPOD_REPO_TRANSITION_APPROVAL"),
+        "{detail}"
+    );
+    assert!(
+        detail.contains("DECAPOD_REPO_TRANSITION_DECISION_ID"),
+        "{detail}"
+    );
+    assert!(detail.contains("scripts/check_source.py"), "{detail}");
+    assert!(
+        !detail.contains("decapod govern policy approve"),
+        "must not prompt humans to run manual CLI commands: {detail}"
     );
     assert!(detail.contains(&accepted_src), "{detail}");
     assert!(detail.contains(&new_src), "{detail}");
@@ -2601,6 +2613,90 @@ fn unreferenced_packaging_script_validates_without_manual_transition_approval() 
     assert!(report.ready && report.proof_ready, "{report:?}");
     assert_eq!(report.scope, repository_profile::READINESS_SCOPE);
     assert_eq!(host.execution_attempts, 1);
+}
+
+#[test]
+fn unreferenced_non_ecosystem_manifest_qualifies_while_coupled_manifest_fails_closed() {
+    let mut fixture = Fixture::new();
+    accept_current_on_main(&fixture);
+
+    // Fixture::new() executes python3 checks: unrelated Dockerfile and release-plz.toml
+    // are outside the Python proof ecosystem and must qualify without manual approval.
+    fs::write(
+        fixture.options.root.join("Dockerfile"),
+        "FROM debian:bookworm-slim\n",
+    )
+    .unwrap();
+    fs::write(
+        fixture.options.root.join("release-plz.toml"),
+        "[workspace]\npr_labels = [\"release\"]\n",
+    )
+    .unwrap();
+    let non_ecosystem_src =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest = non_ecosystem_src;
+    save_full_config(&fixture);
+    fixture.commit("add unrelated Dockerfile and release-plz.toml");
+
+    let mut host = fixture.host();
+    let non_eco_report = fixture.validate(&mut host);
+    assert!(
+        non_eco_report.ready && non_eco_report.proof_ready,
+        "{non_eco_report:?}"
+    );
+    assert_eq!(non_eco_report.scope, repository_profile::READINESS_SCOPE);
+    assert_eq!(host.execution_attempts, 1);
+
+    // Editing pyproject.toml (coupled to python3 proof command) must fail closed
+    // with exact transition diagnostics and zero manual decapod CLI instructions.
+    fs::write(
+        fixture.options.root.join("pyproject.toml"),
+        "[project]\nname = \"fixture\"\nversion = \"0.1.0\"\n",
+    )
+    .unwrap();
+    let coupled_src =
+        runtime::discover_source_inventory(&fixture.options, &Cancellation::default())
+            .unwrap()
+            .digest()
+            .unwrap();
+    fixture
+        .proof
+        .required_profile
+        .as_mut()
+        .unwrap()
+        .reviewed_sources_digest = coupled_src;
+    save_full_config(&fixture);
+    fixture.commit("add Python-coupled pyproject.toml");
+
+    let transition_id = transition_id_for_fixture(&fixture);
+    let mut host = fixture.host();
+    let blocked_report = fixture.validate(&mut host);
+    blocked(&blocked_report, "ACCEPTED_REPOSITORY_CONTRACT_CHANGED");
+    let detail = blocked_report
+        .blockers
+        .iter()
+        .map(|b| b.detail.as_str())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        detail.contains(&format!("transition_id={transition_id}")),
+        "{detail}"
+    );
+    assert!(detail.contains("pyproject.toml"), "{detail}");
+    assert!(
+        !detail.contains("decapod govern policy approve"),
+        "{detail}"
+    );
+    assert_eq!(host.selections, 0);
+    assert_eq!(host.execution_attempts, 0);
 }
 
 #[test]

@@ -1,5 +1,10 @@
 # Interfaces
 
+## `#1949` `repo.pr-readiness.v1` transition error & untruncated `validate` text surface (`src/decapod/core/repository_profile.rs`, `src/decapod/core/validate.rs`)
+
+- **Transition error format (`verify_accepted_transition`)**: `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` reports `transition_id=<64-hex>`, `scope=repo.pr-readiness.v1`, `base`, `head`, `sources: <old> -> <new>`, `commands: <old> -> <new>`, `changed_paths=[...]`, and PR review / `DECAPOD_REPO_TRANSITION_APPROVAL` / `DECAPOD_REPO_TRANSITION_DECISION_ID` guidance without emitting manual `decapod govern policy approve` CLI instructions.
+- **Untruncated CLI text rendering (`validate::render_validation_report`)**: Emits `transition <full failure>` lines via `untruncated_policy_transition_failures` in both default text and `-v` outputs so `transition_id`, digests, and `changed_paths` are never clipped by `compact_line` or `preview_messages`.
+
 ## Dactyl `0.19.1` crate policy & Bazel lockfile interface (`Cargo.toml`, `Cargo.lock`, `MODULE.bazel.lock`, `tests/release_dependency_policy.rs`)
 
 - **Registry pin & checksum policy**: `Cargo.toml` pins `dactyl-db = { version = "=0.19.1", features = ["sqlite", "neon"] }` with `supabase-cloud = ["dactyl-db/supabase"]`; `tests/release_dependency_policy.rs` verifies the exact crates.io release version, SHA-256 checksum, and `quinn-proto`/`quinn-udp`/`rustix` security floors across both Cargo and Bazel lockfiles (`//:cargo_inputs_policy`).
@@ -2586,7 +2591,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c79977d2ffde9191857f4099527c5cd7ca73f771736c71c30a810a1bcc2caf88`
+- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
