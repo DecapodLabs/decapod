@@ -4,6 +4,7 @@
 
 - `src/decapod/core/validation_runtime/executor_contract.rs` unit tests verify `100755 blob ` admission strictly for `.sh` scripts in `profile::definition_files()`, strict `100644 blob ` enforcement on `.rs` definitions, protocol marker, and `verify_carrier_modes`, and fail-closed rejection of symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
 - `tests/unit/core/repository_profile_tests.rs` verifies `qualifies_stale_accepted_base_inventory_reconciliation` admits stale accepted-base `reviewed_sources_digest` reconciliation when `base_tree == head_tree == candidate_sources_digest`, `changed_paths == []`, `base_oid != head_oid`, and commands are preserved verbatim, while failing closed (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`) on any candidate modification to workflows, scripts, manifests, Git file modes, or proof commands; `src/decapod/core/validation_rules.rs` (`fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade`) tests independent maintainer signature enforcement against a proof-relevant `scripts/check_source.py` change.
+- `.decapod/config.toml` reconciles `proof.required_profile.reviewed_sources_digest` (`sha256:526afaf8226d412781485dd66d907884b3fd2d6cde7da05447e6ac6f8e1a620c`) against `origin/master` (`ea7bd4275`, `v0.166.1`).
 
 ## `#1949` follow-up: non-ecosystem manifest scoping, multi-hop helper closure, untruncated text diagnostics, and removal of manual human CLI prompt
 

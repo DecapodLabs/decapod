@@ -913,6 +913,14 @@
         "src/decapod/core/validation_runtime/executor_contract.rs",
         "tests/unit/core/repository_profile_tests.rs"
       ]
+    },
+    {
+      "id": "reconcile-reviewed-sources-digest",
+      "summary": "Reconcile proof.required_profile.reviewed_sources_digest against origin/master ea7bd4275",
+      "input_digest": "sha256:052f86e259c40a325e75ae4e9f4695a98152059865aec91710ef5646fc3e1c70",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     }
   ],
   "intents": {
