@@ -3,6 +3,7 @@
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
+- **Stale accepted-base inventory reconciliation (`src/decapod/core/repository_profile.rs`)**: `qualifies_stale_accepted_base_inventory_reconciliation` computes `base_tree` and `head_tree` via `compute_git_tree_source_inventory` and admits the `repo.pr-readiness.v1` transition in `verify_accepted_transition` only when `commands_preserved && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`, both `base_tree.inventory.digest()` and `head_tree.inventory.digest()` equal `candidate_sources_digest`, and `compute_inventory_diff_paths(&base_tree, &head_tree)` is empty.
 
 ## Proof-relevant `repo.pr-readiness.v1` transition scoping, diagnostics, and human-auth guidance (`#1949`)
 
@@ -2107,7 +2108,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5076852a59b3ec59cc10d2903e971ea0b835f6650bccc52684ef7a3ed1ef73d0`
+- Repository signal fingerprint: `45dffe8b012ecb91ff4224c06b641ee789b16ae780b5130adee7bde6116d613e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

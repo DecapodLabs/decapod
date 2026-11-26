@@ -5,6 +5,7 @@
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
 
 - **Targeted `.sh` blob-mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)**: Allows both `100644 blob ` and `100755 blob ` in `executor_contract::capture` strictly for `.sh` paths returned by `profile::definition_files()` while preserving strict `100644 blob ` enforcement on `.rs` executor definitions, `assets/tools/source_ci_custody.rs` protocol marker, and `verify_carrier_modes`.
+- **Stale accepted-base `reviewed_sources_digest` reconciliation (`src/decapod/core/repository_profile.rs`)**: Eliminates false-positive `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` (`changed_paths=[]`) failures on consumer repos (such as Dactyl `origin/main` `fa4a10b7`) when the accepted base carries a stale `reviewed_sources_digest` in `.decapod/config.toml` while `commands_preserved && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`, `base_tree.inventory.digest() == candidate_sources_digest`, `head_tree.inventory.digest() == candidate_sources_digest`, and `changed_paths.is_empty()` (`qualifies_stale_accepted_base_inventory_reconciliation`). Any candidate modification to workflows, scripts, manifests, file modes, or proof commands still fails closed.
 
 ## Scope `repo.pr-readiness.v1` inventory transitions to proof-relevant inputs, surface transition diagnostics, and route governed WAL checkpoint via Dactyl write path (#1949)
 
@@ -1448,7 +1449,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5076852a59b3ec59cc10d2903e971ea0b835f6650bccc52684ef7a3ed1ef73d0`
+- Repository signal fingerprint: `45dffe8b012ecb91ff4224c06b641ee789b16ae780b5130adee7bde6116d613e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

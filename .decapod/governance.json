@@ -883,6 +883,15 @@
       "proof_refs": [
         "src/decapod/core/validation_runtime/executor_contract.rs"
       ]
+    },
+    "claim:stale-accepted-base-reconciliation": {
+      "statement": "qualifies_stale_accepted_base_inventory_reconciliation reconciles stale accepted_base reviewed_sources_digest only when base_oid != head_oid, commands_preserved and reviewed_commands_digest match verbatim, base_tree == head_tree == candidate_sources_digest, and changed_paths is empty.",
+      "falsifier": "Any candidate change to workflows, scripts, manifests, Git file modes, or proof commands succeeds without approval, or base_oid == head_oid bypasses release-only checks.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/repository_profile.rs",
+        "tests/unit/core/repository_profile_tests.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -892,6 +901,17 @@
       "input_digest": "sha256:aad619bb0a9ee3d6dd3194c3bc59f1ab26ab0b06b0c731f7d4dd9cf10d77f811",
       "proof_refs": [
         "src/decapod/core/validation_runtime/executor_contract.rs"
+      ]
+    },
+    {
+      "id": "bootstrap-sh-mode-and-stale-base-reconcile",
+      "summary": "Add self-hosting executor_contract regression coverage and qualifies_stale_accepted_base_inventory_reconciliation with negative tests",
+      "input_digest": "sha256:ae154f38bf9f02743a48ba58cda17e54bb310cb7abe337c47872c39ba624e566",
+      "proof_refs": [
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_rules.rs",
+        "src/decapod/core/validation_runtime/executor_contract.rs",
+        "tests/unit/core/repository_profile_tests.rs"
       ]
     }
   ],
@@ -934,11 +954,11 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "executor_contract change admits 100755 tracked .sh files only in profile::definition_files() while keeping .rs, protocol marker, and carrier modes strictly 100644; documented in INTENT, ARCHITECTURE, and INTERFACES.",
-          "reviewed_code_fingerprint": "5076852a59b3ec59cc10d2903e971ea0b835f6650bccc52684ef7a3ed1ef73d0",
-          "spec_material_hash": "cf3a8b0cd0a94a37c41a0be69aba73385d4f5b1887cd611d088fc3c59f9d6140"
+          "reason": "Documented executor_contract .sh 100755 mode bounds and qualifies_stale_accepted_base_inventory_reconciliation security invariants",
+          "reviewed_code_fingerprint": "45dffe8b012ecb91ff4224c06b641ee789b16ae780b5130adee7bde6116d613e",
+          "spec_material_hash": "edd7e5782e04251ce6e81b9688791800c56ff6ad0175fc06c47d25522bbfadf2"
         }
       ],
       "state": "APPROVED",
@@ -949,20 +969,32 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795694243Z"
+      "updated_at": "1795728770Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:ead51fbbe4e2bb6a053bddddb825605d79ed1442566b506b8d67e4483ad0a629",
+      "artifact_hash": "sha256:220866a4f7d531e8e1c791254f65a3700dc74eb3e092e5151a93a1f53b748897",
       "checks": [
         {
           "name": "cargo_clippy",
           "status": "passed"
         },
         {
+          "name": "cargo_clippy_all_targets_all_features",
+          "status": "passed"
+        },
+        {
           "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_consumer_readiness_42",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_test_lib_2062",
           "status": "passed"
         },
         {
@@ -992,10 +1024,17 @@
             "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8BTPHPR88ASXG8G4X3NGSS9": {
@@ -1021,6 +1060,31 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/validation_runtime/executor_contract.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "src/decapod/core/validation_runtime/executor_contract.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "tests/unit/core/repository_profile_tests.rs",
+                  "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)"
+                ],
+                "proof_refs": [
+                  "cargo_fmt",
+                  "cargo_clippy_all_targets_all_features",
+                  "cargo_test_lib_2062",
+                  "cargo_test_consumer_readiness_42"
+                ],
+                "scope": [
+                  "core"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1029,14 +1093,20 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)",
         "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2"
       ],
       "inspected_files": [
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_rules.rs",
         "src/decapod/core/validation_runtime/executor_contract.rs"
       ],
       "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
       "modified_files": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/validation_rules.rs",
+        "src/decapod/core/validation_runtime/executor_contract.rs",
+        "tests/unit/core/repository_profile_tests.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"

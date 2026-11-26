@@ -2377,4 +2377,233 @@ mod release_only_inventory_transition_tests {
         assert!(err.contains("scripts/leaf.sh"), "{err}");
         assert!(!err.contains("decapod govern policy approve"), "{err}");
     }
+
+    #[test]
+    fn stale_accepted_base_digest_with_empty_inventory_diff_reconciles_safely() {
+        let (dir, _prior_sha, stale_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        // Simulate accepted base advancing without refreshing `.decapod/config.toml`'s
+        // `reviewed_sources_digest`, leaving `stale_digest` on `origin/main` while
+        // the actual base Git tree inventory has `actual_base_digest`.
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.19.1", "tokio = \"1.0\"\n"),
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore(main): stale reviewed_sources_digest on base");
+        let actual_base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        assert_ne!(stale_digest, actual_base_digest);
+
+        // Candidate modifies only non-inventoried source and reconciles digest to match base==head.
+        fs::write(root.join("src/lib.rs"), "pub fn version() -> u32 { 42 }\n").unwrap();
+        let head_sha = commit_all(root, "fix: non-inventory source change");
+        assert!(changed_inventory_paths_between(root, &base_sha, &head_sha).is_empty());
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: stale_digest.clone(),
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: actual_base_digest.clone(),
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        for ci_local in [false, true] {
+            verify_accepted_transition(
+                root,
+                &base_sha,
+                &head_sha,
+                Some(&accepted_decl),
+                Some(&candidate_decl),
+                &cmds,
+                &cmds,
+                Some(&repo_contract),
+                Some(&repo_contract),
+                approval_input(ci_local),
+            )
+            .unwrap_or_else(|e| {
+                panic!("expected stale accepted-base reconciliation to succeed (ci_local={ci_local}): {e}")
+            });
+        }
+    }
+
+    #[test]
+    fn stale_accepted_base_reconciliation_rejects_any_candidate_inventory_or_command_change() {
+        let (dir, _prior_sha, stale_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        fs::create_dir_all(root.join("scripts")).unwrap();
+        fs::write(root.join("scripts/check.sh"), "#!/bin/sh\necho ok\n").unwrap();
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.19.1", "tokio = \"1.0\"\n"),
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore(main): base with stale digest");
+        let (cmds, repo_contract) = dactyl_contract();
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: stale_digest.clone(),
+        };
+
+        // 1. Candidate modifies workflow -> must fail closed.
+        fs::write(
+            root.join(".github/workflows/rust-contract.yml"),
+            "name: Rust Contract\non: [push]\n",
+        )
+        .unwrap();
+        let wf_head = commit_all(root, "chore: candidate edits workflow");
+        let wf_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &wf_head,
+            Some(&accepted_decl),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: wf_digest,
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err}"
+        );
+        assert!(err.contains(".github/workflows/rust-contract.yml"), "{err}");
+
+        // Reset to base for next isolated negative check.
+        git(root, &["reset", "--hard", &base_sha]);
+
+        // 2. Candidate modifies script -> must fail closed.
+        fs::write(root.join("scripts/check.sh"), "#!/bin/sh\necho mutated\n").unwrap();
+        let script_head = commit_all(root, "chore: candidate edits script");
+        let script_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &script_head,
+            Some(&accepted_decl),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: script_digest,
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err}"
+        );
+        assert!(err.contains("scripts/check.sh"), "{err}");
+
+        git(root, &["reset", "--hard", &base_sha]);
+
+        // 3. Candidate modifies manifest -> must fail closed.
+        fs::write(
+            root.join("Cargo.toml"),
+            cargo_toml("dactyl-db", "0.19.2", "tokio = \"1.0\"\n"),
+        )
+        .unwrap();
+        let manifest_head = commit_all(root, "chore: candidate edits Cargo.toml");
+        let manifest_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &manifest_head,
+            Some(&accepted_decl),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: manifest_digest,
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err}"
+        );
+        assert!(err.contains("Cargo.toml"), "{err}");
+
+        git(root, &["reset", "--hard", &base_sha]);
+
+        // 4. Candidate changes git mode of an inventoried script without changing bytes -> must fail closed.
+        git(root, &["update-index", "--chmod=+x", "scripts/check.sh"]);
+        git(
+            root,
+            &["commit", "-m", "chore: candidate flips script mode"],
+        );
+        let mode_head = git(root, &["rev-parse", "HEAD"]);
+        let mode_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &mode_head,
+            Some(&accepted_decl),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: mode_digest,
+            }),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err}"
+        );
+        assert!(err.contains("scripts/check.sh"), "{err}");
+
+        git(root, &["reset", "--hard", &base_sha]);
+
+        // 5. Candidate modifies proof commands (even with zero inventory changes) -> must fail closed.
+        let base_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+        let mut modified_cmds = cmds.clone();
+        modified_cmds[0].args.push("--offline".into());
+        let mut modified_contract = repo_contract.clone();
+        modified_contract.reviewed_commands_digest =
+            command_contract_digest(&modified_cmds, &modified_contract).unwrap();
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &base_sha,
+            Some(&accepted_decl),
+            Some(&ProfileDeclaration {
+                id: REQUIRED_PROFILE.into(),
+                reviewed_sources_digest: base_digest,
+            }),
+            &cmds,
+            &modified_cmds,
+            Some(&repo_contract),
+            Some(&modified_contract),
+            approval_input(false),
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+            "{err}"
+        );
+    }
 }

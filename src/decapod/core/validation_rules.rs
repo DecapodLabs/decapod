@@ -2585,20 +2585,11 @@ mod tests {
             )
             .unwrap();
         };
-        let inventory = crate::core::validation_runtime::discover_source_inventory(
+        let previous_inventory = crate::core::validation_runtime::discover_source_inventory(
             &fixture.options,
             &crate::core::bounded_process::Cancellation::default(),
         )
         .unwrap();
-        let digest = inventory.digest().unwrap();
-        // Model a release whose scanner did not yet inventory this check file.
-        let mut previous_inventory = inventory;
-        assert!(
-            previous_inventory
-                .files
-                .remove("scripts/check_source.py")
-                .is_some()
-        );
         let previous_digest = previous_inventory.digest().unwrap();
         fixture
             .proof
@@ -2608,11 +2599,23 @@ mod tests {
             .reviewed_sources_digest = previous_digest.clone();
         save_config(&fixture);
         write_signers(root, &maintainer);
-        fixture.commit("accept inventory measured by previous scanner");
+        fixture.commit("accept baseline proof inventory");
         git(root, &["push", "origin", "HEAD:main"]);
         let base = git(root, &["rev-parse", "refs/remotes/origin/main"]);
         let contract = fixture.proof.repository_contract.as_ref().unwrap();
         let command_digest = contract.reviewed_commands_digest.clone();
+        // Modify a proof-relevant script on the candidate branch so the inventory
+        // transition requires independent approval in CI.
+        let script_path = root.join("scripts/check_source.py");
+        let mut script = std::fs::read_to_string(&script_path).unwrap();
+        script.push_str("\n# upgraded proof check\n");
+        std::fs::write(&script_path, script).unwrap();
+        let inventory = crate::core::validation_runtime::discover_source_inventory(
+            &fixture.options,
+            &crate::core::bounded_process::Cancellation::default(),
+        )
+        .unwrap();
+        let digest = inventory.digest().unwrap();
         assert_ne!(digest, previous_digest);
         fixture
             .proof
@@ -2621,11 +2624,11 @@ mod tests {
             .unwrap()
             .reviewed_sources_digest = digest.clone();
         save_config(&fixture);
-        fixture.commit("review inventory measured by current scanner");
+        fixture.commit("review updated proof-relevant script inventory");
         let head = git(root, &["rev-parse", "HEAD"]);
         assert_eq!(
             git(root, &["diff", "--name-only", &base, &head]),
-            ".decapod/config.toml"
+            ".decapod/config.toml\nscripts/check_source.py"
         );
         let id = repository_profile::repo_policy_transition_id(
             &base,

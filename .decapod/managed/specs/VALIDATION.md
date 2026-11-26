@@ -1,5 +1,10 @@
 # Validation
 
+## Bootstrap `.sh` mode (`executor_contract`) & stale accepted-base `repo.pr-readiness.v1` reconciliation
+
+- `src/decapod/core/validation_runtime/executor_contract.rs` unit tests verify `100755 blob ` admission strictly for `.sh` scripts in `profile::definition_files()`, strict `100644 blob ` enforcement on `.rs` definitions, protocol marker, and `verify_carrier_modes`, and fail-closed rejection of symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
+- `tests/unit/core/repository_profile_tests.rs` verifies `qualifies_stale_accepted_base_inventory_reconciliation` admits stale accepted-base `reviewed_sources_digest` reconciliation when `base_tree == head_tree == candidate_sources_digest`, `changed_paths == []`, `base_oid != head_oid`, and commands are preserved verbatim, while failing closed (`ACCEPTED_REPOSITORY_CONTRACT_CHANGED`) on any candidate modification to workflows, scripts, manifests, Git file modes, or proof commands; `src/decapod/core/validation_rules.rs` (`fresh_ci_checkout_requires_independent_approval_after_inventory_upgrade`) tests independent maintainer signature enforcement against a proof-relevant `scripts/check_source.py` change.
+
 ## `#1949` follow-up: non-ecosystem manifest scoping, multi-hop helper closure, untruncated text diagnostics, and removal of manual human CLI prompt
 
 Verified on `origin/master` (`1134da6b1`, `v0.166.0`) inside isolated worktree `agent/clack-ivy-da170052-4ca1-4f15-8a7b-7cf632d83d5d/code_01m8aejkc2mfqakr-repository-work`:
@@ -2887,7 +2892,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5076852a59b3ec59cc10d2903e971ea0b835f6650bccc52684ef7a3ed1ef73d0`
+- Repository signal fingerprint: `45dffe8b012ecb91ff4224c06b641ee789b16ae780b5130adee7bde6116d613e`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
