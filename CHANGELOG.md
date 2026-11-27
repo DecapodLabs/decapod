@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.168.0](https://github.com/DecapodLabs/decapod/compare/v0.167.0...v0.168.0) - 2026-11-27
+
+### Fixed
+
+- *(storage)* admit bounded non-JSON reflex configs and record spec reviews
+
+### Other
+
+- *(specs)* refresh manifest config_input_hash
+- *(governance)* reconcile reviewed_sources_digest for v0.167.0 master
+- Merge commit '7b5d5c2fd393e9d14e6c34bfbc2e25abaf34e83f' into agent/decapod-storage/code_01m8d592e2smqy78-storage-parity-bounds
+- Merge remote-tracking branch 'origin/master' into agent/decapod-storage/code_01m8d592e2smqy78-storage-parity-bounds
+- Merge remote-tracking branch 'origin/master' into agent/decapod-storage/code_01m8d592e2smqy78-storage-parity-bounds
+- Merge remote-tracking branch 'origin/master' into agent/decapod-storage/code_01m8d592e2smqy78-storage-parity-bounds
+- Merge remote-tracking branch 'origin/master' into agent/decapod-storage/code_01m8d592e2smqy78-storage-parity-bounds
+- *(managed)* refresh specs manifest for v0.166.2 config hash
+- *(governance)* record current-PR falsifiable claims for section 10
+- *(section10)* enforce non-task bounds, O(N) compaction benchmarks, Cloud boundaries, and resilience parity
+
 ## [0.167.0](https://github.com/DecapodLabs/decapod/compare/v0.166.5...v0.167.0) - 2026-11-27
 
 ### Added
