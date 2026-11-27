@@ -902,6 +902,11 @@
       "id": "cp_01M8FFZ_SPEC_REVIEW",
       "summary": "Recorded updated INTERFACES.md review bound to clean fbd09eeb fingerprint",
       "input_digest": "sha256:d252fa1f6a3b3b0b6805f245c906fdcbaef6c98f1ef99ad978954f7b5b25018a"
+    },
+    {
+      "id": "cp_01M8FG2_SPECS_ALL_REVIEWED",
+      "summary": "Re-reviewed ARCHITECTURE.md and SECURITY.md against clean fbd09eeb fingerprint",
+      "input_digest": "sha256:9502d9b90bb70dffcd86d1bc3f5b931a4cccf3bda5b38b35f0dcf2b71db16a44"
     }
   ],
   "intents": {
@@ -947,8 +952,8 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only generated codebase attestation fingerprint refreshed; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
-          "reviewed_code_fingerprint": "a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff",
+          "reason": "Only generated codebase attestation fingerprint refreshed to fbd09eeb; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
+          "reviewed_code_fingerprint": "fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3",
           "spec_material_hash": "ccd61a497b5f57ae1adfd92d566dfa77e7cbcab97ae2dacc5d3d3e2e2e4e77d3"
         },
         {
@@ -961,8 +966,8 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only generated codebase attestation fingerprint refreshed; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
-          "reviewed_code_fingerprint": "a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff",
+          "reason": "Only generated codebase attestation fingerprint refreshed to fbd09eeb; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
+          "reviewed_code_fingerprint": "fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -974,13 +979,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795817448Z"
+      "updated_at": "1795817484Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:21282555b10cc2ee640f04015222f23d2935b0ae2d6225373c601f68bdadf1ca",
+      "artifact_hash": "sha256:c866e4ba5455086ac59c15bba9b6212195534c421622f8c6d64178154c3db600",
       "checks": [
         {
           "name": "doc-alignment",
@@ -992,6 +997,10 @@
         },
         {
           "name": "spec_review",
+          "status": "passed"
+        },
+        {
+          "name": "spec_reviews_all",
           "status": "passed"
         },
         {
@@ -1034,10 +1043,17 @@
             "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8FEMKH0KDBR3C0T4G01VQ64": {
@@ -1115,6 +1131,24 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/SECURITY.md"
+                ],
+                "proof_refs": [
+                  "spec_reviews_all"
+                ],
+                "scope": [
+                  ".decapod/**",
+                  "assets/tools/**",
+                  "docs/book/**"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1131,7 +1165,9 @@
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/SECURITY.md",
         "assets/tools/source_ci_custody.rs",
         "assets/tools/source_ci_profile.rs",
         "assets/tools/source_ci_workflow_owned.rs",
