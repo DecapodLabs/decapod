@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.169.2](https://github.com/DecapodLabs/decapod/compare/v0.169.1...v0.169.2) - 2026-11-27
+
+### Added
+
+- *(docs)* publish mdBook canonicals, sitemap.xml, and llms.txt
+
+### Other
+
+- *(govern)* re-review ARCHITECTURE.md and SECURITY.md against clean fingerprint
+- *(govern)* re-review INTERFACES.md against clean codebase fingerprint
+- *(specs)* refresh living specs without bazel symlinks
+
 ## [0.169.1](https://github.com/DecapodLabs/decapod/compare/v0.169.0...v0.169.1) - 2026-11-27
 
 ### Added
