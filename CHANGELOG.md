@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.4](https://github.com/DecapodLabs/decapod/compare/v0.166.3...v0.166.4) - 2026-11-27
+
+### Other
+
+- *(decapod)* refresh 0.166.3 Dockerfile pin for PR #1962
+- Merge remote-tracking branch 'origin/master' into agent/decapod-docs/docs_01m8bmgp4g4caw1g-cloud-pricing-admin
+- Merge remote-tracking branch 'origin/master' into agent/decapod-docs/docs_01m8bmgp4g4caw1g-cloud-pricing-admin
+- *(proof)* reconcile reviewed_sources_digest for v0.166.2
+- *(book)* update Decapod Cloud pricing and Organization Admin links
+
 ## [0.166.3](https://github.com/DecapodLabs/decapod/compare/v0.166.2...v0.166.3) - 2026-11-27
 
 ### Fixed
