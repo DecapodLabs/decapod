@@ -894,6 +894,14 @@
         "tests/agent_rpc_suite.rs",
         "tests/unit/core/projection_tests.rs"
       ]
+    },
+    {
+      "id": "cicd_01m8bmj4mbf5pn71-v1662-digest",
+      "summary": "Reconcile reviewed_sources_digest for v0.166.2 baseline",
+      "input_digest": "sha256:d739e448c510509743be1bb56dacd99894a4012fd01d6f4f02b5d9baba623849",
+      "proof_refs": [
+        "tests/agent_rpc_suite.rs"
+      ]
     }
   ],
   "intents": {
