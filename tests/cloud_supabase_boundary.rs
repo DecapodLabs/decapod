@@ -313,6 +313,27 @@ mod enabled {
                     .unwrap();
                     continue;
                 }
+                let is_account_status = headers
+                    .starts_with("post /functions/v1/decapod-onboarding/account-status ")
+                    || headers
+                        .starts_with("post /functions/v1/propodus-onboarding/account-status ");
+                if is_account_status && path != "/account-status" {
+                    let body = json!({
+                        "version": 1,
+                        "account_id": "00000000-0000-0000-0000-000000000404",
+                        "project_id": "example/supabase-proof",
+                        "status": "active",
+                        "backend_authorized": true
+                    })
+                    .to_string();
+                    write!(
+                        stream,
+                        "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    )
+                    .unwrap();
+                    continue;
+                }
                 let rpc = headers.starts_with("post /rest/v1/rpc/");
                 let is_query = headers.starts_with("post /query ")
                     || headers.starts_with("post /rest/v1/rpc/dactyl_query_v1 ");
@@ -356,6 +377,23 @@ mod enabled {
                 if rpc {
                     assert_eq!(request["request"]["version"], 1);
                     request = request["request"].take();
+                }
+                if is_account_status && request.get("operation").is_none() {
+                    let body = json!({
+                        "version": 1,
+                        "account_id": "00000000-0000-0000-0000-000000000404",
+                        "project_id": "example/supabase-proof",
+                        "status": "active",
+                        "backend_authorized": true
+                    })
+                    .to_string();
+                    write!(
+                        stream,
+                        "HTTP/1.1 200 Fixture\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    )
+                    .unwrap();
+                    continue;
                 }
                 if is_reconciliation {
                     assert_context(&request);

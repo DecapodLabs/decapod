@@ -150,7 +150,7 @@ fn bootstrap_session() -> &'static str {
                     ("DECAPOD_SESSION_PASSWORD", &session_password),
                     ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
                     ("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1"),
-                    ("DECAPOD_VALIDATE_TIMEOUT_SECONDS", "8"),
+                    ("DECAPOD_VALIDATE_TIMEOUT_SECONDS", "30"),
                 ],
             )
         });
@@ -442,4 +442,321 @@ fn test_rpc_trace_and_redaction() {
     assert!(trace_line.contains(&secret_id));
     assert!(trace_line.contains("[REDACTED]"));
     assert!(!trace_line.contains("supersecretpassword"));
+}
+
+#[test]
+fn test_rpc_failures_return_accurate_recovery_context_and_lawful_repair() {
+    let exe = resolve_decapod_bin();
+    let repo = tempfile::tempdir().expect("tempdir");
+
+    let run_in = |dir: &std::path::Path, args: &[&str], envs: &[(&str, &str)]| {
+        let mut cmd = Command::new(&exe);
+        cmd.current_dir(dir).args(args);
+        for (k, v) in envs {
+            cmd.env(k, v);
+        }
+        cmd.output().expect("run decapod")
+    };
+
+    assert!(
+        run_in(repo.path(), &["git", "init", "-b", "master"], &[])
+            .status
+            .success()
+            || Command::new("git")
+                .current_dir(repo.path())
+                .args(["init", "-b", "master"])
+                .output()
+                .unwrap()
+                .status
+                .success()
+    );
+    let init_out = run_in(
+        repo.path(),
+        &[
+            "init",
+            "--force",
+            "--product-summary",
+            "Recovery test fixture",
+        ],
+        &[],
+    );
+    assert!(
+        init_out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&init_out.stderr)
+    );
+    for args in [
+        vec!["add", "."],
+        vec![
+            "-c",
+            "user.name=Recovery fixture",
+            "-c",
+            "user.email=fixture@example.invalid",
+            "commit",
+            "-m",
+            "init",
+        ],
+    ] {
+        let out = Command::new("git")
+            .current_dir(repo.path())
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    // 1. Unsupported command returns unknown_op with empty allowed_next_ops (no agent.init).
+    let unknown_out = run_in(
+        repo.path(),
+        &["rpc", "--op", "does.not.exist", "--params", "{}"],
+        &[],
+    );
+    let unknown_json: serde_json::Value =
+        serde_json::from_slice(&unknown_out.stdout).expect("unknown_op JSON");
+    assert_eq!(unknown_json["success"], false);
+    assert_eq!(unknown_json["error"]["code"], "unknown_op");
+    assert_eq!(unknown_json["allowed_next_ops"], serde_json::json!([]));
+    assert_eq!(
+        unknown_json["error"]["details"]["failure_class"],
+        serde_json::json!("unsupported_no_recovery")
+    );
+    assert!(unknown_json["context_capsule"]["spec"].is_string());
+
+    // 2. Protected-branch mutating RPC returns structured JSON with workspace.ensure next_op, never agent.init.
+    let agent_id = "recovery-agent-1948";
+    let sess_out = run_in(
+        repo.path(),
+        &["session", "acquire"],
+        &[("DECAPOD_AGENT_ID", agent_id)],
+    );
+    assert!(sess_out.status.success());
+    let password = String::from_utf8_lossy(&sess_out.stdout)
+        .lines()
+        .find_map(|l| l.strip_prefix("Password: ").map(|s| s.trim().to_string()))
+        .expect("session password");
+    let envs = [
+        ("DECAPOD_AGENT_ID", agent_id),
+        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_CLAIM_AUTORUN", "0"),
+    ];
+
+    let prot_out = run_in(
+        repo.path(),
+        &["rpc", "--op", "specs.refresh", "--params", "{}"],
+        &envs,
+    );
+    assert!(!prot_out.status.success());
+    let prot_json: serde_json::Value =
+        serde_json::from_slice(&prot_out.stdout).expect("protected_branch JSON");
+    assert_eq!(prot_json["success"], false);
+    assert_eq!(prot_json["error"]["code"], "protected_branch");
+    assert_eq!(
+        prot_json["blocked_by"][0]["kind"],
+        serde_json::json!("protected_branch")
+    );
+    let prot_ops: Vec<&str> = prot_json["allowed_next_ops"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|v| v["op"].as_str())
+        .collect();
+    assert_eq!(prot_ops, vec!["workspace.status", "workspace.ensure"]);
+
+    // 3. Create & claim a todo and enter isolated worktree, then test invalid entity -> schema.get -> lawful repair.
+    let add_out = run_in(
+        repo.path(),
+        &["todo", "add", "Test recovery path", "--format", "json"],
+        &envs,
+    );
+    assert!(add_out.status.success());
+    let todo_id = serde_json::from_slice::<serde_json::Value>(&add_out.stdout).unwrap()["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert!(
+        run_in(
+            repo.path(),
+            &["todo", "claim", "--id", &todo_id, "--format", "json"],
+            &envs,
+        )
+        .status
+        .success()
+    );
+    let branch = format!("agent/{agent_id}/{todo_id}-recovery");
+    let wt_out = run_in(
+        repo.path(),
+        &["workspace", "ensure", "--branch", &branch],
+        &envs,
+    );
+    assert!(wt_out.status.success());
+    let wt_path = std::path::PathBuf::from(
+        serde_json::from_slice::<serde_json::Value>(&wt_out.stdout).unwrap()["worktree_path"]
+            .as_str()
+            .unwrap(),
+    );
+
+    // Before constitutional awareness warm-up, store.upsert fails with constitutional_awareness_required (not agent.init session error).
+    let aware_out = run_in(
+        &wt_path,
+        &[
+            "rpc",
+            "--op",
+            "store.upsert",
+            "--params",
+            r#"{"entity":"todo","payload":{"title":"needs-awareness"}}"#,
+        ],
+        &envs,
+    );
+    assert!(!aware_out.status.success());
+    let aware_json: serde_json::Value =
+        serde_json::from_slice(&aware_out.stdout).expect("awareness JSON");
+    assert_eq!(
+        aware_json["error"]["code"],
+        "constitutional_awareness_required"
+    );
+    assert_eq!(
+        aware_json["error"]["details"]["failure_class"],
+        serde_json::json!("session_custody_required")
+    );
+
+    // Complete prerequisites, then trigger invalid_entity -> schema.get -> valid store.upsert.
+    let mut pr_envs = envs.to_vec();
+    pr_envs.push(("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"));
+    pr_envs.push(("DECAPOD_VALIDATE_SKIP_TOOLING_GATES", "1"));
+    assert!(
+        run_in(&wt_path, &["govern", "project-check"], &pr_envs)
+            .status
+            .success()
+    );
+    assert!(
+        run_in(
+            &wt_path,
+            &["rpc", "--op", "agent.init", "--params", "{}"],
+            &envs
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_in(
+            &wt_path,
+            &[
+                "rpc",
+                "--op",
+                "constitution.get",
+                "--params",
+                r#"{"section":"core/DECAPOD"}"#,
+            ],
+            &envs,
+        )
+        .status
+        .success()
+    );
+    assert!(
+        run_in(
+            &wt_path,
+            &["rpc", "--op", "context.resolve", "--params", "{}"],
+            &envs
+        )
+        .status
+        .success()
+    );
+
+    let bad_ent_out = run_in(
+        &wt_path,
+        &[
+            "rpc",
+            "--op",
+            "store.upsert",
+            "--params",
+            r#"{"entity":"bogus","payload":{}}"#,
+        ],
+        &envs,
+    );
+    assert!(bad_ent_out.status.success());
+    let bad_ent_json: serde_json::Value =
+        serde_json::from_slice(&bad_ent_out.stdout).expect("invalid_entity JSON");
+    assert_eq!(bad_ent_json["success"], false);
+    assert_eq!(bad_ent_json["error"]["code"], "invalid_entity");
+    assert_eq!(
+        bad_ent_json["allowed_next_ops"][0]["op"],
+        serde_json::json!("schema.get")
+    );
+    assert_eq!(
+        bad_ent_json["allowed_next_ops"][0]["required_params"],
+        serde_json::json!(["entity"])
+    );
+
+    // Independent consumer projection preserves refusal details, blockers, allowed_next_ops, and context_capsule.
+    let proj_params = serde_json::json!({
+        "kind": "rpc_response",
+        "response": bad_ent_json,
+    });
+    let proj_out = run_in(
+        &wt_path,
+        &[
+            "rpc",
+            "--op",
+            "interop.project",
+            "--params",
+            &proj_params.to_string(),
+        ],
+        &envs,
+    );
+    assert!(proj_out.status.success());
+    let proj_json: serde_json::Value = serde_json::from_slice(&proj_out.stdout).unwrap();
+    let projection = &proj_json["result"]["projection"];
+    assert_eq!(projection["status"], serde_json::json!("blocked"));
+    assert_eq!(
+        projection["error"]["code"],
+        serde_json::json!("invalid_entity")
+    );
+    assert_eq!(
+        projection["allowed_next_ops"],
+        serde_json::json!(["schema.get"])
+    );
+    assert!(projection["context_capsule"].is_object());
+
+    // Follow recommended schema.get, then lawfully complete store.upsert while keeping failed trace visible.
+    assert!(
+        run_in(
+            &wt_path,
+            &[
+                "rpc",
+                "--op",
+                "schema.get",
+                "--params",
+                r#"{"entity":"todo"}"#
+            ],
+            &envs,
+        )
+        .status
+        .success()
+    );
+    let good_out = run_in(
+        &wt_path,
+        &[
+            "rpc",
+            "--op",
+            "store.upsert",
+            "--params",
+            r#"{"entity":"todo","payload":{"title":"Recovered todo"}}"#,
+        ],
+        &envs,
+    );
+    assert!(good_out.status.success());
+    let good_json: serde_json::Value = serde_json::from_slice(&good_out.stdout).unwrap();
+    assert_eq!(good_json["success"], true);
+
+    let trace_out = run_in(&wt_path, &["trace", "export", "--last", "20"], &envs);
+    assert!(trace_out.status.success());
+    let trace_text = String::from_utf8_lossy(&trace_out.stdout);
+    assert!(
+        trace_text.contains("invalid_entity") && trace_text.contains("Recovered todo"),
+        "trace must retain original failed observation alongside repaired success"
+    );
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
+    "accepted_commit": "78c5c4d7fb55448cd855a27c07d75d36cd1de9fb",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -870,133 +870,93 @@
     }
   },
   "change": {
-    "id": "section11-gov-01m8d5",
-    "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
+    "id": "change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
+    "base_commit": "78c5c4d7fb55448cd855a27c07d75d36cd1de9fb",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:constitution-integrity-1774": {
-      "statement": "assets/build/constitution_admission.rs rejects authority_review on non-binding advisory nodes, rejects sections.enforcement/claims assertions, and enforces core/SPECS.sections.apply non-self-promotion retention.",
-      "falsifier": "An advisory node carries authority_review, sections.enforcement compiles, or removing core/SPECS.sections.apply admission-registry rule builds cleanly.",
-      "status": "supported",
+    "claim:cloud-auto-reconcile-and-disposition-1896": {
+      "statement": "Unset project routing automatically reconciles unambiguous originating repositories after login; CloudAuthErrorCode handles Propodus commercial/seat/reservation dispositions and admin_contact_required without duplicate purchase CTAs or SQLite fallback; dactyl-db =0.21.0 OperationalDisposition maps Retry/Reconcile/InspectAndDecide/Stop cleanly.",
+      "falsifier": "An unambiguous logged-in repository still requires manual decapod cloud projects/use, an unauthorized teammate receives a purchase prompt or SQLite fallback, or OperationalDisposition loses OutcomeUnknown/retry/conflict fidelity.",
+      "status": "open",
       "proof_refs": [
-        "assets/build/constitution_admission.rs",
-        "tests/constitution_claims.rs",
-        "tests/constitution_scaffolding.rs"
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "tests/cloud_managed_session.rs",
+        "tests/cloud_supabase_boundary.rs",
+        "tests/release_dependency_policy.rs"
       ]
     },
-    "claim:knowledge-convergence-657": {
-      "statement": "Legacy entries without merge_key surface scope-normalized contradictions, explicit --supersedes / store.upsert supersedes_id clears contradicted targets while preserving history, hurt-biased records exclude as negative_retrieval_bias, and url: rejects non-HTTPS non-loopback or whitespace provenance.",
-      "falsifier": "Equally authoritative entries without merge_key hide contradictions, explicit supersession fails to filter target, hurt-dominated entries stay promoted, or insecure url: enters context.",
-      "status": "supported",
+    "claim:cloud-workspace-parity-1886": {
+      "statement": "Cloud-accepted repositories keep workspace ensure, container relay, and policy parity usable without falling back to local SQLite.",
+      "falsifier": "An authorized Cloud-accepted repo fails workspace ensure/container relay parity or falls back silently to SQLite.",
+      "status": "open",
       "proof_refs": [
-        "tests/derived_replay_1936.rs",
-        "tests/knowledge_promotion_cli.rs",
-        "tests/unit/plugins/knowledge_tests.rs"
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/workspace.rs",
+        "tests/cloud_workspace_validation_1886.rs"
       ]
     },
-    "claim:phase-admission-cloud-grants-1763-1568": {
-      "statement": "EvaluationPhase x RuleAuthority matrix omits Publication rules pre-publication, refuses forged artifacts without TerminalEvidence, exercises actual-binary denied->repair->admitted verify-checkpoints, denies external bypasses, and qualifies Propodus 037 get_grant over loopback HTTP+DPoP.",
-      "falsifier": "Pre-publication runs Publication gates, forged evidence_artifacts admits without TerminalEvidence, uncheckpointed or external commit passes, or revoked/expired Propodus 037 grant allows maintenance.",
-      "status": "supported",
+    "claim:rpc-failure-recovery-context-1948": {
+      "statement": "Every agent-facing RPC/MCP/HTTP failure derives accurate failure-specific recovery context and allowed_next_ops without hardcoding speculative agent.init.",
+      "falsifier": "An agent-facing failure returns hardcoded speculative context_capsule: None or wrong allowed_next_ops or leaks raw secret tokens.",
+      "status": "open",
       "proof_refs": [
-        "tests/cloud_wave_parity.rs",
-        "tests/gate_admission_and_resilience.rs",
-        "tests/trust_egress_gate.rs"
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
+        "tests/agent_rpc_suite.rs",
+        "tests/unit/core/projection_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ckpt-section11-gov",
-      "summary": "Section 11 governance, knowledge supersession/bias, constitution admission, gate matrix, and Propodus 037 grant parity",
-      "input_digest": "sha256:61e62dec5f36e5c995a7b1fb003e548a1c1cc077a9d078a4b1fc17b58fdf40c2",
+      "id": "cp1-wave4-pr1-clean",
+      "summary": "Wave 4 PR 1 combining #1896 (dactyl-db =0.21.0 OperationalDisposition + auto-reconcile), #1886 (cloud workspace parity), and #1948 (RPC recovery context) on v0.166.5",
+      "input_digest": "sha256:c8f404c8248340873a9fc39d61443655b66377cec7ec62d15477a96b6af1c03f",
       "proof_refs": [
-        "tests/cloud_wave_parity.rs",
-        "tests/constitution_scaffolding.rs",
-        "tests/gate_admission_and_resilience.rs",
-        "tests/unit/plugins/knowledge_tests.rs"
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/rpc.rs",
+        "tests/release_dependency_policy.rs"
       ]
     },
     {
-      "id": "reconcile-reviewed-sources-digest",
-      "summary": "Reconcile proof.required_profile.reviewed_sources_digest for v0.166.2 Cargo.toml/Cargo.lock and #1774 assets/build/constitution_admission.rs",
-      "input_digest": "sha256:68f8585db79167f1d5060cb8fce4da83158414b65549ebf95d9c590845c71d70",
+      "id": "cp2-fresh-attempt1-ci",
+      "summary": "Record full c4ba12707 CI evidence and trigger fresh attempt-1 custody archives for PR 1 (#1896, #1886, #1948)",
+      "input_digest": "sha256:7e7a6a89178fa680235671964c8437010997452e52db16846f3e0d9225125587",
       "proof_refs": [
-        ".decapod/config.toml",
-        "assets/build/constitution_admission.rs"
-      ]
-    },
-    {
-      "id": "refresh-manifest-config-hash",
-      "summary": "Refresh .decapod/managed/.manifest.json config_input_hash after config.toml reviewed_sources_digest reconciliation",
-      "input_digest": "sha256:e22862b8575c2b645a89ed381f8ea4ddd867c957f917b65c57b9157041d27ce2",
-      "proof_refs": [
-        ".decapod/managed/.manifest.json"
-      ]
-    },
-    {
-      "id": "code_01m8d524nefyjt0n-slot2-merge",
-      "summary": "Merge origin/master ad86c6840 (#1961, #1965, #1962) and reconcile v0.166.3 specs and inventory digest",
-      "input_digest": "sha256:c3dd30fb04760dd05684310745062a9fc100e3fd05e748d64e22b66c4b6fdb89",
-      "proof_refs": [
-        "validate_v01663"
-      ]
-    },
-    {
-      "id": "code_01m8d524nefyjt0n-slot2-v1664",
-      "summary": "Merge origin/master fecd81a1d (v0.166.4 Cargo.toml/Cargo.lock/CHANGELOG.md) and update inventory digest",
-      "input_digest": "sha256:5067afea775e2fb18bd218df87f9439173bc17adf2c6524adb57d24f1b23ca01",
-      "proof_refs": [
-        "validate_v01663_on_fecd81a1d"
-      ]
-    },
-    {
-      "id": "code_01m8d524nefyjt0n-slot2-v1664-pin",
-      "summary": "Refresh v0.166.4 Dockerfile pin and specs manifest",
-      "input_digest": "sha256:5461612322a68b25126054b8e6199d979852d82d928a4cd0bfb25067871feda3",
-      "proof_refs": [
-        "validate_v01664"
-      ]
-    },
-    {
-      "id": "code_01m8d524nefyjt0n-slot2-spec-reviews",
-      "summary": "Refresh ARCHITECTURE, INTERFACES, and SECURITY spec reviews after origin/master fecd81a1d merge",
-      "input_digest": "sha256:6a532c749f2d3810b1ae8f93b44e520ad69b95fd04615b900c2f0c2dd4f2badf",
-      "proof_refs": [
-        "verify_checkpoints_publication_material"
-      ]
-    },
-    {
-      "id": "code_01m8d524nefyjt0n-slot2-sec-review",
-      "summary": "Re-review SECURITY.md against merged fecd81a1d code fingerprint",
-      "input_digest": "sha256:fabb9756abac305bf937c3c7f81f8833acf69e3b95e872fe167ab8ec84a8faa5",
-      "proof_refs": [
-        "verify_checkpoints_publication_material"
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/rpc.rs",
+        "tests/release_dependency_policy.rs"
       ]
     }
   ],
   "intents": {
-    "intent:code_01m8d524nefyjt0n": {
+    "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree on origin/master v0.166.2; CARGO_BUILD_JOBS=2; Clack untouched; no root-checkout edits"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "assets/build/constitution_admission.rs",
-        "src/decapod/",
-        "tests/"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:code_01m8d524nefyjt0n",
+      "id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Close Section 11 Governance & Context gaps (#657 #1774 #1772 #1763 #1367 #1735 #1568 #1944) cleanly in decapod with cross-repo #1944 checks (Clack untouched), official v0.166.2 validation, and issue reconciliation.",
-      "refined_intent": "Implement knowledge contradiction/supersession/negative-bias checks (#657), constitution admission enforcement guards (#1774), phase/authority gate + repair admission test (#1763), Propodus 037 delegated-grant parser + DPoP wire test (#1568), paired agy #1772 + cold #1367 telemetry, and #1944/#1735 cross-repo verification.",
+      "raw_intent": "Wave 4 PR 1: combine #1896 (dactyl-db 0.21.0 + OperationalDisposition + auto-reconcile), #1886, and #1948",
+      "refined_intent": "Wave 4 PR 1: combine #1896 (dactyl-db 0.21.0 + OperationalDisposition + auto-reconcile), #1886, and #1948",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -1009,12 +969,9 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Close remaining Section 11 governance and context gaps: provenance-aware contradiction surfacing, explicit supersession and negative-bias exclusion (#657); constitution non-self-promotion and core/SPECS.sections.apply enforcement (#1774); paired agy relevance/anti-bloat and cold Continue PR #42 empirical telemetry (#1772 #1367); phase/authority gate matrix and verified repair-vs-bypass trace (#1763); Propodus 037 Cloud delegated-grant wire parity (#1568); cross-repo trust/egress negative controls (#1944); and ADR #1735 / PR #1766/#1788 reconciliation.",
+      "intent": "Wave 4 PR 1: combine #1896 (dactyl-db 0.21.0 + OperationalDisposition + auto-reconcile), #1886, and #1948",
       "phases": [],
       "proof_hooks": [
-        "cargo test --lib plugins::knowledge::tests",
-        "cargo test --lib core::db_maintenance::tests",
-        "cargo test --test constitution_scaffolding --test constitution_claims --test knowledge_promotion_cli --test gate_admission_and_resilience --test cloud_wave_parity --test trust_egress_gate",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -1022,100 +979,88 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md against merged fecd81a1d (#1961/#1962/#1966) and Section 11 code fingerprint 3def4264",
-          "reviewed_code_fingerprint": "3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567",
-          "spec_material_hash": "4054ee2cd4da686df4a9ad86d4b0224431285cf365f6fcc3e8fadc2ee464fb89"
+          "reason": "Refreshed v0.166.5 entrypoints/Dockerfile pin, updated release_dependency_policy to dactyl-db =0.21.0, and documented Wave 4 #1896/#1886/#1948.",
+          "reviewed_code_fingerprint": "7110cd836fb10aca1359a1a76fc1c072549e27f957649755bf8416443fc64570",
+          "spec_material_hash": "7180f0b29cb3fafebca04c114df1cbd2b54f5a94fe61c0fad63f83786f02a30f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md against merged fecd81a1d (#1961/#1962/#1966) and Section 11 code fingerprint 3def4264",
-          "reviewed_code_fingerprint": "3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567",
-          "spec_material_hash": "01dd88eadd3fe79052503e8d296a1505c1b023a2be182d2e63d4fc9a8aed14df"
+          "reason": "Refreshed v0.166.5 specs, updated release_dependency_policy to dactyl-db =0.21.0, and documented Wave 4 #1896/#1886/#1948.",
+          "reviewed_code_fingerprint": "7110cd836fb10aca1359a1a76fc1c072549e27f957649755bf8416443fc64570",
+          "spec_material_hash": "641fb8c706abb4b713df9f3c39aeccb195ddf0b3d00d293c199a1e08d81da74d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified SECURITY.md invariants remain unchanged against merged fecd81a1d codebase fingerprint 3def4264",
-          "reviewed_code_fingerprint": "3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567",
+          "reason": "Fail-closed cloud session, non-fallback SQLite, credential redaction, and container boundary invariants preserved under v0.166.5.",
+          "reviewed_code_fingerprint": "7110cd836fb10aca1359a1a76fc1c072549e27f957649755bf8416443fc64570",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Section 11 Governance & Context (#657 #1774 #1772 #1763 #1367 #1735 #1568 #1944)",
+      "title": "Wave 4 PR 1: combine #1896 (dactyl-db 0.21.0 + OperationalDisposition + auto-reconcile), #1886, and #1948",
       "todo_ids": [
-        "code_01m8d524nefyjt0n"
+        "cicd_01m8dz3c4mz7zg3k"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795758916Z"
+      "updated_at": "1795768539Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree on origin/master v0.166.2; CARGO_BUILD_JOBS=2; Clack untouched; no root-checkout edits"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:c6259655713de0e016035e181d0beb4d6d5bf9f661fc2b77711cd698ca0a7472",
+      "artifact_hash": "sha256:494be066107ce9ed8fd0691d425d93f13e5c5f4898bd9c8fb84b33e8f252aed6",
       "checks": [
         {
-          "name": "clippy_and_fmt",
+          "name": "bazel_cargo_inputs_policy",
           "status": "passed"
         },
         {
-          "name": "cloud_wave_parity_and_sqlite_maintenance",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "constitution_and_claims",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "db_maintenance_unit",
+          "name": "release_dependency_policy",
           "status": "passed"
         },
         {
-          "name": "gate_admission_and_resilience",
-          "status": "passed"
-        },
-        {
-          "name": "knowledge_unit",
-          "status": "passed"
-        },
-        {
-          "name": "local_tests_and_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "trust_egress_cross_repo",
+          "name": "wave4_combined_suite",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:code_01m8d524nefyjt0n",
+            "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:code_01m8d524nefyjt0n",
+            "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:code_01m8d524nefyjt0n",
+            "detail": "trajectory:branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW",
             "event_id": "event:4",
-            "intent_id": "intent:code_01m8d524nefyjt0n",
+            "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:code_01m8d524nefyjt0n",
+            "detail": "trajectory:branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW",
             "event_id": "event:5",
-            "intent_id": "intent:code_01m8d524nefyjt0n",
+            "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -1124,61 +1069,56 @@
         "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "code_01m8d524nefyjt0n": {
+          "branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW": {
             "evidence_only": true,
-            "id": "code_01m8d524nefyjt0n",
-            "intent_id": "intent:code_01m8d524nefyjt0n",
+            "id": "branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW",
+            "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/plugins/knowledge.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "assets/build/constitution_admission.rs",
-                  "assets/build/constitution_admission.rs",
-                  "src/decapod/plugins/federation_ext.rs",
-                  "src/decapod/plugins/knowledge.rs",
-                  "src/decapod/cli.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/rpc.rs",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "MODULE.bazel.lock",
+                  "src/decapod/core/cloud_client.rs",
+                  "src/decapod/core/cloud_project.rs",
+                  "src/decapod/core/error.rs",
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/rpc.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/core/db_maintenance.rs",
-                  "tests/unit/plugins/knowledge_tests.rs",
-                  "tests/knowledge_promotion_cli.rs",
-                  "tests/constitution_scaffolding.rs",
-                  "tests/gate_admission_and_resilience.rs",
-                  "tests/cloud_wave_parity.rs",
-                  "13/13 knowledge unit, 9/9 docs unit, 8/8 db_maintenance unit, 36/36 constitution_scaffolding, 4/4 constitution_claims, 6/6 cloud_wave_parity, 11/11 derived_replay_1936, 4/4 gate_admission_and_resilience, 6/6 knowledge_promotion_cli, 19/19 sqlite_maintenance, 5/5 trust_egress_gate (decapod), 5/5 trust_and_egress (dactyl v0.19.1), Propodus backend+deno trust tests; paired agy #1772 & cold #1367 cargo test passed."
+                  "tests/release_dependency_policy.rs",
+                  "fmt, clippy, bazel //:cargo_inputs_policy, release_dependency_policy (5/5), lib rpc:: (2/2), lib projection (60/60, 2 ignored), lib cloud_ (97/97), cloud_supabase_boundary (55/55), cloud_workspace_validation_1886 (5/5), agent_rpc_suite (6/6), doc_alignment (5/5), cloud_dpop_e2e_1878 (3/3), cloud_managed_session (32/32), cloud_tenancy_parity_1895 (2/2), cloud_admin_boundary passed."
                 ],
                 "proof_refs": [
-                  "knowledge_unit",
-                  "db_maintenance_unit",
-                  "constitution_and_claims",
-                  "gate_admission_and_resilience",
-                  "cloud_wave_parity_and_sqlite_maintenance",
-                  "trust_egress_cross_repo",
-                  "clippy_and_fmt"
+                  "fmt",
+                  "clippy",
+                  "bazel_cargo_inputs_policy",
+                  "release_dependency_policy",
+                  "wave4_combined_suite"
                 ],
                 "scope": [
-                  "assets/build/constitution_admission.rs",
-                  "src/decapod/",
-                  "tests/"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
                 "action": "trajectory.record",
-                "command": "merge origin/master ad86c6840 and reconcile v0.166.3",
                 "custody_event_id": "event:5",
-                "observations": [],
+                "observations": [
+                  "Verified CI 45961076469 on c4ba12707 (38/39 attempt 1 + Supabase consumer attempt 2 after ETXTBSY flake); cutting clean attempt-1 commit for full single-attempt custody archives."
+                ],
                 "proof_refs": [
-                  "local_tests_and_clippy"
+                  "release_dependency_policy"
                 ],
                 "scope": [
-                  "assets/build/constitution_admission.rs",
-                  "src/decapod/",
-                  "tests/"
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -1187,41 +1127,42 @@
           }
         }
       },
-      "declared_commands": [
-        "merge origin/master ad86c6840 and reconcile v0.166.3"
-      ],
+      "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "13/13 knowledge unit, 9/9 docs unit, 8/8 db_maintenance unit, 36/36 constitution_scaffolding, 4/4 constitution_claims, 6/6 cloud_wave_parity, 11/11 derived_replay_1936, 4/4 gate_admission_and_resilience, 6/6 knowledge_promotion_cli, 19/19 sqlite_maintenance, 5/5 trust_egress_gate (decapod), 5/5 trust_and_egress (dactyl v0.19.1), Propodus backend+deno trust tests; paired agy #1772 & cold #1367 cargo test passed."
+        "Verified CI 45961076469 on c4ba12707 (38/39 attempt 1 + Supabase consumer attempt 2 after ETXTBSY flake); cutting clean attempt-1 commit for full single-attempt custody archives.",
+        "fmt, clippy, bazel //:cargo_inputs_policy, release_dependency_policy (5/5), lib rpc:: (2/2), lib projection (60/60, 2 ignored), lib cloud_ (97/97), cloud_supabase_boundary (55/55), cloud_workspace_validation_1886 (5/5), agent_rpc_suite (6/6), doc_alignment (5/5), cloud_dpop_e2e_1878 (3/3), cloud_managed_session (32/32), cloud_tenancy_parity_1895 (2/2), cloud_admin_boundary passed."
       ],
       "inspected_files": [
-        "assets/build/constitution_admission.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/plugins/knowledge.rs"
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/rpc.rs"
       ],
-      "intent_id": "intent:code_01m8d524nefyjt0n",
+      "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
       "modified_files": [
-        "assets/build/constitution_admission.rs",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
+        "Cargo.lock",
+        "Cargo.toml",
+        "MODULE.bazel.lock",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/workspace.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plugins/federation_ext.rs",
-        "src/decapod/plugins/knowledge.rs",
-        "tests/cloud_wave_parity.rs",
-        "tests/constitution_scaffolding.rs",
-        "tests/gate_admission_and_resilience.rs",
-        "tests/knowledge_promotion_cli.rs",
-        "tests/unit/plugins/knowledge_tests.rs"
+        "tests/release_dependency_policy.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "assets/build/constitution_admission.rs",
-        "src/decapod/",
-        "tests/"
+        "root"
       ],
-      "run_id": "code_01m8d524nefyjt0n",
+      "run_id": "branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8d524nefyjt0n",
+      "task_id": "cicd_01m8dz3c4mz7zg3k",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

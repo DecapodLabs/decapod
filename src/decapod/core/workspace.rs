@@ -950,7 +950,7 @@ pub fn ensure_workspace(
     refresh_workspace_release_surfaces(&worktree_path)?;
 
     // 2. Ensure container (if requested)
-    if config.use_container {
+    if config.use_container && !status.container.in_container {
         if let Some(blocker) = container_snapshot_policy_blocker(&worktree_path) {
             status = get_workspace_status(&worktree_path)?;
             status.can_work = false;
@@ -1010,6 +1010,36 @@ fn ensure_cloud_workspace(
     let identity = crate::core::repo_identity::resolve_repository_identity(&main_repo)?;
     let source_inventory = root_isolation(repo_root)?;
     let status = get_workspace_status(repo_root)?;
+    if status.git.in_worktree
+        && config
+            .branch
+            .as_deref()
+            .is_some_and(|branch| branch != status.git.current_branch)
+    {
+        return Err(DecapodError::ValidationError(
+            "WORKSPACE_DESTINATION_MISMATCH: this checkout is already on another branch; provision the independent task's separate workspace from the repository root".into(),
+        ));
+    }
+
+    if status.can_work
+        && status.git.in_worktree
+        && !status.git.is_protected
+        && is_canonical_decapod_workspace_path(repo_root)
+        && (!config.use_container || status.container.in_container)
+        && crate::core::cloud_workspace::is_container_relay_active()
+    {
+        crate::core::cloud_workspace::check_cloud_authoring(&main_repo, repo_root, agent_id, true)?;
+        initialize_workbranch_governance_at(
+            repo_root,
+            agent_id,
+            config.base_branch.as_deref(),
+            None,
+        )?;
+        refresh_workspace_release_surfaces(repo_root)?;
+        let mut ensured = get_workspace_status(repo_root)?;
+        ensured.root_isolation = Some(source_inventory);
+        return Ok(ensured);
+    }
 
     let hosted_tasks =
         crate::core::cloud_workspace::list_hosted_open_tasks_blocking(&main_repo, &identity)?;
@@ -1081,7 +1111,7 @@ fn ensure_cloud_workspace(
     )?;
     refresh_workspace_release_surfaces(&worktree_path)?;
 
-    if config.use_container {
+    if config.use_container && !status.container.in_container {
         let runtime = container_runtime::find_container_runtime()?;
         ownership.require_container(&runtime)?;
         custody_record.container_expected = true;

@@ -90,6 +90,8 @@ pub struct ToolOperationProjection {
     pub blockers: Vec<BlockerProjection>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub interlock: Option<InterlockProjection>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_capsule: Option<crate::core::rpc::ContextCapsule>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub allowed_next_ops: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -102,6 +104,8 @@ pub struct ToolOperationProjection {
 pub struct ErrorProjection {
     pub code: String,
     pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub details: Option<serde_json::Value>,
 }
 
 /// Classify a response into an observed status without inventing results:
@@ -122,7 +126,19 @@ pub fn classify_response(resp: &RpcResponse) -> OperationStatus {
         | "unauthorized"
         | "session_required"
         | "mandate_violation"
-        | "scope_violation" => OperationStatus::Refused,
+        | "scope_violation"
+        | "worktree_isolation_required"
+        | "protected_branch"
+        | "constitutional_awareness_required"
+        | "constitutional_awareness_stale"
+        | "policy_denied"
+        | "human_authorization_required"
+        | "accepted_repository_contract_changed"
+        | "controller_contract_unsupported"
+        | "admin_required"
+        | "owner_required"
+        | "mfa_step_up_required"
+        | "repo_access_denied" => OperationStatus::Refused,
         _ => OperationStatus::Failed,
     }
 }
@@ -146,7 +162,7 @@ pub fn project_rpc_response(resp: &RpcResponse) -> ToolOperationProjection {
             .blocked_by
             .iter()
             .map(|b| BlockerProjection {
-                kind: b.kind.clone(),
+                kind: b.kind,
                 message: b.message.clone(),
                 resolve_hint: b.resolve_hint.clone(),
             })
@@ -155,10 +171,12 @@ pub fn project_rpc_response(resp: &RpcResponse) -> ToolOperationProjection {
             code: i.code.clone(),
             outcome: project_interlock_status(&i.code),
         }),
+        context_capsule: resp.context_capsule.clone(),
         allowed_next_ops: resp.allowed_next_ops.iter().map(|a| a.op.clone()).collect(),
         error: resp.error.as_ref().map(|e| ErrorProjection {
             code: e.code.clone(),
             message: e.message.clone(),
+            details: e.details.clone(),
         }),
         source: "rpc_response".to_string(),
     }

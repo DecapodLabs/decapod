@@ -58,6 +58,7 @@ struct CloudFixtureState {
     expires_at: String,
     drop_first_bind_ack: bool,
     bound_operation: Option<(String, Value)>,
+    governance_decisions: BTreeMap<String, Value>,
     calls: Vec<String>,
 }
 
@@ -75,6 +76,7 @@ impl CloudFixtureState {
             expires_at,
             drop_first_bind_ack: false,
             bound_operation: None,
+            governance_decisions: BTreeMap::new(),
             calls: Vec::new(),
         }
     }
@@ -280,6 +282,61 @@ impl CloudControlServer {
                             "expires_at": st.expires_at,
                         }),
                     )
+                }
+            }
+            "/rest/v1/rpc/propodus_governance_v1" => {
+                let req = body.get("request").unwrap_or(&body);
+                let action = req["action"].as_str().unwrap_or("");
+                let decision_id = req["decision_id"].as_str().unwrap_or("").to_string();
+                match action {
+                    "authorize_exception" => {
+                        let record = json!({
+                            "version": 1,
+                            "project_id": req["project_id"],
+                            "decision_id": decision_id,
+                            "capability": req["capability"],
+                            "obligation_id": req["obligation_id"],
+                            "base_commit": req["base_commit"],
+                            "candidate_commit": req["candidate_commit"],
+                            "affected_commit": req["affected_commit"],
+                            "tree_oid": req["tree_oid"],
+                            "status": "valid_historical_exception",
+                            "current_generation_matches": true,
+                            "authority_basis": "verified_repo_admin",
+                            "expires_at": st.expires_at,
+                            "authority_expires_at": st.expires_at,
+                        });
+                        st.governance_decisions.insert(decision_id.clone(), record);
+                        (
+                            200,
+                            json!({
+                                "version": 1,
+                                "status": "authorized",
+                                "project_id": req["project_id"],
+                                "decision_id": decision_id,
+                                "capability": req["capability"],
+                                "obligation_id": req["obligation_id"],
+                                "base_commit": req["base_commit"],
+                                "candidate_commit": req["candidate_commit"],
+                                "affected_commit": req["affected_commit"],
+                                "tree_oid": req["tree_oid"],
+                            }),
+                        )
+                    }
+                    "verify_decision" => {
+                        if let Some(found) = st.governance_decisions.get(&decision_id).cloned() {
+                            (200, found)
+                        } else {
+                            (
+                                404,
+                                json!({"code": "governance_decision_not_found", "message": "not found"}),
+                            )
+                        }
+                    }
+                    _ => (
+                        400,
+                        json!({"code": "invalid_request", "message": "unsupported governance action"}),
+                    ),
                 }
             }
             _ => (
@@ -1219,4 +1276,556 @@ esac
         "{swapped}"
     );
     assert!(!repo.join(".decapod/data/decapod.db").exists());
+}
+
+#[test]
+fn accepted_cloud_workspace_ensure_non_ci_validate_policy_approve_and_container_relay() {
+    let srv = CloudControlServer::start(CloudFixtureState::active());
+    let tmp = TempDir::new().unwrap();
+    let repo = tmp.path().join("repo");
+    let machine = TempDir::new().unwrap();
+    fs::create_dir_all(&repo).unwrap();
+    let baselines = init_accepted_cloud_repo(&repo, true);
+
+    managed::seed_ready(
+        &repo,
+        machine.path(),
+        &srv.origin,
+        PROJECT,
+        Session {
+            access_token: managed::ACCESS.into(),
+            refresh_token: Some(managed::REFRESH.into()),
+            expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+        },
+    );
+
+    // 1. Unknown branch task ID must fail closed rather than binding an unrelated claimed task.
+    let unknown_branch_ensure = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .args([
+        "workspace",
+        "ensure",
+        "--branch",
+        "agent/w2-agent/feat_0000000000000000-missing",
+    ])
+    .current_dir(&repo)
+    .output()
+    .unwrap();
+    assert!(
+        !unknown_branch_ensure.status.success(),
+        "ensure with nonexistent branch task ID must fail closed"
+    );
+    assert!(
+        String::from_utf8_lossy(&unknown_branch_ensure.stderr).contains("TODO_CUSTODY_REQUIRED"),
+        "stderr={}",
+        String::from_utf8_lossy(&unknown_branch_ensure.stderr)
+    );
+
+    // 2. `workspace ensure` without `--branch` auto-discovers the claimed hosted task.
+    let ensure_auto = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .env("DATASTORE", "sqlite")
+    .args(["workspace", "ensure"])
+    .current_dir(&repo)
+    .output()
+    .unwrap();
+    assert!(
+        ensure_auto.status.success(),
+        "workspace ensure without --branch failed: stderr={}\nstdout={}",
+        String::from_utf8_lossy(&ensure_auto.stderr),
+        String::from_utf8_lossy(&ensure_auto.stdout),
+    );
+    let ensure_json: Value = serde_json::from_slice(&ensure_auto.stdout).unwrap();
+    assert_eq!(ensure_json["can_work"], true);
+    let wt_path = PathBuf::from(ensure_json["worktree_path"].as_str().unwrap());
+    assert!(
+        ensure_json["branch"].as_str().unwrap().contains(TASK_ID),
+        "auto branch must include hosted task id: {ensure_json}"
+    );
+
+    // 3. `workspace ensure --branch <different>` from inside an existing worktree must fail with WORKSPACE_DESTINATION_MISMATCH.
+    let mismatch = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .args([
+        "workspace",
+        "ensure",
+        "--branch",
+        &format!("agent/w2-agent/{TASK_ID}-other"),
+    ])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(!mismatch.status.success());
+    assert!(
+        String::from_utf8_lossy(&mismatch.stderr).contains("WORKSPACE_DESTINATION_MISMATCH"),
+        "stderr={}",
+        String::from_utf8_lossy(&mismatch.stderr)
+    );
+
+    // 4. `workspace status` succeeds cleanly on Cloud worktree.
+    let status_out = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .args(["workspace", "status"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        status_out.status.success(),
+        "workspace status failed: stderr={}",
+        String::from_utf8_lossy(&status_out.stderr)
+    );
+    let status_json: Value = serde_json::from_slice(&status_out.stdout).unwrap();
+    assert_eq!(status_json["workspace"]["can_work"], true);
+
+    // 5. Prepare plan, specs, trajectory, and commit, then run non-CI `decapod validate --format json` (no GITHUB_ACTIONS env).
+    let approve_plan = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .args(["govern", "plan", "approve"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(approve_plan.status.success());
+
+    let add_claim = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .args([
+        "govern",
+        "artifacts",
+        "claim",
+        "--id",
+        "claim:cloud-1886",
+        "--statement",
+        "Cloud workspace and validation parity executes without SQLite fallback",
+        "--falsifier",
+        "Any SQLite file mutation or missing custody error",
+        "--status",
+        "open",
+    ])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        add_claim.status.success(),
+        "govern artifacts claim failed: stdout={}\nstderr={}",
+        String::from_utf8_lossy(&add_claim.stdout),
+        String::from_utf8_lossy(&add_claim.stderr),
+    );
+
+    let intent_path = wt_path.join(".decapod/managed/specs/INTENT.md");
+    let mut intent = fs::read_to_string(&intent_path).unwrap();
+    intent.push_str("\n- Non-CI Cloud validation and policy approval parity entry.\n");
+    fs::write(&intent_path, intent).unwrap();
+    assert!(
+        apply_cloud_env(
+            &mut Command::new(decapod_bin()),
+            machine.path(),
+            &srv.origin,
+            "w2-agent",
+        )
+        .args(["rpc", "--op", "specs.refresh"])
+        .current_dir(&wt_path)
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+    for spec in ["ARCHITECTURE", "INTERFACES"] {
+        assert!(
+            apply_cloud_env(
+                &mut Command::new(decapod_bin()),
+                machine.path(),
+                &srv.origin,
+                "w2-agent",
+            )
+            .args([
+                "govern",
+                "plan",
+                "review-spec",
+                "--path",
+                &format!(".decapod/managed/specs/{spec}.md"),
+                "--disposition",
+                "unchanged-with-reason",
+                "--reason",
+                "Cloud parity test updates INTENT only.",
+            ])
+            .current_dir(&wt_path)
+            .output()
+            .unwrap()
+            .status
+            .success()
+        );
+    }
+    run_git(&wt_path, &["add", "-A"]);
+    assert!(
+        apply_cloud_env(
+            &mut Command::new(decapod_bin()),
+            machine.path(),
+            &srv.origin,
+            "w2-agent",
+        )
+        .args([
+            "govern",
+            "artifacts",
+            "checkpoint",
+            "--id",
+            "chk_non_ci",
+            "--summary",
+            "Cloud non-CI validation parity",
+        ])
+        .current_dir(&wt_path)
+        .output()
+        .unwrap()
+        .status
+        .success()
+    );
+    run_git(&wt_path, &["add", "-A"]);
+    run_git(&wt_path, &["commit", "-m", "feat: cloud non-ci validation"]);
+
+    let validate_pre_build = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .env_remove("GITHUB_ACTIONS")
+    .env_remove("BUILDKITE")
+    .env("DATASTORE", "sqlite")
+    .args(["validate", "--pre-build", "--format", "json"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        validate_pre_build.status.success(),
+        "non-CI pre-build validate failed: stdout={}\nstderr={}",
+        String::from_utf8_lossy(&validate_pre_build.stdout),
+        String::from_utf8_lossy(&validate_pre_build.stderr),
+    );
+    let pre_build_json: Value = serde_json::from_slice(&validate_pre_build.stdout).unwrap();
+    assert_eq!(pre_build_json["passed"], true, "{pre_build_json}");
+    assert_eq!(pre_build_json["fail_count"], 0, "{pre_build_json}");
+    assert_eq!(pre_build_json["scope"], "pre_build", "{pre_build_json}");
+
+    // Full non-CI validate must reach readiness (proving Cloud custody/governance admission without
+    // SQLite fallback) and fail closed only on canonical_local_target=true requiring backend="local".
+    let validate_non_ci = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .env_remove("GITHUB_ACTIONS")
+    .env_remove("BUILDKITE")
+    .env("DATASTORE", "sqlite")
+    .args(["validate", "--format", "json"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        !validate_non_ci.status.success(),
+        "canonical_local_target=true on backend=cloud must fail closed: stdout={}",
+        String::from_utf8_lossy(&validate_non_ci.stdout),
+    );
+    let non_ci_stdout = String::from_utf8_lossy(&validate_non_ci.stdout);
+    assert!(
+        non_ci_stdout.contains("LOCAL_TARGET_POLICY_UNACCEPTED"),
+        "expected LOCAL_TARGET_POLICY_UNACCEPTED, got: {non_ci_stdout}"
+    );
+    assert!(
+        !non_ci_stdout.contains("PUBLIC_CLOUD_BACKEND_UNAVAILABLE"),
+        "unexpected PUBLIC_CLOUD_BACKEND_UNAVAILABLE: {non_ci_stdout}"
+    );
+
+    let validate_ci = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .env("GITHUB_ACTIONS", "true")
+    .env("DATASTORE", "sqlite")
+    .args(["validate", "--format", "json"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        validate_ci.status.success(),
+        "CI-local validate failed: stdout={}\nstderr={}",
+        String::from_utf8_lossy(&validate_ci.stdout),
+        String::from_utf8_lossy(&validate_ci.stderr),
+    );
+    let val_json: Value = serde_json::from_slice(&validate_ci.stdout).unwrap();
+    assert_eq!(val_json["status"], "ok", "{val_json}");
+    assert_eq!(val_json["report"]["fail_count"], 0, "{val_json}");
+    assert_eq!(val_json["scope"], "ci_local", "{val_json}");
+
+    // 6. Verify `decapod govern policy approve --scope repo.pr-readiness.v1` works on Cloud (not blocked by PUBLIC_CLOUD_BACKEND_UNAVAILABLE).
+    let base_sha = String::from_utf8(
+        run_git(
+            &wt_path,
+            &["rev-parse", "refs/remotes/origin/master^{commit}"],
+        )
+        .stdout,
+    )
+    .unwrap()
+    .trim()
+    .to_string();
+    let head_sha = String::from_utf8(run_git(&wt_path, &["rev-parse", "HEAD^{commit}"]).stdout)
+        .unwrap()
+        .trim()
+        .to_string();
+    let accepted_cfg: toml::Value = toml::from_slice(
+        &run_git(
+            &wt_path,
+            &["show", &format!("{base_sha}:.decapod/config.toml")],
+        )
+        .stdout,
+    )
+    .unwrap();
+    let candidate_cfg: toml::Value = toml::from_slice(
+        &run_git(
+            &wt_path,
+            &["show", &format!("{head_sha}:.decapod/config.toml")],
+        )
+        .stdout,
+    )
+    .unwrap();
+    let transition_id = decapod::core::repository_profile::repo_policy_transition_id(
+        &base_sha,
+        &head_sha,
+        accepted_cfg["proof"]["required_profile"]["reviewed_sources_digest"]
+            .as_str()
+            .unwrap(),
+        candidate_cfg["proof"]["required_profile"]["reviewed_sources_digest"]
+            .as_str()
+            .unwrap(),
+        accepted_cfg["proof"]["repository_contract"]["reviewed_commands_digest"]
+            .as_str()
+            .unwrap(),
+        candidate_cfg["proof"]["repository_contract"]["reviewed_commands_digest"]
+            .as_str()
+            .unwrap(),
+    )
+    .unwrap();
+    let policy_approve = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        machine.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .args([
+        "govern",
+        "policy",
+        "approve",
+        "--id",
+        &transition_id,
+        "--scope",
+        decapod::core::repository_profile::POLICY_TRANSITION_SCOPE,
+    ])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        policy_approve.status.success(),
+        "govern policy approve on Cloud failed: stdout={}\nstderr={}",
+        String::from_utf8_lossy(&policy_approve.stdout),
+        String::from_utf8_lossy(&policy_approve.stderr),
+    );
+    assert!(
+        String::from_utf8_lossy(&policy_approve.stdout)
+            .contains("DECAPOD_REPO_TRANSITION_DECISION_ID="),
+        "{}",
+        String::from_utf8_lossy(&policy_approve.stdout)
+    );
+
+    // 7. Verify `workspace ensure --container` inside an already-running Cloud container relay succeeds without host credentials.
+    use decapod::core::cloud_workspace::{
+        CloudCustodyStore, CloudRelayExecutor, HostCloudRelayHandler,
+    };
+    use decapod::core::container_signer::{
+        ContainerCloudRelayHandler, ContainerRelayOperation, ContainerSignerPolicy,
+        HostContainerSignerServer, WorkspaceCredentialsConfig,
+    };
+    struct RelayExec {
+        origin: String,
+    }
+    impl CloudRelayExecutor for RelayExec {
+        fn execute(
+            &self,
+            operation: ContainerRelayOperation,
+            rpc_op: &str,
+            payload: &Value,
+        ) -> Result<Value, decapod::core::error::DecapodError> {
+            let connector = dactyl_db::CloudConnector::discover(&self.origin)
+                .map_err(decapod::core::cloud_client::transport_error)?;
+            let kind = match operation {
+                ContainerRelayOperation::DactylQuery
+                | ContainerRelayOperation::ProofControlRead => dactyl_db::OperationKind::Read,
+                ContainerRelayOperation::DactylBatch
+                | ContainerRelayOperation::ProofControlWrite => dactyl_db::OperationKind::Write,
+            };
+            connector
+                .control_request(
+                    rpc_op,
+                    payload,
+                    Some(managed::ACCESS),
+                    kind,
+                    dactyl_db::ResourceBudget::default(),
+                )
+                .map_err(decapod::core::cloud_client::transport_error)
+        }
+    }
+    let custody = CloudCustodyStore::at(machine.path().join("custody"))
+        .load(&repo, &wt_path)
+        .unwrap()
+        .expect("saved custody");
+    let canonical_wt = wt_path.canonicalize().unwrap_or_else(|_| wt_path.clone());
+    let relay_handler: Arc<dyn ContainerCloudRelayHandler> = Arc::new(HostCloudRelayHandler {
+        project_id: PROJECT.to_string(),
+        workspace_id: custody.workspace_id.clone(),
+        worktree_path: canonical_wt,
+        task_id: TASK_ID.to_string(),
+        custody_id: custody.custody_id.clone(),
+        invocation_id: "inv_inside_container".to_string(),
+        admission: None,
+        executor: Arc::new(RelayExec {
+            origin: srv.origin.clone(),
+        }),
+    });
+    let sock_path = tmp.path().join("inside-relay.sock");
+    let _relay_server = HostContainerSignerServer::bind_with_relay(
+        &sock_path,
+        ContainerSignerPolicy {
+            allowed_repository: PROJECT.to_string(),
+            allowed_origin: srv.origin.clone(),
+            allowed_agent_id: "w2-agent".to_string(),
+            credentials: WorkspaceCredentialsConfig {
+                git_transport: None,
+                github_api: None,
+                propodus_cloud: Some("signer-broker".to_string()),
+            },
+            session_expires_at: time::OffsetDateTime::now_utc().unix_timestamp() + 900,
+            revoked: Arc::new(AtomicBool::new(false)),
+            device_key_store: None,
+            access_token_digest: None,
+        },
+        Some(relay_handler),
+    )
+    .unwrap();
+    let empty_container_home = TempDir::new().unwrap();
+    let in_container_ensure = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        empty_container_home.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .env("DECAPOD_CONTAINER", "1")
+    .env("DECAPOD_CLOUD_CONTAINER_RELAY", "1")
+    .env("DECAPOD_CONTAINER_SIGNER_SOCKET", &sock_path)
+    .env("DECAPOD_CLOUD_PROJECT_ID", PROJECT)
+    .env("DECAPOD_CLOUD_TASK_ID", TASK_ID)
+    .env("DECAPOD_CLOUD_WORKSPACE_ID", &custody.workspace_id)
+    .env("DECAPOD_CLOUD_CUSTODY_ID", &custody.custody_id)
+    .env("DECAPOD_CLOUD_INVOCATION_ID", "inv_inside_container")
+    .env(
+        "DECAPOD_CLOUD_TASK_REVISION",
+        custody.task_revision.unwrap().to_string(),
+    )
+    .env(
+        "DECAPOD_CLOUD_FENCING_GENERATION",
+        custody.fencing_generation.unwrap().to_string(),
+    )
+    .args(["workspace", "ensure", "--container"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        in_container_ensure.status.success(),
+        "in-container workspace ensure --container failed: stderr={}\nstdout={}",
+        String::from_utf8_lossy(&in_container_ensure.stderr),
+        String::from_utf8_lossy(&in_container_ensure.stdout),
+    );
+    let in_container_json: Value = serde_json::from_slice(&in_container_ensure.stdout).unwrap();
+    assert_eq!(in_container_json["in_container"], true);
+    assert_eq!(in_container_json["can_work"], true);
+
+    let in_container_validate = apply_cloud_env(
+        &mut Command::new(decapod_bin()),
+        empty_container_home.path(),
+        &srv.origin,
+        "w2-agent",
+    )
+    .env("DECAPOD_CONTAINER", "1")
+    .env("DECAPOD_CLOUD_CONTAINER_RELAY", "1")
+    .env("DECAPOD_CONTAINER_SIGNER_SOCKET", &sock_path)
+    .env("DECAPOD_CLOUD_PROJECT_ID", PROJECT)
+    .env("DECAPOD_CLOUD_TASK_ID", TASK_ID)
+    .env("DECAPOD_CLOUD_WORKSPACE_ID", &custody.workspace_id)
+    .env("DECAPOD_CLOUD_CUSTODY_ID", &custody.custody_id)
+    .env("DECAPOD_CLOUD_INVOCATION_ID", "inv_inside_container")
+    .env(
+        "DECAPOD_CLOUD_TASK_REVISION",
+        custody.task_revision.unwrap().to_string(),
+    )
+    .env(
+        "DECAPOD_CLOUD_FENCING_GENERATION",
+        custody.fencing_generation.unwrap().to_string(),
+    )
+    .env("GITHUB_ACTIONS", "true")
+    .args(["validate", "--format", "json"])
+    .current_dir(&wt_path)
+    .output()
+    .unwrap();
+    assert!(
+        in_container_validate.status.success(),
+        "in-container validate failed: stderr={}\nstdout={}",
+        String::from_utf8_lossy(&in_container_validate.stderr),
+        String::from_utf8_lossy(&in_container_validate.stdout),
+    );
+    let in_container_val_json: Value =
+        serde_json::from_slice(&in_container_validate.stdout).unwrap();
+    assert_eq!(
+        in_container_val_json["status"], "ok",
+        "{in_container_val_json}"
+    );
+    assert_eq!(
+        in_container_val_json["report"]["fail_count"], 0,
+        "{in_container_val_json}"
+    );
+    assert_eq!(
+        in_container_val_json["scope"], "ci_local",
+        "{in_container_val_json}"
+    );
+
+    for (path, before) in &baselines {
+        assert_eq!(
+            sha256_file(path),
+            *before,
+            "existing SQLite/WAL file {} must stay bit-for-bit unchanged",
+            path.display()
+        );
+    }
 }
