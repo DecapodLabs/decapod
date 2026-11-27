@@ -76,11 +76,22 @@ pub fn validate(graph: &Value) -> Result<(), String> {
                     "CONSTITUTION_AUTHORITY_REVIEW: {id}: name core/SPECS, repository PR review, accepted-source basis and truthful non-machine-enforced guidance; native gates have their own execution proof"
                 ));
             }
-        } else if binding != "advisory" {
+        } else if binding == "advisory" {
+            if !BINDING_NODES.contains(&id.as_str()) && node.get("authority_review").is_some() {
+                return Err(format!(
+                    "CONSTITUTION_AUTHORITY_REVIEW: {id}: advisory nodes cannot carry binding authority_review metadata"
+                ));
+            }
+        } else {
             return Err(format!("CONSTITUTION_BINDING_INVALID: {id}"));
         }
         // 'proof' prose describes expected checks. It is not an execution ledger.
-        if node.get("enforcement").is_some() || node.get("claims").is_some() {
+        if node.get("enforcement").is_some()
+            || node.get("claims").is_some()
+            || node["sections"]
+                .as_object()
+                .is_some_and(|secs| secs.contains_key("enforcement") || secs.contains_key("claims"))
+        {
             return Err(format!(
                 "CONSTITUTION_UNSUPPORTED_ENFORCEMENT: {id}: source assertions are not executed gate evidence"
             ));
@@ -123,6 +134,21 @@ pub fn validate(graph: &Value) -> Result<(), String> {
                 "CONSTITUTION_BINDING_CONTROL_REMOVED: {id}: accepted control requires an explicit admission-code review"
             ));
         }
+    }
+    let specs_apply_guarded = nodes
+        .get("core/SPECS")
+        .and_then(|node| node["sections"]["apply"].as_array())
+        .is_some_and(|lines| {
+            lines.iter().any(|line| {
+                line.as_str().is_some_and(|text| {
+                    text.contains("admission registry") && text.contains("advisory")
+                })
+            })
+        });
+    if !specs_apply_guarded {
+        return Err(
+            "CONSTITUTION_BINDING_CONTROL_REMOVED: core/SPECS.sections.apply must retain the non-self-promotion advisory admission rule".to_string(),
+        );
     }
     for references in graph["lookup"]
         .as_object()

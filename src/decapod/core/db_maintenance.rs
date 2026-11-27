@@ -476,10 +476,14 @@ pub fn parse_cloud_delegated_grant_status(
         .get("revoked")
         .and_then(serde_json::Value::as_bool)
         .unwrap_or(true);
-    let expired = root
-        .get("expired")
-        .and_then(serde_json::Value::as_bool)
-        .unwrap_or(true);
+    let expired = match root.get("expired").and_then(serde_json::Value::as_bool) {
+        Some(flag) => flag,
+        None => root
+            .get("expires_at")
+            .and_then(serde_json::Value::as_str)
+            .and_then(|ts| crate::core::time::parse_rfc3339(ts).ok())
+            .is_none_or(|exp| exp <= time::OffsetDateTime::now_utc()),
+    };
     let u64_field = |key: &str| -> u64 {
         root.get(key)
             .and_then(serde_json::Value::as_u64)
@@ -502,6 +506,7 @@ pub fn parse_cloud_delegated_grant_status(
         .unwrap_or(session_generation);
     let grant_policy_digest = root
         .get("grant_policy_digest")
+        .or_else(|| root.get("policy_digest"))
         .and_then(serde_json::Value::as_str)
         .map(str::trim)
         .filter(|s| !s.is_empty())

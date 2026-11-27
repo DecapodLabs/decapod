@@ -14,6 +14,23 @@
 - **Durability/replay extensions & reconciliation docs (`tests/crash_durability_1934.rs`, `tests/lease_fencing_consistency_1935.rs`, `tests/derived_replay_1936.rs`, `tests/cloud_cli_boundary.rs`, `tests/single_datastore.rs`, `docs/datastore-v2/proof-ledger.json`)**:
   - Adds Cloud `OutcomeUnknown` crash isolation, clock-skew lease/custody checks, deterministic Cloud parity replay checks, single-DB `36`-table reconciliation (`#1118`/`#1132`), `MANAGED_CLI_FIXTURE_UNAVAILABLE` hosted proof status (`#1369`/`#1378`), and explicit `#1220` pure-Rust vs `dactyl-db` SQLite conflict record.
 
+## Section 11 governance, knowledge convergence, constitution admission, and Cloud delegated grants (#657, #1774, #1763, #1568)
+
+- **Provenance-aware knowledge convergence & supersession (`src/decapod/plugins/knowledge.rs`, `src/decapod/plugins/federation_ext.rs`, `src/decapod/lib.rs`)**:
+  - `canonical_conflict_scope` normalizes `"root"` and `"repo"` into `"repo_wide"` before conflict grouping, `conflict_group_key` groups `merge_key` records and falls back to `(scope, normalized_claim_or_title)` when `merge_key` is unset, and `context_supersedes_map` reads `node_edges` (`edge_type = 'supersedes'`) for `federation` context entries so superseded targets are filtered from operative packets without dropping history.
+  - `resolve_context` aggregates per-entry `helped` / `hurt` feedback, excludes records where `hurt >= 2 && hurt > helped` under `excluded` reason `"negative_retrieval_bias"`, sorts active entries by `(net_helpfulness DESC, helped DESC, rank ASC)` and deterministic `ts`, and `is_valid_provenance` enforces HTTPS (or loopback HTTP) plus control/whitespace rejection on `url:` sources.
+  - `add_scoped_knowledge_inner` handles both `add_scoped_knowledge` and `add_attested_superseding_knowledge`, validating explicit `--supersedes` targets via `supersede_knowledge` and recording `supersedes_id` during `handle_store_upsert`.
+- **Constitution admission non-self-promotion guards (`assets/build/constitution_admission.rs`)**:
+  - `validate` checks `!BINDING_NODES.contains(&id.as_str()) && node.get("authority_review").is_some()` on `"advisory"` nodes (`CONSTITUTION_AUTHORITY_REVIEW`), rejects `sections.enforcement` / `sections.claims` alongside top-level `enforcement` / `claims` (`CONSTITUTION_UNSUPPORTED_ENFORCEMENT`), and verifies `core/SPECS.sections.apply` retains `"admission registry"` and `"advisory"` (`CONSTITUTION_BINDING_CONTROL_REMOVED`).
+- **Propodus `037` delegated-grant wire parser & parity test (`src/decapod/core/db_maintenance.rs`, `tests/cloud_wave_parity.rs`)**:
+  - `parse_cloud_delegated_grant_status` accepts boolean `expired` or falls back to parsing RFC3339 `expires_at` (`exp <= OffsetDateTime::now_utc()`, failing closed when missing/unparseable) and reads `grant_policy_digest` or Propodus `037`'s `policy_digest`; `cloud_delegated_grants_037_rpc_wire_contract` exercises `fetch_cloud_delegated_grant_status` and `evaluate_cloud_capability_with_delegated_grant` end-to-end over DPoP-signed loopback HTTP (`POST /rest/v1/rpc/propodus_delegated_grants_v1`).
+
+## Decapod Cloud mdBook landing, shell navigation, and guide documentation (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+- **Shell navigation & brand assets (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Routes header/sidebar/footer/rail brand and media links to `https://decapodlabs.ai/` and adds `Pricing` (`https://decapodlabs.ai/pricing`) and `Admin` (`https://decapodlabs.ai/admin`) to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` with tightened `.decapod-top-links` spacing to keep the sticky top bar single-line on desktop.
+- **Offerings section & card actions (`docs/book/src/index.md`, `docs/book/src/custom.css`)**: Adds `.decapod-offering-badge.badge-cloud` (warm coral/espresso light and dark theme styles) and `.decapod-offering-actions` flex layout pairing `View Cloud pricing ↗` (`https://decapodlabs.ai/pricing`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) on the Decapod Cloud card.
+- **Guide & reference alignment (`docs/book/src/{introduction.md,quickstart.md,workflows/multi-agent.md,concepts/faq.md,reference/propodus.md,reference/cloud-projects.md}`)**: Adds consistent Decapod Cloud pricing and Organization Admin links across onboarding, workflow, FAQ, and reference chapters without altering Rust CLI/RPC modules or `.decapod/config.toml` schema.
+
 ## Selective core CI shard selection alignment (`assets/tools/source_ci_profile.rs`)
 
 - **`profile::selected` (`Selection::Core`)**: Matches `check.id` so `"selective-core-2"` and `"selective-core-3"` return `core_full(paths)` while `"selective-core-1"` and `"selective-core-status"` remain selected for any `src/decapod/core/` or `core_test_inputs(p)` match, keeping `selected(...)` and `commands(...)` consistent without altering `core_full(paths)` or `selective-cli-*`.
@@ -2126,7 +2143,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155`
+- Repository signal fingerprint: `a2858d6616379750b4c6f3c5acf3db00c70a9d361b92e93b2ff2ba523b1e3e7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

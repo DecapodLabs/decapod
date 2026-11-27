@@ -8,7 +8,7 @@
       <a class="decapod-docs-btn secondary" href="introduction.html">Understand the kernel <span aria-hidden="true">↗</span></a>
     </div>
   </div>
-  <img class="decapod-docs-mascot" src="https://decapodlabs.github.io/assets/mascot.svg" width="520" height="440" alt="The original coral-orange kawaii Decapod crab mascot" loading="eager">
+  <img class="decapod-docs-mascot" src="https://decapodlabs.ai/assets/mascot.svg" width="520" height="440" alt="The original coral-orange kawaii Decapod crab mascot" loading="eager">
 </div>
 
 ## Who invokes Decapod — and how agents coexist
@@ -27,9 +27,9 @@ Human (intent & judgment)
 - **Orientation and recovery:** Before editing, agents consult recorded intent, policy, and bounded reflection checks. When validation fails, they use diagnostics to repair the branch and revalidate the exact revised commit.
 
 <div class="decapod-docs-video">
-  <video controls autoplay muted loop playsinline preload="metadata" poster="https://decapodlabs.github.io/assets/decapod-poster.png" aria-label="Decapod product introduction, including persistent state, enforced boundaries, and commit-bound proof">
-    <source src="https://decapodlabs.github.io/assets/decapod-showcase.mp4" type="video/mp4">
-    <p><a href="https://decapodlabs.github.io/assets/decapod-showcase.mp4">View the Decapod introduction.</a></p>
+  <video controls autoplay muted loop playsinline preload="metadata" poster="https://decapodlabs.ai/assets/decapod-poster.png" aria-label="Decapod product introduction, including persistent state, enforced boundaries, and commit-bound proof">
+    <source src="https://decapodlabs.ai/assets/decapod-showcase.mp4" type="video/mp4">
+    <p><a href="https://decapodlabs.ai/assets/decapod-showcase.mp4">View the Decapod introduction.</a></p>
   </video>
 </div>
 
@@ -45,7 +45,7 @@ Human (intent & judgment)
       <div class="decapod-offerings-kicker">DEPLOYMENT OFFERINGS</div>
       <h2 id="decapod-offerings-heading">Decapod Local &amp; Decapod Cloud</h2>
     </div>
-    <a class="decapod-offerings-compare" href="https://decapodlabs.github.io/offerings.html">Compare Local &amp; Cloud <span aria-hidden="true">↗</span></a>
+    <a class="decapod-offerings-compare" href="https://decapodlabs.ai/pricing">Compare Local &amp; Cloud <span aria-hidden="true">↗</span></a>
   </div>
   <div class="decapod-offerings-grid">
     <article class="decapod-offering-card offering-local">
@@ -63,14 +63,18 @@ Human (intent & judgment)
     <article class="decapod-offering-card offering-cloud">
       <div class="decapod-offering-meta">
         <h3>Decapod Cloud</h3>
-        <span class="decapod-offering-badge badge-soon">Coming soon</span>
+        <span class="decapod-offering-badge badge-cloud">$50/contributor/repo/mo · $0 surprise overages</span>
       </div>
-      <p>Planned hosted coordination for shared team task custody, repository-scoped access control, and cross-session multi-agent continuity.</p>
+      <p>Hosted team task coordination, repository-bound sessions, and organization seat management with predictable per-repo pricing and multi-repo reservations.</p>
       <ul class="decapod-offering-points">
         <li>Repository-bound sessions and shared coordination (<code>backend = "cloud"</code>)</li>
-        <li>Planned offerings overview only — no public pricing or active purchase route</li>
+        <li>Start a personal or team workspace at <a href="https://decapodlabs.ai/signup">Cloud Signup</a>, and manage repo enrollment, seats, access policies, and billing in <a href="https://decapodlabs.ai/admin">Organization Admin</a></li>
       </ul>
-      <a class="decapod-offering-action secondary" href="https://decapodlabs.github.io/offerings.html">Explore planned Cloud <span aria-hidden="true">↗</span></a>
+      <div class="decapod-offering-actions">
+        <a class="decapod-offering-action" href="https://decapodlabs.ai/pricing">View Cloud pricing <span aria-hidden="true">↗</span></a>
+        <a class="decapod-offering-action secondary" href="https://decapodlabs.ai/signup">Sign up <span aria-hidden="true">↗</span></a>
+        <a class="decapod-offering-action secondary" href="https://decapodlabs.ai/admin">Organization Admin <span aria-hidden="true">↗</span></a>
+      </div>
     </article>
   </div>
 </section>

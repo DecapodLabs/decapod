@@ -1,9 +1,5 @@
 # Validation
 
-## Selective core CI shard selection alignment (`assets/tools/source_ci_profile.rs`)
-
-- `tests/source_ci_profile_policy.rs` (`non_full_core_paths_do_not_select_empty_shard_two_or_three`) verifies `src/decapod/core/storage_compaction.rs`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/repository_profile.rs`, and `src/decapod/core/hash.rs` select `"selective-core-1"` and `"selective-core-status"` with non-empty recipes while keeping `"selective-core-2"` and `"selective-core-3"` unselected (`selected == false`) and guaranteeing every non-artifact-worker selected check in `profile::CHECKS` emits non-empty commands.
-
 ## Bootstrap `.sh` mode (`executor_contract`) & stale accepted-base `repo.pr-readiness.v1` reconciliation
 
 - `src/decapod/core/validation_runtime/executor_contract.rs` unit tests verify `100755 blob ` admission strictly for `.sh` scripts in `profile::definition_files()`, strict `100644 blob ` enforcement on `.rs` definitions, protocol marker, and `verify_carrier_modes`, and fail-closed rejection of symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
@@ -2898,7 +2894,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155`
+- Repository signal fingerprint: `a2858d6616379750b4c6f3c5acf3db00c70a9d361b92e93b2ff2ba523b1e3e7c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

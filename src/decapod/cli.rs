@@ -3224,6 +3224,14 @@ pub(crate) enum KnowledgeCommand {
         provenance: String,
         #[clap(long)]
         claim_id: Option<String>,
+        #[clap(long)]
+        merge_key: Option<String>,
+        #[clap(long, default_value = "merge", value_parser = ["merge", "supersede", "reject"])]
+        on_conflict: String,
+        #[clap(long)]
+        supersedes: Option<String>,
+        #[clap(long, default_value = "root")]
+        scope: String,
     },
     /// Search project knowledge
     Search {

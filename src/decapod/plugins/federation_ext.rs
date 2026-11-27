@@ -118,3 +118,35 @@ fn list_nodes_with_limit(
         Ok(nodes)
     })
 }
+
+/// Return a deterministic map of `new_node_id -> superseded_target_id` from
+/// federation `node_edges` (`edge_type = 'supersedes'`) for context projection.
+pub(crate) fn context_supersedes_map(
+    root: &Path,
+) -> Result<std::collections::BTreeMap<String, String>, error::DecapodError> {
+    let broker = DbBroker::new(root);
+    let db_path = federation_db_path(root);
+    if !db_path.is_file() {
+        return Ok(std::collections::BTreeMap::new());
+    }
+    broker.with_conn(&db_path, "decapod", None, "federation.list", |conn| {
+        let has_edges: i64 = conn.query_row(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='node_edges'",
+            [],
+            |row| row.get(0),
+        )?;
+        if has_edges == 0 {
+            return Ok(std::collections::BTreeMap::new());
+        }
+        let mut stmt = conn.prepare(
+            "SELECT source_id, target_id FROM node_edges WHERE edge_type = 'supersedes' ORDER BY created_at ASC, id ASC LIMIT 1024",
+        )?;
+        let rows = stmt.query_map([], |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?)))?;
+        let mut map = std::collections::BTreeMap::new();
+        for row in rows {
+            let (source_id, target_id) = row?;
+            map.insert(source_id, target_id);
+        }
+        Ok(map)
+    })
+}

@@ -155,6 +155,7 @@ pub fn resolve_context(
     }
     let mut candidates = Vec::new();
     let mut keys = BTreeMap::<String, Vec<(String, String)>>::new();
+    let mut superseded_targets = BTreeSet::<String>::new();
     for (entry, scope) in entries {
         if entry.id.len() > 256
             || entry.title.len() > 512
@@ -188,12 +189,37 @@ pub fn resolve_context(
         {
             packet.valid_until = Some(expiry.clone());
         }
+        let canon_scope = canonical_conflict_scope(&scope);
         if let Some(key) = &entry.merge_key
             && !key.is_empty()
         {
-            keys.entry(format!("legacy:{scope}:{key}"))
+            keys.entry(format!("legacy:{canon_scope}:{key}"))
                 .or_default()
                 .push((entry.id.clone(), entry.content.clone()));
+        } else if !entry.title.trim().is_empty() {
+            keys.entry(format!(
+                "legacy_title:{canon_scope}:{}",
+                entry.title.trim().to_lowercase()
+            ))
+            .or_default()
+            .push((entry.id.clone(), entry.content.clone()));
+        }
+        if let Some(claim) = entry
+            .claim_id
+            .as_deref()
+            .map(str::trim)
+            .filter(|c| !c.is_empty())
+        {
+            keys.entry(format!(
+                "legacy_claim:{canon_scope}:{}",
+                claim.to_lowercase()
+            ))
+            .or_default()
+            .push((entry.id.clone(), entry.content.clone()));
+        }
+        let supersedes_id = entry.supersedes_id.clone().filter(|s| !s.is_empty());
+        if let Some(ref target) = supersedes_id {
+            superseded_targets.insert(target.clone());
         }
         let source_hash = format!("{:x}", Sha256::digest(context_json(&entry)?));
         let entry_feedback = feedback_by_entry.get(&entry.id).cloned();
@@ -214,19 +240,22 @@ pub fn resolve_context(
             source_hash,
             reasons,
             source_observation: BTreeMap::new(),
-            supersedes_id: entry.supersedes_id.filter(|s| !s.is_empty()),
+            supersedes_id,
             feedback_summary: entry_feedback,
         });
     }
     // Typed decisions/preferences/lessons remain owned by federation. A confidence
     // label is declared provenance, not authenticated human policy.
-    let typed = if typed_available {
-        crate::plugins::federation_ext::context_nodes(&store.root, &scopes)?
+    let (typed, typed_supersedes) = if typed_available {
+        (
+            crate::plugins::federation_ext::context_nodes(&store.root, &scopes)?,
+            crate::plugins::federation_ext::context_supersedes_map(&store.root)?,
+        )
     } else {
         packet
             .excluded
             .insert("typed_store_uninitialized".into(), 1);
-        Vec::new()
+        (Vec::new(), BTreeMap::new())
     };
     if typed.len() > 256 {
         packet.status = "candidate_budget_exceeded".into();
@@ -280,11 +309,17 @@ pub fn resolve_context(
             continue;
         }
         let id = format!("federation:{}", node.id);
+        let typed_supersedes_id = typed_supersedes
+            .get(&node.id)
+            .map(|target| format!("federation:{target}"));
+        if let Some(ref target) = typed_supersedes_id {
+            superseded_targets.insert(target.clone());
+        }
         keys.entry(format!(
             "typed:{}:{}:{}",
-            node.scope,
+            canonical_conflict_scope(&node.scope),
             node.node_type,
-            node.title.to_lowercase()
+            node.title.trim().to_lowercase()
         ))
         .or_default()
         .push((id.clone(), node.body.clone()));
@@ -302,36 +337,43 @@ pub fn resolve_context(
             source_hash,
             reasons: vec!["applicable_typed_knowledge".into()],
             source_observation: BTreeMap::new(),
-            supersedes_id: None,
+            supersedes_id: typed_supersedes_id,
             feedback_summary: None,
         });
     }
     let mut conflict_ids = BTreeSet::new();
     for entries in keys.values() {
-        if entries
+        let active_entries: Vec<&(String, String)> = entries
+            .iter()
+            .filter(|(id, _)| !superseded_targets.contains(id))
+            .collect();
+        if active_entries
             .iter()
             .map(|(_, body)| body)
             .collect::<BTreeSet<_>>()
             .len()
             > 1
         {
-            let mut ids: Vec<_> = entries.iter().map(|(id, _)| id.clone()).collect();
+            let mut ids: Vec<_> = active_entries.iter().map(|(id, _)| id.clone()).collect();
             ids.sort();
+            ids.dedup();
             conflict_ids.extend(ids.clone());
-            if packet.conflicts.len() < 8 {
-                if ids.len() > 8 {
+            if !packet.conflicts.contains(&ids) {
+                if packet.conflicts.len() < 8 {
+                    if ids.len() > 8 {
+                        *packet
+                            .excluded
+                            .entry("conflict_references_budget".into())
+                            .or_default() += ids.len() - 8;
+                        ids.truncate(8);
+                    }
+                    packet.conflicts.push(ids);
+                } else {
                     *packet
                         .excluded
-                        .entry("conflict_references_budget".into())
-                        .or_default() += ids.len() - 8;
-                    ids.truncate(8);
+                        .entry("conflict_groups_budget".into())
+                        .or_default() += 1;
                 }
-                packet.conflicts.push(ids);
-            } else {
-                *packet
-                    .excluded
-                    .entry("conflict_groups_budget".into())
-                    .or_default() += 1;
             }
         }
     }
@@ -347,11 +389,28 @@ pub fn resolve_context(
     candidates.sort_by(|a, b| {
         let a_hurt = a.feedback_summary.as_ref().is_some_and(|fb| fb.hurt > 0);
         let b_hurt = b.feedback_summary.as_ref().is_some_and(|fb| fb.hurt > 0);
-        a_hurt.cmp(&b_hurt).then_with(|| a.id.cmp(&b.id))
+        let a_net = a
+            .feedback_summary
+            .as_ref()
+            .map_or(0i64, |fb| fb.helped as i64 - fb.hurt as i64);
+        let b_net = b
+            .feedback_summary
+            .as_ref()
+            .map_or(0i64, |fb| fb.helped as i64 - fb.hurt as i64);
+        a_hurt
+            .cmp(&b_hurt)
+            .then_with(|| b_net.cmp(&a_net))
+            .then_with(|| a.id.cmp(&b.id))
     });
     for mut record in candidates {
         let excluded = if record.status == "disputed" || conflict_ids.contains(&record.id) {
             Some("unresolved_conflict")
+        } else if record
+            .feedback_summary
+            .as_ref()
+            .is_some_and(|fb| fb.hurt >= 2 && fb.hurt > fb.helped)
+        {
+            Some("negative_retrieval_bias")
         } else if record.id.len() > 256
             || record.title.len() > 512
             || record.provenance.iter().map(String::len).sum::<usize>() > 1024
@@ -726,7 +785,20 @@ pub fn add_attested_knowledge(
     Ok(result)
 }
 
+fn canonical_conflict_scope(scope: &str) -> &str {
+    match scope {
+        "root" | "repo" => "repo_wide",
+        other => other,
+    }
+}
+
 fn is_valid_provenance(provenance: &str) -> bool {
+    if provenance
+        .chars()
+        .any(|c| c.is_control() || c.is_whitespace())
+    {
+        return false;
+    }
     use fancy_regex::Regex;
     let prov_re = Regex::new(
         r"^(file:[^#]+(#L\d+(-L\d+)?)?|url:[^ ]+|cmd:[^ ]+|commit:[a-f0-9]+|event:[A-Z0-9_]+)$",
@@ -734,6 +806,11 @@ fn is_valid_provenance(provenance: &str) -> bool {
     .unwrap();
     if !prov_re.is_match(provenance).unwrap_or(false) {
         return false;
+    }
+    if let Some(url) = provenance.strip_prefix("url:") {
+        return url.starts_with("https://")
+            || url.starts_with("http://127.0.0.1")
+            || url.starts_with("http://localhost");
     }
     if let Some(file) = provenance.strip_prefix("file:") {
         let rel = file.split('#').next().unwrap_or("");
@@ -751,6 +828,59 @@ pub fn add_scoped_knowledge(
     args: AddKnowledgeParams<'_>,
     scope: &str,
 ) -> Result<AddKnowledgeResult, error::DecapodError> {
+    add_scoped_knowledge_inner(store, args, scope, None)
+}
+
+/// Explicitly record a corrected knowledge entry that supersedes `target_id`
+/// in the same transaction, even without a shared `merge_key` (#657).
+pub fn supersede_knowledge(
+    store: &Store,
+    args: AddKnowledgeParams<'_>,
+    scope: &str,
+    target_id: &str,
+) -> Result<AddKnowledgeResult, error::DecapodError> {
+    add_scoped_knowledge_inner(store, args, scope, Some(target_id))
+}
+
+/// Add a scoped knowledge entry that supersedes `target_id` and records
+/// write-time source attestation (`knowledge.write_attestation`) (#657).
+pub fn add_attested_superseding_knowledge(
+    store: &Store,
+    repo_root: &Path,
+    args: AddKnowledgeParams<'_>,
+    scope: &str,
+    target_id: &str,
+) -> Result<AddKnowledgeResult, error::DecapodError> {
+    let result = supersede_knowledge(store, args.clone(), scope, target_id)?;
+    let observed_source_sha256 = if let Some(file) = args.provenance.strip_prefix("file:") {
+        observe_source(repo_root, file.split('#').next().unwrap_or(""))
+    } else {
+        "unavailable".to_string()
+    };
+    let content_sha256 = format!("sha256:{:x}", Sha256::digest(args.content.as_bytes()));
+    events::append(
+        &store.root,
+        events::KNOWLEDGE,
+        &serde_json::json!({
+            "event_id": crate::core::ulid::new_ulid(),
+            "ts": now_iso(),
+            "event_type": "knowledge.write_attestation",
+            "entry_id": result.id,
+            "scope": scope,
+            "provenance": args.provenance,
+            "content_sha256": content_sha256,
+            "observed_source_sha256": observed_source_sha256,
+        }),
+    )?;
+    Ok(result)
+}
+
+fn add_scoped_knowledge_inner(
+    store: &Store,
+    args: AddKnowledgeParams<'_>,
+    scope: &str,
+    supersedes_target: Option<&str>,
+) -> Result<AddKnowledgeResult, error::DecapodError> {
     crate::core::storage_contracts::validate_knowledge_write(
         args.id,
         args.title,
@@ -764,6 +894,18 @@ pub fn add_scoped_knowledge(
         args.expires_ts,
     )?;
     validate_scope(scope)?;
+    if let Some(target_id) = supersedes_target {
+        if target_id.trim().is_empty() {
+            return Err(error::DecapodError::ValidationError(
+                "supersedes target id cannot be empty".into(),
+            ));
+        }
+        if target_id == args.id {
+            return Err(error::DecapodError::ValidationError(
+                "knowledge entry cannot supersede itself".into(),
+            ));
+        }
+    }
     if [args.id, args.title, args.content, args.provenance]
         .iter()
         .any(|text| crate::core::gatekeeper::contains_secret_material(text))
@@ -840,7 +982,57 @@ pub fn add_scoped_knowledge(
         let mut effective_id = args.id.to_string();
         let mut superseded_ids = Vec::new();
 
-        if let Some(merge_key) = args.merge_key {
+        if let Some(target_id) = supersedes_target {
+            let previous = read_knowledge_on_conn(conn, target_id)?.ok_or_else(|| {
+                error::DecapodError::NotFound(format!(
+                    "superseded knowledge entry '{target_id}' not found"
+                ))
+            })?;
+            if !matches!(previous.status.as_str(), "active" | "disputed") {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "cannot supersede knowledge entry '{target_id}' with status '{}'",
+                    previous.status
+                )));
+            }
+            events::append_on_conn(
+                conn,
+                events::KNOWLEDGE,
+                &serde_json::json!({
+                    "event_id": crate::core::ulid::new_ulid(),
+                    "ts": now,
+                    "event_type": "knowledge.before_correction",
+                    "entry": previous,
+                    "scope": scope,
+                    "replacement_id": args.id,
+                }),
+            )?;
+            conn.execute(
+                "UPDATE knowledge SET status = 'superseded', updated_at = ?2 WHERE id = ?1",
+                params![target_id, now],
+            )?;
+            superseded_ids.push(target_id.to_string());
+            conn.execute(
+                "INSERT INTO knowledge(id, title, content, provenance, claim_id, tags, created_at, updated_at, dir_path, scope, status, merge_key, supersedes_id, ttl_policy, expires_ts)
+                 VALUES(?1, ?2, ?3, ?4, ?5, '', ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
+                params![
+                    args.id,
+                    args.title,
+                    args.content,
+                    args.provenance,
+                    args.claim_id,
+                    now,
+                    now,
+                    store.root.to_string_lossy(),
+                    scope,
+                    args.status,
+                    args.merge_key.unwrap_or(""),
+                    Some(target_id),
+                    args.ttl_policy,
+                    args.expires_ts
+                ],
+            )?;
+            action = "superseded".to_string();
+        } else if let Some(merge_key) = args.merge_key {
             let existing = conn.query_row(
                 "SELECT id FROM knowledge WHERE merge_key = ?1 AND status = 'active' AND scope = ?2",
                 params![merge_key, scope],
@@ -1533,6 +1725,8 @@ pub fn schema() -> serde_json::Value {
                     {"name": "claim_id", "required": false, "description": "Optional claim ID this knowledge relates to"},
                     {"name": "merge_key", "required": false, "description": "Deduplication key for merge/supersede"},
                     {"name": "on_conflict", "required": false, "description": "Conflict policy: merge|supersede|reject (default: merge)"},
+                    {"name": "supersedes", "required": false, "description": "Explicit target knowledge entry ID superseded by this correction"},
+                    {"name": "scope", "required": false, "description": "Applicability scope: root|repo|task:<id>|path:<rel> (default: root)"},
                     {"name": "status", "required": false, "description": "Entry status: active|superseded|deprecated|stale (default: active)"},
                     {"name": "ttl_policy", "required": false, "description": "TTL policy: ephemeral|decay|persistent (default: persistent)"},
                     {"name": "expires_ts", "required": false, "description": "Expiry timestamp (epoch seconds + Z suffix)"}

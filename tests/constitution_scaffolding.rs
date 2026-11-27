@@ -59,12 +59,36 @@ fn global_admission_rejects_metadata_self_promotion_and_broken_references() {
                 .contains("AUTHORITY_REVIEW")
         );
     }
-    hostile = graph;
+    hostile = graph.clone();
     hostile["nodes"]["research/ADAM_2014"]["enforcement"] = "enforced".into();
     assert!(
         constitution_admission::validate(&hostile)
             .unwrap_err()
             .contains("UNSUPPORTED_ENFORCEMENT")
+    );
+    hostile = graph.clone();
+    hostile["nodes"]["research/ADAM_2014"]["sections"]["enforcement"] =
+        serde_json::json!(["Claimed enforced without native gate"]);
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("UNSUPPORTED_ENFORCEMENT")
+    );
+    hostile = graph.clone();
+    hostile["nodes"]["research/ADAM_2014"]["sections"]["claims"] =
+        serde_json::json!(["Self-attested execution claim"]);
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("UNSUPPORTED_ENFORCEMENT")
+    );
+    hostile = graph;
+    hostile["nodes"]["research/ADAM_2014"]["authority_review"] =
+        hostile["nodes"]["core/SPECS"]["authority_review"].clone();
+    assert!(
+        constitution_admission::validate(&hostile)
+            .unwrap_err()
+            .contains("AUTHORITY_REVIEW")
     );
 }
 
@@ -123,6 +147,14 @@ fn binding_amendment_keeps_review_identity_and_has_a_measurable_admission_gate()
             .any(|line| line.as_str().unwrap().contains("admission registry"))
     );
     constitution_admission::validate(&graph).unwrap();
+    let mut removed_guard = admission_fixture();
+    removed_guard["nodes"]["core/SPECS"]["sections"]["apply"] =
+        serde_json::json!(["Apply spec constraints directly without admission check."]);
+    assert!(
+        constitution_admission::validate(&removed_guard)
+            .unwrap_err()
+            .contains("BINDING_CONTROL_REMOVED")
+    );
     graph["nodes"]["core/SPECS"]["binding"] = "advisory".into();
     assert!(
         constitution_admission::validate(&graph)

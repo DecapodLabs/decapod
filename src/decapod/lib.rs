@@ -11089,22 +11089,29 @@ fn run_data_command(
                     text,
                     provenance,
                     claim_id,
+                    merge_key,
+                    on_conflict,
+                    supersedes,
+                    scope,
                 } => {
-                    let result = knowledge::add_knowledge(
-                        project_store,
-                        knowledge::AddKnowledgeParams {
-                            id: &id,
-                            title: &title,
-                            content: &text,
-                            provenance: &provenance,
-                            claim_id: claim_id.as_deref(),
-                            merge_key: None,
-                            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
-                            status: "active",
-                            ttl_policy: "persistent",
-                            expires_ts: None,
-                        },
-                    )?;
+                    let conflict_policy = knowledge::parse_conflict_policy(&on_conflict)?;
+                    let params = knowledge::AddKnowledgeParams {
+                        id: &id,
+                        title: &title,
+                        content: &text,
+                        provenance: &provenance,
+                        claim_id: claim_id.as_deref(),
+                        merge_key: merge_key.as_deref(),
+                        conflict_policy,
+                        status: "active",
+                        ttl_policy: "persistent",
+                        expires_ts: None,
+                    };
+                    let result = if let Some(target_id) = supersedes.as_deref() {
+                        knowledge::supersede_knowledge(project_store, params, &scope, target_id)?
+                    } else {
+                        knowledge::add_scoped_knowledge(project_store, params, &scope)?
+                    };
                     println!(
                         "Knowledge entry {}: {} (action: {})",
                         result.id, id, result.action
@@ -14392,24 +14399,26 @@ mod rpc_handlers {
 
                 db::initialize_knowledge_db(&ctx.store.root)?;
                 let field = |name: &str| payload.and_then(|p| p.get(name)).and_then(|v| v.as_str());
-                let res = knowledge::add_scoped_knowledge(
-                    ctx.store,
-                    knowledge::AddKnowledgeParams {
-                        id: &id,
-                        title: &title,
-                        content: &text,
-                        provenance: &provenance,
-                        claim_id: field("claim_id"),
-                        merge_key: field("merge_key"),
-                        conflict_policy: knowledge::parse_conflict_policy(
-                            field("on_conflict").unwrap_or("merge"),
-                        )?,
-                        status: field("status").unwrap_or("active"),
-                        ttl_policy: field("ttl_policy").unwrap_or("persistent"),
-                        expires_ts: field("expires_ts"),
-                    },
-                    field("scope").unwrap_or("root"),
-                )?;
+                let params = knowledge::AddKnowledgeParams {
+                    id: &id,
+                    title: &title,
+                    content: &text,
+                    provenance: &provenance,
+                    claim_id: field("claim_id"),
+                    merge_key: field("merge_key"),
+                    conflict_policy: knowledge::parse_conflict_policy(
+                        field("on_conflict").unwrap_or("merge"),
+                    )?,
+                    status: field("status").unwrap_or("active"),
+                    ttl_policy: field("ttl_policy").unwrap_or("persistent"),
+                    expires_ts: field("expires_ts"),
+                };
+                let scope = field("scope").unwrap_or("root");
+                let res = if let Some(target_id) = field("supersedes_id") {
+                    knowledge::supersede_knowledge(ctx.store, params, scope, target_id)?
+                } else {
+                    knowledge::add_scoped_knowledge(ctx.store, params, scope)?
+                };
                 let result = StoreUpsertResult {
                     id: res.id,
                     status: None,

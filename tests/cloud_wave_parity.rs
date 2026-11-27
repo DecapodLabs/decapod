@@ -731,3 +731,247 @@ fn dactyl_018_dpop_signer_and_control_request_wire_contract() {
         assert_eq!(verified.jkt, expected_jkt);
     }
 }
+
+#[cfg(feature = "supabase-cloud")]
+#[test]
+fn cloud_delegated_grants_037_rpc_wire_contract() {
+    use decapod::core::cloud_dpop::{DeviceDpopSigner, DeviceKeyMaterial, DeviceKeyStorageBackend};
+    use decapod::core::db_maintenance::{
+        CapabilityDecision, DbMaintenanceCapability, RepoAccessTier,
+        evaluate_cloud_capability_with_delegated_grant, fetch_cloud_delegated_grant_status,
+        fetch_cloud_repository_access_status, resolve_canonical_policy,
+    };
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    use std::sync::{Arc, Mutex};
+
+    let tmp = TempDir::new().expect("tempdir");
+    let repo = tmp.path().join("cloud-repo");
+    fs::create_dir_all(repo.join(".decapod")).expect("mkdir .decapod");
+    git(&repo, &["init", "-b", "main"]);
+    git(&repo, &["config", "user.name", "Test"]);
+    git(&repo, &["config", "user.email", "test@example.com"]);
+    git(
+        &repo,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/DecapodLabs/decapod.git",
+        ],
+    );
+    fs::write(
+        repo.join(".decapod/config.toml"),
+        "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"mermaid\"\nentrypoints = []\n[repo]\nbackend = \"cloud\"\n[governance.db_maintenance]\nenabled = true\nallowed = [\"db.inspect\", \"db.verify\", \"db.backup\"]\n",
+    )
+    .expect("write config");
+    git(&repo, &["add", ".decapod/config.toml"]);
+    git(&repo, &["commit", "-m", "cloud config"]);
+
+    let policy = resolve_canonical_policy(&repo).expect("resolve canonical cloud policy");
+    let policy_sha = policy.policy_sha256.clone();
+    let repo_id = policy.repo_identity.clone();
+
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind loopback");
+    let addr = listener.local_addr().expect("local addr");
+    let origin = format!("http://{addr}");
+    let observed_paths: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
+    let observed_clone = Arc::clone(&observed_paths);
+    let origin_for_server = origin.clone();
+    let server_policy_sha = policy_sha.clone();
+    let server_repo_id = repo_id.clone();
+
+    let server_thread = std::thread::spawn(move || {
+        // 1. discovery
+        // 2. propodus_repository_access_v1
+        // 3. propodus_delegated_grants_v1 (active grant with future expires_at & policy_digest)
+        // 4. propodus_delegated_grants_v1 (revoked grant)
+        // 5. propodus_delegated_grants_v1 (expired via past expires_at)
+        for _ in 0..5 {
+            let (mut stream, _) = listener.accept().expect("accept");
+            let mut buf = vec![0u8; 32768];
+            let n = stream.read(&mut buf).expect("read");
+            let req = String::from_utf8_lossy(&buf[..n]);
+            let path = req
+                .lines()
+                .next()
+                .unwrap_or("")
+                .split_whitespace()
+                .nth(1)
+                .unwrap_or("")
+                .to_string();
+            observed_clone.lock().expect("lock").push(path.clone());
+
+            let future_exp = decapod::core::time::format_rfc3339_nanos(
+                time::OffsetDateTime::now_utc() + time::Duration::hours(1),
+            )
+            .expect("future");
+            let past_exp = decapod::core::time::format_rfc3339_nanos(
+                time::OffsetDateTime::now_utc() - time::Duration::minutes(5),
+            )
+            .expect("past");
+
+            let body = if path == "/functions/v1/decapod-onboarding/config" {
+                serde_json::json!({
+                    "version": 1,
+                    "project_origin": origin_for_server,
+                    "publishable_key": "sb_publishable_test_fixture",
+                    "schema": "dactyl_api",
+                })
+                .to_string()
+            } else if path == "/rest/v1/rpc/propodus_repository_access_v1" {
+                serde_json::json!({
+                    "version": 1,
+                    "repository": server_repo_id,
+                    "effective_tier": "write",
+                    "seat_authorized": true,
+                    "policy_bound": true,
+                    "policy_revision": 4,
+                    "policy_hash": server_policy_sha,
+                    "authority_generation": 2,
+                })
+                .to_string()
+            } else if req.contains("grant-revoked") {
+                serde_json::json!({
+                    "version": 1,
+                    "status": "ok",
+                    "grant": {
+                        "grant_id": "grant-revoked",
+                        "repository": server_repo_id,
+                        "revoked": true,
+                        "expires_at": future_exp,
+                        "revocation_generation": 2,
+                        "policy_generation": 4,
+                        "session_generation": 3,
+                        "policy_digest": server_policy_sha,
+                        "allowed_operations": ["db.verify"]
+                    }
+                })
+                .to_string()
+            } else if req.contains("grant-expired") {
+                serde_json::json!({
+                    "version": 1,
+                    "status": "ok",
+                    "grant": {
+                        "grant_id": "grant-expired",
+                        "repository": server_repo_id,
+                        "revoked": false,
+                        "expires_at": past_exp,
+                        "revocation_generation": 2,
+                        "policy_generation": 4,
+                        "session_generation": 3,
+                        "policy_digest": server_policy_sha,
+                        "allowed_operations": ["db.verify"]
+                    }
+                })
+                .to_string()
+            } else {
+                serde_json::json!({
+                    "version": 1,
+                    "status": "ok",
+                    "grant": {
+                        "grant_id": "grant-active",
+                        "repository": server_repo_id,
+                        "revoked": false,
+                        "expires_at": future_exp,
+                        "revocation_generation": 2,
+                        "policy_generation": 4,
+                        "session_generation": 3,
+                        "policy_digest": server_policy_sha,
+                        "allowed_operations": ["db.verify"]
+                    }
+                })
+                .to_string()
+            };
+            let response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                body.len(),
+                body
+            );
+            stream.write_all(response.as_bytes()).expect("write");
+        }
+    });
+
+    let key = DeviceKeyMaterial::generate(DeviceKeyStorageBackend::PrivateFile0600).expect("key");
+    let signer = Arc::new(DeviceDpopSigner::new(key));
+    let connector = dactyl_db::CloudConnector::discover(&origin)
+        .expect("discover")
+        .with_proof_signer(signer);
+    let bearer = "synthetic-dpop-access-token";
+
+    let access =
+        fetch_cloud_repository_access_status(&connector, bearer, &repo_id).expect("access status");
+    assert_eq!(access.effective_tier, RepoAccessTier::Write);
+
+    let active_grant =
+        fetch_cloud_delegated_grant_status(&connector, bearer, &repo_id, "grant-active")
+            .expect("active grant");
+    assert!(!active_grant.expired);
+    assert_eq!(
+        active_grant.grant_policy_digest.as_deref(),
+        Some(policy_sha.as_str())
+    );
+    assert_eq!(
+        evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some(policy_sha.as_str()),
+            Some(&access),
+            Some(&active_grant),
+        )
+        .0,
+        CapabilityDecision::Allowed
+    );
+    assert_eq!(
+        evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Backup,
+            Some(policy_sha.as_str()),
+            Some(&access),
+            Some(&active_grant),
+        )
+        .1,
+        "CLOUD_DELEGATED_OPERATION_NOT_GRANTED"
+    );
+
+    let revoked_grant =
+        fetch_cloud_delegated_grant_status(&connector, bearer, &repo_id, "grant-revoked")
+            .expect("revoked grant");
+    assert_eq!(
+        evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some(policy_sha.as_str()),
+            Some(&access),
+            Some(&revoked_grant),
+        )
+        .1,
+        "CLOUD_DELEGATED_GRANT_REVOKED"
+    );
+
+    let expired_grant =
+        fetch_cloud_delegated_grant_status(&connector, bearer, &repo_id, "grant-expired")
+            .expect("expired grant");
+    assert!(expired_grant.expired);
+    assert_eq!(
+        evaluate_cloud_capability_with_delegated_grant(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            Some(policy_sha.as_str()),
+            Some(&access),
+            Some(&expired_grant),
+        )
+        .1,
+        "CLOUD_DELEGATED_GRANT_EXPIRED"
+    );
+
+    server_thread.join().expect("server");
+    let paths = observed_paths.lock().expect("lock");
+    assert_eq!(
+        paths
+            .iter()
+            .filter(|p| p.as_str() == "/rest/v1/rpc/propodus_delegated_grants_v1")
+            .count(),
+        3
+    );
+}

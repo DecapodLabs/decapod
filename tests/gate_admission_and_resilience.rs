@@ -527,3 +527,194 @@ fn issue_1772_and_1774_constitution_relevance_resists_repetition_bias_and_verifi
         "core/SPECS.sections.apply must be present in embedded constitution"
     );
 }
+
+#[test]
+fn issue_1763_phase_authority_matrix_denied_repair_admitted_and_external_bypass_classification() {
+    use decapod::core::validation_epoch::active_validation_epoch;
+    use decapod::core::validation_rules::{
+        EvaluationPhase, RuleAuthority, RuleEvaluationContext, RuleRegistry, RulesValidationReport,
+        evaluate_all_rules,
+    };
+    use std::collections::BTreeMap;
+
+    let (tmp, root, wt, _task_id, pw) = setup_isolated_worktree("agent-matrix");
+    let xdg = tmp.path();
+
+    // 1. Orthogonal phase/authority matrix: `include_publication = false` omits Publication rules;
+    //    `include_publication = true` evaluates Publication rules and refuses caller-forged hashes
+    //    when `terminal_evidence` is absent.
+    let mut registry = RuleRegistry::new();
+    let epoch = active_validation_epoch(&wt).expect("active validation epoch");
+    let mut forged_artifacts = BTreeMap::new();
+    forged_artifacts.insert("proof.json".to_string(), "sha256:forged".to_string());
+    let pre_pub_ctx = RuleEvaluationContext {
+        changed_paths: BTreeSet::from(["src/lib.rs".to_string()]),
+        task_type: None,
+        git_ref: Some("refs/heads/master".to_string()),
+        is_ci: false,
+        evidence_artifacts: forged_artifacts.clone(),
+        validation_epoch: epoch.clone(),
+        policy_fingerprint: "sha256:policy".to_string(),
+        repo_root: Some(wt.clone()),
+        include_publication: false,
+        governing_identity: None,
+        evidence_identity: BTreeMap::new(),
+        terminal_evidence: None,
+    };
+    let pre_pub_results = evaluate_all_rules(&mut registry, &pre_pub_ctx);
+    assert!(
+        !pre_pub_results.iter().any(|r| {
+            registry
+                .get_rule(&r.rule_id)
+                .is_some_and(|rr| rr.rule.evaluation_phase == EvaluationPhase::Publication)
+        }),
+        "include_publication=false must not evaluate Publication phase rules"
+    );
+    assert!(
+        pre_pub_results.iter().any(|r| {
+            registry.get_rule(&r.rule_id).is_some_and(|rr| {
+                rr.rule.authority == RuleAuthority::KernelInvariant
+                    || rr.rule.authority == RuleAuthority::Constitution
+            })
+        }),
+        "expected kernel/constitution rules in pre-publication phases"
+    );
+
+    let mut pub_ctx = pre_pub_ctx.clone();
+    pub_ctx.include_publication = true;
+    let pub_results = evaluate_all_rules(&mut registry, &pub_ctx);
+    let pub_report = RulesValidationReport::from_results(pub_results.clone());
+    assert!(
+        pub_results.iter().any(|r| {
+            registry
+                .get_rule(&r.rule_id)
+                .is_some_and(|rr| rr.rule.evaluation_phase == EvaluationPhase::Publication)
+        }),
+        "include_publication=true must include Publication phase rules"
+    );
+    assert!(
+        pub_report.has_blocking_failures() || pub_report.has_unverifiable_mandatory(),
+        "forged evidence_artifacts without opaque TerminalEvidence must fail closed at Publication"
+    );
+
+    // 2. Actual-binary denied -> repair -> admitted sequence on verify-checkpoints:
+    let base_sha = git(&root, &["rev-parse", "master"]);
+    fs::write(wt.join("src/lib.rs"), "pub fn val() -> u32 { 77 }\n").unwrap();
+    git(&wt, &["add", "-A"]);
+    let _ = Command::new("git")
+        .current_dir(&wt)
+        .args(["reset", "--", ".decapod/governance.json"])
+        .output();
+    git(&wt, &["commit", "-m", "uncheckpointed candidate"]);
+    let unckpt_head = git(&wt, &["rev-parse", "HEAD"]);
+
+    let denied = decapod(
+        xdg,
+        &wt,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base_sha,
+            "--head-ref",
+            &unckpt_head,
+            "--target-base",
+            "master",
+        ],
+        "agent-matrix",
+        Some(&pw),
+    );
+    assert!(
+        !denied.status.success(),
+        "uncheckpointed candidate must be denied before repair"
+    );
+
+    // Repair: fold unpushed local commit into a properly checkpointed candidate and commit `.decapod/governance.json`.
+    git(&wt, &["reset", "--soft", "HEAD~1"]);
+    fs::write(wt.join("src/lib.rs"), "pub fn val() -> u32 { 78 }\n").unwrap();
+    git(&wt, &["add", "-A"]);
+    let _ = Command::new("git")
+        .current_dir(&wt)
+        .args(["reset", "--", ".decapod/governance.json"])
+        .output();
+    let ckpt = decapod(
+        xdg,
+        &wt,
+        &[
+            "govern",
+            "artifacts",
+            "checkpoint",
+            "--id",
+            "ckpt-repaired",
+            "--summary",
+            "repaired candidate proof material",
+        ],
+        "agent-matrix",
+        Some(&pw),
+    );
+    assert!(
+        ckpt.status.success(),
+        "repair checkpoint failed: {}",
+        String::from_utf8_lossy(&ckpt.stderr)
+    );
+    git(&wt, &["add", ".decapod/governance.json"]);
+    git(&wt, &["commit", "-m", "checkpoint repaired candidate"]);
+    let repaired_head = git(&wt, &["rev-parse", "HEAD"]);
+
+    let admitted = decapod(
+        xdg,
+        &wt,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base_sha,
+            "--head-ref",
+            &repaired_head,
+            "--target-base",
+            "master",
+        ],
+        "agent-matrix",
+        Some(&pw),
+    );
+    assert!(
+        admitted.status.success(),
+        "repaired candidate must be admitted for exact base/head: stdout={} stderr={}",
+        String::from_utf8_lossy(&admitted.stdout),
+        String::from_utf8_lossy(&admitted.stderr)
+    );
+
+    // 3. External bypass classification: an external commit created directly on a separate branch
+    //    without governed checkpointing is never admitted as mediated publication material.
+    let bypass_branch = "external-bypass-pr";
+    git(&root, &["checkout", "-b", bypass_branch]);
+    fs::write(root.join("src/lib.rs"), "pub fn val() -> u32 { 888 }\n").unwrap();
+    git(&root, &["add", "src/lib.rs"]);
+    git(&root, &["commit", "-m", "external unmediated bypass"]);
+    let bypass_head = git(&root, &["rev-parse", "HEAD"]);
+    git(&root, &["checkout", "master"]);
+
+    let bypass_check = decapod(
+        xdg,
+        &wt,
+        &[
+            "govern",
+            "artifacts",
+            "verify-checkpoints",
+            "--base-branch",
+            &base_sha,
+            "--head-ref",
+            &bypass_head,
+            "--target-base",
+            "master",
+        ],
+        "agent-matrix",
+        Some(&pw),
+    );
+    assert!(
+        !bypass_check.status.success(),
+        "external unmediated bypass commit must remain non-admitted"
+    );
+}

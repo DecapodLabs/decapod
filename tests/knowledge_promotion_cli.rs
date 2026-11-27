@@ -399,3 +399,73 @@ fn knowledge_write_attestation_supersession_and_outcome_feedback_end_to_end() {
         "advisory_below_current_intent_and_policy"
     );
 }
+
+#[test]
+fn cli_knowledge_add_supersedes_links_correction_and_updates_context() {
+    let (_tmp, dir, password) = setup_repo();
+    let envs = [
+        ("DECAPOD_AGENT_ID", "unknown"),
+        ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+    ];
+
+    let add_old = run_decapod(
+        &dir,
+        &[
+            "data",
+            "knowledge",
+            "add",
+            "--id",
+            "K_CLI_OLD",
+            "--title",
+            "CLI retry norm",
+            "--text",
+            "Use unlimited retries",
+            "--provenance",
+            "cmd:fixture",
+        ],
+        &envs,
+    );
+    assert!(
+        add_old.status.success(),
+        "cli add old failed: {}",
+        String::from_utf8_lossy(&add_old.stderr)
+    );
+
+    let add_new = run_decapod(
+        &dir,
+        &[
+            "data",
+            "knowledge",
+            "add",
+            "--id",
+            "K_CLI_NEW",
+            "--title",
+            "CLI retry norm",
+            "--text",
+            "Bound retries to 3 attempts",
+            "--provenance",
+            "cmd:fixture",
+            "--supersedes",
+            "K_CLI_OLD",
+        ],
+        &envs,
+    );
+    assert!(
+        add_new.status.success(),
+        "cli supersede add failed: {}",
+        String::from_utf8_lossy(&add_new.stderr)
+    );
+    assert!(String::from_utf8_lossy(&add_new.stdout).contains("action: superseded"));
+
+    let store = decapod::core::store::Store {
+        kind: decapod::core::store::StoreKind::Repo,
+        root: dir.join(".decapod").join("data"),
+    };
+    let pkt =
+        decapod::plugins::knowledge::resolve_context(&store, &dir, Some("retry"), None, &[], None)
+            .unwrap();
+    assert_eq!(pkt.records.len(), 1);
+    assert_eq!(pkt.records[0].id, "K_CLI_NEW");
+    assert_eq!(pkt.records[0].supersedes_id.as_deref(), Some("K_CLI_OLD"));
+}

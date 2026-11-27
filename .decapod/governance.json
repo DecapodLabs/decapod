@@ -933,6 +933,11 @@
       "id": "section10-storage-parity-v01663-r1",
       "summary": "Merge origin/master (251cb31919, v0.166.3) and refresh Section 10 specs and governance",
       "input_digest": "sha256:b57248dacc754233d0c935d6e94b730e4e4d3188c8d8ff4f865526f5def6da4c"
+    },
+    {
+      "id": "section10-storage-parity-v01664-r1",
+      "summary": "Merge origin/master (bb4d0e8b8e, PR #1960, v0.166.4) and wire validate_knowledge_write in add_scoped_knowledge_inner",
+      "input_digest": "sha256:fb3938071dc1392f931b894265a058fcad6fae5cd75a7291b50168dd5384ec67"
     }
   ],
   "intents": {
@@ -976,23 +981,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled Section 10 bounded write contracts, O(N) compaction, Cloud isolation, and 1933-1936 tests onto v0.166.3 master (251cb31919)",
-          "reviewed_code_fingerprint": "1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155",
-          "spec_material_hash": "2b3b58b909fa2d5aebaac9616bb1eaf5a89949a467496c9eb57dd40bff763417"
+          "reason": "Reconciled Section 10 bounded write contracts, O(N) compaction, Cloud isolation, knowledge.rs supersede validation, and 1933-1936 tests onto v0.166.4 master (bb4d0e8b8e)",
+          "reviewed_code_fingerprint": "a2858d6616379750b4c6f3c5acf3db00c70a9d361b92e93b2ff2ba523b1e3e7c",
+          "spec_material_hash": "dc8f29c5f66efb3ca460a7ee6e518ed42c16875e8cc46275b48379a516f93e24"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled Section 10 write-admission bounds, snapshot benchmark CLI, and Cloud parity interfaces onto v0.166.3 master (251cb31919)",
-          "reviewed_code_fingerprint": "1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155",
-          "spec_material_hash": "c1a5710fe6830f883352e292b21333d4213a74cb219c7d1e3411fcb5afeb3f55"
+          "reason": "Reconciled Section 10 write-admission bounds, snapshot benchmark CLI, and Cloud parity interfaces onto v0.166.4 master (bb4d0e8b8e)",
+          "reviewed_code_fingerprint": "a2858d6616379750b4c6f3c5acf3db00c70a9d361b92e93b2ff2ba523b1e3e7c",
+          "spec_material_hash": "b6b85056431663fd2bc0114e935d8b2690f62523f042247dea50d11025e64976"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fail-closed Cloud boundaries, NUL/byte-bound write admission, and read-only Dactyl snapshot benchmarking preserve v0.166.3 security boundaries",
-          "reviewed_code_fingerprint": "1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155",
-          "spec_material_hash": "ccedc6523b9cf2fe47192b916bd6810d053f175f80c6e045da819873d022a4e7"
+          "reason": "Fail-closed Cloud boundaries, NUL/byte-bound write admission, and read-only Dactyl snapshot benchmarking preserve v0.166.4 security boundaries",
+          "reviewed_code_fingerprint": "a2858d6616379750b4c6f3c5acf3db00c70a9d361b92e93b2ff2ba523b1e3e7c",
+          "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
       "state": "APPROVED",
@@ -1003,7 +1008,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795754967Z"
+      "updated_at": "1795761189Z"
     },
     "trajectory": {
       "active_boundaries": [
