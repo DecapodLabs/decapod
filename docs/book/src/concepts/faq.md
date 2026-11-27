@@ -67,3 +67,11 @@ The agent preserves accepted intent, stays within explicit boundaries, maintains
 ## What does proof-backed completion establish?
 
 It establishes that required checks ran against identified repository state, produced the required evidence, and permitted the governed completion or publication transition.
+
+## Is Decapod free, or what does Decapod Cloud cost?
+
+**Decapod Local** (`repo.backend = "local"`, default) is free, offline, and local-first, with no account required. **Decapod Cloud** (`repo.backend = "cloud"`) is **$50/contributor/repo/mo** with **$0 surprise overages** and **multi-repo reservations** for teams that want hosted repository-bound task custody and coordination. Compare plans at [Decapod Cloud Pricing](https://decapodlabs.ai/pricing) or create a workspace at [Cloud Signup](https://decapodlabs.ai/signup).
+
+## How do teams manage Decapod Cloud subscriptions and repository access?
+
+Organization owners and admins set up teams at [Cloud Signup](https://decapodlabs.ai/signup) and manage subscriptions, repository enrollment, seat assignments, teammate access policies, and billing in [Organization Admin](https://decapodlabs.ai/admin). Each teammate signs in independently on their own machine (`decapod cloud login`); the Decapod CLI never stores pricing tables, access rosters, or billing authority in `.decapod/config.toml`, and the service independently authorizes every repository read and write.

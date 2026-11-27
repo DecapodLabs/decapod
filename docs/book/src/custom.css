@@ -42,7 +42,7 @@ button,input,a{font-family:inherit}
 .navy .decapod-header-brand .logo-a,.coal .decapod-header-brand .logo-a,.ayu .decapod-header-brand .logo-a{display:none!important}
 .navy .decapod-header-brand .logo-c,.coal .decapod-header-brand .logo-c,.ayu .decapod-header-brand .logo-c{display:block!important}
 .decapod-docs-chip{display:inline-flex;border:1px solid #f05b3768;border-radius:999px;background:#f19c7624;color:var(--links);font-size:10px;font-weight:900;letter-spacing:.13em;padding:7px 9px}
-#menu-bar .decapod-top-links{order:2;display:flex;align-items:center;gap:clamp(7px,1.4vw,22px);margin-inline:8px 20px}
+#menu-bar .decapod-top-links{order:2;display:flex;align-items:center;gap:clamp(6px,1.1vw,18px);margin-inline:8px 14px}
 .decapod-top-links a{font-size:12px;font-weight:800;color:var(--shell-muted)!important;text-decoration:none!important;white-space:nowrap;padding:10px 4px;border-bottom:2px solid transparent;transition:color .18s,border-color .18s}
 .decapod-top-links a:hover{color:var(--links)!important;border-color:var(--decapod-orange)}
 #menu-bar .right-buttons{order:3}
@@ -150,11 +150,15 @@ button,input,a{font-family:inherit}
 .decapod-offering-badge{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.04em}
 .decapod-offering-badge.badge-free{background:#271c2c;color:#fff8ef}
 .navy .decapod-offering-badge.badge-free,.coal .decapod-offering-badge.badge-free,.ayu .decapod-offering-badge.badge-free{background:#ffad86;color:#231a25}
+.decapod-offering-badge.badge-cloud{background:linear-gradient(135deg,#fff0e2 0%,#ffd8c2 100%);border:1px solid #f05b37;color:#271c2c}
+.navy .decapod-offering-badge.badge-cloud,.coal .decapod-offering-badge.badge-cloud,.ayu .decapod-offering-badge.badge-cloud{background:linear-gradient(135deg,#4b2d34 0%,#3a232d 100%);border:1px solid #f05b37;color:#ffcfb3}
 .decapod-offering-badge.badge-soon{background:var(--shell-soft);border:1px solid var(--shell-stroke);color:var(--links)}
 #content main .decapod-offering-card p{margin:0;font-size:13.5px;line-height:1.6;color:var(--shell-muted)}
 #content main .decapod-offering-points{margin:0;padding-inline-start:1.25em;font-size:12.5px;line-height:1.55;color:var(--fg)}
 #content main .decapod-offering-points li{margin-block:.28rem}
+.decapod-offering-actions{margin-top:auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .decapod-offering-action{margin-top:auto;display:inline-flex;align-items:center;justify-content:space-between;gap:10px;align-self:flex-start;padding:10px 14px;border-radius:12px;background:#271c2c;color:#fff!important;font-size:12px;font-weight:800;text-decoration:none!important;transition:transform .18s,background .18s}
+.decapod-offering-actions .decapod-offering-action{margin-top:0}
 .decapod-offering-action:hover{transform:translateY(-1px)}
 .navy .decapod-offering-action,.coal .decapod-offering-action,.ayu .decapod-offering-action{background:#ffad86;color:#231a25!important}
 .decapod-offering-action.secondary{background:var(--shell-card);border:1.5px solid var(--shell-stroke);color:var(--shell-strong)!important}

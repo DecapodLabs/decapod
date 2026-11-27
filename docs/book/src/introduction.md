@@ -59,8 +59,8 @@ See [Multi-Agent Workflows](workflows/multi-agent.md) for concrete parallel-engi
 
 Both storage modes remain **repo-native**:
 
-- **Local (`repo.backend = "local"`):** Keeps the task and event datastore locally in `.decapod/data/decapod.db` alongside Git-tracked `.decapod/` governance files. Requires no account or network connectivity.
-- **Cloud (`repo.backend = "cloud"`):** Routes supported task operations (`todo list/add/get/show/claim/release/done`) through Dactyl to a hosted service so engineers and agents on different machines share live task claims and custody, subject to verified repository and organization access.
+- **Local (`repo.backend = "local"`):** Keeps the task and event datastore locally in `.decapod/data/decapod.db` alongside Git-tracked `.decapod/` governance files. Free, offline, and requires no account or network connectivity.
+- **Cloud (`repo.backend = "cloud"`):** Routes supported task operations (`todo list/add/get/show/claim/release/done`) through Dactyl to the hosted **Decapod Cloud** service so engineers and agents on different machines share live task claims and custody, subject to verified repository and organization access (**$50/contributor/repo/mo** with **$0 surprise overages** and **multi-repo reservations**; see [Cloud Pricing](https://decapodlabs.ai/pricing)). Organization owners and admins manage subscriptions, repository enrollment, seat assignments, teammate access policies, and billing in [Organization Admin](https://decapodlabs.ai/admin).
 
 Cloud mode does **not** replace Git, execute agents in a separate remote runtime, or waive worktree isolation and local/CI validation requirements. See [Cloud sign-in and task access](reference/propodus.md) for authorization and failure boundaries.
 

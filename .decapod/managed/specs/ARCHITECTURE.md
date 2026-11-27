@@ -11,6 +11,16 @@
 - **Propodus `037` delegated-grant wire parser & parity test (`src/decapod/core/db_maintenance.rs`, `tests/cloud_wave_parity.rs`)**:
   - `parse_cloud_delegated_grant_status` accepts boolean `expired` or falls back to parsing RFC3339 `expires_at` (`exp <= OffsetDateTime::now_utc()`, failing closed when missing/unparseable) and reads `grant_policy_digest` or Propodus `037`'s `policy_digest`; `cloud_delegated_grants_037_rpc_wire_contract` exercises `fetch_cloud_delegated_grant_status` and `evaluate_cloud_capability_with_delegated_grant` end-to-end over DPoP-signed loopback HTTP (`POST /rest/v1/rpc/propodus_delegated_grants_v1`).
 
+## Decapod Cloud mdBook landing, shell navigation, and guide documentation (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+- **Shell navigation & brand assets (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Routes header/sidebar/footer/rail brand and media links to `https://decapodlabs.ai/` and adds `Pricing` (`https://decapodlabs.ai/pricing`) and `Admin` (`https://decapodlabs.ai/admin`) to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` with tightened `.decapod-top-links` spacing to keep the sticky top bar single-line on desktop.
+- **Offerings section & card actions (`docs/book/src/index.md`, `docs/book/src/custom.css`)**: Adds `.decapod-offering-badge.badge-cloud` (warm coral/espresso light and dark theme styles) and `.decapod-offering-actions` flex layout pairing `View Cloud pricing ↗` (`https://decapodlabs.ai/pricing`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) on the Decapod Cloud card.
+- **Guide & reference alignment (`docs/book/src/{introduction.md,quickstart.md,workflows/multi-agent.md,concepts/faq.md,reference/propodus.md,reference/cloud-projects.md}`)**: Adds consistent Decapod Cloud pricing and Organization Admin links across onboarding, workflow, FAQ, and reference chapters without altering Rust CLI/RPC modules or `.decapod/config.toml` schema.
+
+## Selective core CI shard selection alignment (`assets/tools/source_ci_profile.rs`)
+
+- **`profile::selected` (`Selection::Core`)**: Matches `check.id` so `"selective-core-2"` and `"selective-core-3"` return `core_full(paths)` while `"selective-core-1"` and `"selective-core-status"` remain selected for any `src/decapod/core/` or `core_test_inputs(p)` match, keeping `selected(...)` and `commands(...)` consistent without altering `core_full(paths)` or `selective-cli-*`.
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2119,7 +2129,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54`
+- Repository signal fingerprint: `53ae327719e42ad57467e2d330d324df7152f37d9e69b4c741c71e05eb6da374`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

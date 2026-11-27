@@ -25,7 +25,7 @@ ambiguous authority fails closed.
 ## 2. Repository Initialization (Human, once per repo)
 
 Initialize your repository. This is the only human-facing setup command: use
-`--backend local` (**Decapod Local**, default, free and offline) to store task custody locally in `.decapod/data/decapod.db`, or `--backend cloud` (**Decapod Cloud**) when teams on separate machines should share live task claims through the managed cloud task service. Both modes keep specs, plans, trajectories, worktrees, and Git proof repo-native.
+`--backend local` (**Decapod Local**, default, free and offline) to store task custody locally in `.decapod/data/decapod.db`, or `--backend cloud` (**Decapod Cloud**, **$50/contributor/repo/mo** with **$0 surprise overages** and **multi-repo reservations**; see [Cloud Pricing](https://decapodlabs.ai/pricing)) when teams on separate machines should share live task claims through the managed cloud task service. Both modes keep specs, plans, trajectories, worktrees, and Git proof repo-native.
 
 Initialization creates `.decapod/` and scaffolds the agent entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`) so whichever coding agent you open knows how to invoke the kernel. Agents later run `decapod init --proof` during validation for non-interactive upgrades (see [Configuration](configuration.md) and [Constitution](concepts/constitution.md)).
 
@@ -45,9 +45,22 @@ files. **Edit choices** returns to preferences; **Cancel** leaves a newly select
 project uncreated. A dry run writes no project state. Changed configuration is
 backed up privately under `.decapod/data/config-backups/`.
 
-Cloud sign-in starts after applying the reviewed setup. Pricing, seat assignment
-and repository authorization remain service-owned; setup does not collect a
-credential or maintain an access roster in TOML.
+Cloud sign-in starts after applying the reviewed setup. Create a personal or
+team workspace and start a subscription at
+[Cloud Signup](https://decapodlabs.ai/signup) (see
+[Cloud Pricing](https://decapodlabs.ai/pricing) for plan details), then manage
+subscriptions, repository enrollment, seat assignments, teammate access
+policies, and billing in [Organization Admin](https://decapodlabs.ai/admin).
+Pricing, seat assignment, and repository authorization remain service-owned,
+and setup does not collect a credential or maintain an access roster in TOML.
+
+For team onboarding on a repository that already selects `backend = "cloud"`,
+teammates clone the repository and sign in individually with `decapod cloud login`
+(or via `decapod session acquire` / a normal cloud command); credentials stay
+machine-private, and the service verifies each teammate's organization
+membership, repository enrollment, and assigned seat before admitting task reads
+or writes (`action_required` or `repository_denied` halts without falling back
+to SQLite).
 
 Cloud initialization may return `onboarding_pending` with a one-time browser
 URL. Continue with your coding agent: it shares the link, resumes the saved

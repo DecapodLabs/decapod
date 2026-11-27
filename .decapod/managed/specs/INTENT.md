@@ -9,6 +9,19 @@ Completes remaining Section 11 governance and context integrity gaps across prov
 - **Phase-correct gate matrix, repair admission, and bypass classification (`#1763`, `#1367`, `tests/gate_admission_and_resilience.rs`)**: Verifies orthogonal `EvaluationPhase` x `RuleAuthority` evaluation, refusal of caller-supplied `evidence_artifacts` at Publication when opaque `TerminalEvidence` is absent, actual-binary denied -> soft-reset repair -> admitted `govern artifacts verify-checkpoints` transition, and non-admission of external unmediated commits.
 - **Propodus `037` Cloud delegated-grant wire parity (`#1568`, `src/decapod/core/db_maintenance.rs`, `tests/cloud_wave_parity.rs`)**: Aligns `parse_cloud_delegated_grant_status` with Propodus migration `037` `get_grant` fields (`expires_at` RFC3339 expiry evaluation when boolean `expired` is absent, plus `policy_digest` fallback alongside `grant_policy_digest`) and qualifies `fetch_cloud_delegated_grant_status` -> `evaluate_cloud_capability_with_delegated_grant` over loopback HTTP + DPoP (`propodus_delegated_grants_v1`), failing closed on ungranted, revoked, and expired grants.
 
+## Decapod Cloud pricing & Organization Admin documentation update (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+Updates the human-facing mdBook documentation (`docs/book/`, published at `https://decapodlabs.ai/decapod`) to replace stale `"Coming soon"` / `offerings.html` copy and `https://decapodlabs.github.io/` brand URLs with live **Decapod Cloud** positioning (`$50/contributor/repo/mo`, `$0` surprise overages, multi-repo reservations) and direct navigation to `https://decapodlabs.ai/pricing` and `https://decapodlabs.ai/admin` without changing any CLI or runtime authorization boundaries:
+
+- **Landing page, theme shell & styling (`docs/book/src/index.md`, `docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Replaces the stale `"Coming soon"` badge and `offerings.html` links in the Decapod Local & Decapod Cloud section with `.decapod-offering-badge.badge-cloud` (warm coral/espresso) and `.decapod-offering-actions` flex layout linking to `https://decapodlabs.ai/pricing` ("Compare Local & Cloud ↗", "View Cloud pricing ↗") and `https://decapodlabs.ai/admin` ("Organization Admin ↗"), updates brand/asset links to `https://decapodlabs.ai/`, and adds compact `Pricing` and `Admin` links to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links`.
+- **Guide & reference prose (`docs/book/src/introduction.md`, `quickstart.md`, `workflows/multi-agent.md`, `concepts/faq.md`, `reference/propodus.md`, `reference/cloud-projects.md`)**: Documents Decapod Cloud's `$50/contributor/repo/mo` pricing, `$0` surprise overages, multi-repo reservations, and Organization Admin management scope (subscriptions, repository enrollment, seat assignments, teammate access policies, and billing) while preserving local-first defaults and service-owned authorization boundaries.
+
+## Scope `selective-core-2` and `selective-core-3` selection to `core_full(paths)` (`assets/tools/source_ci_profile.rs`)
+
+Fixes a `source-ci-profile` custody failure (`required source-CI recipe is empty`) on PRs touching `src/decapod/core/*` files outside `core_full(paths)`:
+
+- **Shard-selection alignment (`assets/tools/source_ci_profile.rs`, `tests/source_ci_profile_policy.rs`)**: Restricts `Selection::Core` selection for `"selective-core-2"` and `"selective-core-3"` in `profile::selected` to `core_full(paths)`, matching `profile::commands` (which already returns an empty recipe for shards `2` and `3` when `!core_full(paths)` while routing partial `src/decapod/core/` tests through `"selective-core-1"` and `"selective-core-status"`). Preserves full `core_full` 3-shard coverage for `core_test_inputs` and shared manifests while preventing empty-recipe aborts in `source-ci-custody` and CI shard status reporting.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1458,7 +1471,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54`
+- Repository signal fingerprint: `53ae327719e42ad57467e2d330d324df7152f37d9e69b4c741c71e05eb6da374`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

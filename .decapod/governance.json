@@ -934,6 +934,14 @@
       "proof_refs": [
         ".decapod/managed/.manifest.json"
       ]
+    },
+    {
+      "id": "code_01m8d524nefyjt0n-slot2-merge",
+      "summary": "Merge origin/master ad86c6840 (#1961, #1965, #1962) and reconcile v0.166.3 specs and inventory digest",
+      "input_digest": "sha256:c3dd30fb04760dd05684310745062a9fc100e3fd05e748d64e22b66c4b6fdb89",
+      "proof_refs": [
+        "validate_v01663"
+      ]
     }
   ],
   "intents": {
@@ -1015,7 +1023,7 @@
       "active_boundaries": [
         "Isolated worktree on origin/master v0.166.2; CARGO_BUILD_JOBS=2; Clack untouched; no root-checkout edits"
       ],
-      "artifact_hash": "sha256:e31e8475136e5a03c0657dcdd41ec76f536951b1f16e60133c1e1627c345f778",
+      "artifact_hash": "sha256:c6259655713de0e016035e181d0beb4d6d5bf9f661fc2b77711cd698ca0a7472",
       "checks": [
         {
           "name": "clippy_and_fmt",
@@ -1039,6 +1047,10 @@
         },
         {
           "name": "knowledge_unit",
+          "status": "passed"
+        },
+        {
+          "name": "local_tests_and_clippy",
           "status": "passed"
         },
         {
@@ -1067,10 +1079,17 @@
             "intent_id": "intent:code_01m8d524nefyjt0n",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:code_01m8d524nefyjt0n",
+            "event_id": "event:5",
+            "intent_id": "intent:code_01m8d524nefyjt0n",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "code_01m8d524nefyjt0n": {
@@ -1115,12 +1134,30 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "merge origin/master ad86c6840 and reconcile v0.166.3",
+                "custody_event_id": "event:5",
+                "observations": [],
+                "proof_refs": [
+                  "local_tests_and_clippy"
+                ],
+                "scope": [
+                  "assets/build/constitution_admission.rs",
+                  "src/decapod/",
+                  "tests/"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "merge origin/master ad86c6840 and reconcile v0.166.3"
+      ],
       "evidence": [
         "13/13 knowledge unit, 9/9 docs unit, 8/8 db_maintenance unit, 36/36 constitution_scaffolding, 4/4 constitution_claims, 6/6 cloud_wave_parity, 11/11 derived_replay_1936, 4/4 gate_admission_and_resilience, 6/6 knowledge_promotion_cli, 19/19 sqlite_maintenance, 5/5 trust_egress_gate (decapod), 5/5 trust_and_egress (dactyl v0.19.1), Propodus backend+deno trust tests; paired agy #1772 & cold #1367 cargo test passed."
       ],
