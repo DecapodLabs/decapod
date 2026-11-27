@@ -221,3 +221,163 @@ fn distinct_403_413_429_and_outcome_unknown_reconciliation() {
     assert_eq!(transport.reads.borrow()[0].0, PROOF_ACCEPTANCE_READ_OP);
     assert_eq!(transport.reads.borrow()[0].1["action"], "get_operation");
 }
+
+#[test]
+fn proof_transitions_reject_mismatched_subject_stale_fingerprint_and_self_escalation() {
+    let att_id = new_uuid_v4().expect("att uuid");
+    let req_cap = sample_capture_request(&att_id);
+    let fp = proof_capture_fingerprint(&req_cap).expect("fp");
+    let ev_digest = format!("sha256:{}", "7".repeat(64));
+
+    let verify_req = VerifyProofTransitionRequest {
+        project_id: "DecapodLabs/decapod".into(),
+        operation_id: new_uuid_v4().expect("verify op"),
+        attestation_id: att_id.clone(),
+        expected_fingerprint: fp.clone(),
+        expected_candidate_commit: "a".repeat(40),
+        expected_candidate_tree: "b".repeat(40),
+        verified_evidence_digest: ev_digest.clone(),
+        verifier_scope: "independent-ci-v1".into(),
+    };
+    let valid_verify = json!({
+        "version": 1,
+        "profile": "candidate-acceptance-v1",
+        "state": "independently_verified",
+        "operation_id": verify_req.operation_id,
+        "attestation_id": verify_req.attestation_id,
+        "fingerprint": fp,
+        "candidate": { "commit": "a".repeat(40), "tree": "b".repeat(40) },
+        "verified_evidence_digest": ev_digest,
+        "references_verified": true,
+        "logical_custody_verified": false,
+        "acceptance_supported": false,
+        "publication_eligible": false,
+        "forge_merge_authority": false,
+    });
+    let transport = MockTransport::new();
+    transport.push_write(Ok(valid_verify.clone()));
+    assert_eq!(
+        submit_verify(&transport, &verify_req).unwrap()["state"],
+        "independently_verified"
+    );
+
+    // Negative controls on verify: wrong commit, wrong fingerprint, wrong state, escalated flag.
+    for mut bad in [
+        {
+            let mut r = valid_verify.clone();
+            r["candidate"]["commit"] = json!("9".repeat(40));
+            r
+        },
+        {
+            let mut r = valid_verify.clone();
+            r["fingerprint"] = json!(format!("sha256:{}", "0".repeat(64)));
+            r
+        },
+        {
+            let mut r = valid_verify.clone();
+            r["state"] = json!("published");
+            r
+        },
+        {
+            let mut r = valid_verify.clone();
+            r["publication_eligible"] = json!(true);
+            r
+        },
+        {
+            let mut r = valid_verify.clone();
+            r["forge_merge_authority"] = json!(true);
+            r
+        },
+    ] {
+        let _ = &mut bad;
+        transport.push_write(Ok(bad));
+        assert!(
+            submit_verify(&transport, &verify_req)
+                .unwrap_err()
+                .to_string()
+                .contains("CLOUD_PROOF_RECEIPT_INVALID")
+        );
+    }
+
+    // Reconcile unknown outcome returning another operation's receipt MUST fail closed.
+    transport.push_write(Err(classify_control_status(
+        None,
+        "outcome_unknown",
+        "socket closed",
+        true,
+    )));
+    let mut wrong_op = valid_verify.clone();
+    wrong_op["operation_id"] = json!(new_uuid_v4().expect("other op"));
+    transport.push_read(Ok(json!({ "found": true, "receipt": wrong_op })));
+    assert!(
+        submit_verify(&transport, &verify_req)
+            .unwrap_err()
+            .to_string()
+            .contains("CLOUD_PROOF_RECEIPT_INVALID")
+    );
+
+    // Admit vs publish positive + negative controls.
+    let admit_req = AdmitOrPublishProofRequest {
+        project_id: "DecapodLabs/decapod".into(),
+        operation_id: new_uuid_v4().expect("admit op"),
+        attestation_id: att_id.clone(),
+        expected_fingerprint: fp.clone(),
+        expected_task_revision: 2,
+        expected_fencing_generation: 1,
+        expected_candidate_commit: "a".repeat(40),
+        expected_accepted_target_commit: "c".repeat(40),
+        expected_policy_digest: format!("sha256:{}", "1".repeat(64)),
+    };
+    let valid_admit = json!({
+        "version": 1,
+        "profile": "candidate-acceptance-v1",
+        "state": "currently_admissible",
+        "operation_id": admit_req.operation_id,
+        "attestation_id": att_id,
+        "fingerprint": fp,
+        "task_revision": 2,
+        "fencing_generation": 1,
+        "candidate": { "commit": "a".repeat(40), "tree": "b".repeat(40) },
+        "accepted_target": { "commit": "c".repeat(40), "tree": "d".repeat(40) },
+        "policy_digest": format!("sha256:{}", "1".repeat(64)),
+        "references_verified": true,
+        "logical_custody_verified": true,
+        "acceptance_supported": true,
+        "publication_eligible": false,
+        "forge_merge_authority": false,
+    });
+    transport.push_write(Ok(valid_admit.clone()));
+    assert_eq!(
+        submit_admit_or_publish(&transport, "admit", &admit_req).unwrap()["state"],
+        "currently_admissible"
+    );
+
+    let mut wrong_target = valid_admit.clone();
+    wrong_target["accepted_target"]["commit"] = json!("e".repeat(40));
+    transport.push_write(Ok(wrong_target));
+    assert!(
+        submit_admit_or_publish(&transport, "admit", &admit_req)
+            .unwrap_err()
+            .to_string()
+            .contains("CLOUD_PROOF_RECEIPT_INVALID")
+    );
+
+    let mut valid_publish = valid_admit;
+    valid_publish["state"] = json!("published");
+    valid_publish["publication_eligible"] = json!(true);
+    transport.push_write(Ok(valid_publish.clone()));
+    assert_eq!(
+        submit_admit_or_publish(&transport, "publish", &admit_req).unwrap()["publication_eligible"],
+        true
+    );
+
+    let mut falsified_forge = valid_publish;
+    falsified_forge["forge_merge_authority"] = json!(true);
+    transport.push_write(Ok(falsified_forge));
+    assert!(
+        submit_admit_or_publish(&transport, "publish", &admit_req)
+            .unwrap_err()
+            .to_string()
+            .contains("CLOUD_PROOF_RECEIPT_INVALID")
+    );
+}
