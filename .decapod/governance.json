@@ -892,6 +892,14 @@
       "proof_refs": [
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-v1662-digest",
+      "summary": "Reconcile reviewed_sources_digest for v0.166.2 baseline",
+      "input_digest": "sha256:800035f4c87ae26e79c3538604da9c86d787943b6b9eb3e3e2d8191bff3b6e71",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
