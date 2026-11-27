@@ -578,9 +578,12 @@ pub fn selected(check: &Check, paths: &[String], release_only: bool) -> bool {
     }
     match check.selection {
         Selection::Always => true,
-        Selection::Core => paths
-            .iter()
-            .any(|p| p.contains("src/decapod/core/") || core_test_inputs(p)),
+        Selection::Core => match check.id {
+            "selective-core-2" | "selective-core-3" => core_full(paths),
+            _ => paths
+                .iter()
+                .any(|p| p.contains("src/decapod/core/") || core_test_inputs(p)),
+        },
         Selection::Plugins => paths
             .iter()
             .any(|p| p.contains("src/decapod/plugins/") || p.starts_with("tests/plugins/")),
