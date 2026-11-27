@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "cb54769bd078ccf80657843a230b7848028924d8",
+    "accepted_commit": "7c246e87b8ba044520f40ebfb46d543b980f0b7a",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,78 +872,53 @@
     }
   },
   "change": {
-    "id": "bugs_01m8db7j157m5nxr",
-    "base_commit": "cb54769bd078ccf80657843a230b7848028924d8",
+    "id": "pr:security-assurance-1964",
+    "base_commit": "7c246e87b8ba044520f40ebfb46d543b980f0b7a",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:recovery-workflows-1956-1957": {
-      "statement": "Agent recovery documentation and integration tests verify lease takeover/reconciliation, stale authoring binding recovery, and agent docs ingestion parity.",
-      "falsifier": "docs/agent/error-recovery.md or state-model.md diverges from implemented CLI/JSON recovery paths or recovery_workflows_1956_1957 fails.",
+    "claim:security-assurance-1964": {
+      "statement": "cloud_proof transitions reject wrong-subject, stale-fingerprint, failed-state, and self-escalated receipts; docs/security-assurance-matrix.md prohibits unqualified absolutes; isolated mutations on RULE-APPROVAL-006, RULE-CLOUD-PROOF-008, and RULE-HTTP-READONLY-009 are detected",
+      "falsifier": "Any positive-or-negative test in core::cloud_proof::tests, core::http_transport::tests, cloud_tenancy_parity_1895, or security_guarantee_assurance_1964 failing or mutation surviving",
       "status": "supported",
       "proof_refs": [
-        "docs/agent/error-recovery.md",
-        "docs/agent/state-model.md",
-        "tests/recovery_workflows_1956_1957.rs"
-      ]
-    },
-    "claim:sec9-artifact-rpc-and-ci-local-cloud": {
-      "statement": "GitHub artifact snapshots are fetched/verified in a single inventory pass without redundant artifact-list RPCs, and ci_local repository profile validation enforces cloud_decision verification before SQLite fallback.",
-      "falsifier": "source_import issues duplicate download_zip/list RPCs or ci_local bypasses cloud_decision verification.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "docs/security-assurance-matrix.md",
+        "tests/security_guarantee_assurance_1964.rs",
+        "tests/unit/core/cloud_proof_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "bugs_01m8db7j157m5nxr-cb54769bd-pr4",
-      "summary": "PR 4 on cb54769bd (v0.168.0): Section 9 (#1400, #1573, #1833) + #1956/#1957",
-      "input_digest": "sha256:891bdc885c28f2efde82bd132931cf891696af19702bc9ce08a5156cccdfda1c",
+      "id": "ckpt:security-assurance-1964-7c246e8",
+      "summary": "PR 5 (#1964) rebased cleanly onto 7c246e87b (PR #1974, v0.169.0) with guarantee matrix, cloud_proof receipt validation, and mutation suite.",
+      "input_digest": "sha256:74e722ad917a1f8771fb84158b68ebf9a22ae4f669123baef14999cbbc7102b2",
       "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/recovery_workflows_1956_1957.rs",
-        "tests/unit/core/repository_profile_tests.rs"
-      ]
-    },
-    {
-      "id": "bugs_01m8db7j157m5nxr-v01690-merge",
-      "summary": "Merge v0.169.0 (27e71bc4e) into PR 4 and reconcile reviewed_sources_digest, Dockerfile.decapod, specs, and manifest",
-      "input_digest": "sha256:20e8a86ca2467bb4a28def1f66ec9279d82a5d6b5446ab3c567736727c38042c",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/recovery_workflows_1956_1957.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "docs/security-assurance-matrix.md",
+        "src/decapod/core/cloud_proof.rs",
+        "tests/security_guarantee_assurance_1964.rs",
+        "tests/unit/core/cloud_proof_tests.rs",
+        "tests/unit/core/http_transport_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:bugs_01m8db7j157m5nxr": {
+    "intent:secu_01m8e4a3dekgp6r0": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero edits to assets/tools/*; NO force push; NO operator spoofing"
+        "decapod/src/decapod/core/cloud_proof.rs,docs/security-assurance-matrix.md,tests/security_guarantee_assurance_1964.rs"
       ],
-      "constraints": [
-        "src/decapod/core/snapshot_provider/github_artifacts.rs,src/decapod/core/validation_runtime/snapshot/source_import.rs,src/decapod/core/repository_policy_approval.rs,src/decapod/core/repository_profile.rs,tests/unit/core/repository_profile_tests.rs,docs/agent/error-recovery.md,docs/agent/state-model.md,tests/recovery_workflows_1956_1957.rs"
-      ],
+      "constraints": [],
       "created_sequence": 1,
-      "id": "intent:bugs_01m8db7j157m5nxr",
+      "id": "intent:secu_01m8e4a3dekgp6r0",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Section 9 CI/Publication (#1400, #1573, #1833) + Recovery Workflows (#1956, #1957)",
-      "refined_intent": "Deduplicate GitHub artifact RPCs, verify cloud_decision in ci_local mode, preserve stale-lease/recovery workflow docs and tests, refresh v0.168.0 specs and governance onto cb54769bd.",
+      "raw_intent": "Bind published security guarantees across Decapod, Dactyl, and Propodus to actual enforcement boundaries, negative controls, and mutation detectors (#1964)",
+      "refined_intent": "Harden src/decapod/core/cloud_proof.rs receipt validation, add docs/security-assurance-matrix.md and tests/security_guarantee_assurance_1964.rs (negative-first controls, drift check, RULE-APPROVAL-006 / RULE-CLOUD-PROOF-008 / RULE-HTTP-READONLY-009 mutations)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -956,80 +931,92 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Deduplicate GHA artifact inspection/download RPCs (#1400, #1573), support ci_local Cloud policy approvals in verify_accepted_approval (#1833), and close recovery workflow docs and integration tests (#1956, #1957) cleanly onto cb54769bd (v0.168.0).",
+      "intent": "Bind published security guarantees across Decapod, Dactyl, and Propodus to actual enforcement boundaries, negative controls, and mutation detectors (#1964)",
       "phases": [],
-      "proof_hooks": [
-        "cargo test --lib github_artifacts",
-        "cargo test --lib source_import",
-        "cargo test --lib repository_profile",
-        "cargo test --test recovery_workflows_1956_1957",
-        "cargo test --test cli_contract_enforcement test_agent_docs_ingest_works",
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled ARCHITECTURE.md onto v0.169.0 (27e71bc4e) with active merge.",
-          "reviewed_code_fingerprint": "4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238",
+          "reason": "No architecture component boundaries changed; cloud_proof receipt validation reinforces existing cloud_proof module contract.",
+          "reviewed_code_fingerprint": "f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e",
           "spec_material_hash": "ccd61a497b5f57ae1adfd92d566dfa77e7cbcab97ae2dacc5d3d3e2e2e4e77d3"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled INTERFACES.md onto v0.169.0 (27e71bc4e) with active merge.",
-          "reviewed_code_fingerprint": "4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238",
+          "reason": "Existing ProofControlTransport and CLI/RPC interface signatures preserved; mismatch receipts fail closed with CLOUD_PROOF_RECEIPT_INVALID.",
+          "reviewed_code_fingerprint": "f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e",
           "spec_material_hash": "af7cf7dafd80b510208a5b25f22baa8f29bd2b5729e74ad4798381fd60a34da6"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified SECURITY.md trust invariants preserved onto v0.169.0 (27e71bc4e).",
-          "reviewed_code_fingerprint": "4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238",
-          "spec_material_hash": "a4fe5bc64b48983949848592b590b6af1921b823ac1c42d55d6544d55a1c3cb1"
+          "reason": "Documented #1964 claim-to-enforcement matrix, fail-closed cloud_proof receipt checks, and uncovered mutation checks in SECURITY.md.",
+          "reviewed_code_fingerprint": "f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e",
+          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Section 9 CI/Publication (#1400, #1573, #1833) + Recovery Docs/Tests (#1956, #1957)",
+      "title": "Bind published security guarantees, cloud_proof receipt checks, and mutation suite (#1964)",
       "todo_ids": [
-        "bugs_01m8db7j157m5nxr"
+        "secu_01m8e4a3dekgp6r0"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795786248Z"
+      "updated_at": "1795789137Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero edits to assets/tools/*; NO force push; NO operator spoofing"
+        "decapod/src/decapod/core/cloud_proof.rs,docs/security-assurance-matrix.md,tests/security_guarantee_assurance_1964.rs"
       ],
-      "artifact_hash": "sha256:35fea24acada3c7bf3127c1c698cd930bcbeb0a4b8640406c131c45039e4a88e",
+      "artifact_hash": "sha256:d82e4d2758aefb6f3eb8934ed3969d8a0667cfbddbfc20a283b57d2beacb003f",
       "checks": [
         {
-          "name": "pre_build",
+          "name": "cargo_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "cargo_fmt",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_tenancy_parity_1895",
+          "status": "passed"
+        },
+        {
+          "name": "core_cloud_proof_tests",
+          "status": "passed"
+        },
+        {
+          "name": "core_http_transport_tests",
+          "status": "passed"
+        },
+        {
+          "name": "security_guarantee_assurance_1964",
           "status": "passed"
         }
       ],
-      "current_phase": "reconciled_cb54769bd",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:bugs_01m8db7j157m5nxr",
+            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:bugs_01m8db7j157m5nxr",
+            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:bugs_01m8db7j157m5nxr",
+            "detail": "trajectory:secu_01m8e4a3dekgp6r0",
             "event_id": "event:4",
-            "intent_id": "intent:bugs_01m8db7j157m5nxr",
+            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1038,37 +1025,35 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "bugs_01m8db7j157m5nxr": {
+          "secu_01m8e4a3dekgp6r0": {
             "evidence_only": true,
-            "id": "bugs_01m8db7j157m5nxr",
-            "intent_id": "intent:bugs_01m8db7j157m5nxr",
+            "id": "secu_01m8e4a3dekgp6r0",
+            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
             "steps": [
               {
-                "action": "reconciled_cb54769bd",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/agent/error-recovery.md",
-                  "docs/agent/state-model.md",
-                  "src/decapod/core/repository_policy_approval.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "docs/agent/error-recovery.md",
-                  "docs/agent/state-model.md",
-                  "src/decapod/core/repository_policy_approval.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "tests/recovery_workflows_1956_1957.rs",
-                  "tests/unit/core/repository_profile_tests.rs",
-                  "Rebased PR 4 payload and specs onto origin/master cb54769bd (PR #1972 / v0.168.0)"
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/governed_transition.rs",
+                  "src/decapod/core/http_transport.rs",
+                  "tests/governance_fault_detection_1795.rs",
+                  "src/decapod/core/cloud_proof.rs",
+                  "tests/unit/core/cloud_proof_tests.rs",
+                  "tests/unit/core/http_transport_tests.rs",
+                  "tests/security_guarantee_assurance_1964.rs",
+                  "docs/security-assurance-matrix.md",
+                  ".decapod/managed/specs/SECURITY.md"
                 ],
                 "proof_refs": [
-                  "pre_build"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "core_cloud_proof_tests",
+                  "core_http_transport_tests",
+                  "cloud_tenancy_parity_1895",
+                  "security_guarantee_assurance_1964"
                 ],
-                "scope": [
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs,src/decapod/core/validation_runtime/snapshot/source_import.rs,src/decapod/core/repository_policy_approval.rs,src/decapod/core/repository_profile.rs,tests/unit/core/repository_profile_tests.rs,docs/agent/error-recovery.md,docs/agent/state-model.md,tests/recovery_workflows_1956_1957.rs"
-                ],
+                "scope": [],
                 "sequence": 4,
                 "validation_findings": []
               }
@@ -1077,35 +1062,29 @@
         }
       },
       "declared_commands": [],
-      "evidence": [
-        "Rebased PR 4 payload and specs onto origin/master cb54769bd (PR #1972 / v0.168.0)"
-      ],
+      "evidence": [],
       "inspected_files": [
-        "docs/agent/error-recovery.md",
-        "docs/agent/state-model.md",
-        "src/decapod/core/repository_policy_approval.rs",
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        "src/decapod/core/cloud_proof.rs",
+        "src/decapod/core/governed_transition.rs",
+        "src/decapod/core/http_transport.rs",
+        "tests/governance_fault_detection_1795.rs"
       ],
-      "intent_id": "intent:bugs_01m8db7j157m5nxr",
+      "intent_id": "intent:secu_01m8e4a3dekgp6r0",
       "modified_files": [
-        "docs/agent/error-recovery.md",
-        "docs/agent/state-model.md",
-        "src/decapod/core/repository_policy_approval.rs",
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/recovery_workflows_1956_1957.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        ".decapod/managed/specs/SECURITY.md",
+        "docs/security-assurance-matrix.md",
+        "src/decapod/core/cloud_proof.rs",
+        "tests/security_guarantee_assurance_1964.rs",
+        "tests/unit/core/cloud_proof_tests.rs",
+        "tests/unit/core/http_transport_tests.rs"
       ],
       "repo_scope": [
-        "src/decapod/core/snapshot_provider/github_artifacts.rs,src/decapod/core/validation_runtime/snapshot/source_import.rs,src/decapod/core/repository_policy_approval.rs,src/decapod/core/repository_profile.rs,tests/unit/core/repository_profile_tests.rs,docs/agent/error-recovery.md,docs/agent/state-model.md,tests/recovery_workflows_1956_1957.rs"
+        "src/decapod/core/cloud_proof.rs,docs/security-assurance-matrix.md,tests/"
       ],
-      "run_id": "bugs_01m8db7j157m5nxr",
+      "run_id": "secu_01m8e4a3dekgp6r0",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m8db7j157m5nxr",
+      "task_id": "secu_01m8e4a3dekgp6r0",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -316,3 +316,42 @@ fn slow_and_unauthorized_peers_fail_closed_within_timeout() {
 
     handle.join().unwrap();
 }
+
+#[test]
+fn read_only_credential_refuses_mutating_rpc_op_and_admits_allowlisted_op() {
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = listener.local_addr().unwrap();
+    let mut cfg =
+        HttpTransportConfig::for_rpc(addr.to_string(), "ro-token", false, 4096, "/repo/read-only");
+    cfg.read_only_only = true;
+    cfg.allowed_read_ops = vec!["observe.validation_plan".to_string()];
+    cfg.max_requests = Some(2);
+
+    let handle = thread::spawn(move || {
+        serve_on_listener(listener, cfg, |_| {
+            HttpResponse::json(200, br#"{"success":true}"#.to_vec())
+        })
+        .unwrap();
+    });
+
+    let (s_mut, _, b_mut) = post_rpc(
+        addr,
+        "ro-token",
+        &[("Idempotency-Key", "k-ro-mut")],
+        r#"{"op":"workspace.publish","params":{}}"#,
+    );
+    assert_eq!(s_mut, 403);
+    assert!(b_mut.contains("read_only_enforced"));
+
+    let (s_ok, h_ok, b_ok) = post_rpc(
+        addr,
+        "ro-token",
+        &[("Idempotency-Key", "k-ro-ok")],
+        r#"{"op":"observe.validation_plan","params":{}}"#,
+    );
+    assert_eq!(s_ok, 200);
+    assert!(h_ok.contains("X-Decapod-Read-Only: true"));
+    assert!(b_ok.contains(r#""success":true"#));
+
+    handle.join().unwrap();
+}

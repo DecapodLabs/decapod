@@ -581,12 +581,228 @@ pub fn custody_revoke<T: ProofControlTransport>(
         .map_err(|err| err.to_decapod_error(Some(&req.operation_id)))
 }
 
+fn invalid_proof_receipt(detail: &str) -> DecapodError {
+    DecapodError::ValidationError(format!(
+        "CLOUD_PROOF_RECEIPT_INVALID: hosted proof receipt is missing, failed, or mismatched ({detail})"
+    ))
+}
+
+fn receipt_lifecycle_state(receipt: &JsonValue) -> Option<&str> {
+    receipt
+        .get("state")
+        .or_else(|| receipt.get("status"))
+        .and_then(|v| v.as_str())
+}
+
+fn assert_optional_str_match(
+    receipt: &JsonValue,
+    key: &str,
+    expected: &str,
+) -> Result<(), DecapodError> {
+    if let Some(value) = receipt.get(key)
+        && !value.is_null()
+        && value.as_str() != Some(expected)
+    {
+        return Err(invalid_proof_receipt(&format!("{key} mismatch")));
+    }
+    Ok(())
+}
+
+fn assert_optional_i64_match(
+    receipt: &JsonValue,
+    key: &str,
+    expected: i64,
+) -> Result<(), DecapodError> {
+    if let Some(value) = receipt.get(key)
+        && !value.is_null()
+        && value.as_i64() != Some(expected)
+    {
+        return Err(invalid_proof_receipt(&format!("{key} mismatch")));
+    }
+    Ok(())
+}
+
+fn assert_required_str_match(
+    receipt: &JsonValue,
+    key: &str,
+    expected: &str,
+) -> Result<(), DecapodError> {
+    if receipt.get(key).and_then(|v| v.as_str()) != Some(expected) {
+        return Err(invalid_proof_receipt(&format!("expected {key}")));
+    }
+    Ok(())
+}
+
+fn assert_required_i64_match(
+    receipt: &JsonValue,
+    key: &str,
+    expected: i64,
+) -> Result<(), DecapodError> {
+    if receipt.get(key).and_then(|v| v.as_i64()) != Some(expected) {
+        return Err(invalid_proof_receipt(&format!("expected {key}")));
+    }
+    Ok(())
+}
+
+fn assert_not_escalated_true(receipt: &JsonValue, key: &str) -> Result<(), DecapodError> {
+    if receipt.get(key).and_then(|v| v.as_bool()) == Some(true) {
+        return Err(invalid_proof_receipt(&format!(
+            "unexpected privilege escalation flag {key}=true"
+        )));
+    }
+    Ok(())
+}
+
+fn assert_required_bool(
+    receipt: &JsonValue,
+    key: &str,
+    expected: bool,
+) -> Result<(), DecapodError> {
+    if receipt.get(key).and_then(|v| v.as_bool()) != Some(expected) {
+        return Err(invalid_proof_receipt(&format!("expected {key}={expected}")));
+    }
+    Ok(())
+}
+
+fn assert_candidate_acceptance_envelope(
+    receipt: &JsonValue,
+    project_id: &str,
+    operation_id: &str,
+    attestation_id: &str,
+    expected_fingerprint: &str,
+    expected_state: &str,
+) -> Result<(), DecapodError> {
+    if !receipt.is_object() {
+        return Err(invalid_proof_receipt("receipt is not an object"));
+    }
+    assert_required_i64_match(receipt, "version", 1)?;
+    assert_required_str_match(receipt, "profile", "candidate-acceptance-v1")?;
+    if receipt_lifecycle_state(receipt) != Some(expected_state) {
+        return Err(invalid_proof_receipt(&format!(
+            "expected state {expected_state}"
+        )));
+    }
+    assert_optional_str_match(receipt, "project_id", project_id)?;
+    assert_required_str_match(receipt, "operation_id", operation_id)?;
+    assert_required_str_match(receipt, "attestation_id", attestation_id)?;
+    assert_required_str_match(receipt, "fingerprint", expected_fingerprint)?;
+    assert_not_escalated_true(receipt, "forge_merge_authority")?;
+    Ok(())
+}
+
+fn verify_capture_receipt(
+    receipt: &JsonValue,
+    project_id: &str,
+    submission: &ProofCaptureRequest,
+    expected_fingerprint: &str,
+) -> Result<(), DecapodError> {
+    if !receipt.is_object() {
+        return Err(invalid_proof_receipt("capture receipt is not an object"));
+    }
+    if !matches!(
+        receipt_lifecycle_state(receipt),
+        Some("captured" | "recorded_unverified")
+    ) {
+        return Err(invalid_proof_receipt(
+            "capture receipt must report captured or recorded_unverified state",
+        ));
+    }
+    assert_optional_str_match(receipt, "project_id", project_id)?;
+    assert_optional_str_match(receipt, "operation_id", &submission.operation_id)?;
+    assert_optional_str_match(receipt, "capture_operation_id", &submission.operation_id)?;
+    let op_bound = [
+        receipt.get("operation_id"),
+        receipt.get("capture_operation_id"),
+        receipt.get("attestation_id"),
+    ]
+    .into_iter()
+    .flatten()
+    .filter_map(|v| v.as_str())
+    .any(|v| v == submission.operation_id);
+    if !op_bound {
+        return Err(invalid_proof_receipt(
+            "capture receipt does not bind expected operation_id",
+        ));
+    }
+    assert_optional_str_match(receipt, "task_id", &submission.subject.task_id)?;
+    assert_optional_str_match(receipt, "workspace_id", &submission.subject.workspace_id)?;
+    assert_optional_str_match(receipt, "custody_id", &submission.subject.custody_id)?;
+    assert_optional_i64_match(receipt, "task_revision", submission.subject.task_revision)?;
+    assert_optional_i64_match(
+        receipt,
+        "fencing_generation",
+        submission.subject.fencing_generation,
+    )?;
+    assert_optional_str_match(receipt, "fingerprint", expected_fingerprint)?;
+    assert_optional_str_match(
+        receipt,
+        "source_commit",
+        &submission.subject.candidate.commit,
+    )?;
+    assert_optional_str_match(
+        receipt,
+        "policy_revision",
+        &submission.subject.policy_digest,
+    )?;
+    assert_optional_str_match(receipt, "policy_digest", &submission.subject.policy_digest)?;
+    if let Some(cand) = receipt.get("candidate").filter(|v| !v.is_null()) {
+        assert_optional_str_match(cand, "commit", &submission.subject.candidate.commit)?;
+        assert_optional_str_match(cand, "tree", &submission.subject.candidate.tree)?;
+    }
+    if let Some(target) = receipt.get("accepted_target").filter(|v| !v.is_null()) {
+        assert_optional_str_match(target, "commit", &submission.subject.accepted_target.commit)?;
+        assert_optional_str_match(target, "tree", &submission.subject.accepted_target.tree)?;
+    }
+    for flag in [
+        "logical_custody_verified",
+        "acceptance_supported",
+        "publication_eligible",
+        "forge_merge_authority",
+    ] {
+        assert_not_escalated_true(receipt, flag)?;
+    }
+    Ok(())
+}
+
+fn execute_proof_transition<T: ProofControlTransport, F>(
+    transport: &T,
+    project_id: &str,
+    operation_id: &str,
+    expected_fingerprint: Option<&str>,
+    payload: &JsonValue,
+    validate: F,
+) -> Result<JsonValue, DecapodError>
+where
+    F: FnOnce(&JsonValue) -> Result<(), DecapodError>,
+{
+    let receipt = match transport.write_control(PROOF_ACCEPTANCE_CONTROL_OP, payload) {
+        Ok(receipt) => receipt,
+        Err(err) if err.kind == CloudControlDenialKind::OutcomeUnknown => {
+            reconcile_operation_after_unknown(
+                transport,
+                project_id,
+                operation_id,
+                expected_fingerprint,
+            )?
+        }
+        Err(err) => return Err(err.to_decapod_error(Some(operation_id))),
+    };
+    validate(&receipt)?;
+    Ok(receipt)
+}
+
 pub fn submit_capture<T: ProofControlTransport>(
     transport: &T,
     project_id: &str,
     native_task_version: i64,
     submission: &ProofCaptureRequest,
 ) -> Result<JsonValue, DecapodError> {
+    if submission.subject.repository_id != project_id {
+        return Err(invalid_proof_receipt(
+            "submission subject repository_id disagrees with target project_id",
+        ));
+    }
+    let fingerprint = proof_capture_fingerprint(submission)?;
     let sub_json = serde_json::to_string(submission).map_err(|e| {
         DecapodError::ValidationError(format!("failed serializing proof submission: {e}"))
     })?;
@@ -598,18 +814,14 @@ pub fn submit_capture<T: ProofControlTransport>(
         "native_task_version": native_task_version,
         "submission": sub_json,
     });
-    match transport.write_control(PROOF_ACCEPTANCE_CONTROL_OP, &payload) {
-        Ok(receipt) => Ok(receipt),
-        Err(err) if err.kind == CloudControlDenialKind::OutcomeUnknown => {
-            reconcile_operation_after_unknown(
-                transport,
-                project_id,
-                &submission.operation_id,
-                Some(&proof_capture_fingerprint(submission)?),
-            )
-        }
-        Err(err) => Err(err.to_decapod_error(Some(&submission.operation_id))),
-    }
+    execute_proof_transition(
+        transport,
+        project_id,
+        &submission.operation_id,
+        Some(&fingerprint),
+        &payload,
+        |receipt| verify_capture_receipt(receipt, project_id, submission, &fingerprint),
+    )
 }
 
 #[derive(Debug, Clone)]
@@ -640,18 +852,43 @@ pub fn submit_verify<T: ProofControlTransport>(
         "verified_evidence_digest": req.verified_evidence_digest,
         "verifier_scope": req.verifier_scope,
     });
-    match transport.write_control(PROOF_ACCEPTANCE_CONTROL_OP, &payload) {
-        Ok(receipt) => Ok(receipt),
-        Err(err) if err.kind == CloudControlDenialKind::OutcomeUnknown => {
-            reconcile_operation_after_unknown(
-                transport,
+    execute_proof_transition(
+        transport,
+        &req.project_id,
+        &req.operation_id,
+        Some(&req.expected_fingerprint),
+        &payload,
+        |receipt| {
+            assert_candidate_acceptance_envelope(
+                receipt,
                 &req.project_id,
                 &req.operation_id,
-                Some(&req.expected_fingerprint),
-            )
-        }
-        Err(err) => Err(err.to_decapod_error(Some(&req.operation_id))),
-    }
+                &req.attestation_id,
+                &req.expected_fingerprint,
+                ProofLifecycleState::IndependentlyVerified.as_str(),
+            )?;
+            let candidate = receipt
+                .get("candidate")
+                .filter(|v| v.is_object())
+                .ok_or_else(|| invalid_proof_receipt("expected candidate identity"))?;
+            assert_required_str_match(candidate, "commit", &req.expected_candidate_commit)?;
+            assert_required_str_match(candidate, "tree", &req.expected_candidate_tree)?;
+            assert_required_str_match(
+                receipt,
+                "verified_evidence_digest",
+                &req.verified_evidence_digest,
+            )?;
+            assert_required_bool(receipt, "references_verified", true)?;
+            for flag in [
+                "logical_custody_verified",
+                "acceptance_supported",
+                "publication_eligible",
+            ] {
+                assert_not_escalated_true(receipt, flag)?;
+            }
+            Ok(())
+        },
+    )
 }
 
 #[derive(Debug, Clone)]
@@ -672,11 +909,15 @@ pub fn submit_admit_or_publish<T: ProofControlTransport>(
     action: &str,
     req: &AdmitOrPublishProofRequest,
 ) -> Result<JsonValue, DecapodError> {
-    if action != "admit" && action != "publish" {
-        return Err(DecapodError::ValidationError(format!(
-            "unsupported proof admission action {action:?}"
-        )));
-    }
+    let expected_state = match action {
+        "admit" => ProofLifecycleState::CurrentlyAdmissible.as_str(),
+        "publish" => ProofLifecycleState::Published.as_str(),
+        _ => {
+            return Err(DecapodError::ValidationError(format!(
+                "unsupported proof admission action {action:?}"
+            )));
+        }
+    };
     let payload = json!({
         "version": 1,
         "action": action,
@@ -690,18 +931,45 @@ pub fn submit_admit_or_publish<T: ProofControlTransport>(
         "expected_accepted_target_commit": req.expected_accepted_target_commit,
         "expected_policy_digest": req.expected_policy_digest,
     });
-    match transport.write_control(PROOF_ACCEPTANCE_CONTROL_OP, &payload) {
-        Ok(receipt) => Ok(receipt),
-        Err(err) if err.kind == CloudControlDenialKind::OutcomeUnknown => {
-            reconcile_operation_after_unknown(
-                transport,
+    execute_proof_transition(
+        transport,
+        &req.project_id,
+        &req.operation_id,
+        Some(&req.expected_fingerprint),
+        &payload,
+        |receipt| {
+            assert_candidate_acceptance_envelope(
+                receipt,
                 &req.project_id,
                 &req.operation_id,
-                Some(&req.expected_fingerprint),
-            )
-        }
-        Err(err) => Err(err.to_decapod_error(Some(&req.operation_id))),
-    }
+                &req.attestation_id,
+                &req.expected_fingerprint,
+                expected_state,
+            )?;
+            assert_required_i64_match(receipt, "task_revision", req.expected_task_revision)?;
+            assert_required_i64_match(
+                receipt,
+                "fencing_generation",
+                req.expected_fencing_generation,
+            )?;
+            let candidate = receipt
+                .get("candidate")
+                .filter(|v| v.is_object())
+                .ok_or_else(|| invalid_proof_receipt("expected candidate identity"))?;
+            assert_required_str_match(candidate, "commit", &req.expected_candidate_commit)?;
+            let target = receipt
+                .get("accepted_target")
+                .filter(|v| v.is_object())
+                .ok_or_else(|| invalid_proof_receipt("expected accepted_target identity"))?;
+            assert_required_str_match(target, "commit", &req.expected_accepted_target_commit)?;
+            assert_required_str_match(receipt, "policy_digest", &req.expected_policy_digest)?;
+            assert_required_bool(receipt, "references_verified", true)?;
+            assert_required_bool(receipt, "logical_custody_verified", true)?;
+            assert_required_bool(receipt, "acceptance_supported", true)?;
+            assert_required_bool(receipt, "publication_eligible", action == "publish")?;
+            Ok(())
+        },
+    )
 }
 
 pub fn submit_retire_historical<T: ProofControlTransport>(
@@ -721,22 +989,28 @@ pub fn submit_retire_historical<T: ProofControlTransport>(
         "expected_fingerprint": expected_fingerprint,
         "reason": reason,
     });
-    match transport.write_control(PROOF_ACCEPTANCE_CONTROL_OP, &payload) {
-        Ok(receipt) => Ok(receipt),
-        Err(err) if err.kind == CloudControlDenialKind::OutcomeUnknown => {
-            reconcile_operation_after_unknown(
-                transport,
+    execute_proof_transition(
+        transport,
+        project_id,
+        operation_id,
+        Some(expected_fingerprint),
+        &payload,
+        |receipt| {
+            assert_candidate_acceptance_envelope(
+                receipt,
                 project_id,
                 operation_id,
-                Some(expected_fingerprint),
-            )
-        }
-        Err(err) => Err(err.to_decapod_error(Some(operation_id))),
-    }
+                attestation_id,
+                expected_fingerprint,
+                ProofLifecycleState::HistoricallyAccepted.as_str(),
+            )?;
+            assert_required_bool(receipt, "publication_eligible", false)
+        },
+    )
 }
 
 /// Read-only reconciliation of an uncertain write using `get_operation` rather
-/// than blind replay.
+/// than blind replay, failing closed on missing/mismatched/failed receipts.
 pub fn reconcile_operation_after_unknown<T: ProofControlTransport>(
     transport: &T,
     project_id: &str,
@@ -763,20 +1037,71 @@ pub fn reconcile_operation_after_unknown<T: ProofControlTransport>(
         }
         Err(err) => return Err(err.to_decapod_error(Some(operation_id))),
     };
-    if lookup.get("found").and_then(|v| v.as_bool()) == Some(true)
-        && let Some(receipt) = lookup.get("receipt")
-    {
-        return Ok(receipt.clone());
+    if lookup.get("found").and_then(|v| v.as_bool()) == Some(false) {
+        return Err(DecapodError::ValidationError(format!(
+            "CLOUD_OUTCOME_UNKNOWN (operation_id={operation_id}): operation not found during reconciliation; retry safely only after checking task revision"
+        )));
     }
-    if lookup.get("state").is_some()
-        || lookup.get("attestation_id").is_some()
-        || lookup.get("fencing_generation").is_some()
+    let receipt = if lookup.get("found").and_then(|v| v.as_bool()) == Some(true) {
+        lookup
+            .get("receipt")
+            .filter(|v| v.is_object())
+            .cloned()
+            .ok_or_else(|| {
+                invalid_proof_receipt("get_operation found=true without receipt object")
+            })?
+    } else if lookup.is_object()
+        && (lookup.get("state").is_some()
+            || lookup.get("status").is_some()
+            || lookup.get("attestation_id").is_some()
+            || lookup.get("fencing_generation").is_some())
     {
-        return Ok(lookup);
+        lookup
+    } else {
+        return Err(DecapodError::ValidationError(format!(
+            "CLOUD_OUTCOME_UNKNOWN (operation_id={operation_id}): operation not found during reconciliation; retry safely only after checking task revision"
+        )));
+    };
+    if !matches!(
+        receipt_lifecycle_state(&receipt),
+        Some(
+            "captured"
+                | "recorded_unverified"
+                | "independently_verified"
+                | "currently_admissible"
+                | "published"
+                | "historically_accepted"
+                | "custody_bound"
+                | "custody_current"
+                | "custody_revoked"
+        )
+    ) {
+        return Err(invalid_proof_receipt(
+            "reconciled receipt has missing or disallowed lifecycle state",
+        ));
     }
-    Err(DecapodError::ValidationError(format!(
-        "CLOUD_OUTCOME_UNKNOWN (operation_id={operation_id}): operation not found during reconciliation; retry safely only after checking task revision"
-    )))
+    assert_optional_str_match(&receipt, "project_id", project_id)?;
+    assert_optional_str_match(&receipt, "operation_id", operation_id)?;
+    let op_bound = [
+        receipt.get("operation_id"),
+        receipt.get("capture_operation_id"),
+        receipt.get("attestation_id"),
+    ]
+    .into_iter()
+    .flatten()
+    .filter_map(|v| v.as_str())
+    .any(|v| v == operation_id);
+    if !op_bound {
+        return Err(invalid_proof_receipt(
+            "reconciled receipt does not match requested operation_id",
+        ));
+    }
+    if let Some(fp) = expected_fingerprint {
+        assert_optional_str_match(&receipt, "fingerprint", fp)?;
+        assert_optional_str_match(&receipt, "expected_fingerprint", fp)?;
+    }
+    assert_not_escalated_true(&receipt, "forge_merge_authority")?;
+    Ok(receipt)
 }
 
 pub fn reconstruct_attestation<T: ProofControlTransport>(

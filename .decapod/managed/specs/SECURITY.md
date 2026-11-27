@@ -1614,18 +1614,24 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 - **In-process ETag validation (`src/decapod/core/snapshot_provider/mod.rs`)**: ETag headers are strictly validated as printable ASCII (length 2..=256, single header, no CR/LF) to prevent header injection; the validator map is strictly in-process (max 64 entries, never persisted), always performs live TLS revalidation, and fails closed on unexpected HTTP 304 without prior ETag.
 - **Native-only Cachix tag publication (`.github/workflows/nix-flake.yml`)**: `publication-owner` restricts SemVer `refs/tags/v*` publication to `github-hosted` native Actions runners with non-Buildkite identity and valid 1-parent or 2-parent `chore: release v*` commits, keeping `secrets.CACHIX_AUTH_TOKEN` isolated to the single `publish` job.
 
+## Guarantee-to-Enforcement Binding & Cloud Proof Receipt Validation (#1964)
+
+- **Fail-closed Cloud proof receipt validation (`src/decapod/core/cloud_proof.rs`)**: `submit_capture`, `submit_verify`, `submit_admit_or_publish`, `submit_retire_historical`, and `reconcile_operation_after_unknown` share `execute_proof_transition` and validate `version`, `profile`, lifecycle `state`/`status`, `operation_id`, `attestation_id`, `fingerprint`, `candidate` (`commit`/`tree`), `accepted_target.commit`, `policy_digest`, `task_revision`, `fencing_generation`, and `verified_evidence_digest`, refusing privilege-escalation flags (`forge_merge_authority = true`, or `acceptance_supported`/`publication_eligible = true` on `capture`/`verify`/`admit`). An authenticated HTTP `200` receipt for the wrong subject or stale digest fails closed with `CLOUD_PROOF_RECEIPT_INVALID`.
+- **Cross-layer claim matrix & drift gate (`docs/security-assurance-matrix.md`, `tests/security_guarantee_assurance_1964.rs`)**: Maps published security/correctness claims across `README.md`, `SECURITY.md`, `docs/trust-and-egress-inventory.md`, `docs/publication-admission-acceptance.md`, `docs/book/src/reference/cloud-projects.md`, and `bindings/typescript/README.md` to exact enforcement components, evidence paths, and residual assumptions (`proven_for_exact_subject`, `trusted_assertion`, `conditional`, `not_proven`, `unsupported`), prohibiting unqualified absolute claims (`unspoofable`, `100% guaranteed`, unqualified `zero telemetry`).
+- **Mutation coverage extension (`tests/security_guarantee_assurance_1964.rs`)**: Preserves `#1795` intact and adds isolated single-fault mutation detection across uncovered boundaries `RULE-APPROVAL-006` (`governed_transition::admit`), `RULE-CLOUD-PROOF-008` (`cloud_proof::assert_candidate_acceptance_envelope`), and `RULE-HTTP-READONLY-009` (`http_transport::read_only_only`).
+
 <!-- decapod:codebase-contract:start -->
 
 ## Codebase Contract Snapshot
 
-- Security/policy/auth surfaces (37): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/trust_egress.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, (+21 more)
+- Security/policy/auth surfaces (38): `.config/build/cargo_inputs_policy.py`, `.github/workflows/security-audit.yml`, `src/decapod/core/agent_eval.rs`, `src/decapod/core/auth.rs`, `src/decapod/core/authoring.rs`, `src/decapod/core/capsule_policy.rs`, `src/decapod/core/path_policy.rs`, `src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/snapshot_provider/read_authorization.rs`, `src/decapod/core/trust_egress.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy.rs`, `src/decapod/core/validation_runtime/snapshot/source_policy/real_compiler_tests.rs`, `src/decapod/plugins/eval.rs`, `src/decapod/plugins/policy.rs`, `tests/agent_eval.rs`, `tests/build_layout_policy.rs`, (+22 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (293 files)
+- Repository signal fingerprint: `f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
