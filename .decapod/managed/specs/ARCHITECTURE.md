@@ -1,10 +1,15 @@
 # Architecture
 
-## Decapod Cloud mdBook landing, shell navigation, and guide documentation (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+## Section 11 governance, knowledge convergence, constitution admission, and Cloud delegated grants (#657, #1774, #1763, #1568)
 
-- **Shell navigation & brand assets (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Routes header/sidebar/footer/rail brand and media links to `https://decapodlabs.ai/` and adds `Pricing` (`https://decapodlabs.ai/pricing`) and `Admin` (`https://decapodlabs.ai/admin`) to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` with tightened `.decapod-top-links` spacing to keep the sticky top bar single-line on desktop.
-- **Offerings section & card actions (`docs/book/src/index.md`, `docs/book/src/custom.css`)**: Adds `.decapod-offering-badge.badge-cloud` (warm coral/espresso light and dark theme styles) and `.decapod-offering-actions` flex layout pairing `View Cloud pricing ↗` (`https://decapodlabs.ai/pricing`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) on the Decapod Cloud card.
-- **Guide & reference alignment (`docs/book/src/{introduction.md,quickstart.md,workflows/multi-agent.md,concepts/faq.md,reference/propodus.md,reference/cloud-projects.md}`)**: Adds consistent Decapod Cloud pricing and Organization Admin links across onboarding, workflow, FAQ, and reference chapters without altering Rust CLI/RPC modules or `.decapod/config.toml` schema.
+- **Provenance-aware knowledge convergence & supersession (`src/decapod/plugins/knowledge.rs`, `src/decapod/plugins/federation_ext.rs`, `src/decapod/lib.rs`)**:
+  - `canonical_conflict_scope` normalizes `"root"` and `"repo"` into `"repo_wide"` before conflict grouping, `conflict_group_key` groups `merge_key` records and falls back to `(scope, normalized_claim_or_title)` when `merge_key` is unset, and `context_supersedes_map` reads `node_edges` (`edge_type = 'supersedes'`) for `federation` context entries so superseded targets are filtered from operative packets without dropping history.
+  - `resolve_context` aggregates per-entry `helped` / `hurt` feedback, excludes records where `hurt >= 2 && hurt > helped` under `excluded` reason `"negative_retrieval_bias"`, sorts active entries by `(net_helpfulness DESC, helped DESC, rank ASC)` and deterministic `ts`, and `is_valid_provenance` enforces HTTPS (or loopback HTTP) plus control/whitespace rejection on `url:` sources.
+  - `add_scoped_knowledge_inner` handles both `add_scoped_knowledge` and `add_attested_superseding_knowledge`, validating explicit `--supersedes` targets via `supersede_knowledge` and recording `supersedes_id` during `handle_store_upsert`.
+- **Constitution admission non-self-promotion guards (`assets/build/constitution_admission.rs`)**:
+  - `validate` checks `!BINDING_NODES.contains(&id.as_str()) && node.get("authority_review").is_some()` on `"advisory"` nodes (`CONSTITUTION_AUTHORITY_REVIEW`), rejects `sections.enforcement` / `sections.claims` alongside top-level `enforcement` / `claims` (`CONSTITUTION_UNSUPPORTED_ENFORCEMENT`), and verifies `core/SPECS.sections.apply` retains `"admission registry"` and `"advisory"` (`CONSTITUTION_BINDING_CONTROL_REMOVED`).
+- **Propodus `037` delegated-grant wire parser & parity test (`src/decapod/core/db_maintenance.rs`, `tests/cloud_wave_parity.rs`)**:
+  - `parse_cloud_delegated_grant_status` accepts boolean `expired` or falls back to parsing RFC3339 `expires_at` (`exp <= OffsetDateTime::now_utc()`, failing closed when missing/unparseable) and reads `grant_policy_digest` or Propodus `037`'s `policy_digest`; `cloud_delegated_grants_037_rpc_wire_contract` exercises `fetch_cloud_delegated_grant_status` and `evaluate_cloud_capability_with_delegated_grant` end-to-end over DPoP-signed loopback HTTP (`POST /rest/v1/rpc/propodus_delegated_grants_v1`).
 
 ## Decapod Cloud mdBook landing, shell navigation, and guide documentation (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
 
@@ -2124,7 +2129,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151`
+- Repository signal fingerprint: `3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

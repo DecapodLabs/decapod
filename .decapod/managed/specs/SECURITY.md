@@ -1,9 +1,5 @@
 # Security
 
-## Selective core CI recipe non-emptiness invariant (`assets/tools/source_ci_profile.rs`)
-
-- **Closed recipe enforcement**: Preserves `assets/tools/source_ci_custody.rs`'s fail-closed check rejecting empty source-CI recipes (`required source-CI recipe is empty`) without weakening custody verification; aligns `profile::selected` so `selective-core-2` and `selective-core-3` are not falsely marked selected when only single-shard `selective-core-1` commands apply.
-
 ## Source-CI executor mode & stale accepted-base reconciliation boundaries
 
 - **Executor definition vs. carrier Git mode boundary (`src/decapod/core/validation_runtime/executor_contract.rs`)**: `is_valid_definition_entry` admits `100755 blob ` strictly for `.sh` paths in `profile::definition_files()`, while non-`.sh` definitions, `assets/tools/source_ci_custody.rs` protocol markers, and `verify_carrier_modes` strictly require `100644 blob `, rejecting symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
@@ -1622,7 +1618,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151`
+- Repository signal fingerprint: `3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

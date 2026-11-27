@@ -1,17 +1,14 @@
 # Interfaces
 
-## Decapod Cloud documentation links & styling classes (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+## Section 11 knowledge CLI/RPC, constitution admission errors, and Cloud delegated-grant fields (#657, #1774, #1568)
 
-- **External documentation navigation URLs**:
-  - Pricing & Local/Cloud comparison: `https://decapodlabs.ai/pricing`
-  - Organization Admin (subscriptions, repository enrollment, seat assignments, teammate access policies, billing): `https://decapodlabs.ai/admin`
-  - Brand & static media origin: `https://decapodlabs.ai/` and `https://decapodlabs.ai/assets/*`
-- **CSS & shell surface classes (`docs/book/src/custom.css`, `docs/book/theme/index.hbs`, `docs/book/src/index.md`)**:
-  - `.decapod-offering-badge.badge-cloud`: coral/espresso pill badge for the live Decapod Cloud offering card.
-  - `.decapod-offering-actions`: wrapping flex container for primary Pricing and secondary Admin action links inside `.decapod-offering-card`.
-  - `.decapod-top-links`, `.decapod-footer-links`, `.decapod-rail-links`: carry concise `Pricing` and `Admin` entries across the mdBook shell.
-- **Runtime CLI boundary**: Unchanged; `repo.backend = "local" | "cloud"` remains logical selection only in `.decapod/config.toml`, with no local price tables, access rosters, or billing authority stored in Git.
-- **Alignment regression (`tests/doc_alignment.rs`)**: `test_docs_landing_page_links_local_and_cloud_offerings` asserts live `decapodlabs.ai/pricing` and `decapodlabs.ai/admin` links, `.decapod-offering-badge.badge-cloud`, `.decapod-offering-actions`, and absence of stale `decapodlabs.github.io` / `offerings.html` / `"Coming soon"` copy.
+- **`decapod data knowledge add` & `store.upsert` supersession parameters (`src/decapod/cli.rs::KnowledgeCommand::Add`, `src/decapod/lib.rs`, `src/decapod/plugins/knowledge.rs`)**:
+  - CLI adds `--merge-key <KEY>`, `--on-conflict merge|supersede|reject` (default `"merge"`), `--supersedes <ID>`, and `--scope <SCOPE>` (default `"root"`), mirrored in `knowledge::schema()` and `handle_store_upsert`'s `supersedes_id` payload field.
+  - `KnowledgeContext` surfaces `"negative_retrieval_bias"` in `excluded` for entries rejected by sustained negative feedback (`hurt >= 2 && hurt > helped`), alongside `"malformed_provenance"` for invalid `url:` / `file:` provenance.
+- **Constitution build-time admission diagnostics (`assets/build/constitution_admission.rs`)**:
+  - `CONSTITUTION_AUTHORITY_REVIEW` fires on `"advisory"` non-`BINDING_NODES` carrying `authority_review`; `CONSTITUTION_UNSUPPORTED_ENFORCEMENT` fires on `sections.enforcement` or `sections.claims`; `CONSTITUTION_BINDING_CONTROL_REMOVED` fires if `core/SPECS.sections.apply` drops the `"admission registry"` + `"advisory"` guard.
+- **Cloud `propodus_delegated_grants_v1` `get_grant` response interface (`src/decapod/core/db_maintenance.rs::parse_cloud_delegated_grant_status`)**:
+  - Consumes Propodus `037` `get_grant` fields (`expires_at` RFC3339 timestamp when `expired` bool is omitted, `policy_digest` fallback for `grant_policy_digest`) while continuing to require non-zero matching `revocation_generation`, `policy_generation`, and `session_generation` in `evaluate_cloud_capability_with_delegated_grant`.
 
 ## Decapod Cloud documentation links & styling classes (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
 
@@ -2626,7 +2623,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151`
+- Repository signal fingerprint: `3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
