@@ -1,5 +1,10 @@
 # Interfaces
 
+## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
+
+- **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
+- **`verify_accepted_transition` (`qualifies_stale_accepted_base_inventory_reconciliation`)**: Admits `repo.pr-readiness.v1` transitions with a stale `accepted_base` `reviewed_sources_digest` strictly when commands and `reviewed_commands_digest` are preserved verbatim, both `base_tree` and `head_tree` inventory digests match `candidate_sources_digest`, and `changed_paths` is empty (`[]`).
+
 ## `#1949` `repo.pr-readiness.v1` transition error & untruncated `validate` text surface (`src/decapod/core/repository_profile.rs`, `src/decapod/core/validate.rs`)
 
 - **Transition error format (`verify_accepted_transition`)**: `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` reports `transition_id=<64-hex>`, `scope=repo.pr-readiness.v1`, `base`, `head`, `sources: <old> -> <new>`, `commands: <old> -> <new>`, `changed_paths=[...]`, and PR review / `DECAPOD_REPO_TRANSITION_APPROVAL` / `DECAPOD_REPO_TRANSITION_DECISION_ID` guidance without emitting manual `decapod govern policy approve` CLI instructions.
@@ -2591,7 +2596,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
+- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,12 @@
 # Intent
 
+## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
+
+Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
+
+- **Targeted `.sh` blob-mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)**: Allows both `100644 blob ` and `100755 blob ` in `executor_contract::capture` strictly for `.sh` paths returned by `profile::definition_files()` while preserving strict `100644 blob ` enforcement on `.rs` executor definitions, `assets/tools/source_ci_custody.rs` protocol marker, and `verify_carrier_modes`.
+- **Stale accepted-base `reviewed_sources_digest` reconciliation (`src/decapod/core/repository_profile.rs`)**: Eliminates false-positive `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` (`changed_paths=[]`) failures on consumer repos (such as Dactyl `origin/main` `fa4a10b7`) when the accepted base carries a stale `reviewed_sources_digest` in `.decapod/config.toml` while `commands_preserved && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`, `base_tree.inventory.digest() == candidate_sources_digest`, `head_tree.inventory.digest() == candidate_sources_digest`, and `changed_paths.is_empty()` (`qualifies_stale_accepted_base_inventory_reconciliation`). Any candidate modification to workflows, scripts, manifests, file modes, or proof commands still fails closed.
+
 ## Scope `repo.pr-readiness.v1` inventory transitions to proof-relevant inputs, surface transition diagnostics, and route governed WAL checkpoint via Dactyl write path (#1949)
 
 Eliminates dead-ends on routine packaging/version script changes, surfaces actionable transition diagnostics and accurate human-authorization guidance, and restores governed `db.wal.checkpoint` execution under `dactyl-db 0.19.1`:
@@ -1442,7 +1449,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `8bcbdb8d3b70781fe700c1a6cad533223419a5eff24e95545122591a00248b59`
+- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

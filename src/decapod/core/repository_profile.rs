@@ -464,6 +464,12 @@ pub(crate) fn verify_accepted_transition(
             &candidate_decl.reviewed_sources_digest,
             accepted_commands,
             accepted,
+        ) || qualifies_stale_accepted_base_inventory_reconciliation(
+            checkout_root,
+            accepted_base_sha,
+            candidate_head_sha,
+            &accepted_decl.reviewed_sources_digest,
+            &candidate_decl.reviewed_sources_digest,
         ))
     {
         return Ok(());
@@ -1090,6 +1096,57 @@ pub(crate) fn qualifies_release_only_inventory_transition(
     }
 
     false
+}
+
+/// Qualify an automatic `repo.pr-readiness.v1` source-inventory reconciliation
+/// when `accepted_base_sha` itself carries a stale `reviewed_sources_digest`
+/// in `.decapod/config.toml` that does not match its own Git tree inventory,
+/// `commands_preserved` and `reviewed_commands_digest` match verbatim, both
+/// `accepted_base_sha` and `candidate_head_sha` have identical inventoried Git
+/// trees matching `candidate_sources_digest`, and `changed_paths` is empty.
+pub(crate) fn qualifies_stale_accepted_base_inventory_reconciliation(
+    checkout_root: &Path,
+    accepted_base_sha: &str,
+    candidate_head_sha: &str,
+    accepted_sources_digest: &str,
+    candidate_sources_digest: &str,
+) -> bool {
+    if accepted_sources_digest == candidate_sources_digest
+        || accepted_base_sha == candidate_head_sha
+    {
+        return false;
+    }
+    let resolve_commit = |rev: &str| -> Option<String> {
+        let raw = transition_approval::git_object(
+            checkout_root,
+            &["rev-parse", "--verify", &format!("{rev}^{{commit}}")],
+        )
+        .ok()?;
+        String::from_utf8(raw).ok().map(|s| s.trim().to_owned())
+    };
+    let (Some(base_oid), Some(head_oid)) = (
+        resolve_commit(accepted_base_sha),
+        resolve_commit(candidate_head_sha),
+    ) else {
+        return false;
+    };
+    if base_oid == head_oid {
+        return false;
+    }
+    let mut blob_cache = BTreeMap::new();
+    let Some(base_tree) =
+        compute_git_tree_source_inventory(checkout_root, accepted_base_sha, &mut blob_cache)
+    else {
+        return false;
+    };
+    let Some(head_tree) =
+        compute_git_tree_source_inventory(checkout_root, candidate_head_sha, &mut blob_cache)
+    else {
+        return false;
+    };
+    base_tree.inventory.digest().ok().as_deref() == Some(candidate_sources_digest)
+        && head_tree.inventory.digest().ok().as_deref() == Some(candidate_sources_digest)
+        && compute_inventory_diff_paths(&base_tree, &head_tree).is_empty()
 }
 
 fn compute_inventory_diff_paths(
