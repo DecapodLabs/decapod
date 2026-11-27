@@ -942,6 +942,14 @@
       "proof_refs": [
         "validate_v01663"
       ]
+    },
+    {
+      "id": "code_01m8d524nefyjt0n-slot2-v1664",
+      "summary": "Merge origin/master fecd81a1d (v0.166.4 Cargo.toml/Cargo.lock/CHANGELOG.md) and update inventory digest",
+      "input_digest": "sha256:5067afea775e2fb18bd218df87f9439173bc17adf2c6524adb57d24f1b23ca01",
+      "proof_refs": [
+        "validate_v01663_on_fecd81a1d"
+      ]
     }
   ],
   "intents": {
