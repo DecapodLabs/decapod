@@ -958,6 +958,14 @@
       "proof_refs": [
         "validate_v01664"
       ]
+    },
+    {
+      "id": "code_01m8d524nefyjt0n-slot2-spec-reviews",
+      "summary": "Refresh ARCHITECTURE, INTERFACES, and SECURITY spec reviews after origin/master fecd81a1d merge",
+      "input_digest": "sha256:6a532c749f2d3810b1ae8f93b44e520ad69b95fd04615b900c2f0c2dd4f2badf",
+      "proof_refs": [
+        "verify_checkpoints_publication_material"
+      ]
     }
   ],
   "intents": {
@@ -1006,16 +1014,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #657 knowledge supersession/bias exclusion, #1774 constitution_admission guards, and #1568 Propodus 037 delegated-grant parser.",
-          "reviewed_code_fingerprint": "72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54",
-          "spec_material_hash": "dc45a8436b3171cbfd18ffc622a17b3f28bbc8c4d6badf1fd1d1a042bab65caa"
+          "reason": "Re-reviewed ARCHITECTURE.md against merged fecd81a1d (#1961/#1962/#1966) and Section 11 code fingerprint 3def4264",
+          "reviewed_code_fingerprint": "3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567",
+          "spec_material_hash": "4054ee2cd4da686df4a9ad86d4b0224431285cf365f6fcc3e8fadc2ee464fb89"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented new KnowledgeCommand::Add flags, store.upsert supersedes_id, admission diagnostics, and Propodus 037 get_grant fields.",
-          "reviewed_code_fingerprint": "72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54",
-          "spec_material_hash": "7c30ee406139431bfdf7726cd7c7f1af288920937cf8fe0c94b633fb90ad20df"
+          "reason": "Re-reviewed INTERFACES.md against merged fecd81a1d (#1961/#1962/#1966) and Section 11 code fingerprint 3def4264",
+          "reviewed_code_fingerprint": "3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567",
+          "spec_material_hash": "01dd88eadd3fe79052503e8d296a1505c1b023a2be182d2e63d4fc9a8aed14df"
         },
         {
           "disposition": "unchanged_with_reason",
@@ -1033,7 +1041,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795744521Z"
+      "updated_at": "1795758888Z"
     },
     "trajectory": {
       "active_boundaries": [
