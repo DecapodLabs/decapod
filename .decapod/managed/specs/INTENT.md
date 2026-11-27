@@ -30,6 +30,20 @@ Replaces `core::rpc::error_response`'s hardcoded `"Session may be invalid or exp
 
 # Intent
 
+## Terminal reflection recovery & machine-only completed-task proof boundary (`#1956`, `#1957`)
+
+Documents two non-destructive recovery workflows grounded directly in the current Decapod binary and adds real-binary integration coverage in `tests/recovery_workflows_1956_1957.rs`:
+
+- **Terminal reflection (`REFLECTION_BLOCKED`) with uncommitted governed work (`#1956`, `docs/agent/error-recovery.md`, `docs/agent/state-model.md`)**: Clarifies that `begin-pr` rejects uncommitted work (`GOVERNANCE_UNARCHIVED_WORK`) as well as committed unmerged PR records (`GOVERNANCE_PR_NOT_ACCEPTED`), and that subsequent operator authority neither resets the stopped branch's three-round reflection budget nor substitutes for validation proof. Preserves the terminal receipt and uncommitted authored edits via archival checkpoint+commit on the stopped branch, starts a fresh workstream off the accepted target via `decapod todo add` -> `claim` -> `decapod workspace ensure`, ports only non-governance authored paths, and honors operator authority through fresh plan/execution/checkpoint/validation gates.
+- **Completed machine-only operational tasks without a repository artifact (`#1957`, `docs/agent/error-recovery.md`)**: Documents that Decapod does not admit external or user-confirmed evidence without a repository artifact as `VERIFIED`, rejects fabricating `--artifact <id>=<unrelated-file>` or using `qa verify prune` (which wipes `completed_at` and reopens the task to `open`), and specifies recording operational context via `decapod todo comment` followed by policy-approved `decapod todo archive --id <ops-id>` (`task.archive`), keeping `completed_at` and unverified `task_verification` intact while clearing `PROOF_HOOK_FAILED` for unrelated code candidates.
+
+## Section 9 CI/Publication latency, Cloud transition approval, and collector hardening (`#1400`, `#1573`, `#1833`)
+
+Reduces GitHub Actions custody-collection latency and request volume while preserving full cryptographic proof, and extends Cloud policy-transition approvals to `ci_local` execution:
+
+- **Inventory-backed GHA artifact collection (`src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: Eliminates redundant per-artifact `verify_run` and `metadata` API subprocesses during `github_sources` collection (`#1400`, `#1573`) by authenticating the workflow run, jobs, and artifact `Metadata` (ID, size, and `sha256:` digest) once in `discover_workflow`, verifying each downloaded ZIP against those bounds via `GithubWorkflowInventory::download_artifact`, and re-verifying exact `artifact_snapshot` + `Run`/`Jobs` parity via post-loop `discover_workflow`.
+- **Cloud policy-transition approval in `ci_local` (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**: Carries `DECAPOD_REPO_TRANSITION_DECISION_ID` on `ApprovalInput` and evaluates `verify_cloud` whenever `cloud_backend` is active—including `ci_local` remote CI runs—while still blocking local SQLite fallback in `ci_local` (`#1833`).
+
 ## Section 11 governance, provenance knowledge convergence, constitution integrity, phase-correct admission, and Cloud delegated grants (#657, #1774, #1772, #1763, #1367, #1568, #1735, #1944)
 
 Completes remaining Section 11 governance and context integrity gaps across provenance-aware project knowledge retrieval/supersession, constitutional non-self-promotion enforcement, phase-correct PR checkpoint admission, Propodus migration `037` delegated-grant wire compatibility, and cross-repo trust/egress and ADR reconciliation:
@@ -1502,15 +1516,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 649 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (292)
-- Core modules: 149 | Workflows: 9 | Integration targets: 175
+- Tracked significant codebase files: 650 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (293)
+- Core modules: 149 | Workflows: 9 | Integration targets: 176
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (293 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

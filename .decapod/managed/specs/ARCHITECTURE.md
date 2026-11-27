@@ -33,6 +33,19 @@
 
 # Architecture
 
+## Terminal reflection recovery & machine-only task archive boundaries (`#1956`, `#1957`)
+
+- **Stopped-branch archival vs new workstream boundary (`docs/agent/error-recovery.md`, `docs/agent/state-model.md`, `src/decapod/core/governance_document.rs`, `src/decapod/core/mentor/reflection.rs`)**:
+  - `governance_document::checkpoint` permits committing an archival WIP checkpoint (`git add -A -- ':!.decapod/governance.json'`) on the stopped branch while `reflection::check_execute` continues failing closed (`REFLECTION_BLOCKED: obligations_regressed`) and `begin_pr_from_context` refuses unmerged rotation (`GOVERNANCE_PR_NOT_ACCEPTED`).
+  - `workspace::ensure_workspace` seeds a clean `.decapod/governance.json` off the accepted base for the follow-up task without copying or mutating the stopped branch's `sections.plan.reflection`.
+- **Machine-only operational task archival (`docs/agent/error-recovery.md`, `src/decapod/core/todo.rs`, `src/decapod/plan_governance.rs`)**:
+  - `todo::update_status_with_verification` transitions `status` from `'done'` to `'archived'` (`task.archive` policy-gated by `verified` trust + `govern policy grant`/`approve`) while preserving `completed_at`, `task_verification` (`CLAIMED`/unverified), and append-only `task.done` + `task.archive` events, removing the operational task from `collect_unverified_done_todos` (`WHERE t.status = 'done'`).
+
+## Section 9 GHA artifact collection & Cloud transition architecture (`#1400`, `#1573`, `#1833`)
+
+- **Shared ZIP verifier & inventory download (`src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: `download_zip_verified` centralizes ZIP fetch, exact `size_in_bytes` assertion, and `ArtifactFiles::verified` SHA-256 verification for both standalone `github::download` and `GithubWorkflowInventory::download_artifact`. `github_sources` downloads via `inventory.download_artifact` and verifies `current.artifact_snapshot(name) == Some((id, digest, size))` alongside `Run`/`Jobs` equality after the workflow loop.
+- **`ApprovalInput::cloud_decision` ordering (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**: `ApprovalInput` holds `cloud_decision: Option<std::ffi::OsString>` (`DECAPOD_REPO_TRANSITION_DECISION_ID`), and `verify_accepted_transition` evaluates `verify_signed`, then `cloud_backend` + `verify_cloud`, and only then gates local SQLite fallback behind `!approval.ci_local`.
+
 ## Section 11 governance, knowledge convergence, constitution admission, and Cloud delegated grants (#657, #1774, #1763, #1568)
 
 - **Provenance-aware knowledge convergence & supersession (`src/decapod/plugins/knowledge.rs`, `src/decapod/plugins/federation_ext.rs`, `src/decapod/lib.rs`)**:
@@ -2174,7 +2187,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (293 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

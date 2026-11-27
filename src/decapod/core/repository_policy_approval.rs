@@ -16,6 +16,7 @@ pub(super) const CLOUD_DECISION_ENV: &str = "DECAPOD_REPO_TRANSITION_DECISION_ID
 pub(crate) struct ApprovalInput {
     pub(super) ci_local: bool,
     pub(super) signed: Option<std::ffi::OsString>,
+    pub(super) cloud_decision: Option<std::ffi::OsString>,
     pub(crate) ci_target: Option<String>,
 }
 
@@ -24,6 +25,7 @@ impl ApprovalInput {
         Self {
             ci_local,
             signed: std::env::var_os(SIGNED_APPROVAL_ENV),
+            cloud_decision: std::env::var_os(CLOUD_DECISION_ENV),
             ci_target: ["GITHUB_BASE_REF", "BUILDKITE_PULL_REQUEST_BASE_BRANCH"]
                 .into_iter()
                 .filter_map(|key| std::env::var(key).ok())
@@ -36,6 +38,7 @@ impl ApprovalInput {
         Self {
             ci_local: true,
             signed: Some(signed.into()),
+            cloud_decision: None,
             ci_target: Some("main".into()),
         }
     }

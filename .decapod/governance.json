@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "714b90cbd578ce357ba519516aec22fcbce3a986",
-    "release": "v0.168.0",
+    "accepted_commit": "cb54769bd078ccf80657843a230b7848028924d8",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -765,6 +764,7 @@
       "trajectory:06645c9215349379": "custody isolation is container, but this host has no Docker; the work uses a git worktree workspace",
       "trajectory:083d2ad8e4cb2b22": "Current v2 mutation receipts and Dactyl 0.13.0 native consumer require fresh full proof; prior source proof is historical.",
       "trajectory:090ca62e2848cd74": "All8 authored spec bodies and exact proof config preserved through supported native init recovery; raw decoder scope remains separate from autonomous run coverage.",
+      "trajectory:11bb64be5869625d": "claude (#1888), codex-cli usage limit, and opencode unauthenticated remain external host credential gates",
       "trajectory:13217192dadb3ee3": "No local prerequisite suite run; remote full validation remains required",
       "trajectory:14bb95d52b8efabf": "Fresh complete exact-candidate CI required after cloud test contract correction",
       "trajectory:150b60dea853e3ba": "Real native measurements and separate holdout risk/coverage are required; current source CI success is insufficient. Evaluation criteria recorded before model outputs; no readiness fitting or holdout evaluation executed.",
@@ -872,80 +872,66 @@
     }
   },
   "change": {
-    "id": "test_01m8dkhxjeg9vm6c",
-    "base_commit": "714b90cbd578ce357ba519516aec22fcbce3a986",
+    "id": "bugs_01m8db7j157m5nxr",
+    "base_commit": "cb54769bd078ccf80657843a230b7848028924d8",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:sec12-darkmatter-a2a-boundary": {
-      "statement": "Decapod preserves read-only Darkmatter snapshot verification (#1711) and bounded A2A Agent Card/Handoff validation (#873) while keeping DecapodLabs/darkmatter external and owner-priority P3 deferral intact.",
-      "falsifier": "houseboat_engine or agent_interop_conformance A2A/Darkmatter contracts regress or embed cockpit UI inside decapod.",
+    "claim:recovery-workflows-1956-1957": {
+      "statement": "Agent recovery documentation and integration tests verify lease takeover/reconciliation, stale authoring binding recovery, and agent docs ingestion parity.",
+      "falsifier": "docs/agent/error-recovery.md or state-model.md diverges from implemented CLI/JSON recovery paths or recovery_workflows_1956_1957 fails.",
       "status": "supported",
       "proof_refs": [
-        "tests/agent_interop_conformance.rs",
-        "tests/houseboat_engine.rs"
+        "docs/agent/error-recovery.md",
+        "docs/agent/state-model.md",
+        "tests/recovery_workflows_1956_1957.rs"
       ]
     },
-    "claim:sec12-harness-packaging": {
-      "statement": "decapod integration harness {matrix,generate,install,remove} writes conflict-safe MCP configs, SKILL.md, Claude PreToolUse hooks, and OpenCode plugins while refusing symlinks and enforcing version_skew.",
-      "falsifier": "install_harness_package follows a symlink, clobbers unrelated user config/hooks, skips version_skew, or fails agent_interop_conformance.",
+    "claim:sec9-artifact-rpc-and-ci-local-cloud": {
+      "statement": "GitHub artifact snapshots are fetched/verified in a single inventory pass without redundant artifact-list RPCs, and ci_local repository profile validation enforces cloud_decision verification before SQLite fallback.",
+      "falsifier": "source_import issues duplicate download_zip/list RPCs or ci_local bypasses cloud_decision verification.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/agent_interop/registry.rs",
-        "tests/agent_interop_conformance.rs"
-      ]
-    },
-    "claim:sec12-napi-library-seam": {
-      "statement": "execute_library_rpc and decapod-napi preserve caller-isolated RPC custody without process::exit or shared SESSION_P_VAL, route @decapodlabs/decapod-client via native_napi with cli_process fallback, and bind @decapodlabs/pi-decapod lifecycle hooks.",
-      "falsifier": "Concurrent callers share SESSION_P_VAL, AbortSignal leaves runaway execution, or native/TS/Pi suites fail.",
-      "status": "supported",
-      "proof_refs": [
-        "bindings/typescript/test/client.test.ts",
-        "packages/pi-decapod/test/pi_extension.test.ts",
-        "src/decapod/lib.rs"
-      ]
-    },
-    "claim:sec12-three-arm-outcomes": {
-      "statement": "Arm::Static supports strict 3-arm (baseline, static, governed) paired comparisons without fabricating human attention (reviewed_active_human_minutes stays null) or hiding external host credential blockers.",
-      "falsifier": "Static runs masquerade as baseline/governed, unreviewed human attention turns into synthetic zero, or raw transcripts leak.",
-      "status": "supported",
-      "proof_refs": [
-        "docs/research/host-outcome-pilot/sec12-host-activation-2026-11-26.md",
-        "src/decapod/core/flight_recorder/outcomes.rs"
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/unit/core/repository_profile_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ckpt:section12-host-integration-714b",
-      "summary": "Section 12 (#875, #1277, #1095, #880, #1888, #1711, #873) rebased onto v0.168.0 (714b90cbd5) with N-API v0.168.0, Pi hooks, harness packaging, 3-arm outcomes, reconciled reviewed_sources_digest, and all checks verified",
-      "input_digest": "sha256:545b4bfa0f9455ed87f044b93bb2e521714205f691de48dbe78bfcd30be1079b",
+      "id": "bugs_01m8db7j157m5nxr-cb54769bd-pr4",
+      "summary": "PR 4 on cb54769bd (v0.168.0): Section 9 (#1400, #1573, #1833) + #1956/#1957",
+      "input_digest": "sha256:891bdc885c28f2efde82bd132931cf891696af19702bc9ce08a5156cccdfda1c",
       "proof_refs": [
-        "bindings/typescript/test/client.test.ts",
-        "packages/pi-decapod/test/pi_extension.test.ts",
-        "tests/agent_interop_conformance.rs"
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/recovery_workflows_1956_1957.rs",
+        "tests/unit/core/repository_profile_tests.rs"
       ]
     }
   ],
   "intents": {
-    "intent:branch_01M8E4_SEC12": {
+    "intent:bugs_01m8db7j157m5nxr": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated worktree agent/agy-hosts/test_01m8dkhxjeg9vm6c-sec12; CARGO_BUILD_JOBS=2; external paid/credential blockers preserved honestly"
+        "Zero edits to assets/tools/*; NO force push; NO operator spoofing"
       ],
       "constraints": [
-        "src/decapod/{cli,lib}.rs, agent_interop/registry.rs, flight_recorder/outcomes.rs, bindings/typescript/**, packages/pi-decapod/**, docs/research/host-outcome-pilot/**, tests/agent_interop_conformance.rs"
+        "src/decapod/core/snapshot_provider/github_artifacts.rs,src/decapod/core/validation_runtime/snapshot/source_import.rs,src/decapod/core/repository_policy_approval.rs,src/decapod/core/repository_profile.rs,tests/unit/core/repository_profile_tests.rs,docs/agent/error-recovery.md,docs/agent/state-model.md,tests/recovery_workflows_1956_1957.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_01M8E4_SEC12",
+      "id": "intent:bugs_01m8db7j157m5nxr",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Section 12 (#880, #1888, #1095, #1277, #875, #1711, #873) in isolated worktree onto v0.168.0",
-      "refined_intent": "Rebase Section 12 implementation onto 714b90cbd5, rebuild decapod-napi v0.168.0 with dactyl-db 0.21.0, refresh Living Specs/config digest/governance, and verify all suites cleanly",
+      "raw_intent": "Section 9 CI/Publication (#1400, #1573, #1833) + Recovery Workflows (#1956, #1957)",
+      "refined_intent": "Deduplicate GitHub artifact RPCs, verify cloud_decision in ci_local mode, preserve stale-lease/recovery workflow docs and tests, refresh v0.168.0 specs and governance onto cb54769bd.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -954,119 +940,84 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": [
-          "/Users/arx/src/decapod/.git"
-        ]
+        "forbidden_paths": []
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Land Section 12 deliverables (#875, #1277, #1095, #880, #1888, #1711, #873) onto v0.168.0 (714b90cbd5) cleanly with verified Rust, N-API, Pi, and redacted host-study proof while preserving external credential/quota blockers (#1888, codex, opencode).",
+      "intent": "Deduplicate GHA artifact inspection/download RPCs (#1400, #1573), support ci_local Cloud policy approvals in verify_accepted_approval (#1833), and close recovery workflow docs and integration tests (#1956, #1957) cleanly onto cb54769bd (v0.168.0).",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test agent_interop_conformance --test agent_rpc_suite --test houseboat_engine --test projection_consistency --test activation_conformance",
-        "cd bindings/typescript && npm test && npm run bench",
-        "cd packages/pi-decapod && npm test"
+        "cargo test --lib github_artifacts",
+        "cargo test --lib source_import",
+        "cargo test --lib repository_profile",
+        "cargo test --test recovery_workflows_1956_1957",
+        "cargo test --test cli_contract_enforcement test_agent_docs_ingest_works",
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Section 12 RpcCtx caller isolation, decapod-napi v0.168.0 dactyl-db 0.21.0 build, Pi hook enforcement, and Arm::Static summary ordering verified on 714b90cbd5",
-          "reviewed_code_fingerprint": "938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b",
-          "spec_material_hash": "98d7b5d79489c992a225a17b67a4dac9cccc82a36dbb7313c18be5ea34d867b0"
+          "reason": "Updated ARCHITECTURE.md onto cb54769bd (v0.168.0) for Section 9 and #1956/#1957.",
+          "reviewed_code_fingerprint": "1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27",
+          "spec_material_hash": "ccd61a497b5f57ae1adfd92d566dfa77e7cbcab97ae2dacc5d3d3e2e2e4e77d3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Section 12 CLI harness subcommands, library RPC seam, N-API exports, Pi hooks, and 3-arm outcomes verified on 714b90cbd5 (v0.168.0)",
-          "reviewed_code_fingerprint": "938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b",
-          "spec_material_hash": "75ee784de3d1140c862e30d974e8f32cca3bec0144d571ef628a536530c07193"
+          "reason": "Updated INTERFACES.md onto cb54769bd (v0.168.0) for Section 9 and #1956/#1957.",
+          "reviewed_code_fingerprint": "1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27",
+          "spec_material_hash": "af7cf7dafd80b510208a5b25f22baa8f29bd2b5729e74ad4798381fd60a34da6"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Section 12 symlink-refusing harness installer, zero shared SESSION_P_VAL, branch mutation refusal, and redacted telemetry / credential restraint verified on 714b90cbd5",
-          "reviewed_code_fingerprint": "938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b",
+          "reason": "Verified SECURITY.md trust invariants preserved onto cb54769bd (v0.168.0).",
+          "reviewed_code_fingerprint": "1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27",
           "spec_material_hash": "a4fe5bc64b48983949848592b590b6af1921b823ac1c42d55d6544d55a1c3cb1"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Section 12 Agent-Host Integration, Native TS Binding, Pi Hooks & 3-Arm Outcomes",
+      "title": "Section 9 CI/Publication (#1400, #1573, #1833) + Recovery Docs/Tests (#1956, #1957)",
       "todo_ids": [
-        "test_01m8dkhxjeg9vm6c"
+        "bugs_01m8db7j157m5nxr"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795779770Z"
+      "updated_at": "1795785022Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated worktree agent/agy-hosts/test_01m8dkhxjeg9vm6c-sec12; CARGO_BUILD_JOBS=2; external paid/credential blockers preserved honestly"
+        "Zero edits to assets/tools/*; NO force push; NO operator spoofing"
       ],
-      "artifact_hash": "sha256:eefb962f1968eb9e19c937a80a5aa183fc42384231cd1980a7ad7483ba87a04c",
+      "artifact_hash": "sha256:35fea24acada3c7bf3127c1c698cd930bcbeb0a4b8640406c131c45039e4a88e",
       "checks": [
         {
-          "name": "activation_conformance_2_of_2",
-          "status": "passed"
-        },
-        {
-          "name": "agent_interop_conformance_11_of_11",
-          "status": "passed"
-        },
-        {
-          "name": "agent_rpc_suite_6_of_6",
-          "status": "passed"
-        },
-        {
-          "name": "bindings_typescript_8_of_8",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "flight_recorder_outcomes_9_of_9",
-          "status": "passed"
-        },
-        {
-          "name": "houseboat_engine_14_of_14",
-          "status": "passed"
-        },
-        {
-          "name": "packages_pi_decapod_5_of_5",
-          "status": "passed"
-        },
-        {
-          "name": "projection_consistency_7_of_7",
+          "name": "pre_build",
           "status": "passed"
         }
       ],
-      "current_phase": "pre_publication_verification",
+      "current_phase": "reconciled_cb54769bd",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_01M8E4_SEC12",
+            "intent_id": "intent:bugs_01m8db7j157m5nxr",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_01M8E4_SEC12",
+            "intent_id": "intent:bugs_01m8db7j157m5nxr",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8E4_SEC12",
+            "detail": "trajectory:bugs_01m8db7j157m5nxr",
             "event_id": "event:4",
-            "intent_id": "intent:branch_01M8E4_SEC12",
+            "intent_id": "intent:bugs_01m8db7j157m5nxr",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1075,46 +1026,39 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8E4_SEC12": {
+          "bugs_01m8db7j157m5nxr": {
             "evidence_only": true,
-            "id": "branch_01M8E4_SEC12",
-            "intent_id": "intent:branch_01M8E4_SEC12",
+            "id": "bugs_01m8db7j157m5nxr",
+            "intent_id": "intent:bugs_01m8db7j157m5nxr",
             "steps": [
               {
-                "action": "pre_publication_verification",
+                "action": "reconciled_cb54769bd",
                 "custody_event_id": "event:4",
                 "observations": [
-                  ".decapod/config.toml",
-                  "src/decapod/lib.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/agent_interop/registry.rs",
-                  "src/decapod/core/flight_recorder/outcomes.rs",
-                  "bindings/typescript/native/Cargo.toml",
-                  "bindings/typescript/native/Cargo.lock",
-                  "bindings/typescript/src/index.ts",
-                  "packages/pi-decapod/src/index.ts",
-                  "tests/agent_interop_conformance.rs",
-                  "Rebased cleanly onto origin/master 714b90cbd5 (v0.168.0) + reviewed_sources_digest reconciled; all Rust/TS/Pi suites verified in task-2853"
+                  "docs/agent/error-recovery.md",
+                  "docs/agent/state-model.md",
+                  "src/decapod/core/repository_policy_approval.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "docs/agent/error-recovery.md",
+                  "docs/agent/state-model.md",
+                  "src/decapod/core/repository_policy_approval.rs",
+                  "src/decapod/core/repository_profile.rs",
+                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "tests/recovery_workflows_1956_1957.rs",
+                  "tests/unit/core/repository_profile_tests.rs",
+                  "Rebased PR 4 payload and specs onto origin/master cb54769bd (PR #1972 / v0.168.0)"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "bindings_typescript_8_of_8",
-                  "packages_pi_decapod_5_of_5",
-                  "agent_interop_conformance_11_of_11",
-                  "agent_rpc_suite_6_of_6",
-                  "houseboat_engine_14_of_14",
-                  "projection_consistency_7_of_7",
-                  "activation_conformance_2_of_2",
-                  "flight_recorder_outcomes_9_of_9"
+                  "pre_build"
                 ],
                 "scope": [
-                  "src/decapod/{cli,lib}.rs, agent_interop/registry.rs, flight_recorder/outcomes.rs, bindings/typescript/**, packages/pi-decapod/**, docs/research/host-outcome-pilot/**, tests/agent_interop_conformance.rs"
+                  "src/decapod/core/snapshot_provider/github_artifacts.rs,src/decapod/core/validation_runtime/snapshot/source_import.rs,src/decapod/core/repository_policy_approval.rs,src/decapod/core/repository_profile.rs,tests/unit/core/repository_profile_tests.rs,docs/agent/error-recovery.md,docs/agent/state-model.md,tests/recovery_workflows_1956_1957.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "claude (#1888), codex-cli usage limit, and opencode unauthenticated remain external host credential gates"
-                ]
+                "validation_findings": []
               }
             ]
           }
@@ -1122,33 +1066,36 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Rebased cleanly onto origin/master 714b90cbd5 (v0.168.0) + reviewed_sources_digest reconciled; all Rust/TS/Pi suites verified in task-2853"
+        "Rebased PR 4 payload and specs onto origin/master cb54769bd (PR #1972 / v0.168.0)"
       ],
-      "inspected_files": [],
-      "intent_id": "intent:branch_01M8E4_SEC12",
+      "inspected_files": [
+        "docs/agent/error-recovery.md",
+        "docs/agent/state-model.md",
+        "src/decapod/core/repository_policy_approval.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+      ],
+      "intent_id": "intent:bugs_01m8db7j157m5nxr",
       "modified_files": [
-        ".decapod/config.toml",
-        "bindings/typescript/native/Cargo.lock",
-        "bindings/typescript/native/Cargo.toml",
-        "bindings/typescript/src/index.ts",
-        "packages/pi-decapod/src/index.ts",
-        "src/decapod/cli.rs",
-        "src/decapod/core/agent_interop/registry.rs",
-        "src/decapod/core/flight_recorder/outcomes.rs",
-        "src/decapod/lib.rs",
-        "tests/agent_interop_conformance.rs"
+        "docs/agent/error-recovery.md",
+        "docs/agent/state-model.md",
+        "src/decapod/core/repository_policy_approval.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/recovery_workflows_1956_1957.rs",
+        "tests/unit/core/repository_profile_tests.rs"
       ],
       "repo_scope": [
-        "src/decapod/{cli,lib}.rs, agent_interop/registry.rs, flight_recorder/outcomes.rs, bindings/typescript/**, packages/pi-decapod/**, docs/research/host-outcome-pilot/**, tests/agent_interop_conformance.rs"
+        "src/decapod/core/snapshot_provider/github_artifacts.rs,src/decapod/core/validation_runtime/snapshot/source_import.rs,src/decapod/core/repository_policy_approval.rs,src/decapod/core/repository_profile.rs,tests/unit/core/repository_profile_tests.rs,docs/agent/error-recovery.md,docs/agent/state-model.md,tests/recovery_workflows_1956_1957.rs"
       ],
-      "run_id": "branch_01M8E4_SEC12",
+      "run_id": "bugs_01m8db7j157m5nxr",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m8dkhxjeg9vm6c",
+      "task_id": "bugs_01m8db7j157m5nxr",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "claude (#1888), codex-cli usage limit, and opencode unauthenticated remain external host credential gates"
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

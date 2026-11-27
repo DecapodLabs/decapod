@@ -240,7 +240,13 @@ The plan source/context hash binds governing definitions; approval and measured
 phase/gate progress reuse the existing plan contract/progress distinction and
 do not consume extra rounds. Existing execution/proof gates still check them.
 Terminal state dominates historical replays, including an earlier `proceed`.
-A new accepted workstream is the explicit recovery boundary for a terminal stop.
+A new accepted workstream is the explicit recovery boundary for a terminal stop:
+on an unmerged work branch with uncommitted edits and a terminal reflection
+receipt, archive both by committing them on that stopped branch, open a fresh
+task and worktree from the accepted target via `decapod workspace ensure`, port
+only non-governance authored files, and honor subsequent operator authority
+through fresh plan, execution, checkpoint, and `decapod validate` gates rather
+than running `begin-pr` on the unmerged branch or resetting the stopped budget.
 This initial contract supports one task continuation per plan, local exclusive
 custody, up to 32 literal paths and 32 bounded ADR files; it fails explicitly
 outside those limits. It does not automatically retrieve the whole knowledge graph.

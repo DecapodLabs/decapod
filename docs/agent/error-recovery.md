@@ -140,6 +140,33 @@ Scoped recovery diagnostics (`qa verify recover --json` and
   recovery; use `decapod todo journal checkpoint` to checkpoint live state
   non-destructively while preserving completion timestamps.
 
+#### Completed machine-only operational tasks without a repository artifact
+
+When an unrelated completed operational task (`status = 'done'`) changed machine
+or host state rather than repository files, `decapod validate` stops with
+`PROOF_HOOK_FAILED` and `qa verify recover` requires `--artifact TODO_ID=FILE`.
+Decapod does not admit external or user-confirmed evidence without a repository
+file as `VERIFIED` (`todo done --validated` and `qa verify recover --artifact`
+require hashed repository `file_artifacts`, and `todo done --validated --commit`
+verifies immutable repository commits in Git history). Do **not** point
+`--artifact` at an unrelated repository file or run `qa verify prune` (which
+clears `completed_at` and reopens the task to `open`).
+
+To preserve the operational task as historically unverified while allowing a
+separate code candidate to complete full validation:
+
+1. Record the operational evidence or operator confirmation in task context
+   (`decapod todo comment --id <ops-id> --comment "<machine-state repair evidence; historically unverified, no repo artifact>"`).
+2. Obtain explicit operator approval for `task.archive` (`decapod govern policy
+   grant --command task.archive --path <ops-id> --task-id <ops-id> --format json`
+   followed by operator `decapod govern policy approve --id <fingerprint> --scope global`
+   from a `verified`-trust actor) and run `decapod todo archive --id <ops-id>`.
+3. Archiving transitions `status` from `done` to `archived` while keeping
+   `completed_at`, the `CLAIMED` / unverified `task_verification` state, and
+   append-only `task.done` + `task.archive` events intact. Because `PROOF_HOOK_FAILED`
+   checks only `status = 'done'`, the separate code candidate can then complete
+   full `decapod validate` without fabricating verification evidence.
+
 ### `TODO_PROJECTION_MISSING`
 
 `govern plan check-execute` found no selected todo in the store named by the
@@ -314,6 +341,40 @@ unaccepted conflicting-PR authority (`GOVERNANCE_MERGE_AUTHORITY_CONFLICT`) or
 conflicting check proofs (`GOVERNANCE_MERGE_PROOF_CONFLICT`), preserves complete
 active journal history and failed/missing proof states, and writes a valid
 canonical document ready for a follow-up checkpoint before committing the merge.
+
+#### Terminal reflection (`REFLECTION_BLOCKED`) with uncommitted governed work
+
+When `sections.plan.reflection` reaches a terminal stop (such as
+`obligations_regressed` or `budget_exhausted`) while authored edits and the
+terminal reflection receipt in `.decapod/governance.json` remain uncommitted,
+`decapod govern plan check-execute` fails closed with
+`REFLECTION_BLOCKED: <reason>`. A later operator authority grant does not unlock
+the exhausted reflection journal or act as validation proof, and `begin-pr`
+cannot run on that branch either before commit (`GOVERNANCE_UNARCHIVED_WORK`)
+or after committing an unmerged workbranch (`GOVERNANCE_PR_NOT_ACCEPTED`).
+
+Recover non-destructively without resetting the original reflection budget or
+bypassing execution and checkpoint gates:
+
+1. Preserve the terminal reflection receipt and uncommitted authored edits on
+   the stopped work branch (`git add -A -- ':!.decapod/governance.json'`,
+   `decapod govern artifacts checkpoint --id <wip-id> --summary "Preserve terminal reflection and WIP without proof"`,
+   `git add .decapod/governance.json`, `git commit`). Leave that stopped
+   branch unmerged so its receipt and round budget remain immutable.
+2. Create a follow-up task (`decapod todo add` and `decapod todo claim`) and
+   start a fresh isolated workstream from the accepted base
+   (`decapod workspace ensure --branch agent/<agent>/<new-task>-<topic>`), which
+   seeds a new `.decapod/governance.json` without copying the stopped branch's
+   `sections.plan.reflection`.
+3. Port only the non-governance authored edits onto the new branch
+   (`git checkout <stopped-commit> -- <authored paths>`; never copy
+   `.decapod/governance.json`).
+4. Re-initialize and approve the plan under the subsequent operator authority
+   (`decapod govern plan init`, `decapod govern plan approve`), record custody
+   referencing the stopped commit in `decapod govern trajectory record`, verify
+   execution admission with `decapod govern plan check-execute --todo-id <new-id>`
+   (authority admits execution only, never completion proof), checkpoint, commit,
+   and run `decapod validate`.
 
 ### Orphan broker audit entries (`data broker verify`)
 
