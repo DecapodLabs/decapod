@@ -4503,6 +4503,7 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
         Command::Govern(govern_cli) => matches!(
             govern_cli.command,
             GovernCommand::Plan(_)
+                | GovernCommand::Policy(_)
                 | GovernCommand::Trajectory(_)
                 | GovernCommand::Artifacts(_)
                 | GovernCommand::ProjectCheck { .. }

@@ -1,5 +1,13 @@
 # Intent
 
+## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
+
+Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
+
+- **Cloud `govern policy` admission (`src/decapod/lib.rs`)**: Admits `GovernCommand::Policy(_)` inside `is_cloud_file_only_command` so `decapod govern policy approve --scope repo.pr-readiness.v1` routes directly to Cloud `propodus_governance_v1` approvals without failing on `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
+- **Cloud workspace destination, container-relay, and nested-container guards (`src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)**: Enforces `WORKSPACE_DESTINATION_MISMATCH` in `ensure_cloud_workspace` when `--branch` differs from the current isolated worktree branch, admits active Cloud container relays (`is_container_relay_active()`) inside `ensure_cloud_workspace` via `check_cloud_authoring(..., true)` without host credentials or nested container launches, guards `config.use_container && !status.container.in_container` in both `ensure_workspace` and `ensure_cloud_workspace`, and rejects nonexistent branch-embedded task IDs in `admit_cloud_checkout` with `TODO_CUSTODY_REQUIRED` instead of binding an unrelated claimed task.
+- **Offline integration proof (`tests/cloud_workspace_validation_1886.rs`)**: Verifies nonexistent branch task refusal, auto-discovered hosted task `workspace ensure`, `WORKSPACE_DESTINATION_MISMATCH`, non-CI `--pre-build` + `canonical_local_target = true` fail-closed `LOCAL_TARGET_POLICY_UNACCEPTED` + `ci_local` validation, Cloud `govern policy approve`, and hostless Cloud container-relay `workspace ensure --container` + `validate` without mutating or creating SQLite stores.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1449,7 +1457,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `8e2666a4ec8a891e813d312119641071109285516465bf5073477f485c15a37f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

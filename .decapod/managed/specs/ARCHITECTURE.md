@@ -1,5 +1,13 @@
 # Architecture
 
+## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
+
+- **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
+- **Cloud workspace admission & container-relay handling (`src/decapod/core/workspace.rs::ensure_cloud_workspace`, `src/decapod/core/cloud_workspace.rs::admit_cloud_checkout`)**:
+  - `admit_cloud_checkout` parses branch-embedded task IDs via `extract_task_ids_from_branch` and fails closed with `TODO_CUSTODY_REQUIRED` whenever `branch_task_ids` is non-empty and none match an active hosted claim.
+  - `ensure_cloud_workspace` validates `WORKSPACE_DESTINATION_MISMATCH` before branching/reusing an active isolated worktree, skips host-credential discovery and container launching when `cloud_workspace::is_container_relay_active()` is true by delegating directly to `cloud_workspace::check_cloud_authoring(..., true)`, and gates `ensure_container_workspace` on `config.use_container && !status.container.in_container` in both `ensure_workspace` and `ensure_cloud_workspace`.
+- **Cloud non-CI, policy, and container-relay integration harness (`tests/cloud_workspace_validation_1886.rs`)**: Extends `CloudControlServer` to mock `/rest/v1/rpc/propodus_governance_v1` (`authorize_exception`, `verify_decision`) and adds `accepted_cloud_workspace_ensure_non_ci_validate_policy_approve_and_container_relay`.
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2108,7 +2116,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `8e2666a4ec8a891e813d312119641071109285516465bf5073477f485c15a37f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

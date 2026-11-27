@@ -1,5 +1,13 @@
 # Interfaces
 
+## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
+
+- **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
+- **`decapod workspace ensure` Cloud invariants (`src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)**:
+  - Fails closed with `TODO_CUSTODY_REQUIRED` when `--branch` encodes a task ID not present in the caller's hosted claims.
+  - Fails closed with `WORKSPACE_DESTINATION_MISMATCH` when `--branch` differs from the current isolated worktree branch.
+  - Succeeds inside an active Cloud container relay (`DECAPOD_CONTAINER=1` + `DECAPOD_CLOUD_CONTAINER_RELAY=1` + `DECAPOD_CONTAINER_SIGNER_SOCKET`) for `workspace ensure --container` and `validate` without host credentials or launching a nested container.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2596,7 +2604,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `8e2666a4ec8a891e813d312119641071109285516465bf5073477f485c15a37f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
