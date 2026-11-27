@@ -766,6 +766,34 @@ fn native_expected_tool() -> io::Result<&'static str> {
     })
 }
 
+/// Typed executable-format or native-platform mismatch raised during native
+/// invocation validation (#1544, #1892).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct IncompatibleNativeExecutableError {
+    pub check: Option<String>,
+    pub message: String,
+}
+
+impl std::fmt::Display for IncompatibleNativeExecutableError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(check) = &self.check {
+            write!(f, "{check}: {}", self.message)
+        } else {
+            f.write_str(&self.message)
+        }
+    }
+}
+
+impl std::error::Error for IncompatibleNativeExecutableError {}
+
+fn incompatible_executable_error(
+    kind: io::ErrorKind,
+    check: Option<String>,
+    message: String,
+) -> io::Error {
+    io::Error::new(kind, IncompatibleNativeExecutableError { check, message })
+}
+
 fn native_executable(program: &Path) -> io::Result<()> {
     if !program.is_absolute() || program.canonicalize()? != program {
         return Err(invalid("tool must be an absolute canonical path"));
@@ -785,12 +813,16 @@ fn native_executable(program: &Path) -> io::Result<()> {
     std::fs::File::open(program)?.read_exact(&mut magic)?;
     #[cfg(target_os = "linux")]
     if magic != *b"\x7fELF" {
-        return Err(invalid(format!(
-            "{} is {}; native Linux validation requires {}",
-            program.display(),
-            describe_executable(program)?,
-            native_expected_tool()?
-        )));
+        return Err(incompatible_executable_error(
+            io::ErrorKind::InvalidInput,
+            None,
+            format!(
+                "{} is {}; native Linux validation requires {}",
+                program.display(),
+                describe_executable(program)?,
+                native_expected_tool()?
+            ),
+        ));
     }
     #[cfg(target_os = "macos")]
     if ![
@@ -803,12 +835,16 @@ fn native_executable(program: &Path) -> io::Result<()> {
     ]
     .contains(&magic)
     {
-        return Err(invalid(format!(
-            "{} is {}; native macOS validation requires {}",
-            program.display(),
-            describe_executable(program)?,
-            native_expected_tool()?
-        )));
+        return Err(incompatible_executable_error(
+            io::ErrorKind::InvalidInput,
+            None,
+            format!(
+                "{} is {}; native macOS validation requires {}",
+                program.display(),
+                describe_executable(program)?,
+                native_expected_tool()?
+            ),
+        ));
     }
     Ok(())
 }
@@ -840,9 +876,10 @@ fn validate_invocation(
         validate_invocation(&direct, inputs, budget, self_digest)?;
     }
     if invocation.platform != NativePlatform::current()? {
-        return Err(io::Error::new(
+        return Err(incompatible_executable_error(
             io::ErrorKind::Unsupported,
-            "reviewed execution profile requires a different platform",
+            None,
+            "reviewed execution profile requires a different platform".to_string(),
         ));
     }
     native_executable(&invocation.program)?;
@@ -1318,8 +1355,19 @@ pub fn run_native(
         {
             return Err(invalid("unreviewed native invocation/purpose/backend"));
         }
-        validate_invocation(invocation, inputs, &mut budget, &self_digest)
-            .map_err(|e| invalid(format!("{}: {e}", check.key.job)))?;
+        if let Err(err) = validate_invocation(invocation, inputs, &mut budget, &self_digest) {
+            if let Some(incompat) = err
+                .get_ref()
+                .and_then(|cause| cause.downcast_ref::<IncompatibleNativeExecutableError>())
+            {
+                return Err(incompatible_executable_error(
+                    err.kind(),
+                    Some(check.key.job.clone()),
+                    incompat.message.clone(),
+                ));
+            }
+            return Err(invalid(format!("{}: {err}", check.key.job)));
+        }
         if check.toolchain_digest != measured_toolchain(invocation, &mut budget)? {
             return Err(invalid("reviewed executable digest changed"));
         }
@@ -1816,9 +1864,14 @@ mod tests {
     fn linux_rejects_foreign_mach_o_with_identity() {
         let dir = tempfile::tempdir().unwrap();
         let path = write_tool(&dir, "alejandra", &macho_arm64());
-        let err = native_executable(&path).unwrap_err().to_string();
+        let err = native_executable(&path).unwrap_err();
+        assert!(
+            err.get_ref()
+                .and_then(|cause| cause.downcast_ref::<IncompatibleNativeExecutableError>())
+                .is_some()
+        );
         assert_eq!(
-            err,
+            err.to_string(),
             format!(
                 "{} is Mach-O arm64; native Linux validation requires {}",
                 path.display(),
@@ -1840,9 +1893,14 @@ mod tests {
     fn macos_rejects_foreign_elf_with_identity() {
         let dir = tempfile::tempdir().unwrap();
         let path = write_tool(&dir, "alejandra", &elf_x86_64());
-        let err = native_executable(&path).unwrap_err().to_string();
+        let err = native_executable(&path).unwrap_err();
+        assert!(
+            err.get_ref()
+                .and_then(|cause| cause.downcast_ref::<IncompatibleNativeExecutableError>())
+                .is_some()
+        );
         assert_eq!(
-            err,
+            err.to_string(),
             format!(
                 "{} is ELF x86_64 (64-bit); native macOS validation requires {}",
                 path.display(),

@@ -305,9 +305,17 @@ impl ValidationReport {
                     .and_then(|cause| cause.downcast_ref::<profile::PlanningFailure>()),
                 Some(profile::PlanningFailure::ControllerContractUnsupported(_))
             );
+            let incompatible_executable = error
+                .get_ref()
+                .and_then(|cause| {
+                    cause.downcast_ref::<native_proof::IncompatibleNativeExecutableError>()
+                })
+                .is_some();
             let code = if unsupported_controller {
                 self.agent_guidance = ValidationGuidance::for_controller_contract_unsupported();
                 "CONTROLLER_CONTRACT_UNSUPPORTED"
+            } else if incompatible_executable {
+                "INCOMPATIBLE_NATIVE_EXECUTABLE"
             } else {
                 if error
                     .to_string()

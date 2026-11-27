@@ -139,6 +139,14 @@ Scoped recovery diagnostics (`qa verify recover --json` and
   uncheckpointed historical tasks flagged by `todo journal verify` do not block
   recovery; use `decapod todo journal checkpoint` to checkpoint live state
   non-destructively while preserving completion timestamps.
+- `INCOMPATIBLE_NATIVE_EXECUTABLE` (plus `MISSING_PLATFORM_EXECUTION` /
+  `INCOMPATIBLE_TARGET_EXECUTOR`): a native `repo.pr-readiness.v1` check points
+  to an executable built for another OS or binary format (for example a Mach-O
+  tool configured on a Linux validator, or an ELF tool on macOS). Run
+  `decapod validate --format json` to read the sanitized check name, path,
+  detected format, and expected host format, and declare per-platform
+  `[proof.repository_contract.executions.<check>.platforms.<platform>]` blocks
+  in `.decapod/config.toml`.
 
 #### Completed machine-only operational tasks without a repository artifact
 

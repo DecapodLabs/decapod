@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "74ecb590874080fd201c168de6e55e663b03bda1",
+    "accepted_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,64 +872,47 @@
     }
   },
   "change": {
-    "id": "change_01M8FEMKBXGYKKT35D6X9Q35VH",
-    "base_commit": "74ecb590874080fd201c168de6e55e663b03bda1",
+    "id": "change_1892_slot2",
+    "base_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:docs-seo-discovery": {
-      "statement": "mdBook docs-build runs docs-build.sh and docs_seo.py in reviewed workflow_owned custody, generating HTTPS canonicals, JSON-LD, sitemap.xml, and llms.txt while excluding private/noindex/redirect/print/404 pages and preserving chapter bodies.",
-      "falsifier": "Any missing/forged canonical, leaked private/noindex page in sitemap.xml or llms.txt, Bazel compile_data omission, or failure in source_ci_profile_policy/doc_alignment.",
+    "verify-recover-1892": {
+      "statement": "Scoped qa verify recover preserves INCOMPATIBLE_NATIVE_EXECUTABLE and concrete native execution codes instead of collapsing to READINESS_BLOCKED.",
+      "falsifier": "Incompatible Mach-O or executable format failures collapse to READINESS_BLOCKED in scoped qa verify recover output.",
       "status": "supported",
       "proof_refs": [
-        "tests/doc_alignment.rs",
-        "tests/source_ci_profile_policy.rs"
+        "tests/recovery_workflows_1956_1957.rs",
+        "tests/unit/plugins/verify_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-docs-seo-101",
-      "summary": "Publish mdBook canonicals, sitemap.xml, and llms.txt via workflow_owned docs-build (site#101)",
-      "input_digest": "sha256:b0a78d9022dfa62180d9f43d945af0cb5f61ba851319cb8949344b733b5d549f"
-    },
-    {
-      "id": "cp_01M8FFK_SPECS_CLEAN",
-      "summary": "Refreshed living specs without bazel-* symlinks so repo_signal_fingerprint matches clean CI checkout",
-      "input_digest": "sha256:a77177bf2cb0687221f713028e025a0b35540c7238d925b6519dec1c737c2e4c"
-    },
-    {
-      "id": "cp_01M8FFZ_SPEC_REVIEW",
-      "summary": "Recorded updated INTERFACES.md review bound to clean fbd09eeb fingerprint",
-      "input_digest": "sha256:d252fa1f6a3b3b0b6805f245c906fdcbaef6c98f1ef99ad978954f7b5b25018a"
-    },
-    {
-      "id": "cp_01M8FG2_SPECS_ALL_REVIEWED",
-      "summary": "Re-reviewed ARCHITECTURE.md and SECURITY.md against clean fbd09eeb fingerprint",
-      "input_digest": "sha256:9502d9b90bb70dffcd86d1bc3f5b931a4cccf3bda5b38b35f0dcf2b71db16a44"
+      "id": "verify-recover-1892",
+      "summary": "Rebase #1892 onto 78b9c0f18a, bind bugs_01m8fe5c7kejq9vb plan/trajectory, and preserve INCOMPATIBLE_NATIVE_EXECUTABLE diagnostic fidelity (Bootstrap controller 78b9c0f18a sha256:4a252e0832abd30f verified #506)",
+      "input_digest": "sha256:01f244c380884225a42cb923cd608740fda9808f3ecc6368ea789a491b4e9591"
     }
   ],
   "intents": {
-    "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH": {
+    "intent:run_1892_slot2": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Modify only verify/native_proof/validation_runtime, error-recovery docs, tests, and #1892 living specs in isolated worktree."
       ],
       "constraints": [
-        "docs/book/**",
-        "assets/tools/**",
-        ".decapod/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+      "id": "intent:run_1892_slot2",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
-      "refined_intent": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
+      "raw_intent": "Fix diagnostic propagation so #1544 incompatible-executable format / Mach-O failures retain their explicit diagnostic label instead of collapsing to READINESS_BLOCKED in scoped qa verify recover (#1892).",
+      "refined_intent": "Add IncompatibleNativeExecutableError in native_proof.rs, propagate INCOMPATIBLE_NATIVE_EXECUTABLE in validation_runtime.rs, update SAFE_BLOCKER_LABELS in verify.rs, document in error-recovery.md, and verify with unit, consumer, and recovery workflow tests.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -942,7 +925,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
+      "intent": "Fix diagnostic propagation so incompatible executable format / Mach-O failures retain INCOMPATIBLE_NATIVE_EXECUTABLE and concrete codes in scoped qa verify recover instead of collapsing to READINESS_BLOCKED (#1892).",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -950,257 +933,150 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only generated codebase attestation fingerprint refreshed to fbd09eeb; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
-          "reviewed_code_fingerprint": "fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3",
-          "spec_material_hash": "ccd61a497b5f57ae1adfd92d566dfa77e7cbcab97ae2dacc5d3d3e2e2e4e77d3"
+          "reason": "Documented native_proof IncompatibleNativeExecutableError and verify SAFE_BLOCKER_LABELS propagation (#1892)",
+          "reviewed_code_fingerprint": "76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397",
+          "spec_material_hash": "6d893de1999224cec2eadeadccd40a548169fc9ca9e6ee33f658a744a6676211"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md for docs-build.sh, docs_seo.py, workflow_owned::SOURCES, and clean codebase fingerprint fbd09eeb without bazel symlinks",
-          "reviewed_code_fingerprint": "fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3",
-          "spec_material_hash": "ca491cdf86ef2f46f292af46b37285d66b4e66226441e870509f0841692a43ec"
+          "reason": "Propagated INCOMPATIBLE_NATIVE_EXECUTABLE and preserved specific failure codes in scoped qa verify recover (#1892)",
+          "reviewed_code_fingerprint": "76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397",
+          "spec_material_hash": "206726180a6007ea1010036173b314ae8e3999a2cd1e1badc64d9b3bdbb6b1b5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Only generated codebase attestation fingerprint refreshed to fbd09eeb; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
-          "reviewed_code_fingerprint": "fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3",
+          "reason": "No change to security boundaries; label preservation only affects explicit diagnostic fidelity (#1892)",
+          "reviewed_code_fingerprint": "76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
+      "title": "Preserve INCOMPATIBLE_NATIVE_EXECUTABLE diagnostic fidelity in scoped qa verify recover (#1892)",
       "todo_ids": [
-        "data_01m8fe9jenw5xh4b"
+        "bugs_01m8fe5c7kejq9vb"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795817484Z"
+      "updated_at": "1795823207Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Modify only verify/native_proof/validation_runtime, error-recovery docs, tests, and #1892 living specs in isolated worktree."
       ],
-      "artifact_hash": "sha256:c866e4ba5455086ac59c15bba9b6212195534c421622f8c6d64178154c3db600",
+      "artifact_hash": "sha256:2c9f001962604a7a764b4d25433656d51890f1175cc5dd47860785af5db87649",
       "checks": [
         {
-          "name": "doc-alignment",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "docs-seo-fixture",
+          "name": "consumer_readiness",
           "status": "passed"
         },
         {
-          "name": "spec_review",
+          "name": "recovery_workflows_1956_1957",
           "status": "passed"
         },
         {
-          "name": "spec_reviews_all",
-          "status": "passed"
-        },
-        {
-          "name": "specs_refresh",
+          "name": "verify_tests",
           "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "intent_id": "intent:run_1892_slot2",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "intent_id": "intent:run_1892_slot2",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
+            "detail": "trajectory:run_1892_slot2",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "intent_id": "intent:run_1892_slot2",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
-            "event_id": "event:7",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8FEMKH0KDBR3C0T4G01VQ64": {
+          "run_1892_slot2": {
             "evidence_only": true,
-            "id": "branch_01M8FEMKH0KDBR3C0T4G01VQ64",
-            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "id": "run_1892_slot2",
+            "intent_id": "intent:run_1892_slot2",
             "steps": [
               {
-                "action": "implementation",
-                "command": "cargo test --locked --test source_ci_profile_policy docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "assets/tools/source_ci_profile.rs",
-                  "assets/tools/source_ci_custody.rs",
-                  "assets/tools/source_ci_workflow_owned.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  "docs/book/book.toml",
-                  "docs/book/theme/index.hbs",
-                  "docs/book/book.toml",
-                  "docs/book/theme/index.hbs",
-                  "assets/tools/docs_seo.py",
-                  "assets/tools/source_ci/docs-build.sh",
-                  "assets/tools/source_ci_profile.rs",
-                  "assets/tools/source_ci_workflow_owned.rs",
-                  "assets/tools/source_ci_custody.rs",
-                  ".config/build/decapod.BUILD.bzl",
-                  ".decapod/config.toml",
-                  "tests/source_ci_profile_policy.rs",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "Applied #101 patch (2ea91d22), wired docs-build.sh + docs_seo.py in workflow_owned::SOURCES & decapod.BUILD.bzl, updated reviewed_sources_digest, passed doc_alignment 5/5 & docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages"
+                  "src/decapod/core/native_proof.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "src/decapod/core/native_proof.rs",
+                  "src/decapod/core/validation_runtime.rs",
+                  "src/decapod/plugins/verify.rs",
+                  "docs/agent/error-recovery.md",
+                  "tests/unit/plugins/verify_tests.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/recovery_workflows_1956_1957.rs",
+                  "Rebased cleanly onto origin/master@78b9c0f18a using #506-verified bootstrap controller (sha256:4a252e0832abd30f)."
                 ],
                 "proof_refs": [
-                  "docs-seo-fixture",
-                  "doc-alignment"
+                  "verify_tests",
+                  "recovery_workflows_1956_1957",
+                  "consumer_readiness",
+                  "clippy"
                 ],
                 "scope": [
-                  ".decapod/**",
-                  "assets/tools/**",
-                  "docs/book/**"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".decapod/managed/.manifest.json",
-                  ".decapod/managed/.manifest.json"
-                ],
-                "proof_refs": [
-                  "specs_refresh"
-                ],
-                "scope": [
-                  ".decapod/**",
-                  "assets/tools/**",
-                  "docs/book/**"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/managed/specs/INTERFACES.md"
-                ],
-                "proof_refs": [
-                  "spec_review"
-                ],
-                "scope": [
-                  ".decapod/**",
-                  "assets/tools/**",
-                  "docs/book/**"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/SECURITY.md"
-                ],
-                "proof_refs": [
-                  "spec_reviews_all"
-                ],
-                "scope": [
-                  ".decapod/**",
-                  "assets/tools/**",
-                  "docs/book/**"
-                ],
-                "sequence": 7,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo test --locked --test doc_alignment",
-        "cargo test --locked --test source_ci_profile_policy docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages"
-      ],
-      "destination": "pull request",
+      "declared_commands": [],
       "evidence": [
-        "Applied #101 patch (2ea91d22), wired docs-build.sh + docs_seo.py in workflow_owned::SOURCES & decapod.BUILD.bzl, updated reviewed_sources_digest, passed doc_alignment 5/5 & docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages"
+        "Rebased cleanly onto origin/master@78b9c0f18a using #506-verified bootstrap controller (sha256:4a252e0832abd30f)."
       ],
       "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/managed/.manifest.json",
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "assets/tools/source_ci_custody.rs",
-        "assets/tools/source_ci_profile.rs",
-        "assets/tools/source_ci_workflow_owned.rs",
-        "docs/book/book.toml",
-        "docs/book/theme/index.hbs"
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/plugins/verify.rs"
       ],
-      "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+      "intent_id": "intent:run_1892_slot2",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        ".decapod/managed/.manifest.json",
-        ".decapod/managed/specs/INTERFACES.md",
-        "assets/tools/docs_seo.py",
-        "assets/tools/source_ci/docs-build.sh",
-        "assets/tools/source_ci_custody.rs",
-        "assets/tools/source_ci_profile.rs",
-        "assets/tools/source_ci_workflow_owned.rs",
-        "docs/book/book.toml",
-        "docs/book/theme/index.hbs",
-        "tests/source_ci_profile_policy.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "docs/agent/error-recovery.md",
+        "src/decapod/core/native_proof.rs",
+        "src/decapod/core/validation_runtime.rs",
+        "src/decapod/plugins/verify.rs",
+        "tests/consumer_readiness.rs",
+        "tests/recovery_workflows_1956_1957.rs",
+        "tests/unit/plugins/verify_tests.rs"
       ],
       "repo_scope": [
-        ".decapod/**",
-        "assets/tools/**",
-        "docs/book/**"
+        "root"
       ],
-      "run_id": "branch_01M8FEMKH0KDBR3C0T4G01VQ64",
+      "run_id": "run_1892_slot2",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "data_01m8fe9jenw5xh4b",
+      "task_id": "bugs_01m8fe5c7kejq9vb",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

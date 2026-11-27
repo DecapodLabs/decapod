@@ -1,3 +1,9 @@
+## Typed Executable-Format Error Propagation in Native Readiness & Scoped Recovery (`#1892`)
+
+- **Core native proof (`src/decapod/core/native_proof.rs`)**: `IncompatibleNativeExecutableError` implements `std::error::Error` and carries optional check job context alongside the existing display diagnostic for foreign ELF/Mach-O headers or mismatched platform closures.
+- **Validation runtime (`src/decapod/core/validation_runtime.rs`)**: `ValidationReport::finish` downcasts `IncompatibleNativeExecutableError` before falling back to generic `READINESS_BLOCKED`, emitting blocker code `"INCOMPATIBLE_NATIVE_EXECUTABLE"`.
+- **Scoped `qa verify recover` (`src/decapod/plugins/verify.rs`)**: `SAFE_BLOCKER_LABELS` and `extract_labels_from_structured_text` recognize `INCOMPATIBLE_NATIVE_EXECUTABLE` and platform/executor codes (`REPOSITORY_COMMAND_PLATFORM`, `MISSING_PLATFORM_EXECUTION`, `INCOMPATIBLE_TARGET_EXECUTOR`, `UNKNOWN_DEPLOYMENT_TARGET`) and prioritize explicit diagnostic labels ahead of catch-all `READINESS_BLOCKED`.
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2187,7 +2193,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

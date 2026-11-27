@@ -1,3 +1,8 @@
+## `#1892` Scoped `qa verify recover` & `ValidationReport` Blocker Codes (`src/decapod/core/native_proof.rs`, `src/decapod/core/validation_runtime.rs`, `src/decapod/plugins/verify.rs`)
+
+- **New typed error & blocker code**: `core::native_proof::IncompatibleNativeExecutableError` propagates `"INCOMPATIBLE_NATIVE_EXECUTABLE"` into `ValidationReport.blockers[].code` during native repository-profile validation.
+- **Scoped `qa verify recover --json` labels**: `plugins::verify::SAFE_BLOCKER_LABELS` emits `"INCOMPATIBLE_NATIVE_EXECUTABLE"`, `"REPOSITORY_COMMAND_PLATFORM"`, `"MISSING_PLATFORM_EXECUTION"`, `"INCOMPATIBLE_TARGET_EXECUTOR"`, and `"UNKNOWN_DEPLOYMENT_TARGET"` when present in child readiness output or structured messages without exposing host tool paths or local filenames.
+
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -2719,7 +2724,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
