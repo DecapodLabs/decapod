@@ -4103,7 +4103,7 @@ pub fn run() -> Result<(), error::DecapodError> {
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             if configured_backend.is_cloud()
                 && !cloud_todo_command
-                && !is_cloud_file_only_command(&cli.command)
+                && !is_cloud_file_only_command(&cli.command, predecoded_rpc_request.as_ref())
             {
                 return Err(core::cloud_backend::unavailable_error());
             }
@@ -4478,7 +4478,10 @@ fn is_storage_independent_command(command: &Command) -> bool {
     }
 }
 
-fn is_cloud_file_only_command(command: &Command) -> bool {
+fn is_cloud_file_only_command(
+    command: &Command,
+    predecoded_rpc: Option<&core::rpc::RpcRequest>,
+) -> bool {
     match command {
         Command::Activate
         | Command::Capabilities(_)
@@ -4508,7 +4511,10 @@ fn is_cloud_file_only_command(command: &Command) -> bool {
                 | GovernCommand::ProjectCheck { .. }
         ),
         Command::Rpc(rpc_cli) => matches!(
-            rpc_cli.op.as_deref(),
+            rpc_cli
+                .op
+                .as_deref()
+                .or_else(|| predecoded_rpc.map(|req| req.op.as_str())),
             Some(
                 "agent.init"
                     | "workspace.status"
@@ -5632,11 +5638,13 @@ fn ensure_session_valid() -> Result<(), error::DecapodError> {
 
     if session.expires_at_epoch_secs <= now_epoch_secs() {
         let _ = remove_agent_session_files(&project_root, &agent_id);
-        let _ = todo::cleanup_stale_agent_assignments(
-            &store_root,
-            std::slice::from_ref(&agent_id),
-            "session.expired",
-        );
+        if !is_cloud {
+            let _ = todo::cleanup_stale_agent_assignments(
+                &store_root,
+                std::slice::from_ref(&agent_id),
+                "session.expired",
+            );
+        }
         // Auto-acquire session if expired (entrypoint funnel behavior)
         return auto_acquire_session(&project_root, &agent_id);
     }
@@ -14292,6 +14300,9 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_store_upsert(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        if core::cloud_workspace::is_cloud_project(ctx.project_root) {
+            return Err(core::cloud_backend::unavailable_error());
+        }
         let params: StoreUpsertParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
@@ -14477,6 +14488,9 @@ mod rpc_handlers {
     }
 
     pub(crate) fn handle_store_query(ctx: &RpcCtx) -> Result<RpcResponse, error::DecapodError> {
+        if core::cloud_workspace::is_cloud_project(ctx.project_root) {
+            return Err(core::cloud_backend::unavailable_error());
+        }
         let params: StoreQueryParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 

@@ -483,3 +483,132 @@ fn mixed_worktree_routing_honors_invoking_workspace_in_both_directions() {
     )
     .expect("local worktree get under cloud root must stay local");
 }
+
+#[test]
+fn cloud_non_todo_stores_and_rpc_stdin_fail_closed_without_sqlite_fallback() {
+    use std::io::Write;
+    use std::process::Stdio;
+
+    let project = cloud_project();
+    git(project.path(), &["config", "user.name", "Decapod Test"]);
+    git(
+        project.path(),
+        &["config", "user.email", "test@example.invalid"],
+    );
+    git(project.path(), &["add", "."]);
+    git(project.path(), &["commit", "-m", "cloud root"]);
+
+    let db_path = project.path().join(".decapod/data/decapod.db");
+    assert!(!db_path.exists());
+
+    let home = tempfile::tempdir().unwrap();
+    // Non-todo subsystems & local compaction must fail closed with zero SQLite fallback.
+    for args in [
+        vec!["knowledge", "list"],
+        vec!["federation", "list"],
+        vec!["data", "compact", "--dry-run", "--format", "json"],
+    ] {
+        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(&args)
+            .env("HOME", home.path())
+            .env("DECAPOD_AGENT_ID", "cloud-boundary-test")
+            .current_dir(project.path())
+            .output()
+            .expect("run cloud blocked command");
+        assert!(
+            !out.status.success(),
+            "non-todo cloud command {:?} must fail closed",
+            args
+        );
+        assert!(
+            !db_path.exists(),
+            "non-todo command {:?} must never create decapod.db",
+            args
+        );
+    }
+
+    // `decapod rpc --stdin` with store.upsert / store.query must fail closed without creating SQLite.
+    for op in ["store.upsert", "store.query"] {
+        let payload = serde_json::json!({
+            "op": op,
+            "id": format!("req-{op}"),
+            "params": {"entity": "knowledge", "query": {"text": "probe"}}
+        });
+        let mut child = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(["rpc", "--stdin"])
+            .env("HOME", home.path())
+            .env("DECAPOD_AGENT_ID", "cloud-boundary-test")
+            .current_dir(project.path())
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .expect("spawn rpc stdin");
+        child
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(payload.to_string().as_bytes())
+            .unwrap();
+        let out = child.wait_with_output().unwrap();
+        assert!(
+            !out.status.success(),
+            "cloud rpc --stdin {op} must fail closed: stdout={} stderr={}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(
+            !db_path.exists(),
+            "cloud rpc --stdin {op} must never create decapod.db"
+        );
+    }
+}
+
+#[test]
+fn cloud_expired_session_renewal_never_creates_local_sqlite_database() {
+    let project = cloud_project();
+    git(project.path(), &["config", "user.name", "Decapod Test"]);
+    git(
+        project.path(),
+        &["config", "user.email", "test@example.invalid"],
+    );
+    git(project.path(), &["add", "."]);
+    git(project.path(), &["commit", "-m", "cloud root"]);
+
+    // Seed an expired session record for `cloud-expired-agent` before running a session-checked CLI command.
+    let sessions_dir = project.path().join(".decapod/sessions");
+    std::fs::create_dir_all(&sessions_dir).unwrap();
+    let expired_record = serde_json::json!({
+        "agent_id": "cloud-expired-agent",
+        "token": "tok_expired_test",
+        "password_hash": "deadbeef",
+        "issued_at_epoch_secs": 1,
+        "expires_at_epoch_secs": 2
+    });
+    std::fs::write(
+        sessions_dir.join("cloud-expired-agent.session.json"),
+        serde_json::to_vec_pretty(&expired_record).unwrap(),
+    )
+    .unwrap();
+
+    let db_path = project.path().join(".decapod/data/decapod.db");
+    assert!(!db_path.exists());
+
+    let home = tempfile::tempdir().unwrap();
+    let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["workspace", "status"])
+        .env("HOME", home.path())
+        .env("DECAPOD_AGENT_ID", "cloud-expired-agent")
+        .current_dir(project.path())
+        .output()
+        .expect("run workspace status with expired cloud session");
+    assert!(
+        out.status.success(),
+        "workspace status must auto-renew expired cloud session cleanly: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(
+        !db_path.exists(),
+        "expired cloud session renewal must never create .decapod/data/decapod.db"
+    );
+}

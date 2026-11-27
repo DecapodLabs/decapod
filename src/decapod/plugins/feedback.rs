@@ -35,6 +35,7 @@ pub fn add_feedback(
     text: &str,
     links: Option<&str>,
 ) -> Result<String, error::DecapodError> {
+    crate::core::storage_contracts::validate_feedback_write(source, text, links)?;
     let broker = DbBroker::new(&store.root);
     let db_path = feedback_db_path(&store.root);
     let id = crate::core::ulid::new_ulid();

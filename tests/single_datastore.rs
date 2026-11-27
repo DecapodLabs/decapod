@@ -576,3 +576,83 @@ fn legacy_feedback_and_dot_broker_dedupe_migrate_losslessly_into_single_datastor
     let decide_schema = decapod::plugins::decide::schema();
     assert_eq!(decide_schema["storage"], serde_json::json!(["decapod.db"]));
 }
+
+#[test]
+fn all_subsystems_share_single_db_with_reconciled_table_inventory() {
+    let temp = tempdir().unwrap();
+    let decapod_root = temp.path().join(".decapod");
+    let data = decapod_root.join("data");
+
+    // Initialize every active subsystem initializer (#1118).
+    todo::initialize_todo_db(&data).unwrap();
+    decapod::plugins::health::initialize_health_db(&data).unwrap();
+    decapod::plugins::federation::initialize_federation_db(&data).unwrap();
+    decapod::plugins::decide::initialize_decide_db(&data).unwrap();
+    decapod::plugins::cron::initialize_cron_db(&data).unwrap();
+    decapod::plugins::reflex::initialize_reflex_db(&data).unwrap();
+    decapod::plugins::lcm::initialize_lcm_db(&data).unwrap();
+    decapod::plugins::aptitude::initialize_aptitude_db(&data).unwrap();
+    decapod::plugins::archive::initialize_archive_db(&data).unwrap();
+    decapod::plugins::feedback::initialize_feedback_db(&data).unwrap();
+    decapod::plugins::policy::initialize_policy_db(&data).unwrap();
+    decapod::core::obligation::initialize_obligation_db(&data).unwrap();
+    db::initialize_knowledge_db(&data).unwrap();
+    migration::check_and_migrate(&decapod_root).unwrap();
+
+    // Ensure compaction storage tables and request_dedupe exist as in live production stores.
+    decapod::core::storage_compaction::compact_datastore_lossless(&data, false, false).unwrap();
+
+    // Verify ONLY canonical decapod.db (plus optional lock/WAL sidecars) exists in data/ — zero legacy *.db or *.events.jsonl files.
+    let mut non_canonical_dbs = Vec::new();
+    let mut jsonl_files = Vec::new();
+    for entry in std::fs::read_dir(&data).unwrap() {
+        let name = entry.unwrap().file_name().to_string_lossy().into_owned();
+        if name.ends_with(".db") && name != schemas::LOCAL_DB_NAME {
+            non_canonical_dbs.push(name);
+        } else if name.ends_with(".events.jsonl") {
+            jsonl_files.push(name);
+        }
+    }
+    assert!(
+        non_canonical_dbs.is_empty(),
+        "unexpected per-subsystem .db files: {non_canonical_dbs:?}"
+    );
+    assert!(
+        jsonl_files.is_empty(),
+        "unexpected .events.jsonl files: {jsonl_files:?}"
+    );
+
+    // Every runtime table in decapod.db must appear in docs/datastore-v2/logical_contract_v1.json (#1132).
+    let contract: serde_json::Value = serde_json::from_str(include_str!(
+        "../docs/datastore-v2/logical_contract_v1.json"
+    ))
+    .unwrap();
+    let contract_tables: std::collections::BTreeSet<String> = contract["tables"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|t| t["logical_name"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(contract_tables.len(), 36);
+
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let mut stmt = conn
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+        .unwrap();
+    let runtime_tables: std::collections::BTreeSet<String> = stmt
+        .query_map([], |row| row.get::<_, String>(0))
+        .unwrap()
+        .collect::<Result<_, _>>()
+        .unwrap();
+    let unexpected: Vec<_> = runtime_tables.difference(&contract_tables).collect();
+    assert!(
+        unexpected.is_empty(),
+        "runtime tables absent from logical_contract_v1.json: {unexpected:?}"
+    );
+    // Patterns/observations/consolidations exist as legacy/aptitude optional tables; check core active set is present.
+    assert!(
+        runtime_tables.len() >= 30,
+        "expected >= 30 active consolidated runtime tables, got {}",
+        runtime_tables.len()
+    );
+}

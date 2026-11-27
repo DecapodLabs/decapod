@@ -171,6 +171,16 @@ fn add_cron_job(
     dir: Option<String>,
 ) -> Result<(), error::DecapodError> {
     let dir_path = dir.unwrap_or_else(|| env::current_dir().unwrap().to_string_lossy().to_string());
+    crate::core::storage_contracts::validate_cron_write(
+        Some(&name),
+        Some(&description),
+        Some(&schedule),
+        Some(&command),
+        Some(&status),
+        Some(&tags),
+        None,
+        None,
+    )?;
     let dir_abs = Path::new(&dir_path)
         .canonicalize()
         .map_err(error::DecapodError::IoError)?
@@ -427,6 +437,16 @@ fn update_cron_job(
     last_run: Option<String>,
     next_run: Option<String>,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_cron_write(
+        name.as_deref(),
+        description.as_deref(),
+        schedule.as_deref(),
+        command.as_deref(),
+        status.as_deref(),
+        tags.as_deref(),
+        last_run.as_deref(),
+        next_run.as_deref(),
+    )?;
     let broker = DbBroker::new(root);
     let db_path = cron_db_path(root);
 

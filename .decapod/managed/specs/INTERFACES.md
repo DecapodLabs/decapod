@@ -5,6 +5,17 @@
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
 - **`verify_accepted_transition` (`qualifies_stale_accepted_base_inventory_reconciliation`)**: Admits `repo.pr-readiness.v1` transitions with a stale `accepted_base` `reviewed_sources_digest` strictly when commands and `reviewed_commands_digest` are preserved verbatim, both `base_tree` and `head_tree` inventory digests match `candidate_sources_digest`, and `changed_paths` is empty (`[]`).
 
+## Section 10 write-admission contracts, dogfood snapshot benchmark CLI, and fail-closed Cloud surfaces (`#1630`, `#1933`–`#1936`, `#1110`, `#1118`, `#1120`, `#1132`, `#1220`, `#1221`, `#1369`, `#1378`)
+
+- **`core::storage_contracts` plugin admission & manifest exports**:
+  - Exports `MAX_EVIDENCE_REFS_PER_RECORD` (`128`), `validate_knowledge_write`, `validate_knowledge_promotion`, `validate_federation_node_write`, `validate_federation_edge_write`, `validate_health_claim_write`, `validate_health_proof_write`, `validate_decide_session_write`, `validate_decide_record_write`, `validate_cron_write`, `validate_reflex_write`, `validate_feedback_write`, `validate_archive_write`, `validate_aptitude_pattern_write`, `validate_aptitude_observation_write`, and `validate_lcm_ingest_write`.
+  - `contract_manifest()` includes `collection_bounds.evidence_refs_per_record` and `sql_boundary_parity`, matched byte-for-byte by `docs/datastore-v2/logical_contract_v1.json` (`tests/datastore_contract.rs`).
+- **Dogfood snapshot benchmark CLI (`decapod houseboat storage-snapshot-benchmark`)**:
+  - Added `HouseboatCommand::StorageSnapshotBenchmark { --source-data <PATH>, --scope <LABEL> }` emitting `SnapshotCompactionBenchmarkReport` (`decapod.snapshot-compaction-benchmark.v1`) with read-only `DactylBridge::backup`, before/after byte snapshots, explicit `VACUUM` reclaim delta, pre/post reconstruction timings, `lossless_verified`, `todo_stream_parity`, and `task_journal_parity`.
+- **Cloud parity matrix & fail-closed RPC interfaces (`src/decapod/core/cloud_parity_matrix.rs`, `src/decapod/lib.rs`)**:
+  - `unsupported_cloud_operations` explicitly classifies `knowledge.store`, `federation.store`, `decide.store`, `health.store`, `aptitude.store`, `archive.store`, `feedback.store`, `cron.store`, `reflex.store`, `lcm.store`, `primitives.store`, `map.store`, `policy.store`, `data.broker`, `data.compact`, `store.upsert`, and `store.query` (`never_falls_back_to_sqlite: true`).
+  - `decapod rpc --stdin` routes through `is_cloud_file_only_command(&cli.command, predecoded_rpc_request.as_ref())` and `handle_store_upsert`/`handle_store_query` fail closed via `cloud_backend::unavailable_error()` when `cloud_workspace::is_cloud_project(ctx.project_root)`.
+
 ## `#1949` `repo.pr-readiness.v1` transition error & untruncated `validate` text surface (`src/decapod/core/repository_profile.rs`, `src/decapod/core/validate.rs`)
 
 - **Transition error format (`verify_accepted_transition`)**: `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` reports `transition_id=<64-hex>`, `scope=repo.pr-readiness.v1`, `base`, `head`, `sources: <old> -> <new>`, `commands: <old> -> <new>`, `changed_paths=[...]`, and PR review / `DECAPOD_REPO_TRANSITION_APPROVAL` / `DECAPOD_REPO_TRANSITION_DECISION_ID` guidance without emitting manual `decapod govern policy approve` CLI instructions.
@@ -2596,7 +2607,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `e3a790c9675a421b883bc15c351a4bbdab3c0ccfb5db87270a6e1beef6448bb5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

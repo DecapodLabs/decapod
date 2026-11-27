@@ -55,6 +55,7 @@ pub fn register_archive(
         .unwrap_or(path)
         .to_string_lossy()
         .to_string();
+    crate::core::storage_contracts::validate_archive_write(id, &rel_path)?;
 
     broker.with_conn(&db_path, "decapod", None, "archive.register", |conn| {
         conn.execute(

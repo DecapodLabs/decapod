@@ -1,0 +1,272 @@
+{
+  "schema_version": "decapod.dogfood-compaction-suite.v1",
+  "binary_version": "0.166.1",
+  "storage_format_version": 2,
+  "hosted_backend_status": "unavailable_local_only",
+  "synthetic_workload": {
+    "schema_version": "decapod.storage-compaction-benchmark.v1",
+    "binary_version": "0.166.1",
+    "storage_format_version": 2,
+    "backend_scope": "local_sqlite_benchmark",
+    "hosted_backend_status": "unavailable_local_only",
+    "workload_tasks": 25,
+    "workload_operations": 75,
+    "before_compaction": {
+      "main_db_bytes": 630784,
+      "wal_sidecar_bytes": 0,
+      "shm_sidecar_bytes": 0,
+      "page_size": 4096,
+      "page_count": 154,
+      "freelist_count": 0,
+      "live_bytes": 630784,
+      "reclaimable_bytes": 0
+    },
+    "after_compaction": {
+      "main_db_bytes": 630784,
+      "wal_sidecar_bytes": 0,
+      "shm_sidecar_bytes": 0,
+      "page_size": 4096,
+      "page_count": 154,
+      "freelist_count": 0,
+      "live_bytes": 630784,
+      "reclaimable_bytes": 0
+    },
+    "after_explicit_reclaim": {
+      "main_db_bytes": 630784,
+      "wal_sidecar_bytes": 0,
+      "shm_sidecar_bytes": 0,
+      "page_size": 4096,
+      "page_count": 154,
+      "freelist_count": 0,
+      "live_bytes": 630784,
+      "reclaimable_bytes": 0
+    },
+    "bytes_per_operation_before": 8410,
+    "bytes_per_operation_after_reclaim": 8410,
+    "p50_op_micros": 98045,
+    "p95_op_micros": 180489,
+    "max_op_micros": 219604,
+    "events_compacted": 0,
+    "unreferenced_components_collected": 0,
+    "sampling_method": "exact_per_operation_monotonic_instant",
+    "unknown_fields": [
+      "hosted_postgresql_live_bytes: unavailable_local_only",
+      "process_rss_delta_bytes: not_sampled_in_inprocess_harness"
+    ]
+  },
+  "dogfood_snapshots": [
+    {
+      "schema_version": "decapod.snapshot-compaction-benchmark.v1",
+      "binary_version": "0.166.1",
+      "storage_format_version": 2,
+      "scope": "dactyl",
+      "source_main_db_bytes": 42614784,
+      "source_wal_sidecar_bytes": 0,
+      "backup_copy_duration_ms": 234,
+      "compact_duration_ms": 2391,
+      "reclaim_duration_ms": 209,
+      "before_compaction": {
+        "main_db_bytes": 42614784,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 10404,
+        "freelist_count": 0,
+        "live_bytes": 42614784,
+        "reclaimable_bytes": 0
+      },
+      "after_compaction": {
+        "main_db_bytes": 42614784,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 10404,
+        "freelist_count": 0,
+        "live_bytes": 42614784,
+        "reclaimable_bytes": 0
+      },
+      "after_explicit_reclaim": {
+        "main_db_bytes": 32165888,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 7853,
+        "freelist_count": 0,
+        "live_bytes": 32165888,
+        "reclaimable_bytes": 0
+      },
+      "main_db_bytes_saved_vs_source": 10448896,
+      "main_db_bytes_saved_vs_snapshot": 10448896,
+      "live_bytes_saved": 10448896,
+      "events_compacted": 1,
+      "prompts_deduplicated": 0,
+      "components_collected": 0,
+      "events_logical_count": 69054,
+      "events_logical_sha256": "f9110b11f56bffffd936536ea98b1cc0bf85155a1fef7444314dba06b4ee987b",
+      "manifest_sha256": "2420ae4a3c951e66cf7766e06beabd90b6e41d825b904ee81fbf6fe18f12aea7",
+      "lossless_verified": true,
+      "todo_stream_parity": true,
+      "task_journal_parity": true,
+      "before_reconstruction": {
+        "logical_inventory_ms": 483,
+        "task_journal_verify_ms": 157,
+        "todo_events_query_ms": 16,
+        "todo_events_count": 2052,
+        "todo_events_sha256": "sha256:ad102482f5a1b25663f0ca670480d82da821522762340fed0677cc12c50f0f20"
+      },
+      "after_reconstruction": {
+        "logical_inventory_ms": 571,
+        "task_journal_verify_ms": 159,
+        "todo_events_query_ms": 26,
+        "todo_events_count": 2052,
+        "todo_events_sha256": "sha256:ad102482f5a1b25663f0ca670480d82da821522762340fed0677cc12c50f0f20"
+      },
+      "unknown_fields": [
+        "hosted_postgresql_live_bytes: unavailable_local_only",
+        "wal_sidecar_note: DactylBridge::backup folds source WAL frames into the isolated snapshot copy before compaction"
+      ]
+    },
+    {
+      "schema_version": "decapod.snapshot-compaction-benchmark.v1",
+      "binary_version": "0.166.1",
+      "storage_format_version": 2,
+      "scope": "propodus",
+      "source_main_db_bytes": 131825664,
+      "source_wal_sidecar_bytes": 0,
+      "backup_copy_duration_ms": 798,
+      "compact_duration_ms": 6417,
+      "reclaim_duration_ms": 943,
+      "before_compaction": {
+        "main_db_bytes": 131825664,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 32184,
+        "freelist_count": 0,
+        "live_bytes": 131825664,
+        "reclaimable_bytes": 0
+      },
+      "after_compaction": {
+        "main_db_bytes": 131825664,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 32184,
+        "freelist_count": 0,
+        "live_bytes": 131825664,
+        "reclaimable_bytes": 0
+      },
+      "after_explicit_reclaim": {
+        "main_db_bytes": 108011520,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 26370,
+        "freelist_count": 0,
+        "live_bytes": 108011520,
+        "reclaimable_bytes": 0
+      },
+      "main_db_bytes_saved_vs_source": 23814144,
+      "main_db_bytes_saved_vs_snapshot": 23814144,
+      "live_bytes_saved": 23814144,
+      "events_compacted": 5,
+      "prompts_deduplicated": 0,
+      "components_collected": 0,
+      "events_logical_count": 229932,
+      "events_logical_sha256": "c6fa6994faeb095e85db998b3463ee4fd43eab4e253fe3b3928f16a11743b1d0",
+      "manifest_sha256": "f1b8e3517743ea6396d353d48a4308bd5cf43f5290295553710e05d3a08fddf3",
+      "lossless_verified": true,
+      "todo_stream_parity": true,
+      "task_journal_parity": true,
+      "before_reconstruction": {
+        "logical_inventory_ms": 1601,
+        "task_journal_verify_ms": 1129,
+        "todo_events_query_ms": 39,
+        "todo_events_count": 6228,
+        "todo_events_sha256": "sha256:645877b5bcd749a4f02e4d1189f584ad700305f3fee8e0b97186f7536d7a1c3f"
+      },
+      "after_reconstruction": {
+        "logical_inventory_ms": 1295,
+        "task_journal_verify_ms": 877,
+        "todo_events_query_ms": 40,
+        "todo_events_count": 6228,
+        "todo_events_sha256": "sha256:645877b5bcd749a4f02e4d1189f584ad700305f3fee8e0b97186f7536d7a1c3f"
+      },
+      "unknown_fields": [
+        "hosted_postgresql_live_bytes: unavailable_local_only",
+        "wal_sidecar_note: DactylBridge::backup folds source WAL frames into the isolated snapshot copy before compaction"
+      ]
+    },
+    {
+      "schema_version": "decapod.snapshot-compaction-benchmark.v1",
+      "binary_version": "0.166.1",
+      "storage_format_version": 2,
+      "scope": "decapod",
+      "source_main_db_bytes": 333950976,
+      "source_wal_sidecar_bytes": 0,
+      "backup_copy_duration_ms": 1700,
+      "compact_duration_ms": 18138,
+      "reclaim_duration_ms": 2021,
+      "before_compaction": {
+        "main_db_bytes": 333950976,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 81531,
+        "freelist_count": 0,
+        "live_bytes": 333950976,
+        "reclaimable_bytes": 0
+      },
+      "after_compaction": {
+        "main_db_bytes": 333950976,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 81531,
+        "freelist_count": 0,
+        "live_bytes": 333950976,
+        "reclaimable_bytes": 0
+      },
+      "after_explicit_reclaim": {
+        "main_db_bytes": 282701824,
+        "wal_sidecar_bytes": 0,
+        "shm_sidecar_bytes": 0,
+        "page_size": 4096,
+        "page_count": 69019,
+        "freelist_count": 0,
+        "live_bytes": 282701824,
+        "reclaimable_bytes": 0
+      },
+      "main_db_bytes_saved_vs_source": 51249152,
+      "main_db_bytes_saved_vs_snapshot": 51249152,
+      "live_bytes_saved": 51249152,
+      "events_compacted": 12,
+      "prompts_deduplicated": 0,
+      "components_collected": 0,
+      "events_logical_count": 549462,
+      "events_logical_sha256": "8136fa82ff1ff8d3b54ed43121b938c1e97b6173b67dae1eed44eb28ae668181",
+      "manifest_sha256": "3cb6f7ae4a83ca1488d14dfdc777b2c0ed156485d7b32878d8ef7aae192203bd",
+      "lossless_verified": true,
+      "todo_stream_parity": true,
+      "task_journal_parity": true,
+      "before_reconstruction": {
+        "logical_inventory_ms": 3439,
+        "task_journal_verify_ms": 5036,
+        "todo_events_query_ms": 92,
+        "todo_events_count": 17996,
+        "todo_events_sha256": "sha256:5e79cd017ef746517ecac24f0593fb6b74584079d10c9291e27c88ece896b454"
+      },
+      "after_reconstruction": {
+        "logical_inventory_ms": 3572,
+        "task_journal_verify_ms": 4496,
+        "todo_events_query_ms": 92,
+        "todo_events_count": 17996,
+        "todo_events_sha256": "sha256:5e79cd017ef746517ecac24f0593fb6b74584079d10c9291e27c88ece896b454"
+      },
+      "unknown_fields": [
+        "hosted_postgresql_live_bytes: unavailable_local_only",
+        "wal_sidecar_note: DactylBridge::backup folds source WAL frames into the isolated snapshot copy before compaction"
+      ]
+    }
+  ]
+}

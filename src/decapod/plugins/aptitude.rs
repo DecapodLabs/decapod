@@ -529,6 +529,14 @@ pub fn get_preferences_by_category(
 // ============================================================================
 
 pub fn add_pattern(store: &Store, input: PatternInput) -> Result<String, error::DecapodError> {
+    crate::core::storage_contracts::validate_aptitude_pattern_write(
+        &input.name,
+        &input.category,
+        &input.regex_pattern,
+        input.preference_category.as_deref(),
+        input.preference_key.as_deref(),
+        input.description.as_deref(),
+    )?;
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
     let now = now_iso();
@@ -647,6 +655,7 @@ pub fn record_observation(
     content: &str,
     category: Option<&str>,
 ) -> Result<String, error::DecapodError> {
+    crate::core::storage_contracts::validate_aptitude_observation_write(content, category)?;
     let broker = DbBroker::new(&store.root);
     let db_path = aptitude_db_path(&store.root);
     let id = crate::core::ulid::new_ulid();

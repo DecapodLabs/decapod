@@ -751,6 +751,18 @@ pub fn add_scoped_knowledge(
     args: AddKnowledgeParams<'_>,
     scope: &str,
 ) -> Result<AddKnowledgeResult, error::DecapodError> {
+    crate::core::storage_contracts::validate_knowledge_write(
+        args.id,
+        args.title,
+        args.content,
+        args.provenance,
+        scope,
+        args.claim_id,
+        args.merge_key,
+        args.status,
+        args.ttl_policy,
+        args.expires_ts,
+    )?;
     validate_scope(scope)?;
     if [args.id, args.title, args.content, args.provenance]
         .iter()
@@ -1360,6 +1372,13 @@ pub fn record_promotion_event(
     }
 
     let source_entry_id = input.source_entry_id.trim();
+    crate::core::storage_contracts::validate_knowledge_promotion(
+        source_entry_id,
+        &evidence_refs,
+        input.approved_by.trim(),
+        input.actor.trim(),
+        input.reason.trim(),
+    )?;
     ensure_promotion_source_active(store, source_entry_id)?;
 
     let event = KnowledgePromotionEvent {

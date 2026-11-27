@@ -7,8 +7,10 @@
 //! reusing Decapod's existing primitives (`gatekeeper`, `storage_compaction`,
 //! `db`, `todo`, `mooring`).
 
+use crate::core::dactyl::DactylBridge;
 use crate::core::db;
 use crate::core::error::DecapodError;
+use crate::core::events;
 use crate::core::gatekeeper;
 use crate::core::mooring::{
     ArtifactProvenance, CollaborationContract, MooringEnforcementRequest, MooringOperation,
@@ -21,13 +23,14 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 pub const HOUSEBOAT_SCHEMA_VERSION: &str = "decapod.houseboat.v1";
 pub const DARKMATTER_SNAPSHOT_SCHEMA_VERSION: &str = "decapod.darkmatter-readonly-snapshot.v1";
 pub const KNOWLEDGE_ATTESTATION_SCHEMA_VERSION: &str = "decapod.knowledge-attestation.v1";
 pub const STORAGE_BENCHMARK_SCHEMA_VERSION: &str = "decapod.storage-compaction-benchmark.v1";
+pub const SNAPSHOT_BENCHMARK_SCHEMA_VERSION: &str = "decapod.snapshot-compaction-benchmark.v1";
 
 fn sha256_hex(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
@@ -2437,6 +2440,194 @@ pub fn run_local_storage_compaction_benchmark(
     })
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SnapshotReconstructionTiming {
+    pub logical_inventory_ms: u64,
+    pub task_journal_verify_ms: u64,
+    pub todo_events_query_ms: u64,
+    pub todo_events_count: usize,
+    pub todo_events_sha256: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SnapshotCompactionBenchmarkReport {
+    pub schema_version: String,
+    pub binary_version: String,
+    pub storage_format_version: u32,
+    pub scope: String,
+    pub source_main_db_bytes: u64,
+    pub source_wal_sidecar_bytes: u64,
+    pub backup_copy_duration_ms: u64,
+    pub compact_duration_ms: u64,
+    pub reclaim_duration_ms: u64,
+    pub before_compaction: StorageByteSnapshot,
+    pub after_compaction: StorageByteSnapshot,
+    pub after_explicit_reclaim: StorageByteSnapshot,
+    pub main_db_bytes_saved_vs_source: i64,
+    pub main_db_bytes_saved_vs_snapshot: i64,
+    pub live_bytes_saved: i64,
+    pub events_compacted: u64,
+    pub prompts_deduplicated: usize,
+    pub components_collected: usize,
+    pub events_logical_count: u64,
+    pub events_logical_sha256: String,
+    pub manifest_sha256: Option<String>,
+    pub lossless_verified: bool,
+    pub todo_stream_parity: bool,
+    pub task_journal_parity: bool,
+    pub before_reconstruction: SnapshotReconstructionTiming,
+    pub after_reconstruction: SnapshotReconstructionTiming,
+    pub unknown_fields: Vec<String>,
+}
+
+fn byte_snapshot_from_compaction(
+    snap: &storage_compaction::DataCompactionByteSnapshot,
+) -> StorageByteSnapshot {
+    StorageByteSnapshot {
+        main_db_bytes: snap.main_db_bytes,
+        wal_sidecar_bytes: snap.wal_sidecar_bytes,
+        shm_sidecar_bytes: snap.shm_sidecar_bytes,
+        page_size: snap.page_size,
+        page_count: snap.page_count,
+        freelist_count: snap.freelist_count,
+        live_bytes: snap.live_bytes,
+        reclaimable_bytes: snap.reclaimable_bytes,
+    }
+}
+
+fn measure_snapshot_reconstruction(
+    scratch_data: &Path,
+    db_path: &Path,
+) -> Result<(SnapshotReconstructionTiming, serde_json::Value), DecapodError> {
+    let conn = db::db_connect_readonly_bounded(
+        &db_path.to_string_lossy(),
+        std::time::Duration::from_secs(30),
+    )?;
+    let t_inv = Instant::now();
+    let (_inv_count, _inv_sha) = storage_compaction::logical_events_inventory(&conn)?;
+    let logical_inventory_ms = t_inv.elapsed().as_millis() as u64;
+    drop(conn);
+
+    let t_journal = Instant::now();
+    let journal = todo::task_journal_verify(scratch_data)?;
+    let task_journal_verify_ms = t_journal.elapsed().as_millis() as u64;
+
+    let t_todo = Instant::now();
+    let todo_events = events::query(scratch_data, events::TODO, usize::MAX)?;
+    let todo_events_query_ms = t_todo.elapsed().as_millis() as u64;
+    let todo_bytes = serde_json::to_vec(&todo_events)
+        .map_err(|e| DecapodError::ValidationError(format!("todo events serialize: {e}")))?;
+
+    Ok((
+        SnapshotReconstructionTiming {
+            logical_inventory_ms,
+            task_journal_verify_ms,
+            todo_events_query_ms,
+            todo_events_count: todo_events.len(),
+            todo_events_sha256: sha256_hex(&todo_bytes),
+        },
+        journal,
+    ))
+}
+
+/// Snapshot-copy a real `decapod.db` read-only into an isolated scratch
+/// directory and measure lossless compaction savings + reconstruction cost (#1630).
+///
+/// The source store is opened read-only through `DactylBridge::open_canonical`
+/// and copied via `DactylBridge::backup`, so the source directory is never mutated.
+pub fn run_snapshot_compaction_benchmark(
+    source_data_root: &Path,
+    scratch_root: &Path,
+    scope: &str,
+) -> Result<SnapshotCompactionBenchmarkReport, DecapodError> {
+    let source_db_path = source_data_root.join(schemas::LOCAL_DB_NAME);
+    if !source_db_path.is_file() {
+        return Err(DecapodError::NotFound(format!(
+            "canonical local datastore missing at {}",
+            source_db_path.display()
+        )));
+    }
+    let source_wal_path = Path::new(&format!("{}-wal", source_db_path.display())).to_path_buf();
+    let source_main_db_bytes = file_len_or_zero(&source_db_path);
+    let source_wal_sidecar_bytes = file_len_or_zero(&source_wal_path);
+
+    let scratch_data = scratch_root.join(".decapod/data");
+    fs::create_dir_all(&scratch_data).map_err(DecapodError::IoError)?;
+    let scratch_db = scratch_data.join(schemas::LOCAL_DB_NAME);
+
+    let t_copy = Instant::now();
+    let bridge = DactylBridge::open_canonical(source_data_root, ::dactyl_db::AccessMode::ReadOnly)?;
+    bridge.backup(&scratch_db)?;
+    drop(bridge);
+    let backup_copy_duration_ms = t_copy.elapsed().as_millis() as u64;
+
+    let (before_reconstruction, journal_before) =
+        measure_snapshot_reconstruction(&scratch_data, &scratch_db)?;
+
+    let t_compact = Instant::now();
+    let compact_report =
+        storage_compaction::compact_datastore_lossless(&scratch_data, false, false)?;
+    let compact_duration_ms = t_compact.elapsed().as_millis() as u64;
+
+    let before_compaction = byte_snapshot_from_compaction(&compact_report.before);
+    let after_compaction = byte_snapshot_from_compaction(&compact_report.after);
+
+    let t_reclaim = Instant::now();
+    let conn = db::db_connect(&scratch_db.to_string_lossy())?;
+    let _vac = storage_compaction::reclaim_pages_explicit(&conn)?;
+    let after_explicit_reclaim = measure_sqlite_bytes(&conn, &scratch_db)?;
+    drop(conn);
+    let reclaim_duration_ms = t_reclaim.elapsed().as_millis() as u64;
+
+    let (after_reconstruction, journal_after) =
+        measure_snapshot_reconstruction(&scratch_data, &scratch_db)?;
+
+    let todo_stream_parity = before_reconstruction.todo_events_count
+        == after_reconstruction.todo_events_count
+        && before_reconstruction.todo_events_sha256 == after_reconstruction.todo_events_sha256;
+    let task_journal_parity = journal_before == journal_after;
+
+    let main_db_bytes_saved_vs_source =
+        source_main_db_bytes as i64 - after_explicit_reclaim.main_db_bytes as i64;
+    let main_db_bytes_saved_vs_snapshot =
+        before_compaction.main_db_bytes as i64 - after_explicit_reclaim.main_db_bytes as i64;
+    let live_bytes_saved =
+        before_compaction.live_bytes as i64 - after_explicit_reclaim.live_bytes as i64;
+
+    Ok(SnapshotCompactionBenchmarkReport {
+        schema_version: SNAPSHOT_BENCHMARK_SCHEMA_VERSION.to_string(),
+        binary_version: env!("CARGO_PKG_VERSION").to_string(),
+        storage_format_version: schemas::STORAGE_FORMAT_VERSION,
+        scope: scope.to_string(),
+        source_main_db_bytes,
+        source_wal_sidecar_bytes,
+        backup_copy_duration_ms,
+        compact_duration_ms,
+        reclaim_duration_ms,
+        before_compaction,
+        after_compaction,
+        after_explicit_reclaim,
+        main_db_bytes_saved_vs_source,
+        main_db_bytes_saved_vs_snapshot,
+        live_bytes_saved,
+        events_compacted: compact_report.events_compacted,
+        prompts_deduplicated: compact_report.prompts_deduplicated,
+        components_collected: compact_report.components_collected,
+        events_logical_count: compact_report.events_logical_count,
+        events_logical_sha256: compact_report.events_logical_sha256,
+        manifest_sha256: compact_report.manifest_sha256,
+        lossless_verified: compact_report.lossless_verified,
+        todo_stream_parity,
+        task_journal_parity,
+        before_reconstruction,
+        after_reconstruction,
+        unknown_fields: vec![
+            "hosted_postgresql_live_bytes: unavailable_local_only".to_string(),
+            "wal_sidecar_note: DactylBridge::backup folds source WAL frames into the isolated snapshot copy before compaction".to_string(),
+        ],
+    })
+}
+
 // ============================================================================
 // CLI Surface (`decapod houseboat ...`)
 // ============================================================================
@@ -2462,6 +2653,15 @@ pub enum HouseboatCommand {
         /// Number of synthetic governed task/lease lifecycles to execute.
         #[clap(long, default_value_t = 12)]
         tasks: usize,
+    },
+    /// Benchmark lossless compaction and reconstruction on a read-only snapshot copy of a data dir (#1630).
+    StorageSnapshotBenchmark {
+        /// Source `.decapod/data` directory (never mutated).
+        #[clap(long)]
+        source_data: PathBuf,
+        /// Aggregate scope label to embed in the JSON report (e.g. decapod|dactyl|propodus).
+        #[clap(long, default_value = "snapshot")]
+        scope: String,
     },
     /// Verify a sample or JSON-encoded mooring collaboration contract (#855).
     VerifyMooring {
@@ -2536,6 +2736,17 @@ pub fn run_houseboat_command(cli: &HouseboatCli) -> Result<(), DecapodError> {
                 "{}",
                 serde_json::to_string_pretty(&report).map_err(|e| {
                     DecapodError::ValidationError(format!("benchmark serialize: {e}"))
+                })?
+            );
+            Ok(())
+        }
+        HouseboatCommand::StorageSnapshotBenchmark { source_data, scope } => {
+            let tmp = tempfile::tempdir().map_err(DecapodError::IoError)?;
+            let report = run_snapshot_compaction_benchmark(source_data, tmp.path(), scope)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).map_err(|e| {
+                    DecapodError::ValidationError(format!("snapshot benchmark serialize: {e}"))
                 })?
             );
             Ok(())

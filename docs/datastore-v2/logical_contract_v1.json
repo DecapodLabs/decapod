@@ -1,8 +1,8 @@
 {
   "schema": "decapod.logical-storage-inventory.v1",
   "status": "provisional_source_inventory_requires_effective_runtime_and_postgres_catalog_proof",
-  "release": "0.143.1",
-  "pinned_source_sha": "d3542c30ac0088f3c07e83b775471b8677875e7e",
+  "release": "0.166.2",
+  "pinned_source_sha": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
   "inventory_blob_sha": "f409aa80ea5cfa17aa82365b2dab7c69ace15160",
   "field_policy": "explicit_utf8_byte_json_and_collection_bounds_enforced_fail_closed_on_writes_historical_reads_lossless",
   "field_contracts": {
@@ -10,27 +10,37 @@
     "unit": "utf8_bytes",
     "nul_byte_policy": "reject_0x00_on_all_writes",
     "historical_oversized_read_policy": "lossless_untruncated_read",
+    "sql_boundary_parity": {
+      "rust_utf8_len": "str::len(value) in UTF-8 bytes + fail-closed NUL rejection",
+      "sqlite_length_function": "length(CAST(col AS BLOB))",
+      "postgres_length_function": "octet_length(convert_to(col, 'UTF8'))",
+      "null_byte_parity": "PostgreSQL TEXT rejects 0x00 natively; Rust validator enforces identical fail-closed rejection on SQLite/local stores"
+    },
     "limits": {
       "id_bytes": 128,
+      "digest_bytes": 128,
       "principal_bytes": 128,
+      "repository_id_bytes": 256,
       "stream_bytes": 64,
       "event_type_bytes": 128,
       "timestamp_bytes": 64,
       "enum_token_bytes": 64,
       "category_bytes": 128,
       "tag_bytes": 128,
-      "title_bytes": 512,
-      "scope_bytes": 4096,
-      "path_or_ref_bytes": 2048,
+      "title_bytes": 1024,
+      "scope_bytes": 16384,
+      "path_or_ref_bytes": 4096,
       "description_bytes": 65536,
       "proof_plan_bytes": 65536,
-      "verification_artifacts_bytes": 262144,
-      "event_payload_bytes": 524288,
-      "transfer_event_payload_bytes": 4456448,
-      "json_max_depth": 24,
+      "verification_artifacts_bytes": 524288,
+      "body_prose_bytes": 262144,
+      "event_payload_bytes": 1048576,
+      "transfer_event_payload_bytes": 4259840,
+      "json_max_depth": 32,
       "tags_per_task": 64,
       "owners_per_task": 32,
-      "dependencies_per_task": 128
+      "dependencies_per_task": 128,
+      "evidence_refs_per_record": 128
     }
   },
   "authority_convergence": {
@@ -1890,6 +1900,81 @@
       ],
       "primary_key": [
         "id"
+      ],
+      "unique": [],
+      "foreign_keys": [],
+      "indexes": []
+    },
+    {
+      "logical_name": "repository_scope",
+      "authority": "authoritative_operational",
+      "columns": [
+        {
+          "name": "repository_key",
+          "sqlite_type": "INTEGER",
+          "not_null": false,
+          "pk_ordinal": 1,
+          "default_sql": null
+        },
+        {
+          "name": "version",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "stable_id",
+          "sqlite_type": "TEXT",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "provider",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "owner_name",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "owner_kind",
+          "sqlite_type": "INTEGER",
+          "not_null": true,
+          "pk_ordinal": 0,
+          "default_sql": "0"
+        },
+        {
+          "name": "organization_id",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "repository_name",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        },
+        {
+          "name": "local_user",
+          "sqlite_type": "TEXT",
+          "not_null": false,
+          "pk_ordinal": 0,
+          "default_sql": null
+        }
+      ],
+      "primary_key": [
+        "repository_key"
       ],
       "unique": [],
       "foreign_keys": [],
