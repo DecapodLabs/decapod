@@ -900,6 +900,16 @@
         "tests/cloud_managed_session.rs",
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "cp2-bazel-lock-and-manifest-1896",
+      "summary": "Update MODULE.bazel.lock for dactyl-db 0.21.0, refresh .manifest.json config_input_hash, and re-review specs (#1896)",
+      "input_digest": "sha256:caf91c10bc7184b77fd638e1eac5dc64e1a0e4d3ae4934f03c4b2992c3e765c1",
+      "proof_refs": [
+        ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
+        "MODULE.bazel.lock"
+      ]
     }
   ],
   "intents": {
@@ -944,21 +954,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Documented cloud_project unselected routing/reconcile, dactyl-db =0.21.0 OperationalDisposition transport mapping, and CloudAuthErrorCode extensions.",
-          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
+          "reviewed_code_fingerprint": "d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec",
           "spec_material_hash": "8496a08bb55569e2f5bff06201f414cb08f06d45dcd221e01a5930c23ba131ce"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Documented new CloudAuthErrorCode variants, automatic repository reconciliation contract, and OperationalAction/OutcomeUnknown mapping.",
-          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
+          "reviewed_code_fingerprint": "d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec",
           "spec_material_hash": "a28f18f4792c70e61eaf3d77366294cc358d4ca7a542845640f211dcd385fe31"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Public org filtering and non-fallback fail-closed boundaries preserved; security invariants unchanged.",
-          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
+          "reviewed_code_fingerprint": "d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
@@ -970,14 +980,18 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795761255Z"
+      "updated_at": "1795761891Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Fail-closed cloud session; zero SQLite fallback; zero local path overrides; decapod validate proof-gated."
       ],
-      "artifact_hash": "sha256:10e3e24ffc9c605cacc7515f56bdcea9c758a96400b695dba98a5a0e809c466a",
+      "artifact_hash": "sha256:8ab4a8f130dfec30e9df2e22134e4ef1cb62b644aeaec98a809125ab6d88793d",
       "checks": [
+        {
+          "name": "bazel_cargo_inputs_policy",
+          "status": "passed"
+        },
         {
           "name": "clippy",
           "status": "passed"
@@ -1011,10 +1025,17 @@
             "intent_id": "intent:fend_01m8ben363mx75qe",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:fend_01m8ben363mx75qe",
+            "event_id": "event:5",
+            "intent_id": "intent:fend_01m8ben363mx75qe",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "fend_01m8ben363mx75qe": {
@@ -1049,6 +1070,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "command": "bazel mod deps --lockfile_mode=update && bazel test //:cargo_inputs_policy",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "MODULE.bazel.lock",
+                  ".decapod/managed/.manifest.json",
+                  "Updated MODULE.bazel.lock for dactyl-db 0.21.0 and verified //:cargo_inputs_policy PASSED in 0.5s; refreshed .manifest.json config_input_hash after reviewed_sources_digest update."
+                ],
+                "proof_refs": [
+                  "bazel_cargo_inputs_policy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1056,10 +1095,12 @@
       },
       "declared_commands": [
         "RUSTC_WRAPPER='' CARGO_BUILD_JOBS=2 cargo fmt --all -- --check && CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings",
-        "RUSTC_WRAPPER='' CARGO_BUILD_JOBS=2 cargo test --all-features --lib cloud_client --lib cloud_project --test doc_alignment"
+        "RUSTC_WRAPPER='' CARGO_BUILD_JOBS=2 cargo test --all-features --lib cloud_client --lib cloud_project --test doc_alignment",
+        "bazel mod deps --lockfile_mode=update && bazel test //:cargo_inputs_policy"
       ],
       "evidence": [
-        "Rebased onto bb4d0e8b8e (v0.166.4); dactyl-db =0.21.0 OperationalDisposition and auto-reconcile verified."
+        "Rebased onto bb4d0e8b8e (v0.166.4); dactyl-db =0.21.0 OperationalDisposition and auto-reconcile verified.",
+        "Updated MODULE.bazel.lock for dactyl-db 0.21.0 and verified //:cargo_inputs_policy PASSED in 0.5s; refreshed .manifest.json config_input_hash after reviewed_sources_digest update."
       ],
       "inspected_files": [
         "src/decapod/core/cloud_client.rs",
@@ -1069,8 +1110,10 @@
       "intent_id": "intent:fend_01m8ben363mx75qe",
       "modified_files": [
         ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
         "Cargo.lock",
         "Cargo.toml",
+        "MODULE.bazel.lock",
         "docs/book/src/reference/cloud-projects.md",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/cloud_project.rs",

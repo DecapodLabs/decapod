@@ -2127,14 +2127,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 - Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
-- Build manifests (9): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, `tests/fixtures/justfile_consumer/Cargo.toml`, (+1 more)
+- Build manifests (113): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/Cargo.toml`, `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/assets/tools/laya-native/Cargo.toml`, `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/bazel-out/darwin_arm64-fastbuild/bin/cargo_inputs_policy.sh.runfiles/+cargo_inputs+decapod_cargo_inputs/Cargo.toml`, `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/bindings/typescript/package.json`, `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/external/+cargo_inputs+decapod_cargo_inputs/Cargo.toml`, (+105 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/` (1451 files), `bazel-bin/` (3 files), `bazel-out/` (3 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
