@@ -897,6 +897,11 @@
       "id": "cp_01M8FFK_SPECS_CLEAN",
       "summary": "Refreshed living specs without bazel-* symlinks so repo_signal_fingerprint matches clean CI checkout",
       "input_digest": "sha256:a77177bf2cb0687221f713028e025a0b35540c7238d925b6519dec1c737c2e4c"
+    },
+    {
+      "id": "cp_01M8FFZ_SPEC_REVIEW",
+      "summary": "Recorded updated INTERFACES.md review bound to clean fbd09eeb fingerprint",
+      "input_digest": "sha256:d252fa1f6a3b3b0b6805f245c906fdcbaef6c98f1ef99ad978954f7b5b25018a"
     }
   ],
   "intents": {
@@ -949,8 +954,8 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented mdBook public discovery metadata, docs-build.sh + docs_seo.py custody, sitemap.xml, and llms.txt (site#101)",
-          "reviewed_code_fingerprint": "a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff",
+          "reason": "Updated INTERFACES.md for docs-build.sh, docs_seo.py, workflow_owned::SOURCES, and clean codebase fingerprint fbd09eeb without bazel symlinks",
+          "reviewed_code_fingerprint": "fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3",
           "spec_material_hash": "ca491cdf86ef2f46f292af46b37285d66b4e66226441e870509f0841692a43ec"
         },
         {
@@ -969,13 +974,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795815651Z"
+      "updated_at": "1795817448Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:cf9093c88be6f941753e59dbe479ad43fa1bf6a58388bfd43fa88372e89e7d90",
+      "artifact_hash": "sha256:21282555b10cc2ee640f04015222f23d2935b0ae2d6225373c601f68bdadf1ca",
       "checks": [
         {
           "name": "doc-alignment",
@@ -983,6 +988,10 @@
         },
         {
           "name": "docs-seo-fixture",
+          "status": "passed"
+        },
+        {
+          "name": "spec_review",
           "status": "passed"
         },
         {
@@ -1018,10 +1027,17 @@
             "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8FEMKH0KDBR3C0T4G01VQ64": {
@@ -1082,6 +1098,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md"
+                ],
+                "proof_refs": [
+                  "spec_review"
+                ],
+                "scope": [
+                  ".decapod/**",
+                  "assets/tools/**",
+                  "docs/book/**"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1098,6 +1131,7 @@
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/managed/.manifest.json",
+        ".decapod/managed/specs/INTERFACES.md",
         "assets/tools/source_ci_custody.rs",
         "assets/tools/source_ci_profile.rs",
         "assets/tools/source_ci_workflow_owned.rs",
