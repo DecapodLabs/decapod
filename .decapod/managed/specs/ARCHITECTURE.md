@@ -1,3 +1,17 @@
+## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
+
+- **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
+- **Cloud workspace admission & container-relay handling (`src/decapod/core/workspace.rs::ensure_cloud_workspace`, `src/decapod/core/cloud_workspace.rs::admit_cloud_checkout`)**:
+  - `admit_cloud_checkout` parses branch-embedded task IDs via `extract_task_ids_from_branch` and fails closed with `TODO_CUSTODY_REQUIRED` whenever `branch_task_ids` is non-empty and none match an active hosted claim.
+  - `ensure_cloud_workspace` validates `WORKSPACE_DESTINATION_MISMATCH` before branching/reusing an active isolated worktree, skips host-credential discovery and container launching when `cloud_workspace::is_container_relay_active()` is true by delegating directly to `cloud_workspace::check_cloud_authoring(..., true)`, and gates `ensure_container_workspace` on `config.use_container && !status.container.in_container` in both `ensure_workspace` and `ensure_cloud_workspace`.
+- **Cloud non-CI, policy, and container-relay integration harness (`tests/cloud_workspace_validation_1886.rs`)**: Extends `CloudControlServer` to mock `/rest/v1/rpc/propodus_governance_v1` (`authorize_exception`, `verify_decision`) and adds `accepted_cloud_workspace_ensure_non_ci_validate_policy_approve_and_container_relay`.
+
+## Deterministic RPC/MCP/HTTP failure recovery derivation (`#1948`)
+
+- **Shared recovery classifier (`src/decapod/core/rpc.rs::derive_failure_recovery`)**: Centralizes `FailureClass` (`AuthorityRequired`, `UnknownOutcome`, `StaleState`, `WorkspaceCustody`, `SessionCustody`, `FailedProof`, `RetryablePreflight`, `InvalidInput`, `Unsupported`) so `error_response`, `mcp_denied_result` (`src/decapod/core/agent_interop/mcp.rs`), and `http_transport::error_code_json` (`src/decapod/core/http_transport.rs`) derive consistent, redacted, bounded `ContextCapsule`, `Blocker`, `AllowedOp`, and `RpcError.details` payloads without a second error interpreter.
+- **Structured pre-dispatch RPC failure emission (`src/decapod/lib.rs::emit_rpc_error_response`, `classify_decapod_error_for_rpc`)**: Converts `DecapodError` failures from `enforce_worktree_requirement_for_rpc`, `ensure_session_valid`, `enforce_constitutional_awareness_for_rpc`, `cloud_admin_rpc_response`, and RPC handlers into structured `RpcResponse` JSON + trace entries before returning `Err(err)`, while `handle_context_resolve` clears `context_capsule` if `context_budget_exceeded` remains over `MAX_CONTEXT_ENVELOPE_BYTES`.
+- **Projection fidelity (`src/decapod/core/projection.rs`)**: Extends `classify_response` with refusal codes (`worktree_isolation_required`, `protected_branch`, `constitutional_awareness_required`, `policy_denied`, `human_authorization_required`, `controller_contract_unsupported`, etc.) and preserves `context_capsule` and `error.details` on `ToolOperationProjection` (`#[serde(skip_serializing_if = "Option::is_none")]`).
+
 ## Commercial reservation diagnostics, automatic repository reconciliation, and `OperationalDisposition` integration (issues #1896, #1859, #1895)
 
 - **Unselected-project routing & reconciliation (`src/decapod/core/cloud_project.rs`)**: Splits `cloud_project::route` so unset `record.selection` invokes `AccountOperation::Status` (`route_from_status`), handles `registration_required`, persists the resolved `<org_uuid>/<repo_uuid>` selection on authorized projects, and delegates unresolved slug lookups to `reconcile_originating_repository` (disambiguating multiple matching projects via `decapod cloud project use`, or returning typed `PaymentRequired` / `AdminApprovalRequired` / `RepositoryDenied` diagnostics).
@@ -2134,7 +2148,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
+- Repository signal fingerprint: `e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

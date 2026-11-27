@@ -886,6 +886,27 @@
         "tests/cloud_managed_session.rs",
         "tests/cloud_tenancy_parity_1895.rs"
       ]
+    },
+    "claim:cloud-workspace-parity-1886": {
+      "statement": "Cloud-accepted repositories keep workspace ensure, container relay, and policy parity usable without falling back to local SQLite.",
+      "falsifier": "An authorized Cloud-accepted repo fails workspace ensure/container relay parity or falls back silently to SQLite.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/workspace.rs",
+        "tests/cloud_workspace_validation_1886.rs"
+      ]
+    },
+    "claim:rpc-failure-recovery-context-1948": {
+      "statement": "Every agent-facing RPC/MCP/HTTP failure derives accurate failure-specific recovery context and allowed_next_ops without hardcoding speculative agent.init.",
+      "falsifier": "An agent-facing failure returns hardcoded speculative context_capsule: None or wrong allowed_next_ops or leaks raw secret tokens.",
+      "status": "open",
+      "proof_refs": [
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
+        "tests/agent_rpc_suite.rs",
+        "tests/unit/core/projection_tests.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -919,6 +940,19 @@
         ".decapod/managed/.manifest.json",
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md"
+      ]
+    },
+    {
+      "id": "cp4-wave4-combined-1896-1886-1948",
+      "summary": "Combine #1896 (dactyl-db 0.21.0 + auto-reconcile + OperationalDisposition), #1886 (cloud workspace parity), and #1948 (RPC recovery context) onto 78c5c4d7f",
+      "input_digest": "sha256:0735bd678fa9ca2b34da74eb2aa4ea1e3dd8e797b3a0d693856a4b79f32c390e",
+      "proof_refs": [
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/rpc.rs",
+        "tests/agent_rpc_suite.rs",
+        "tests/cloud_workspace_validation_1886.rs"
       ]
     }
   ],
@@ -963,22 +997,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented cloud_project unselected routing/reconcile, dactyl-db =0.21.0 OperationalDisposition transport mapping, and CloudAuthErrorCode extensions.",
-          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
-          "spec_material_hash": "8496a08bb55569e2f5bff06201f414cb08f06d45dcd221e01a5930c23ba131ce"
+          "reason": "Combined Wave 4 Cloud CLI (#1896/#1859/#1895 + dactyl-db =0.21.0 OperationalDisposition), Cloud Workspace (#1886), and RPC failure recovery (#1948) on 78c5c4d7f.",
+          "reviewed_code_fingerprint": "e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb",
+          "spec_material_hash": "7180f0b29cb3fafebca04c114df1cbd2b54f5a94fe61c0fad63f83786f02a30f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented new CloudAuthErrorCode variants, automatic repository reconciliation contract, and OperationalAction/OutcomeUnknown mapping.",
-          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
-          "spec_material_hash": "a28f18f4792c70e61eaf3d77366294cc358d4ca7a542845640f211dcd385fe31"
+          "reason": "Combined CloudAuthErrorCode/auto-reconcile/OperationalDisposition (#1896), cloud_workspace/workspace parity (#1886), and error_response context_capsule/allowed_next_ops (#1948) interfaces.",
+          "reviewed_code_fingerprint": "e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb",
+          "spec_material_hash": "641fb8c706abb4b713df9f3c39aeccb195ddf0b3d00d293c199a1e08d81da74d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Public org filtering and non-fallback fail-closed boundaries preserved; security invariants unchanged.",
-          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
+          "reason": "Fail-closed cloud session, non-fallback SQLite, credential redaction, and container boundary invariants preserved across #1896, #1886, and #1948.",
+          "reviewed_code_fingerprint": "e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
@@ -990,13 +1024,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795762185Z"
+      "updated_at": "1795763526Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Fail-closed cloud session; zero SQLite fallback; zero local path overrides; decapod validate proof-gated."
       ],
-      "artifact_hash": "sha256:8ab4a8f130dfec30e9df2e22134e4ef1cb62b644aeaec98a809125ab6d88793d",
+      "artifact_hash": "sha256:6a7e31fd0a62276aeda2f083b1dc633d6812fe07ef02336219feb6b4f741a7a8",
       "checks": [
         {
           "name": "bazel_cargo_inputs_policy",
@@ -1042,10 +1076,17 @@
             "intent_id": "intent:fend_01m8ben363mx75qe",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:fend_01m8ben363mx75qe",
+            "event_id": "event:6",
+            "intent_id": "intent:fend_01m8ben363mx75qe",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "fend_01m8ben363mx75qe": {
@@ -1098,6 +1139,32 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/workspace.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/agent_interop/mcp.rs",
+                  "src/decapod/core/http_transport.rs",
+                  "src/decapod/core/projection.rs",
+                  "src/decapod/lib.rs",
+                  "tests/cloud_workspace_validation_1886.rs",
+                  "tests/agent_rpc_suite.rs",
+                  "tests/unit/core/projection_tests.rs",
+                  "MODULE.bazel.lock",
+                  "Folded #1886 and #1948 cleanly into #1896 branch off 78c5c4d7f (v0.166.5); MODULE.bazel.lock updated and verified."
+                ],
+                "proof_refs": [
+                  "bazel_cargo_inputs_policy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1109,6 +1176,7 @@
         "bazel mod deps --lockfile_mode=update && bazel test //:cargo_inputs_policy"
       ],
       "evidence": [
+        "Folded #1886 and #1948 cleanly into #1896 branch off 78c5c4d7f (v0.166.5); MODULE.bazel.lock updated and verified.",
         "Rebased onto bb4d0e8b8e (v0.166.4); dactyl-db =0.21.0 OperationalDisposition and auto-reconcile verified.",
         "Updated MODULE.bazel.lock for dactyl-db 0.21.0 and verified //:cargo_inputs_policy PASSED in 0.5s; refreshed .manifest.json config_input_hash after reviewed_sources_digest update."
       ],
@@ -1125,9 +1193,19 @@
         "Cargo.toml",
         "MODULE.bazel.lock",
         "docs/book/src/reference/cloud-projects.md",
+        "src/decapod/core/agent_interop/mcp.rs",
         "src/decapod/core/cloud_client.rs",
         "src/decapod/core/cloud_project.rs",
-        "src/decapod/core/error.rs"
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/error.rs",
+        "src/decapod/core/http_transport.rs",
+        "src/decapod/core/projection.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/workspace.rs",
+        "src/decapod/lib.rs",
+        "tests/agent_rpc_suite.rs",
+        "tests/cloud_workspace_validation_1886.rs",
+        "tests/unit/core/projection_tests.rs"
       ],
       "repo_scope": [
         "root"

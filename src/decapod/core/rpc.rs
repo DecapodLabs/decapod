@@ -1000,7 +1000,7 @@ pub struct ContextCapsule {
 }
 
 /// Allowed next operation
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AllowedOp {
     /// Operation name
     pub op: String,
@@ -1012,7 +1012,7 @@ pub struct AllowedOp {
 }
 
 /// Blocker preventing operation completion
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Blocker {
     /// Blocker type
     pub kind: BlockerKind,
@@ -1023,7 +1023,7 @@ pub struct Blocker {
 }
 
 /// Types of blockers
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum BlockerKind {
     MissingAnswer,
@@ -1951,7 +1951,695 @@ pub fn success_response(
     }
 }
 
-/// Create an error response
+/// Structured, bounded recovery context derived from an RPC failure and its
+/// governing state (#1948). Advice never grants authority or skips gates.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct FailureRecovery {
+    pub failure_class: &'static str,
+    pub recovery_mode: &'static str,
+    pub retry_safe: bool,
+    pub authority_required: bool,
+    pub readback_required: bool,
+    pub blocker: Blocker,
+    pub allowed_next_ops: Vec<AllowedOp>,
+    pub context_capsule: ContextCapsule,
+    pub details: serde_json::Value,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FailureClass {
+    AuthorityRequired,
+    UnknownOutcome,
+    StaleState,
+    WorkspaceCustody,
+    SessionCustody,
+    FailedProof,
+    RetryablePreflight,
+    InvalidInput,
+    Unsupported,
+}
+
+impl FailureClass {
+    const fn as_str(self) -> &'static str {
+        match self {
+            Self::AuthorityRequired => "authority_required",
+            Self::UnknownOutcome => "unknown_outcome_readback_required",
+            Self::StaleState => "stale_state_reread_required",
+            Self::WorkspaceCustody => "workspace_custody_required",
+            Self::SessionCustody => "session_custody_required",
+            Self::FailedProof => "failed_proof_repair_required",
+            Self::RetryablePreflight => "retryable_preflight_fault",
+            Self::InvalidInput => "invalid_input",
+            Self::Unsupported => "unsupported_no_recovery",
+        }
+    }
+
+    const fn recovery_mode(self) -> &'static str {
+        match self {
+            Self::AuthorityRequired => "principal_authority_required",
+            Self::UnknownOutcome => "readback_before_retry",
+            Self::StaleState => "reread_and_reconcile",
+            Self::WorkspaceCustody => "acquire_isolated_worktree",
+            Self::SessionCustody => "acquire_session_or_awareness",
+            Self::FailedProof => "repair_and_revalidate",
+            Self::RetryablePreflight => "safe_read_retry",
+            Self::InvalidInput => "fix_request_parameters",
+            Self::Unsupported => "no_supported_recovery",
+        }
+    }
+}
+
+fn bounded_redacted_text(raw: &str, max_chars: usize) -> String {
+    let redacted = crate::core::trace::redact_string(raw);
+    let mut out = String::new();
+    for (idx, ch) in redacted.chars().enumerate() {
+        if idx >= max_chars {
+            out.push_str("...");
+            break;
+        }
+        out.push(ch);
+    }
+    out
+}
+
+fn contains_any(haystack_lc: &str, needles: &[&str]) -> bool {
+    needles.iter().any(|needle| haystack_lc.contains(needle))
+}
+
+fn classify_failure(code: &str, message: &str, existing_blocker: Option<&Blocker>) -> FailureClass {
+    let code_lc = code.to_ascii_lowercase();
+    let msg_lc = message.to_ascii_lowercase();
+
+    // Unknown-after-send outcomes must never recommend blind mutation replay.
+    if contains_any(
+        &code_lc,
+        &[
+            "outcome_unknown",
+            "restart_required",
+            "unknown_outcome",
+            "timeout_unknown_outcome",
+            "cancelled_unknown_outcome",
+            "idempotency_in_progress",
+            "idempotency_conflict",
+        ],
+    ) || contains_any(&msg_lc, &["outcome is unknown", "uncertain write"])
+    {
+        return FailureClass::UnknownOutcome;
+    }
+
+    // Principal/controller-only refusals must never suggest agent.init, validate loops,
+    // or permission/bypass flags. Checked before FailedProof because validation reports
+    // may embed these policy transition/controller blockers in their JSON message.
+    if matches!(
+        existing_blocker.map(|b| b.kind),
+        Some(BlockerKind::Unauthorized)
+    ) || contains_any(
+        &code_lc,
+        &[
+            "unauthorized",
+            "policy_denied",
+            "human_authorization_required",
+            "accepted_repository_contract_changed",
+            "controller_contract_unsupported",
+            "required_profile_downgrade",
+            "policy_self_authorization_rejected",
+            "admin_required",
+            "owner_required",
+            "admin_approval_required",
+            "paid_seat_required",
+            "seat_capacity_exceeded",
+            "mfa_step_up_required",
+            "mfa_required",
+            "repo_access_denied",
+            "repository_denied",
+            "repository_not_approved",
+            "repository_access_denied",
+            "seat_available_for_assignment",
+            "provider_quarantined",
+            "quarantined_provider_link",
+            "scope_denied",
+            "grant_revoked",
+            "grant_expired",
+            "payment_required",
+            "signup_required",
+            "entitlement_denied",
+            "read_only_session_denied",
+        ],
+    ) || contains_any(
+        &msg_lc,
+        &[
+            "accepted_repository_contract_changed",
+            "controller_contract_unsupported",
+            "required_profile_downgrade",
+            "policy_self_authorization_rejected",
+            "\"human_authorization_required\":true",
+            "\"next_action\":\"request_human_authorization\"",
+            "\"next_action\":\"obtain_supported_controller\"",
+        ],
+    ) {
+        return FailureClass::AuthorityRequired;
+    }
+
+    if matches!(
+        existing_blocker.map(|b| b.kind),
+        Some(BlockerKind::ProtectedBranch | BlockerKind::WorkspaceRequired)
+    ) || contains_any(
+        &code_lc,
+        &[
+            "protected_branch",
+            "worktree_isolation_required",
+            "workspace_required",
+            "scope_violation",
+            "custody_required",
+        ],
+    ) || contains_any(
+        &msg_lc,
+        &[
+            "protected branch",
+            "isolated git worktree",
+            "decapod-managed worktree",
+            "outside an isolated .decapod/workspaces",
+        ],
+    ) {
+        return FailureClass::WorkspaceCustody;
+    }
+
+    if contains_any(
+        &code_lc,
+        &[
+            "stale",
+            "version_conflict",
+            "custody_conflict",
+            "task_advanced_during_validation",
+            "publication_material_base_changed",
+            "policy_snapshot_stale",
+            "validation_history_task_stale",
+            "constitutional_awareness_stale",
+        ],
+    ) || contains_any(
+        &msg_lc,
+        &[
+            "policy_snapshot_stale",
+            "validation_history_task_stale",
+            "task_advanced_during_validation",
+            "publication_material_base_changed",
+            "stale receipt",
+            "stale epoch",
+        ],
+    ) {
+        return FailureClass::StaleState;
+    }
+
+    if contains_any(
+        &code_lc,
+        &[
+            "session_required",
+            "session_invalid",
+            "session_expired",
+            "constitutional_awareness_required",
+        ],
+    ) || contains_any(
+        &msg_lc,
+        &[
+            "session required",
+            "session is missing",
+            "session expired",
+            "constitutional awareness",
+        ],
+    ) {
+        return FailureClass::SessionCustody;
+    }
+
+    if matches!(
+        existing_blocker.map(|b| b.kind),
+        Some(BlockerKind::MissingProof)
+    ) || contains_any(
+        &code_lc,
+        &[
+            "validation_failed",
+            "ci_local_validation_failed",
+            "publication_not_ready",
+            "proof_hook_failed",
+            "missing_proof",
+            "mandate_violation",
+        ],
+    ) {
+        return FailureClass::FailedProof;
+    }
+
+    if contains_any(
+        &code_lc,
+        &[
+            "inventory_unavailable",
+            "observe_error",
+            "offline",
+            "provider_unavailable",
+            "storage_contention",
+            "storage_io",
+            "database_busy",
+            "storage_lock_timeout",
+        ],
+    ) || contains_any(
+        &msg_lc,
+        &[
+            "database is locked",
+            "storage_lock_timeout",
+            "disk i/o error",
+        ],
+    ) {
+        return FailureClass::RetryablePreflight;
+    }
+
+    if contains_any(
+        &code_lc,
+        &[
+            "unknown_op",
+            "capability_unsupported",
+            "data_compact_cloud_unsupported",
+            "context_budget_exceeded",
+            "not_implemented",
+            "rpc_request_budget",
+        ],
+    ) {
+        return FailureClass::Unsupported;
+    }
+
+    if contains_any(
+        &code_lc,
+        &[
+            "invalid_params",
+            "invalid_entity",
+            "unknown_section",
+            "unknown_subsection",
+            "negotiation_refused",
+            "invalid_request",
+            "inventory_parameters",
+            "inventory_scope",
+            "inventory_budget",
+            "db_maintenance_parameters",
+            "not_found",
+        ],
+    ) {
+        return FailureClass::InvalidInput;
+    }
+
+    FailureClass::FailedProof
+}
+
+fn is_read_only_rpc_op(op: &str) -> bool {
+    op.starts_with("observe.")
+        || matches!(
+            op,
+            "workspace.status"
+                | "context.resolve"
+                | "context.scope"
+                | "context.capsule.query"
+                | "context.bindings"
+                | "constitution.get"
+                | "constitution.links.query"
+                | "constitution.links.navigate"
+                | "constitution.overlay.status"
+                | "schema.get"
+                | "store.query"
+                | "data.database.inspect"
+                | "interop.manifest"
+                | "interop.negotiate"
+                | "interop.project"
+                | "interop.capability_contracts"
+                | "interop.cloud_parity"
+                | "interop.envelope.verify"
+                | "interop.drift.check"
+                | "interop.registry.query"
+                | "interop.skills.select"
+                | "interop.rules.evaluate"
+                | "interop.rules.taxonomy"
+                | "interop.overlap.classify"
+                | "policy.grant.explain"
+                | "cloud.orgs"
+        )
+}
+
+/// Derive accurate, bounded failure classification, blockers, governing context,
+/// and lawful next operations from an RPC refusal or error (#1948).
+pub fn derive_failure_recovery(
+    op: &str,
+    code: &str,
+    message: &str,
+    existing_blocker: Option<&Blocker>,
+    mandates: &[Mandate],
+) -> FailureRecovery {
+    let class = classify_failure(code, message, existing_blocker);
+    let code_lc = code.to_ascii_lowercase();
+    let msg_lc = message.to_ascii_lowercase();
+    let safe_msg = bounded_redacted_text(message, 400);
+
+    let (derived_kind, default_hint, allowed_next_ops, evidence_required) = match class {
+        FailureClass::AuthorityRequired => {
+            let hint = if contains_any(&msg_lc, &["controller_contract_unsupported"]) {
+                "An independently supported validation controller is required for this repository contract; do not rerun or substitute manual builds."
+            } else if contains_any(&msg_lc, &["accepted_repository_contract_changed"]) {
+                "Repository contract or proof-relevant inputs changed; obtain human PR review or an independently signed/Cloud transition approval before revalidating."
+            } else {
+                "An authorized human principal or organization administrator must supply this approval, seat, or credential outside automated agent retry."
+            };
+            (
+                BlockerKind::Unauthorized,
+                hint,
+                Vec::new(),
+                "External principal authorization, signed transition approval, or supported controller",
+            )
+        }
+        FailureClass::UnknownOutcome => {
+            let readback = if op.starts_with("cloud.") {
+                AllowedOp {
+                    op: "cloud.orgs".to_string(),
+                    reason: "Read back authoritative Cloud organization/repository state before any retry; do not blindly replay an uncertain write".to_string(),
+                    required_params: vec![],
+                }
+            } else if op.starts_with("store.") {
+                AllowedOp {
+                    op: "store.query".to_string(),
+                    reason: "Read back persisted store records to reconcile whether the mutation committed; do not blindly replay".to_string(),
+                    required_params: vec!["entity".to_string()],
+                }
+            } else {
+                AllowedOp {
+                    op: "observe.timeline".to_string(),
+                    reason: "Inspect recorded trajectory and event timeline to reconcile the uncertain outcome before retrying".to_string(),
+                    required_params: vec![],
+                }
+            };
+            (
+                BlockerKind::Conflict,
+                "Write or subprocess outcome is unknown after send; read back persisted state before any retry and never blind-replay.",
+                vec![readback],
+                "Authoritative readback confirming whether the prior operation committed or rolled back",
+            )
+        }
+        FailureClass::StaleState => {
+            let mut next_ops = vec![if op.starts_with("store.") {
+                AllowedOp {
+                    op: "store.query".to_string(),
+                    reason: "Read fresh store state after revision or custody drift".to_string(),
+                    required_params: vec!["entity".to_string()],
+                }
+            } else if op == "state.resolve" || op == "state.diff" {
+                AllowedOp {
+                    op: "state.resolve".to_string(),
+                    reason: "Re-resolve current repository state against the moved base"
+                        .to_string(),
+                    required_params: vec![],
+                }
+            } else {
+                AllowedOp {
+                    op: "observe.workspace".to_string(),
+                    reason: "Read current worktree, commit, and custody state after drift"
+                        .to_string(),
+                    required_params: vec![],
+                }
+            }];
+            if code_lc == "constitutional_awareness_stale" {
+                next_ops = vec![
+                    AllowedOp {
+                        op: "agent.init".to_string(),
+                        reason: "Re-initialize agent awareness for the active session token"
+                            .to_string(),
+                        required_params: vec![],
+                    },
+                    AllowedOp {
+                        op: "context.resolve".to_string(),
+                        reason: "Resolve applicable context for the refreshed awareness state"
+                            .to_string(),
+                        required_params: vec![],
+                    },
+                ];
+            } else if !op.starts_with("store.") && !op.starts_with("cloud.") {
+                next_ops.push(AllowedOp {
+                    op: "validate.run".to_string(),
+                    reason: "Re-run validation against the exact current candidate commit and accepted target".to_string(),
+                    required_params: vec![],
+                });
+            }
+            (
+                BlockerKind::MissingProof,
+                "Referenced proof, receipt, lease, or base commit is stale; read fresh state and revalidate the exact current candidate.",
+                next_ops,
+                "Fresh state read and new exact-commit validation receipt (old proof never carries forward)",
+            )
+        }
+        FailureClass::WorkspaceCustody => {
+            let kind = if code_lc.contains("protected") || msg_lc.contains("protected branch") {
+                BlockerKind::ProtectedBranch
+            } else {
+                BlockerKind::WorkspaceRequired
+            };
+            (
+                kind,
+                "Mutations and worktree-scoped RPCs require an active claimed todo and an isolated worktree under .decapod/workspaces/*.",
+                vec![
+                    AllowedOp {
+                        op: "workspace.status".to_string(),
+                        reason: "Inspect current branch protection and worktree custody blockers".to_string(),
+                        required_params: vec![],
+                    },
+                    AllowedOp {
+                        op: "workspace.ensure".to_string(),
+                        reason: "Create or enter an isolated todo-scoped worktree branch before retrying".to_string(),
+                        required_params: vec!["branch".to_string()],
+                    },
+                ],
+                "Claimed todo plus clean isolated worktree under .decapod/workspaces/*",
+            )
+        }
+        FailureClass::SessionCustody => {
+            let next_ops = if msg_lc.contains("constitution.get") && !msg_lc.contains("agent.init")
+            {
+                vec![
+                    AllowedOp {
+                        op: "constitution.get".to_string(),
+                        reason: "Ingest core/DECAPOD constitution before mutating operations"
+                            .to_string(),
+                        required_params: vec!["section".to_string()],
+                    },
+                    AllowedOp {
+                        op: "context.resolve".to_string(),
+                        reason:
+                            "Resolve applicable repository context after ingesting constitution"
+                                .to_string(),
+                        required_params: vec![],
+                    },
+                ]
+            } else if msg_lc.contains("context.resolve") && !msg_lc.contains("agent.init") {
+                vec![AllowedOp {
+                    op: "context.resolve".to_string(),
+                    reason: "Resolve applicable context before mutating operations".to_string(),
+                    required_params: vec![],
+                }]
+            } else if msg_lc.contains("decapod validate")
+                && msg_lc.contains("constitutional awareness")
+            {
+                vec![
+                    AllowedOp {
+                        op: "validate.run".to_string(),
+                        reason:
+                            "Run baseline validation before completing constitutional awareness"
+                                .to_string(),
+                        required_params: vec![],
+                    },
+                    AllowedOp {
+                        op: "agent.init".to_string(),
+                        reason: "Initialize agent awareness after acquiring session".to_string(),
+                        required_params: vec![],
+                    },
+                ]
+            } else {
+                vec![AllowedOp {
+                    op: "agent.init".to_string(),
+                    reason: "Acquire an active Decapod session (`decapod session acquire`) and initialize agent context".to_string(),
+                    required_params: vec![],
+                }]
+            };
+            (
+                BlockerKind::Unauthorized,
+                "Active authenticated session and constitutional awareness are required before mutating operations.",
+                next_ops,
+                "Valid session token and completed constitutional awareness handshake",
+            )
+        }
+        FailureClass::FailedProof => {
+            let next_ops = vec![
+                AllowedOp {
+                    op: "observe.validation_plan".to_string(),
+                    reason: "Inspect applicable validation gates and failed check details"
+                        .to_string(),
+                    required_params: vec![],
+                },
+                AllowedOp {
+                    op: "specs.refresh".to_string(),
+                    reason: "Refresh managed spec manifests after repairing source or living specs"
+                        .to_string(),
+                    required_params: vec![],
+                },
+                AllowedOp {
+                    op: "validate.run".to_string(),
+                    reason: "Re-run validation on the exact revised commit after repair"
+                        .to_string(),
+                    required_params: vec![],
+                },
+            ];
+            (
+                BlockerKind::ValidationFailed,
+                "Validation or proof gate failed; inspect the failed checks, repair the root cause, checkpoint, and revalidate.",
+                next_ops,
+                "Passing validation run bound to the repaired candidate commit",
+            )
+        }
+        FailureClass::RetryablePreflight => {
+            let next_ops = if is_read_only_rpc_op(op) {
+                vec![AllowedOp {
+                    op: op.to_string(),
+                    reason: "Transient read/preflight fault; safe to retry read-only operation"
+                        .to_string(),
+                    required_params: vec![],
+                }]
+            } else {
+                vec![AllowedOp {
+                    op: "workspace.status".to_string(),
+                    reason:
+                        "Verify repository and runtime health before re-attempting the operation"
+                            .to_string(),
+                    required_params: vec![],
+                }]
+            };
+            (
+                BlockerKind::ValidationFailed,
+                "Transient preflight, lock contention, or upstream availability fault; recheck status or retry read-only probe.",
+                next_ops,
+                "Healthy read/preflight check with contention or connectivity cleared",
+            )
+        }
+        FailureClass::InvalidInput => {
+            let next_ops = if code_lc == "invalid_entity"
+                && matches!(op, "store.upsert" | "store.query")
+            {
+                vec![AllowedOp {
+                    op: "schema.get".to_string(),
+                    reason: "Inspect supported entity schemas (todo, knowledge, decision) before retrying".to_string(),
+                    required_params: vec!["entity".to_string()],
+                }]
+            } else if code_lc == "negotiation_refused" {
+                vec![AllowedOp {
+                    op: "interop.manifest".to_string(),
+                    reason:
+                        "Inspect supported operations and profile versions before renegotiating"
+                            .to_string(),
+                    required_params: vec![],
+                }]
+            } else if code_lc == "unknown_section" {
+                vec![AllowedOp {
+                    op: "context.resolve".to_string(),
+                    reason: "Resolve valid constitution sections applicable to the current task"
+                        .to_string(),
+                    required_params: vec![],
+                }]
+            } else {
+                Vec::new()
+            };
+            (
+                BlockerKind::MissingAnswer,
+                "Request parameters or target identifier are invalid; correct the request against the schema before retrying.",
+                next_ops,
+                "Valid request parameters matching the target schema",
+            )
+        }
+        FailureClass::Unsupported => (
+            BlockerKind::ValidationFailed,
+            "Requested operation or capability is unsupported in this context; no automated recovery applies.",
+            Vec::new(),
+            "Supported operation or alternate non-unsupported workflow",
+        ),
+    };
+
+    let blocker = existing_blocker.cloned().unwrap_or_else(|| Blocker {
+        kind: derived_kind,
+        message: safe_msg.clone(),
+        resolve_hint: default_hint.to_string(),
+    });
+
+    let fragments: Vec<DocFragment> = mandates
+        .iter()
+        .take(3)
+        .map(|m| m.fragment.clone())
+        .collect();
+
+    let mut standards = HashMap::new();
+    standards.insert(
+        "failure_class".to_string(),
+        serde_json::json!(class.as_str()),
+    );
+    standards.insert(
+        "recovery_mode".to_string(),
+        serde_json::json!(class.recovery_mode()),
+    );
+    standards.insert(
+        "retry_safe".to_string(),
+        serde_json::json!(class == FailureClass::RetryablePreflight && is_read_only_rpc_op(op)),
+    );
+    standards.insert(
+        "authority_required".to_string(),
+        serde_json::json!(class == FailureClass::AuthorityRequired),
+    );
+    standards.insert(
+        "readback_required".to_string(),
+        serde_json::json!(class == FailureClass::UnknownOutcome),
+    );
+    standards.insert(
+        "evidence_required".to_string(),
+        serde_json::json!(evidence_required),
+    );
+
+    let spec_summary = bounded_redacted_text(
+        &format!(
+            "op={op}; code={code}; class={}; hint={}",
+            class.as_str(),
+            blocker.resolve_hint
+        ),
+        512,
+    );
+
+    let context_capsule = ContextCapsule {
+        fragments,
+        resolved_authority: vec![],
+        authority_chain: None,
+        spec: Some(spec_summary),
+        architecture: None,
+        security: None,
+        standards: Some(standards),
+    };
+
+    let details = serde_json::json!({
+        "failure_class": class.as_str(),
+        "recovery_mode": class.recovery_mode(),
+        "retry_safe": class == FailureClass::RetryablePreflight && is_read_only_rpc_op(op),
+        "authority_required": class == FailureClass::AuthorityRequired,
+        "readback_required": class == FailureClass::UnknownOutcome,
+        "evidence_required": evidence_required,
+    });
+
+    FailureRecovery {
+        failure_class: class.as_str(),
+        recovery_mode: class.recovery_mode(),
+        retry_safe: class == FailureClass::RetryablePreflight && is_read_only_rpc_op(op),
+        authority_required: class == FailureClass::AuthorityRequired,
+        readback_required: class == FailureClass::UnknownOutcome,
+        blocker,
+        allowed_next_ops,
+        context_capsule,
+        details,
+    }
+}
+
+/// Create an error response with derived governing context, blockers, and lawful next ops.
 pub fn error_response(
     request_id: String,
     op: String,
@@ -1962,17 +2650,15 @@ pub fn error_response(
     mandates: Vec<Mandate>,
 ) -> RpcResponse {
     let timestamp = crate::core::time::now_epoch_z();
+    let redacted_params = crate::core::cloud_admin::redact_json_value(&params);
     let inputs_hash = format!(
         "{:x}",
-        sha2::Sha256::digest(serde_json::to_string(&params).unwrap_or_default())
+        sha2::Sha256::digest(serde_json::to_string(&redacted_params).unwrap_or_default())
     );
     let outputs_hash = format!("{:x}", sha2::Sha256::digest("error"));
 
-    let blocked_by = if let Some(b) = blocker {
-        vec![b]
-    } else {
-        vec![]
-    };
+    let recovery = derive_failure_recovery(&op, &code, &message, blocker.as_ref(), &mandates);
+    let safe_message = bounded_redacted_text(&message, 4096);
 
     RpcResponse {
         id: request_id,
@@ -1986,21 +2672,210 @@ pub fn error_response(
             governing_anchors: mandates.iter().map(|m| m.fragment.r#ref.clone()).collect(),
         },
         mandates,
-        context_capsule: None,
+        context_capsule: Some(recovery.context_capsule),
         result: None,
-        allowed_next_ops: vec![AllowedOp {
-            op: "agent.init".to_string(),
-            reason: "Session may be invalid or expired".to_string(),
-            required_params: vec![],
-        }],
-        blocked_by,
+        allowed_next_ops: recovery.allowed_next_ops,
+        blocked_by: vec![recovery.blocker],
         interlock: None,
         advisory: None,
         attestation: None,
         error: Some(RpcError {
             code,
-            message,
-            details: None,
+            message: safe_message,
+            details: Some(recovery.details),
         }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_response_distinguishes_failure_classes_without_speculative_agent_init() {
+        let stale = error_response(
+            "req-stale".into(),
+            "validate.run".into(),
+            serde_json::json!({}),
+            "POLICY_SNAPSHOT_STALE".into(),
+            "POLICY_SNAPSHOT_STALE: accepted base moved".into(),
+            None,
+            vec![],
+        );
+        assert_eq!(stale.blocked_by[0].kind, BlockerKind::MissingProof);
+        assert!(
+            stale.allowed_next_ops.iter().all(|a| a.op != "agent.init"),
+            "stale proof must never suggest agent.init: {:?}",
+            stale.allowed_next_ops
+        );
+        assert!(
+            stale
+                .allowed_next_ops
+                .iter()
+                .any(|a| a.op == "observe.workspace")
+                && stale
+                    .allowed_next_ops
+                    .iter()
+                    .any(|a| a.op == "validate.run")
+        );
+        let capsule = stale.context_capsule.expect("context_capsule present");
+        assert_eq!(
+            capsule.standards.unwrap()["failure_class"],
+            serde_json::json!("stale_state_reread_required")
+        );
+
+        let failed_proof = error_response(
+            "req-proof".into(),
+            "validate.run".into(),
+            serde_json::json!({}),
+            "validation_failed".into(),
+            "2 validation gate(s) failed".into(),
+            None,
+            vec![],
+        );
+        assert_eq!(
+            failed_proof.blocked_by[0].kind,
+            BlockerKind::ValidationFailed
+        );
+        assert!(
+            failed_proof
+                .allowed_next_ops
+                .iter()
+                .any(|a| a.op == "validate.run")
+        );
+        assert!(
+            failed_proof
+                .allowed_next_ops
+                .iter()
+                .all(|a| a.op != "agent.init")
+        );
+
+        let workspace = error_response(
+            "req-ws".into(),
+            "store.upsert".into(),
+            serde_json::json!({}),
+            "protected_branch".into(),
+            "RPC op 'store.upsert' requires isolated git worktree; current checkout branch='master'".into(),
+            None,
+            vec![],
+        );
+        assert_eq!(workspace.blocked_by[0].kind, BlockerKind::ProtectedBranch);
+        assert_eq!(
+            workspace
+                .allowed_next_ops
+                .iter()
+                .map(|a| a.op.as_str())
+                .collect::<Vec<_>>(),
+            vec!["workspace.status", "workspace.ensure"]
+        );
+
+        let authority = error_response(
+            "req-auth".into(),
+            "validate.run".into(),
+            serde_json::json!({}),
+            "publication_not_ready".into(),
+            r#"{"blockers":[{"code":"ACCEPTED_REPOSITORY_CONTRACT_CHANGED"}],"human_authorization_required":true}"#.into(),
+            None,
+            vec![],
+        );
+        assert_eq!(authority.blocked_by[0].kind, BlockerKind::Unauthorized);
+        assert!(
+            authority.allowed_next_ops.is_empty(),
+            "principal-only refusal must have empty allowed_next_ops: {:?}",
+            authority.allowed_next_ops
+        );
+        assert_eq!(
+            authority.error.as_ref().unwrap().details.as_ref().unwrap()["authority_required"],
+            serde_json::json!(true)
+        );
+
+        let unknown_outcome = error_response(
+            "req-uncertain".into(),
+            "cloud.invites".into(),
+            serde_json::json!({}),
+            "outcome_unknown".into(),
+            "Mutation failed after send; outcome is unknown".into(),
+            None,
+            vec![],
+        );
+        assert_eq!(unknown_outcome.blocked_by[0].kind, BlockerKind::Conflict);
+        assert_eq!(
+            unknown_outcome
+                .allowed_next_ops
+                .iter()
+                .map(|a| a.op.as_str())
+                .collect::<Vec<_>>(),
+            vec!["cloud.orgs"]
+        );
+        assert_eq!(
+            unknown_outcome
+                .error
+                .as_ref()
+                .unwrap()
+                .details
+                .as_ref()
+                .unwrap()["readback_required"],
+            serde_json::json!(true)
+        );
+
+        let unsupported = error_response(
+            "req-unsup".into(),
+            "bogus.op".into(),
+            serde_json::json!({}),
+            "unknown_op".into(),
+            "Unknown operation: bogus.op".into(),
+            None,
+            vec![],
+        );
+        assert!(unsupported.allowed_next_ops.is_empty());
+        assert!(unsupported.context_capsule.is_some());
+
+        let invalid_entity = error_response(
+            "req-ent".into(),
+            "store.upsert".into(),
+            serde_json::json!({}),
+            "invalid_entity".into(),
+            "Invalid or missing entity: Some(\"bogus\")".into(),
+            None,
+            vec![],
+        );
+        assert_eq!(
+            invalid_entity
+                .allowed_next_ops
+                .iter()
+                .map(|a| a.op.as_str())
+                .collect::<Vec<_>>(),
+            vec!["schema.get"]
+        );
+
+        let retry_read = error_response(
+            "req-retry".into(),
+            "observe.workspace".into(),
+            serde_json::json!({}),
+            "observe_error".into(),
+            "database is locked".into(),
+            None,
+            vec![],
+        );
+        assert_eq!(
+            retry_read.error.as_ref().unwrap().details.as_ref().unwrap()["retry_safe"],
+            serde_json::json!(true)
+        );
+        assert_eq!(retry_read.allowed_next_ops[0].op, "observe.workspace");
+    }
+
+    #[test]
+    fn error_response_redacts_secret_tokens_in_message_and_capsule() {
+        let resp = error_response(
+            "req-secret".into(),
+            "store.upsert".into(),
+            serde_json::json!({ "token": "ghp_1234567890abcdef1234567890abcdef1234" }),
+            "validation_failed".into(),
+            "failed with bearer ghp_1234567890abcdef1234567890abcdef1234".into(),
+            None,
+            vec![],
+        );
+        let serialized = serde_json::to_string(&resp).unwrap();
+        assert!(!serialized.contains("ghp_1234567890abcdef1234567890abcdef1234"));
     }
 }

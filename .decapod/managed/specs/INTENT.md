@@ -1,3 +1,19 @@
+## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
+
+Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
+
+- **Cloud `govern policy` admission (`src/decapod/lib.rs`)**: Admits `GovernCommand::Policy(_)` inside `is_cloud_file_only_command` so `decapod govern policy approve --scope repo.pr-readiness.v1` routes directly to Cloud `propodus_governance_v1` approvals without failing on `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
+- **Cloud workspace destination, container-relay, and nested-container guards (`src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)**: Enforces `WORKSPACE_DESTINATION_MISMATCH` in `ensure_cloud_workspace` when `--branch` differs from the current isolated worktree branch, admits active Cloud container relays (`is_container_relay_active()`) inside `ensure_cloud_workspace` via `check_cloud_authoring(..., true)` without host credentials or nested container launches, guards `config.use_container && !status.container.in_container` in both `ensure_workspace` and `ensure_cloud_workspace`, and rejects nonexistent branch-embedded task IDs in `admit_cloud_checkout` with `TODO_CUSTODY_REQUIRED` instead of binding an unrelated claimed task.
+- **Offline integration proof (`tests/cloud_workspace_validation_1886.rs`)**: Verifies nonexistent branch task refusal, auto-discovered hosted task `workspace ensure`, `WORKSPACE_DESTINATION_MISMATCH`, non-CI `--pre-build` + `canonical_local_target = true` fail-closed `LOCAL_TARGET_POLICY_UNACCEPTED` + `ci_local` validation, Cloud `govern policy approve`, and hostless Cloud container-relay `workspace ensure --container` + `validate` without mutating or creating SQLite stores.
+
+## Accurate agent-facing failure recovery context and next operations (#1948)
+
+Replaces `core::rpc::error_response`'s hardcoded `"Session may be invalid or expired"` / `agent.init` / `context_capsule: None` fallback with deterministic, state-derived recovery metadata across CLI, JSON RPC, HTTP RPC, MCP, and `interop.project`:
+
+- **Nine-class failure taxonomy (`src/decapod/core/rpc.rs::derive_failure_recovery`)**: Distinguishes retryable read/preflight faults (`retryable_preflight_fault`), changed/stale state (`stale_state_reread_required`), repairable proof failures (`failed_proof_repair_required`), missing workspace/protected-branch custody (`workspace_custody_required`), missing/stale session or constitutional awareness (`session_custody_required`), principal-only/controller authority (`authority_required` with empty `allowed_next_ops`), uncertain post-send writes (`unknown_outcome_readback_required` directing readback before replay), invalid parameters/entities (`invalid_input`), and unsupported commands (`unsupported_no_recovery` with empty `allowed_next_ops`).
+- **Pre-dispatch & handler RPC JSON envelopes (`src/decapod/lib.rs`)**: Emits structured `RpcResponse` JSON (plus trace redaction and non-zero exit status) when worktree, session, constitutional awareness, cloud admin, or handler errors fail, without inventing human approval, suggesting bypass flags, or emitting speculative `agent.init` calls.
+- **Projection & MCP parity (`src/decapod/core/projection.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/http_transport.rs`)**: Preserves `context_capsule`, `error.details`, `blocked_by`, and `allowed_next_ops` in `ToolOperationProjection`, `mcp_denied_result`, and `http_transport::error_code_json` while keeping existing golden vectors and redaction invariants intact.
+
 ## Align Decapod Cloud CLI diagnostics, automatic repository reconciliation, and `dactyl-db 0.21.0` `OperationalDisposition` (issues #1896, #1859, #1895)
 
 - **Automatic originating-repository reconciliation (`src/decapod/core/cloud_project.rs`, `docs/book/src/reference/cloud-projects.md`)**: Eliminates the manual post-login `decapod cloud projects` + `decapod cloud project use <owner/repo>` step when `record.selection` is unset on a valid managed session (`!is_dpop_access_token(bearer)`). `cloud_project::route` queries `AccountOperation::Status` for the originating repository slug, registers cleanly when `registration_required`, resolves the server-assigned `<org_uuid>/<repo_uuid>` project ID directly (`route_from_status`), and falls back to `reconcile_originating_repository` across the project directory only when ambiguous or unenrolled (`signup_required` for empty orgs, admin enroll/reservation CTA when `admin == Some(true)`, or collaborator administrator-contact guidance without duplicate purchase prompts).
@@ -1476,7 +1492,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
+- Repository signal fingerprint: `e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

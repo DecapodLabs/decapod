@@ -1618,7 +1618,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
+- Repository signal fingerprint: `e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

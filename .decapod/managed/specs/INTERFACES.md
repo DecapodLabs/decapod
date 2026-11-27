@@ -1,3 +1,21 @@
+## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
+
+- **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
+- **`decapod workspace ensure` Cloud invariants (`src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)**:
+  - Fails closed with `TODO_CUSTODY_REQUIRED` when `--branch` encodes a task ID not present in the caller's hosted claims.
+  - Fails closed with `WORKSPACE_DESTINATION_MISMATCH` when `--branch` differs from the current isolated worktree branch.
+  - Succeeds inside an active Cloud container relay (`DECAPOD_CONTAINER=1` + `DECAPOD_CLOUD_CONTAINER_RELAY=1` + `DECAPOD_CONTAINER_SIGNER_SOCKET`) for `workspace ensure --container` and `validate` without host credentials or launching a nested container.
+
+## `#1948` Agent-facing failure recovery envelope & projection contracts (`src/decapod/core/rpc.rs`, `src/decapod/core/projection.rs`, `src/decapod/core/agent_interop/mcp.rs`)
+
+- **`RpcResponse` failure fields (`core::rpc::error_response`, `core::rpc::derive_failure_recovery`)**:
+  - `context_capsule`: populated with up to 3 mandate `DocFragment`s, bounded redacted `spec` summary, and `standards` (`failure_class`, `recovery_mode`, `retry_safe`, `authority_required`, `readback_required`, `evidence_required`).
+  - `blocked_by`: preserves explicit caller `Blocker` or derives typed `Blocker { kind, message, resolve_hint }` (`ProtectedBranch`, `WorkspaceRequired`, `Unauthorized`, `MissingProof`, `Conflict`, `ValidationFailed`, `MissingAnswer`).
+  - `allowed_next_ops`: ordered lawful recovery ops (`workspace.status`/`workspace.ensure` for custody, `schema.get` for invalid `store.*` entity, `observe.validation_plan`/`specs.refresh`/`validate.run` for repairable proof, readback-only `cloud.orgs`/`store.query`/`observe.timeline` for unknown outcomes), and empty `[]` for `authority_required` and `unsupported_no_recovery` (`unknown_op`).
+  - `error.details`: embeds `{ failure_class, recovery_mode, retry_safe, authority_required, readback_required, evidence_required }` (merged with `CloudAuthDiagnostic` on Cloud Admin errors).
+- **Projection & MCP/HTTP alignment**: `ToolOperationProjection` (`core::projection`) adds optional `context_capsule` and `error.details`; `decapod_governed_mutate` denials (`core::agent_interop::mcp`) and `http_transport::error_code_json` emit `failure_class`, `recovery_mode`, `blocked_by`, `allowed_next_ops`, and `context_capsule`.
+- **Verification (`tests/agent_rpc_suite.rs`, `tests/unit/core/projection_tests.rs`, `src/decapod/core/rpc.rs`)**: Actual-binary tests exercise `unknown_op`, `protected_branch`, `constitutional_awareness_required`, `invalid_entity` -> `schema.get` -> `store.upsert` repair, `interop.project` agreement, trace retention, and secret redaction.
+
 ## `#1896` Automatic Cloud project reconciliation, commercial disposition diagnostics, and `dactyl-db 0.21.0` contracts (`src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_project.rs`, `src/decapod/core/error.rs`)
 
 - **`CloudAuthErrorCode` (`src/decapod/core/error.rs`)**: Adds `SignupRequired` (`"signup_required"`), `RepositoryCapacityExhausted` (`"repository_capacity_exhausted"`), `RepositoryReservationExhausted` (`"repository_reservation_exhausted"`), `ReservationAvailableForBinding` (`"reservation_available_for_binding"`), `RepositoryNotApproved` (`"repository_not_approved"`), `SeatAvailableForAssignment` (`"seat_available_for_assignment"`), and `RepositoryAccessDenied` (`"repository_access_denied"`).
@@ -2629,7 +2647,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
+- Repository signal fingerprint: `e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

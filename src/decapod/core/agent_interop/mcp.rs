@@ -604,33 +604,24 @@ impl McpServer {
             "decapod_governed_mutate" => {
                 // Enforce identical authority, session, and worktree isolation boundaries.
                 if self.config.read_only_session {
-                    return Ok(mcp_tool_json_result(
-                        json!({
-                            "status": "denied",
-                            "code": "read_only_session_denied",
-                            "message": "Read-only MCP session cannot invoke mutating governance operations."
-                        }),
-                        true,
+                    return Ok(mcp_denied_result(
+                        "mcp.decapod_governed_mutate",
+                        "read_only_session_denied",
+                        "Read-only MCP session cannot invoke mutating governance operations.",
                     ));
                 }
                 if !self.config.session_authenticated {
-                    return Ok(mcp_tool_json_result(
-                        json!({
-                            "status": "denied",
-                            "code": "session_required",
-                            "message": "Authenticated Decapod session required before mutation."
-                        }),
-                        true,
+                    return Ok(mcp_denied_result(
+                        "mcp.decapod_governed_mutate",
+                        "session_required",
+                        "Authenticated Decapod session required before mutation.",
                     ));
                 }
                 if !self.config.in_managed_worktree {
-                    return Ok(mcp_tool_json_result(
-                        json!({
-                            "status": "denied",
-                            "code": "worktree_isolation_required",
-                            "message": "Mutating operation refused outside an isolated .decapod/workspaces/* worktree."
-                        }),
-                        true,
+                    return Ok(mcp_denied_result(
+                        "mcp.decapod_governed_mutate",
+                        "worktree_isolation_required",
+                        "Mutating operation refused outside an isolated .decapod/workspaces/* worktree.",
                     ));
                 }
                 let op = arguments
@@ -638,13 +629,10 @@ impl McpServer {
                     .and_then(Value::as_str)
                     .ok_or_else(|| (-32602, "missing string 'op'".to_string(), None))?;
                 if !interop::RPC_OPS.contains(&op) {
-                    return Ok(mcp_tool_json_result(
-                        json!({
-                            "status": "denied",
-                            "code": "unknown_op",
-                            "message": format!("Operation '{op}' is not registered in Decapod RPC_OPS.")
-                        }),
-                        true,
+                    return Ok(mcp_denied_result(
+                        op,
+                        "unknown_op",
+                        &format!("Operation '{op}' is not registered in Decapod RPC_OPS."),
                     ));
                 }
                 Ok(mcp_tool_json_result(
@@ -797,6 +785,23 @@ impl McpServer {
         }
         Ok(processed)
     }
+}
+
+fn mcp_denied_result(op: &str, code: &str, message: &str) -> Value {
+    let recovery = crate::core::rpc::derive_failure_recovery(op, code, message, None, &[]);
+    mcp_tool_json_result(
+        json!({
+            "status": "denied",
+            "code": code,
+            "message": message,
+            "failure_class": recovery.failure_class,
+            "recovery_mode": recovery.recovery_mode,
+            "blocked_by": [recovery.blocker],
+            "allowed_next_ops": recovery.allowed_next_ops,
+            "context_capsule": recovery.context_capsule,
+        }),
+        true,
+    )
 }
 
 fn mcp_tool_json_result(payload: Value, is_error: bool) -> Value {
