@@ -948,6 +948,11 @@
       "id": "section10-storage-parity-v01665-pr2",
       "summary": "Merge origin/master (a3bc7c98a9, PR #1968, v0.166.5, dactyl-db 0.21.0) and refresh Section 10 specs and governance",
       "input_digest": "sha256:ac5151a8319953026b61a60fa52f363264020edaf3e91e0f1ca0124fea7d0812"
+    },
+    {
+      "id": "section10-storage-parity-v01670-pr2",
+      "summary": "Merge master v0.167.0 (7b5d5c2fd3) and refresh specs, manifest, and Dockerfile pin",
+      "input_digest": "sha256:bc9cbd4f6770e302950fe20ffcd59207322aa3e03ba4ed8ad1812637ef527c03"
     }
   ],
   "intents": {
@@ -991,22 +996,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled Section 10 bounded write contracts, O(N) compaction, Cloud isolation, knowledge.rs supersede validation, and 1933-1936 tests onto a3bc7c98a9 (PR #1968, v0.166.5, dactyl-db 0.21.0)",
-          "reviewed_code_fingerprint": "2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a",
+          "reason": "Re-reviewed ARCHITECTURE.md Section 10 storage boundaries against v0.167.0 master 7b5d5c2fd3",
+          "reviewed_code_fingerprint": "5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf",
           "spec_material_hash": "37376d50cc8e0a6c71125f6a1624efb15b8982995413def0e8dfb436f6dbaa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled Section 10 write-admission bounds, snapshot benchmark CLI, and Cloud parity interfaces onto a3bc7c98a9 (PR #1968, v0.166.5, dactyl-db 0.21.0)",
-          "reviewed_code_fingerprint": "2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a",
+          "reason": "Re-reviewed INTERFACES.md Section 10 write bounds and Cloud parity boundaries against v0.167.0 master 7b5d5c2fd3",
+          "reviewed_code_fingerprint": "5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf",
           "spec_material_hash": "79f0e2d7a82a6cd288711da73e1f40e1813f45d97100d3285308ebb12a35986b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fail-closed Cloud boundaries, NUL/byte-bound write admission, and read-only Dactyl snapshot benchmarking preserve v0.166.5 security boundaries",
-          "reviewed_code_fingerprint": "2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a",
+          "reason": "SECURITY.md reviewed against v0.167.0 master 7b5d5c2fd3; Section 10 trust/egress/fail-closed guarantees leave SECURITY.md authored prose unchanged",
+          "reviewed_code_fingerprint": "5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
@@ -1018,7 +1023,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795770665Z"
+      "updated_at": "1795774093Z"
     },
     "trajectory": {
       "active_boundaries": [

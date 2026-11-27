@@ -2658,7 +2658,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a`
+- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
