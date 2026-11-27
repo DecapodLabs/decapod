@@ -926,6 +926,14 @@
         ".decapod/config.toml",
         "assets/build/constitution_admission.rs"
       ]
+    },
+    {
+      "id": "refresh-manifest-config-hash",
+      "summary": "Refresh .decapod/managed/.manifest.json config_input_hash after config.toml reviewed_sources_digest reconciliation",
+      "input_digest": "sha256:e22862b8575c2b645a89ed381f8ea4ddd867c957f917b65c57b9157041d27ce2",
+      "proof_refs": [
+        ".decapod/managed/.manifest.json"
+      ]
     }
   ],
   "intents": {
