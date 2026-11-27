@@ -2180,14 +2180,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 - Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
-- Build manifests (361): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/Cargo.toml`, `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/assets/tools/laya-native/Cargo.toml`, `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/bindings/typescript/native/Cargo.toml`, `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/bindings/typescript/package.json`, `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/external/rules_rust++crate+crates__adler2-2.0.1/Cargo.toml`, (+353 more)
+- Build manifests (10): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, (+2 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bazel-bin/` (3 files), `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/` (8803 files), `bazel-out/` (5 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

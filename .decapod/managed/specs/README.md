@@ -65,7 +65,7 @@ agent documentation. The source architecture is described in
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 9463 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bazel-bin/` (3), `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/` (8803), `bazel-out/` (5), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (294)
+- Tracked significant codebase files: 652 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (294)
 - Core modules: 149 | Workflows: 9 | Integration targets: 177
 <!-- decapod:codebase-contract:end -->
 
@@ -73,7 +73,7 @@ agent documentation. The source architecture is described in
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bazel-bin/` (3 files), `bazel-decapod-ci-seo-todo-01m8fe-agent-decapod-ci-seo-data_01m8fe9jenw5xh4b-docs-seo-101/` (8803 files), `bazel-out/` (5 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

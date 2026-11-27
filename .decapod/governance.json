@@ -892,6 +892,11 @@
       "id": "chk-docs-seo-101",
       "summary": "Publish mdBook canonicals, sitemap.xml, and llms.txt via workflow_owned docs-build (site#101)",
       "input_digest": "sha256:b0a78d9022dfa62180d9f43d945af0cb5f61ba851319cb8949344b733b5d549f"
+    },
+    {
+      "id": "cp_01M8FFK_SPECS_CLEAN",
+      "summary": "Refreshed living specs without bazel-* symlinks so repo_signal_fingerprint matches clean CI checkout",
+      "input_digest": "sha256:a77177bf2cb0687221f713028e025a0b35540c7238d925b6519dec1c737c2e4c"
     }
   ],
   "intents": {
@@ -970,7 +975,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bddd117c65f3a4a521901fb743446e612f09321b8f81dd865869592d095c363c",
+      "artifact_hash": "sha256:cf9093c88be6f941753e59dbe479ad43fa1bf6a58388bfd43fa88372e89e7d90",
       "checks": [
         {
           "name": "doc-alignment",
@@ -978,6 +983,10 @@
         },
         {
           "name": "docs-seo-fixture",
+          "status": "passed"
+        },
+        {
+          "name": "specs_refresh",
           "status": "passed"
         }
       ],
@@ -1002,10 +1011,17 @@
             "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8FEMKH0KDBR3C0T4G01VQ64": {
@@ -1048,6 +1064,24 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/managed/.manifest.json",
+                  ".decapod/managed/.manifest.json"
+                ],
+                "proof_refs": [
+                  "specs_refresh"
+                ],
+                "scope": [
+                  ".decapod/**",
+                  "assets/tools/**",
+                  "docs/book/**"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1063,6 +1097,7 @@
       ],
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
+        ".decapod/managed/.manifest.json",
         "assets/tools/source_ci_custody.rs",
         "assets/tools/source_ci_profile.rs",
         "assets/tools/source_ci_workflow_owned.rs",
@@ -1073,6 +1108,7 @@
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
         ".decapod/managed/specs/INTERFACES.md",
         "assets/tools/docs_seo.py",
         "assets/tools/source_ci/docs-build.sh",
