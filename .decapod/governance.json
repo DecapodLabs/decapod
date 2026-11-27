@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "ea7bd4275df081e1ed50425ddc09d75986ffd473",
-    "release": "v0.166.1",
+    "accepted_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -871,112 +870,46 @@
     }
   },
   "change": {
-    "id": "change_01M8BTPHKFYT67HHH0HWCBF167",
-    "base_commit": "ea7bd4275df081e1ed50425ddc09d75986ffd473",
+    "id": "change_01M8DEXFANBZGW6F0AH1YV9V6V",
+    "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:executor-contract-sh-mode": {
-      "statement": "executor_contract::capture admits 100755 Git blob mode strictly for tracked .sh scripts in profile::definition_files() while preserving 100644 enforcement on non-.sh definitions and carrier files.",
-      "falsifier": "A 100755 .rs definition file or symlink 120000 is admitted, or 100755 .sh definition scripts fail with CONTROLLER_CONTRACT_UNSUPPORTED.",
+    "bugs_01m8decqz284yd4g-fix-core-shard": {
+      "statement": "selective-core-2 and selective-core-3 are selected only when core_full(paths) is true",
+      "falsifier": "selective-core-2 or selective-core-3 selected=true while commands returns empty for non-core_full src/decapod/core/* changes",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
-      ]
-    },
-    "claim:stale-accepted-base-reconciliation": {
-      "statement": "qualifies_stale_accepted_base_inventory_reconciliation reconciles stale accepted_base reviewed_sources_digest only when base_oid != head_oid, commands_preserved and reviewed_commands_digest match verbatim, base_tree == head_tree == candidate_sources_digest, and changed_paths is empty.",
-      "falsifier": "Any candidate change to workflows, scripts, manifests, Git file modes, or proof commands succeeds without approval, or base_oid == head_oid bypasses release-only checks.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "cargo test --test source_ci_profile_policy non_full_core_paths_do_not_select_empty_shard_two_or_three"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "code_01m8btae8yj5pbpb",
-      "summary": "Admit 100755 tracked .sh scripts in executor_contract::capture with regression tests",
-      "input_digest": "sha256:aad619bb0a9ee3d6dd3194c3bc59f1ab26ab0b06b0c731f7d4dd9cf10d77f811",
-      "proof_refs": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
-      ]
-    },
-    {
-      "id": "bootstrap-sh-mode-and-stale-base-reconcile",
-      "summary": "Add self-hosting executor_contract regression coverage and qualifies_stale_accepted_base_inventory_reconciliation with negative tests",
-      "input_digest": "sha256:ae154f38bf9f02743a48ba58cda17e54bb310cb7abe337c47872c39ba624e566",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs"
-      ]
-    },
-    {
-      "id": "reconcile-reviewed-sources-digest",
-      "summary": "Reconcile proof.required_profile.reviewed_sources_digest against origin/master ea7bd4275",
-      "input_digest": "sha256:052f86e259c40a325e75ae4e9f4695a98152059865aec91710ef5646fc3e1c70",
-      "proof_refs": [
-        ".decapod/config.toml"
-      ]
-    },
-    {
-      "id": "cli-roundtrip-and-spec-reviews",
-      "summary": "Add CLI roundtrip regression test in tests/validate_termination.rs and record current spec reviews",
-      "input_digest": "sha256:b440f1ba4d681f36e1639a3df628c521023ea50f1684a63104add553b10557e1",
-      "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "tests/validate_termination.rs"
-      ]
-    },
-    {
-      "id": "spec-reviews-08a5fb94",
-      "summary": "Record current-fingerprint spec reviews for ARCHITECTURE, INTERFACES, and SECURITY",
-      "input_digest": "sha256:0058ac520c648a8e841fd7ae3bcf1352c695449a0a44a525780bb1a81b486ab7",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "safe-bin-validate-termination",
-      "summary": "Exclude container runtimes from PATH in stale_accepted_base_reconciliation_cli_roundtrip so CI Bazel build_lifecycle scratch cleanup succeeds; refreshed specs and verified fmt/clippy/validate_termination/lib tests.",
-      "input_digest": "sha256:a68812cbc5029f13b91a706e9db07e914783155097e3e34c927bedb49c46d0f2"
-    },
-    {
-      "id": "refresh-clean-specs",
-      "summary": "Refresh living specs without local bazel-* symlinks and update spec reviews.",
-      "input_digest": "sha256:a12b5f68de468e1d7e561501e8596ac1bfdce3d5fa2b66eb6456dd8453ae2d7e"
-    },
-    {
-      "id": "selective-status-effective-context",
-      "summary": "Allow exact 7-key CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT=success effective context on selective-core-status and selective-cli-status in source_policy.rs; refreshed living specs and verified fmt/clippy/source_policy tests.",
-      "input_digest": "sha256:2e80ca6b127f3a35ab863cbc1091d251635efc45d42e400b2cc610e6fedcbd25"
+      "id": "bugs_01m8decqz284yd4g",
+      "summary": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
+      "input_digest": "sha256:36268b3a68e3c9ab2968bf0e454c10b7ed127179df82e5f880b81a2e509fb8c4"
     }
   ],
   "intents": {
-    "intent:change_01M8BTPHKFYT67HHH0HWCBF167": {
+    "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "core"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+      "id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
-      "refined_intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "raw_intent": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
+      "refined_intent": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -989,7 +922,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "intent": "Align selective-core-2 and selective-core-3 selection in assets/tools/source_ci_profile.rs with core_full(paths) so PRs touching src/decapod/core/* outside core_full never fail source-ci-custody with required source-CI recipe is empty",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -997,215 +930,142 @@
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "verify_non_integration_effective_context refines snapshot context validation in validation_runtime/snapshot/source_policy.rs without changing overall component architecture.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "fd3527c27d3eac36aec2f3b4e46082102b5a1dd01a652d14251283df28139161"
+          "reason": "Documented selective-core-2/3 core_full selection alignment",
+          "reviewed_code_fingerprint": "ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12",
+          "spec_material_hash": "549bb30846e7ecf06afe2b82ba0fcb2829542ef857cf13a1433f5ec55440c552"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Selective shard status effective-context verification validates existing CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT workflow bindings without altering public interfaces.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "9487951162590ade30d3d3d0bfeddbde89bc438298ce9f1786d4ed9dd3c917fd"
+          "reason": "Documented selected/commands non-emptiness invariant for non-artifact-worker checks",
+          "reviewed_code_fingerprint": "ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12",
+          "spec_material_hash": "de67bae015b0859f97917e766ccd4b4316214fcabf4cfd4a9f7bdd6d4b2b0359"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented verify_non_integration_effective_context 7-key invariant for selective-core-status and selective-cli-status.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
+          "reason": "Documented fail-closed source-CI custody preservation",
+          "reviewed_code_fingerprint": "ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12",
+          "spec_material_hash": "ccedc6523b9cf2fe47192b916bd6810d053f175f80c6e045da819873d022a4e7"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "title": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
       "todo_ids": [
-        "code_01m8btae8yj5pbpb"
+        "bugs_01m8decqz284yd4g"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795735718Z"
+      "updated_at": "1795748801Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:0e222921728ce1581a6a0c820119739ac3dda30a4f1c425a0a2bdffb09ec882c",
+      "artifact_hash": "sha256:9c9023f8565e0788dbe1c320bb28d28b02dd4b664e40868d15a2e0ff52062bfc",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy_all_targets_all_features",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_test_consumer_readiness_42",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_test_lib_2062",
-          "status": "passed"
-        },
-        {
-          "name": "executor_contract_tests",
-          "status": "passed"
-        },
-        {
-          "name": "validate_termination_cli_roundtrip",
+          "name": "non_full_core_paths_do_not_select_empty_shard_two_or_three",
           "status": "passed"
         }
       ],
-      "completion_claim": "executor_contract .sh 100755 fix and regression tests verified; PR held unopened",
-      "current_phase": "verified",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+            "detail": "trajectory:branch_01M8DEXFE67R1NFTVRDVAWQ2NY",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8BTPHPR88ASXG8G4X3NGSS9": {
+          "branch_01M8DEXFE67R1NFTVRDVAWQ2NY": {
             "evidence_only": true,
-            "id": "branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "id": "branch_01M8DEXFE67R1NFTVRDVAWQ2NY",
+            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
             "steps": [
               {
-                "action": "verified",
+                "action": "trajectory.record",
+                "command": "cargo test --test source_ci_profile_policy non_full_core_paths_do_not_select_empty_shard_two_or_three",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2"
+                  "assets/tools/source_ci_profile.rs",
+                  "tests/source_ci_profile_policy.rs",
+                  "assets/tools/source_ci_profile.rs",
+                  "tests/source_ci_profile_policy.rs",
+                  ".decapod/config.toml",
+                  "1 passed, 0 failed"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "executor_contract_tests"
+                  "fmt",
+                  "clippy",
+                  "non_full_core_paths_do_not_select_empty_shard_two_or_three"
                 ],
                 "scope": [
-                  "core"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "tests/unit/core/repository_profile_tests.rs",
-                  "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_all_targets_all_features",
-                  "cargo_test_lib_2062",
-                  "cargo_test_consumer_readiness_42"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "tests/validate_termination.rs",
-                  "tests/validate_termination.rs",
-                  "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
-                ],
-                "proof_refs": [
-                  "validate_termination_cli_roundtrip"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "cargo test --test source_ci_profile_policy non_full_core_paths_do_not_select_empty_shard_two_or_three"
+      ],
       "destination": "pull request",
       "evidence": [
-        "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)",
-        "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2",
-        "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
+        "1 passed, 0 failed"
       ],
       "inspected_files": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/validate_termination.rs"
+        "assets/tools/source_ci_profile.rs",
+        "tests/source_ci_profile_policy.rs"
       ],
-      "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+      "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
       "modified_files": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs",
-        "tests/validate_termination.rs"
+        ".decapod/config.toml",
+        "assets/tools/source_ci_profile.rs",
+        "tests/source_ci_profile_policy.rs"
       ],
       "next_transitions": [
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "core"
+        "root"
       ],
-      "run_id": "branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+      "run_id": "branch_01M8DEXFE67R1NFTVRDVAWQ2NY",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8btae8yj5pbpb",
+      "task_id": "bugs_01m8decqz284yd4g",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

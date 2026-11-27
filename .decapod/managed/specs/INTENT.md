@@ -1,5 +1,11 @@
 # Intent
 
+## Scope `selective-core-2` and `selective-core-3` selection to `core_full(paths)` (`assets/tools/source_ci_profile.rs`)
+
+Fixes a `source-ci-profile` custody failure (`required source-CI recipe is empty`) on PRs touching `src/decapod/core/*` files outside `core_full(paths)`:
+
+- **Shard-selection alignment (`assets/tools/source_ci_profile.rs`, `tests/source_ci_profile_policy.rs`)**: Restricts `Selection::Core` selection for `"selective-core-2"` and `"selective-core-3"` in `profile::selected` to `core_full(paths)`, matching `profile::commands` (which already returns an empty recipe for shards `2` and `3` when `!core_full(paths)` while routing partial `src/decapod/core/` tests through `"selective-core-1"` and `"selective-core-status"`). Preserves full `core_full` 3-shard coverage for `core_test_inputs` and shared manifests while preventing empty-recipe aborts in `source-ci-custody` and CI shard status reporting.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1449,7 +1455,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

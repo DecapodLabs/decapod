@@ -1,5 +1,9 @@
 # Architecture
 
+## Selective core CI shard selection alignment (`assets/tools/source_ci_profile.rs`)
+
+- **`profile::selected` (`Selection::Core`)**: Matches `check.id` so `"selective-core-2"` and `"selective-core-3"` return `core_full(paths)` while `"selective-core-1"` and `"selective-core-status"` remain selected for any `src/decapod/core/` or `core_test_inputs(p)` match, keeping `selected(...)` and `commands(...)` consistent without altering `core_full(paths)` or `selective-cli-*`.
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2108,7 +2112,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

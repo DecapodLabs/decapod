@@ -1,5 +1,9 @@
 # Interfaces
 
+## Source-CI `profile::selected` shard invariant (`assets/tools/source_ci_profile.rs`)
+
+- **`profile::selected` (`Selection::Core`)**: For every non-`workflow_owned::artifact_worker` check, `selected(check, &paths, false)` now guarantees `!commands(check, &paths).unwrap().is_empty()`, including PRs touching `src/decapod/core/*` outside `core_full(paths)` where `.github/workflows/ci.yml` (`test-core`) invokes `candidate-source-ci-profile` for `selective-core-2` and `selective-core-3`.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2596,7 +2600,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
