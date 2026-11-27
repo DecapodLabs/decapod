@@ -954,6 +954,16 @@
         "tests/agent_rpc_suite.rs",
         "tests/cloud_workspace_validation_1886.rs"
       ]
+    },
+    {
+      "id": "cp5-v01665-refresh-pr1",
+      "summary": "Refresh v0.166.5 entrypoints, Dockerfile.decapod pin, living specs, and manifest for combined Wave 4 PR 1 (#1896, #1886, #1948)",
+      "input_digest": "sha256:0e470da3e9885c5d346b30935fdad85342f308a1b97b6b20f843d6d6e03fee3c",
+      "proof_refs": [
+        ".decapod/managed/.manifest.json",
+        ".decapod/managed/Dockerfile.decapod",
+        "AGENTS.md"
+      ]
     }
   ],
   "intents": {
@@ -997,21 +1007,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Combined Wave 4 Cloud CLI (#1896/#1859/#1895 + dactyl-db =0.21.0 OperationalDisposition), Cloud Workspace (#1886), and RPC failure recovery (#1948) on 78c5c4d7f.",
+          "reason": "Refreshed v0.166.5 entrypoints/Dockerfile pin and documented Wave 4 #1896/#1886/#1948 integration.",
           "reviewed_code_fingerprint": "e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb",
           "spec_material_hash": "7180f0b29cb3fafebca04c114df1cbd2b54f5a94fe61c0fad63f83786f02a30f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Combined CloudAuthErrorCode/auto-reconcile/OperationalDisposition (#1896), cloud_workspace/workspace parity (#1886), and error_response context_capsule/allowed_next_ops (#1948) interfaces.",
+          "reason": "Refreshed v0.166.5 specs and documented Wave 4 #1896/#1886/#1948 interfaces.",
           "reviewed_code_fingerprint": "e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb",
           "spec_material_hash": "641fb8c706abb4b713df9f3c39aeccb195ddf0b3d00d293c199a1e08d81da74d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Fail-closed cloud session, non-fallback SQLite, credential redaction, and container boundary invariants preserved across #1896, #1886, and #1948.",
+          "reason": "Fail-closed cloud session, non-fallback SQLite, credential redaction, and container boundary invariants preserved under v0.166.5.",
           "reviewed_code_fingerprint": "e27f37a04b90d37858901d896791dd4f8c93c3f0b8c636159c381f297a3cdbeb",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
@@ -1024,7 +1034,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795763526Z"
+      "updated_at": "1795764408Z"
     },
     "trajectory": {
       "active_boundaries": [
