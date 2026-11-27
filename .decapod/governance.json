@@ -950,6 +950,14 @@
       "proof_refs": [
         "validate_v01663_on_fecd81a1d"
       ]
+    },
+    {
+      "id": "code_01m8d524nefyjt0n-slot2-v1664-pin",
+      "summary": "Refresh v0.166.4 Dockerfile pin and specs manifest",
+      "input_digest": "sha256:5461612322a68b25126054b8e6199d979852d82d928a4cd0bfb25067871feda3",
+      "proof_refs": [
+        "validate_v01664"
+      ]
     }
   ],
   "intents": {
