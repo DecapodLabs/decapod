@@ -6,6 +6,8 @@ Follow this guide to initialize Decapod once in your repository and verify your 
 
 ---
 
+<div aria-hidden="true"><span id="1-installation-human"></span></div>
+
 ## 1. Install the binary (Human)
 
 Choose either prebuilt binary installation or building from source:
@@ -21,6 +23,8 @@ cargo install decapod --locked
 **Local SQLite prerequisite:** Default local mode (`backend = "local"`) uses a host SQLite shared library via Dactyl. If `decapod` reports `LOCAL_SQLITE_RUNTIME_REQUIRED`, install your OS SQLite runtime or set `DACTYL_SQLITE_LIBRARY`; see [Local Dactyl SQLite prerequisite](reference/errors.md#local-dactyl-sqlite-prerequisite). Cloud-backed repositories do not require local SQLite.
 
 ---
+
+<div aria-hidden="true"><span id="2-repository-initialization-human-once-per-repo"></span></div>
 
 ## 2. Initialize once per repository (Human)
 
@@ -43,9 +47,21 @@ For **Decapod Cloud** teams:
 
 ---
 
+<div aria-hidden="true"><span id="3-prompt-gate--contract-ingestion-agent-invoked"></span><span id="4-agent-session-custody-agent-invoked"></span><span id="5-claiming-a-task-agent-invoked"></span><span id="6-entering-an-isolated-workspace-agent-invoked"></span><span id="7-decision-time-orientation--reflection-agent-invoked"></span></div>
+
 ## 3. Hand off to your coding agent
 
 Once `decapod init` succeeds, open your coding agent in the repository and state your goal in plain language. You do not need to run kernel commands manually.
+
+**Example prompt for your coding agent:**
+
+```text
+Read AGENTS.md, claim a Decapod task for fixing the failing retry-backoff test,
+work inside an isolated Decapod workspace, update tests and living specs under
+.decapod/managed/specs/, checkpoint and commit your change, and run
+decapod validate against the final commit. Stop and ask me if any check
+fails without a supported recovery path or requires a product decision.
+```
 
 At decision and commit boundaries, your agent invokes the kernel:
 
@@ -60,6 +76,8 @@ At decision and commit boundaries, your agent invokes the kernel:
 See [Single-Agent & Handoff Workflow](workflows/single-agent.md) and the [CLI Reference](reference/cli.md) for full flag contracts and mid-task agent handoffs.
 
 ---
+
+<div aria-hidden="true"><span id="8-checkpoints-validation-and-proof-agent-invoked"></span></div>
 
 ## 4. First Governed Result Walkthrough
 

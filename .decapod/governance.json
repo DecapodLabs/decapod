@@ -896,6 +896,11 @@
       "id": "cp-4-specs",
       "summary": "Author living specs and refresh projections for #1977 and #1978",
       "input_digest": "sha256:42025edbfaefe94d699edf6328bffac367145fcba533277f07a5dc78238fc172"
+    },
+    {
+      "id": "cp-5-quickstart-aliases",
+      "summary": "Add coding-agent example prompt, legacy anchor aliases, and refresh INTERFACES spec",
+      "input_digest": "sha256:65fb849f0e9fe6fbae236f72fa6262c2f96dd1e0bda1401f6292698e2fa248e7"
     }
   ],
   "intents": {
@@ -950,7 +955,7 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:bc4bc6962cd35f513567ee6950e6addf01b541e3910ca769cad41dbc56961fd5",
+      "artifact_hash": "sha256:9ce5db3cff075d894e1719660dffbcabfdf96e85568a4d808de8515eae1be75b",
       "checks": [
         {
           "name": "chrome_qa_5themes_5viewports",
@@ -962,6 +967,10 @@
         },
         {
           "name": "mdbook_docs_seo",
+          "status": "passed"
+        },
+        {
+          "name": "quickstart_legacy_anchors_chrome",
           "status": "passed"
         }
       ],
@@ -985,10 +994,17 @@
             "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
+            "event_id": "event:5",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_docs_01m8fjpadj5ywkv7": {
@@ -1020,6 +1036,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5"
+                ],
+                "proof_refs": [
+                  "quickstart_legacy_anchors_chrome"
+                ],
+                "scope": [
+                  "docs/book/**"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1027,6 +1058,7 @@
       },
       "declared_commands": [],
       "evidence": [
+        "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5",
         "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
       ],
       "inspected_files": [],
