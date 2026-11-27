@@ -874,6 +874,31 @@
     "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:section10-cloud-parity-durability": {
+      "statement": "Cloud mode never creates or falls back to .decapod/data/decapod.db across expired session renewal, rpc --stdin store.upsert/query, non-todo stores, OutcomeUnknown crash recovery, or derived parity inspection, while hosted Supabase and #1220 pure-Rust boundaries remain explicitly documented.",
+      "falsifier": "Any cloud CLI/RPC/session-renewal/crash/custody/parity path creates or reads .decapod/data/decapod.db, omits non-todo store entries from cloud_parity_matrix, weakens tests/supabase_service.rs fail-closed gating, or misstates #1220 architectural conflict.",
+      "status": "supported",
+      "proof_refs": [
+        "docs/datastore-v2/proof-ledger.json",
+        "tests/cloud_cli_boundary.rs",
+        "tests/crash_durability_1934.rs",
+        "tests/derived_replay_1936.rs",
+        "tests/lease_fencing_consistency_1935.rs"
+      ]
+    },
+    "claim:section10-storage-bounds-compaction": {
+      "statement": "All 10 persisted non-task plugin stores enforce UTF-8/NUL/JSON/collection bounds, single decapod.db reconciles 36 logical tables without sidecar files, and O(N) rowid compaction achieves 100% lossless todo/journal parity across real dogfood snapshots.",
+      "falsifier": "Any persisted plugin accepts >MAX_* UTF-8 bytes or NUL bytes, any subsystem creates a sidecar .db/.events.jsonl file, logical_contract_v1 drifts from runtime PRAGMA table_info, or snapshot compaction loses or alters logical events or task journals.",
+      "status": "supported",
+      "proof_refs": [
+        "docs/datastore-v2/dogfood-compaction-v0.166.json",
+        "tests/datastore_contract.rs",
+        "tests/datastore_relational_compaction.rs",
+        "tests/single_datastore.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "section10-storage-parity-v01662",
@@ -884,6 +909,15 @@
       "id": "section10-storage-parity-v01662-r2",
       "summary": "Reconcile reviewed_sources_digest against v0.166.2 and include refreshed Dockerfile.decapod",
       "input_digest": "sha256:84b089d9536ff59c30bb00e96323e70eec480a48e3b3989bc66ece2d89dd8f77"
+    },
+    {
+      "id": "section10-storage-parity-v01662-r3",
+      "summary": "Record current-PR falsifiable claims for Section 10 storage bounds, dogfood compaction, and Cloud parity/durability",
+      "input_digest": "sha256:38f3553724c44481a5996b437498fd03b2f140fe46e3736679ae85c7349428a2",
+      "proof_refs": [
+        "tests/cloud_cli_boundary.rs",
+        "tests/datastore_contract.rs"
+      ]
     }
   ],
   "intents": {
