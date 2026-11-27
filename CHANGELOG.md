@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.2](https://github.com/DecapodLabs/decapod/compare/v0.166.1...v0.166.2) - 2026-11-27
+
+### Fixed
+
+- *(snapshot)* validate selective status CUSTODY_* effective context bindings
+- *(validate)* reconcile stale accepted-base inventory digest and test executor modes
+- *(validate)* admit 100755 .sh scripts in executor_contract::capture
+
+### Other
+
+- *(specs)* refresh living specs cleanly without bazel symlinks
+- *(validate_termination)* isolate PATH from container runtimes in stale-base CLI test
+- *(governance)* record spec reviews for current codebase fingerprint
+- *(validate)* add stale accepted-base CLI roundtrip and refresh spec reviews
+- *(proof)* reconcile reviewed_sources_digest for v0.166.1
+
 ## [0.166.1](https://github.com/DecapodLabs/decapod/compare/v0.166.0...v0.166.1) - 2026-11-26
 
 ### Fixed
