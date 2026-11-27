@@ -1050,7 +1050,11 @@ pub fn required_artifact_paths(check: &Check, _paths: &[String]) -> Vec<String> 
         "golden-vectors-linux" | "golden-vectors-macos" => {
             &["tests/golden_vectors/target/release/golden_vectors"]
         }
-        "docs-build" => &["docs/book/book/index.html"],
+        "docs-build" => &[
+            "docs/book/book/index.html",
+            "docs/book/book/sitemap.xml",
+            "docs/book/book/llms.txt",
+        ],
         _ => &[],
     };
     let mut artifact_paths = artifact_defaults.to_vec();

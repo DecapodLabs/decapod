@@ -2564,3 +2564,170 @@ fn non_full_core_paths_do_not_select_empty_shard_two_or_three() {
         }
     }
 }
+
+#[test]
+fn docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages() {
+    let check = find_check("docs-build").expect("docs-build check exists");
+    assert_eq!(
+        profile::workflow_owned::script(check),
+        Some("assets/tools/source_ci/docs-build.sh")
+    );
+    let sources = profile::workflow_owned::script_sources(check);
+    assert!(
+        sources
+            .iter()
+            .any(|(path, _)| *path == "assets/tools/source_ci/docs-build.sh")
+    );
+    assert!(
+        sources
+            .iter()
+            .any(|(path, _)| *path == "assets/tools/docs_seo.py")
+    );
+    let artifacts = profile::custody::required_artifact_paths(check, &[]);
+    assert_eq!(
+        artifacts,
+        [
+            "docs/book/book/index.html",
+            "docs/book/book/sitemap.xml",
+            "docs/book/book/llms.txt",
+        ]
+    );
+
+    let temp = Temp::new();
+    let script = temp.0.join("docs_seo.py");
+    fs::write(&script, include_str!("../assets/tools/docs_seo.py")).unwrap();
+    let book = temp.0.join("book");
+    fs::create_dir_all(book.join("concepts")).unwrap();
+    fs::create_dir_all(book.join("admin")).unwrap();
+
+    fs::write(
+        book.join("index.html"),
+        "<!DOCTYPE HTML><html><head><title>Decapod — Documentation</title><meta name=\"description\" content=\"\"></head><body><main><h1>Decapod</h1><p>Decapod is the daemonless local-first governance kernel for AI coding agents and proof-backed delivery.</p></main></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("quickstart.html"),
+        "<!DOCTYPE HTML><html><head><title>Quickstart - Decapod — Documentation</title></head><body><main><h1>Quickstart</h1><p>Install the released CLI, initialize a governed repository, and run your first isolated workspace validation.</p></main></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("concepts/agent-first.html"),
+        "<!DOCTYPE HTML><html><head><title>Agent First - Decapod — Documentation</title></head><body><main><h1>Agent-First</h1><p>Agents execute work inside isolated git worktrees while Decapod validates state transitions and proof boundaries.</p></main></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("print.html"),
+        "<!DOCTYPE HTML><html><head><title>Print</title><meta name=\"robots\" content=\"noindex\"></head><body><main><h1>Print</h1><p>Full printable documentation bundle.</p></main></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("404.html"),
+        "<!DOCTYPE HTML><html><head><title>Page Not Found</title></head><body><main><h1>Document not found (404)</h1></main></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("redirect.html"),
+        "<!DOCTYPE HTML><html><head><title>Redirecting</title><meta http-equiv=\"refresh\" content=\"0; URL=quickstart.html\"></head><body></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("private-note.html"),
+        "<!DOCTYPE HTML><html><head><title>Draft</title><meta name=\"robots\" content=\"noindex, nofollow\"></head><body><main><h1>Draft</h1><p>Unlisted internal page that keeps nofollow and noindex directives intact.</p></main></body></html>",
+    )
+    .unwrap();
+    fs::write(
+        book.join("admin/secret.html"),
+        "<!DOCTYPE HTML><html><head><title>Admin</title></head><body><main><h1>Admin</h1><p>Private route root excluded from public sitemap and llms index.</p></main></body></html>",
+    )
+    .unwrap();
+
+    let run = Command::new("python3")
+        .arg(&script)
+        .arg(&book)
+        .output()
+        .expect("run docs_seo.py");
+    assert!(
+        run.status.success(),
+        "docs_seo.py failed: {}",
+        String::from_utf8_lossy(&run.stderr)
+    );
+    let stdout = String::from_utf8_lossy(&run.stdout);
+    assert!(stdout.contains("\"public_pages\": 3"), "{stdout}");
+
+    let index_html = fs::read_to_string(book.join("index.html")).unwrap();
+    assert!(
+        index_html.contains("<link rel=\"canonical\" href=\"https://decapodlabs.ai/decapod/\">")
+    );
+    assert!(index_html.contains("\"@type\": \"CollectionPage\""));
+
+    let chapter_html = fs::read_to_string(book.join("concepts/agent-first.html")).unwrap();
+    assert!(chapter_html.contains(
+        "<link rel=\"canonical\" href=\"https://decapodlabs.ai/decapod/concepts/agent-first.html\">"
+    ));
+    assert!(chapter_html.contains("\"@type\": \"TechArticle\""));
+
+    let private_html = fs::read_to_string(book.join("private-note.html")).unwrap();
+    assert!(private_html.contains("noindex, nofollow"));
+    assert!(!private_html.contains("rel=\"canonical\""));
+
+    let sitemap = fs::read_to_string(book.join("sitemap.xml")).unwrap();
+    assert!(sitemap.contains("<loc>https://decapodlabs.ai/decapod/</loc>"));
+    assert!(sitemap.contains("<loc>https://decapodlabs.ai/decapod/quickstart.html</loc>"));
+    assert!(
+        sitemap.contains("<loc>https://decapodlabs.ai/decapod/concepts/agent-first.html</loc>")
+    );
+    for excluded in [
+        "print.html",
+        "404.html",
+        "redirect.html",
+        "private-note.html",
+        "admin/secret.html",
+    ] {
+        assert!(
+            !sitemap.contains(excluded),
+            "unexpected {excluded} in sitemap"
+        );
+    }
+
+    let llms = fs::read_to_string(book.join("llms.txt")).unwrap();
+    assert!(llms.contains("https://decapodlabs.ai/decapod/"));
+    assert!(llms.contains("https://decapodlabs.ai/decapod/concepts/agent-first.html"));
+    assert!(!llms.contains("print.html"));
+    assert!(!llms.contains("admin/secret.html"));
+
+    // Second run must be byte-for-byte idempotent.
+    let before = fs::read(book.join("index.html")).unwrap();
+    let second = Command::new("python3")
+        .arg(&script)
+        .arg(&book)
+        .output()
+        .expect("rerun docs_seo.py");
+    assert!(second.status.success());
+    assert_eq!(fs::read(book.join("index.html")).unwrap(), before);
+    assert_eq!(
+        fs::read_to_string(book.join("sitemap.xml")).unwrap(),
+        sitemap
+    );
+    assert_eq!(fs::read_to_string(book.join("llms.txt")).unwrap(), llms);
+
+    // Symlinked output must be refused before writes.
+    #[cfg(unix)]
+    {
+        let link_book = temp.0.join("link-book");
+        fs::create_dir(&link_book).unwrap();
+        fs::write(
+            link_book.join("index.html"),
+            "<!DOCTYPE HTML><html><head><title>Index</title></head><body><main><h1>Index</h1><p>Valid primary page content long enough for description extraction.</p></main></body></html>",
+        )
+        .unwrap();
+        let target = temp.0.join("outside.html");
+        fs::write(&target, "<html/>").unwrap();
+        std::os::unix::fs::symlink(&target, link_book.join("evil.html")).unwrap();
+        let symlink_run = Command::new("python3")
+            .arg(&script)
+            .arg(&link_book)
+            .output()
+            .expect("run docs_seo.py on symlink");
+        assert!(!symlink_run.status.success());
+    }
+}

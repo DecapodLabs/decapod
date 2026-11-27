@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "7c246e87b8ba044520f40ebfb46d543b980f0b7a",
+    "accepted_commit": "74ecb590874080fd201c168de6e55e663b03bda1",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,53 +872,49 @@
     }
   },
   "change": {
-    "id": "pr:security-assurance-1964",
-    "base_commit": "7c246e87b8ba044520f40ebfb46d543b980f0b7a",
+    "id": "change_01M8FEMKBXGYKKT35D6X9Q35VH",
+    "base_commit": "74ecb590874080fd201c168de6e55e663b03bda1",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:security-assurance-1964": {
-      "statement": "cloud_proof transitions reject wrong-subject, stale-fingerprint, failed-state, and self-escalated receipts; docs/security-assurance-matrix.md prohibits unqualified absolutes; isolated mutations on RULE-APPROVAL-006, RULE-CLOUD-PROOF-008, and RULE-HTTP-READONLY-009 are detected",
-      "falsifier": "Any positive-or-negative test in core::cloud_proof::tests, core::http_transport::tests, cloud_tenancy_parity_1895, or security_guarantee_assurance_1964 failing or mutation surviving",
+    "claim:docs-seo-discovery": {
+      "statement": "mdBook docs-build runs docs-build.sh and docs_seo.py in reviewed workflow_owned custody, generating HTTPS canonicals, JSON-LD, sitemap.xml, and llms.txt while excluding private/noindex/redirect/print/404 pages and preserving chapter bodies.",
+      "falsifier": "Any missing/forged canonical, leaked private/noindex page in sitemap.xml or llms.txt, Bazel compile_data omission, or failure in source_ci_profile_policy/doc_alignment.",
       "status": "supported",
       "proof_refs": [
-        "docs/security-assurance-matrix.md",
-        "tests/security_guarantee_assurance_1964.rs",
-        "tests/unit/core/cloud_proof_tests.rs"
+        "tests/doc_alignment.rs",
+        "tests/source_ci_profile_policy.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ckpt:security-assurance-1964-7c246e8",
-      "summary": "PR 5 (#1964) rebased cleanly onto 7c246e87b (PR #1974, v0.169.0) with guarantee matrix, cloud_proof receipt validation, and mutation suite.",
-      "input_digest": "sha256:74e722ad917a1f8771fb84158b68ebf9a22ae4f669123baef14999cbbc7102b2",
-      "proof_refs": [
-        "docs/security-assurance-matrix.md",
-        "src/decapod/core/cloud_proof.rs",
-        "tests/security_guarantee_assurance_1964.rs",
-        "tests/unit/core/cloud_proof_tests.rs",
-        "tests/unit/core/http_transport_tests.rs"
-      ]
+      "id": "chk-docs-seo-101",
+      "summary": "Publish mdBook canonicals, sitemap.xml, and llms.txt via workflow_owned docs-build (site#101)",
+      "input_digest": "sha256:b0a78d9022dfa62180d9f43d945af0cb5f61ba851319cb8949344b733b5d549f"
     }
   ],
   "intents": {
-    "intent:secu_01m8e4a3dekgp6r0": {
+    "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "decapod/src/decapod/core/cloud_proof.rs,docs/security-assurance-matrix.md,tests/security_guarantee_assurance_1964.rs"
+        "Current claimed task and isolated work branch"
       ],
-      "constraints": [],
+      "constraints": [
+        "docs/book/**",
+        "assets/tools/**",
+        ".decapod/**"
+      ],
       "created_sequence": 1,
-      "id": "intent:secu_01m8e4a3dekgp6r0",
+      "id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Bind published security guarantees across Decapod, Dactyl, and Propodus to actual enforcement boundaries, negative controls, and mutation detectors (#1964)",
-      "refined_intent": "Harden src/decapod/core/cloud_proof.rs receipt validation, add docs/security-assurance-matrix.md and tests/security_guarantee_assurance_1964.rs (negative-first controls, drift check, RULE-APPROVAL-006 / RULE-CLOUD-PROOF-008 / RULE-HTTP-READONLY-009 mutations)",
+      "raw_intent": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
+      "refined_intent": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -931,92 +927,79 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Bind published security guarantees across Decapod, Dactyl, and Propodus to actual enforcement boundaries, negative controls, and mutation detectors (#1964)",
+      "intent": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "decapod validate"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "No architecture component boundaries changed; cloud_proof receipt validation reinforces existing cloud_proof module contract.",
-          "reviewed_code_fingerprint": "f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e",
+          "reason": "Only generated codebase attestation fingerprint refreshed; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
+          "reviewed_code_fingerprint": "a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff",
           "spec_material_hash": "ccd61a497b5f57ae1adfd92d566dfa77e7cbcab97ae2dacc5d3d3e2e2e4e77d3"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Existing ProofControlTransport and CLI/RPC interface signatures preserved; mismatch receipts fail closed with CLOUD_PROOF_RECEIPT_INVALID.",
-          "reviewed_code_fingerprint": "f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e",
-          "spec_material_hash": "af7cf7dafd80b510208a5b25f22baa8f29bd2b5729e74ad4798381fd60a34da6"
+          "reason": "Documented mdBook public discovery metadata, docs-build.sh + docs_seo.py custody, sitemap.xml, and llms.txt (site#101)",
+          "reviewed_code_fingerprint": "a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff",
+          "spec_material_hash": "ca491cdf86ef2f46f292af46b37285d66b4e66226441e870509f0841692a43ec"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented #1964 claim-to-enforcement matrix, fail-closed cloud_proof receipt checks, and uncovered mutation checks in SECURITY.md.",
-          "reviewed_code_fingerprint": "f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e",
+          "reason": "Only generated codebase attestation fingerprint refreshed; authored documentation discovery interfaces updated in INTERFACES.md (site#101)",
+          "reviewed_code_fingerprint": "a38d33f6b904538a86b207ccb3f6689ab8ff09aa02580c4a8b2d759f5d03d6ff",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Bind published security guarantees, cloud_proof receipt checks, and mutation suite (#1964)",
+      "title": "Publish upstream mdBook canonicals, sitemap.xml, and llms.txt (site#101)",
       "todo_ids": [
-        "secu_01m8e4a3dekgp6r0"
+        "data_01m8fe9jenw5xh4b"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795789137Z"
+      "updated_at": "1795815651Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "decapod/src/decapod/core/cloud_proof.rs,docs/security-assurance-matrix.md,tests/security_guarantee_assurance_1964.rs"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d82e4d2758aefb6f3eb8934ed3969d8a0667cfbddbfc20a283b57d2beacb003f",
+      "artifact_hash": "sha256:bddd117c65f3a4a521901fb743446e612f09321b8f81dd865869592d095c363c",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "doc-alignment",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
-          "status": "passed"
-        },
-        {
-          "name": "cloud_tenancy_parity_1895",
-          "status": "passed"
-        },
-        {
-          "name": "core_cloud_proof_tests",
-          "status": "passed"
-        },
-        {
-          "name": "core_http_transport_tests",
-          "status": "passed"
-        },
-        {
-          "name": "security_guarantee_assurance_1964",
+          "name": "docs-seo-fixture",
           "status": "passed"
         }
       ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:secu_01m8e4a3dekgp6r0",
+            "detail": "trajectory:branch_01M8FEMKH0KDBR3C0T4G01VQ64",
             "event_id": "event:4",
-            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1025,35 +1008,44 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "secu_01m8e4a3dekgp6r0": {
+          "branch_01M8FEMKH0KDBR3C0T4G01VQ64": {
             "evidence_only": true,
-            "id": "secu_01m8e4a3dekgp6r0",
-            "intent_id": "intent:secu_01m8e4a3dekgp6r0",
+            "id": "branch_01M8FEMKH0KDBR3C0T4G01VQ64",
+            "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
+                "command": "cargo test --locked --test source_ci_profile_policy docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/cloud_proof.rs",
-                  "src/decapod/core/governed_transition.rs",
-                  "src/decapod/core/http_transport.rs",
-                  "tests/governance_fault_detection_1795.rs",
-                  "src/decapod/core/cloud_proof.rs",
-                  "tests/unit/core/cloud_proof_tests.rs",
-                  "tests/unit/core/http_transport_tests.rs",
-                  "tests/security_guarantee_assurance_1964.rs",
-                  "docs/security-assurance-matrix.md",
-                  ".decapod/managed/specs/SECURITY.md"
+                  "assets/tools/source_ci_profile.rs",
+                  "assets/tools/source_ci_custody.rs",
+                  "assets/tools/source_ci_workflow_owned.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  "docs/book/book.toml",
+                  "docs/book/theme/index.hbs",
+                  "docs/book/book.toml",
+                  "docs/book/theme/index.hbs",
+                  "assets/tools/docs_seo.py",
+                  "assets/tools/source_ci/docs-build.sh",
+                  "assets/tools/source_ci_profile.rs",
+                  "assets/tools/source_ci_workflow_owned.rs",
+                  "assets/tools/source_ci_custody.rs",
+                  ".config/build/decapod.BUILD.bzl",
+                  ".decapod/config.toml",
+                  "tests/source_ci_profile_policy.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Applied #101 patch (2ea91d22), wired docs-build.sh + docs_seo.py in workflow_owned::SOURCES & decapod.BUILD.bzl, updated reviewed_sources_digest, passed doc_alignment 5/5 & docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "core_cloud_proof_tests",
-                  "core_http_transport_tests",
-                  "cloud_tenancy_parity_1895",
-                  "security_guarantee_assurance_1964"
+                  "docs-seo-fixture",
+                  "doc-alignment"
                 ],
-                "scope": [],
+                "scope": [
+                  ".decapod/**",
+                  "assets/tools/**",
+                  "docs/book/**"
+                ],
                 "sequence": 4,
                 "validation_findings": []
               }
@@ -1061,30 +1053,48 @@
           }
         }
       },
-      "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [
-        "src/decapod/core/cloud_proof.rs",
-        "src/decapod/core/governed_transition.rs",
-        "src/decapod/core/http_transport.rs",
-        "tests/governance_fault_detection_1795.rs"
+      "declared_commands": [
+        "cargo test --locked --test doc_alignment",
+        "cargo test --locked --test source_ci_profile_policy docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages"
       ],
-      "intent_id": "intent:secu_01m8e4a3dekgp6r0",
+      "destination": "pull request",
+      "evidence": [
+        "Applied #101 patch (2ea91d22), wired docs-build.sh + docs_seo.py in workflow_owned::SOURCES & decapod.BUILD.bzl, updated reviewed_sources_digest, passed doc_alignment 5/5 & docs_build_recipe_and_docs_seo_postprocessor_cover_public_and_excluded_pages"
+      ],
+      "inspected_files": [
+        ".config/build/decapod.BUILD.bzl",
+        "assets/tools/source_ci_custody.rs",
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci_workflow_owned.rs",
+        "docs/book/book.toml",
+        "docs/book/theme/index.hbs"
+      ],
+      "intent_id": "intent:change_01M8FEMKBXGYKKT35D6X9Q35VH",
       "modified_files": [
-        ".decapod/managed/specs/SECURITY.md",
-        "docs/security-assurance-matrix.md",
-        "src/decapod/core/cloud_proof.rs",
-        "tests/security_guarantee_assurance_1964.rs",
-        "tests/unit/core/cloud_proof_tests.rs",
-        "tests/unit/core/http_transport_tests.rs"
+        ".config/build/decapod.BUILD.bzl",
+        ".decapod/config.toml",
+        ".decapod/managed/specs/INTERFACES.md",
+        "assets/tools/docs_seo.py",
+        "assets/tools/source_ci/docs-build.sh",
+        "assets/tools/source_ci_custody.rs",
+        "assets/tools/source_ci_profile.rs",
+        "assets/tools/source_ci_workflow_owned.rs",
+        "docs/book/book.toml",
+        "docs/book/theme/index.hbs",
+        "tests/source_ci_profile_policy.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/cloud_proof.rs,docs/security-assurance-matrix.md,tests/"
+        ".decapod/**",
+        "assets/tools/**",
+        "docs/book/**"
       ],
-      "run_id": "secu_01m8e4a3dekgp6r0",
+      "run_id": "branch_01M8FEMKH0KDBR3C0T4G01VQ64",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m8e4a3dekgp6r0",
+      "task_id": "data_01m8fe9jenw5xh4b",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

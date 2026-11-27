@@ -4,8 +4,10 @@ language = "en"
 multilingual = false
 src = "src"
 title = "Decapod — Documentation"
+description = "Documentation for Decapod, the local-first governance kernel for AI coding agents: setup, workflows, boundaries, and proof-backed completion."
 
 [output.html]
+site-url = "/decapod/"
 git-repository-url = "https://github.com/DecapodLabs/decapod"
 additional-css = ["src/custom.css"]
 edit-url-template = "https://github.com/DecapodLabs/decapod/edit/master/docs/book/{path}"

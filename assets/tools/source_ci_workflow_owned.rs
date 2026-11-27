@@ -72,6 +72,11 @@ pub const SOURCES: &[(&str, &[u8])] = &[
         include_bytes!("../../src/decapod/core/release_metadata.rs"),
     ),
     ("assets/tools/docs_sync.rs", include_bytes!("docs_sync.rs")),
+    (
+        "assets/tools/source_ci/docs-build.sh",
+        include_bytes!("source_ci/docs-build.sh"),
+    ),
+    ("assets/tools/docs_seo.py", include_bytes!("docs_seo.py")),
 ];
 pub fn script(check: &Check) -> Option<&'static str> {
     Some(match check.id {
@@ -87,6 +92,7 @@ pub fn script(check: &Check) -> Option<&'static str> {
         "integration-prepare" => "assets/tools/source_ci/integration-prepare.sh",
         "integration-status" => "assets/tools/source_ci/integration-status.sh",
         "standalone-validation" => "assets/tools/source_ci/standalone-validation.sh",
+        "docs-build" => "assets/tools/source_ci/docs-build.sh",
         "docs-drift" => "assets/tools/source_ci/docs-drift.sh",
         "integration-gatling-0" => "assets/tools/source_ci/integration-worker.sh",
         "integration-gatling-1" => "assets/tools/source_ci/integration-worker.sh",
@@ -113,6 +119,7 @@ pub fn script_sources(check: &Check) -> Vec<(&'static str, &'static [u8])> {
                     check.id,
                     "health" | "governance-artifacts" | "standalone-validation"
                 ) && path.ends_with("/private-checkout.sh"))
+                || (check.id == "docs-build" && *path == "assets/tools/docs_seo.py")
         })
         .collect()
 }
