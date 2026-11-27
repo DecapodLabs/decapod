@@ -953,6 +953,11 @@
       "id": "section10-storage-parity-v01670-pr2",
       "summary": "Merge master v0.167.0 (7b5d5c2fd3) and refresh specs, manifest, and Dockerfile pin",
       "input_digest": "sha256:bc9cbd4f6770e302950fe20ffcd59207322aa3e03ba4ed8ad1812637ef527c03"
+    },
+    {
+      "id": "section10-config-digest-v01670-pr2",
+      "summary": "Reconcile reviewed_sources_digest for v0.167.0 master (7b5d5c2fd3)",
+      "input_digest": "sha256:7b1da530c99fac748043ba6c9fd95707c15494307de1709877082c09ae1b3148"
     }
   ],
   "intents": {
