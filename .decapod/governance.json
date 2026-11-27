@@ -892,6 +892,14 @@
       "proof_refs": [
         "tests/cloud_workspace_validation_1886.rs"
       ]
+    },
+    {
+      "id": "code_01m8brxqdaahrgf6-v1662-digest",
+      "summary": "Reconcile reviewed_sources_digest for v0.166.2 baseline",
+      "input_digest": "sha256:dbbb1b2d24a3a58d7bfc34f8955ce4656e89fa8bb78d5fa5e6ab155b3de8bb90",
+      "proof_refs": [
+        "tests/cloud_workspace_validation_1886.rs"
+      ]
     }
   ],
   "intents": {
