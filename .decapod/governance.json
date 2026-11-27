@@ -897,6 +897,11 @@
       "id": "verify-recover-1892-inventory",
       "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for v0.169.2 Cargo.toml/Cargo.lock bump on 78b9c0f18a (Bootstrap controller 78b9c0f18a sha256:4a252e0832abd30f verified #506)",
       "input_digest": "sha256:c629a0f9e1b219e7643c527fc2c70408d13d75b75fc4106140e06f86c0afdb7a"
+    },
+    {
+      "id": "verify-recover-1892-dockerfile",
+      "summary": "Commit v0.169.2 refreshed Dockerfile.decapod and .manifest.json from evaluating bootstrap controller 78b9c0f18a (sha256:4a252e0832abd30f verified #506)",
+      "input_digest": "sha256:e3253a52059d71f69e954d270b9ef319e652d8813375ff36b1e8c11ca6658173"
     }
   ],
   "intents": {
