@@ -1,5 +1,14 @@
 # Intent
 
+## Section 11 governance, provenance knowledge convergence, constitution integrity, phase-correct admission, and Cloud delegated grants (#657, #1774, #1772, #1763, #1367, #1568, #1735, #1944)
+
+Completes remaining Section 11 governance and context integrity gaps across provenance-aware project knowledge retrieval/supersession, constitutional non-self-promotion enforcement, phase-correct PR checkpoint admission, Propodus migration `037` delegated-grant wire compatibility, and cross-repo trust/egress and ADR reconciliation:
+
+- **Provenance-aware contradiction surfacing, explicit supersession, and negative-bias exclusion (`#657`, `src/decapod/plugins/knowledge.rs`, `src/decapod/plugins/federation_ext.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Surfacing equally authoritative contradictions for legacy entries lacking `merge_key` via normalized scope (`canonical_conflict_scope`) and title/claim grouping, projecting `node_edges` (`edge_type = 'supersedes'`) for typed federation records, exposing explicit `--merge-key` / `--on-conflict` / `--supersedes` / `--scope` options on `decapod data knowledge add` and `store.upsert`, excluding persistently harmful records (`hurt >= 2 && hurt > helped`) as `negative_retrieval_bias` while ranking remaining candidates by net helpfulness, and tightening `url:` provenance validation to HTTPS or loopback HTTP without whitespace/control characters.
+- **Constitutional non-self-promotion & `core/SPECS.sections.apply` integrity (`#1774`, `assets/build/constitution_admission.rs`, `tests/constitution_scaffolding.rs`)**: Rejects `authority_review` on non-binding `advisory` nodes (`CONSTITUTION_AUTHORITY_REVIEW`), rejects `sections.enforcement` / `sections.claims` assertions (`CONSTITUTION_UNSUPPORTED_ENFORCEMENT`), and enforces that `core/SPECS.sections.apply` retains the non-self-promotion admission-registry rule (`CONSTITUTION_BINDING_CONTROL_REMOVED`).
+- **Phase-correct gate matrix, repair admission, and bypass classification (`#1763`, `#1367`, `tests/gate_admission_and_resilience.rs`)**: Verifies orthogonal `EvaluationPhase` x `RuleAuthority` evaluation, refusal of caller-supplied `evidence_artifacts` at Publication when opaque `TerminalEvidence` is absent, actual-binary denied -> soft-reset repair -> admitted `govern artifacts verify-checkpoints` transition, and non-admission of external unmediated commits.
+- **Propodus `037` Cloud delegated-grant wire parity (`#1568`, `src/decapod/core/db_maintenance.rs`, `tests/cloud_wave_parity.rs`)**: Aligns `parse_cloud_delegated_grant_status` with Propodus migration `037` `get_grant` fields (`expires_at` RFC3339 expiry evaluation when boolean `expired` is absent, plus `policy_digest` fallback alongside `grant_policy_digest`) and qualifies `fetch_cloud_delegated_grant_status` -> `evaluate_cloud_capability_with_delegated_grant` over loopback HTTP + DPoP (`propodus_delegated_grants_v1`), failing closed on ungranted, revoked, and expired grants.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1449,7 +1458,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

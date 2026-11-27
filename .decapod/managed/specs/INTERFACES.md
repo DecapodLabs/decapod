@@ -1,5 +1,15 @@
 # Interfaces
 
+## Section 11 knowledge CLI/RPC, constitution admission errors, and Cloud delegated-grant fields (#657, #1774, #1568)
+
+- **`decapod data knowledge add` & `store.upsert` supersession parameters (`src/decapod/cli.rs::KnowledgeCommand::Add`, `src/decapod/lib.rs`, `src/decapod/plugins/knowledge.rs`)**:
+  - CLI adds `--merge-key <KEY>`, `--on-conflict merge|supersede|reject` (default `"merge"`), `--supersedes <ID>`, and `--scope <SCOPE>` (default `"root"`), mirrored in `knowledge::schema()` and `handle_store_upsert`'s `supersedes_id` payload field.
+  - `KnowledgeContext` surfaces `"negative_retrieval_bias"` in `excluded` for entries rejected by sustained negative feedback (`hurt >= 2 && hurt > helped`), alongside `"malformed_provenance"` for invalid `url:` / `file:` provenance.
+- **Constitution build-time admission diagnostics (`assets/build/constitution_admission.rs`)**:
+  - `CONSTITUTION_AUTHORITY_REVIEW` fires on `"advisory"` non-`BINDING_NODES` carrying `authority_review`; `CONSTITUTION_UNSUPPORTED_ENFORCEMENT` fires on `sections.enforcement` or `sections.claims`; `CONSTITUTION_BINDING_CONTROL_REMOVED` fires if `core/SPECS.sections.apply` drops the `"admission registry"` + `"advisory"` guard.
+- **Cloud `propodus_delegated_grants_v1` `get_grant` response interface (`src/decapod/core/db_maintenance.rs::parse_cloud_delegated_grant_status`)**:
+  - Consumes Propodus `037` `get_grant` fields (`expires_at` RFC3339 timestamp when `expired` bool is omitted, `policy_digest` fallback for `grant_policy_digest`) while continuing to require non-zero matching `revocation_generation`, `policy_generation`, and `session_generation` in `evaluate_cloud_capability_with_delegated_grant`.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2596,7 +2606,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

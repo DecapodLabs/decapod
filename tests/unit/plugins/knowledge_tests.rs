@@ -291,3 +291,111 @@ fn bundle_import_rejects_corrected_knowledge_and_legacy_omission() {
         "superseded"
     );
 }
+
+#[test]
+fn equally_authoritative_legacy_entries_without_merge_key_surface_contradiction() {
+    let (temp, store) = fixture();
+    let mut first = add("K_1", "Prefer synchronous WAL flush for durability");
+    first.title = "Storage sync mode";
+    first.merge_key = None;
+    let mut second = add("K_2", "Prefer deferred background flush for latency");
+    second.title = "Storage sync mode";
+    second.merge_key = None;
+    add_scoped_knowledge(&store, first, "root").unwrap();
+    add_scoped_knowledge(&store, second, "repo").unwrap();
+
+    let ctx = resolve_context(&store, temp.path(), Some("flush"), None, &[], None).unwrap();
+    assert_eq!(ctx.status, "unresolved_conflict");
+    assert_eq!(
+        ctx.conflicts,
+        vec![vec!["K_1".to_string(), "K_2".to_string()]]
+    );
+    assert!(ctx.records.is_empty());
+    assert_eq!(ctx.excluded.get("unresolved_conflict"), Some(&2));
+}
+
+#[test]
+fn explicit_supersede_knowledge_links_correction_and_clears_contradiction() {
+    let (temp, store) = fixture();
+    let mut old = add("K_OLD_SYNC", "Prefer deferred background flush");
+    old.title = "Storage sync mode";
+    old.merge_key = None;
+    add_scoped_knowledge(&store, old, "root").unwrap();
+
+    let mut fix = add("K_NEW_SYNC", "Prefer synchronous WAL flush");
+    fix.title = "Storage sync mode";
+    fix.merge_key = None;
+
+    assert!(supersede_knowledge(&store, fix.clone(), "root", "K_MISSING").is_err());
+    assert!(supersede_knowledge(&store, fix.clone(), "root", "K_NEW_SYNC").is_err());
+
+    let res =
+        add_attested_superseding_knowledge(&store, temp.path(), fix, "root", "K_OLD_SYNC").unwrap();
+    assert_eq!(res.action, "superseded");
+    assert_eq!(res.superseded_ids, vec!["K_OLD_SYNC".to_string()]);
+    assert_eq!(
+        get_knowledge(&store, "K_OLD_SYNC").unwrap().unwrap().status,
+        "superseded"
+    );
+
+    let ctx = resolve_context(&store, temp.path(), Some("flush"), None, &[], None).unwrap();
+    assert_eq!(ctx.status, "advisory_knowledge_selected");
+    assert!(ctx.conflicts.is_empty());
+    assert_eq!(ctx.records.len(), 1);
+    assert_eq!(ctx.records[0].id, "K_NEW_SYNC");
+    assert_eq!(ctx.records[0].supersedes_id.as_deref(), Some("K_OLD_SYNC"));
+}
+
+#[test]
+fn negative_retrieval_bias_excludes_repeated_hurt_and_rejects_plaintext_non_loopback_url() {
+    let (temp, store) = fixture();
+    let mut insecure = add("K_HTTP", "Plain HTTP reference");
+    insecure.provenance = "url:http://example.invalid/doc";
+    assert!(add_knowledge(&store, insecure).is_err());
+
+    let mut helpful = add("K_HELPFUL", "Helpful WAL guidance");
+    helpful.title = "WAL guidance";
+    helpful.merge_key = None;
+    let mut harmful = add("K_HARMFUL", "Harmful WAL guidance");
+    harmful.title = "Legacy WAL shortcut";
+    harmful.merge_key = None;
+    add_knowledge(&store, helpful).unwrap();
+    add_knowledge(&store, harmful).unwrap();
+
+    log_retrieval_feedback(
+        &store,
+        "WAL",
+        &["K_HARMFUL".to_string()],
+        &["K_HARMFUL".to_string()],
+        "hurt",
+        "manual_feedback",
+    )
+    .unwrap();
+    log_retrieval_feedback(
+        &store,
+        "WAL",
+        &["K_HARMFUL".to_string()],
+        &["K_HARMFUL".to_string()],
+        "hurt",
+        "manual_feedback",
+    )
+    .unwrap();
+    log_retrieval_feedback(
+        &store,
+        "WAL",
+        &["K_HELPFUL".to_string()],
+        &["K_HELPFUL".to_string()],
+        "helped",
+        "manual_feedback",
+    )
+    .unwrap();
+
+    let ctx = resolve_context(&store, temp.path(), Some("WAL"), None, &[], None).unwrap();
+    assert_eq!(ctx.records.len(), 1);
+    assert_eq!(ctx.records[0].id, "K_HELPFUL");
+    assert_eq!(
+        ctx.records[0].authority,
+        "advisory_below_current_intent_and_policy"
+    );
+    assert_eq!(ctx.excluded.get("negative_retrieval_bias"), Some(&1));
+}

@@ -1,5 +1,16 @@
 # Architecture
 
+## Section 11 governance, knowledge convergence, constitution admission, and Cloud delegated grants (#657, #1774, #1763, #1568)
+
+- **Provenance-aware knowledge convergence & supersession (`src/decapod/plugins/knowledge.rs`, `src/decapod/plugins/federation_ext.rs`, `src/decapod/lib.rs`)**:
+  - `canonical_conflict_scope` normalizes `"root"` and `"repo"` into `"repo_wide"` before conflict grouping, `conflict_group_key` groups `merge_key` records and falls back to `(scope, normalized_claim_or_title)` when `merge_key` is unset, and `context_supersedes_map` reads `node_edges` (`edge_type = 'supersedes'`) for `federation` context entries so superseded targets are filtered from operative packets without dropping history.
+  - `resolve_context` aggregates per-entry `helped` / `hurt` feedback, excludes records where `hurt >= 2 && hurt > helped` under `excluded` reason `"negative_retrieval_bias"`, sorts active entries by `(net_helpfulness DESC, helped DESC, rank ASC)` and deterministic `ts`, and `is_valid_provenance` enforces HTTPS (or loopback HTTP) plus control/whitespace rejection on `url:` sources.
+  - `add_scoped_knowledge_inner` handles both `add_scoped_knowledge` and `add_attested_superseding_knowledge`, validating explicit `--supersedes` targets via `supersede_knowledge` and recording `supersedes_id` during `handle_store_upsert`.
+- **Constitution admission non-self-promotion guards (`assets/build/constitution_admission.rs`)**:
+  - `validate` checks `!BINDING_NODES.contains(&id.as_str()) && node.get("authority_review").is_some()` on `"advisory"` nodes (`CONSTITUTION_AUTHORITY_REVIEW`), rejects `sections.enforcement` / `sections.claims` alongside top-level `enforcement` / `claims` (`CONSTITUTION_UNSUPPORTED_ENFORCEMENT`), and verifies `core/SPECS.sections.apply` retains `"admission registry"` and `"advisory"` (`CONSTITUTION_BINDING_CONTROL_REMOVED`).
+- **Propodus `037` delegated-grant wire parser & parity test (`src/decapod/core/db_maintenance.rs`, `tests/cloud_wave_parity.rs`)**:
+  - `parse_cloud_delegated_grant_status` accepts boolean `expired` or falls back to parsing RFC3339 `expires_at` (`exp <= OffsetDateTime::now_utc()`, failing closed when missing/unparseable) and reads `grant_policy_digest` or Propodus `037`'s `policy_digest`; `cloud_delegated_grants_037_rpc_wire_contract` exercises `fetch_cloud_delegated_grant_status` and `evaluate_cloud_capability_with_delegated_grant` end-to-end over DPoP-signed loopback HTTP (`POST /rest/v1/rpc/propodus_delegated_grants_v1`).
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2108,7 +2119,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

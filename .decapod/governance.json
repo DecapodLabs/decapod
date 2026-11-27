@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "ea7bd4275df081e1ed50425ddc09d75986ffd473",
-    "release": "v0.166.1",
+    "accepted_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -871,112 +870,76 @@
     }
   },
   "change": {
-    "id": "change_01M8BTPHKFYT67HHH0HWCBF167",
-    "base_commit": "ea7bd4275df081e1ed50425ddc09d75986ffd473",
+    "id": "section11-gov-01m8d5",
+    "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:executor-contract-sh-mode": {
-      "statement": "executor_contract::capture admits 100755 Git blob mode strictly for tracked .sh scripts in profile::definition_files() while preserving 100644 enforcement on non-.sh definitions and carrier files.",
-      "falsifier": "A 100755 .rs definition file or symlink 120000 is admitted, or 100755 .sh definition scripts fail with CONTROLLER_CONTRACT_UNSUPPORTED.",
+    "claim:constitution-integrity-1774": {
+      "statement": "assets/build/constitution_admission.rs rejects authority_review on non-binding advisory nodes, rejects sections.enforcement/claims assertions, and enforces core/SPECS.sections.apply non-self-promotion retention.",
+      "falsifier": "An advisory node carries authority_review, sections.enforcement compiles, or removing core/SPECS.sections.apply admission-registry rule builds cleanly.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
+        "assets/build/constitution_admission.rs",
+        "tests/constitution_claims.rs",
+        "tests/constitution_scaffolding.rs"
       ]
     },
-    "claim:stale-accepted-base-reconciliation": {
-      "statement": "qualifies_stale_accepted_base_inventory_reconciliation reconciles stale accepted_base reviewed_sources_digest only when base_oid != head_oid, commands_preserved and reviewed_commands_digest match verbatim, base_tree == head_tree == candidate_sources_digest, and changed_paths is empty.",
-      "falsifier": "Any candidate change to workflows, scripts, manifests, Git file modes, or proof commands succeeds without approval, or base_oid == head_oid bypasses release-only checks.",
+    "claim:knowledge-convergence-657": {
+      "statement": "Legacy entries without merge_key surface scope-normalized contradictions, explicit --supersedes / store.upsert supersedes_id clears contradicted targets while preserving history, hurt-biased records exclude as negative_retrieval_bias, and url: rejects non-HTTPS non-loopback or whitespace provenance.",
+      "falsifier": "Equally authoritative entries without merge_key hide contradictions, explicit supersession fails to filter target, hurt-dominated entries stay promoted, or insecure url: enters context.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/derived_replay_1936.rs",
+        "tests/knowledge_promotion_cli.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
+      ]
+    },
+    "claim:phase-admission-cloud-grants-1763-1568": {
+      "statement": "EvaluationPhase x RuleAuthority matrix omits Publication rules pre-publication, refuses forged artifacts without TerminalEvidence, exercises actual-binary denied->repair->admitted verify-checkpoints, denies external bypasses, and qualifies Propodus 037 get_grant over loopback HTTP+DPoP.",
+      "falsifier": "Pre-publication runs Publication gates, forged evidence_artifacts admits without TerminalEvidence, uncheckpointed or external commit passes, or revoked/expired Propodus 037 grant allows maintenance.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/cloud_wave_parity.rs",
+        "tests/gate_admission_and_resilience.rs",
+        "tests/trust_egress_gate.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "code_01m8btae8yj5pbpb",
-      "summary": "Admit 100755 tracked .sh scripts in executor_contract::capture with regression tests",
-      "input_digest": "sha256:aad619bb0a9ee3d6dd3194c3bc59f1ab26ab0b06b0c731f7d4dd9cf10d77f811",
+      "id": "ckpt-section11-gov",
+      "summary": "Section 11 governance, knowledge supersession/bias, constitution admission, gate matrix, and Propodus 037 grant parity",
+      "input_digest": "sha256:61e62dec5f36e5c995a7b1fb003e548a1c1cc077a9d078a4b1fc17b58fdf40c2",
       "proof_refs": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
+        "tests/cloud_wave_parity.rs",
+        "tests/constitution_scaffolding.rs",
+        "tests/gate_admission_and_resilience.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
       ]
-    },
-    {
-      "id": "bootstrap-sh-mode-and-stale-base-reconcile",
-      "summary": "Add self-hosting executor_contract regression coverage and qualifies_stale_accepted_base_inventory_reconciliation with negative tests",
-      "input_digest": "sha256:ae154f38bf9f02743a48ba58cda17e54bb310cb7abe337c47872c39ba624e566",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs"
-      ]
-    },
-    {
-      "id": "reconcile-reviewed-sources-digest",
-      "summary": "Reconcile proof.required_profile.reviewed_sources_digest against origin/master ea7bd4275",
-      "input_digest": "sha256:052f86e259c40a325e75ae4e9f4695a98152059865aec91710ef5646fc3e1c70",
-      "proof_refs": [
-        ".decapod/config.toml"
-      ]
-    },
-    {
-      "id": "cli-roundtrip-and-spec-reviews",
-      "summary": "Add CLI roundtrip regression test in tests/validate_termination.rs and record current spec reviews",
-      "input_digest": "sha256:b440f1ba4d681f36e1639a3df628c521023ea50f1684a63104add553b10557e1",
-      "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "tests/validate_termination.rs"
-      ]
-    },
-    {
-      "id": "spec-reviews-08a5fb94",
-      "summary": "Record current-fingerprint spec reviews for ARCHITECTURE, INTERFACES, and SECURITY",
-      "input_digest": "sha256:0058ac520c648a8e841fd7ae3bcf1352c695449a0a44a525780bb1a81b486ab7",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "safe-bin-validate-termination",
-      "summary": "Exclude container runtimes from PATH in stale_accepted_base_reconciliation_cli_roundtrip so CI Bazel build_lifecycle scratch cleanup succeeds; refreshed specs and verified fmt/clippy/validate_termination/lib tests.",
-      "input_digest": "sha256:a68812cbc5029f13b91a706e9db07e914783155097e3e34c927bedb49c46d0f2"
-    },
-    {
-      "id": "refresh-clean-specs",
-      "summary": "Refresh living specs without local bazel-* symlinks and update spec reviews.",
-      "input_digest": "sha256:a12b5f68de468e1d7e561501e8596ac1bfdce3d5fa2b66eb6456dd8453ae2d7e"
-    },
-    {
-      "id": "selective-status-effective-context",
-      "summary": "Allow exact 7-key CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT=success effective context on selective-core-status and selective-cli-status in source_policy.rs; refreshed living specs and verified fmt/clippy/source_policy tests.",
-      "input_digest": "sha256:2e80ca6b127f3a35ab863cbc1091d251635efc45d42e400b2cc610e6fedcbd25"
     }
   ],
   "intents": {
-    "intent:change_01M8BTPHKFYT67HHH0HWCBF167": {
+    "intent:code_01m8d524nefyjt0n": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree on origin/master v0.166.2; CARGO_BUILD_JOBS=2; Clack untouched; no root-checkout edits"
       ],
       "constraints": [
-        "core"
+        "assets/build/constitution_admission.rs",
+        "src/decapod/",
+        "tests/"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+      "id": "intent:code_01m8d524nefyjt0n",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
-      "refined_intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "raw_intent": "Close Section 11 Governance & Context gaps (#657 #1774 #1772 #1763 #1367 #1735 #1568 #1944) cleanly in decapod with cross-repo #1944 checks (Clack untouched), official v0.166.2 validation, and issue reconciliation.",
+      "refined_intent": "Implement knowledge contradiction/supersession/negative-bias checks (#657), constitution admission enforcement guards (#1774), phase/authority gate + repair admission test (#1763), Propodus 037 delegated-grant parser + DPoP wire test (#1568), paired agy #1772 + cold #1367 telemetry, and #1944/#1735 cross-repo verification.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -989,186 +952,151 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "intent": "Close remaining Section 11 governance and context gaps: provenance-aware contradiction surfacing, explicit supersession and negative-bias exclusion (#657); constitution non-self-promotion and core/SPECS.sections.apply enforcement (#1774); paired agy relevance/anti-bloat and cold Continue PR #42 empirical telemetry (#1772 #1367); phase/authority gate matrix and verified repair-vs-bypass trace (#1763); Propodus 037 Cloud delegated-grant wire parity (#1568); cross-repo trust/egress negative controls (#1944); and ADR #1735 / PR #1766/#1788 reconciliation.",
       "phases": [],
       "proof_hooks": [
+        "cargo test --lib plugins::knowledge::tests",
+        "cargo test --lib core::db_maintenance::tests",
+        "cargo test --test constitution_scaffolding --test constitution_claims --test knowledge_promotion_cli --test gate_admission_and_resilience --test cloud_wave_parity --test trust_egress_gate",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "verify_non_integration_effective_context refines snapshot context validation in validation_runtime/snapshot/source_policy.rs without changing overall component architecture.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "fd3527c27d3eac36aec2f3b4e46082102b5a1dd01a652d14251283df28139161"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Selective shard status effective-context verification validates existing CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT workflow bindings without altering public interfaces.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "9487951162590ade30d3d3d0bfeddbde89bc438298ce9f1786d4ed9dd3c917fd"
+          "reason": "Documented #657 knowledge supersession/bias exclusion, #1774 constitution_admission guards, and #1568 Propodus 037 delegated-grant parser.",
+          "reviewed_code_fingerprint": "72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54",
+          "spec_material_hash": "dc45a8436b3171cbfd18ffc622a17b3f28bbc8c4d6badf1fd1d1a042bab65caa"
         },
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented new KnowledgeCommand::Add flags, store.upsert supersedes_id, admission diagnostics, and Propodus 037 get_grant fields.",
+          "reviewed_code_fingerprint": "72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54",
+          "spec_material_hash": "7c30ee406139431bfdf7726cd7c7f1af288920937cf8fe0c94b633fb90ad20df"
+        },
+        {
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented verify_non_integration_effective_context 7-key invariant for selective-core-status and selective-cli-status.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
+          "reason": "Existing SECURITY trust boundaries hold without weakening; url: HTTPS/loopback provenance guard, constitution non-self-promotion checks, and Propodus 037 fail-closed expiry/digest parsing are documented in ARCHITECTURE.md and INTERFACES.md.",
+          "reviewed_code_fingerprint": "72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "title": "Section 11 Governance & Context (#657 #1774 #1772 #1763 #1367 #1735 #1568 #1944)",
       "todo_ids": [
-        "code_01m8btae8yj5pbpb"
+        "code_01m8d524nefyjt0n"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795735718Z"
+      "updated_at": "1795744521Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree on origin/master v0.166.2; CARGO_BUILD_JOBS=2; Clack untouched; no root-checkout edits"
       ],
-      "artifact_hash": "sha256:0e222921728ce1581a6a0c820119739ac3dda30a4f1c425a0a2bdffb09ec882c",
+      "artifact_hash": "sha256:e31e8475136e5a03c0657dcdd41ec76f536951b1f16e60133c1e1627c345f778",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "clippy_and_fmt",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy_all_targets_all_features",
+          "name": "cloud_wave_parity_and_sqlite_maintenance",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "constitution_and_claims",
           "status": "passed"
         },
         {
-          "name": "cargo_test_consumer_readiness_42",
+          "name": "db_maintenance_unit",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_2062",
+          "name": "gate_admission_and_resilience",
           "status": "passed"
         },
         {
-          "name": "executor_contract_tests",
+          "name": "knowledge_unit",
           "status": "passed"
         },
         {
-          "name": "validate_termination_cli_roundtrip",
+          "name": "trust_egress_cross_repo",
           "status": "passed"
         }
       ],
-      "completion_claim": "executor_contract .sh 100755 fix and regression tests verified; PR held unopened",
-      "current_phase": "verified",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:code_01m8d524nefyjt0n",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:code_01m8d524nefyjt0n",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+            "detail": "trajectory:code_01m8d524nefyjt0n",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:code_01m8d524nefyjt0n",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8BTPHPR88ASXG8G4X3NGSS9": {
+          "code_01m8d524nefyjt0n": {
             "evidence_only": true,
-            "id": "branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "id": "code_01m8d524nefyjt0n",
+            "intent_id": "intent:code_01m8d524nefyjt0n",
             "steps": [
               {
-                "action": "verified",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2"
+                  "src/decapod/plugins/knowledge.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/validation_rules.rs",
+                  "assets/build/constitution_admission.rs",
+                  "assets/build/constitution_admission.rs",
+                  "src/decapod/plugins/federation_ext.rs",
+                  "src/decapod/plugins/knowledge.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "tests/unit/plugins/knowledge_tests.rs",
+                  "tests/knowledge_promotion_cli.rs",
+                  "tests/constitution_scaffolding.rs",
+                  "tests/gate_admission_and_resilience.rs",
+                  "tests/cloud_wave_parity.rs",
+                  "13/13 knowledge unit, 9/9 docs unit, 8/8 db_maintenance unit, 36/36 constitution_scaffolding, 4/4 constitution_claims, 6/6 cloud_wave_parity, 11/11 derived_replay_1936, 4/4 gate_admission_and_resilience, 6/6 knowledge_promotion_cli, 19/19 sqlite_maintenance, 5/5 trust_egress_gate (decapod), 5/5 trust_and_egress (dactyl v0.19.1), Propodus backend+deno trust tests; paired agy #1772 & cold #1367 cargo test passed."
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "executor_contract_tests"
+                  "knowledge_unit",
+                  "db_maintenance_unit",
+                  "constitution_and_claims",
+                  "gate_admission_and_resilience",
+                  "cloud_wave_parity_and_sqlite_maintenance",
+                  "trust_egress_cross_repo",
+                  "clippy_and_fmt"
                 ],
                 "scope": [
-                  "core"
+                  "assets/build/constitution_admission.rs",
+                  "src/decapod/",
+                  "tests/"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "tests/unit/core/repository_profile_tests.rs",
-                  "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_all_targets_all_features",
-                  "cargo_test_lib_2062",
-                  "cargo_test_consumer_readiness_42"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "tests/validate_termination.rs",
-                  "tests/validate_termination.rs",
-                  "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
-                ],
-                "proof_refs": [
-                  "validate_termination_cli_roundtrip"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1176,36 +1104,38 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)",
-        "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2",
-        "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
+        "13/13 knowledge unit, 9/9 docs unit, 8/8 db_maintenance unit, 36/36 constitution_scaffolding, 4/4 constitution_claims, 6/6 cloud_wave_parity, 11/11 derived_replay_1936, 4/4 gate_admission_and_resilience, 6/6 knowledge_promotion_cli, 19/19 sqlite_maintenance, 5/5 trust_egress_gate (decapod), 5/5 trust_and_egress (dactyl v0.19.1), Propodus backend+deno trust tests; paired agy #1772 & cold #1367 cargo test passed."
       ],
       "inspected_files": [
-        "src/decapod/core/repository_profile.rs",
+        "assets/build/constitution_admission.rs",
+        "src/decapod/core/db_maintenance.rs",
         "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/validate_termination.rs"
+        "src/decapod/plugins/knowledge.rs"
       ],
-      "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+      "intent_id": "intent:code_01m8d524nefyjt0n",
       "modified_files": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs",
-        "tests/validate_termination.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "assets/build/constitution_admission.rs",
+        "src/decapod/cli.rs",
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plugins/federation_ext.rs",
+        "src/decapod/plugins/knowledge.rs",
+        "tests/cloud_wave_parity.rs",
+        "tests/constitution_scaffolding.rs",
+        "tests/gate_admission_and_resilience.rs",
+        "tests/knowledge_promotion_cli.rs",
+        "tests/unit/plugins/knowledge_tests.rs"
       ],
       "repo_scope": [
-        "core"
+        "assets/build/constitution_admission.rs",
+        "src/decapod/",
+        "tests/"
       ],
-      "run_id": "branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+      "run_id": "code_01m8d524nefyjt0n",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8btae8yj5pbpb",
+      "task_id": "code_01m8d524nefyjt0n",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
