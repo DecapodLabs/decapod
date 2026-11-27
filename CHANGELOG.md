@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.169.1](https://github.com/DecapodLabs/decapod/compare/v0.169.0...v0.169.1) - 2026-11-27
+
+### Added
+
+- *(security)* bind guarantee matrix, cloud_proof receipt validation, and mutation suite ([#1964](https://github.com/DecapodLabs/decapod/pull/1964))
+
+### Fixed
+
+- *(validate)* cut GHA artifact RPC latency, support ci_local Cloud approvals, and add #1956/#1957 recovery docs/tests (#1400, #1573, #1833, #1956, #1957)
+
+### Other
+
+- *(governance)* merge v0.169.0 (27e71bc4e) into PR 4 and refresh v0.169.0 pins
+
 ## [0.169.0](https://github.com/DecapodLabs/decapod/compare/v0.168.0...v0.169.0) - 2026-11-27
 
 ### Added
