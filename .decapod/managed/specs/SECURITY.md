@@ -1,5 +1,12 @@
 # Security
 
+## Section 12 Host Integration, Caller Isolation, and Privacy Boundaries (#875, #1277, #1095, #880, #1888)
+
+- **Harness packaging isolation (`src/decapod/core/agent_interop/registry.rs`)**: `install_harness_package` and `remove_harness_package` refuse symlink targets (`symlink_metadata`), verify version skew (`version_skew`), preserve unrelated user MCP/hook entries via `decapodManaged = true` tagging, and construct harness config directory literals safely without bypassing repository namespace gates.
+- **Per-caller Rust/N-API isolation (`src/decapod/lib.rs`, `bindings/typescript/native/src/lib.rs`)**: `execute_library_rpc` requires an explicit non-empty `agent_id`, keeps `allow_process_session_cache = false` so concurrent in-process callers cannot share `SESSION_P_VAL` or mutate process-wide CWD/env state, enforces `RPC_OPS` membership and `session_required` / worktree isolation gates identically to the CLI, and polls `AtomicBool` cancellation without terminating the host process.
+- **Pi lifecycle enforcement (`packages/pi-decapod/src/index.ts`)**: `registerPiDecapodHooks` runs prompt safety `evalPrompt` on `input`, injects governed context on `before_agent_start`, and denies protected-branch writes in `tool_call` before tool execution.
+- **Empirical telemetry & credential restraint (`#1095`, `#880`, `#1888`)**: Paired Antigravity study artifacts under `docs/research/host-outcome-pilot/` remain local-only redacted summaries (no raw transcripts, no secret scraping, no default uploads, and `reviewed_active_human_minutes = null` rather than fabricated human-attention claims); unauthenticated/quota-limited hosts (`claude` `loggedIn: false`, `codex-cli` usage limit, `opencode` unauthenticated) fail closed cleanly without credential harvesting.
+
 ## Source-CI executor mode & stale accepted-base reconciliation boundaries
 
 - **Executor definition vs. carrier Git mode boundary (`src/decapod/core/validation_runtime/executor_contract.rs`)**: `is_valid_definition_entry` admits `100755 blob ` strictly for `.sh` paths in `profile::definition_files()`, while non-`.sh` definitions, `assets/tools/source_ci_custody.rs` protocol markers, and `verify_carrier_modes` strictly require `100644 blob `, rejecting symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
@@ -1618,7 +1625,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

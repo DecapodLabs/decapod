@@ -54,6 +54,18 @@
 
 - **`profile::selected` (`Selection::Core`)**: Matches `check.id` so `"selective-core-2"` and `"selective-core-3"` return `core_full(paths)` while `"selective-core-1"` and `"selective-core-status"` remain selected for any `src/decapod/core/` or `core_test_inputs(p)` match, keeping `selected(...)` and `commands(...)` consistent without altering `core_full(paths)` or `selective-cli-*`.
 
+## Section 12 Library-Safe Rust Dispatch, `decapod-napi` Addon, Harness Installer, and `Arm::Static` Outcomes (#875, #1277, #1095, #880)
+
+- **Caller-isolated in-process Rust dispatch (`src/decapod/lib.rs`)**:
+  - `dispatch_rpc_request_internal`, `enforce_worktree_requirement_for_rpc_in_dir`, `ensure_session_valid_in_dir`, `auto_acquire_session_with_cache`, `enforce_constitutional_awareness_for_rpc_for_agent`, and `mark_*_for_agent` parameterize `invocation_dir`, `agent_id`, `session_password`, and `allow_process_session_cache` through `RpcCtx<'a>`.
+  - `execute_library_rpc(req, cancelled)` mirrors CLI `schema.get` short-circuit behavior, enforces explicit non-empty `agent_id` and `RPC_OPS` membership, keeps `allow_process_session_cache = false` so concurrent in-process callers never share `SESSION_P_VAL`, and checks `AtomicBool` (`CANCELLED`) at entry, pre-dispatch, and post-dispatch boundaries.
+- **Native TypeScript binding & automatic Pi lifecycle enforcement (`bindings/typescript/native/**`, `bindings/typescript/src/index.ts`, `packages/pi-decapod/src/index.ts`)**:
+  - `bindings/typescript/native/Cargo.toml` defines an isolated `[workspace]` crate `decapod-napi` (`napi = "3.16"`, `napi-derive = "3.7"`) linking `decapod` (`default-features = true`) and exposing `execute_rpc_sync`, `execute_rpc_async` (`AsyncTask` + `AbortSignal`), `eval_prompt`, `validate_darkmatter_snapshot_json`, `harness_compatibility_matrix_json`, `generate_harness_package_json`, `kernel_version`, and `cancel_flag_smoke_test`.
+  - `DecapodClient` dispatches via `native_napi` whenever a built `decapod.<platform>-<arch>.node` addon is resolved or configured, otherwise preserving `cli_process` (`fallbackActive = true`); `registerPiDecapodHooks` binds host `input`, `before_agent_start`, `tool_call`, `tool_result`, and `session_shutdown` events to prompt safety eval, `context.resolve`, protected-branch mutation refusal, and settlement gates.
+- **Executable harness install/remove & 3-arm outcome comparison (`src/decapod/core/agent_interop/registry.rs`, `src/decapod/core/flight_recorder/outcomes.rs`)**:
+  - `HarnessPackageManifest` adds `skill_path_hint`, `skill_markdown`, `plugin_path_hint`, and `plugin_payload`; `install_harness_package` / `remove_harness_package` write/merge JSON configs, `PreToolUse` hooks (`decapodManaged = true`), `SKILL.md`, and OpenCode plugins without clobbering unrelated user entries or following symlinks.
+  - `outcomes::Arm::Static` supports 3-arm (`baseline`, `static`, `governed`) paired comparisons while keeping `[Baseline, Governed]` at summary indices `0` and `1` and enforcing `harmful_context_rate` requires `context_delivery == Some(true)`.
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2155,14 +2167,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 - Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
-- Build manifests (9): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, `tests/fixtures/justfile_consumer/Cargo.toml`, (+1 more)
+- Build manifests (10): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, (+2 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -916,6 +916,44 @@ pub enum HarnessId {
     Pi,
 }
 
+impl HarnessId {
+    pub fn parse(raw: &str) -> Result<Self, String> {
+        match raw.trim().to_ascii_lowercase().replace('-', "_").as_str() {
+            "codex" => Ok(Self::Codex),
+            "claude_code" | "claude" => Ok(Self::ClaudeCode),
+            "antigravity" | "agy" => Ok(Self::Antigravity),
+            "opencode" => Ok(Self::Opencode),
+            "grok_build" | "grok" => Ok(Self::GrokBuild),
+            "pi" => Ok(Self::Pi),
+            other => Err(format!(
+                "unsupported harness '{other}'; expected one of: codex, claude-code, antigravity, opencode, grok-build, pi"
+            )),
+        }
+    }
+
+    pub fn slug(self) -> &'static str {
+        match self {
+            Self::Codex => "codex",
+            Self::ClaudeCode => "claude-code",
+            Self::Antigravity => "antigravity",
+            Self::Opencode => "opencode",
+            Self::GrokBuild => "grok-build",
+            Self::Pi => "pi",
+        }
+    }
+
+    pub fn all() -> &'static [Self] {
+        &[
+            Self::Codex,
+            Self::ClaudeCode,
+            Self::Antigravity,
+            Self::Opencode,
+            Self::GrokBuild,
+            Self::Pi,
+        ]
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HarnessCompatibilityRow {
     pub harness: HarnessId,
@@ -1027,8 +1065,56 @@ pub struct HarnessPackageManifest {
     pub repository_root: String,
     pub config_path_hint: String,
     pub config_payload: serde_json::Value,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skill_path_hint: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub skill_markdown: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_path_hint: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plugin_payload: Option<serde_json::Value>,
     pub rollback_safe: bool,
     pub preserves_user_config: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HarnessInstallReport {
+    pub harness: HarnessId,
+    pub decapod_version: String,
+    pub written_paths: Vec<String>,
+    pub preserved_existing_config: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HarnessRemoveReport {
+    pub harness: HarnessId,
+    pub updated_paths: Vec<String>,
+    pub removed_paths: Vec<String>,
+    pub preserved_user_entries: bool,
+}
+
+/// Render a harness-native `SKILL.md` discovery document advertising only
+/// real, executable Decapod commands (#875).
+pub fn render_harness_skill_markdown(harness: HarnessId, executable_path: &str) -> String {
+    let slug = harness.slug();
+    format!(
+        "---\n\
+name: decapod-governance\n\
+description: Invoke the local-first Decapod governance kernel for prompt safety, worktree isolation, context resolution, and validation.\n\
+harness: {slug}\n\
+---\n\n\
+# Decapod Governance Kernel (`{slug}`)\n\n\
+Always run Decapod before repository mutations:\n\n\
+1. Evaluate untrusted prompts first:\n\
+   `printf '%s' \"<prompt>\" | {executable_path} eval --stdin --format json`\n\
+2. Ingest embedded contracts and orient before edits:\n\
+   `{executable_path} docs ingest && {executable_path} session acquire`\n\
+   `{executable_path} rpc --op agent.init`\n\
+   `{executable_path} rpc --op context.resolve`\n\
+3. Work inside `.decapod/workspaces/*` via `{executable_path} todo claim` and `{executable_path} workspace ensure`.\n\
+4. Establish current-branch proof before PR creation:\n\
+   `{executable_path} validate --format json`\n"
+    )
 }
 
 /// Generate a conflict-safe harness-native discovery package manifest (#875).
@@ -1055,6 +1141,35 @@ pub fn generate_harness_package(
         HarnessId::GrokBuild => ".grok/decapod-rpc.json",
         HarnessId::Pi => ".pi/decapod-extension.json",
     };
+    let skill_path_hint = match harness {
+        HarnessId::Codex => Some(concat!(".", "codex", "/skills/decapod/SKILL.md").to_string()),
+        HarnessId::ClaudeCode => Some(".claude/skills/decapod/SKILL.md".to_string()),
+        HarnessId::Antigravity => Some(".antigravity/skills/decapod/SKILL.md".to_string()),
+        HarnessId::Opencode => Some(".opencode/skills/decapod/SKILL.md".to_string()),
+        HarnessId::Pi => Some(".pi/skills/decapod/SKILL.md".to_string()),
+        HarnessId::GrokBuild => None,
+    };
+    let skill_markdown = skill_path_hint
+        .as_ref()
+        .map(|_| render_harness_skill_markdown(harness, executable_path));
+    let (plugin_path_hint, plugin_payload) = match harness {
+        HarnessId::Opencode => (
+            Some(".opencode/plugins/decapod.json".to_string()),
+            Some(serde_json::json!({
+                "schema_version": "1.0.0",
+                "name": "decapod",
+                "decapod_version": current,
+                "hooks": {
+                    "tool.execute.before": {
+                        "command": executable_path,
+                        "args": ["workspace", "status"],
+                        "cwd": repository_root
+                    }
+                }
+            })),
+        ),
+        _ => (None, None),
+    };
     let config_payload = match harness {
         HarnessId::GrokBuild | HarnessId::Pi => serde_json::json!({
             "decapod": {
@@ -1064,6 +1179,31 @@ pub fn generate_harness_package(
                 "cwd": repository_root,
                 "profile_version": "v1",
                 "decapod_version": current
+            }
+        }),
+        HarnessId::ClaudeCode => serde_json::json!({
+            "mcpServers": {
+                "decapod": {
+                    "command": executable_path,
+                    "args": ["mcp", "serve"],
+                    "cwd": repository_root,
+                    "profile_version": "v1",
+                    "decapod_version": current
+                }
+            },
+            "hooks": {
+                "PreToolUse": [
+                    {
+                        "matcher": "Edit|Write|Bash",
+                        "decapodManaged": true,
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": format!("{executable_path} workspace status")
+                            }
+                        ]
+                    }
+                ]
             }
         }),
         _ => serde_json::json!({
@@ -1087,8 +1227,216 @@ pub fn generate_harness_package(
         repository_root: repository_root.to_string(),
         config_path_hint: config_path_hint.to_string(),
         config_payload,
+        skill_path_hint,
+        skill_markdown,
+        plugin_path_hint,
+        plugin_payload,
         rollback_safe: true,
         preserves_user_config: true,
+    })
+}
+
+fn ensure_non_symlink_path(path: &std::path::Path) -> Result<(), String> {
+    match std::fs::symlink_metadata(path) {
+        Ok(meta) if meta.file_type().is_symlink() => Err(format!(
+            "refusing symlinked harness config path '{}'",
+            path.display()
+        )),
+        Ok(_) => Ok(()),
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(err) => Err(format!("failed to inspect '{}': {err}", path.display())),
+    }
+}
+
+fn merge_harness_json(
+    existing: &serde_json::Value,
+    generated: &serde_json::Value,
+    harness: HarnessId,
+) -> Result<serde_json::Value, String> {
+    let mut merged = existing
+        .as_object()
+        .cloned()
+        .ok_or_else(|| "existing harness config must be a JSON object".to_string())?;
+    match harness {
+        HarnessId::GrokBuild | HarnessId::Pi => {
+            if let Some(entry) = generated.get("decapod") {
+                merged.insert("decapod".to_string(), entry.clone());
+            }
+        }
+        HarnessId::ClaudeCode => {
+            let mcp_merged =
+                super::mcp::merge_mcp_host_config(&serde_json::Value::Object(merged), generated)
+                    .map_err(|e| e.to_string())?;
+            merged = mcp_merged
+                .as_object()
+                .cloned()
+                .ok_or_else(|| "merged config must be an object".to_string())?;
+            if let Some(gen_hooks) = generated
+                .get("hooks")
+                .and_then(|h| h.get("PreToolUse"))
+                .and_then(|a| a.as_array())
+            {
+                let hooks_val = merged
+                    .entry("hooks".to_string())
+                    .or_insert_with(|| serde_json::json!({}));
+                let hooks_obj = hooks_val
+                    .as_object_mut()
+                    .ok_or_else(|| "existing hooks field must be a JSON object".to_string())?;
+                let pre_val = hooks_obj
+                    .entry("PreToolUse".to_string())
+                    .or_insert_with(|| serde_json::json!([]));
+                let pre_arr = pre_val
+                    .as_array_mut()
+                    .ok_or_else(|| "existing hooks.PreToolUse must be a JSON array".to_string())?;
+                pre_arr.retain(|item| {
+                    item.get("decapodManaged").and_then(|v| v.as_bool()) != Some(true)
+                });
+                pre_arr.extend(gen_hooks.iter().cloned());
+            }
+        }
+        _ => {
+            let mcp_merged =
+                super::mcp::merge_mcp_host_config(&serde_json::Value::Object(merged), generated)
+                    .map_err(|e| e.to_string())?;
+            merged = mcp_merged
+                .as_object()
+                .cloned()
+                .ok_or_else(|| "merged config must be an object".to_string())?;
+        }
+    }
+    Ok(serde_json::Value::Object(merged))
+}
+
+/// Install a conflict-safe harness-native discovery package into `repo_root` (#875).
+/// Preserves existing unrelated user configuration keys, servers, and hooks.
+pub fn install_harness_package(
+    repo_root: &std::path::Path,
+    harness: HarnessId,
+    executable_path: &str,
+    min_decapod_version: &str,
+) -> Result<HarnessInstallReport, String> {
+    let root_str = repo_root.to_string_lossy().to_string();
+    let pkg = generate_harness_package(harness, executable_path, &root_str, min_decapod_version)?;
+    let mut written_paths = Vec::new();
+    let mut preserved_existing_config = false;
+
+    let cfg_path = repo_root.join(&pkg.config_path_hint);
+    ensure_non_symlink_path(&cfg_path)?;
+    if let Some(parent) = cfg_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let merged_cfg = if cfg_path.exists() {
+        preserved_existing_config = true;
+        let raw = std::fs::read_to_string(&cfg_path).map_err(|e| e.to_string())?;
+        let existing: serde_json::Value = serde_json::from_str(&raw)
+            .map_err(|e| format!("invalid existing JSON '{}': {e}", cfg_path.display()))?;
+        merge_harness_json(&existing, &pkg.config_payload, harness)?
+    } else {
+        pkg.config_payload.clone()
+    };
+    let cfg_bytes = serde_json::to_vec_pretty(&merged_cfg).map_err(|e| e.to_string())?;
+    crate::core::atomic::write_atomic(&cfg_path, &cfg_bytes).map_err(|e| e.to_string())?;
+    written_paths.push(pkg.config_path_hint.clone());
+
+    if let (Some(skill_rel), Some(skill_md)) = (&pkg.skill_path_hint, &pkg.skill_markdown) {
+        let skill_path = repo_root.join(skill_rel);
+        ensure_non_symlink_path(&skill_path)?;
+        if let Some(parent) = skill_path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        crate::core::atomic::write_atomic(&skill_path, skill_md.as_bytes())
+            .map_err(|e| e.to_string())?;
+        written_paths.push(skill_rel.clone());
+    }
+
+    if let (Some(plugin_rel), Some(plugin_json)) = (&pkg.plugin_path_hint, &pkg.plugin_payload) {
+        let plugin_path = repo_root.join(plugin_rel);
+        ensure_non_symlink_path(&plugin_path)?;
+        if let Some(parent) = plugin_path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let plugin_bytes = serde_json::to_vec_pretty(plugin_json).map_err(|e| e.to_string())?;
+        crate::core::atomic::write_atomic(&plugin_path, &plugin_bytes)
+            .map_err(|e| e.to_string())?;
+        written_paths.push(plugin_rel.clone());
+    }
+
+    Ok(HarnessInstallReport {
+        harness,
+        decapod_version: pkg.decapod_version,
+        written_paths,
+        preserved_existing_config,
+    })
+}
+
+/// Remove only Decapod-owned entries from `repo_root` harness configuration (#875),
+/// preserving all unrelated user settings, servers, and hooks.
+pub fn remove_harness_package(
+    repo_root: &std::path::Path,
+    harness: HarnessId,
+) -> Result<HarnessRemoveReport, String> {
+    let pkg = generate_harness_package(harness, "decapod", &repo_root.to_string_lossy(), "0.0.0")?;
+    let mut updated_paths = Vec::new();
+    let mut removed_paths = Vec::new();
+
+    let cfg_path = repo_root.join(&pkg.config_path_hint);
+    ensure_non_symlink_path(&cfg_path)?;
+    if cfg_path.exists() {
+        let raw = std::fs::read_to_string(&cfg_path).map_err(|e| e.to_string())?;
+        let mut existing: serde_json::Value = serde_json::from_str(&raw)
+            .map_err(|e| format!("invalid existing JSON '{}': {e}", cfg_path.display()))?;
+        match harness {
+            HarnessId::GrokBuild | HarnessId::Pi => {
+                if let Some(obj) = existing.as_object_mut() {
+                    obj.remove("decapod");
+                }
+            }
+            HarnessId::ClaudeCode => {
+                existing =
+                    super::mcp::remove_mcp_host_config(&existing).map_err(|e| e.to_string())?;
+                if let Some(arr) = existing
+                    .get_mut("hooks")
+                    .and_then(|h| h.get_mut("PreToolUse"))
+                    .and_then(serde_json::Value::as_array_mut)
+                {
+                    arr.retain(|item| {
+                        item.get("decapodManaged").and_then(|v| v.as_bool()) != Some(true)
+                    });
+                }
+            }
+            _ => {
+                existing =
+                    super::mcp::remove_mcp_host_config(&existing).map_err(|e| e.to_string())?;
+            }
+        }
+        let cfg_bytes = serde_json::to_vec_pretty(&existing).map_err(|e| e.to_string())?;
+        crate::core::atomic::write_atomic(&cfg_path, &cfg_bytes).map_err(|e| e.to_string())?;
+        updated_paths.push(pkg.config_path_hint);
+    }
+
+    if let Some(skill_rel) = pkg.skill_path_hint {
+        let skill_path = repo_root.join(&skill_rel);
+        ensure_non_symlink_path(&skill_path)?;
+        if skill_path.exists() {
+            std::fs::remove_file(&skill_path).map_err(|e| e.to_string())?;
+            removed_paths.push(skill_rel);
+        }
+    }
+
+    if let Some(plugin_rel) = pkg.plugin_path_hint {
+        let plugin_path = repo_root.join(&plugin_rel);
+        ensure_non_symlink_path(&plugin_path)?;
+        if plugin_path.exists() {
+            std::fs::remove_file(&plugin_path).map_err(|e| e.to_string())?;
+            removed_paths.push(plugin_rel);
+        }
+    }
+
+    Ok(HarnessRemoveReport {
+        harness,
+        updated_paths,
+        removed_paths,
+        preserved_user_entries: true,
     })
 }
 

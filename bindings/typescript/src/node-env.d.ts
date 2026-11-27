@@ -64,6 +64,17 @@ declare module "node:path" {
   export function dirname(path: string): string;
 }
 
+declare module "node:module" {
+  export type NodeRequire = (id: string) => unknown;
+  export function createRequire(filename: string | URL): NodeRequire;
+}
+
+declare module "node:perf_hooks" {
+  export const performance: {
+    now(): number;
+  };
+}
+
 declare module "node:assert/strict" {
   const assert: {
     equal<T>(actual: unknown, expected: T, message?: string): asserts actual is T;

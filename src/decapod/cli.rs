@@ -3135,6 +3135,69 @@ pub(crate) enum IntegrationCommand {
         #[clap(long, default_value = "text")]
         format: String,
     },
+    /// Generate, install, or remove harness-native discovery and pre-bundling manifests (#875).
+    Harness(HarnessCli),
+}
+
+#[derive(clap::Args, Debug)]
+pub(crate) struct HarnessCli {
+    #[clap(subcommand)]
+    pub command: HarnessCommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum HarnessCommand {
+    /// Emit the honest 6-host harness compatibility matrix.
+    Matrix {
+        /// Output format: text or json.
+        #[clap(long, default_value = "json", value_parser = ["text", "json"])]
+        format: String,
+    },
+    /// Generate a harness-native discovery package manifest (JSON) without mutating disk.
+    Generate {
+        /// Target harness: codex, claude-code, antigravity, opencode, grok-build, pi.
+        #[clap(long)]
+        harness: String,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Executable path override (defaults to current decapod binary path).
+        #[clap(long)]
+        executable: Option<PathBuf>,
+        /// Minimum required Decapod semver (refuses with version_skew when newer than binary).
+        #[clap(long, default_value = "0.0.0")]
+        min_version: String,
+    },
+    /// Install conflict-safe harness discovery configs and SKILL.md manifests into a repository.
+    Install {
+        /// Target harness (codex, claude-code, antigravity, opencode, grok-build, pi).
+        #[clap(long, conflicts_with = "all")]
+        harness: Option<String>,
+        /// Install packages for all supported harnesses.
+        #[clap(long, conflicts_with = "harness")]
+        all: bool,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Executable path override (defaults to current decapod binary path).
+        #[clap(long)]
+        executable: Option<PathBuf>,
+        /// Minimum required Decapod semver.
+        #[clap(long, default_value = "0.0.0")]
+        min_version: String,
+    },
+    /// Remove Decapod-owned entries from harness configs while preserving user settings.
+    Remove {
+        /// Target harness (codex, claude-code, antigravity, opencode, grok-build, pi).
+        #[clap(long, conflicts_with = "all")]
+        harness: Option<String>,
+        /// Remove Decapod entries for all supported harnesses.
+        #[clap(long, conflicts_with = "harness")]
+        all: bool,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+    },
 }
 
 #[derive(clap::Args, Debug)]

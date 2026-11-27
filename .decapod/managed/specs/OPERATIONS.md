@@ -1,5 +1,11 @@
 # Operations
 
+## Harness installation, native TS addon builds, and 3-arm study telemetry (#875, #1277, #1095, #880)
+
+- **Install or remove harness discovery & hooks cleanly**: Run `decapod integration harness install --harness <id> --executable <path>` (or `--all`) inside a repository root to write conflict-safe MCP configs, `SKILL.md`, and Claude/OpenCode hooks; run `decapod integration harness remove --all` to strip Decapod-managed entries while preserving unrelated user configs.
+- **Build & benchmark the native TypeScript binding**: From `bindings/typescript`, run `npm run build:native` (compiling `bindings/typescript/native` into `bindings/typescript/native/decapod.<platform>-<arch>.node`), followed by `npm test` and `npm run bench`. Without the `.node` binary built, `DecapodClient` stays transparently on `cli_process`.
+- **Reproduce redacted outcome comparison & local telemetry**: Run `decapod trace flight-recorder compare --input docs/research/host-outcome-pilot/sec12-antigravity-input.json` (or `decapod observe telemetry --format json`) without ever committing raw JSONL transcripts or fabricating unreviewed human-attention metrics.
+
 ## Kernel workload baseline & scaling thresholds (`docs/kernel-workload-baseline.md`, `#1938`, `#1095`)
 
 - **Reproducing kernel workload benchmarks**: Run `cargo test --offline --test kernel_workload_1938 -- --nocapture` to execute the deterministic fixed-seed `small`/`medium`/`large` skewed workloads and inspect the emitted `KERNEL_WORKLOAD_1938_REPORT` JSON.
@@ -552,7 +558,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

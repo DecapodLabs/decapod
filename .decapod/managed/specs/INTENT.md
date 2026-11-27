@@ -52,6 +52,15 @@ Fixes a `source-ci-profile` custody failure (`required source-CI recipe is empty
 
 - **Shard-selection alignment (`assets/tools/source_ci_profile.rs`, `tests/source_ci_profile_policy.rs`)**: Restricts `Selection::Core` selection for `"selective-core-2"` and `"selective-core-3"` in `profile::selected` to `core_full(paths)`, matching `profile::commands` (which already returns an empty recipe for shards `2` and `3` when `!core_full(paths)` while routing partial `src/decapod/core/` tests through `"selective-core-1"` and `"selective-core-status"`). Preserves full `core_full` 3-shard coverage for `core_test_inputs` and shared manifests while preventing empty-recipe aborts in `source-ci-custody` and CI shard status reporting.
 
+## Section 12 Agent-Host Native Bindings, Executable Harness Packaging, `Arm::Static` Outcome Support, and Empirical Host Studies (#875, #1277, #1095, #880, #1888, #1711, #873)
+
+Advances Decapod's host-integration plane while preserving one authoritative Rust governance kernel and truthful external-blocker reporting:
+
+- **Executable harness-native discovery & packaging (`#875`, `src/decapod/core/agent_interop/registry.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Exposes `decapod integration harness {matrix,generate,install,remove}` to write executable stdio MCP server definitions, `SKILL.md` skills (`render_harness_skill_markdown`), Claude Code `hooks.PreToolUse` entries (`decapodManaged = true`), and OpenCode `.opencode/plugins/decapod.json` hooks across supported harnesses while preserving unrelated user configs/hooks, enforcing `version_skew`, and refusing symlink targets.
+- **Library-safe Rust RPC seam, `decapod-napi` native TypeScript addon & automatic Pi hooks (`#1277`, `src/decapod/lib.rs`, `bindings/typescript/**`, `packages/pi-decapod/**`)**: Exports `execute_library_rpc`, `evaluate_prompt_library`, `validate_darkmatter_snapshot_library`, and `library_version` with explicit per-caller `cwd`/`agent_id`/`session_password` (`allow_process_session_cache = false`), zero `process::exit`, zero global `SESSION_P_VAL` mutation, and cooperative `AtomicBool` cancellation (`CANCELLED`). Adds the standalone `bindings/typescript/native` (`decapod-napi`) crate compiled to `.node`, routes `@decapodlabs/decapod-client` through `native_napi` with explicit `cli_process` fallback visibility, and wires `registerPiDecapodHooks` in `@decapodlabs/pi-decapod` (`input`, `before_agent_start`, `tool_call`, `tool_result`, `session_shutdown`).
+- **`Arm::Static` 3-arm outcome comparison & empirical Section 12 study (`#1095`, `#880`, `#1888`)**: Extends `src/decapod/core/flight_recorder/outcomes.rs` with `Arm::Static` alongside `Baseline` and `Governed` (`expected_arms = 3` when static runs appear) and documents the 2026-11-26 paired Antigravity `1.5.18` study alongside external credential/quota blockers for `claude` (`loggedIn: false`, `#1888`), `codex` (ChatGPT usage limit), and `opencode` (`No authenticated integrations`) without purchasing subscriptions or fabricating human attention.
+- **Read-only Darkmatter & bounded A2A boundary parity (`#1711`, `#873`)**: Re-verifies Decapod's read-only Darkmatter snapshot contract (`houseboat_engine`) and bounded A2A Agent Card/Handoff validator (`agent_interop_conformance`) while keeping `DecapodLabs/darkmatter` external and preserving owner-priority deferral on HTTP/network A2A server transport.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1493,7 +1502,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 645 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (292)
+- Tracked significant codebase files: 649 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (292)
 - Core modules: 149 | Workflows: 9 | Integration targets: 175
 <!-- decapod:codebase-contract:end -->
 
@@ -1501,7 +1510,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

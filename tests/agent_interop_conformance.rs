@@ -1872,3 +1872,296 @@ fn mcp_stdio_allow_mutations_enforces_real_session_and_worktree_custody_and_emit
         interop::VerificationState::Verified
     );
 }
+
+#[test]
+fn harness_native_cli_install_executes_mcp_and_hooks_and_preserves_user_config() {
+    let tmp = tempfile::tempdir().expect("tmpdir");
+    let repo = tmp.path();
+    let bin = decapod_bin();
+
+    assert!(
+        Command::new("git")
+            .current_dir(repo)
+            .args(["init", "-b", "master"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "init",
+                "--force",
+                "--dir",
+                repo.to_str().unwrap(),
+                "--no-container-workspaces",
+                "--isolation-mode",
+                "worktree",
+                "--no-ci",
+                "--product-name",
+                "HarnessTestRepo",
+                "--product-summary",
+                "Harness test repo.",
+            ])
+            .stdin(Stdio::null())
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+
+    // Pre-seed unrelated user MCP server & Claude hook to prove conflict-safe preservation.
+    let codex_dir = concat!(".", "codex");
+    let codex_mcp = concat!(".", "codex", "/mcp.json");
+    let codex_skill = concat!(".", "codex", "/skills/decapod/SKILL.md");
+    std::fs::create_dir_all(repo.join(codex_dir)).unwrap();
+    std::fs::write(
+        repo.join(codex_mcp),
+        serde_json::to_string_pretty(&json!({
+            "mcpServers": {
+                "existing-user-tool": { "command": "/usr/bin/true", "args": [] }
+            },
+            "customSetting": "keep-me"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    std::fs::create_dir_all(repo.join(".claude")).unwrap();
+    std::fs::write(
+        repo.join(".claude/settings.local.json"),
+        serde_json::to_string_pretty(&json!({
+            "permissions": { "allow": ["Bash(git status)"] },
+            "hooks": {
+                "PreToolUse": [{ "matcher": "Custom", "hooks": [{ "type": "command", "command": "true" }] }]
+            }
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+
+    // Version skew refusal on CLI generate.
+    let skew = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "integration",
+            "harness",
+            "generate",
+            "--harness",
+            "codex",
+            "--min-version",
+            "99.0.0",
+        ])
+        .output()
+        .unwrap();
+    assert!(!skew.status.success());
+    assert!(String::from_utf8_lossy(&skew.stderr).contains("version_skew"));
+
+    // Install all 6 harnesses cleanly.
+    let install = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "integration",
+            "harness",
+            "install",
+            "--all",
+            "--executable",
+            bin.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        install.status.success(),
+        "harness install --all failed: {}",
+        String::from_utf8_lossy(&install.stderr)
+    );
+
+    // Verify generated SKILL.md and OpenCode plugin manifest exist, and user config was preserved.
+    assert!(repo.join(codex_skill).is_file());
+    assert!(repo.join(".claude/skills/decapod/SKILL.md").is_file());
+    assert!(repo.join(".opencode/plugins/decapod.json").is_file());
+
+    let codex_cfg: Value =
+        serde_json::from_str(&std::fs::read_to_string(repo.join(codex_mcp)).unwrap()).unwrap();
+    assert_eq!(codex_cfg["customSetting"], "keep-me");
+    assert!(codex_cfg["mcpServers"]["existing-user-tool"].is_object());
+    assert_eq!(
+        codex_cfg["mcpServers"]["decapod"]["command"],
+        bin.to_str().unwrap()
+    );
+
+    // Execute the exact command+args from generated Codex mcp.json (actual live MCP handshake!).
+    let args: Vec<String> = codex_cfg["mcpServers"]["decapod"]["args"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    let mut mcp_child = Command::new(
+        codex_cfg["mcpServers"]["decapod"]["command"]
+            .as_str()
+            .unwrap(),
+    )
+    .current_dir(codex_cfg["mcpServers"]["decapod"]["cwd"].as_str().unwrap())
+    .args(&args)
+    .args(["--framing", "jsonl", "--one-shot"])
+    .stdin(Stdio::piped())
+    .stdout(Stdio::piped())
+    .spawn()
+    .unwrap();
+    {
+        let stdin = mcp_child.stdin.as_mut().unwrap();
+        stdin
+            .write_all(
+                br#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"harness-pkg-test","version":"1.0"}}}"#,
+            )
+            .unwrap();
+        stdin.write_all(b"\n").unwrap();
+    }
+    let mcp_out = mcp_child.wait_with_output().unwrap();
+    assert!(mcp_out.status.success());
+    let mcp_resp: Value = serde_json::from_slice(&mcp_out.stdout).unwrap();
+    assert_eq!(mcp_resp["result"]["serverInfo"]["name"], "decapod");
+
+    // Verify Claude PreToolUse hook command is present alongside existing user hook and executes cleanly.
+    let claude_cfg: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".claude/settings.local.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(claude_cfg["permissions"]["allow"][0], "Bash(git status)");
+    let hooks = claude_cfg["hooks"]["PreToolUse"].as_array().unwrap();
+    assert_eq!(hooks.len(), 2);
+    let decapod_hook_cmd = hooks.iter().find(|h| h["decapodManaged"] == true).unwrap()["hooks"][0]
+        ["command"]
+        .as_str()
+        .unwrap();
+    let hook_exec = Command::new("sh")
+        .current_dir(repo)
+        .args(["-c", decapod_hook_cmd])
+        .output()
+        .unwrap();
+    assert!(hook_exec.status.success());
+
+    // Remove Decapod harness integration and verify user entries remain untouched.
+    let remove = Command::new(&bin)
+        .current_dir(repo)
+        .args(["integration", "harness", "remove", "--all"])
+        .output()
+        .unwrap();
+    assert!(remove.status.success());
+    let codex_after: Value =
+        serde_json::from_str(&std::fs::read_to_string(repo.join(codex_mcp)).unwrap()).unwrap();
+    assert_eq!(codex_after["customSetting"], "keep-me");
+    assert!(codex_after["mcpServers"]["existing-user-tool"].is_object());
+    assert!(codex_after["mcpServers"].get("decapod").is_none());
+    assert!(!repo.join(codex_skill).exists());
+
+    let claude_after: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".claude/settings.local.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        claude_after["hooks"]["PreToolUse"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+    assert_eq!(claude_after["hooks"]["PreToolUse"][0]["matcher"], "Custom");
+}
+
+#[test]
+fn library_rpc_seam_supports_concurrent_isolated_callers_and_cancellation() {
+    use decapod::{LibraryRpcRequest, execute_library_rpc};
+    use std::sync::atomic::AtomicBool;
+
+    let tmp_a = tempfile::tempdir().unwrap();
+    let tmp_b = tempfile::tempdir().unwrap();
+    let bin = decapod_bin();
+    for dir in [tmp_a.path(), tmp_b.path()] {
+        assert!(
+            Command::new("git")
+                .current_dir(dir)
+                .args(["init", "-b", "master"])
+                .status()
+                .unwrap()
+                .success()
+        );
+        assert!(
+            Command::new(&bin)
+                .current_dir(dir)
+                .args([
+                    "init",
+                    "--force",
+                    "--dir",
+                    dir.to_str().unwrap(),
+                    "--no-container-workspaces",
+                    "--isolation-mode",
+                    "worktree",
+                    "--no-ci",
+                    "--product-name",
+                    "LibrarySeamRepo",
+                    "--product-summary",
+                    "Library seam test.",
+                ])
+                .stdin(Stdio::null())
+                .output()
+                .unwrap()
+                .status
+                .success()
+        );
+    }
+
+    let handle_a = std::thread::spawn({
+        let dir = tmp_a.path().to_path_buf();
+        move || {
+            execute_library_rpc(
+                LibraryRpcRequest {
+                    cwd: dir,
+                    agent_id: "lib-alpha".to_string(),
+                    session_password: None,
+                    op: "schema.get".to_string(),
+                    params: json!({ "entity": "todo" }),
+                    request_id: Some("req-a".to_string()),
+                },
+                None,
+            )
+        }
+    });
+    let handle_b = std::thread::spawn({
+        let dir = tmp_b.path().to_path_buf();
+        move || {
+            execute_library_rpc(
+                LibraryRpcRequest {
+                    cwd: dir,
+                    agent_id: "lib-beta".to_string(),
+                    session_password: None,
+                    op: "interop.manifest".to_string(),
+                    params: json!({}),
+                    request_id: Some("req-b".to_string()),
+                },
+                None,
+            )
+        }
+    });
+
+    let res_a = handle_a.join().unwrap().unwrap();
+    let res_b = handle_b.join().unwrap().unwrap();
+    assert!(res_a.success);
+    assert!(res_b.success);
+
+    let cancelled = AtomicBool::new(true);
+    let err = execute_library_rpc(
+        LibraryRpcRequest {
+            cwd: tmp_a.path().to_path_buf(),
+            agent_id: "lib-alpha".to_string(),
+            session_password: None,
+            op: "schema.get".to_string(),
+            params: json!({}),
+            request_id: None,
+        },
+        Some(&cancelled),
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("CANCELLED"));
+}
