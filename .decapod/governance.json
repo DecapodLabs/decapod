@@ -917,6 +917,15 @@
         "tests/gate_admission_and_resilience.rs",
         "tests/unit/plugins/knowledge_tests.rs"
       ]
+    },
+    {
+      "id": "reconcile-reviewed-sources-digest",
+      "summary": "Reconcile proof.required_profile.reviewed_sources_digest for v0.166.2 Cargo.toml/Cargo.lock and #1774 assets/build/constitution_admission.rs",
+      "input_digest": "sha256:68f8585db79167f1d5060cb8fce4da83158414b65549ebf95d9c590845c71d70",
+      "proof_refs": [
+        ".decapod/config.toml",
+        "assets/build/constitution_admission.rs"
+      ]
     }
   ],
   "intents": {
