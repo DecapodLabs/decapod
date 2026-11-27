@@ -77,6 +77,7 @@ pub struct Verdict {
 pub enum Arm {
     Baseline,
     Governed,
+    Static,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -339,9 +340,11 @@ pub fn compare(input: Input) -> io::Result<Report> {
             ));
         }
     }
+    let has_static_arm = input.runs.iter().any(|run| run.arm == Arm::Static);
+    let expected_arms = if has_static_arm { 3 } else { 2 };
     let incomplete_pairs = pairs
         .iter()
-        .filter(|(_, (_, arms))| arms.len() != 2)
+        .filter(|(_, (_, arms))| arms.len() != expected_arms)
         .map(|(id, _)| (*id).to_string())
         .collect();
     let unverified_pair_identities = pairs
@@ -351,7 +354,11 @@ pub fn compare(input: Input) -> io::Result<Report> {
         })
         .map(|(id, _)| (*id).to_string())
         .collect();
-    let summaries = [Arm::Baseline, Arm::Governed]
+    let mut summary_arms = vec![Arm::Baseline, Arm::Governed];
+    if has_static_arm {
+        summary_arms.push(Arm::Static);
+    }
+    let summaries = summary_arms
         .into_iter()
         .map(|arm| {
             let runs: Vec<_> = input.runs.iter().filter(|run| run.arm == arm).collect();

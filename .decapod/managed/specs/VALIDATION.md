@@ -1,5 +1,17 @@
 # Validation
 
+## Section 12 Host Integration, N-API Native Binding, Harness Packaging, `Arm::Static`, and Empirical Study Verification (#875, #1277, #1095, #880, #1888, #1711, #873)
+
+Verified inside isolated worktree `agent/agy-hosts/test_01m8dkhxjeg9vm6c-sec12` (rebased onto `origin/master` `714b90cbd`, `v0.168.0`, `CARGO_BUILD_JOBS=2`):
+
+- `cargo fmt --all -- --check` and `cargo fmt --manifest-path bindings/typescript/native/Cargo.toml -- --check`: passed.
+- `CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings` and `cargo clippy --manifest-path bindings/typescript/native/Cargo.toml --all-targets -- -D warnings`: passed with 0 warnings.
+- `cargo test --test agent_interop_conformance`: 11 passed, 0 failed (`harness_native_cli_install_executes_mcp_and_hooks_and_preserves_user_config`, `library_rpc_seam_supports_concurrent_isolated_callers_and_cancellation`, `a2a_agent_card_and_handoff_validation`).
+- `cargo test --test agent_rpc_suite`: 6 passed, 0 failed; `cargo test --test projection_consistency`: 7 passed, 0 failed; `cargo test --test houseboat_engine`: 14 passed, 0 failed (`houseboat_1711_darkmatter_readonly_snapshot_fixture_and_cli`); `cargo test --test activation_conformance`: 2 passed, 0 failed; `cargo test --lib flight_recorder::outcomes`: 9 passed, 0 failed.
+- `bindings/typescript`: `npm run build:native` compiled `native/decapod.darwin-arm64.node` (`decapod-napi v0.168.0`, `dactyl-db 0.21.0`); `npm run typecheck` passed; `npm test` passed 8/8 (`native_napi`, `cli_process`, `AbortSignal`, Darkmatter boundary); `npm run bench` measured `evalPrompt` `0.004 ms` vs `5.24 ms` (`1310x`) and `rpc(schema.get)` `0.045 ms` vs `5.197 ms` (`115.5x`); `npm pack --dry-run` verified 5 packed files.
+- `packages/pi-decapod`: `npm run typecheck` passed; `npm test` passed 5/5 (`registerPiDecapodHooks` backed by `decapod.darwin-arm64.node`); `npm pack --dry-run` verified 3 packed files.
+- `docs/research/host-outcome-pilot/sec12-host-activation-2026-11-26.md`: `decapod trace flight-recorder compare --input docs/research/host-outcome-pilot/sec12-antigravity-input.json` validated the 6 real-host `antigravity 1.5.18` runs (`unverified_pair_identities: []`, `reviewed_active_human_minutes: null`) and preserved external credential/quota blockers for `claude 2.1.311` (`loggedIn: false`, `#1888`), `codex-cli 0.172.0` (`usage limit`), and `opencode v2.2.5`.
+
 ## Bootstrap `.sh` mode (`executor_contract`) & stale accepted-base `repo.pr-readiness.v1` reconciliation
 
 - `src/decapod/core/validation_runtime/executor_contract.rs` unit tests verify `100755 blob ` admission strictly for `.sh` scripts in `profile::definition_files()`, strict `100644 blob ` enforcement on `.rs` definitions, protocol marker, and `verify_carrier_modes`, and fail-closed rejection of symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
@@ -2894,7 +2906,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

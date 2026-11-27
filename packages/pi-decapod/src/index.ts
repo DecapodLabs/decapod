@@ -380,3 +380,138 @@ export function createPiDecapodExtension(options: {
     },
   };
 }
+
+export interface PiHostEventApi {
+  on(
+    event: "input",
+    handler: (event: { readonly text?: string; readonly turnId?: string }) => Promise<{ readonly action?: "block" | "continue"; readonly reason?: string } | void>,
+  ): void;
+  on(
+    event: "before_agent_start",
+    handler: (event: { readonly query?: string; readonly taskId?: string }) => Promise<{ readonly systemPrompt?: string } | void>,
+  ): void;
+  on(
+    event: "tool_call",
+    handler: (event: { readonly toolName: string; readonly input?: Readonly<Record<string, unknown>> }) => Promise<{ readonly block?: boolean; readonly reason?: string } | void>,
+  ): void;
+  on(
+    event: "tool_result",
+    handler: (event: { readonly toolName: string; readonly isError?: boolean; readonly summary?: string; readonly decisionGateRequired?: boolean }) => Promise<void> | void,
+  ): void;
+  on(
+    event: "session_shutdown",
+    handler: (event: { readonly branch?: string; readonly proofPassed?: boolean }) => Promise<void> | void,
+  ): void;
+}
+
+const MUTATING_PI_TOOLS = new Set(["write", "edit", "multi_edit", "apply_patch"]);
+
+/**
+ * Automatic Pi harness lifecycle hook registration (#1277).
+ *
+ * Automatically evaluates human prompts on `input`, injects bounded Decapod context on
+ * `before_agent_start`, enforces worktree/provenance/Decision-Gate guards on `tool_call`
+ * (blocking protected-branch or missing-custody mutations automatically without manual user
+ * invocation), and refuses unverified completion on `session_shutdown`.
+ */
+export function registerPiDecapodHooks(
+  pi: PiHostEventApi,
+  options: {
+    readonly sessionId: string;
+    readonly modelId: string;
+    readonly harnessId?: string;
+    readonly client: DecapodClient | DecapodTransport;
+    readonly isPlanConverged?: () => boolean;
+    readonly currentBranch?: () => string;
+  },
+): PiDecapodExtension {
+  const ext = createPiDecapodExtension({
+    sessionId: options.sessionId,
+    modelId: options.modelId,
+    harnessId: options.harnessId ?? "pi",
+    client: options.client,
+  });
+  let turnCounter = 0;
+
+  pi.on("input", async (ev) => {
+    const raw = ev.text ?? "";
+    if (raw.trim() === "") return;
+    turnCounter += 1;
+    const res = await ext.onPromptReceived({
+      turnId: ev.turnId ?? `pi-turn-${turnCounter}`,
+      rawHumanPrompt: raw,
+    });
+    if (!res.evalAllowed) {
+      return {
+        action: "block",
+        reason: "DECAPOD_PROMPT_BLOCKED: prompt failed decapod eval safety gate; human review required.",
+      };
+    }
+    return { action: "continue" };
+  });
+
+  pi.on("before_agent_start", async (ev) => {
+    const resolved = await ext.onContextResolve({
+      query: ev.query,
+      taskId: ev.taskId,
+    });
+    if (!resolved.ok) {
+      return {
+        systemPrompt: `[decapod] context unavailable (${resolved.error ?? "unknown"}); orient via decapod rpc --op agent.init before mutating.`,
+      };
+    }
+    if (resolved.decisionGateRequired) {
+      return {
+        systemPrompt: `[decapod] DECISION_GATE pending (${resolved.unresolvedConflicts.length} conflict(s)); stop and escalate to human before mutation.`,
+      };
+    }
+    return {
+      systemPrompt: `[decapod] governed context resolved via ${resolved.transport.kind}.`,
+    };
+  });
+
+  pi.on("tool_call", async (ev) => {
+    const tool = ev.toolName.toLowerCase();
+    if (!MUTATING_PI_TOOLS.has(tool)) {
+      return;
+    }
+    const rawPath = ev.input?.path;
+    const targetPaths = typeof rawPath === "string" && rawPath.trim() !== "" ? [rawPath] : [];
+    const branch = options.currentBranch ? options.currentBranch() : "";
+    if (branch === "main" || branch === "master") {
+      return {
+        block: true,
+        reason: `DECAPOD_PROTECTED_BRANCH: direct mutation on '${branch}' blocked; enter .decapod/workspaces/* first.`,
+      };
+    }
+    const verdict = await ext.beforeMutation({
+      targetPaths,
+      planConverged: options.isPlanConverged ? options.isPlanConverged() : true,
+      invokedThroughDecapodHook: true,
+    });
+    if (!verdict.allowed) {
+      return {
+        block: true,
+        reason: verdict.reason,
+      };
+    }
+  });
+
+  pi.on("tool_result", (ev) => {
+    ext.onToolResult({
+      toolName: ev.toolName,
+      ok: !ev.isError,
+      outputSummary: ev.summary ?? "",
+      decisionGateRequired: ev.decisionGateRequired,
+    });
+  });
+
+  pi.on("session_shutdown", async (ev) => {
+    await ext.onSettlement({
+      branch: ev.branch ?? (options.currentBranch ? options.currentBranch() : ""),
+      proofPassed: Boolean(ev.proofPassed),
+    });
+  });
+
+  return ext;
+}

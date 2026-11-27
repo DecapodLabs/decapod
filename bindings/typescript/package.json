@@ -14,12 +14,15 @@
   },
   "files": [
     "src/**/*.ts",
+    "native/*.node",
     "README.md",
     "package.json"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test test/*.test.ts",
+    "build:native": "node -e \"const cp=require('child_process'),fs=require('fs'),p=require('path');cp.execFileSync('cargo',['build','--release','--manifest-path','native/Cargo.toml'],{stdio:'inherit',env:{...process.env,CARGO_PROFILE_RELEASE_STRIP:'none'}});const ext=process.platform==='darwin'?'dylib':process.platform==='win32'?'dll':'so';const pre=process.platform==='win32'?'':'lib';const src=p.join('native','target','release',pre+'decapod_napi.'+ext);const dst=p.join('native','decapod.'+process.platform+'-'+process.arch+'.node');fs.copyFileSync(src,dst);console.log('built',dst);\"",
+    "bench": "node test/benchmark.mjs",
     "pack:check": "npm pack --dry-run"
   },
   "repository": {

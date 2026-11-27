@@ -62,6 +62,22 @@
 
 - **`profile::selected` (`Selection::Core`)**: For every non-`workflow_owned::artifact_worker` check, `selected(check, &paths, false)` now guarantees `!commands(check, &paths).unwrap().is_empty()`, including PRs touching `src/decapod/core/*` outside `core_full(paths)` where `.github/workflows/ci.yml` (`test-core`) invokes `candidate-source-ci-profile` for `selective-core-2` and `selective-core-3`.
 
+## Section 12 Harness CLI, Library Seam, N-API Addon, Pi Hook API & `Arm::Static` Outcome Schema (#875, #1277, #1095)
+
+- **Harness packaging CLI (`src/decapod/cli.rs::IntegrationCommand::Harness`)**:
+  - `decapod integration harness matrix [--format json|text]`
+  - `decapod integration harness generate --harness <id> [--executable <path>] [--root <dir>] [--min-version <semver>] [--format json|text]`
+  - `decapod integration harness install (--harness <id> | --all) [--executable <path>] [--root <dir>] [--min-version <semver>] [--format json|text]`
+  - `decapod integration harness remove (--harness <id> | --all) [--root <dir>] [--format json|text]`
+  - Valid `<id>` values (`HarnessId::parse`): `codex`, `claude_code` (`claude`), `antigravity`, `opencode`, `grok_build` (`grok`), `pi`.
+- **Rust library & N-API exports (`src/decapod/lib.rs`, `bindings/typescript/native/src/lib.rs`, `bindings/typescript/src/index.ts`, `packages/pi-decapod/src/index.ts`)**:
+  - Rust: `LibraryRpcRequest`, `execute_library_rpc`, `evaluate_prompt_library`, `validate_darkmatter_snapshot_library`, `library_version`.
+  - N-API (`decapod-napi`): `kernelVersion()`, `evalPrompt(prompt)`, `validateDarkmatterSnapshotJson(json)`, `harnessCompatibilityMatrixJson()`, `generateHarnessPackageJson(...)`, `executeRpcSync(...)`, `executeRpcAsync(..., signal?)`, `cancelFlagSmokeTest()`.
+  - `@decapodlabs/decapod-client`: `resolveDefaultNativeAddonPath()`, `DecapodClientOptions::{nativeAddonPath, preferNative}`, `TransportMetadata.kind` (`"native_napi" | "cli_process"`).
+  - `@decapodlabs/pi-decapod`: `PiHostEventApi`, `registerPiDecapodHooks(pi, options)`.
+- **3-arm outcome schema (`src/decapod/core/flight_recorder/outcomes.rs`)**:
+  - `Arm` accepts `"baseline"`, `"governed"`, and `"static"`; `decapod trace flight-recorder compare` requires `3` distinct arms per `pair_id` when any `"static"` run is present and allows `harmful_context_rate` only when `context_delivery.value == Some(true)`.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2650,7 +2666,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Contract Snapshot
 
-- CLI/RPC/protocol surfaces (23): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/README.md`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/README.md`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/interop.rs`, `src/decapod/core/observability_projections/server.rs`, (+7 more)
+- CLI/RPC/protocol surfaces (27): `assets/tools/laya-native/src/lib.rs`, `assets/tools/laya-native/src/main.rs`, `bindings/typescript/README.md`, `bindings/typescript/native/Cargo.lock`, `bindings/typescript/native/Cargo.toml`, `bindings/typescript/native/build.rs`, `bindings/typescript/native/src/lib.rs`, `bindings/typescript/package.json`, `bindings/typescript/src/index.ts`, `bindings/typescript/src/node-env.d.ts`, `bindings/typescript/test/client.test.ts`, `packages/pi-decapod/README.md`, `packages/pi-decapod/package.json`, `packages/pi-decapod/src/index.ts`, `packages/pi-decapod/test/pi_extension.test.ts`, `src/decapod/cli.rs`, (+11 more)
 - Manifest authority path: `.decapod/managed/.manifest.json`
 <!-- decapod:codebase-contract:end -->
 
@@ -2658,7 +2674,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

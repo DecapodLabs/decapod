@@ -1,7 +1,8 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
+    "accepted_commit": "714b90cbd578ce357ba519516aec22fcbce3a986",
+    "release": "v0.168.0",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -774,6 +775,7 @@
       "trajectory:22ceeec9cc8afae2": "Validmodeluncertaintyyes0.573/two-labelsetcausedcalibrationpositiveabstainbothbackends; frozenexpectedacceptmismatchpreservednotrelabeled. Workingmeaningfulmodelapprovalsareobservedgate/prompt; alladversecontrolsnonready. We donotknowwhythemodelabstained. Independentcoverageauditdemonstratedmetadatafixtureclaimedorderbutonlyinvalidlength/namechecked; addcanonical+all23permutationchecksandtruthfulobservationacrossfamily. Currentvalidatedworkandactualcheckinventoryexpand; no question/threshold/weight/calibration/labeltuning. Userclarificationonsafeabstentionpending; strictallpositive ruleunchanged. Fullnewcandidatevalidate,donotclaimpreviousfullreportgreen or domainaccuracy. Sameoriginaltaskbranch/custody/noPRmerge release.",
       "trajectory:2318b54d5863154f": "Confirmed pinned CUDA dynamic links can prevent worker startup before its CPU path. Prepare optional separately pinned CPU executable in private local binding; model-free GPU startup before exposing model/state, typed hardware-only fallback, exact immutable pins and same deadline. Negative/abstaining/malformed inference and numerical failures remain non-ready and never trigger a new answer search. No actual Metal/model/reference/holdout evidence exists yet.",
       "trajectory:280aab34e7c0084a": "Source-built generator is used solely for report-prescribed Markdown regeneration and grants no kernel authority. No native build or scientific test executed on132because source docs proof failed. All earlier failed reports retained. Return to official1191 plain validate on exact repaired candidate; no bootstrap exception or manual shadow preflight.",
+      "trajectory:2815464be8cb3ccc": "Hosted Supabase e2e proof (#1369/#1378) requires authorized managed fixture; #1220 pure-Rust no-SQLite irreducibly conflicts with dactyl-db SQLite",
       "trajectory:306f3433d7e5e778": "Final candidate and provider proof remain required; local macOS failures are not waived.",
       "trajectory:308bef2f77b39c87": "Integrate accepted master 9767ae9a3ff1c7452101482218a17c55cf569b71 after accepted release v0.144.5 with issue1568. Preserve current task journal/checkpoints and authored specs from both branches; regenerate projections through the kernel. Previous candidate readiness does not apply; no local tests.",
       "trajectory:30ef4cc2d51da604": "The new already-authorized retry wording still needs generation by its exact updated binary; the existing controller can now admit the source catalog and own remote verification.",
@@ -870,120 +872,80 @@
     }
   },
   "change": {
-    "id": "change_section10_storage",
-    "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
+    "id": "test_01m8dkhxjeg9vm6c",
+    "base_commit": "714b90cbd578ce357ba519516aec22fcbce3a986",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:section10-cloud-parity-durability": {
-      "statement": "Cloud mode never creates or falls back to .decapod/data/decapod.db across expired session renewal, rpc --stdin store.upsert/query, non-todo stores, OutcomeUnknown crash recovery, or derived parity inspection, while hosted Supabase and #1220 pure-Rust boundaries remain explicitly documented.",
-      "falsifier": "Any cloud CLI/RPC/session-renewal/crash/custody/parity path creates or reads .decapod/data/decapod.db, omits non-todo store entries from cloud_parity_matrix, weakens tests/supabase_service.rs fail-closed gating, or misstates #1220 architectural conflict.",
+    "claim:sec12-darkmatter-a2a-boundary": {
+      "statement": "Decapod preserves read-only Darkmatter snapshot verification (#1711) and bounded A2A Agent Card/Handoff validation (#873) while keeping DecapodLabs/darkmatter external and owner-priority P3 deferral intact.",
+      "falsifier": "houseboat_engine or agent_interop_conformance A2A/Darkmatter contracts regress or embed cockpit UI inside decapod.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/proof-ledger.json",
-        "tests/cloud_cli_boundary.rs",
-        "tests/crash_durability_1934.rs",
-        "tests/derived_replay_1936.rs",
-        "tests/lease_fencing_consistency_1935.rs"
+        "tests/agent_interop_conformance.rs",
+        "tests/houseboat_engine.rs"
       ]
     },
-    "claim:section10-storage-bounds-compaction": {
-      "statement": "All 10 persisted non-task plugin stores enforce UTF-8/NUL/JSON/collection bounds, single decapod.db reconciles 36 logical tables without sidecar files, and O(N) rowid compaction achieves 100% lossless todo/journal parity across real dogfood snapshots.",
-      "falsifier": "Any persisted plugin accepts >MAX_* UTF-8 bytes or NUL bytes, any subsystem creates a sidecar .db/.events.jsonl file, logical_contract_v1 drifts from runtime PRAGMA table_info, or snapshot compaction loses or alters logical events or task journals.",
+    "claim:sec12-harness-packaging": {
+      "statement": "decapod integration harness {matrix,generate,install,remove} writes conflict-safe MCP configs, SKILL.md, Claude PreToolUse hooks, and OpenCode plugins while refusing symlinks and enforcing version_skew.",
+      "falsifier": "install_harness_package follows a symlink, clobbers unrelated user config/hooks, skips version_skew, or fails agent_interop_conformance.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.166.json",
-        "tests/datastore_contract.rs",
-        "tests/datastore_relational_compaction.rs",
-        "tests/single_datastore.rs"
+        "src/decapod/core/agent_interop/registry.rs",
+        "tests/agent_interop_conformance.rs"
+      ]
+    },
+    "claim:sec12-napi-library-seam": {
+      "statement": "execute_library_rpc and decapod-napi preserve caller-isolated RPC custody without process::exit or shared SESSION_P_VAL, route @decapodlabs/decapod-client via native_napi with cli_process fallback, and bind @decapodlabs/pi-decapod lifecycle hooks.",
+      "falsifier": "Concurrent callers share SESSION_P_VAL, AbortSignal leaves runaway execution, or native/TS/Pi suites fail.",
+      "status": "supported",
+      "proof_refs": [
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "src/decapod/lib.rs"
+      ]
+    },
+    "claim:sec12-three-arm-outcomes": {
+      "statement": "Arm::Static supports strict 3-arm (baseline, static, governed) paired comparisons without fabricating human attention (reviewed_active_human_minutes stays null) or hiding external host credential blockers.",
+      "falsifier": "Static runs masquerade as baseline/governed, unreviewed human attention turns into synthetic zero, or raw transcripts leak.",
+      "status": "supported",
+      "proof_refs": [
+        "docs/research/host-outcome-pilot/sec12-host-activation-2026-11-26.md",
+        "src/decapod/core/flight_recorder/outcomes.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "section10-storage-parity-v01662",
-      "summary": "Rebased Section 10 storage/parity/durability implementation onto v0.166.2 with refreshed specs and dogfood benchmarks",
-      "input_digest": "sha256:ccc88c0e1dcf08ed7e5178bddb17903ffff19bc893af5ad39883fc5ec7f9cd90"
-    },
-    {
-      "id": "section10-storage-parity-v01662-r2",
-      "summary": "Reconcile reviewed_sources_digest against v0.166.2 and include refreshed Dockerfile.decapod",
-      "input_digest": "sha256:84b089d9536ff59c30bb00e96323e70eec480a48e3b3989bc66ece2d89dd8f77"
-    },
-    {
-      "id": "section10-storage-parity-v01662-r3",
-      "summary": "Record current-PR falsifiable claims for Section 10 storage bounds, dogfood compaction, and Cloud parity/durability",
-      "input_digest": "sha256:38f3553724c44481a5996b437498fd03b2f140fe46e3736679ae85c7349428a2",
+      "id": "ckpt:section12-host-integration-714b",
+      "summary": "Section 12 (#875, #1277, #1095, #880, #1888, #1711, #873) rebased onto v0.168.0 (714b90cbd5) with N-API v0.168.0, Pi hooks, harness packaging, 3-arm outcomes, reconciled reviewed_sources_digest, and all checks verified",
+      "input_digest": "sha256:545b4bfa0f9455ed87f044b93bb2e521714205f691de48dbe78bfcd30be1079b",
       "proof_refs": [
-        "tests/cloud_cli_boundary.rs",
-        "tests/datastore_contract.rs"
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
+        "tests/agent_interop_conformance.rs"
       ]
-    },
-    {
-      "id": "section10-storage-parity-v01662-r4",
-      "summary": "Refresh managed manifest config_input_hash for reconciled reviewed_sources_digest",
-      "input_digest": "sha256:4221f63c06c1cfb9f300dd6fb31e2f05643625f89b40fc4b8e612d3738f732ff"
-    },
-    {
-      "id": "section10-storage-parity-v01662-r5",
-      "summary": "Fix validate_reflex_write command-string config admission (t200_reflex) and record spec reviews",
-      "input_digest": "sha256:de51ca1d7bc456d29da46a4a13a999e8a4beaa6e8911bc47944faa22f504f981"
-    },
-    {
-      "id": "section10-storage-parity-v01663-r1",
-      "summary": "Merge origin/master (251cb31919, v0.166.3) and refresh Section 10 specs and governance",
-      "input_digest": "sha256:b57248dacc754233d0c935d6e94b730e4e4d3188c8d8ff4f865526f5def6da4c"
-    },
-    {
-      "id": "section10-storage-parity-v01664-r1",
-      "summary": "Merge origin/master (bb4d0e8b8e, PR #1960, v0.166.4) and wire validate_knowledge_write in add_scoped_knowledge_inner",
-      "input_digest": "sha256:fb3938071dc1392f931b894265a058fcad6fae5cd75a7291b50168dd5384ec67"
-    },
-    {
-      "id": "section10-storage-parity-v01665-pre",
-      "summary": "Merge origin/master (78c5c4d7fb, v0.166.5) and refresh specs and governance",
-      "input_digest": "sha256:de00620427309cdedbd6b479cba90ee53267ca9bf93499296531a8ed2a328031"
-    },
-    {
-      "id": "section10-storage-parity-v01665-pr2",
-      "summary": "Merge origin/master (a3bc7c98a9, PR #1968, v0.166.5, dactyl-db 0.21.0) and refresh Section 10 specs and governance",
-      "input_digest": "sha256:ac5151a8319953026b61a60fa52f363264020edaf3e91e0f1ca0124fea7d0812"
-    },
-    {
-      "id": "section10-storage-parity-v01670-pr2",
-      "summary": "Merge master v0.167.0 (7b5d5c2fd3) and refresh specs, manifest, and Dockerfile pin",
-      "input_digest": "sha256:bc9cbd4f6770e302950fe20ffcd59207322aa3e03ba4ed8ad1812637ef527c03"
-    },
-    {
-      "id": "section10-config-digest-v01670-pr2",
-      "summary": "Reconcile reviewed_sources_digest for v0.167.0 master (7b5d5c2fd3)",
-      "input_digest": "sha256:7b1da530c99fac748043ba6c9fd95707c15494307de1709877082c09ae1b3148"
-    },
-    {
-      "id": "section10-manifest-hash-v01670-pr2",
-      "summary": "Refresh .manifest.json config_input_hash for reviewed_sources_digest on v0.167.0 master",
-      "input_digest": "sha256:7ed454baa8a731fa49ed5b8c788471f5b20bae5b29da649afa5e00c08f9c16e3"
     }
   ],
   "intents": {
-    "intent:run_section10_storage": {
+    "intent:branch_01M8E4_SEC12": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree agent/agy-hosts/test_01m8dkhxjeg9vm6c-sec12; CARGO_BUILD_JOBS=2; external paid/credential blockers preserved honestly"
       ],
       "constraints": [
-        "storage"
+        "src/decapod/{cli,lib}.rs, agent_interop/registry.rs, flight_recorder/outcomes.rs, bindings/typescript/**, packages/pi-decapod/**, docs/research/host-outcome-pilot/**, tests/agent_interop_conformance.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:run_section10_storage",
+      "id": "intent:branch_01M8E4_SEC12",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Own Section 10 Storage, Parity & Durability (#1630, #1934-#1936, #1933, #1110, #1118, #1120, #1132, #1221, #1220, #1369, #1378)",
-      "refined_intent": "Implement non-task write bounds, O(N) dogfood compaction benchmarks, single-DB table reconciliation, Cloud SQLite isolation & non-todo boundaries, and Cloud durability/fencing/replay coverage",
+      "raw_intent": "Execute Section 12 (#880, #1888, #1095, #1277, #875, #1711, #873) in isolated worktree onto v0.168.0",
+      "refined_intent": "Rebase Section 12 implementation onto 714b90cbd5, rebuild decapod-napi v0.168.0 with dactyl-db 0.21.0, refresh Living Specs/config digest/governance, and verify all suites cleanly",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -992,263 +954,200 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": []
+        "forbidden_paths": [
+          "/Users/arx/src/decapod/.git"
+        ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement non-task write bounds, O(N) dogfood compaction benchmarks (#1630), single-DB/table inventory reconciliation (#1118,#1132), Cloud SQLite isolation & non-todo boundaries (#1110,#1120,#1221), durability/fencing/replay Cloud parity (#1933-#1936), and truthful hosted/1220 disclosures (#1369,#1378,#1220)",
+      "intent": "Land Section 12 deliverables (#875, #1277, #1095, #880, #1888, #1711, #873) onto v0.168.0 (714b90cbd5) cleanly with verified Rust, N-API, Pi, and redacted host-study proof while preserving external credential/quota blockers (#1888, codex, opencode).",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --test agent_interop_conformance --test agent_rpc_suite --test houseboat_engine --test projection_consistency --test activation_conformance",
+        "cd bindings/typescript && npm test && npm run bench",
+        "cd packages/pi-decapod && npm test"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Re-reviewed ARCHITECTURE.md Section 10 storage boundaries against v0.167.0 master 7b5d5c2fd3",
-          "reviewed_code_fingerprint": "5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf",
-          "spec_material_hash": "37376d50cc8e0a6c71125f6a1624efb15b8982995413def0e8dfb436f6dbaa9b"
+          "reason": "Section 12 RpcCtx caller isolation, decapod-napi v0.168.0 dactyl-db 0.21.0 build, Pi hook enforcement, and Arm::Static summary ordering verified on 714b90cbd5",
+          "reviewed_code_fingerprint": "938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b",
+          "spec_material_hash": "98d7b5d79489c992a225a17b67a4dac9cccc82a36dbb7313c18be5ea34d867b0"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-reviewed INTERFACES.md Section 10 write bounds and Cloud parity boundaries against v0.167.0 master 7b5d5c2fd3",
-          "reviewed_code_fingerprint": "5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf",
-          "spec_material_hash": "79f0e2d7a82a6cd288711da73e1f40e1813f45d97100d3285308ebb12a35986b"
+          "reason": "Section 12 CLI harness subcommands, library RPC seam, N-API exports, Pi hooks, and 3-arm outcomes verified on 714b90cbd5 (v0.168.0)",
+          "reviewed_code_fingerprint": "938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b",
+          "spec_material_hash": "75ee784de3d1140c862e30d974e8f32cca3bec0144d571ef628a536530c07193"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "SECURITY.md reviewed against v0.167.0 master 7b5d5c2fd3; Section 10 trust/egress/fail-closed guarantees leave SECURITY.md authored prose unchanged",
-          "reviewed_code_fingerprint": "5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf",
-          "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
+          "reason": "Section 12 symlink-refusing harness installer, zero shared SESSION_P_VAL, branch mutation refusal, and redacted telemetry / credential restraint verified on 714b90cbd5",
+          "reviewed_code_fingerprint": "938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b",
+          "spec_material_hash": "a4fe5bc64b48983949848592b590b6af1921b823ac1c42d55d6544d55a1c3cb1"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Section 10 storage bounds, dogfood compaction benchmarks, Cloud parity & durability",
+      "title": "Section 12 Agent-Host Integration, Native TS Binding, Pi Hooks & 3-Arm Outcomes",
       "todo_ids": [
-        "code_01m8d592e2smqy78"
+        "test_01m8dkhxjeg9vm6c"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795774093Z"
+      "updated_at": "1795779770Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Isolated worktree agent/agy-hosts/test_01m8dkhxjeg9vm6c-sec12; CARGO_BUILD_JOBS=2; external paid/credential blockers preserved honestly"
       ],
-      "artifact_hash": "sha256:58f19e7d30e33d2bceddce6b2ed3f648be927317a2b3d4fdf9ae518cf9f29c8b",
+      "artifact_hash": "sha256:eefb962f1968eb9e19c937a80a5aa183fc42384231cd1980a7ad7483ba87a04c",
       "checks": [
         {
-          "name": "clippy_all_features",
+          "name": "activation_conformance_2_of_2",
           "status": "passed"
         },
         {
-          "name": "clippy_all_targets_all_features",
+          "name": "agent_interop_conformance_11_of_11",
           "status": "passed"
         },
         {
-          "name": "cloud_cli_boundary",
+          "name": "agent_rpc_suite_6_of_6",
           "status": "passed"
         },
         {
-          "name": "cloud_dactyl_boundary",
+          "name": "bindings_typescript_8_of_8",
           "status": "passed"
         },
         {
-          "name": "cloud_tenancy_parity_1895",
+          "name": "cargo_clippy",
           "status": "passed"
         },
         {
-          "name": "crash_durability_1934",
+          "name": "cargo_fmt",
           "status": "passed"
         },
         {
-          "name": "datastore_contract",
+          "name": "flight_recorder_outcomes_9_of_9",
           "status": "passed"
         },
         {
-          "name": "datastore_relational_compaction",
+          "name": "houseboat_engine_14_of_14",
           "status": "passed"
         },
         {
-          "name": "derived_replay_1936",
+          "name": "packages_pi_decapod_5_of_5",
           "status": "passed"
         },
         {
-          "name": "gatling_t200_reflex",
-          "status": "passed"
-        },
-        {
-          "name": "hosted_supabase_1378",
-          "status": "unavailable"
-        },
-        {
-          "name": "lease_fencing_consistency_1935",
-          "status": "passed"
-        },
-        {
-          "name": "plugins_tests",
-          "status": "passed"
-        },
-        {
-          "name": "single_datastore",
+          "name": "projection_consistency_7_of_7",
           "status": "passed"
         }
       ],
-      "current_phase": "verify",
+      "current_phase": "pre_publication_verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_section10_storage",
+            "intent_id": "intent:branch_01M8E4_SEC12",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_section10_storage",
+            "intent_id": "intent:branch_01M8E4_SEC12",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_section10_storage",
+            "detail": "trajectory:branch_01M8E4_SEC12",
             "event_id": "event:4",
-            "intent_id": "intent:run_section10_storage",
+            "intent_id": "intent:branch_01M8E4_SEC12",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:run_section10_storage",
-            "event_id": "event:5",
-            "intent_id": "intent:run_section10_storage",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_section10_storage": {
+          "branch_01M8E4_SEC12": {
             "evidence_only": true,
-            "id": "run_section10_storage",
-            "intent_id": "intent:run_section10_storage",
+            "id": "branch_01M8E4_SEC12",
+            "intent_id": "intent:branch_01M8E4_SEC12",
             "steps": [
               {
-                "action": "verify",
+                "action": "pre_publication_verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_compaction.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "src/decapod/core/cloud_parity_matrix.rs",
+                  ".decapod/config.toml",
                   "src/decapod/lib.rs",
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_compaction.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "src/decapod/core/cloud_parity_matrix.rs",
-                  "src/decapod/lib.rs",
-                  "docs/datastore-v2/logical_contract_v1.json",
-                  "docs/datastore-v2/compaction-benchmarks-v0.166.md",
-                  "docs/datastore-v2/dogfood-compaction-v0.166.json",
-                  "docs/datastore-v2/table-inventory-reconciliation.md",
-                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
-                  "docs/datastore-v2/proof-ledger.json",
-                  "docs/durability-and-fencing.md",
-                  "docs/datastore-v2/dogfood-compaction-v0.166.json",
-                  "docs/datastore-v2/proof-ledger.json"
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/agent_interop/registry.rs",
+                  "src/decapod/core/flight_recorder/outcomes.rs",
+                  "bindings/typescript/native/Cargo.toml",
+                  "bindings/typescript/native/Cargo.lock",
+                  "bindings/typescript/src/index.ts",
+                  "packages/pi-decapod/src/index.ts",
+                  "tests/agent_interop_conformance.rs",
+                  "Rebased cleanly onto origin/master 714b90cbd5 (v0.168.0) + reviewed_sources_digest reconciled; all Rust/TS/Pi suites verified in task-2853"
                 ],
                 "proof_refs": [
-                  "datastore_contract",
-                  "datastore_relational_compaction",
-                  "single_datastore",
-                  "crash_durability_1934",
-                  "lease_fencing_consistency_1935",
-                  "derived_replay_1936",
-                  "cloud_cli_boundary",
-                  "cloud_dactyl_boundary",
-                  "cloud_tenancy_parity_1895",
-                  "plugins_tests",
-                  "clippy_all_features",
-                  "hosted_supabase_1378"
+                  "cargo_fmt",
+                  "cargo_clippy",
+                  "bindings_typescript_8_of_8",
+                  "packages_pi_decapod_5_of_5",
+                  "agent_interop_conformance_11_of_11",
+                  "agent_rpc_suite_6_of_6",
+                  "houseboat_engine_14_of_14",
+                  "projection_consistency_7_of_7",
+                  "activation_conformance_2_of_2",
+                  "flight_recorder_outcomes_9_of_9"
                 ],
                 "scope": [
-                  "storage"
+                  "src/decapod/{cli,lib}.rs, agent_interop/registry.rs, flight_recorder/outcomes.rs, bindings/typescript/**, packages/pi-decapod/**, docs/research/host-outcome-pilot/**, tests/agent_interop_conformance.rs"
                 ],
                 "sequence": 4,
                 "validation_findings": [
-                  "Hosted Supabase e2e proof (#1369/#1378) requires authorized managed fixture; #1220 pure-Rust no-SQLite irreducibly conflicts with dactyl-db SQLite"
+                  "claude (#1888), codex-cli usage limit, and opencode unauthenticated remain external host credential gates"
                 ]
-              },
-              {
-                "action": "trajectory.record",
-                "command": "cargo test --test core_tests datastore_contract && cargo test --test gatling t200_reflex && clippy",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "tests/datastore_contract.rs",
-                  "src/decapod/core/storage_contracts.rs",
-                  "tests/datastore_contract.rs"
-                ],
-                "proof_refs": [
-                  "datastore_contract",
-                  "gatling_t200_reflex",
-                  "clippy_all_targets_all_features"
-                ],
-                "scope": [
-                  "storage"
-                ],
-                "sequence": 5,
-                "validation_findings": []
               }
             ]
           }
         }
       },
-      "declared_commands": [
-        "cargo test --test core_tests datastore_contract && cargo test --test gatling t200_reflex && clippy"
-      ],
+      "declared_commands": [],
       "evidence": [
-        "docs/datastore-v2/dogfood-compaction-v0.166.json",
-        "docs/datastore-v2/proof-ledger.json"
+        "Rebased cleanly onto origin/master 714b90cbd5 (v0.168.0) + reviewed_sources_digest reconciled; all Rust/TS/Pi suites verified in task-2853"
       ],
-      "inspected_files": [
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_compaction.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/lib.rs",
-        "tests/datastore_contract.rs"
-      ],
-      "intent_id": "intent:run_section10_storage",
+      "inspected_files": [],
+      "intent_id": "intent:branch_01M8E4_SEC12",
       "modified_files": [
-        "docs/datastore-v2/cloud-parity-and-boundaries.md",
-        "docs/datastore-v2/compaction-benchmarks-v0.166.md",
-        "docs/datastore-v2/dogfood-compaction-v0.166.json",
-        "docs/datastore-v2/logical_contract_v1.json",
-        "docs/datastore-v2/proof-ledger.json",
-        "docs/datastore-v2/table-inventory-reconciliation.md",
-        "docs/durability-and-fencing.md",
-        "src/decapod/core/cloud_parity_matrix.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_compaction.rs",
-        "src/decapod/core/storage_contracts.rs",
+        ".decapod/config.toml",
+        "bindings/typescript/native/Cargo.lock",
+        "bindings/typescript/native/Cargo.toml",
+        "bindings/typescript/src/index.ts",
+        "packages/pi-decapod/src/index.ts",
+        "src/decapod/cli.rs",
+        "src/decapod/core/agent_interop/registry.rs",
+        "src/decapod/core/flight_recorder/outcomes.rs",
         "src/decapod/lib.rs",
-        "tests/datastore_contract.rs"
+        "tests/agent_interop_conformance.rs"
       ],
       "repo_scope": [
-        "storage"
+        "src/decapod/{cli,lib}.rs, agent_interop/registry.rs, flight_recorder/outcomes.rs, bindings/typescript/**, packages/pi-decapod/**, docs/research/host-outcome-pilot/**, tests/agent_interop_conformance.rs"
       ],
-      "run_id": "run_section10_storage",
+      "run_id": "branch_01M8E4_SEC12",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8d592e2smqy78",
+      "task_id": "test_01m8dkhxjeg9vm6c",
       "tool_calls": [],
       "unresolved_assumptions": [
-        "Hosted Supabase e2e proof (#1369/#1378) requires authorized managed fixture; #1220 pure-Rust no-SQLite irreducibly conflicts with dactyl-db SQLite"
+        "claude (#1888), codex-cli usage limit, and opencode unauthenticated remain external host credential gates"
       ]
     }
   },

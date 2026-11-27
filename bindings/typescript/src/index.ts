@@ -1,6 +1,8 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, resolve } from "node:path";
 
 export type EnforcementBoundary =
   | "kernel_enforced"
@@ -59,11 +61,43 @@ export interface PromptProvenance {
 export interface DecapodClientOptions {
   readonly binaryPath?: string;
   readonly nativeAddonPath?: string;
+  readonly preferNative?: boolean;
   readonly cwd: string;
   readonly agentId: string;
   readonly sessionPassword?: string;
   readonly extraEnv?: Readonly<Record<string, string>>;
   readonly defaultTimeoutMs?: number;
+}
+
+export interface NativeAddonBinding {
+  kernelVersion(): string;
+  evalPrompt(prompt: string): string;
+  validateDarkmatterSnapshotJson(snapshotJson: string): string;
+  harnessCompatibilityMatrixJson(): string;
+  generateHarnessPackageJson(
+    harness: string,
+    executablePath: string,
+    repositoryRoot: string,
+    minVersion: string,
+  ): string;
+  executeRpcSync(
+    cwd: string,
+    agentId: string,
+    sessionPassword: string | null | undefined,
+    op: string,
+    paramsJson: string,
+    requestId?: string | null,
+  ): string;
+  executeRpcAsync(
+    cwd: string,
+    agentId: string,
+    sessionPassword: string | null | undefined,
+    op: string,
+    paramsJson: string,
+    requestId?: string | null,
+    signal?: AbortSignal | null,
+  ): Promise<string>;
+  cancelFlagSmokeTest(): boolean;
 }
 
 export interface InvocationOptions {
@@ -292,6 +326,23 @@ export function classifyDecapodError(exitCode: number, stderr: string, stdout: s
   });
 }
 
+export function resolveDefaultNativeAddonPath(): string | undefined {
+  const filename = `decapod.${process.platform}-${process.arch}.node`;
+  const candidates = [
+    resolve(dirname(new URL(import.meta.url).pathname), "../native", filename),
+    resolve(dirname(new URL(import.meta.url).pathname), "../../native", filename),
+  ];
+  return candidates.find((candidate) => existsSync(candidate));
+}
+
+function loadNativeAddon(nativeAddonPath?: string): NativeAddonBinding | undefined {
+  if (!nativeAddonPath || !existsSync(nativeAddonPath)) {
+    return undefined;
+  }
+  const req = createRequire(import.meta.url);
+  return req(nativeAddonPath) as NativeAddonBinding;
+}
+
 /**
  * Probe whether an optional N-API prebuild exists; always reports explicit
  * `cli_process` fallback metadata when absent so hosts never silently downgrade.
@@ -328,6 +379,7 @@ export class DecapodClient implements DecapodTransport {
   private readonly extraEnv: Readonly<Record<string, string>>;
   private readonly defaultTimeoutMs: number;
   private readonly transportMeta: TransportMetadata;
+  private readonly nativeAddon?: NativeAddonBinding;
 
   constructor(options: DecapodClientOptions) {
     if (!options.cwd || options.cwd.trim() === "") {
@@ -342,7 +394,14 @@ export class DecapodClient implements DecapodTransport {
     this.sessionPassword = options.sessionPassword;
     this.extraEnv = Object.freeze({ ...(options.extraEnv ?? {}) });
     this.defaultTimeoutMs = options.defaultTimeoutMs ?? 30_000;
-    this.transportMeta = probeTransport(this.binaryPath, options.nativeAddonPath);
+    const resolvedAddon =
+      options.nativeAddonPath ??
+      (options.preferNative ? resolveDefaultNativeAddonPath() : undefined);
+    this.nativeAddon = loadNativeAddon(resolvedAddon);
+    this.transportMeta = probeTransport(
+      this.binaryPath,
+      this.nativeAddon ? resolvedAddon : options.nativeAddonPath,
+    );
   }
 
   transportInfo(): TransportMetadata {
@@ -459,6 +518,48 @@ export class DecapodClient implements DecapodTransport {
     params: Readonly<Record<string, unknown>> = {},
     options: InvocationOptions = {},
   ): Promise<RpcEnvelope<T>> {
+    if (this.nativeAddon) {
+      if (options.signal?.aborted) {
+        throw new DOMException("Decapod native invocation aborted before execution", "AbortError");
+      }
+      try {
+        const rawStdout = await this.nativeAddon.executeRpcAsync(
+          this.cwd,
+          this.agentId,
+          this.sessionPassword ?? null,
+          op,
+          JSON.stringify(params),
+          null,
+          options.signal ?? null,
+        );
+        const obj = JSON.parse(rawStdout) as Record<string, unknown>;
+        const ok = obj.success !== false;
+        return {
+          ok,
+          op,
+          result: ("result" in obj ? obj.result : obj) as T,
+          error: ok ? undefined : String(obj.error ?? rawStdout),
+          rawStdout,
+          rawStderr: "",
+          exitCode: ok ? 0 : 1,
+          transport: this.transportMeta,
+        };
+      } catch (err) {
+        if (options.signal?.aborted) {
+          throw new DOMException("Decapod native invocation cancelled", "AbortError");
+        }
+        const msg = err instanceof Error ? err.message : String(err);
+        return {
+          ok: false,
+          op,
+          error: msg,
+          rawStdout: "",
+          rawStderr: msg,
+          exitCode: 1,
+          transport: this.transportMeta,
+        };
+      }
+    }
     const out = await this.exec(
       ["rpc", "--op", op, "--params", JSON.stringify(params)],
       options,
@@ -498,6 +599,27 @@ export class DecapodClient implements DecapodTransport {
     provenance: PromptProvenance,
     options: InvocationOptions = {},
   ): Promise<EvalPromptResult> {
+    if (this.nativeAddon) {
+      if (options.signal?.aborted) {
+        throw new DOMException("Decapod native eval aborted before execution", "AbortError");
+      }
+      const raw = this.nativeAddon.evalPrompt(provenance.rawHumanPrompt);
+      const parsed = JSON.parse(raw) as {
+        status?: string;
+        prompt_sha256?: string;
+        findings?: readonly unknown[];
+        action?: string;
+      };
+      return {
+        allowed: parsed.status === "allow",
+        status: parsed.status ?? "unknown",
+        promptSha256: parsed.prompt_sha256,
+        findings: parsed.findings,
+        action: parsed.action,
+        raw,
+        transport: this.transportMeta,
+      };
+    }
     const out = await this.exec(["eval", "--stdin", "--format", "json"], {
       ...options,
       stdin: provenance.rawHumanPrompt,

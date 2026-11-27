@@ -3616,6 +3616,9 @@ pub fn run() -> Result<(), error::DecapodError> {
             store: &store,
             request,
             mandates: vec![],
+            agent_id: "cli",
+            session_password: None,
+            allow_process_session_cache: true,
         })?;
         println!(
             "{}",
@@ -4823,9 +4826,10 @@ fn rpc_op_requires_worktree(op: &str) -> bool {
     )
 }
 
-fn enforce_worktree_requirement_for_rpc(
+fn enforce_worktree_requirement_for_rpc_in_dir(
     op: &str,
-    _project_root: &Path,
+    current_dir: &Path,
+    agent_id: &str,
 ) -> Result<(), error::DecapodError> {
     if std::env::var("DECAPOD_VALIDATE_SKIP_GIT_GATES").is_ok() {
         return Ok(());
@@ -4834,8 +4838,7 @@ fn enforce_worktree_requirement_for_rpc(
         return Ok(());
     }
 
-    let current_dir = std::env::current_dir()?;
-    let status = crate::core::workspace::get_workspace_status(&current_dir)?;
+    let status = crate::core::workspace::get_workspace_status(current_dir)?;
     if status.git.in_worktree {
         let worktree_path = status
             .git
@@ -4858,11 +4861,11 @@ fn enforce_worktree_requirement_for_rpc(
                 worktree_path.display()
             )));
         }
-        let main = crate::core::workspace::get_main_repo_root(&current_dir)?;
+        let main = crate::core::workspace::get_main_repo_root(current_dir)?;
         crate::core::todo::check_authoring(
             &main.join(".decapod/data"),
-            &current_dir,
-            &current_agent_id(),
+            current_dir,
+            agent_id,
             false,
         )?;
         return Ok(());
@@ -5457,11 +5460,13 @@ fn write_awareness_record(
     Ok(())
 }
 
-fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::DecapodError> {
-    let agent_id = current_agent_id();
-    let session_token = read_agent_session(project_root, &agent_id)?.map(|s| s.token);
+fn mark_constitution_initialized_for_agent(
+    project_root: &Path,
+    agent_id: &str,
+) -> Result<(), error::DecapodError> {
+    let session_token = read_agent_session(project_root, agent_id)?.map(|s| s.token);
     let now = now_epoch_secs();
-    let existing = read_awareness_record(project_root, &agent_id)?;
+    let existing = read_awareness_record(project_root, agent_id)?;
     let mut source_ops = existing
         .as_ref()
         .map(|r| r.source_ops.clone())
@@ -5470,7 +5475,7 @@ fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::Decap
         source_ops.push("agent.init".to_string());
     }
     let rec = ConstitutionalAwarenessRecord {
-        agent_id,
+        agent_id: agent_id.to_string(),
         session_token,
         initialized_at_epoch_secs: now,
         validated_at_epoch_secs: existing.as_ref().and_then(|r| r.validated_at_epoch_secs),
@@ -5483,12 +5488,14 @@ fn mark_constitution_initialized(project_root: &Path) -> Result<(), error::Decap
     write_awareness_record(project_root, &rec)
 }
 
-fn mark_constitution_context_resolved(project_root: &Path) -> Result<(), error::DecapodError> {
-    let agent_id = current_agent_id();
+fn mark_constitution_context_resolved_for_agent(
+    project_root: &Path,
+    agent_id: &str,
+) -> Result<(), error::DecapodError> {
     let mut rec =
-        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
-            agent_id: agent_id.clone(),
-            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+        read_awareness_record(project_root, agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.to_string(),
+            session_token: read_agent_session(project_root, agent_id)?.map(|s| s.token),
             initialized_at_epoch_secs: now_epoch_secs(),
             validated_at_epoch_secs: None,
             core_constitution_ingested_at_epoch_secs: None,
@@ -5538,11 +5545,18 @@ fn mark_core_constitution_ingested(
     project_root: &Path,
     source_op: &str,
 ) -> Result<(), error::DecapodError> {
-    let agent_id = current_agent_id();
+    mark_core_constitution_ingested_for_agent(project_root, &current_agent_id(), source_op)
+}
+
+fn mark_core_constitution_ingested_for_agent(
+    project_root: &Path,
+    agent_id: &str,
+    source_op: &str,
+) -> Result<(), error::DecapodError> {
     let mut rec =
-        read_awareness_record(project_root, &agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
-            agent_id: agent_id.clone(),
-            session_token: read_agent_session(project_root, &agent_id)?.map(|s| s.token),
+        read_awareness_record(project_root, agent_id)?.unwrap_or(ConstitutionalAwarenessRecord {
+            agent_id: agent_id.to_string(),
+            session_token: read_agent_session(project_root, agent_id)?.map(|s| s.token),
             initialized_at_epoch_secs: now_epoch_secs(),
             validated_at_epoch_secs: None,
             core_constitution_ingested_at_epoch_secs: None,
@@ -5612,70 +5626,93 @@ fn cleanup_expired_sessions(
 fn ensure_session_valid() -> Result<(), error::DecapodError> {
     let current_dir = std::env::current_dir()?;
     let project_root = find_decapod_project_root(&current_dir)?;
-    let store_root = find_governance_root(&project_root)
-        .join(".decapod")
-        .join("data");
-    let is_cloud = core::cloud_workspace::is_cloud_project(&project_root);
-    if is_cloud {
-        let _ = cleanup_expired_sessions(&project_root, None)?;
-    } else {
-        core::fs_permissions::ensure_storage_dir(&store_root)
-            .map_err(error::DecapodError::IoError)?;
-        let _ = cleanup_expired_sessions(&project_root, Some(&store_root))?;
-    }
-
     let agent_id = current_agent_id();
-    let session = read_agent_session(&project_root, &agent_id)?;
-    let Some(session) = session else {
-        // Auto-acquire session if none exists (entrypoint funnel behavior)
-        return auto_acquire_session(&project_root, &agent_id);
-    };
-
-    let backend = configured_session_backend(&project_root);
-    if !session_token_matches_backend(&session.token, backend) {
-        let _ = remove_agent_session_files(&project_root, &agent_id);
-        return auto_acquire_session(&project_root, &agent_id);
-    }
-
-    if session.expires_at_epoch_secs <= now_epoch_secs() {
-        let _ = remove_agent_session_files(&project_root, &agent_id);
-        if !is_cloud {
-            let _ = todo::cleanup_stale_agent_assignments(
-                &store_root,
-                std::slice::from_ref(&agent_id),
-                "session.expired",
-            );
-        }
-        // Auto-acquire session if expired (entrypoint funnel behavior)
-        return auto_acquire_session(&project_root, &agent_id);
-    }
-
-    if agent_id == "unknown" {
-        // Force session instantiation for unknown agents (required for validate)
-        return auto_acquire_session(&project_root, &agent_id);
-    }
-
-    // Read from OnceLock first (process-local), fall back to env if not set
     let supplied_p = SESSION_P_VAL
         .get()
         .cloned()
         .or_else(|| std::env::var("DECAPOD_SESSION_PASSWORD").ok())
         .inspect(|p| {
-            // Cache it in OnceLock if found in env
             let _ = SESSION_P_VAL.get_or_init(|| p.clone());
         });
+    ensure_session_valid_in_dir(&project_root, &agent_id, supplied_p.as_deref(), true)
+}
 
-    let supplied_p = match supplied_p {
-        Some(p) => p,
-        None => {
-            // No password in env - auto-acquire new session (entrypoint funnel)
-            return auto_acquire_session(&project_root, &agent_id);
+fn ensure_session_valid_in_dir(
+    project_root: &Path,
+    agent_id: &str,
+    supplied_password: Option<&str>,
+    allow_process_cache: bool,
+) -> Result<(), error::DecapodError> {
+    let store_root = find_governance_root(project_root)
+        .join(".decapod")
+        .join("data");
+    let is_cloud = core::cloud_workspace::is_cloud_project(project_root);
+    if is_cloud {
+        let _ = cleanup_expired_sessions(project_root, None)?;
+    } else {
+        core::fs_permissions::ensure_storage_dir(&store_root)
+            .map_err(error::DecapodError::IoError)?;
+        let _ = cleanup_expired_sessions(project_root, Some(&store_root))?;
+    }
+
+    let session = read_agent_session(project_root, agent_id)?;
+    let Some(session) = session else {
+        if !allow_process_cache && agent_id != "unknown" {
+            return Err(error::DecapodError::ValidationError(format!(
+                "INVALID_SESSION: no active session found for agent '{agent_id}'"
+            )));
         }
+        return auto_acquire_session_with_cache(project_root, agent_id, allow_process_cache);
     };
-    let supplied_hash = hash_password(&supplied_p, &session.token);
+
+    let backend = configured_session_backend(project_root);
+    if !session_token_matches_backend(&session.token, backend) {
+        let _ = remove_agent_session_files(project_root, agent_id);
+        if !allow_process_cache && agent_id != "unknown" {
+            return Err(error::DecapodError::ValidationError(format!(
+                "INVALID_SESSION: session backend mismatch for agent '{agent_id}'"
+            )));
+        }
+        return auto_acquire_session_with_cache(project_root, agent_id, allow_process_cache);
+    }
+
+    if session.expires_at_epoch_secs <= now_epoch_secs() {
+        let _ = remove_agent_session_files(project_root, agent_id);
+        if !is_cloud {
+            let _ = todo::cleanup_stale_agent_assignments(
+                &store_root,
+                &[agent_id.to_string()],
+                "session.expired",
+            );
+        }
+        if !allow_process_cache && agent_id != "unknown" {
+            return Err(error::DecapodError::ValidationError(format!(
+                "INVALID_SESSION: session expired for agent '{agent_id}'"
+            )));
+        }
+        return auto_acquire_session_with_cache(project_root, agent_id, allow_process_cache);
+    }
+
+    if agent_id == "unknown" {
+        return auto_acquire_session_with_cache(project_root, agent_id, allow_process_cache);
+    }
+
+    let Some(supplied_p) = supplied_password else {
+        if !allow_process_cache {
+            return Err(error::DecapodError::ValidationError(format!(
+                "INVALID_SESSION: explicit session password required for library invocation by '{agent_id}'"
+            )));
+        }
+        return auto_acquire_session_with_cache(project_root, agent_id, true);
+    };
+    let supplied_hash = hash_password(supplied_p, &session.token);
     if supplied_hash != session.password_hash {
-        // Password invalid - auto-acquire new session (entrypoint funnel)
-        return auto_acquire_session(&project_root, &agent_id);
+        if !allow_process_cache {
+            return Err(error::DecapodError::ValidationError(format!(
+                "INVALID_SESSION: invalid session password for agent '{agent_id}'"
+            )));
+        }
+        return auto_acquire_session_with_cache(project_root, agent_id, true);
     }
     Ok(())
 }
@@ -5699,7 +5736,11 @@ fn remove_agent_session_files(
     Ok(removed)
 }
 
-fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error::DecapodError> {
+fn auto_acquire_session_with_cache(
+    project_root: &Path,
+    agent_id: &str,
+    allow_process_cache: bool,
+) -> Result<(), error::DecapodError> {
     let issued = now_epoch_secs();
     let expires = issued.saturating_add(session_ttl_secs());
     let token = new_session_token(configured_session_backend(project_root));
@@ -5713,11 +5754,12 @@ fn auto_acquire_session(project_root: &Path, agent_id: &str) -> Result<(), error
     };
     write_agent_session(project_root, &rec)?;
 
-    // Set the password for subsequent operations in this process using process-local OnceLock
-    // Eliminates unsafe env::set_var and multi-threading UB
-    SESSION_P_VAL.get_or_init(|| temp_p.clone());
-
-    eprintln!("session: auto-acquired for agent '{agent_id}'.");
+    if allow_process_cache {
+        // Set the password for subsequent CLI operations in this process using process-local OnceLock
+        // Eliminates unsafe env::set_var and multi-threading UB
+        SESSION_P_VAL.get_or_init(|| temp_p.clone());
+        eprintln!("session: auto-acquired for agent '{agent_id}'.");
+    }
 
     Ok(())
 }
@@ -9831,16 +9873,16 @@ fn rpc_op_skips_mandate_enforcement(op: &str) -> bool {
     )
 }
 
-fn enforce_constitutional_awareness_for_rpc(
+fn enforce_constitutional_awareness_for_rpc_for_agent(
     op: &str,
     project_root: &Path,
+    agent_id: &str,
 ) -> Result<(), error::DecapodError> {
     if !rpc_op_requires_constitutional_awareness(op) {
         return Ok(());
     }
 
-    let agent_id = current_agent_id();
-    let rec = read_awareness_record(project_root, &agent_id)?;
+    let rec = read_awareness_record(project_root, agent_id)?;
     let Some(rec) = rec else {
         return Err(error::DecapodError::ValidationError(
             r#"Constitutional awareness required before mutating operations. Run `decapod validate`, then `decapod session acquire`, `decapod rpc --op agent.init`, `decapod rpc --op constitution.get --params '{"section":"core/DECAPOD"}'`, and `decapod rpc --op context.resolve`."#
@@ -9869,7 +9911,7 @@ fn enforce_constitutional_awareness_for_rpc(
         ));
     }
 
-    if let Some(session) = read_agent_session(project_root, &agent_id)?
+    if let Some(session) = read_agent_session(project_root, agent_id)?
         && rec.session_token.as_deref() != Some(session.token.as_str())
     {
         return Err(error::DecapodError::ValidationError(
@@ -13078,6 +13120,118 @@ fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodErro
             }
             Ok(())
         }
+        IntegrationCommand::Harness(harness_cli) => run_harness_integration_command(harness_cli),
+    }
+}
+
+fn run_harness_integration_command(cli: HarnessCli) -> Result<(), error::DecapodError> {
+    use core::agent_interop::registry::{
+        HarnessId, generate_harness_package, harness_compatibility_matrix, install_harness_package,
+        remove_harness_package,
+    };
+
+    let resolve_repo_root = |dir: Option<PathBuf>| -> Result<PathBuf, error::DecapodError> {
+        let base = match dir {
+            Some(d) => d,
+            None => std::env::current_dir().map_err(error::DecapodError::IoError)?,
+        };
+        Ok(find_decapod_project_root(&base).unwrap_or(base))
+    };
+    let resolve_exe = |exe: Option<PathBuf>| -> String {
+        exe.or_else(|| std::env::current_exe().ok())
+            .map(|p| p.to_string_lossy().to_string())
+            .unwrap_or_else(|| "decapod".to_string())
+    };
+    let select_harnesses =
+        |harness: Option<String>, all: bool| -> Result<Vec<HarnessId>, error::DecapodError> {
+            if all {
+                Ok(HarnessId::all().to_vec())
+            } else if let Some(raw) = harness {
+                let id = HarnessId::parse(&raw).map_err(error::DecapodError::ValidationError)?;
+                Ok(vec![id])
+            } else {
+                Err(error::DecapodError::ValidationError(
+                    "HARNESS_REQUIRED: pass --harness <name> or --all".to_string(),
+                ))
+            }
+        };
+
+    match cli.command {
+        HarnessCommand::Matrix { format } => {
+            let matrix = harness_compatibility_matrix();
+            if format == "json" {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&matrix).map_err(io::Error::other)?
+                );
+            } else {
+                for row in &matrix {
+                    println!(
+                        "{} ({}): mechanism='{}' hooks={:?} live_verified={}",
+                        row.display_name,
+                        row.harness.slug(),
+                        row.pinned_mechanism,
+                        row.cooperative_hook_surface,
+                        row.live_host_verified
+                    );
+                }
+            }
+            Ok(())
+        }
+        HarnessCommand::Generate {
+            harness,
+            dir,
+            executable,
+            min_version,
+        } => {
+            let id = HarnessId::parse(&harness).map_err(error::DecapodError::ValidationError)?;
+            let root = resolve_repo_root(dir)?;
+            let exe = resolve_exe(executable);
+            let pkg = generate_harness_package(id, &exe, &root.to_string_lossy(), &min_version)
+                .map_err(error::DecapodError::ValidationError)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&pkg).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
+        HarnessCommand::Install {
+            harness,
+            all,
+            dir,
+            executable,
+            min_version,
+        } => {
+            let root = resolve_repo_root(dir)?;
+            let exe = resolve_exe(executable);
+            let targets = select_harnesses(harness, all)?;
+            let mut reports = Vec::with_capacity(targets.len());
+            for id in targets {
+                let rep = install_harness_package(&root, id, &exe, &min_version)
+                    .map_err(error::DecapodError::ValidationError)?;
+                reports.push(rep);
+            }
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&reports).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
+        HarnessCommand::Remove { harness, all, dir } => {
+            let root = resolve_repo_root(dir)?;
+            let targets = select_harnesses(harness, all)?;
+            let mut reports = Vec::with_capacity(targets.len());
+            for id in targets {
+                let rep = remove_harness_package(&root, id)
+                    .map_err(error::DecapodError::ValidationError)?;
+                reports.push(rep);
+            }
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&reports).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
     }
 }
 
@@ -13595,6 +13749,9 @@ struct RpcCtx<'a> {
     store: &'a Store,
     request: &'a crate::core::rpc::RpcRequest,
     mandates: Vec<crate::core::docs::Mandate>,
+    agent_id: &'a str,
+    session_password: Option<&'a str>,
+    allow_process_session_cache: bool,
 }
 
 mod rpc_handlers {
@@ -13613,16 +13770,17 @@ mod rpc_handlers {
 
         let workspace_status = workspace::get_workspace_status(ctx.project_root)?;
         if workspace_status.git.in_worktree && workspace_status.can_work {
-            ensure_session_valid()?;
-            workspace::initialize_workbranch_governance(
+            ensure_session_valid_in_dir(
                 ctx.project_root,
-                &current_agent_id(),
-                None,
+                ctx.agent_id,
+                ctx.session_password,
+                ctx.allow_process_session_cache,
             )?;
+            workspace::initialize_workbranch_governance(ctx.project_root, ctx.agent_id, None)?;
         }
         let mut allowed_ops = workspace::get_allowed_ops(&workspace_status);
 
-        let agent_id = current_agent_id();
+        let agent_id = ctx.agent_id;
         let is_cloud = core::cloud_workspace::is_cloud_project(ctx.project_root);
         if agent_id != "unknown"
             && !is_cloud
@@ -13723,7 +13881,7 @@ mod rpc_handlers {
             ctx.mandates.clone(),
         );
 
-        mark_constitution_initialized(ctx.project_root)?;
+        mark_constitution_initialized_for_agent(ctx.project_root, ctx.agent_id)?;
         Ok(response)
     }
 
@@ -13765,8 +13923,13 @@ mod rpc_handlers {
         let params: WorkspaceEnsureParams = serde_json::from_value(ctx.request.params.clone())
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
-        ensure_session_valid()?;
-        let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_else(|_| "unknown".to_string());
+        ensure_session_valid_in_dir(
+            ctx.project_root,
+            ctx.agent_id,
+            ctx.session_password,
+            ctx.allow_process_session_cache,
+        )?;
+        let agent_id = ctx.agent_id.to_string();
         let config = params.branch.map(|b| workspace::WorkspaceConfig {
             branch: Some(b),
             use_container: false,
@@ -13977,7 +14140,7 @@ mod rpc_handlers {
             }
             return Ok(refused);
         }
-        mark_constitution_context_resolved(ctx.project_root)?;
+        mark_constitution_context_resolved_for_agent(ctx.project_root, ctx.agent_id)?;
         Ok(response)
     }
 
@@ -14201,7 +14364,11 @@ mod rpc_handlers {
             );
         }
 
-        mark_core_constitution_ingested(ctx.project_root, "constitution.get")?;
+        mark_core_constitution_ingested_for_agent(
+            ctx.project_root,
+            ctx.agent_id,
+            "constitution.get",
+        )?;
 
         Ok(success_response(
             ctx.request.id.clone(),
@@ -14663,7 +14830,12 @@ mod rpc_handlers {
             target: params.target,
         };
         invocation.validate()?;
-        ensure_session_valid()?;
+        ensure_session_valid_in_dir(
+            ctx.project_root,
+            ctx.agent_id,
+            ctx.session_password,
+            ctx.allow_process_session_cache,
+        )?;
         let readiness = super::run_current_workbranch_readiness_with(ctx.project_root, &invocation);
         let tmp_cleanup_guidance = readiness
             .ready
@@ -14725,7 +14897,12 @@ mod rpc_handlers {
             ));
         }
 
-        ensure_session_valid()?;
+        ensure_session_valid_in_dir(
+            ctx.project_root,
+            ctx.agent_id,
+            ctx.session_password,
+            ctx.allow_process_session_cache,
+        )?;
         let workspace_root = &ctx.project_root;
         let governance_root = super::find_governance_root(workspace_root);
         let project_store = Store {
@@ -15328,7 +15505,17 @@ mod rpc_handlers {
             .map_err(|e| error::DecapodError::ValidationError(format!("Invalid params: {e}")))?;
 
         let mut agents = Vec::new();
-        if let Ok(agent_id) = std::env::var("DECAPOD_AGENT_ID") {
+        if ctx.agent_id != "unknown" {
+            agents.push(AgentSessionInfo {
+                agent_id: ctx.agent_id.to_string(),
+                provider: std::env::var("DECAPOD_AGENT_PROVIDER")
+                    .unwrap_or_else(|_| "unknown".to_string()),
+                session_id: std::env::var("DECAPOD_SESSION_ID")
+                    .unwrap_or_else(|_| "unknown".to_string()),
+                active_task_id: std::env::var("DECAPOD_TASK_ID").ok(),
+                last_heartbeat: crate::core::time::now_epoch_z(),
+            });
+        } else if let Ok(agent_id) = std::env::var("DECAPOD_AGENT_ID") {
             agents.push(AgentSessionInfo {
                 agent_id,
                 provider: std::env::var("DECAPOD_AGENT_PROVIDER")
@@ -15414,7 +15601,7 @@ mod rpc_handlers {
             .map_err(|e| {
             error::DecapodError::ValidationError(format!("Invalid params: {e}"))
         })?;
-        let actor_id = current_agent_id();
+        let actor_id = ctx.agent_id.to_string();
         let mut req = crate::core::effective_grant::GrantEvaluationRequest::for_operation(
             params.command,
             actor_id,
@@ -16871,9 +17058,11 @@ fn classify_decapod_error_for_rpc(
 
 fn emit_rpc_error_response(
     project_root: &Path,
+    agent_id: &str,
     request: &core::rpc::RpcRequest,
     err: error::DecapodError,
     mandates: Vec<core::docs::Mandate>,
+    emit_stdout: bool,
 ) -> error::DecapodError {
     let (code, blocker, custom_details) = classify_decapod_error_for_rpc(&request.op, &err);
     let safe_params = core::cloud_admin::redact_json_value(&request.params);
@@ -16905,7 +17094,7 @@ fn emit_rpc_error_response(
     let trace_event = trace::TraceEvent {
         trace_id: request.id.clone(),
         ts: crate::core::time::now_epoch_z(),
-        actor: current_agent_id(),
+        actor: agent_id.to_string(),
         op: request.op.clone(),
         request: serde_json::to_value(&core::rpc::RpcRequest {
             op: request.op.clone(),
@@ -16919,61 +17108,180 @@ fn emit_rpc_error_response(
         ),
     };
     let _ = trace::append_trace(project_root, trace_event);
-    println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    if emit_stdout {
+        println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    }
     err
 }
 
-fn run_rpc_command(
-    cli: RpcCli,
-    project_root: &Path,
-    predecoded: Option<core::rpc::RpcRequest>,
+/// Caller-isolated request for concurrent in-process Decapod library invocations (#1277).
+///
+/// Guarantees: zero `std::process::exit`, zero process-global `SESSION_P_VAL` reads/writes,
+/// zero `std::env::set_current_dir` mutations, and cooperative cancellation via `AtomicBool`.
+#[derive(Debug, Clone)]
+pub struct LibraryRpcRequest {
+    pub cwd: PathBuf,
+    pub agent_id: String,
+    pub session_password: Option<String>,
+    pub op: String,
+    pub params: serde_json::Value,
+    pub request_id: Option<String>,
+}
+
+/// Return the compiled Decapod kernel version without invoking CLI argument parsing.
+pub fn library_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
+/// Evaluate an untrusted prompt directly in-process without spawning a child binary.
+pub fn evaluate_prompt_library(prompt: &str) -> core::agent_eval::EvalResult {
+    core::agent_eval::evaluate_prompt(prompt)
+}
+
+/// Validate a Darkmatter read-only snapshot directly in-process without mutating state.
+pub fn validate_darkmatter_snapshot_library(
+    snapshot: &core::houseboat::DarkmatterReadonlySnapshot,
+) -> Result<(), Vec<String>> {
+    core::houseboat::validate_darkmatter_snapshot(snapshot)
+}
+
+fn check_cancelled(
+    cancelled: Option<&std::sync::atomic::AtomicBool>,
 ) -> Result<(), error::DecapodError> {
-    use crate::core::rpc::*;
-
-    if cli.http_server {
-        let token = cli
-            .auth_token
-            .or_else(|| std::env::var("DECAPOD_HTTP_TOKEN").ok())
-            .ok_or_else(|| {
-                error::DecapodError::ValidationError(
-                    "authenticated HTTP transport requires --auth-token or DECAPOD_HTTP_TOKEN"
-                        .to_string(),
-                )
-            })?;
-        let root = project_root.to_path_buf();
-        let canonical_repo = std::fs::canonicalize(&root)
-            .unwrap_or_else(|_| root.clone())
-            .display()
-            .to_string();
-        let config = core::http_transport::HttpTransportConfig::for_rpc(
-            &cli.listen,
-            &token,
-            cli.allow_remote,
-            cli.max_body_bytes,
-            canonical_repo,
-        );
-        return core::http_transport::serve_with_config(config, move |req| {
-            http_rpc_handler(&root, &req.body)
-        })
-        .map_err(error::DecapodError::IoError);
+    if cancelled.is_some_and(|flag| flag.load(std::sync::atomic::Ordering::Acquire)) {
+        return Err(error::DecapodError::ValidationError(
+            "CANCELLED: library operation cancelled by caller".to_string(),
+        ));
     }
+    Ok(())
+}
 
-    let request = match predecoded {
-        Some(request) => request,
-        None => parse_rpc_request(&cli)?,
+/// Execute a single Decapod RPC operation in-process with explicit per-caller `cwd`,
+/// `agent_id`, optional `session_password`, and cooperative cancellation.
+pub fn execute_library_rpc(
+    req: LibraryRpcRequest,
+    cancelled: Option<&std::sync::atomic::AtomicBool>,
+) -> Result<crate::core::rpc::RpcResponse, error::DecapodError> {
+    use crate::core::rpc::{RpcRequest, default_request_id};
+
+    check_cancelled(cancelled)?;
+    if req.agent_id.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "LibraryRpcRequest requires a non-empty agent_id".to_string(),
+        ));
+    }
+    if !core::interop::RPC_OPS.contains(&req.op.as_str()) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "UNKNOWN_OP: unsupported RPC op '{}'",
+            req.op
+        )));
+    }
+    let request = RpcRequest {
+        op: req.op,
+        params: req.params,
+        id: req.request_id.unwrap_or_else(default_request_id),
+        session: None,
     };
+    if request.op == "schema.get" {
+        // Pure embedded reference: match CLI short-circuit so schema inspection works
+        // without config/session/mandate prerequisites.
+        let store = Store {
+            kind: StoreKind::Repo,
+            root: req.cwd.join(".decapod/data"),
+        };
+        let response = rpc_handlers::handle_schema_get(&RpcCtx {
+            project_root: &req.cwd,
+            store: &store,
+            request: &request,
+            mandates: vec![],
+            agent_id: &req.agent_id,
+            session_password: req.session_password.as_deref(),
+            allow_process_session_cache: false,
+        })?;
+        check_cancelled(cancelled)?;
+        return Ok(response);
+    }
+    let project_root = find_decapod_project_root(&req.cwd)?;
+    dispatch_rpc_request_internal(
+        &project_root,
+        &request,
+        RpcDispatchOptions {
+            invocation_dir: &req.cwd,
+            agent_id: &req.agent_id,
+            supplied_password: req.session_password.as_deref(),
+            allow_process_session_cache: false,
+            emit_error_stdout: false,
+            cancelled,
+        },
+    )
+}
 
-    if let Err(err) = enforce_worktree_requirement_for_rpc(&request.op, project_root) {
-        return Err(emit_rpc_error_response(project_root, &request, err, vec![]));
+struct RpcDispatchOptions<'a> {
+    invocation_dir: &'a Path,
+    agent_id: &'a str,
+    supplied_password: Option<&'a str>,
+    allow_process_session_cache: bool,
+    emit_error_stdout: bool,
+    cancelled: Option<&'a std::sync::atomic::AtomicBool>,
+}
+
+fn dispatch_rpc_request_internal(
+    project_root: &Path,
+    request: &core::rpc::RpcRequest,
+    opts: RpcDispatchOptions<'_>,
+) -> Result<core::rpc::RpcResponse, error::DecapodError> {
+    use crate::core::rpc::*;
+    let RpcDispatchOptions {
+        invocation_dir,
+        agent_id,
+        supplied_password,
+        allow_process_session_cache,
+        emit_error_stdout,
+        cancelled,
+    } = opts;
+
+    check_cancelled(cancelled)?;
+    if let Err(err) =
+        enforce_worktree_requirement_for_rpc_in_dir(&request.op, invocation_dir, agent_id)
+    {
+        return Err(emit_rpc_error_response(
+            project_root,
+            agent_id,
+            request,
+            err,
+            vec![],
+            emit_error_stdout,
+        ));
     }
 
     if !rpc_op_bypasses_session(&request.op)
-        && let Err(err) = ensure_session_valid()
+        && let Err(err) = ensure_session_valid_in_dir(
+            project_root,
+            agent_id,
+            supplied_password,
+            allow_process_session_cache,
+        )
     {
-        return Err(emit_rpc_error_response(project_root, &request, err, vec![]));
+        return Err(emit_rpc_error_response(
+            project_root,
+            agent_id,
+            request,
+            err,
+            vec![],
+            emit_error_stdout,
+        ));
     }
-    if let Err(err) = enforce_constitutional_awareness_for_rpc(&request.op, project_root) {
-        return Err(emit_rpc_error_response(project_root, &request, err, vec![]));
+    if let Err(err) =
+        enforce_constitutional_awareness_for_rpc_for_agent(&request.op, project_root, agent_id)
+    {
+        return Err(emit_rpc_error_response(
+            project_root,
+            agent_id,
+            request,
+            err,
+            vec![],
+            emit_error_stdout,
+        ));
     }
 
     let governance_root = find_governance_root(project_root);
@@ -16989,7 +17297,6 @@ fn run_rpc_command(
         validate::evaluate_mandates(project_root, &project_store, &mandates)
     };
 
-    // If any mandate is blocked, we fail the operation
     let blocked_mandate = mandates.iter().find(|m| {
         mandate_blockers
             .iter()
@@ -17001,7 +17308,7 @@ fn run_rpc_command(
             .iter()
             .find(|b| b.message.contains(&mandate.fragment.title))
             .unwrap();
-        let response = error_response(
+        return Ok(error_response(
             request.id.clone(),
             request.op.clone(),
             request.params.clone(),
@@ -17009,18 +17316,20 @@ fn run_rpc_command(
             blocker.message.clone(),
             Some(blocker.clone()),
             mandates,
-        );
-        println!("{}", serde_json::to_string_pretty(&response).unwrap());
-        return rpc_validation_exit_status(&request.op, response.success);
+        ));
     }
 
     let rpc_ctx = RpcCtx {
         project_root,
         store: &project_store,
-        request: &request,
+        request,
         mandates: mandates.clone(),
+        agent_id,
+        session_password: supplied_password,
+        allow_process_session_cache,
     };
 
+    check_cancelled(cancelled)?;
     let outcome = match request.op.as_str() {
         "agent.init" => rpc_handlers::handle_agent_init(&rpc_ctx),
         "workspace.status" => rpc_handlers::handle_workspace_status(&rpc_ctx),
@@ -17074,9 +17383,9 @@ fn run_rpc_command(
         "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx),
         "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx),
         "cloud.orgs" | "cloud.members" | "cloud.invites" | "cloud.identity" | "cloud.billing" => {
-            let outcome = execute_cloud_admin_rpc(project_root, &request);
+            let outcome = execute_cloud_admin_rpc(project_root, request);
             Ok(cloud_admin_rpc_response(
-                &request,
+                request,
                 &outcome,
                 mandates.clone(),
             ))
@@ -17096,20 +17405,21 @@ fn run_rpc_command(
         Err(err) => {
             return Err(emit_rpc_error_response(
                 project_root,
-                &request,
+                agent_id,
+                request,
                 err,
                 mandates,
+                emit_error_stdout,
             ));
         }
     };
 
-    // Trace the RPC call (always redact secret material).
     let mut traced_request = request.clone();
     traced_request.params = core::cloud_admin::redact_json_value(&traced_request.params);
     let trace_event = trace::TraceEvent {
         trace_id: request.id.clone(),
         ts: crate::core::time::now_epoch_z(),
-        actor: current_agent_id(),
+        actor: agent_id.to_string(),
         op: request.op.clone(),
         request: serde_json::to_value(&traced_request).unwrap_or(serde_json::Value::Null),
         response: core::cloud_admin::redact_json_value(
@@ -17117,6 +17427,70 @@ fn run_rpc_command(
         ),
     };
     let _ = trace::append_trace(project_root, trace_event);
+
+    check_cancelled(cancelled)?;
+    Ok(response)
+}
+
+fn run_rpc_command(
+    cli: RpcCli,
+    project_root: &Path,
+    predecoded: Option<core::rpc::RpcRequest>,
+) -> Result<(), error::DecapodError> {
+    if cli.http_server {
+        let token = cli
+            .auth_token
+            .or_else(|| std::env::var("DECAPOD_HTTP_TOKEN").ok())
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "authenticated HTTP transport requires --auth-token or DECAPOD_HTTP_TOKEN"
+                        .to_string(),
+                )
+            })?;
+        let root = project_root.to_path_buf();
+        let canonical_repo = std::fs::canonicalize(&root)
+            .unwrap_or_else(|_| root.clone())
+            .display()
+            .to_string();
+        let config = core::http_transport::HttpTransportConfig::for_rpc(
+            &cli.listen,
+            &token,
+            cli.allow_remote,
+            cli.max_body_bytes,
+            canonical_repo,
+        );
+        return core::http_transport::serve_with_config(config, move |req| {
+            http_rpc_handler(&root, &req.body)
+        })
+        .map_err(error::DecapodError::IoError);
+    }
+
+    let request = match predecoded {
+        Some(request) => request,
+        None => parse_rpc_request(&cli)?,
+    };
+
+    let invocation_dir = std::env::current_dir()?;
+    let agent_id = current_agent_id();
+    let supplied_p = SESSION_P_VAL
+        .get()
+        .cloned()
+        .or_else(|| std::env::var("DECAPOD_SESSION_PASSWORD").ok())
+        .inspect(|p| {
+            let _ = SESSION_P_VAL.get_or_init(|| p.clone());
+        });
+    let response = dispatch_rpc_request_internal(
+        project_root,
+        &request,
+        RpcDispatchOptions {
+            invocation_dir: &invocation_dir,
+            agent_id: &agent_id,
+            supplied_password: supplied_p.as_deref(),
+            allow_process_session_cache: true,
+            emit_error_stdout: true,
+            cancelled: None,
+        },
+    )?;
 
     println!("{}", serde_json::to_string_pretty(&response).unwrap());
     rpc_validation_exit_status(&request.op, response.success)

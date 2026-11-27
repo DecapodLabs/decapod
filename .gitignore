@@ -15,6 +15,7 @@ dev/
 *.dll
 *.exe
 *.dylib
+*.node
 
 # --- Nix ---
 /result
