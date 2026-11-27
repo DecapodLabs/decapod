@@ -1,5 +1,10 @@
 # Operations
 
+## Building and Auditing Documentation (`#1977`, `#1978`)
+
+- **Local preview build & static discovery verification**: Run `mdbook build docs/book -d /tmp/decapod-book-preview && python3 assets/tools/docs_seo.py /tmp/decapod-book-preview` (using native arm64 `mdbook 0.4.40` on Apple Silicon) to verify rendered HTML, self-hosted `fonts/Geist*.woff2`, `sitemap.xml`, `llms.txt`, and canonical/JSON-LD tags without polluting the Git working tree.
+- **Alignment & headless browser readability audit**: Run `cargo test --test doc_alignment` and audit served preview HTML across `light`, `rust`, `navy`, `coal`, and `ayu` at `320px`, `390px`, `768px`, `1024px`, and `1440px` plus `1.25x` enlarged text to verify `pre > code` contrast (`>= 4.5:1`), zero sticky-header overlap on load or `#fragment` jumps, `>= 16px` body and `>= 14px` UI typography, zero horizontal overflow, working `Copy for your agent` / `⌘K` search controls, and zero third-party font requests.
+
 ## Harness installation, native TS addon builds, and 3-arm study telemetry (#875, #1277, #1095, #880)
 
 - **Install or remove harness discovery & hooks cleanly**: Run `decapod integration harness install --harness <id> --executable <path>` (or `--all`) inside a repository root to write conflict-safe MCP configs, `SKILL.md`, and Claude/OpenCode hooks; run `decapod integration harness remove --all` to strip Decapod-managed entries while preserving unrelated user configs.
@@ -558,7 +563,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Repository signal fingerprint: `7cedfa78a02749565b4fa4e28901d1b6fb2a00b57d5e82b46b88977ee4713c9b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

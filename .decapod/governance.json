@@ -891,6 +891,11 @@
       "id": "cp-3-journey",
       "summary": "Streamline 3-route landing and First Governed Result quickstart",
       "input_digest": "sha256:4931bb586e4944d2d84438c727ca323b23f135b3496f5c3e14e88ed70387d97d"
+    },
+    {
+      "id": "cp-4-specs",
+      "summary": "Author living specs and refresh projections for #1977 and #1978",
+      "input_digest": "sha256:42025edbfaefe94d699edf6328bffac367145fcba533277f07a5dc78238fc172"
     }
   ],
   "intents": {
@@ -945,8 +950,21 @@
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:23046fd76d2d7a7c7f7798aafa59ba5afb4487fb348967c4a2debc0e461307f1",
-      "checks": [],
+      "artifact_hash": "sha256:bc4bc6962cd35f513567ee6950e6addf01b541e3910ca769cad41dbc56961fd5",
+      "checks": [
+        {
+          "name": "chrome_qa_5themes_5viewports",
+          "status": "passed"
+        },
+        {
+          "name": "doc_alignment",
+          "status": "passed"
+        },
+        {
+          "name": "mdbook_docs_seo",
+          "status": "passed"
+        }
+      ],
       "custody": {
         "events": [
           {
@@ -960,18 +978,69 @@
             "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "refined",
             "sequence": 3
+          },
+          {
+            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
+            "event_id": "event:4",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 4
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 3,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
-        "trajectories": {}
+        "trajectories": {
+          "branch_docs_01m8fjpadj5ywkv7": {
+            "evidence_only": true,
+            "id": "branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "steps": [
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:4",
+                "observations": [
+                  "docs/book/theme/fonts/Geist-Variable.woff2",
+                  "docs/book/theme/fonts/GeistMono-Variable.woff2",
+                  "docs/book/theme/fonts/OFL-LICENSE.txt",
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/custom.css",
+                  "docs/book/src/index.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/configuration.md",
+                  "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
+                ],
+                "proof_refs": [
+                  "doc_alignment",
+                  "mdbook_docs_seo",
+                  "chrome_qa_5themes_5viewports"
+                ],
+                "scope": [
+                  "docs/book/**"
+                ],
+                "sequence": 4,
+                "validation_findings": []
+              }
+            ]
+          }
+        }
       },
       "declared_commands": [],
-      "evidence": [],
+      "evidence": [
+        "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
+      ],
       "inspected_files": [],
       "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
-      "modified_files": [],
+      "modified_files": [
+        "docs/book/src/configuration.md",
+        "docs/book/src/custom.css",
+        "docs/book/src/index.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/theme/fonts/Geist-Variable.woff2",
+        "docs/book/theme/fonts/GeistMono-Variable.woff2",
+        "docs/book/theme/fonts/OFL-LICENSE.txt",
+        "docs/book/theme/index.hbs"
+      ],
       "repo_scope": [
         "docs/book/**"
       ],

@@ -1,3 +1,11 @@
+## Public Documentation Reading Shell and Onboarding Contracts (`#1977`, `#1978`)
+
+- **Public documentation shell & accessibility interface (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**:
+  - Exposes cross-site header navigation (`Docs`, `Proof`, `Pricing`, `Admin`, `Trust`, `Rework`, `GitHub`) using `https://decapodlabs.ai/*`, a `⌘K`/`Ctrl+K` search trigger (`#search-toggle`), `#decapod-page-toc` / `#decapod-inline-toc` heading anchors with `scroll-margin-top` clearance beneath `#menu-bar`, `<link rel="help" type="text/plain" href="{{ path_to_root }}llms.txt">`, and local DOM-to-Markdown export (`#decapod-copy-agent-btn` / `window.__decapodBuildAgentMarkdown`) without external font or analytics requests.
+  - Enforces readable `>= 4.5:1` `pre > code` and highlight.js token contrast across all five mdBook themes (`light`, `rust`, `navy`, `coal`, `ayu`), `>= 16px` body text, and `>= 14px` UI/sidebar/TOC/table typography without horizontal overflow (`320px..1440px`).
+- **Onboarding & boundary contracts (`docs/book/src/index.md`, `docs/book/src/quickstart.md`, `docs/book/src/configuration.md`)**:
+  - Satisfies `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings`, avoids unqualified timing claims in `quickstart.md`, documents `cargo binstall decapod` vs `cargo install decapod --locked`, and distinguishes exact-commit `decapod validate` gating (with stale-receipt invalidation on commit edits) from arbitrary semantic correctness.
+
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -2719,7 +2727,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Repository signal fingerprint: `7cedfa78a02749565b4fa4e28901d1b6fb2a00b57d5e82b46b88977ee4713c9b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

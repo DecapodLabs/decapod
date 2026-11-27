@@ -1,3 +1,12 @@
+## Documentation Reading Shell and First Governed Result Journey (`#1977`, `#1978`)
+
+- **OpenShell-inspired mdBook reading shell & self-hosted Geist typography (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`, `docs/book/theme/fonts/`)**:
+  - Replaces Google Fonts CDN imports with self-hosted `Geist-Variable.woff2` and `GeistMono-Variable.woff2` (`OFL-LICENSE.txt`), declares `@font-face` rules targeting mdBook's copied `../fonts/` bundle, enforces `>= 16px` body copy and `>= 14px` UI/nav/sidebar/table labels, and anchors a sticky cross-site topbar alongside a left chapter drawer, `72ch` reading column, desktop right-rail `On this page` TOC (`>= 1240px`), and collapsible inline TOC (`< 1240px`) while preserving `#101`'s `llms.txt` `<link rel="help">` and footer links.
+  - Fixes light/dark `pre > code` highlight.js contrast across all five mdBook themes (`light`, `rust`, `navy`, `coal`, `ayu`) via unified `--decapod-code-bg: #1b1620` / `#f7efe8` token styles (`>= 4.5:1`), fixes sticky `#menu-bar` clearance via `scroll-padding-top` and `scroll-margin-top`, and implements local DOM-only Markdown serialization for `#decapod-copy-agent-btn` (`window.__decapodBuildAgentMarkdown`) plus `⌘K`/`Ctrl+K` search focus.
+- **Focused 3-route landing and First Governed Result journey (`docs/book/src/index.md`, `docs/book/src/quickstart.md`, `docs/book/src/configuration.md`)**:
+  - Streamlines `index.md` around three entry routes (`Start locally with your agent`, `Coordinate a team with Cloud`, `Inspect recorded proof`) while preserving all `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings` invariants (`decapodlabs.ai/pricing`, `signup`, `admin`, `Decapod Local`, `Decapod Cloud`, `$50/contributor/repo/mo`, `$0 surprise overages`).
+  - Separates human one-time install/`decapod init` from agent-invoked kernel commands in `quickstart.md`, documents `cargo binstall decapod` vs `cargo install decapod --locked` and SQLite prerequisites, moves detailed JSONL migration and `config-backups` prose to `configuration.md#legacy-upgrades-and-config-backups`, and adds an artifact-grounded First Governed Result walkthrough citing `https://decapodlabs.ai/proof.html` and `tests/workunit_verified_proof_1660.rs` (including stale-evidence invalidation and configured-gate limits).
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2187,7 +2196,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Repository signal fingerprint: `7cedfa78a02749565b4fa4e28901d1b6fb2a00b57d5e82b46b88977ee4713c9b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
