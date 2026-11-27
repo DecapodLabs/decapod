@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.169.0](https://github.com/DecapodLabs/decapod/compare/v0.168.0...v0.169.0) - 2026-11-27
+
+### Added
+
+- *(hosts)* Section 12 harness packaging, decapod-napi, Pi hooks & 3-arm outcomes (#875, #1277, #1095, #880)
+
 ## [0.168.0](https://github.com/DecapodLabs/decapod/compare/v0.167.0...v0.168.0) - 2026-11-27
 
 ### Fixed
