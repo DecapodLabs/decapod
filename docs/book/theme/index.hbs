@@ -11,15 +11,13 @@
         <base href="{{ base_url }}">
         {{/if}}
 
-
         <!-- Custom HTML head -->
         {{> head}}
 
         <meta name="description" content="{{ description }}">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#fff8ef">
+        <meta name="theme-color" content="#fff9f0">
         <meta name="color-scheme" content="light dark">
-        <link rel="help" type="text/plain" href="{{ path_to_root }}llms.txt" title="Agent documentation index">
 
         {{#if favicon_svg}}
         <link rel="icon" href="{{ path_to_root }}favicon.svg">
@@ -27,6 +25,7 @@
         {{#if favicon_png}}
         <link rel="shortcut icon" href="{{ path_to_root }}favicon.png">
         {{/if}}
+        <link rel="help" type="text/plain" href="{{ path_to_root }}llms.txt" title="Agent documentation index">
         <link rel="stylesheet" href="{{ path_to_root }}css/variables.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/general.css">
         <link rel="stylesheet" href="{{ path_to_root }}css/chrome.css">
@@ -69,11 +68,11 @@
                 var theme = localStorage.getItem('mdbook-theme');
                 var sidebar = localStorage.getItem('mdbook-sidebar');
 
-                if (theme.startsWith('"') && theme.endsWith('"')) {
+                if (theme && theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
                 }
 
-                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                if (sidebar && sidebar.startsWith('"') && sidebar.endsWith('"')) {
                     localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
                 }
             } catch (e) { }
@@ -85,10 +84,10 @@
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
             var html = document.querySelector('html');
-            html.classList.remove('{{ default_theme }}')
+            html.classList.remove('{{ default_theme }}');
             html.classList.add(theme);
             var body = document.querySelector('body');
-            body.classList.remove('no-js')
+            body.classList.remove('no-js');
             body.classList.add('js');
         </script>
 
@@ -110,17 +109,32 @@
             body.classList.add("sidebar-" + sidebar);
         </script>
 
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+        <nav id="sidebar" class="sidebar" aria-label="Documentation chapters">
             <div class="sidebar-scrollbox">
                 <div class="decapod-sidebar-head">
                     <a class="decapod-sidebar-brand" href="{{ path_to_root }}index.html" aria-label="Decapod documentation home">
-                        <img class="decapod-shell-mascot" src="https://decapodlabs.ai/assets/mascot.svg" alt="" width="57" height="49">
-                        <span class="decapod-sidebar-brand-title">Agent-invoked<br><strong>governance kernel.</strong></span>
+                        <img class="decapod-shell-mascot" src="https://decapodlabs.ai/assets/mascot.svg" alt="" width="44" height="38">
+                        <span class="decapod-sidebar-brand-title">
+                            <strong>Decapod Docs</strong>
+                            <span>Agent governance kernel</span>
+                        </span>
                     </a>
-                    <div class="decapod-sidebar-section-title">EXPLORE DOCUMENTATION</div>
+                    <div class="decapod-sidebar-mobile-links" aria-label="Cross-site links">
+                        <a href="https://decapodlabs.ai/">Home</a>
+                        <a href="https://decapodlabs.ai/proof.html">Proof</a>
+                        <a href="https://decapodlabs.ai/pricing">Pricing</a>
+                        <a href="https://decapodlabs.ai/admin">Admin</a>
+                        <a href="https://decapodlabs.ai/trust/">Trust</a>
+                        <a href="https://decapodlabs.ai/tecr.html">Rework</a>
+                    </div>
+                    <div class="decapod-sidebar-section-title">Documentation</div>
                 </div>
                 {{#toc}}{{/toc}}
-                <div class="decapod-sidebar-bottom"><div class="decapod-sidebar-bottom-mark">✳</div><strong>Built for agents.</strong><span>Designed for trust.</span><a href="https://decapodlabs.ai/">Meet Decapod Labs <span aria-hidden="true">↗</span></a></div>
+                <div class="decapod-sidebar-bottom">
+                    <strong>Decapod Labs</strong>
+                    <span>Repo-native intent, isolated worktrees, and commit-bound proof.</span>
+                    <a href="https://decapodlabs.ai/">Explore decapodlabs.ai <span aria-hidden="true">↗</span></a>
+                </div>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -138,10 +152,8 @@
             var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
             sessionStorage.removeItem('sidebar-scroll');
             if (sidebarScrollTop) {
-                // preserve sidebar scroll position when navigating via links within sidebar
                 sidebarScrollbox.scrollTop = sidebarScrollTop;
             } else {
-                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
                 var activeSection = document.querySelector('#sidebar .active');
                 if (activeSection) {
                     activeSection.scrollIntoView({ block: 'center' });
@@ -154,13 +166,40 @@
             <div class="page">
                 {{> header}}
                 <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky">
+                <header id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
+                            <i class="fa fa-bars" aria-hidden="true"></i>
                         </label>
+                        <div class="decapod-header-brand">
+                            <a href="{{ path_to_root }}index.html" aria-label="Decapod Labs documentation home">
+                                <img class="decapod-wordmark logo-a" src="https://decapodlabs.ai/assets/logo-a.png" alt="Decapod Labs" width="420" height="140">
+                                <img class="decapod-wordmark logo-c" src="https://decapodlabs.ai/assets/logo-c.png" alt="Decapod Labs" width="420" height="140">
+                            </a>
+                            <a class="decapod-docs-chip" href="{{ path_to_root }}index.html">Docs</a>
+                        </div>
+                    </div>
+
+                    <nav class="decapod-top-links" aria-label="Primary navigation">
+                        <a href="{{ path_to_root }}index.html" class="is-active" aria-current="page">Docs</a>
+                        <a href="https://decapodlabs.ai/proof.html">Proof</a>
+                        <a href="https://decapodlabs.ai/pricing">Pricing</a>
+                        <a href="https://decapodlabs.ai/admin">Admin</a>
+                        <a href="https://decapodlabs.ai/trust/">Trust</a>
+                        <a href="https://decapodlabs.ai/tecr.html">Rework</a>
+                        <a href="https://github.com/DecapodLabs/decapod">GitHub <span aria-hidden="true">↗</span></a>
+                    </nav>
+
+                    <div class="right-buttons">
+                        {{#if search_enabled}}
+                        <button id="search-toggle" class="icon-button decapod-search-trigger" type="button" title="Search docs (S or ⌘K)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S Control+K Meta+K" aria-controls="searchbar">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                            <span class="decapod-search-label">Search</span>
+                            <kbd class="decapod-kbd">⌘K</kbd>
+                        </button>
+                        {{/if}}
                         <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
+                            <i class="fa fa-paint-brush" aria-hidden="true"></i>
                         </button>
                         <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
                             <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
@@ -169,35 +208,23 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        {{#if search_enabled}}
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
-                        </button>
+                        {{#if git_repository_edit_url}}
+                        <a href="{{git_repository_edit_url}}" title="Suggest an edit on GitHub" aria-label="Suggest an edit on GitHub">
+                            <i id="git-edit-button" class="fa fa-edit" aria-hidden="true"></i>
+                        </a>
                         {{/if}}
-                    </div>
-
-                    <div class="decapod-header-brand"><a href="{{ path_to_root }}index.html" aria-label="Decapod documentation home"><img class="decapod-wordmark logo-a" src="https://decapodlabs.ai/assets/logo-a.png" alt="Decapod Labs" width="420" height="140"><img class="decapod-wordmark logo-c" src="https://decapodlabs.ai/assets/logo-c.png" alt="Decapod Labs" width="420" height="140"></a><span class="decapod-docs-chip">DOCS</span></div>
-                    <nav class="decapod-top-links" aria-label="Primary navigation"><a href="{{ path_to_root }}index.html">Overview</a><a href="{{ path_to_root }}quickstart.html">Get started</a><a href="{{ path_to_root }}concepts/agent-first.html">Concepts</a><a href="{{ path_to_root }}reference/cli.html">Reference</a><a href="https://decapodlabs.ai/pricing">Pricing</a><a href="https://decapodlabs.ai/admin">Admin</a></nav>
-
-                    <div class="right-buttons">
                         {{#if print_enable}}
                         <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
+                            <i id="print-button" class="fa fa-print" aria-hidden="true"></i>
                         </a>
                         {{/if}}
                         {{#if git_repository_url}}
-                        <a href="{{git_repository_url}}" title="Git repository" aria-label="Git repository">
-                            <i id="git-repository-button" class="fa {{git_repository_icon}}"></i>
+                        <a class="decapod-repo-icon-link" href="{{git_repository_url}}" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa {{git_repository_icon}}" aria-hidden="true"></i>
                         </a>
                         {{/if}}
-                        {{#if git_repository_edit_url}}
-                        <a href="{{git_repository_edit_url}}" title="Suggest an edit" aria-label="Suggest an edit">
-                            <i id="git-edit-button" class="fa fa-edit"></i>
-                        </a>
-                        {{/if}}
-
                     </div>
-                </div>
+                </header>
 
                 {{#if search_enabled}}
                 <div id="search-wrapper" class="hidden">
@@ -223,43 +250,88 @@
 
                 <div id="content" class="content">
                     <main>
+                        <div class="decapod-article-toolbar" aria-label="Page tools">
+                            <span id="decapod-breadcrumb" class="decapod-breadcrumb">Decapod Docs</span>
+                            <div class="decapod-toolbar-actions">
+                                <button type="button" id="decapod-copy-agent-btn" class="decapod-toolbar-btn">Copy for your agent</button>
+                                <span id="decapod-copy-agent-status" class="decapod-toolbar-status" role="status" aria-live="polite"></span>
+                                {{#if git_repository_edit_url}}
+                                <a class="decapod-toolbar-link" href="{{git_repository_edit_url}}">Edit on GitHub <span aria-hidden="true">↗</span></a>
+                                {{/if}}
+                            </div>
+                        </div>
+                        <details id="decapod-inline-toc" class="decapod-inline-toc" hidden>
+                            <summary>On this page</summary>
+                            <nav id="decapod-inline-toc-nav" aria-label="On this page"></nav>
+                        </details>
                         {{{ content }}}
                     </main>
-                    <footer class="decapod-page-footer" aria-label="Decapod Labs footer"><div class="decapod-footer-identity"><a href="https://decapodlabs.ai/" aria-label="Decapod Labs homepage"><img src="https://decapodlabs.ai/assets/logo-b.png" width="420" height="140" alt="Decapod Labs"></a><span>Governed agents. Proven work.</span></div><div class="decapod-footer-links"><a href="{{ path_to_root }}quickstart.html">Quickstart</a><a href="{{ path_to_root }}llms.txt">Agent index</a><a href="https://decapodlabs.ai/pricing">Pricing ↗</a><a href="https://decapodlabs.ai/admin">Admin ↗</a><a href="https://github.com/DecapodLabs/decapod">GitHub ↗</a></div></footer>
 
-                    <nav class="nav-wrapper" aria-label="Page navigation">
-                        <!-- Mobile navigation buttons -->
-                        {{#previous}}
-                            <a rel="prev" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                        {{/previous}}
+                    <nav class="nav-wrapper decapod-chapter-nav" aria-label="Page navigation">
+                        <div class="decapod-chapter-nav-inner">
+                            {{#previous}}
+                                <a rel="prev" href="{{ path_to_root }}{{link}}" class="decapod-chapter-link previous" title="Previous chapter: {{title}}" aria-label="Previous chapter: {{title}}" aria-keyshortcuts="Left">
+                                    <span class="decapod-chapter-dir">← Previous</span>
+                                    <span class="decapod-chapter-title">{{title}}</span>
+                                </a>
+                            {{/previous}}
 
-                        {{#next}}
-                            <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                        {{/next}}
-
-                        <div style="clear: both"></div>
+                            {{#next}}
+                                <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="decapod-chapter-link next" title="Next chapter: {{title}}" aria-label="Next chapter: {{title}}" aria-keyshortcuts="Right">
+                                    <span class="decapod-chapter-dir">Next →</span>
+                                    <span class="decapod-chapter-title">{{title}}</span>
+                                </a>
+                            {{/next}}
+                        </div>
                     </nav>
+
+                    <footer class="decapod-page-footer" aria-label="Decapod Labs footer">
+                        <div class="decapod-footer-identity">
+                            <a href="https://decapodlabs.ai/" aria-label="Decapod Labs homepage">
+                                <img src="https://decapodlabs.ai/assets/logo-b.png" width="420" height="140" alt="Decapod Labs">
+                            </a>
+                            <span>Governed agents. Proven work.</span>
+                        </div>
+                        <div class="decapod-footer-links">
+                            <a href="{{ path_to_root }}quickstart.html">Quickstart</a>
+                            <a href="{{ path_to_root }}llms.txt">Agent index</a>
+                            <a href="https://decapodlabs.ai/proof.html">Proof ↗</a>
+                            <a href="https://decapodlabs.ai/pricing">Pricing ↗</a>
+                            <a href="https://decapodlabs.ai/admin">Admin ↗</a>
+                            <a href="https://decapodlabs.ai/trust/">Trust ↗</a>
+                            <a href="https://github.com/DecapodLabs/decapod">GitHub ↗</a>
+                        </div>
+                    </footer>
                 </div>
-                <aside class="decapod-reading-rail" aria-label="Documentation shortcuts">
-                    <div class="decapod-reading-rail-card"><div class="decapod-rail-label">AGENT-INVOKED GOVERNANCE</div><img src="https://decapodlabs.ai/assets/mascot.svg" alt="" width="116" height="96" loading="lazy"><strong>Less babysitting.<br>More shipping.</strong><p>Make intent explicit, keep work bounded, and require proof.</p><a href="{{ path_to_root }}mental-model.html">The mental model ↗</a></div>
-                    <div class="decapod-rail-links"><span>JUMP IN</span><a href="{{ path_to_root }}quickstart.html">01. Quickstart</a><a href="{{ path_to_root }}workflows/single-agent.html">02. Workflows</a><a href="{{ path_to_root }}concepts/proof.html">03. Proof</a><a href="{{ path_to_root }}reference/cli.html">04. CLI reference</a><a href="https://decapodlabs.ai/pricing">Pricing ↗</a><a href="https://decapodlabs.ai/admin">Admin ↗</a></div>
+
+                <aside class="decapod-reading-rail" aria-label="On this page and shortcuts">
+                    <div class="decapod-toc-panel" id="decapod-toc-rail">
+                        <div class="decapod-rail-heading">On this page</div>
+                        <nav id="decapod-page-toc" class="decapod-page-toc" aria-label="On this page"></nav>
+                    </div>
+                    <div class="decapod-rail-links">
+                        <div class="decapod-rail-heading">Quick routes</div>
+                        <a href="{{ path_to_root }}quickstart.html">Quickstart</a>
+                        <a href="{{ path_to_root }}workflows/single-agent.html">Single-agent workflow</a>
+                        <a href="{{ path_to_root }}concepts/proof.html">Proof &amp; gates</a>
+                        <a href="{{ path_to_root }}reference/cli.html">CLI reference</a>
+                        <a href="{{ path_to_root }}llms.txt">Agent index (llms.txt)</a>
+                        <a href="https://decapodlabs.ai/pricing">Pricing ↗</a>
+                        <a href="https://decapodlabs.ai/admin">Admin ↗</a>
+                    </div>
                 </aside>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 {{#previous}}
                     <a rel="prev" href="{{ path_to_root }}{{link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
                     </a>
                 {{/previous}}
 
                 {{#next}}
                     <a rel="next prefetch" href="{{ path_to_root }}{{link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
                     </a>
                 {{/next}}
             </nav>
@@ -289,9 +361,6 @@
         <!-- Google Analytics Tag -->
         <script>
             var localAddrs = ["localhost", "127.0.0.1", ""];
-
-            // make sure we don't activate google analytics if the developer is
-            // inspecting the book locally...
             if (localAddrs.indexOf(document.location.hostname) === -1) {
                 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
                 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -338,6 +407,242 @@
         {{#each additional_js}}
         <script src="{{ ../path_to_root }}{{this}}"></script>
         {{/each}}
+
+        <script>
+        (function() {
+            // Breadcrumb from active sidebar link
+            var breadcrumb = document.getElementById('decapod-breadcrumb');
+            var activeLink = document.querySelector('#sidebar a.active');
+            if (breadcrumb && activeLink) {
+                var cleanLabel = activeLink.textContent.replace(/^\d+(\.\d+)*\.?\s*/, '').trim();
+                if (cleanLabel) {
+                    breadcrumb.textContent = 'Docs / ' + cleanLabel;
+                }
+            }
+
+            // Keyboard shortcut: Cmd+K / Ctrl+K opens and focuses mdBook search
+            document.addEventListener('keydown', function(e) {
+                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    var wrapper = document.getElementById('search-wrapper');
+                    var toggle = document.getElementById('search-toggle');
+                    var input = document.getElementById('searchbar');
+                    if (wrapper && wrapper.classList.contains('hidden') && toggle) {
+                        toggle.click();
+                    }
+                    if (input) {
+                        input.focus();
+                        input.select();
+                    }
+                }
+            });
+
+            // Build right-rail & inline "On this page" TOC
+            var main = document.querySelector('#content main');
+            var railToc = document.getElementById('decapod-page-toc');
+            var inlineDetails = document.getElementById('decapod-inline-toc');
+            var inlineNav = document.getElementById('decapod-inline-toc-nav');
+            if (main && railToc) {
+                var headings = Array.from(main.querySelectorAll('h2[id], h3[id]')).filter(function(h) {
+                    return !h.closest('.decapod-article-toolbar') && !h.closest('.decapod-inline-toc');
+                });
+                if (headings.length > 0) {
+                    var railLinks = [];
+                    headings.forEach(function(h) {
+                        var id = h.getAttribute('id');
+                        var text = h.textContent.trim();
+                        if (!id || !text) return;
+                        var depthClass = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+
+                        var aRail = document.createElement('a');
+                        aRail.href = '#' + id;
+                        aRail.textContent = text;
+                        aRail.className = depthClass;
+                        aRail.dataset.tocTarget = id;
+                        railToc.appendChild(aRail);
+                        railLinks.push(aRail);
+
+                        if (inlineNav) {
+                            var aInline = document.createElement('a');
+                            aInline.href = '#' + id;
+                            aInline.textContent = text;
+                            aInline.className = depthClass;
+                            aInline.addEventListener('click', function() {
+                                if (inlineDetails) inlineDetails.open = false;
+                            });
+                            inlineNav.appendChild(aInline);
+                        }
+                    });
+                    if (inlineDetails && inlineNav && inlineNav.children.length > 0) {
+                        inlineDetails.hidden = false;
+                    }
+
+                    // Highlight active section on scroll
+                    var updateActiveToc = function() {
+                        var threshold = 130;
+                        var activeId = headings[0].id;
+                        for (var i = 0; i < headings.length; i++) {
+                            if (headings[i].getBoundingClientRect().top <= threshold) {
+                                activeId = headings[i].id;
+                            }
+                        }
+                        railLinks.forEach(function(link) {
+                            link.classList.toggle('is-active', link.dataset.tocTarget === activeId);
+                        });
+                    };
+                    window.addEventListener('scroll', updateActiveToc, { passive: true });
+                    updateActiveToc();
+                } else {
+                    var emptyNote = document.createElement('p');
+                    emptyNote.className = 'decapod-toc-empty';
+                    emptyNote.textContent = 'Top-level overview';
+                    railToc.appendChild(emptyNote);
+                }
+            }
+
+            // Copy-for-your-agent Markdown serializer (pure local DOM extraction, zero network calls)
+            function buildAgentMarkdown() {
+                if (!main) return '';
+                var clone = main.cloneNode(true);
+                Array.from(clone.querySelectorAll('.decapod-article-toolbar, .decapod-inline-toc, .buttons, .decapod-docs-video')).forEach(function(el) {
+                    el.remove();
+                });
+
+                function inlineText(node) {
+                    if (node.nodeType === 3) {
+                        return node.nodeValue.replace(/\s+/g, ' ');
+                    }
+                    if (node.nodeType !== 1) return '';
+                    var tag = node.tagName.toLowerCase();
+                    if (tag === 'code' && !node.closest('pre')) {
+                        return '`' + node.textContent.trim() + '`';
+                    }
+                    if (tag === 'a') {
+                        if (node.classList.contains('header')) {
+                            return inlineTextChildren(node);
+                        }
+                        var label = inlineTextChildren(node).trim();
+                        var href = node.getAttribute('href') || '';
+                        try {
+                            href = new URL(href, window.location.href).href;
+                        } catch (e) {}
+                        return label ? '[' + label + '](' + href + ')' : href;
+                    }
+                    if (tag === 'strong' || tag === 'b') {
+                        return '**' + inlineTextChildren(node).trim() + '**';
+                    }
+                    if (tag === 'em' || tag === 'i') {
+                        return '*' + inlineTextChildren(node).trim() + '*';
+                    }
+                    if (tag === 'br') return '\n';
+                    return inlineTextChildren(node);
+                }
+
+                function inlineTextChildren(node) {
+                    return Array.from(node.childNodes).map(inlineText).join('');
+                }
+
+                var blocks = [];
+                function walk(node) {
+                    if (node.nodeType !== 1) return;
+                    var tag = node.tagName.toLowerCase();
+                    if (/^h[1-4]$/.test(tag)) {
+                        var level = Number(tag.slice(1));
+                        var title = inlineTextChildren(node).trim();
+                        if (title) blocks.push('#'.repeat(level) + ' ' + title);
+                        return;
+                    }
+                    if (tag === 'p') {
+                        var p = inlineTextChildren(node).trim();
+                        if (p) blocks.push(p);
+                        return;
+                    }
+                    if (tag === 'pre') {
+                        var codeEl = node.querySelector('code');
+                        var lang = '';
+                        if (codeEl) {
+                            var match = (codeEl.className || '').match(/language-([A-Za-z0-9_-]+)/);
+                            if (match) lang = match[1];
+                        }
+                        var rawCode = (codeEl ? codeEl.textContent : node.textContent).replace(/\n+$/, '');
+                        blocks.push('```' + lang + '\n' + rawCode + '\n```');
+                        return;
+                    }
+                    if (tag === 'blockquote') {
+                        var q = inlineTextChildren(node).trim().split('\n').map(function(line) {
+                            return '> ' + line.trim();
+                        }).join('\n');
+                        if (q) blocks.push(q);
+                        return;
+                    }
+                    if (tag === 'ul' || tag === 'ol') {
+                        var lines = Array.from(node.children).filter(function(c) {
+                            return c.tagName && c.tagName.toLowerCase() === 'li';
+                        }).map(function(li, idx) {
+                            var prefix = tag === 'ol' ? (idx + 1) + '. ' : '- ';
+                            return prefix + inlineTextChildren(li).trim();
+                        });
+                        if (lines.length) blocks.push(lines.join('\n'));
+                        return;
+                    }
+                    if (tag === 'table') {
+                        var rows = Array.from(node.querySelectorAll('tr')).map(function(tr) {
+                            return Array.from(tr.children).map(function(cell) {
+                                return inlineTextChildren(cell).trim().replace(/\|/g, '\\|');
+                            });
+                        }).filter(function(r) { return r.length > 0; });
+                        if (rows.length > 0) {
+                            var mdRows = ['| ' + rows[0].join(' | ') + ' |', '| ' + rows[0].map(function() { return '---'; }).join(' | ') + ' |'];
+                            rows.slice(1).forEach(function(r) {
+                                mdRows.push('| ' + r.join(' | ') + ' |');
+                            });
+                            blocks.push(mdRows.join('\n'));
+                        }
+                        return;
+                    }
+                    Array.from(node.children).forEach(walk);
+                }
+
+                walk(clone);
+                var docTitle = document.title.replace(/\s+-\s+Decapod.*$/, '').trim();
+                var llmsUrl = 'https://decapodlabs.ai/decapod/llms.txt';
+                return '# ' + docTitle + '\n\nSource: ' + window.location.href + '\nAgent index: ' + llmsUrl + '\n\n' + blocks.join('\n\n') + '\n';
+            }
+            window.__decapodBuildAgentMarkdown = buildAgentMarkdown;
+
+            var copyBtn = document.getElementById('decapod-copy-agent-btn');
+            var copyStatus = document.getElementById('decapod-copy-agent-status');
+            if (copyBtn && copyStatus) {
+                copyBtn.addEventListener('click', function() {
+                    var md = buildAgentMarkdown();
+                    function onOk() {
+                        copyStatus.textContent = 'Copied Markdown';
+                        setTimeout(function() { copyStatus.textContent = ''; }, 2400);
+                    }
+                    function fallbackCopy() {
+                        try {
+                            var ta = document.createElement('textarea');
+                            ta.value = md;
+                            ta.setAttribute('readonly', '');
+                            ta.style.position = 'fixed';
+                            ta.style.opacity = '0';
+                            document.body.appendChild(ta);
+                            ta.select();
+                            var ok = document.execCommand('copy');
+                            document.body.removeChild(ta);
+                            if (ok) { onOk(); return; }
+                        } catch (e) {}
+                        copyStatus.textContent = 'Copy unavailable';
+                    }
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(md).then(onOk, fallbackCopy);
+                    } else {
+                        fallbackCopy();
+                    }
+                });
+            }
+        })();
+        </script>
 
         {{#if is_print}}
         {{#if mathjax_support}}
