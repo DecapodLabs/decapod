@@ -121,7 +121,7 @@ pub(super) fn github_sources(
             }
             continue;
         }
-        let mut selected_artifacts = BTreeMap::<String, u64>::new();
+        let mut selected_artifacts = BTreeMap::<String, (u64, String, u64)>::new();
         let mut jobs: BTreeMap<(String, Option<String>), Vec<&profile::Obligation>> =
             BTreeMap::new();
         for obligation in obligations.iter().filter(|o| o.key.workflow == workflow) {
@@ -184,34 +184,68 @@ pub(super) fn github_sources(
                     matrix.as_deref(),
                     &inventory.run_attempt().to_string(),
                 )?;
-                let selection = inventory
-                    .artifact_selection(&artifact_name)?
-                    .ok_or_else(|| {
-                        invalid(format!("required uploaded archive absent: {artifact_name}"))
-                    })?;
-                let files = if let Some(directory) = directory {
+                let (selection, artifact_digest, artifact_size, files) = if let Some(directory) =
+                    directory
+                {
+                    let (id, digest, size) = inventory
+                        .artifact_snapshot(&artifact_name)?
+                        .ok_or_else(|| {
+                            invalid(format!("required uploaded archive absent: {artifact_name}"))
+                        })?;
+                    let selection =
+                        inventory
+                            .artifact_selection(&artifact_name)?
+                            .ok_or_else(|| {
+                                invalid(format!(
+                                    "required uploaded archive absent: {artifact_name}"
+                                ))
+                            })?;
+                    debug_assert_eq!(selection.artifact_id, id);
                     // Explicit bootstrap transport supplies bytes only. IDs,
                     // digests and attempts are independently reauthenticated.
                     let path =
                         directory.join(format!("github-artifact-{}.zip", selection.artifact_id));
-                    github::verify_handoff(runner, &options.root, &selection, &path, budget)
+                    let files =
+                        github::verify_handoff(runner, &options.root, &selection, &path, budget)
+                            .map_err(|error| {
+                                transport_failed = true;
+                                io::Error::new(
+                                    error.kind(),
+                                    format!(
+                                        "GitHub artifact {} for run {} attempt {} could not be verified: {error}",
+                                        selection.artifact_id,
+                                        selection.run_id,
+                                        selection.run_attempt
+                                    ),
+                                )
+                            })?;
+                    (selection, digest, size, files)
                 } else {
-                    // Normal validate owns the exact authenticated download;
-                    // an authorization failure is terminal, never a fallback.
-                    github::download(runner, &options.root, &selection, budget)
+                    // Normal validate owns the exact authenticated download using
+                    // the run/metadata snapshot already fetched by discover_workflow
+                    // (and re-verified against `current` after the workflow loop).
+                    inventory
+                        .download_artifact(runner, &options.root, &artifact_name, budget)
+                        .map_err(|error| {
+                            transport_failed = true;
+                            io::Error::new(
+                                error.kind(),
+                                format!(
+                                    "GitHub artifact {artifact_name} for run {} attempt {} could not be verified: {error}",
+                                    inventory.run_id(),
+                                    inventory.run_attempt()
+                                ),
+                            )
+                        })?
+                        .ok_or_else(|| {
+                            invalid(format!("required uploaded archive absent: {artifact_name}"))
+                        })?
                 };
-                let files = files.map_err(|error| {
-                    transport_failed = true;
-                    io::Error::new(
-                        error.kind(),
-                        format!(
-                        "GitHub artifact {} for run {} attempt {} could not be verified: {error}",
-                        selection.artifact_id, selection.run_id, selection.run_attempt
-                    ),
-                    )
-                })?;
                 if selected_artifacts
-                    .insert(artifact_name, selection.artifact_id)
+                    .insert(
+                        artifact_name,
+                        (selection.artifact_id, artifact_digest, artifact_size),
+                    )
                     .is_some()
                 {
                     return Err(invalid("duplicate selected source artifact"));
@@ -257,11 +291,8 @@ pub(super) fn github_sources(
         }
         let current = github::discover_workflow(runner, snapshot, workflow, budget)?
             .ok_or_else(|| invalid("provider workflow disappeared during custody collection"))?;
-        for (name, id) in &selected_artifacts {
-            if current
-                .artifact_selection(name)?
-                .is_none_or(|selection| selection.artifact_id != *id)
-            {
+        for (name, (id, digest, size)) in &selected_artifacts {
+            if current.artifact_snapshot(name)?.as_ref() != Some(&(*id, digest.clone(), *size)) {
                 return Err(invalid(
                     "selected source artifact changed during collection",
                 ));
@@ -277,9 +308,13 @@ pub(super) fn github_sources(
                 "provider run/attempt/jobs changed during artifact verification",
             ));
         }
-        collection
-            .github_artifacts
-            .insert(workflow.into(), selected_artifacts);
+        collection.github_artifacts.insert(
+            workflow.into(),
+            selected_artifacts
+                .into_iter()
+                .map(|(name, (id, _, _))| (name, id))
+                .collect(),
+        );
     }
     Ok(collection)
 }

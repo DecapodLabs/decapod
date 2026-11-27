@@ -492,19 +492,27 @@ pub(crate) fn verify_accepted_transition(
             &transition_id,
             envelope.as_bytes(),
         )?
+    } else if transition_approval::cloud_backend(checkout_root, accepted_base_sha)? {
+        // Cloud decision verification authenticates directly against the remote
+        // control plane for the exact base/head/tree/transition tuple, so it
+        // applies in both local and ci_local execution without local SQLite trust.
+        match approval.cloud_decision {
+            Some(decision) => {
+                let decision = decision.to_str().ok_or_else(|| {
+                    invalid("CLOUD_POLICY_APPROVAL_DECISION_ID_INVALID: expected UTF-8 UUID")
+                })?;
+                transition_approval::verify_cloud(
+                    checkout_root,
+                    accepted_base_sha,
+                    candidate_head_sha,
+                    &transition_id,
+                    decision,
+                )?
+            }
+            None => false,
+        }
     } else if approval.ci_local {
         false
-    } else if transition_approval::cloud_backend(checkout_root, accepted_base_sha)? {
-        match std::env::var(transition_approval::CLOUD_DECISION_ENV) {
-            Ok(decision) => transition_approval::verify_cloud(
-                checkout_root,
-                accepted_base_sha,
-                candidate_head_sha,
-                &transition_id,
-                &decision,
-            )?,
-            Err(_) => false,
-        }
     } else {
         has_active_policy_transition_approval(checkout_root, &transition_id)?
     };

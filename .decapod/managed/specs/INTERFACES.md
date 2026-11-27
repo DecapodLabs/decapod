@@ -35,6 +35,18 @@
 
 # Interfaces
 
+## Recovery workflow documentation & end-to-end verification surfaces (`#1956`, `#1957`)
+
+- **Embedded agent documentation (`docs/agent/error-recovery.md`, `docs/agent/state-model.md`)**:
+  - Adds `#### Terminal reflection (REFLECTION_BLOCKED) with uncommitted governed work` and `#### Completed machine-only operational tasks without a repository artifact` to embedded `decapod docs ingest` guidance, matching CLI behavior for `govern artifacts checkpoint`, `govern artifacts begin-pr`, `govern plan check-execute`, `workspace ensure`, `govern policy grant --command task.archive`, and `todo archive`.
+- **Real-binary integration suite (`tests/recovery_workflows_1956_1957.rs`)**:
+  - `issue_1956_terminal_reflection_uncommitted_recovery_preserves_budget_and_honors_authority` and `issue_1957_machine_only_completed_task_preserves_unverified_history_while_unblocking_code_candidate` execute `CARGO_BIN_EXE_decapod` end-to-end against isolated git repositories and SQLite control planes.
+
+## Section 9 collector & Cloud approval interfaces (`#1400`, `#1573`, `#1833`)
+
+- **`GithubWorkflowInventory::artifact_snapshot` & `download_artifact` (`src/decapod/core/snapshot_provider/github_artifacts.rs`)**: Exposes `(artifact_id, sha256_digest, size_in_bytes)` snapshot validation and inventory-authenticated ZIP download without changing `github::download` semantics.
+- **`ApprovalInput::cloud_decision` (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**: Evaluates `DECAPOD_REPO_TRANSITION_DECISION_ID` via `verify_cloud` across both local and `ci_local` transitions when `cloud_backend` is configured, surfacing `CLOUD_POLICY_APPROVAL_DECISION_ID_INVALID` on non-UTF-8 values and `CLOUD_POLICY_APPROVAL_DECISION_UNAVAILABLE` / `CLOUD_POLICY_APPROVAL_UNSUPPORTED` on missing or unverified remote authority.
+
 ## Section 11 knowledge CLI/RPC, constitution admission errors, and Cloud delegated-grant fields (#657, #1774, #1568)
 
 - **`decapod data knowledge add` & `store.upsert` supersession parameters (`src/decapod/cli.rs::KnowledgeCommand::Add`, `src/decapod/lib.rs`, `src/decapod/plugins/knowledge.rs`)**:
@@ -2674,7 +2686,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `938571cada1dc24a03ea1102d9771174ff1c183a76344e85296652cc1c45c50b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (293 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
