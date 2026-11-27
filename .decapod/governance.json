@@ -924,6 +924,18 @@
         "src/decapod/core/rpc.rs",
         "tests/release_dependency_policy.rs"
       ]
+    },
+    {
+      "id": "cp2-fresh-attempt1-ci",
+      "summary": "Record full c4ba12707 CI evidence and trigger fresh attempt-1 custody archives for PR 1 (#1896, #1886, #1948)",
+      "input_digest": "sha256:7e7a6a89178fa680235671964c8437010997452e52db16846f3e0d9225125587",
+      "proof_refs": [
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/cloud_project.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/rpc.rs",
+        "tests/release_dependency_policy.rs"
+      ]
     }
   ],
   "intents": {
@@ -994,13 +1006,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795765409Z"
+      "updated_at": "1795768539Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e01468a8aa30c81c582ba91e15bfe331caa0fd5ed4e6ed6ea3f14edea59d0d7d",
+      "artifact_hash": "sha256:494be066107ce9ed8fd0691d425d93f13e5c5f4898bd9c8fb84b33e8f252aed6",
       "checks": [
         {
           "name": "bazel_cargo_inputs_policy",
@@ -1044,10 +1056,17 @@
             "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8DZ7F5CRFPSM83RF2ZE0V1N",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8DZ7F8KHYP0Z5ATWZE4CFCW": {
@@ -1088,6 +1107,21 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Verified CI 45961076469 on c4ba12707 (38/39 attempt 1 + Supabase consumer attempt 2 after ETXTBSY flake); cutting clean attempt-1 commit for full single-attempt custody archives."
+                ],
+                "proof_refs": [
+                  "release_dependency_policy"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1096,6 +1130,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Verified CI 45961076469 on c4ba12707 (38/39 attempt 1 + Supabase consumer attempt 2 after ETXTBSY flake); cutting clean attempt-1 commit for full single-attempt custody archives.",
         "fmt, clippy, bazel //:cargo_inputs_policy, release_dependency_policy (5/5), lib rpc:: (2/2), lib projection (60/60, 2 ignored), lib cloud_ (97/97), cloud_supabase_boundary (55/55), cloud_workspace_validation_1886 (5/5), agent_rpc_suite (6/6), doc_alignment (5/5), cloud_dpop_e2e_1878 (3/3), cloud_managed_session (32/32), cloud_tenancy_parity_1895 (2/2), cloud_admin_boundary passed."
       ],
       "inspected_files": [
