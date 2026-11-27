@@ -958,6 +958,11 @@
       "id": "section10-config-digest-v01670-pr2",
       "summary": "Reconcile reviewed_sources_digest for v0.167.0 master (7b5d5c2fd3)",
       "input_digest": "sha256:7b1da530c99fac748043ba6c9fd95707c15494307de1709877082c09ae1b3148"
+    },
+    {
+      "id": "section10-manifest-hash-v01670-pr2",
+      "summary": "Refresh .manifest.json config_input_hash for reviewed_sources_digest on v0.167.0 master",
+      "input_digest": "sha256:7ed454baa8a731fa49ed5b8c788471f5b20bae5b29da649afa5e00c08f9c16e3"
     }
   ],
   "intents": {
