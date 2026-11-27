@@ -886,6 +886,11 @@
       "id": "cp-2-layout",
       "summary": "Upgrade OpenShell reading layout, code contrast, and sticky header clearance",
       "input_digest": "sha256:c8fca9669f369acb5beda0f977a1baceb08f17625554e757fe6f0a9a44eb4c7c"
+    },
+    {
+      "id": "cp-3-journey",
+      "summary": "Streamline 3-route landing and First Governed Result quickstart",
+      "input_digest": "sha256:4931bb586e4944d2d84438c727ca323b23f135b3496f5c3e14e88ed70387d97d"
     }
   ],
   "intents": {
