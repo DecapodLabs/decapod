@@ -630,7 +630,23 @@ pub fn validate_cron_write(
     Ok(())
 }
 
-/// Validate reflex write/update bounds (including JSON trigger/action configs).
+fn validate_optional_reflex_config(
+    field: &str,
+    value: Option<&str>,
+    max_bytes: usize,
+    max_depth: usize,
+) -> Result<(), DecapodError> {
+    let Some(cfg) = value else {
+        return Ok(());
+    };
+    validate_utf8_field(field, cfg, max_bytes, false)?;
+    if let Ok(parsed) = serde_json::from_str::<Value>(cfg) {
+        validate_json_value_bounds(field, &parsed, max_bytes, max_depth)?;
+    }
+    Ok(())
+}
+
+/// Validate reflex write/update bounds (bounded UTF-8 strings or JSON configs).
 #[allow(clippy::too_many_arguments)]
 pub fn validate_reflex_write(
     name: Option<&str>,
@@ -645,13 +661,19 @@ pub fn validate_reflex_write(
     validate_optional_utf8_field("name", name, MAX_TITLE_BYTES, false)?;
     validate_optional_utf8_field("description", description, MAX_DESCRIPTION_BYTES, false)?;
     validate_optional_utf8_field("trigger_type", trigger_type, MAX_ENUM_TOKEN_BYTES, false)?;
-    if let Some(cfg) = trigger_config {
-        validate_json_str_bounds("trigger_config", cfg, MAX_PROOF_PLAN_BYTES, MAX_JSON_DEPTH)?;
-    }
+    validate_optional_reflex_config(
+        "trigger_config",
+        trigger_config,
+        MAX_PROOF_PLAN_BYTES,
+        MAX_JSON_DEPTH,
+    )?;
     validate_optional_utf8_field("action_type", action_type, MAX_ENUM_TOKEN_BYTES, false)?;
-    if let Some(cfg) = action_config {
-        validate_json_str_bounds("action_config", cfg, MAX_PROOF_PLAN_BYTES, MAX_JSON_DEPTH)?;
-    }
+    validate_optional_reflex_config(
+        "action_config",
+        action_config,
+        MAX_PROOF_PLAN_BYTES,
+        MAX_JSON_DEPTH,
+    )?;
     validate_optional_utf8_field("status", status, MAX_ENUM_TOKEN_BYTES, false)?;
     if let Some(t) = tags {
         let _ = normalize_and_validate_tags_csv(t)?;

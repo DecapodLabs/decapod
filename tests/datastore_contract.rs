@@ -880,6 +880,17 @@ fn non_task_plugin_stores_enforce_utf8_byte_and_collection_bounds() {
     );
 
     // 6. reflex contract validator (direct validator parity for private add_reflex/update_reflex)
+    storage_contracts::validate_reflex_write(
+        Some("reflex-name"),
+        Some("Command reflex"),
+        Some("event"),
+        Some("{}"),
+        Some("command"),
+        Some("echo done"),
+        Some("active"),
+        Some(""),
+    )
+    .expect("command-style action_config string should be admitted when bounded");
     let reflex_err = storage_contracts::validate_reflex_write(
         Some("reflex-name"),
         Some(&over_desc),
@@ -896,6 +907,24 @@ fn non_task_plugin_stores_enforce_utf8_byte_and_collection_bounds() {
             .to_string()
             .contains("STORAGE_CONTRACT_VIOLATION"),
         "{reflex_err}"
+    );
+    let over_cfg = "x".repeat(storage_contracts::MAX_PROOF_PLAN_BYTES + 1);
+    let reflex_cfg_err = storage_contracts::validate_reflex_write(
+        Some("reflex-name"),
+        Some("desc"),
+        Some("event"),
+        Some("{}"),
+        Some("command"),
+        Some(&over_cfg),
+        Some("active"),
+        Some(""),
+    )
+    .unwrap_err();
+    assert!(
+        reflex_cfg_err
+            .to_string()
+            .contains("STORAGE_CONTRACT_VIOLATION"),
+        "{reflex_cfg_err}"
     );
 
     // 7. feedback + archive + aptitude + lcm bounds
