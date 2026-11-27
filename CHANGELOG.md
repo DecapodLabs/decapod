@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.3](https://github.com/DecapodLabs/decapod/compare/v0.166.2...v0.166.3) - 2026-11-27
+
+### Fixed
+
+- *(ci)* align selective-core-2/3 selection with core_full ([#138](https://github.com/DecapodLabs/decapod/pull/138))
+
 ## [0.166.2](https://github.com/DecapodLabs/decapod/compare/v0.166.1...v0.166.2) - 2026-11-27
 
 ### Fixed
