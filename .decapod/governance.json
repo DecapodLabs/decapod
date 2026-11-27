@@ -911,6 +911,18 @@
         "tests/recovery_workflows_1956_1957.rs",
         "tests/unit/core/repository_profile_tests.rs"
       ]
+    },
+    {
+      "id": "bugs_01m8db7j157m5nxr-v01690-merge",
+      "summary": "Merge v0.169.0 (27e71bc4e) into PR 4 and reconcile reviewed_sources_digest, Dockerfile.decapod, specs, and manifest",
+      "input_digest": "sha256:20e8a86ca2467bb4a28def1f66ec9279d82a5d6b5446ab3c567736727c38042c",
+      "proof_refs": [
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/recovery_workflows_1956_1957.rs",
+        "tests/unit/core/repository_profile_tests.rs"
+      ]
     }
   ],
   "intents": {
@@ -959,22 +971,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated ARCHITECTURE.md onto cb54769bd (v0.168.0) for Section 9 and #1956/#1957.",
-          "reviewed_code_fingerprint": "1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27",
+          "reason": "Reconciled ARCHITECTURE.md onto v0.169.0 (27e71bc4e) with active merge.",
+          "reviewed_code_fingerprint": "4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238",
           "spec_material_hash": "ccd61a497b5f57ae1adfd92d566dfa77e7cbcab97ae2dacc5d3d3e2e2e4e77d3"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated INTERFACES.md onto cb54769bd (v0.168.0) for Section 9 and #1956/#1957.",
-          "reviewed_code_fingerprint": "1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27",
+          "reason": "Reconciled INTERFACES.md onto v0.169.0 (27e71bc4e) with active merge.",
+          "reviewed_code_fingerprint": "4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238",
           "spec_material_hash": "af7cf7dafd80b510208a5b25f22baa8f29bd2b5729e74ad4798381fd60a34da6"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Verified SECURITY.md trust invariants preserved onto cb54769bd (v0.168.0).",
-          "reviewed_code_fingerprint": "1be24a3f34c2fdac93aa6ac773a7208a13a944535bef28d8030e2b90fe994a27",
+          "reason": "Verified SECURITY.md trust invariants preserved onto v0.169.0 (27e71bc4e).",
+          "reviewed_code_fingerprint": "4b29a85252db59676b147012095d9d7b11ec5aeb7ce3595a78011f345a22a238",
           "spec_material_hash": "a4fe5bc64b48983949848592b590b6af1921b823ac1c42d55d6544d55a1c3cb1"
         }
       ],
@@ -986,7 +998,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795785022Z"
+      "updated_at": "1795786248Z"
     },
     "trajectory": {
       "active_boundaries": [
