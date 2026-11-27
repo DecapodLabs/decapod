@@ -918,6 +918,11 @@
         "tests/cloud_cli_boundary.rs",
         "tests/datastore_contract.rs"
       ]
+    },
+    {
+      "id": "section10-storage-parity-v01662-r4",
+      "summary": "Refresh managed manifest config_input_hash for reconciled reviewed_sources_digest",
+      "input_digest": "sha256:4221f63c06c1cfb9f300dd6fb31e2f05643625f89b40fc4b8e612d3738f732ff"
     }
   ],
   "intents": {
