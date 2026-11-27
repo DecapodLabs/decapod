@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.166.5](https://github.com/DecapodLabs/decapod/compare/v0.166.4...v0.166.5) - 2026-11-27
+
+### Added
+
+- *(governance)* close Section 11 knowledge, constitution, admission & cloud grant gaps (#657, #1774, #1763, #1568)
+
+### Other
+
+- *(governance)* re-review SECURITY.md against merged origin/master
+- *(governance)* re-review specs after origin/master merge
+- *(specs)* refresh v0.166.4 Dockerfile pin and manifest
+- Merge remote-tracking branch 'origin/master' into agent/decapod-gov/code_01m8d524nefyjt0n-section11-gov
+- Merge remote-tracking branch 'origin/master' into agent/decapod-gov/code_01m8d524nefyjt0n-section11-gov
+- *(specs)* refresh .manifest.json config_input_hash
+- *(proof)* reconcile reviewed_sources_digest for v0.166.2 and #1774
+
 ## [0.166.4](https://github.com/DecapodLabs/decapod/compare/v0.166.3...v0.166.4) - 2026-11-27
 
 ### Other
