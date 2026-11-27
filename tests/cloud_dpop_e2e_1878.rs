@@ -86,6 +86,7 @@ struct GatewayFixtureState {
     disable_device_endpoints: bool,
     fail_refresh_with_code: Option<&'static str>,
     fail_query_with_code: Option<&'static str>,
+    resolved_uuid_project_id: Option<&'static str>,
     calls: Vec<RecordedCall>,
     enroll_body: Option<Value>,
     refresh_body: Option<Value>,
@@ -105,6 +106,7 @@ impl GatewayFixtureState {
             disable_device_endpoints: false,
             fail_refresh_with_code: None,
             fail_query_with_code: None,
+            resolved_uuid_project_id: None,
             calls: Vec::new(),
             enroll_body: None,
             refresh_body: None,
@@ -250,12 +252,15 @@ impl PropodusGatewayServer {
                 } else if auth.as_deref() != Some(&format!("Bearer {HUMAN_JWT}")) {
                     (401, json!({"error": {"code": "invalid_token"}}))
                 } else {
+                    let effective_project = st.resolved_uuid_project_id.unwrap_or(PROJECT);
                     (
                         200,
                         json!({
                             "version": 1,
-                            "account_id": "00000000-0000-0000-0000-000000000404",
-                            "project_id": PROJECT,
+                            "account_id": "00000000-0000-4000-8000-000000000404",
+                            "project_id": effective_project,
+                            "repository": PROJECT,
+                            "organization_id": "00000000-0000-4000-8000-000000000001",
                             "status": "active",
                             "backend_authorized": true,
                             "resource_limits": {
@@ -267,11 +272,19 @@ impl PropodusGatewayServer {
                 }
             }
             "/functions/v1/decapod-onboarding/device-challenge" => {
+                let expected_project = st.resolved_uuid_project_id;
                 if st.disable_device_endpoints {
                     (404, json!({"error": {"code": "not_found"}}))
                 } else if auth.as_deref() != Some(&format!("Bearer {HUMAN_JWT}")) || dpop.is_some()
                 {
                     (401, json!({"error": {"code": "invalid_token"}}))
+                } else if expected_project
+                    .is_some_and(|exp| body["project_id"].as_str() != Some(exp))
+                {
+                    (
+                        403,
+                        json!({"error": {"code": "authorization_denied", "message": "raw slug rejected; expected resolved <org_uuid>/<repo_uuid>"}}),
+                    )
                 } else {
                     (
                         200,
@@ -850,4 +863,46 @@ fn dpop_failures_fail_closed_and_strict_mode_rejects_missing_device_endpoints() 
     assert!(matches!(err, DecapodError::CloudAuth(_)));
     let _ = BackendRoute::cloud(identity, &server.origin);
     let _ = StorageContext::from_route;
+}
+
+#[test]
+fn post_login_auto_reconciles_slug_to_server_uuid_project_without_cloud_project_use() {
+    let _lock = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let tmp = TempDir::new().expect("tempdir");
+    init_cloud_repo(tmp.path());
+    let repo = tmp.path().join("repo");
+    let xdg = tmp.path().join("xdg");
+    fs::create_dir_all(&xdg).unwrap();
+
+    const RESOLVED_UUID_PROJECT: &str =
+        "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002";
+    let server = PropodusGatewayServer::start(900);
+    server.state.lock().unwrap().resolved_uuid_project_id = Some(RESOLVED_UUID_PROJECT);
+    let _env = EnvRestoreGuard::set(&[
+        ("DECAPOD_TEST_MODE", Some("1")),
+        ("DECAPOD_CLOUD_TEST_ORIGIN", Some(&server.origin)),
+        ("HOME", Some(xdg.to_str().unwrap())),
+        ("XDG_DATA_HOME", Some(xdg.to_str().unwrap())),
+        ("DECAPOD_CLOUD_AUTH_SCHEME", Some("dpop")),
+        ("DECAPOD_CONTAINER_SIGNER_SOCKET", None),
+        ("DECAPOD_AGENT_ID", Some("auto-reconcile-agent")),
+    ]);
+
+    let identity = resolve_repository_identity(&repo).expect("identity");
+    seed_human_session(&server.origin, &repo);
+
+    // Without running `cloud projects` or `cloud project use`, connect() resolves
+    // the originating Git slug via /account-status -> <org_uuid>/<repo_uuid>,
+    // enrolls DPoP against <org_uuid>/<repo_uuid>, and passes /cloud-query.
+    let ctx = connect(&repo, &identity, false, true)
+        .expect("auto-reconciliation must enroll DPoP against resolved server project_id");
+    assert_eq!(ctx.bearer(), Some("dpc_at_initial_tok_1"));
+    match ctx.route() {
+        BackendRoute::Cloud { repository, .. } => {
+            assert_eq!(repository.canonical_name, RESOLVED_UUID_PROJECT);
+        }
+        other => panic!("expected Cloud route, got {other:?}"),
+    }
+    assert!(!repo.join(".decapod/data/decapod.db").exists());
+    assert!(!repo.join(".decapod/data/todo.db").exists());
 }

@@ -1179,9 +1179,14 @@ pub fn admit_cloud_checkout(
             }
             branch_owned.push(task.clone());
         }
-        if !branch_owned.is_empty() {
-            matching_tasks = branch_owned;
+        if branch_owned.is_empty() {
+            return Err(DecapodError::ValidationError(format!(
+                "TODO_CUSTODY_REQUIRED: branch '{branch}' references task(s) {}, but none are open/claimed by '{actor}' on '{}'",
+                branch_task_ids.join(", "),
+                identity.canonical_name
+            )));
         }
+        matching_tasks = branch_owned;
     }
 
     let primary_task = matching_tasks.first().cloned().ok_or_else(|| {

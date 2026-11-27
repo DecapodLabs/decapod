@@ -6,7 +6,7 @@ use crate::core::cloud_client::{
     transport_error_for_repository,
 };
 use crate::core::cloud_session::SessionGuard;
-use crate::core::error::{CloudAuthDiagnostic, CloudAuthStatus, DecapodError};
+use crate::core::error::{CloudAuthDiagnostic, CloudAuthErrorCode, CloudAuthStatus, DecapodError};
 use crate::core::repo_identity::RepositoryIdentity;
 use dactyl_db::{AccountOperation, CloudConnector};
 use serde::{Deserialize, Serialize};
@@ -60,6 +60,10 @@ struct Response {
     #[serde(default)]
     authorization_state: Option<String>,
     #[serde(default)]
+    access_disposition: Option<String>,
+    #[serde(default)]
+    admin_contact_required: Option<bool>,
+    #[serde(default)]
     pending_fulfillment: Option<bool>,
     #[serde(default)]
     cloud_org_id: Option<String>,
@@ -80,6 +84,8 @@ struct Response {
 #[derive(Deserialize)]
 struct Organization {
     id: String,
+    #[serde(default)]
+    admin: Option<bool>,
 }
 
 #[derive(Clone, Serialize)]
@@ -382,6 +388,13 @@ fn new_request_id() -> Result<String, DecapodError> {
     ))
 }
 
+fn is_safe_public_org_id(org_id: &str) -> bool {
+    let is_physical_tenant_schema = org_id.len() == 34
+        && org_id.starts_with("t_")
+        && org_id[2..].bytes().all(|b| b.is_ascii_hexdigit());
+    !is_physical_tenant_schema && !org_id.contains("://") && !org_id.contains('@')
+}
+
 fn enrich_diagnostic(
     mut diagnostic: CloudAuthDiagnostic,
     response: &Response,
@@ -392,6 +405,7 @@ fn enrich_diagnostic(
                 .cloud_org_id
                 .as_deref()
                 .or(response.organization_id.as_deref())
+                .filter(|id| is_safe_public_org_id(id))
             {
                 diagnostic.message = format!(
                     "This organization is already enrolled under immutable Cloud organization ID {org_id}."
@@ -405,6 +419,21 @@ fn enrich_diagnostic(
         }
         _ => {}
     }
+    if response.admin_contact_required == Some(true) {
+        let had_enrollment_url = diagnostic.enrollment_url.take().is_some();
+        if had_enrollment_url
+            || diagnostic.next_action.contains("pricing")
+            || diagnostic.next_action.contains("Cloud Admin ->")
+            || diagnostic.next_action.contains("Purchase")
+            || diagnostic
+                .next_action
+                .contains("Complete repository enrollment")
+        {
+            diagnostic.next_action =
+                "Contact your organization administrator to request access to this repository."
+                    .into();
+        }
+    }
     diagnostic
 }
 
@@ -417,18 +446,34 @@ fn project_auth_diagnostic(response: &Response, repo_slug: Option<&str>) -> Clou
         .as_deref()
         .filter(|slug| is_valid_repo_slug(slug))
         .or(repo_slug);
+    let pending_token = |value: &str| {
+        matches!(
+            value,
+            "pending_fulfillment" | "payment_pending" | "order_pending"
+        )
+    };
     if response.pending_fulfillment == Some(true)
-        || matches!(
-            response.authorization_state.as_deref(),
-            Some("pending_fulfillment" | "payment_pending")
-        )
-        || matches!(
-            response.status.as_str(),
-            "pending_fulfillment" | "payment_pending"
-        )
+        || response
+            .access_disposition
+            .as_deref()
+            .is_some_and(pending_token)
+        || response
+            .authorization_state
+            .as_deref()
+            .is_some_and(pending_token)
+        || pending_token(response.status.as_str())
     {
-        return diagnostic_for_status_code("pending_fulfillment", effective_repo)
-            .expect("pending_fulfillment diagnostic");
+        return enrich_diagnostic(
+            diagnostic_for_status_code("pending_fulfillment", effective_repo)
+                .expect("pending_fulfillment diagnostic"),
+            response,
+        );
+    }
+    if let Some(disp) = response.access_disposition.as_deref()
+        && disp != "ready"
+        && let Some(diagnostic) = diagnostic_for_status_code(disp, effective_repo)
+    {
+        return enrich_diagnostic(diagnostic, response);
     }
     if let Some(auth_state) = response.authorization_state.as_deref()
         && !matches!(auth_state, "active" | "authorized" | "ready")
@@ -444,6 +489,13 @@ fn project_auth_diagnostic(response: &Response, repo_slug: Option<&str>) -> Clou
             diagnostic_for_status_code("admin_approval_required", effective_repo)
                 .expect("admin_approval_required diagnostic"),
             response,
+        );
+    }
+    if response.admin_contact_required == Some(true) {
+        return CloudAuthDiagnostic::new(
+            CloudAuthStatus::AdminApprovalRequired,
+            "The service has not granted seat access for the selected repository.",
+            "Contact your organization administrator to request access to this repository.",
         );
     }
     let enroll_url = pricing_enrollment_url(effective_repo);
@@ -466,9 +518,22 @@ fn association_blocked(response: &Response) -> bool {
                 | "authorization_denied"
                 | "repository_not_authorized"
                 | "entitlement_denied"
+                | "repository_not_approved"
+                | "repository_capacity_exhausted"
+                | "repository_reservation_exhausted"
+                | "reservation_available_for_binding"
+                | "seat_available_for_assignment"
+                | "repository_access_denied"
         )
     };
     if blocked_code(response.status.as_str()) {
+        return true;
+    }
+    if response
+        .access_disposition
+        .as_deref()
+        .is_some_and(blocked_code)
+    {
         return true;
     }
     if response
@@ -773,9 +838,154 @@ pub(crate) fn execute(
     }
 }
 
-/// Return a selected routing reference after a fresh account response. Every
-/// following data query/batch is still independently authorized by the service.
-/// Absence preserves the existing canonical-repository native compatibility path.
+fn route_from_status(
+    response: &Response,
+    original: &RepositoryIdentity,
+) -> Result<RepositoryIdentity, DecapodError> {
+    if !response.backend_authorized
+        || response.status != "active"
+        || response.pending_fulfillment == Some(true)
+    {
+        return Err(DecapodError::CloudAuth(project_auth_diagnostic(
+            response,
+            Some(&original.canonical_name),
+        )));
+    }
+    let resolved_id = response
+        .project_id
+        .as_deref()
+        .unwrap_or(&original.canonical_name);
+    let (owner, repository) = resolved_id.split_once('/').ok_or_else(invalid)?;
+    Ok(RepositoryIdentity {
+        canonical_name: resolved_id.to_owned(),
+        owner: owner.into(),
+        repository: repository.into(),
+        remote_url: original.remote_url.clone(),
+    })
+}
+
+fn reconcile_originating_repository(
+    connector: &CloudConnector,
+    bearer: &str,
+    original: &RepositoryIdentity,
+) -> Result<RepositoryIdentity, DecapodError> {
+    let mut response = request(
+        connector,
+        bearer,
+        AccountOperation::Status,
+        json!({"version":1,"project_id":original.canonical_name}),
+        Some(&original.canonical_name),
+    )?;
+    if response.status == "registration_required" {
+        let registered_account = response.account_id.clone();
+        let _ = identity(connector, bearer, Some(&original.canonical_name))?;
+        response = request(
+            connector,
+            bearer,
+            AccountOperation::Status,
+            json!({"version":1,"project_id":original.canonical_name}),
+            Some(&original.canonical_name),
+        )?;
+        if response.account_id != registered_account {
+            return Err(invalid());
+        }
+    }
+    require_identity(&response)?;
+    if response.backend_authorized
+        && response.status == "active"
+        && response.pending_fulfillment != Some(true)
+    {
+        return route_from_status(&response, original);
+    }
+
+    // If the service already resolved this originating repository into an
+    // organization or a specific non-not-approved disposition (e.g.
+    // entitlement_required, payment_required, pending_fulfillment,
+    // reservation_available_for_binding, admin_approval_required,
+    // repository_capacity_exhausted), surface that exact diagnostic directly.
+    let unresolved_lookup = response.organization_id.is_none()
+        && response.pending_fulfillment != Some(true)
+        && matches!(
+            response.access_disposition.as_deref(),
+            None | Some("repository_not_approved")
+        )
+        && response.status == "admin_approval_required";
+    if !unresolved_lookup {
+        return Err(DecapodError::CloudAuth(project_auth_diagnostic(
+            &response,
+            Some(&original.canonical_name),
+        )));
+    }
+
+    // Fall back to the account's project/organization directory only to match
+    // an unambiguous project by slug/name or to distinguish an un-enrolled
+    // admin/new-customer repo from a restricted collaborator repo.
+    let directory = identity(connector, bearer, Some(&original.canonical_name))?;
+    if directory.account_id != response.account_id {
+        return Err(invalid());
+    }
+    let matches: Vec<&Project> = directory
+        .projects
+        .iter()
+        .filter(|p| {
+            p.project_id.eq_ignore_ascii_case(&original.canonical_name)
+                || p.name.eq_ignore_ascii_case(&original.canonical_name)
+        })
+        .collect();
+    if matches.len() > 1 {
+        return Err(attention(
+            "Multiple cloud projects match this repository for your account.",
+            "Run `decapod cloud projects` and select the intended entry with `decapod cloud project use <choice> --org <organization_id>`.",
+        ));
+    }
+    if let Some(matched) = matches.first() {
+        let checked = status(
+            connector,
+            bearer,
+            &directory.account_id,
+            &matched.project_id,
+            Some(&original.canonical_name),
+        )?;
+        return route_from_status(&checked, original);
+    }
+
+    if response.admin_contact_required != Some(true) {
+        if directory.organizations.is_empty() {
+            return Err(DecapodError::CloudAuth(
+                diagnostic_for_status_code("signup_required", Some(&original.canonical_name))
+                    .expect("signup_required diagnostic"),
+            ));
+        }
+        if directory
+            .organizations
+            .iter()
+            .any(|org| org.admin == Some(true))
+        {
+            let enroll_url = pricing_enrollment_url(Some(&original.canonical_name));
+            return Err(DecapodError::CloudAuth(
+                CloudAuthDiagnostic::new(
+                    CloudAuthStatus::ActionRequired,
+                    "This repository is not yet enrolled or enabled in your Decapod Cloud organization.",
+                    format!(
+                        "Bind an existing repository reservation in Cloud Admin -> Repositories, enroll it via `decapod cloud project enroll`, or subscribe at {enroll_url}, then retry."
+                    ),
+                )
+                .with_enrollment_url(enroll_url)
+                .with_error_code(CloudAuthErrorCode::RepositoryNotApproved),
+            ));
+        }
+    }
+
+    Err(DecapodError::CloudAuth(project_auth_diagnostic(
+        &response,
+        Some(&original.canonical_name),
+    )))
+}
+
+/// Return a selected routing reference after a fresh account response, or
+/// automatically reconcile an unambiguous originating repository when no
+/// explicit selection overrides it. Every following data query/batch is still
+/// independently authorized by the service.
 pub(crate) fn route(
     connector: &CloudConnector,
     guard: &SessionGuard,
@@ -791,7 +1001,10 @@ pub(crate) fn route(
         return Err(pending_creation());
     }
     let Some(selection) = record.selection else {
-        return Ok(original.clone());
+        if crate::core::cloud_dpop::is_dpop_access_token(bearer) {
+            return Ok(original.clone());
+        }
+        return reconcile_originating_repository(connector, bearer, original);
     };
     let response = status(
         connector,

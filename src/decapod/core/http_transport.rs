@@ -1026,10 +1026,19 @@ fn write_response(stream: &mut TcpStream, response: HttpResponse) -> std::io::Re
 }
 
 pub fn error_code_json(code: &str, message: &str) -> Vec<u8> {
+    let recovery = crate::core::rpc::derive_failure_recovery("http.rpc", code, message, None, &[]);
     serde_json::to_vec(&serde_json::json!({
         "success": false,
         "error_code": code,
-        "error": message,
+        "error": crate::core::trace::redact_string(message),
+        "failure_class": recovery.failure_class,
+        "recovery_mode": recovery.recovery_mode,
+        "readback_required": recovery.readback_required,
+        "retry_safe": recovery.retry_safe,
+        "authority_required": recovery.authority_required,
+        "blocked_by": [recovery.blocker],
+        "allowed_next_ops": recovery.allowed_next_ops,
+        "context_capsule": recovery.context_capsule,
     }))
     .unwrap_or_else(|_| b"{\"success\":false}".to_vec())
 }
