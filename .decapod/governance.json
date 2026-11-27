@@ -910,6 +910,16 @@
         ".decapod/managed/.manifest.json",
         "MODULE.bazel.lock"
       ]
+    },
+    {
+      "id": "cp3-clean-specs-1896",
+      "summary": "Refresh living specs without bazel-* workspace symlinks and re-review specs (#1896)",
+      "input_digest": "sha256:b651fc553b76c295f86dcc2e229dc5737f42daad5e8497762c24e962cd7a783b",
+      "proof_refs": [
+        ".decapod/managed/.manifest.json",
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md"
+      ]
     }
   ],
   "intents": {
@@ -954,21 +964,21 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Documented cloud_project unselected routing/reconcile, dactyl-db =0.21.0 OperationalDisposition transport mapping, and CloudAuthErrorCode extensions.",
-          "reviewed_code_fingerprint": "d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec",
+          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
           "spec_material_hash": "8496a08bb55569e2f5bff06201f414cb08f06d45dcd221e01a5930c23ba131ce"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Documented new CloudAuthErrorCode variants, automatic repository reconciliation contract, and OperationalAction/OutcomeUnknown mapping.",
-          "reviewed_code_fingerprint": "d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec",
+          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
           "spec_material_hash": "a28f18f4792c70e61eaf3d77366294cc358d4ca7a542845640f211dcd385fe31"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Public org filtering and non-fallback fail-closed boundaries preserved; security invariants unchanged.",
-          "reviewed_code_fingerprint": "d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec",
+          "reviewed_code_fingerprint": "9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
@@ -980,7 +990,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795761891Z"
+      "updated_at": "1795762185Z"
     },
     "trajectory": {
       "active_boundaries": [

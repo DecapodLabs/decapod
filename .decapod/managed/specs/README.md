@@ -65,7 +65,7 @@ agent documentation. The source architecture is described in
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 2102 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/` (1451), `bazel-bin/` (3), `bazel-out/` (3), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (292)
+- Tracked significant codebase files: 645 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (40), `bindings/` (5), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (292)
 - Core modules: 149 | Workflows: 9 | Integration targets: 175
 <!-- decapod:codebase-contract:end -->
 
@@ -73,7 +73,7 @@ agent documentation. The source architecture is described in
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d7072599f2504b3a9b9610328dce34253e04bd09f0ee0e9f7d52aceb7c807fec`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bazel-agy-commercial-todo-01m8be-agent-agy-commercial-fend_01m8ben363mx75qe-cloud-client-1896/` (1451 files), `bazel-bin/` (3 files), `bazel-out/` (3 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
+- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
