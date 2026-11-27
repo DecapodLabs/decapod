@@ -908,6 +908,14 @@
       "proof_refs": [
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-v1663-merge",
+      "summary": "Merge origin/master 251cb31919 (v0.166.3) into Docs PR #1962 and reconcile reviewed_sources_digest",
+      "input_digest": "sha256:a972eada827a4ed6f9237d8cffc1451da0cf34e93d5aca87d953ce661fab24a6",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -951,22 +959,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master 7b3d309e9 (#1961) and preserved authored Decapod Cloud mdBook specs",
-          "reviewed_code_fingerprint": "49c089a2ccf9b868281d55007a7a6534f560616ee48828a8543f27d9d0c4b0de",
-          "spec_material_hash": "802626d5074edf983f6d10e2180b246cd09ba95e0fb299818aa7a24d20d75fd2"
+          "reason": "Merged origin/master 251cb31919 (v0.166.3), reconciled reviewed_sources_digest, and preserved authored Decapod Cloud mdBook specs",
+          "reviewed_code_fingerprint": "ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151",
+          "spec_material_hash": "ad11f6f4801b343f12d913699c6ba0d7a11f429996cc205e0a5ce96e2de222ba"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master 7b3d309e9 (#1961) and preserved authored Decapod Cloud mdBook specs",
-          "reviewed_code_fingerprint": "49c089a2ccf9b868281d55007a7a6534f560616ee48828a8543f27d9d0c4b0de",
-          "spec_material_hash": "9d7ca05e38a6415eede0dfa9a83cb1de0d34e62b915c517dd6b9ce301b3a6d51"
+          "reason": "Merged origin/master 251cb31919 (v0.166.3), reconciled reviewed_sources_digest, and preserved authored Decapod Cloud mdBook specs",
+          "reviewed_code_fingerprint": "ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151",
+          "spec_material_hash": "3b72000f58e1e9d27450a0c16c25e6ca9e66415bc3dd8f5bebf0b84bbf765d4a"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Merge with 7b3d309e9 preserves all security controls; Docs PR only updates mdBook documentation and tests/doc_alignment.rs",
-          "reviewed_code_fingerprint": "49c089a2ccf9b868281d55007a7a6534f560616ee48828a8543f27d9d0c4b0de",
+          "reason": "Merge with 251cb31919 (v0.166.3) preserves all security controls; Docs PR only updates mdBook documentation and tests/doc_alignment.rs",
+          "reviewed_code_fingerprint": "ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151",
           "spec_material_hash": "ccedc6523b9cf2fe47192b916bd6810d053f175f80c6e045da819873d022a4e7"
         }
       ],
@@ -978,7 +986,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795753005Z"
+      "updated_at": "1795754251Z"
     },
     "trajectory": {
       "active_boundaries": [
