@@ -70,6 +70,39 @@
 - **Runtime CLI boundary**: Unchanged; `repo.backend = "local" | "cloud"` remains logical selection only in `.decapod/config.toml`, with no local price tables, access rosters, or billing authority stored in Git.
 - **Alignment regression (`tests/doc_alignment.rs`)**: `test_docs_landing_page_links_local_and_cloud_offerings` asserts live `decapodlabs.ai/pricing` and `decapodlabs.ai/admin` links, `.decapod-offering-badge.badge-cloud`, `.decapod-offering-actions`, and absence of stale `decapodlabs.github.io` / `offerings.html` / `"Coming soon"` copy.
 
+## Public documentation discovery (`docs/book/`, `assets/tools/docs_seo.py`, `assets/tools/source_ci/docs-build.sh`)
+
+The public mdBook remains a documentation build owned by this repository and is
+served under `https://decapodlabs.ai/decapod/`. The existing `docs-build` source-CI
+check runs via `workflow_owned::script` (`assets/tools/source_ci/docs-build.sh`),
+which invokes mdBook 0.4.40 and then the standard-library Python postprocessor
+`assets/tools/docs_seo.py`. Both helpers are included in
+`source_ci_workflow_owned::SOURCES` (chained into `source_ci_custody::profile_sources()`
+and `readiness_profile::definition_files()`) so their bytes participate in the
+reviewed source-CI closure and digest; they create no independent proof authority.
+`source_ci_custody::required_artifact_paths` requires `docs/book/book/index.html`,
+`docs/book/book/sitemap.xml`, and `docs/book/book/llms.txt`.
+
+The postprocessor derives canonical URLs from rendered `.html` paths, maps the
+book's `index.html` to `/decapod/`, and extracts short descriptions from chapter
+paragraphs with the configured book description as a fallback. It emits matching
+Open Graph and Twitter metadata plus factual CollectionPage/TechArticle JSON-LD,
+without changing chapter bodies or inventing ratings, publication dates, or
+product guarantees. Repeated processing preserves the same output bytes.
+
+The same public-page inventory produces `/decapod/sitemap.xml` and
+`/decapod/llms.txt`; the shared theme links the agent index from the head and
+footer. Print, not-found, redirect, explicitly noindex, and private-root pages
+are excluded from both indexes and receive noindex metadata while retaining
+existing robots restrictions. These files support public discovery, not
+authentication or agent authorization. The source-relative
+`docs/agent/llms.txt` remains the separate repository agent-docs contract.
+
+This build step performs no network calls and needs only Python's standard
+library. The existing native docs deployment publishes its output. A successful
+standalone metadata check is not Decapod validation, a runtime proof, or PR
+publication readiness; the configured exact-candidate checks still govern release.
+
 ## Source-CI `profile::selected` shard invariant (`assets/tools/source_ci_profile.rs`)
 
 - **`profile::selected` (`Selection::Core`)**: For every non-`workflow_owned::artifact_worker` check, `selected(check, &paths, false)` now guarantees `!commands(check, &paths).unwrap().is_empty()`, including PRs touching `src/decapod/core/*` outside `core_full(paths)` where `.github/workflows/ci.yml` (`test-core`) invokes `candidate-source-ci-profile` for `selective-core-2` and `selective-core-3`.
@@ -2686,7 +2719,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f0c4a1ca120b13a129bf7f812173d288eb50df56f94390d32d061dc09a29925e`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
