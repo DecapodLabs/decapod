@@ -900,6 +900,14 @@
       "proof_refs": [
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-merge-7b3d309e9",
+      "summary": "Merge origin/master 7b3d309e9 (#1961) into Docs PR #1962 and reconcile specs/governance",
+      "input_digest": "sha256:c3bc1bde1b5ad4dc987564ff05549d436361e89c4f6eba9930cc52755dbda14d",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -943,23 +951,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Authored Decapod Cloud mdBook pricing and admin documentation specs on v0.166.2",
-          "reviewed_code_fingerprint": "1d7d28dadc87380ae707297f72c478c69961f2c1bb4ee1e3da062631dbb8b8dd",
-          "spec_material_hash": "e477b44bb7456a13e693e8b5b5fe3d730415193da43716da01fb6eeaae730ec8"
+          "reason": "Merged origin/master 7b3d309e9 (#1961) and preserved authored Decapod Cloud mdBook specs",
+          "reviewed_code_fingerprint": "49c089a2ccf9b868281d55007a7a6534f560616ee48828a8543f27d9d0c4b0de",
+          "spec_material_hash": "802626d5074edf983f6d10e2180b246cd09ba95e0fb299818aa7a24d20d75fd2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Authored Decapod Cloud mdBook pricing and admin documentation specs on v0.166.2",
-          "reviewed_code_fingerprint": "1d7d28dadc87380ae707297f72c478c69961f2c1bb4ee1e3da062631dbb8b8dd",
-          "spec_material_hash": "812b0b974c30912ab3b55189e7493445474346c87b4c7232fcda53d27ad94e11"
+          "reason": "Merged origin/master 7b3d309e9 (#1961) and preserved authored Decapod Cloud mdBook specs",
+          "reviewed_code_fingerprint": "49c089a2ccf9b868281d55007a7a6534f560616ee48828a8543f27d9d0c4b0de",
+          "spec_material_hash": "9d7ca05e38a6415eede0dfa9a83cb1de0d34e62b915c517dd6b9ce301b3a6d51"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documentation-only mdBook and doc_alignment change; zero runtime, auth, or security policy modifications",
-          "reviewed_code_fingerprint": "1d7d28dadc87380ae707297f72c478c69961f2c1bb4ee1e3da062631dbb8b8dd",
-          "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
+          "reason": "Merge with 7b3d309e9 preserves all security controls; Docs PR only updates mdBook documentation and tests/doc_alignment.rs",
+          "reviewed_code_fingerprint": "49c089a2ccf9b868281d55007a7a6534f560616ee48828a8543f27d9d0c4b0de",
+          "spec_material_hash": "ccedc6523b9cf2fe47192b916bd6810d053f175f80c6e045da819873d022a4e7"
         }
       ],
       "state": "APPROVED",
@@ -970,7 +978,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795749291Z"
+      "updated_at": "1795753005Z"
     },
     "trajectory": {
       "active_boundaries": [
