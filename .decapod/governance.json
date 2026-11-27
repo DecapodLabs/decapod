@@ -916,6 +916,14 @@
       "proof_refs": [
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-v1663-dockerfile",
+      "summary": "Refresh 0.166.3 managed Dockerfile pin for Docs PR #1962",
+      "input_digest": "sha256:70568a3ea381b6f364a19e0f0d9f6c0b29e895023132714256fd70901bac04b0",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
