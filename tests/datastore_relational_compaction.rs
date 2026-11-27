@@ -1219,3 +1219,79 @@ fn propodus_dactyl_logical_compaction_parity_preserves_envelopes_and_labels_host
     assert!(bench.before_compaction.main_db_bytes > 0);
     assert!(bench.after_explicit_reclaim.freelist_count == 0);
 }
+
+#[test]
+fn snapshot_compaction_benchmark_preserves_source_and_verifies_lossless_reconstruction() {
+    use decapod::core::{db, events, houseboat, todo};
+    use tempfile::tempdir;
+
+    let src = tempdir().unwrap();
+    let src_data = src.path().join(".decapod/data");
+    std::fs::create_dir_all(&src_data).unwrap();
+    todo::initialize_todo_db(&src_data).unwrap();
+
+    // Seed legacy verbose envelope rows + duplicate agent_prompts via raw fixture writes
+    let db_path = src_data.join(schemas::LOCAL_DB_NAME);
+    let conn = db::db_connect(&db_path.to_string_lossy()).unwrap();
+    for idx in 0..8 {
+        let added = todo::add_task(
+            &src_data,
+            &todo::TodoCommand::Add {
+                title: format!("Snapshot fixture task {idx}"),
+                description: "verbose envelope benchmark payload ".repeat(12),
+                priority: "medium".into(),
+                tags: "bench,snapshot".into(),
+                owner: "tester".into(),
+                due: None,
+                r#ref: String::new(),
+                scope: "root".into(),
+                dir: Some(src.path().to_string_lossy().into_owned()),
+                depends_on: String::new(),
+                blocks: String::new(),
+                parent: None,
+                one_shot: 0,
+            },
+        )
+        .unwrap();
+        let tid = added["id"].as_str().unwrap();
+        let _ = todo::claim_task(&src_data, tid, "tester", todo::ClaimMode::Exclusive).unwrap();
+        let _ = todo::release_task_as_actor(&src_data, tid, "tester").unwrap();
+    }
+    // Insert a legacy non-compact JSON envelope row directly to force event compaction work
+    conn.execute(
+        "INSERT INTO events(stream, seq, event_id, ts, event_type, actor, subject_kind, subject_id, payload)
+         VALUES('todo', (SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream = 'todo'), 'legacy-bench-ev-1', '2026-11-26T00:00:00Z', 'task.comment', 'tester', 'task', 't-legacy',
+         '{\"event_id\":\"legacy-bench-ev-1\",\"ts\":\"2026-11-26T00:00:00Z\",\"event_type\":\"task.comment\",\"actor\":\"tester\",\"subject_kind\":\"task\",\"subject_id\":\"t-legacy\",\"payload\":{\"note\":\"compact me please with padding data\"}}')",
+        [],
+    )
+    .unwrap();
+    drop(conn);
+
+    let src_bytes_before = std::fs::metadata(&db_path).unwrap().len();
+    let src_todo_before = events::query(&src_data, events::TODO, usize::MAX).unwrap();
+
+    let scratch = tempdir().unwrap();
+    let report = houseboat::run_snapshot_compaction_benchmark(
+        &src_data,
+        scratch.path(),
+        "synthetic-snapshot",
+    )
+    .unwrap();
+
+    assert_eq!(report.scope, "synthetic-snapshot");
+    assert!(report.lossless_verified);
+    assert!(report.todo_stream_parity);
+    assert!(report.task_journal_parity);
+    assert_eq!(report.after_explicit_reclaim.freelist_count, 0);
+    assert!(report.events_compacted >= 1);
+    assert_eq!(
+        std::fs::metadata(&db_path).unwrap().len(),
+        src_bytes_before,
+        "source database must remain unmodified"
+    );
+    assert_eq!(
+        events::query(&src_data, events::TODO, usize::MAX).unwrap(),
+        src_todo_before,
+        "source events must remain unmodified"
+    );
+}

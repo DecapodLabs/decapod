@@ -444,6 +444,310 @@ pub fn validate_event_append(
     Ok(())
 }
 
+/// Maximum sources/evidence refs per persisted non-task record.
+pub const MAX_EVIDENCE_REFS_PER_RECORD: usize = MAX_DEPENDENCIES_PER_TASK;
+
+/// Validate knowledge entry write bounds without altering historical reads.
+#[allow(clippy::too_many_arguments)]
+pub fn validate_knowledge_write(
+    id: &str,
+    title: &str,
+    content: &str,
+    provenance: &str,
+    scope: &str,
+    claim_id: Option<&str>,
+    merge_key: Option<&str>,
+    status: &str,
+    ttl_policy: &str,
+    expires_ts: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("id", id, MAX_ID_BYTES, false)?;
+    validate_utf8_field("title", title, MAX_TITLE_BYTES, false)?;
+    validate_utf8_field("content", content, MAX_BODY_PROSE_BYTES, false)?;
+    validate_utf8_field("provenance", provenance, MAX_PATH_OR_REF_BYTES, false)?;
+    validate_utf8_field("scope", scope, MAX_SCOPE_BYTES, false)?;
+    validate_optional_utf8_field("claim_id", claim_id, MAX_ID_BYTES, false)?;
+    validate_optional_utf8_field("merge_key", merge_key, MAX_ID_BYTES, false)?;
+    validate_utf8_field("status", status, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_utf8_field("ttl_policy", ttl_policy, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_optional_utf8_field("expires_ts", expires_ts, MAX_TIMESTAMP_BYTES, false)?;
+    Ok(())
+}
+
+/// Validate knowledge promotion event bounds.
+pub fn validate_knowledge_promotion(
+    source_entry_id: &str,
+    evidence_refs: &[String],
+    approved_by: &str,
+    actor: &str,
+    reason: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("source_entry_id", source_entry_id, MAX_ID_BYTES, true)?;
+    if evidence_refs.len() > MAX_EVIDENCE_REFS_PER_RECORD {
+        return Err(violation(
+            "evidence_refs",
+            format!(
+                "exceeds evidence reference collection bound ({} > {MAX_EVIDENCE_REFS_PER_RECORD})",
+                evidence_refs.len()
+            ),
+        ));
+    }
+    for r in evidence_refs {
+        validate_utf8_field("evidence_refs[]", r, MAX_PATH_OR_REF_BYTES, true)?;
+    }
+    validate_utf8_field("approved_by", approved_by, MAX_PRINCIPAL_BYTES, true)?;
+    validate_utf8_field("actor", actor, MAX_PRINCIPAL_BYTES, true)?;
+    validate_utf8_field("reason", reason, MAX_DESCRIPTION_BYTES, true)?;
+    Ok(())
+}
+
+/// Validate federation node write bounds and normalized tags/sources collections.
+#[allow(clippy::too_many_arguments)]
+pub fn validate_federation_node_write(
+    title: &str,
+    node_type: &str,
+    priority: &str,
+    confidence: &str,
+    body: &str,
+    sources: &[String],
+    tags: &str,
+    scope: &str,
+    effective_from: Option<&str>,
+    actor: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("title", title, MAX_TITLE_BYTES, false)?;
+    validate_utf8_field("node_type", node_type, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_utf8_field("priority", priority, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_utf8_field("confidence", confidence, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_utf8_field("body", body, MAX_BODY_PROSE_BYTES, false)?;
+    if sources.len() > MAX_EVIDENCE_REFS_PER_RECORD {
+        return Err(violation(
+            "sources",
+            format!(
+                "exceeds source collection bound ({} > {MAX_EVIDENCE_REFS_PER_RECORD})",
+                sources.len()
+            ),
+        ));
+    }
+    for src in sources {
+        validate_utf8_field("sources[]", src, MAX_PATH_OR_REF_BYTES, true)?;
+    }
+    let _ = normalize_and_validate_tags_csv(tags)?;
+    validate_utf8_field("scope", scope, MAX_SCOPE_BYTES, false)?;
+    validate_optional_utf8_field("effective_from", effective_from, MAX_TIMESTAMP_BYTES, false)?;
+    validate_utf8_field("actor", actor, MAX_PRINCIPAL_BYTES, false)?;
+    Ok(())
+}
+
+/// Validate federation edge write bounds.
+pub fn validate_federation_edge_write(
+    source_id: &str,
+    target_id: &str,
+    edge_type: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("source_id", source_id, MAX_ID_BYTES, true)?;
+    validate_utf8_field("target_id", target_id, MAX_ID_BYTES, true)?;
+    validate_utf8_field("edge_type", edge_type, MAX_ENUM_TOKEN_BYTES, true)?;
+    Ok(())
+}
+
+/// Validate health claim and proof write bounds.
+pub fn validate_health_claim_write(
+    id: &str,
+    subject: &str,
+    kind: &str,
+    provenance: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("id", id, MAX_ID_BYTES, false)?;
+    validate_utf8_field("subject", subject, MAX_TITLE_BYTES, false)?;
+    validate_utf8_field("kind", kind, MAX_ENUM_TOKEN_BYTES, false)?;
+    validate_utf8_field("provenance", provenance, MAX_PATH_OR_REF_BYTES, false)?;
+    Ok(())
+}
+
+pub fn validate_health_proof_write(
+    claim_id: &str,
+    surface: &str,
+    result: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("claim_id", claim_id, MAX_ID_BYTES, false)?;
+    validate_utf8_field("surface", surface, MAX_PATH_OR_REF_BYTES, false)?;
+    validate_utf8_field("result", result, MAX_ENUM_TOKEN_BYTES, false)?;
+    Ok(())
+}
+
+/// Validate decide session and decision write bounds.
+pub fn validate_decide_session_write(
+    tree_id: &str,
+    title: &str,
+    description: &str,
+    actor: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("tree_id", tree_id, MAX_ID_BYTES, true)?;
+    validate_utf8_field("title", title, MAX_TITLE_BYTES, false)?;
+    validate_utf8_field("description", description, MAX_DESCRIPTION_BYTES, false)?;
+    validate_utf8_field("actor", actor, MAX_PRINCIPAL_BYTES, false)?;
+    Ok(())
+}
+
+pub fn validate_decide_record_write(
+    session_id: &str,
+    question_id: &str,
+    value: &str,
+    rationale: &str,
+    actor: &str,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("session_id", session_id, MAX_ID_BYTES, true)?;
+    validate_utf8_field("question_id", question_id, MAX_ID_BYTES, true)?;
+    validate_utf8_field("value", value, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_utf8_field("rationale", rationale, MAX_DESCRIPTION_BYTES, false)?;
+    validate_utf8_field("actor", actor, MAX_PRINCIPAL_BYTES, false)?;
+    Ok(())
+}
+
+/// Validate cron job write/update bounds.
+#[allow(clippy::too_many_arguments)]
+pub fn validate_cron_write(
+    name: Option<&str>,
+    description: Option<&str>,
+    schedule: Option<&str>,
+    command: Option<&str>,
+    status: Option<&str>,
+    tags: Option<&str>,
+    last_run: Option<&str>,
+    next_run: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_optional_utf8_field("name", name, MAX_TITLE_BYTES, false)?;
+    validate_optional_utf8_field("description", description, MAX_DESCRIPTION_BYTES, false)?;
+    validate_optional_utf8_field("schedule", schedule, MAX_ENUM_TOKEN_BYTES, false)?;
+    validate_optional_utf8_field("command", command, MAX_PATH_OR_REF_BYTES, false)?;
+    validate_optional_utf8_field("status", status, MAX_ENUM_TOKEN_BYTES, false)?;
+    if let Some(t) = tags {
+        let _ = normalize_and_validate_tags_csv(t)?;
+    }
+    validate_optional_utf8_field("last_run", last_run, MAX_TIMESTAMP_BYTES, false)?;
+    validate_optional_utf8_field("next_run", next_run, MAX_TIMESTAMP_BYTES, false)?;
+    Ok(())
+}
+
+fn validate_optional_reflex_config(
+    field: &str,
+    value: Option<&str>,
+    max_bytes: usize,
+    max_depth: usize,
+) -> Result<(), DecapodError> {
+    let Some(cfg) = value else {
+        return Ok(());
+    };
+    validate_utf8_field(field, cfg, max_bytes, false)?;
+    if let Ok(parsed) = serde_json::from_str::<Value>(cfg) {
+        validate_json_value_bounds(field, &parsed, max_bytes, max_depth)?;
+    }
+    Ok(())
+}
+
+/// Validate reflex write/update bounds (bounded UTF-8 strings or JSON configs).
+#[allow(clippy::too_many_arguments)]
+pub fn validate_reflex_write(
+    name: Option<&str>,
+    description: Option<&str>,
+    trigger_type: Option<&str>,
+    trigger_config: Option<&str>,
+    action_type: Option<&str>,
+    action_config: Option<&str>,
+    status: Option<&str>,
+    tags: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_optional_utf8_field("name", name, MAX_TITLE_BYTES, false)?;
+    validate_optional_utf8_field("description", description, MAX_DESCRIPTION_BYTES, false)?;
+    validate_optional_utf8_field("trigger_type", trigger_type, MAX_ENUM_TOKEN_BYTES, false)?;
+    validate_optional_reflex_config(
+        "trigger_config",
+        trigger_config,
+        MAX_PROOF_PLAN_BYTES,
+        MAX_JSON_DEPTH,
+    )?;
+    validate_optional_utf8_field("action_type", action_type, MAX_ENUM_TOKEN_BYTES, false)?;
+    validate_optional_reflex_config(
+        "action_config",
+        action_config,
+        MAX_PROOF_PLAN_BYTES,
+        MAX_JSON_DEPTH,
+    )?;
+    validate_optional_utf8_field("status", status, MAX_ENUM_TOKEN_BYTES, false)?;
+    if let Some(t) = tags {
+        let _ = normalize_and_validate_tags_csv(t)?;
+    }
+    Ok(())
+}
+
+/// Validate feedback write bounds.
+pub fn validate_feedback_write(
+    source: &str,
+    text: &str,
+    links: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("source", source, MAX_PATH_OR_REF_BYTES, false)?;
+    validate_utf8_field("text", text, MAX_DESCRIPTION_BYTES, false)?;
+    validate_optional_utf8_field("links", links, MAX_PATH_OR_REF_BYTES, false)?;
+    Ok(())
+}
+
+/// Validate archive registry write bounds.
+pub fn validate_archive_write(id: &str, path: &str) -> Result<(), DecapodError> {
+    validate_utf8_field("id", id, MAX_ID_BYTES, true)?;
+    validate_utf8_field("path", path, MAX_PATH_OR_REF_BYTES, true)?;
+    Ok(())
+}
+
+/// Validate aptitude pattern and observation writes.
+pub fn validate_aptitude_pattern_write(
+    name: &str,
+    category: &str,
+    regex_pattern: &str,
+    preference_category: Option<&str>,
+    preference_key: Option<&str>,
+    description: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("name", name, MAX_TITLE_BYTES, true)?;
+    validate_utf8_field("category", category, MAX_CATEGORY_BYTES, true)?;
+    validate_utf8_field("regex_pattern", regex_pattern, MAX_PATH_OR_REF_BYTES, true)?;
+    validate_optional_utf8_field(
+        "preference_category",
+        preference_category,
+        MAX_CATEGORY_BYTES,
+        false,
+    )?;
+    validate_optional_utf8_field("preference_key", preference_key, MAX_TITLE_BYTES, false)?;
+    validate_optional_utf8_field("description", description, MAX_DESCRIPTION_BYTES, false)?;
+    Ok(())
+}
+
+pub fn validate_aptitude_observation_write(
+    content: &str,
+    category: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("content", content, MAX_DESCRIPTION_BYTES, true)?;
+    validate_optional_utf8_field("category", category, MAX_CATEGORY_BYTES, false)?;
+    Ok(())
+}
+
+/// Validate LCM original ingestion fields (envelope payload bounded by `MAX_EVENT_PAYLOAD_BYTES`).
+pub fn validate_lcm_ingest_write(
+    content: &str,
+    kind: &str,
+    actor: &str,
+    session_id: Option<&str>,
+    source: Option<&str>,
+) -> Result<(), DecapodError> {
+    validate_utf8_field("content", content, MAX_BODY_PROSE_BYTES, false)?;
+    validate_utf8_field("kind", kind, MAX_ENUM_TOKEN_BYTES, true)?;
+    validate_utf8_field("actor", actor, MAX_PRINCIPAL_BYTES, false)?;
+    validate_optional_utf8_field("session_id", session_id, MAX_ID_BYTES, false)?;
+    validate_optional_utf8_field("source", source, MAX_PATH_OR_REF_BYTES, false)?;
+    Ok(())
+}
+
 // ---------------------------------------------------------------------------
 // Duplicated-authority convergence (`tasks.tags` <-> `task_tags` and
 // `tasks.depends_on` <-> `task_dependencies`)
@@ -600,7 +904,14 @@ pub fn contract_manifest() -> Value {
         "collection_bounds": {
             "tags_per_task": MAX_TAGS_PER_TASK,
             "dependencies_per_task": MAX_DEPENDENCIES_PER_TASK,
-            "owners_per_task": MAX_OWNERS_PER_TASK
+            "owners_per_task": MAX_OWNERS_PER_TASK,
+            "evidence_refs_per_record": MAX_EVIDENCE_REFS_PER_RECORD
+        },
+        "sql_boundary_parity": {
+            "rust_utf8_len": "str::len(value) in UTF-8 bytes + fail-closed NUL rejection",
+            "sqlite_length_function": "length(CAST(col AS BLOB))",
+            "postgres_length_function": "octet_length(convert_to(col, 'UTF8'))",
+            "null_byte_parity": "PostgreSQL TEXT rejects 0x00 natively; Rust validator enforces identical fail-closed rejection on SQLite/local stores"
         },
         "authority_convergence": {
             "tags": {

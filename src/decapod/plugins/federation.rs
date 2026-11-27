@@ -587,6 +587,18 @@ pub fn add_node(
     for src in &sources {
         validate_provenance(src)?;
     }
+    crate::core::storage_contracts::validate_federation_node_write(
+        title,
+        node_type,
+        priority,
+        confidence,
+        body,
+        &sources,
+        tags,
+        scope,
+        effective_from,
+        actor,
+    )?;
 
     // Enforce provenance for critical types
     if is_critical(node_type, priority) && sources.is_empty() {
@@ -890,6 +902,9 @@ pub fn add_edge(
     target_id: &str,
     edge_type: &str,
 ) -> Result<String, error::DecapodError> {
+    crate::core::storage_contracts::validate_federation_edge_write(
+        source_id, target_id, edge_type,
+    )?;
     validate_edge_type(edge_type)?;
 
     let broker = DbBroker::new(&store.root);

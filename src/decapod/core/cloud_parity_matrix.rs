@@ -428,6 +428,142 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
             reason_code: "CLOUD_PRINCIPAL_UNVERIFIED".to_string(),
             never_falls_back_to_sqlite: true,
         },
+        UnsupportedCloudOperation {
+            operation_id: "knowledge.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); knowledge store is local-only and never falls back to SQLite under `backend = \"cloud\"`.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "federation.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); federation graph nodes/edges remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "decide.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); decision tree sessions/records remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "health.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); health claims/proof_events remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "aptitude.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); aptitude preferences/prompts/patterns remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "archive.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); archive registration remains local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "feedback.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); feedback capture remains local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "cron.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); scheduled cron jobs remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "reflex.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); reflex rules remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "lcm.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); LCM originals/summaries remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "primitives.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); risk_zones/categories/obligations remain local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "map.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); map persistence remains local-only without SQLite fallback in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "policy.store".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); local SQLite policy approvals table is skipped in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "data.broker".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); local DbBroker audit CLI is unavailable in Cloud mode without SQLite fallback.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "data.compact".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`DATA_COMPACT_CLOUD_UNSUPPORTED`); local SQLite compaction is never substituted for server-managed PostgreSQL.".to_string(),
+            reason_code: "DATA_COMPACT_CLOUD_UNSUPPORTED".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "store.upsert".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); RPC store.upsert never falls back to `.decapod/data/decapod.db` in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
+        UnsupportedCloudOperation {
+            operation_id: "store.query".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            local_supported: true,
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); RPC store.query never falls back to `.decapod/data/decapod.db` in Cloud mode.".to_string(),
+            reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
+            never_falls_back_to_sqlite: true,
+        },
     ];
 
     let invariants = vec![
@@ -706,6 +842,33 @@ mod tests {
                 .iter()
                 .any(|op| op.operation_id == "qa.verify.commit")
         );
+        for op_id in [
+            "knowledge.store",
+            "federation.store",
+            "decide.store",
+            "health.store",
+            "aptitude.store",
+            "archive.store",
+            "feedback.store",
+            "cron.store",
+            "reflex.store",
+            "lcm.store",
+            "primitives.store",
+            "map.store",
+            "policy.store",
+            "data.broker",
+            "data.compact",
+            "store.upsert",
+            "store.query",
+        ] {
+            assert!(
+                first
+                    .unsupported_cloud_operations
+                    .iter()
+                    .any(|op| op.operation_id == op_id && op.never_falls_back_to_sqlite),
+                "missing fail-closed unsupported cloud boundary entry: {op_id}"
+            );
+        }
     }
 
     #[test]

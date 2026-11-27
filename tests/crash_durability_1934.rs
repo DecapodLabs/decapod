@@ -742,3 +742,122 @@ fn crash_1934_git_worktree_and_staging_recovery_preserves_peers_and_fsck() {
     );
     let _ = git_in(&fx.repo, &["fsck", "--full", "--no-dangling"]);
 }
+
+#[test]
+fn crash_1934_cloud_custody_journal_interruption_and_unknown_outcome_never_creates_sqlite() {
+    use decapod::core::cloud_todo_operation::{
+        FailureKind, Journal, OperationRecord, Outcome, fingerprint,
+    };
+    use decapod::core::cloud_workspace::{CloudCustodyRecord, CloudCustodyStore};
+    use serde_json::json;
+
+    let tmp = TempDir::new().unwrap();
+    let repo_root = tmp.path().join("cloud-repo");
+    fs::create_dir_all(repo_root.join(".decapod")).unwrap();
+    fs::write(
+        repo_root.join(".decapod/config.toml"),
+        "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"mermaid\"\nentrypoints = []\n[repo]\nbackend = \"cloud\"\n",
+    )
+    .unwrap();
+    let machine_state = tmp.path().join("machine-state");
+    let wt_path = repo_root.join(".decapod/workspaces/agent-cloud-crash");
+    fs::create_dir_all(&wt_path).unwrap();
+
+    let op_id = "op_cloud_crash_1934".to_string();
+    let fp = fingerprint(
+        "https://propodus.example.invalid",
+        "DecapodLabs/decapod",
+        &json!({"task_id": "t_cloud_1", "action": "claim"}),
+    );
+    let route_fp = fingerprint(
+        "https://propodus.example.invalid",
+        "org:1/proj:1",
+        &json!({"backend": "cloud"}),
+    );
+
+    // 1. Prepare journal + save pending custody before simulating crash/network cut.
+    let journal = Journal::at(machine_state.join("ops"));
+    let rec = journal
+        .prepare(&OperationRecord {
+            operation_id: op_id.clone(),
+            request_fingerprint: fp.clone(),
+            routing_fingerprint: None,
+            task_id: "t_cloud_1".into(),
+            status: Outcome::Prepared,
+            failure_kind: None,
+            updated_at: 1_800_000_000,
+        })
+        .unwrap();
+    let bound = journal.bind_route(&rec, &route_fp, &route_fp).unwrap();
+    journal
+        .finish(
+            &bound,
+            Outcome::OutcomeUnknown,
+            Some(FailureKind::Transport),
+        )
+        .unwrap();
+
+    let custody_store = CloudCustodyStore::at(machine_state.join("custody"));
+    custody_store
+        .save(
+            &repo_root,
+            &CloudCustodyRecord {
+                version: 1,
+                origin: "https://propodus.example.invalid".into(),
+                project_id: "proj_1".into(),
+                task_id: "t_cloud_1".into(),
+                task_title: "Crash recovery".into(),
+                native_task_version: 1,
+                workspace_id: "ws-cloud-1".into(),
+                worktree_path: wt_path.clone(),
+                branch: "agent/cloud/crash".into(),
+                actor: "agent-cloud".into(),
+                custody_id: "cust_1".into(),
+                pending_operation_id: Some(op_id.clone()),
+                pending_custody_id: Some("cust_2".into()),
+                pending_native_task_version: Some(2),
+                task_revision: Some(1),
+                fencing_generation: Some(1),
+                expires_at: None,
+                invocation_id: Some("inv-1".into()),
+                container_expected: false,
+                container_runtime: None,
+                container_name: None,
+                container_id: None,
+            },
+        )
+        .unwrap();
+
+    // 2. Reopen journal & custody after simulated crash: OutcomeUnknown must remain un-evicted,
+    //    must reject rebinding onto a different route, and must never create decapod.db.
+    let reopened_journal = Journal::at(machine_state.join("ops"));
+    let list = reopened_journal.list().unwrap();
+    assert_eq!(list.len(), 1);
+    assert_eq!(list[0].status, Outcome::OutcomeUnknown);
+
+    let other_route = fingerprint(
+        "https://propodus.example.invalid",
+        "org:2/proj:2",
+        &json!({"backend": "cloud"}),
+    );
+    let rebind_err = reopened_journal
+        .bind_route(&bound, &other_route, &route_fp)
+        .expect_err("OutcomeUnknown cloud op must refuse cross-project replay");
+    assert!(
+        rebind_err.to_string().contains("another resolved project"),
+        "{rebind_err}"
+    );
+
+    let reopened_custody = CloudCustodyStore::at(machine_state.join("custody"))
+        .load(&repo_root, &wt_path)
+        .unwrap()
+        .expect("pending cloud custody survives crash");
+    assert_eq!(
+        reopened_custody.pending_operation_id.as_deref(),
+        Some(op_id.as_str())
+    );
+    assert!(
+        !repo_root.join(".decapod/data/decapod.db").exists(),
+        "cloud crash recovery must never fall back to local SQLite"
+    );
+}

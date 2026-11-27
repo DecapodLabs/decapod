@@ -403,40 +403,38 @@ pub fn compact_historical_events(conn: &Connection) -> Result<EventCompactionRep
         return Ok(EventCompactionReport::default());
     }
     let mut report = EventCompactionReport::default();
-    let mut last_seq = 0u64;
-    let mut last_event_id = String::new();
+    let mut last_rowid = 0i64;
 
     loop {
         let mut stmt = conn.prepare(
-            "SELECT seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, payload
+            "SELECT rowid, seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events
-             WHERE stream <> 'federation'
-               AND (seq > ?1 OR (seq = ?1 AND event_id > ?2))
-             ORDER BY seq ASC, event_id ASC
-             LIMIT 256",
+             WHERE rowid > ?1
+             ORDER BY rowid ASC
+             LIMIT 1024",
         )?;
-        let rows = stmt.query_map(params![last_seq, last_event_id], |r| {
+        let rows = stmt.query_map(params![last_rowid], |r| {
             Ok((
-                r.get::<_, u64>(0)?,
-                r.get::<_, String>(1)?,
+                r.get::<_, i64>(0)?,
+                r.get::<_, u64>(1)?,
                 r.get::<_, String>(2)?,
                 r.get::<_, String>(3)?,
                 r.get::<_, String>(4)?,
                 r.get::<_, String>(5)?,
-                r.get::<_, Option<String>>(6)?,
+                r.get::<_, String>(6)?,
                 r.get::<_, Option<String>>(7)?,
-                r.get::<_, String>(8)?,
+                r.get::<_, Option<String>>(8)?,
+                r.get::<_, String>(9)?,
             ))
         })?;
         let batch = rows.collect::<Result<Vec<_>, _>>()?;
         if batch.is_empty() {
             break;
         }
-        let last = batch.last().expect("non-empty batch");
-        last_seq = last.0;
-        last_event_id = last.2.clone();
+        last_rowid = batch.last().expect("non-empty batch").0;
 
         for (
+            _rowid,
             _seq,
             stream,
             event_id,
@@ -448,6 +446,9 @@ pub fn compact_historical_events(conn: &Connection) -> Result<EventCompactionRep
             raw_payload,
         ) in batch
         {
+            if stream == "federation" {
+                continue;
+            }
             report.scanned_rows += 1;
             let raw_len = raw_payload.len() as u64;
             report.bytes_before += raw_len;
@@ -522,32 +523,37 @@ fn collect_event_embedded_component_keys(
     if !conn.has_table("events")? {
         return Ok(());
     }
-    let mut last_seq = 0u64;
-    let mut last_event_id = String::new();
+    let mut last_rowid = 0i64;
     loop {
         let mut stmt = conn.prepare(
-            "SELECT seq, event_id, payload FROM events
-             WHERE stream = 'todo'
-               AND event_type IN ('task.journal.checkpoint', 'task.transfer.exported', 'task.transfer.imported')
-               AND (seq > ?1 OR (seq = ?1 AND event_id > ?2))
-             ORDER BY seq ASC, event_id ASC
-             LIMIT 256",
+            "SELECT rowid, stream, event_type, payload
+             FROM events
+             WHERE rowid > ?1
+             ORDER BY rowid ASC
+             LIMIT 1024",
         )?;
-        let rows = stmt.query_map(params![last_seq, last_event_id], |r| {
+        let rows = stmt.query_map(params![last_rowid], |r| {
             Ok((
-                r.get::<_, u64>(0)?,
+                r.get::<_, i64>(0)?,
                 r.get::<_, String>(1)?,
                 r.get::<_, String>(2)?,
+                r.get::<_, String>(3)?,
             ))
         })?;
         let batch = rows.collect::<Result<Vec<_>, _>>()?;
         if batch.is_empty() {
             break;
         }
-        let last = batch.last().expect("non-empty batch");
-        last_seq = last.0;
-        last_event_id = last.1.clone();
-        for (_seq, _event_id, raw) in batch {
+        last_rowid = batch.last().expect("non-empty batch").0;
+        for (_rowid, stream, event_type, raw) in batch {
+            if stream != "todo"
+                || !matches!(
+                    event_type.as_str(),
+                    "task.journal.checkpoint" | "task.transfer.exported" | "task.transfer.imported"
+                )
+            {
+                continue;
+            }
             let Ok(val) = serde_json::from_str::<Value>(&raw) else {
                 continue;
             };
@@ -777,43 +783,43 @@ pub struct CompactionMigrationManifest {
     pub manifest_sha256: String,
 }
 
-fn logical_events_inventory(conn: &Connection) -> Result<(u64, String), DecapodError> {
+pub(crate) fn logical_events_inventory(conn: &Connection) -> Result<(u64, String), DecapodError> {
     if !conn.has_table("events")? {
         return Ok((0, format!("{:x}", Sha256::digest(b"empty"))));
     }
-    let mut hasher = Sha256::new();
+    let mut row_digests: Vec<(u64, String, [u8; 32])> = Vec::new();
     let mut count = 0u64;
-    let mut last_seq = 0u64;
-    let mut last_event_id = String::new();
+    let mut last_rowid = 0i64;
     loop {
         let mut stmt = conn.prepare(
-            "SELECT seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, payload
+            "SELECT rowid, seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, payload
              FROM events
-             WHERE (seq > ?1 OR (seq = ?1 AND event_id > ?2))
-             ORDER BY seq ASC, event_id ASC
-             LIMIT 256",
+             WHERE rowid > ?1
+             ORDER BY rowid ASC
+             LIMIT 1024",
         )?;
-        let rows = stmt.query_map(params![last_seq, last_event_id], |r| {
+        let rows = stmt.query_map(params![last_rowid], |r| {
             Ok((
-                r.get::<_, u64>(0)?,
-                r.get::<_, String>(1)?,
+                r.get::<_, i64>(0)?,
+                r.get::<_, u64>(1)?,
                 r.get::<_, String>(2)?,
                 r.get::<_, String>(3)?,
                 r.get::<_, String>(4)?,
                 r.get::<_, String>(5)?,
-                r.get::<_, Option<String>>(6)?,
+                r.get::<_, String>(6)?,
                 r.get::<_, Option<String>>(7)?,
-                r.get::<_, String>(8)?,
+                r.get::<_, Option<String>>(8)?,
+                r.get::<_, String>(9)?,
             ))
         })?;
         let batch = rows.collect::<Result<Vec<_>, _>>()?;
         if batch.is_empty() {
             break;
         }
-        let last = batch.last().expect("non-empty batch");
-        last_seq = last.0;
-        last_event_id = last.2.clone();
-        for (seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, raw) in batch {
+        last_rowid = batch.last().expect("non-empty batch").0;
+        for (_rowid, seq, stream, event_id, ts, event_type, actor, subject_kind, subject_id, raw) in
+            batch
+        {
             count += 1;
             let logical = match events::reconstruct_stored_payload(
                 &stream,
@@ -828,14 +834,22 @@ fn logical_events_inventory(conn: &Connection) -> Result<(u64, String), DecapodE
                 Ok(v) => serde_json::to_vec(&v).unwrap_or_else(|_| raw.as_bytes().to_vec()),
                 Err(_) => raw.as_bytes().to_vec(),
             };
-            hasher.update(seq.to_le_bytes());
-            hasher.update(stream.as_bytes());
-            hasher.update([0]);
-            hasher.update(event_id.as_bytes());
-            hasher.update([0]);
-            hasher.update(&logical);
-            hasher.update([0xff]);
+            let mut row_hasher = Sha256::new();
+            row_hasher.update(seq.to_le_bytes());
+            row_hasher.update(stream.as_bytes());
+            row_hasher.update([0]);
+            row_hasher.update(event_id.as_bytes());
+            row_hasher.update([0]);
+            row_hasher.update(&logical);
+            let row_digest: [u8; 32] = row_hasher.finalize().into();
+            row_digests.push((seq, event_id, row_digest));
         }
+    }
+    row_digests.sort_unstable_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
+    let mut hasher = Sha256::new();
+    for (_seq, _event_id, digest) in row_digests {
+        hasher.update(digest);
+        hasher.update([0xff]);
     }
     Ok((count, format!("{:x}", hasher.finalize())))
 }

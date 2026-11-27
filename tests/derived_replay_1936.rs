@@ -1273,3 +1273,51 @@ fn knowledge_657_procedural_promotion_firewall_blocks_obsolete_and_revoked_entri
     assert_eq!(found.len(), 1);
     assert_eq!(found[0].id, "procedural/norms/verified");
 }
+
+#[test]
+fn derived_1936_cloud_parity_matrix_and_store_inspection_stay_deterministic_without_sqlite() {
+    use decapod::core::cloud_parity_matrix::{
+        build_parity_matrix, cross_check_parity_matrix, inspect_cloud_parity,
+    };
+
+    let tmp = TempDir::new().unwrap();
+    let repo_root = tmp.path().join("cloud-repo");
+    fs::create_dir_all(repo_root.join(".decapod")).unwrap();
+    fs::write(
+        repo_root.join(".decapod/config.toml"),
+        "schema_version = \"1.0.0\"\n[init]\ndiagram_style = \"mermaid\"\nentrypoints = []\n[repo]\nbackend = \"cloud\"\n",
+    )
+    .unwrap();
+
+    let first = inspect_cloud_parity(&repo_root).unwrap();
+    let second = inspect_cloud_parity(&repo_root).unwrap();
+    assert_eq!(
+        first, second,
+        "cloud parity derived projection must be deterministic"
+    );
+    assert_eq!(first.repository_backend, "cloud");
+    assert!(!first.local_sqlite_path_present);
+    assert!(!first.blanket_parity_claimed);
+    assert!(first.cross_check.consistent);
+    assert!(first.cross_check.cloud_sqlite_fallback_forbidden);
+
+    let matrix = build_parity_matrix();
+    let check = cross_check_parity_matrix(&matrix);
+    assert!(check.consistent);
+    assert!(
+        matrix
+            .unsupported_cloud_operations
+            .iter()
+            .any(|op| op.operation_id == "knowledge.store" && op.never_falls_back_to_sqlite)
+    );
+    assert!(
+        matrix
+            .unsupported_cloud_operations
+            .iter()
+            .any(|op| op.operation_id == "data.compact" && op.never_falls_back_to_sqlite)
+    );
+    assert!(
+        !repo_root.join(".decapod/data/decapod.db").exists(),
+        "cloud derived parity inspection must never create decapod.db"
+    );
+}

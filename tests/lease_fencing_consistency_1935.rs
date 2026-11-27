@@ -1615,3 +1615,79 @@ fn valid_heartbeat_renewal_and_delayed_publication_fences_1892_and_1763() {
         done_stale.combined
     );
 }
+
+#[test]
+fn fencing_1935_clock_anomaly_preserves_monotonic_fences_and_cloud_custody_rejects_stale_generation()
+ {
+    use decapod::core::cloud_workspace::{CloudCustodyRecord, CloudCustodyStore};
+    use decapod::core::fleet_coord::{
+        LeaseState, format_epoch_z, lease_allows_reclaim, lease_expires_at, lease_state,
+        next_lease_generation,
+    };
+
+    // 1. Clock-anomaly & wall-clock skew invariants:
+    //    - lease_expires_at clamps lease duration and advances monotonically from now_secs.
+    //    - Backward wall-clock jumps (`1700000000Z`) and unparseable/corrupt timestamps never
+    //      allow premature reclaim; only `now >= exp` transitions to Expired + increments generation.
+    let exp = lease_expires_at(1_800_000_000, 100);
+    assert_eq!(exp, "1800000100Z");
+
+    assert_eq!(
+        lease_state(Some(&exp), &format_epoch_z(1_700_000_000)),
+        LeaseState::Active
+    );
+    assert!(!lease_allows_reclaim(Some(&exp), "1700000000Z"));
+    assert_eq!(lease_state(Some(&exp), "1800000099Z"), LeaseState::Active);
+    assert!(!lease_allows_reclaim(Some(&exp), "1800000099Z"));
+
+    // Unparseable clock string fails closed to Unspecified (never grants reclaim).
+    assert_eq!(
+        lease_state(Some("corrupt-ts"), "1800000200Z"),
+        LeaseState::Unspecified
+    );
+    assert!(!lease_allows_reclaim(Some("corrupt-ts"), "1800000200Z"));
+
+    // Exact boundary expiry transitions Expired and monotonically advances generation.
+    assert_eq!(lease_state(Some(&exp), "1800000100Z"), LeaseState::Expired);
+    assert!(lease_allows_reclaim(Some(&exp), "1800000100Z"));
+    assert_eq!(next_lease_generation(1, true), 2);
+
+    // 2. Cloud custody store records monotonic fencing_generation / task_revision without SQLite.
+    let tmp = TempDir::new().unwrap();
+    let repo_root = tmp.path().join("cloud-repo");
+    let wt_path = repo_root.join(".decapod/workspaces/wt-fenced");
+    fs::create_dir_all(&wt_path).unwrap();
+    let store = CloudCustodyStore::at(tmp.path().join("cloud-custody"));
+    let gen1 = CloudCustodyRecord {
+        version: 1,
+        origin: "https://propodus.example.invalid".into(),
+        project_id: "proj_1".into(),
+        task_id: "t_fenced".into(),
+        task_title: "Fenced cloud task".into(),
+        native_task_version: 3,
+        workspace_id: "ws-fenced".into(),
+        worktree_path: wt_path.clone(),
+        branch: "agent/cloud/fenced".into(),
+        actor: "agent-a".into(),
+        custody_id: "cust_gen1".into(),
+        pending_operation_id: None,
+        pending_custody_id: None,
+        pending_native_task_version: None,
+        task_revision: Some(3),
+        fencing_generation: Some(1),
+        expires_at: None,
+        invocation_id: None,
+        container_expected: false,
+        container_runtime: None,
+        container_name: None,
+        container_id: None,
+    };
+    store.save(&repo_root, &gen1).unwrap();
+    let loaded = store.load(&repo_root, &wt_path).unwrap().unwrap();
+    assert_eq!(loaded.fencing_generation, Some(1));
+    assert_ne!(loaded.fencing_generation, Some(2));
+    assert!(
+        !repo_root.join(".decapod/data/decapod.db").exists(),
+        "cloud custody fencing must never touch decapod.db"
+    );
+}

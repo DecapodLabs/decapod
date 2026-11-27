@@ -181,6 +181,9 @@ pub fn ingest(
     source: Option<&str>,
 ) -> Result<serde_json::Value, error::DecapodError> {
     let valid_kinds = ["event", "message", "artifact", "tool_result"];
+    crate::core::storage_contracts::validate_lcm_ingest_write(
+        content, kind, actor, session_id, source,
+    )?;
     if !valid_kinds.contains(&kind) {
         return Err(error::DecapodError::ValidationError(format!(
             "Invalid kind '{}'; must be one of: {}",

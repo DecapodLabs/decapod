@@ -1049,6 +1049,12 @@ pub fn start_session(
     description: &str,
     actor: &str,
 ) -> Result<DecisionSession, error::DecapodError> {
+    crate::core::storage_contracts::validate_decide_session_write(
+        tree_id,
+        title,
+        description,
+        actor,
+    )?;
     let tree = find_tree(tree_id)?;
     let _ = tree; // validate tree exists
 
@@ -1103,6 +1109,13 @@ pub fn record_decision(
     rationale: &str,
     actor: &str,
 ) -> Result<Decision, error::DecapodError> {
+    crate::core::storage_contracts::validate_decide_record_write(
+        session_id,
+        question_id,
+        value,
+        rationale,
+        actor,
+    )?;
     let broker = DbBroker::new(&store.root);
     let db_path = decide_db_path(&store.root);
 

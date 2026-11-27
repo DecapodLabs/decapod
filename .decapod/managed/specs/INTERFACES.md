@@ -6,6 +6,17 @@
   - Fails closed with `WORKSPACE_DESTINATION_MISMATCH` when `--branch` differs from the current isolated worktree branch.
   - Succeeds inside an active Cloud container relay (`DECAPOD_CONTAINER=1` + `DECAPOD_CLOUD_CONTAINER_RELAY=1` + `DECAPOD_CONTAINER_SIGNER_SOCKET`) for `workspace ensure --container` and `validate` without host credentials or launching a nested container.
 
+## Section 10 write-admission contracts, dogfood snapshot benchmark CLI, and fail-closed Cloud surfaces (`#1630`, `#1933`–`#1936`, `#1110`, `#1118`, `#1120`, `#1132`, `#1220`, `#1221`, `#1369`, `#1378`)
+
+- **`core::storage_contracts` plugin admission & manifest exports**:
+  - Exports `MAX_EVIDENCE_REFS_PER_RECORD` (`128`), `validate_knowledge_write`, `validate_knowledge_promotion`, `validate_federation_node_write`, `validate_federation_edge_write`, `validate_health_claim_write`, `validate_health_proof_write`, `validate_decide_session_write`, `validate_decide_record_write`, `validate_cron_write`, `validate_reflex_write`, `validate_feedback_write`, `validate_archive_write`, `validate_aptitude_pattern_write`, `validate_aptitude_observation_write`, and `validate_lcm_ingest_write`.
+  - `contract_manifest()` includes `collection_bounds.evidence_refs_per_record` and `sql_boundary_parity`, matched byte-for-byte by `docs/datastore-v2/logical_contract_v1.json` (`tests/datastore_contract.rs`).
+- **Dogfood snapshot benchmark CLI (`decapod houseboat storage-snapshot-benchmark`)**:
+  - Added `HouseboatCommand::StorageSnapshotBenchmark { --source-data <PATH>, --scope <LABEL> }` emitting `SnapshotCompactionBenchmarkReport` (`decapod.snapshot-compaction-benchmark.v1`) with read-only `DactylBridge::backup`, before/after byte snapshots, explicit `VACUUM` reclaim delta, pre/post reconstruction timings, `lossless_verified`, `todo_stream_parity`, and `task_journal_parity`.
+- **Cloud parity matrix & fail-closed RPC interfaces (`src/decapod/core/cloud_parity_matrix.rs`, `src/decapod/lib.rs`)**:
+  - `unsupported_cloud_operations` explicitly classifies `knowledge.store`, `federation.store`, `decide.store`, `health.store`, `aptitude.store`, `archive.store`, `feedback.store`, `cron.store`, `reflex.store`, `lcm.store`, `primitives.store`, `map.store`, `policy.store`, `data.broker`, `data.compact`, `store.upsert`, and `store.query` (`never_falls_back_to_sqlite: true`).
+  - `decapod rpc --stdin` routes through `is_cloud_file_only_command(&cli.command, predecoded_rpc_request.as_ref())` and `handle_store_upsert`/`handle_store_query` fail closed via `cloud_backend::unavailable_error()` when `cloud_workspace::is_cloud_project(ctx.project_root)`.
+
 ## `#1948` Agent-facing failure recovery envelope & projection contracts (`src/decapod/core/rpc.rs`, `src/decapod/core/projection.rs`, `src/decapod/core/agent_interop/mcp.rs`)
 
 - **`RpcResponse` failure fields (`core::rpc::error_response`, `core::rpc::derive_failure_recovery`)**:
@@ -2647,7 +2658,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7110cd836fb10aca1359a1a76fc1c072549e27f957649755bf8416443fc64570`
+- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

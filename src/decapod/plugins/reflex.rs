@@ -838,6 +838,16 @@ fn add_reflex(
     tags: String,
     dir: Option<String>,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_reflex_write(
+        Some(&name),
+        Some(&description),
+        Some(&trigger_type),
+        Some(&trigger_config),
+        Some(&action_type),
+        Some(&action_config),
+        Some(&status),
+        Some(&tags),
+    )?;
     let dir_path = dir.unwrap_or_else(|| env::current_dir().unwrap().to_string_lossy().to_string());
     let dir_abs = Path::new(&dir_path)
         .canonicalize()
@@ -885,6 +895,16 @@ fn update_reflex(
     status: Option<String>,
     tags: Option<String>,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_reflex_write(
+        name.as_deref(),
+        description.as_deref(),
+        trigger_type.as_deref(),
+        trigger_config.as_deref(),
+        action_type.as_deref(),
+        action_config.as_deref(),
+        status.as_deref(),
+        tags.as_deref(),
+    )?;
     let broker = DbBroker::new(root);
     let db_path = reflex_db_path(root);
 

@@ -6,6 +6,20 @@
   - `ensure_cloud_workspace` validates `WORKSPACE_DESTINATION_MISMATCH` before branching/reusing an active isolated worktree, skips host-credential discovery and container launching when `cloud_workspace::is_container_relay_active()` is true by delegating directly to `cloud_workspace::check_cloud_authoring(..., true)`, and gates `ensure_container_workspace` on `config.use_container && !status.container.in_container` in both `ensure_workspace` and `ensure_cloud_workspace`.
 - **Cloud non-CI, policy, and container-relay integration harness (`tests/cloud_workspace_validation_1886.rs`)**: Extends `CloudControlServer` to mock `/rest/v1/rpc/propodus_governance_v1` (`authorize_exception`, `verify_decision`) and adds `accepted_cloud_workspace_ensure_non_ci_validate_policy_approve_and_container_relay`.
 
+## Section 10 storage bounds, $O(N)$ lossless compaction & fail-closed Cloud boundaries (`#1630`, `#1933`–`#1936`, `#1110`, `#1118`, `#1120`, `#1132`, `#1220`, `#1221`, `#1369`, `#1378`)
+
+- **Non-task write admission & logical contract sync (`src/decapod/core/storage_contracts.rs`, `src/decapod/plugins/*.rs`, `docs/datastore-v2/logical_contract_v1.json`)**:
+  - `validate_knowledge_write`, `validate_knowledge_promotion`, `validate_federation_node_write`, `validate_federation_edge_write`, `validate_health_claim_write`, `validate_health_proof_write`, `validate_decide_session_write`, `validate_decide_record_write`, `validate_cron_write`, `validate_reflex_write`, `validate_feedback_write`, `validate_archive_write`, `validate_aptitude_pattern_write`, `validate_aptitude_observation_write`, and `validate_lcm_ingest_write` enforce UTF-8 byte bounds, NUL-byte rejection, JSON depth (`MAX_JSON_DEPTH = 32`), and `MAX_EVIDENCE_REFS_PER_RECORD = 128` at write admission without truncating historical reads.
+  - `docs/datastore-v2/logical_contract_v1.json` is updated to all `36` consolidated tables (adding `repository_scope`), aligned `limits`, and `sql_boundary_parity` (`str::len`, SQLite `length(CAST(col AS BLOB))`, Postgres `octet_length(convert_to(col, 'UTF8'))`).
+- **Rowid-paginated compaction & dogfood snapshot benchmark (`src/decapod/core/storage_compaction.rs`, `src/decapod/core/houseboat.rs`)**:
+  - `compact_historical_events`, `collect_event_embedded_component_keys`, and `logical_events_inventory` page `events` by `rowid > ?1 ORDER BY rowid ASC LIMIT 1024`, keeping every batch inside `dactyl-db`'s per-query row quota and eliminating $O(N^2)$ full-table scans while `logical_events_inventory` accumulates 32-byte per-row SHA-256 digests sorted deterministically by `(seq, event_id)`.
+  - `houseboat::run_snapshot_compaction_benchmark` (`decapod houseboat storage-snapshot-benchmark --source-data <dir> --scope <label>`) clones read-only via `DactylBridge::open_canonical(..., AccessMode::ReadOnly)` + `backup` into an isolated temp directory, runs `compact_datastore_lossless(..., false, false)` + `reclaim_pages_explicit`, and captures pre/post byte counts and reconstruction latencies (`logical_inventory_ms`, `task_journal_verify_ms`, `todo_events_query_ms`).
+- **Cloud SQLite isolation & non-todo boundary gating (`src/decapod/lib.rs`, `src/decapod/core/cloud_parity_matrix.rs`)**:
+  - `lib.rs::ensure_session_valid` skips `todo::cleanup_stale_agent_assignments(&store_root, ...)` whenever `is_cloud` is true so expired `.decapod/sessions/*.session.json` auto-renewal never touches `.decapod/data/decapod.db`.
+  - `is_cloud_file_only_command` inspects `predecoded_rpc_request` for `decapod rpc --stdin`, `handle_store_upsert` / `handle_store_query` fail closed via `cloud_workspace::is_cloud_project`, and `cloud_parity_matrix::build_parity_matrix` explicitly marks 17 non-todo stores/operations (`knowledge.store`..`store.query`) as unsupported with `never_falls_back_to_sqlite = true`.
+- **Durability/replay extensions & reconciliation docs (`tests/crash_durability_1934.rs`, `tests/lease_fencing_consistency_1935.rs`, `tests/derived_replay_1936.rs`, `tests/cloud_cli_boundary.rs`, `tests/single_datastore.rs`, `docs/datastore-v2/proof-ledger.json`)**:
+  - Adds Cloud `OutcomeUnknown` crash isolation, clock-skew lease/custody checks, deterministic Cloud parity replay checks, single-DB `36`-table reconciliation (`#1118`/`#1132`), `MANAGED_CLI_FIXTURE_UNAVAILABLE` hosted proof status (`#1369`/`#1378`), and explicit `#1220` pure-Rust vs `dactyl-db` SQLite conflict record.
+
 ## Deterministic RPC/MCP/HTTP failure recovery derivation (`#1948`)
 
 - **Shared recovery classifier (`src/decapod/core/rpc.rs::derive_failure_recovery`)**: Centralizes `FailureClass` (`AuthorityRequired`, `UnknownOutcome`, `StaleState`, `WorkspaceCustody`, `SessionCustody`, `FailedProof`, `RetryablePreflight`, `InvalidInput`, `Unsupported`) so `error_response`, `mcp_denied_result` (`src/decapod/core/agent_interop/mcp.rs`), and `http_transport::error_code_json` (`src/decapod/core/http_transport.rs`) derive consistent, redacted, bounded `ContextCapsule`, `Blocker`, `AllowedOp`, and `RpcError.details` payloads without a second error interpreter.
@@ -2148,7 +2162,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7110cd836fb10aca1359a1a76fc1c072549e27f957649755bf8416443fc64570`
+- Repository signal fingerprint: `5e167590b4d3d8aff00eea132c92680e361d981cea5ac1fd6762884dfd416dbf`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

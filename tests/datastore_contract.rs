@@ -10,7 +10,125 @@ fn logical_schema_inventory_is_structurally_valid_and_matches_runtime_core() {
     ))
     .expect("reviewed JSON contract");
     assert_eq!(contract["schema"], "decapod.logical-storage-inventory.v1");
-    assert_eq!(contract["release"], env!("CARGO_PKG_VERSION"));
+    let contract_release = contract["release"].as_str().expect("contract release");
+    let parse_semver = |v: &str| -> (u64, u64, u64) {
+        let mut parts = v.split('.').map(|p| p.parse::<u64>().expect("semver int"));
+        (
+            parts.next().expect("major"),
+            parts.next().expect("minor"),
+            parts.next().expect("patch"),
+        )
+    };
+    assert!(
+        parse_semver(contract_release) >= (0, 166, 1)
+            && parse_semver(contract_release) <= parse_semver(env!("CARGO_PKG_VERSION")),
+        "contract release {contract_release} must stay within [0.166.1, {}]",
+        env!("CARGO_PKG_VERSION")
+    );
+
+    // Keep reviewed JSON limits exactly aligned with runtime storage_contracts::contract_manifest().
+    let runtime_manifest = decapod::core::storage_contracts::contract_manifest();
+    let limits = &contract["field_contracts"]["limits"];
+    assert_eq!(
+        limits["id_bytes"],
+        runtime_manifest["field_classes"]["id"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["digest_bytes"],
+        runtime_manifest["field_classes"]["digest"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["principal_bytes"],
+        runtime_manifest["field_classes"]["principal"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["repository_id_bytes"],
+        runtime_manifest["field_classes"]["repository_id"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["stream_bytes"],
+        runtime_manifest["field_classes"]["stream"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["event_type_bytes"],
+        runtime_manifest["field_classes"]["event_type"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["timestamp_bytes"],
+        runtime_manifest["field_classes"]["timestamp"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["enum_token_bytes"],
+        runtime_manifest["field_classes"]["enum_token"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["category_bytes"],
+        runtime_manifest["field_classes"]["category_or_component"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["tag_bytes"],
+        runtime_manifest["field_classes"]["tag"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["title_bytes"],
+        runtime_manifest["field_classes"]["title"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["scope_bytes"],
+        runtime_manifest["field_classes"]["scope"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["path_or_ref_bytes"],
+        runtime_manifest["field_classes"]["path_or_ref"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["description_bytes"],
+        runtime_manifest["field_classes"]["description_or_notes"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["proof_plan_bytes"],
+        runtime_manifest["field_classes"]["proof_plan_json"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["verification_artifacts_bytes"],
+        runtime_manifest["field_classes"]["verification_artifacts_json"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["body_prose_bytes"],
+        runtime_manifest["field_classes"]["body_prose"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["event_payload_bytes"],
+        runtime_manifest["field_classes"]["event_payload_json"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["transfer_event_payload_bytes"],
+        runtime_manifest["field_classes"]["transfer_event_payload_json"]["max_utf8_bytes"]
+    );
+    assert_eq!(
+        limits["json_max_depth"],
+        runtime_manifest["field_classes"]["event_payload_json"]["max_json_depth"]
+    );
+    assert_eq!(
+        limits["tags_per_task"],
+        runtime_manifest["collection_bounds"]["tags_per_task"]
+    );
+    assert_eq!(
+        limits["owners_per_task"],
+        runtime_manifest["collection_bounds"]["owners_per_task"]
+    );
+    assert_eq!(
+        limits["dependencies_per_task"],
+        runtime_manifest["collection_bounds"]["dependencies_per_task"]
+    );
+    assert_eq!(
+        limits["evidence_refs_per_record"],
+        runtime_manifest["collection_bounds"]["evidence_refs_per_record"]
+    );
+    assert_eq!(
+        contract["field_contracts"]["sql_boundary_parity"],
+        runtime_manifest["sql_boundary_parity"]
+    );
     let tables = contract["tables"].as_array().expect("tables");
     assert!(tables.len() >= 32, "missing current logical inventory");
     let mut names = BTreeSet::new();
@@ -602,5 +720,263 @@ fn events_read_and_write_paths_enforce_storage_format_compatibility_boundaries()
         .unwrap_err()
         .to_string()
         .contains("STORAGE_FORMAT_INCOMPATIBLE")
+    );
+}
+
+#[test]
+fn non_task_plugin_stores_enforce_utf8_byte_and_collection_bounds() {
+    use decapod::core::{
+        storage_contracts,
+        store::{Store, StoreKind},
+    };
+    use decapod::plugins::{
+        aptitude, archive, cron, decide, federation, feedback, health, knowledge, lcm,
+    };
+
+    let scratch = tempfile::tempdir().unwrap();
+    let data = scratch.path().join("data");
+    todo::initialize_todo_db(&data).unwrap();
+    health::initialize_health_db(&data).unwrap();
+    federation::initialize_federation_db(&data).unwrap();
+    decide::initialize_decide_db(&data).unwrap();
+    cron::initialize_cron_db(&data).unwrap();
+    archive::initialize_archive_db(&data).unwrap();
+    aptitude::initialize_aptitude_db(&data).unwrap();
+    lcm::initialize_lcm_db(&data).unwrap();
+
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: data.clone(),
+    };
+
+    let over_title = format!("{}a", "🦀".repeat(256)); // 1025 UTF-8 bytes
+    let over_id = "x".repeat(storage_contracts::MAX_ID_BYTES + 1);
+    let over_body = "b".repeat(storage_contracts::MAX_BODY_PROSE_BYTES + 1);
+    let over_ref = "r".repeat(storage_contracts::MAX_PATH_OR_REF_BYTES + 1);
+    let over_desc = "d".repeat(storage_contracts::MAX_DESCRIPTION_BYTES + 1);
+
+    // 1. knowledge write + promotion evidence ref bounds
+    let k_err = knowledge::add_scoped_knowledge(
+        &store,
+        knowledge::AddKnowledgeParams {
+            id: "k_ok",
+            title: &over_title,
+            content: "valid",
+            provenance: "docs/a.md",
+            claim_id: None,
+            merge_key: None,
+            conflict_policy: knowledge::KnowledgeConflictPolicy::Merge,
+            status: "active",
+            ttl_policy: "none",
+            expires_ts: None,
+        },
+        "root",
+    )
+    .unwrap_err();
+    assert!(
+        k_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{k_err}"
+    );
+
+    let too_many_refs: Vec<String> = (0..=storage_contracts::MAX_EVIDENCE_REFS_PER_RECORD)
+        .map(|i| format!("ref-{i}"))
+        .collect();
+    let promo_err = knowledge::record_promotion_event(
+        &store,
+        knowledge::KnowledgePromotionEventInput {
+            source_entry_id: "k_src",
+            evidence_refs: &too_many_refs,
+            approved_by: "reviewer",
+            actor: "tester",
+            reason: "excess refs boundary check",
+        },
+    )
+    .unwrap_err();
+    assert!(
+        promo_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{promo_err}"
+    );
+
+    // 2. federation node + edge bounds (UTF-8 title + NUL rejection + sources collection cap)
+    let fed_err = federation::add_node(
+        &store,
+        &over_title,
+        "decision",
+        "notable",
+        "agent_inferred",
+        "body",
+        "",
+        "",
+        "repo",
+        None,
+        "tester",
+    )
+    .unwrap_err();
+    assert!(
+        fed_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{fed_err}"
+    );
+
+    let edge_err = federation::add_edge(&store, "n\0src", "n_dst", "depends_on").unwrap_err();
+    assert!(edge_err.to_string().contains("NUL"), "{edge_err}");
+
+    // 3. health claim + proof bounds
+    let hc_err = health::add_claim(&store, &over_id, "subj", "assertion", "prov").unwrap_err();
+    assert!(
+        hc_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{hc_err}"
+    );
+    let hp_err = health::record_proof(&store, "claim-1", "surface", "bad\0result", 60).unwrap_err();
+    assert!(hp_err.to_string().contains("NUL"), "{hp_err}");
+
+    // 4. decide session + decision bounds
+    let ds_err = decide::start_session(&store, "tree", &over_title, "desc", "tester").unwrap_err();
+    assert!(
+        ds_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{ds_err}"
+    );
+    let dd_err =
+        decide::record_decision(&store, "sess-1", "q1", "opt", &over_desc, "tester").unwrap_err();
+    assert!(
+        dd_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{dd_err}"
+    );
+
+    // 5. cron write bounds: run_cron_cli logs and rejects write (0 rows inserted); validator fails closed.
+    cron::run_cron_cli(
+        &store,
+        cron::CronCli {
+            command: cron::CronCommand::Add {
+                name: over_title.clone(),
+                description: "desc".into(),
+                schedule: "* * * * *".into(),
+                command: "echo ok".into(),
+                status: "active".into(),
+                tags: String::new(),
+                dir: Some(scratch.path().to_string_lossy().into_owned()),
+            },
+        },
+    )
+    .unwrap();
+    let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+    let cron_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM cron_jobs", [], |r| r.get(0))
+        .unwrap();
+    assert_eq!(cron_count, 0, "oversized cron write must not persist");
+    let cron_err = storage_contracts::validate_cron_write(
+        Some(&over_title),
+        Some("desc"),
+        Some("* * * * *"),
+        Some("echo ok"),
+        Some("active"),
+        Some(""),
+        None,
+        None,
+    )
+    .unwrap_err();
+    assert!(
+        cron_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{cron_err}"
+    );
+
+    // 6. reflex contract validator (direct validator parity for private add_reflex/update_reflex)
+    storage_contracts::validate_reflex_write(
+        Some("reflex-name"),
+        Some("Command reflex"),
+        Some("event"),
+        Some("{}"),
+        Some("command"),
+        Some("echo done"),
+        Some("active"),
+        Some(""),
+    )
+    .expect("command-style action_config string should be admitted when bounded");
+    let reflex_err = storage_contracts::validate_reflex_write(
+        Some("reflex-name"),
+        Some(&over_desc),
+        Some("event"),
+        Some("{}"),
+        Some("command"),
+        Some("{}"),
+        Some("active"),
+        Some(""),
+    )
+    .unwrap_err();
+    assert!(
+        reflex_err
+            .to_string()
+            .contains("STORAGE_CONTRACT_VIOLATION"),
+        "{reflex_err}"
+    );
+    let over_cfg = "x".repeat(storage_contracts::MAX_PROOF_PLAN_BYTES + 1);
+    let reflex_cfg_err = storage_contracts::validate_reflex_write(
+        Some("reflex-name"),
+        Some("desc"),
+        Some("event"),
+        Some("{}"),
+        Some("command"),
+        Some(&over_cfg),
+        Some("active"),
+        Some(""),
+    )
+    .unwrap_err();
+    assert!(
+        reflex_cfg_err
+            .to_string()
+            .contains("STORAGE_CONTRACT_VIOLATION"),
+        "{reflex_cfg_err}"
+    );
+
+    // 7. feedback + archive + aptitude + lcm bounds
+    let fb_err = feedback::add_feedback(&store, "user", &over_desc, None).unwrap_err();
+    assert!(
+        fb_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{fb_err}"
+    );
+
+    let arch_err = archive::register_archive(
+        &store,
+        "arch-1",
+        std::path::Path::new(&over_ref),
+        "content",
+        "summary",
+    )
+    .unwrap_err();
+    assert!(
+        arch_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{arch_err}"
+    );
+
+    let apt_pat_err = aptitude::add_pattern(
+        &store,
+        aptitude::PatternInput {
+            name: over_title.clone(),
+            category: "cli".into(),
+            regex_pattern: "git .*".into(),
+            preference_category: None,
+            preference_key: None,
+            description: None,
+        },
+    )
+    .unwrap_err();
+    assert!(
+        apt_pat_err
+            .to_string()
+            .contains("STORAGE_CONTRACT_VIOLATION"),
+        "{apt_pat_err}"
+    );
+
+    let apt_obs_err = aptitude::record_observation(&store, &over_desc, None).unwrap_err();
+    assert!(
+        apt_obs_err
+            .to_string()
+            .contains("STORAGE_CONTRACT_VIOLATION"),
+        "{apt_obs_err}"
+    );
+
+    let lcm_err = lcm::ingest(&store, &over_body, "event", "tester", None, None).unwrap_err();
+    assert!(
+        lcm_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+        "{lcm_err}"
     );
 }

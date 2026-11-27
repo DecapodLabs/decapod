@@ -354,6 +354,7 @@ pub fn add_claim(
     kind: &str,
     provenance: &str,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_health_claim_write(id, subject, kind, provenance)?;
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
     let now = now_iso();
@@ -374,6 +375,7 @@ pub fn record_proof(
     result: &str,
     sla: i64,
 ) -> Result<(), error::DecapodError> {
+    crate::core::storage_contracts::validate_health_proof_write(claim_id, surface, result)?;
     let broker = DbBroker::new(&store.root);
     let db_path = health_db_path(&store.root);
     let now = now_iso();
