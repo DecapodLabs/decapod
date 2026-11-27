@@ -1,5 +1,17 @@
 # Architecture
 
+## Decapod Cloud mdBook landing, shell navigation, and guide documentation (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+- **Shell navigation & brand assets (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Routes header/sidebar/footer/rail brand and media links to `https://decapodlabs.ai/` and adds `Pricing` (`https://decapodlabs.ai/pricing`) and `Admin` (`https://decapodlabs.ai/admin`) to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` with tightened `.decapod-top-links` spacing to keep the sticky top bar single-line on desktop.
+- **Offerings section & card actions (`docs/book/src/index.md`, `docs/book/src/custom.css`)**: Adds `.decapod-offering-badge.badge-cloud` (warm coral/espresso light and dark theme styles) and `.decapod-offering-actions` flex layout pairing `View Cloud pricing ↗` (`https://decapodlabs.ai/pricing`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) on the Decapod Cloud card.
+- **Guide & reference alignment (`docs/book/src/{introduction.md,quickstart.md,workflows/multi-agent.md,concepts/faq.md,reference/propodus.md,reference/cloud-projects.md}`)**: Adds consistent Decapod Cloud pricing and Organization Admin links across onboarding, workflow, FAQ, and reference chapters without altering Rust CLI/RPC modules or `.decapod/config.toml` schema.
+
+## Decapod Cloud mdBook landing, shell navigation, and guide documentation (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+- **Shell navigation & brand assets (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Routes header/sidebar/footer/rail brand and media links to `https://decapodlabs.ai/` and adds `Pricing` (`https://decapodlabs.ai/pricing`) and `Admin` (`https://decapodlabs.ai/admin`) to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` with tightened `.decapod-top-links` spacing to keep the sticky top bar single-line on desktop.
+- **Offerings section & card actions (`docs/book/src/index.md`, `docs/book/src/custom.css`)**: Adds `.decapod-offering-badge.badge-cloud` (warm coral/espresso light and dark theme styles) and `.decapod-offering-actions` flex layout pairing `View Cloud pricing ↗` (`https://decapodlabs.ai/pricing`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) on the Decapod Cloud card.
+- **Guide & reference alignment (`docs/book/src/{introduction.md,quickstart.md,workflows/multi-agent.md,concepts/faq.md,reference/propodus.md,reference/cloud-projects.md}`)**: Adds consistent Decapod Cloud pricing and Organization Admin links across onboarding, workflow, FAQ, and reference chapters without altering Rust CLI/RPC modules or `.decapod/config.toml` schema.
+
 ## Selective core CI shard selection alignment (`assets/tools/source_ci_profile.rs`)
 
 - **`profile::selected` (`Selection::Core`)**: Matches `check.id` so `"selective-core-2"` and `"selective-core-3"` return `core_full(paths)` while `"selective-core-1"` and `"selective-core-status"` remain selected for any `src/decapod/core/` or `core_test_inputs(p)` match, keeping `selected(...)` and `commands(...)` consistent without altering `core_full(paths)` or `selective-cli-*`.
@@ -2112,7 +2124,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12`
+- Repository signal fingerprint: `ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

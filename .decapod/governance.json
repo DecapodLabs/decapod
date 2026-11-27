@@ -870,46 +870,81 @@
     }
   },
   "change": {
-    "id": "change_01M8DEXFANBZGW6F0AH1YV9V6V",
+    "id": "change_01M8DDM000CLOUDDOCS00V1662",
     "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "target_base": "origin/master"
   },
   "claims": {
-    "bugs_01m8decqz284yd4g-fix-core-shard": {
-      "statement": "selective-core-2 and selective-core-3 are selected only when core_full(paths) is true",
-      "falsifier": "selective-core-2 or selective-core-3 selected=true while commands returns empty for non-core_full src/decapod/core/* changes",
+    "claim:cloud-docs-links": {
+      "statement": "All Decapod mdBook landing, navigation, and guide pages surface live Decapod Cloud pricing and Organization Admin links without stale Coming soon or offerings.html URLs",
+      "falsifier": "Any file under docs/book/ retains offerings.html, decapodlabs.github.io, or Coming soon, or doc_alignment tests fail",
       "status": "supported",
       "proof_refs": [
-        "cargo test --test source_ci_profile_policy non_full_core_paths_do_not_select_empty_shard_two_or_three"
+        "tests/doc_alignment.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "bugs_01m8decqz284yd4g",
-      "summary": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
-      "input_digest": "sha256:36268b3a68e3c9ab2968bf0e454c10b7ed127179df82e5f880b81a2e509fb8c4"
+      "id": "docs_01m8bmgp4g4caw1g-v1662",
+      "summary": "Rebase Decapod Cloud pricing and Organization Admin docs/book update onto v0.166.2",
+      "input_digest": "sha256:2700790d659598b5b22e0be4b8eff7e55f775fa2a1eec3c8590e4bd421dbc5b3",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-v1662-digest",
+      "summary": "Reconcile reviewed_sources_digest for v0.166.2 baseline",
+      "input_digest": "sha256:800035f4c87ae26e79c3538604da9c86d787943b6b9eb3e3e2d8191bff3b6e71",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-merge-7b3d309e9",
+      "summary": "Merge origin/master 7b3d309e9 (#1961) into Docs PR #1962 and reconcile specs/governance",
+      "input_digest": "sha256:c3bc1bde1b5ad4dc987564ff05549d436361e89c4f6eba9930cc52755dbda14d",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-v1663-merge",
+      "summary": "Merge origin/master 251cb31919 (v0.166.3) into Docs PR #1962 and reconcile reviewed_sources_digest",
+      "input_digest": "sha256:a972eada827a4ed6f9237d8cffc1451da0cf34e93d5aca87d953ce661fab24a6",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
+    },
+    {
+      "id": "docs_01m8bmgp4g4caw1g-v1663-dockerfile",
+      "summary": "Refresh 0.166.3 managed Dockerfile pin for Docs PR #1962",
+      "input_digest": "sha256:70568a3ea381b6f364a19e0f0d9f6c0b29e895023132714256fd70901bac04b0",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V": {
+    "intent:run_docs_v1662": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Human docs only; isolated worktree only"
       ],
       "constraints": [
-        "root"
+        "docs"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
+      "id": "intent:run_docs_v1662",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
-      "refined_intent": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
+      "raw_intent": "Update docs/book for Decapod Cloud pricing and admin links",
+      "refined_intent": "Rebase Cloud pricing & admin mdBook update onto v0.166.2 and verify doc_alignment",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -922,83 +957,82 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Align selective-core-2 and selective-core-3 selection in assets/tools/source_ci_profile.rs with core_full(paths) so PRs touching src/decapod/core/* outside core_full never fail source-ci-custody with required source-CI recipe is empty",
+      "intent": "Replace stale Coming soon / offerings.html copy and github.io URLs with live Decapod Cloud pricing and Organization Admin links across mdBook pages and doc_alignment tests",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --test doc_alignment"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented selective-core-2/3 core_full selection alignment",
-          "reviewed_code_fingerprint": "ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12",
-          "spec_material_hash": "549bb30846e7ecf06afe2b82ba0fcb2829542ef857cf13a1433f5ec55440c552"
+          "reason": "Merged origin/master 251cb31919 (v0.166.3), reconciled reviewed_sources_digest, and preserved authored Decapod Cloud mdBook specs",
+          "reviewed_code_fingerprint": "ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151",
+          "spec_material_hash": "ad11f6f4801b343f12d913699c6ba0d7a11f429996cc205e0a5ce96e2de222ba"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented selected/commands non-emptiness invariant for non-artifact-worker checks",
-          "reviewed_code_fingerprint": "ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12",
-          "spec_material_hash": "de67bae015b0859f97917e766ccd4b4316214fcabf4cfd4a9f7bdd6d4b2b0359"
+          "reason": "Merged origin/master 251cb31919 (v0.166.3), reconciled reviewed_sources_digest, and preserved authored Decapod Cloud mdBook specs",
+          "reviewed_code_fingerprint": "ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151",
+          "spec_material_hash": "3b72000f58e1e9d27450a0c16c25e6ca9e66415bc3dd8f5bebf0b84bbf765d4a"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented fail-closed source-CI custody preservation",
-          "reviewed_code_fingerprint": "ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12",
+          "reason": "Merge with 251cb31919 (v0.166.3) preserves all security controls; Docs PR only updates mdBook documentation and tests/doc_alignment.rs",
+          "reviewed_code_fingerprint": "ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151",
           "spec_material_hash": "ccedc6523b9cf2fe47192b916bd6810d053f175f80c6e045da819873d022a4e7"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "fix(ci): align selective-core-2/3 selection with core_full (#138)",
+      "title": "Update docs/book with Decapod Cloud pricing and Organization Admin links",
       "todo_ids": [
-        "bugs_01m8decqz284yd4g"
+        "docs_01m8bmgp4g4caw1g"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795748801Z"
+      "updated_at": "1795754251Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Human docs only; isolated worktree only"
       ],
-      "artifact_hash": "sha256:9c9023f8565e0788dbe1c320bb28d28b02dd4b664e40868d15a2e0ff52062bfc",
+      "artifact_hash": "sha256:ffdbafa29fca93c9556bf883392bc288f27e46f1638863fcecbbcdd82e109d70",
       "checks": [
         {
           "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "fmt",
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "non_full_core_paths_do_not_select_empty_shard_two_or_three",
+          "name": "fmt",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
+            "intent_id": "intent:run_docs_v1662",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
+            "intent_id": "intent:run_docs_v1662",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8DEXFE67R1NFTVRDVAWQ2NY",
+            "detail": "trajectory:run_docs_v1662",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
+            "intent_id": "intent:run_docs_v1662",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1007,30 +1041,37 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8DEXFE67R1NFTVRDVAWQ2NY": {
+          "run_docs_v1662": {
             "evidence_only": true,
-            "id": "branch_01M8DEXFE67R1NFTVRDVAWQ2NY",
-            "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
+            "id": "run_docs_v1662",
+            "intent_id": "intent:run_docs_v1662",
             "steps": [
               {
                 "action": "trajectory.record",
-                "command": "cargo test --test source_ci_profile_policy non_full_core_paths_do_not_select_empty_shard_two_or_three",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "assets/tools/source_ci_profile.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  ".decapod/config.toml",
-                  "1 passed, 0 failed"
+                  "docs/book/src/index.md",
+                  "docs/book/theme/index.hbs",
+                  "tests/doc_alignment.rs",
+                  "docs/book/src/concepts/faq.md",
+                  "docs/book/src/custom.css",
+                  "docs/book/src/index.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/reference/cloud-projects.md",
+                  "docs/book/src/reference/propodus.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "docs/book/theme/index.hbs",
+                  "tests/doc_alignment.rs",
+                  "cargo fmt --all -- --check; clippy --test doc_alignment -D warnings; doc_alignment 5/5 passed on 9806bc4d2 (v0.166.2)"
                 ],
                 "proof_refs": [
                   "fmt",
                   "clippy",
-                  "non_full_core_paths_do_not_select_empty_shard_two_or_three"
+                  "doc_alignment"
                 ],
                 "scope": [
-                  "root"
+                  "docs"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1039,33 +1080,35 @@
           }
         }
       },
-      "declared_commands": [
-        "cargo test --test source_ci_profile_policy non_full_core_paths_do_not_select_empty_shard_two_or_three"
-      ],
-      "destination": "pull request",
+      "declared_commands": [],
       "evidence": [
-        "1 passed, 0 failed"
+        "cargo fmt --all -- --check; clippy --test doc_alignment -D warnings; doc_alignment 5/5 passed on 9806bc4d2 (v0.166.2)"
       ],
       "inspected_files": [
-        "assets/tools/source_ci_profile.rs",
-        "tests/source_ci_profile_policy.rs"
+        "docs/book/src/index.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ],
-      "intent_id": "intent:change_01M8DEXFANBZGW6F0AH1YV9V6V",
+      "intent_id": "intent:run_docs_v1662",
       "modified_files": [
-        ".decapod/config.toml",
-        "assets/tools/source_ci_profile.rs",
-        "tests/source_ci_profile_policy.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "docs/book/src/concepts/faq.md",
+        "docs/book/src/custom.css",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/reference/cloud-projects.md",
+        "docs/book/src/reference/propodus.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ],
       "repo_scope": [
-        "root"
+        "docs"
       ],
-      "run_id": "branch_01M8DEXFE67R1NFTVRDVAWQ2NY",
+      "run_id": "run_docs_v1662",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m8decqz284yd4g",
+      "task_id": "docs_01m8bmgp4g4caw1g",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

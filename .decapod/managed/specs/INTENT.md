@@ -1,5 +1,19 @@
 # Intent
 
+## Decapod Cloud pricing & Organization Admin documentation update (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+Updates the human-facing mdBook documentation (`docs/book/`, published at `https://decapodlabs.ai/decapod`) to replace stale `"Coming soon"` / `offerings.html` copy and `https://decapodlabs.github.io/` brand URLs with live **Decapod Cloud** positioning (`$50/contributor/repo/mo`, `$0` surprise overages, multi-repo reservations) and direct navigation to `https://decapodlabs.ai/pricing` and `https://decapodlabs.ai/admin` without changing any CLI or runtime authorization boundaries:
+
+- **Landing page, theme shell & styling (`docs/book/src/index.md`, `docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Replaces the stale `"Coming soon"` badge and `offerings.html` links in the Decapod Local & Decapod Cloud section with `.decapod-offering-badge.badge-cloud` (warm coral/espresso) and `.decapod-offering-actions` flex layout linking to `https://decapodlabs.ai/pricing` ("Compare Local & Cloud ↗", "View Cloud pricing ↗") and `https://decapodlabs.ai/admin` ("Organization Admin ↗"), updates brand/asset links to `https://decapodlabs.ai/`, and adds compact `Pricing` and `Admin` links to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links`.
+- **Guide & reference prose (`docs/book/src/introduction.md`, `quickstart.md`, `workflows/multi-agent.md`, `concepts/faq.md`, `reference/propodus.md`, `reference/cloud-projects.md`)**: Documents Decapod Cloud's `$50/contributor/repo/mo` pricing, `$0` surprise overages, multi-repo reservations, and Organization Admin management scope (subscriptions, repository enrollment, seat assignments, teammate access policies, and billing) while preserving local-first defaults and service-owned authorization boundaries.
+
+## Decapod Cloud pricing & Organization Admin documentation update (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+Updates the human-facing mdBook documentation (`docs/book/`, published at `https://decapodlabs.ai/decapod`) to replace stale `"Coming soon"` / `offerings.html` copy and `https://decapodlabs.github.io/` brand URLs with live **Decapod Cloud** positioning (`$50/contributor/repo/mo`, `$0` surprise overages, multi-repo reservations) and direct navigation to `https://decapodlabs.ai/pricing` and `https://decapodlabs.ai/admin` without changing any CLI or runtime authorization boundaries:
+
+- **Landing page, theme shell & styling (`docs/book/src/index.md`, `docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Replaces the stale `"Coming soon"` badge and `offerings.html` links in the Decapod Local & Decapod Cloud section with `.decapod-offering-badge.badge-cloud` (warm coral/espresso) and `.decapod-offering-actions` flex layout linking to `https://decapodlabs.ai/pricing` ("Compare Local & Cloud ↗", "View Cloud pricing ↗") and `https://decapodlabs.ai/admin` ("Organization Admin ↗"), updates brand/asset links to `https://decapodlabs.ai/`, and adds compact `Pricing` and `Admin` links to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links`.
+- **Guide & reference prose (`docs/book/src/introduction.md`, `quickstart.md`, `workflows/multi-agent.md`, `concepts/faq.md`, `reference/propodus.md`, `reference/cloud-projects.md`)**: Documents Decapod Cloud's `$50/contributor/repo/mo` pricing, `$0` surprise overages, multi-repo reservations, and Organization Admin management scope (subscriptions, repository enrollment, seat assignments, teammate access policies, and billing) while preserving local-first defaults and service-owned authorization boundaries.
+
 ## Scope `selective-core-2` and `selective-core-3` selection to `core_full(paths)` (`assets/tools/source_ci_profile.rs`)
 
 Fixes a `source-ci-profile` custody failure (`required source-CI recipe is empty`) on PRs touching `src/decapod/core/*` files outside `core_full(paths)`:
@@ -1455,7 +1469,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `ebc793a964f27af83e450d2a5ac76ca6ad5506f518d3ee25eb704211c0bf6b12`
+- Repository signal fingerprint: `ca01f868d8ce7702e7883765edfdcc18dbd874767dd15684a48f8d836d23d151`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
