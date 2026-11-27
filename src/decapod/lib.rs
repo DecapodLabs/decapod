@@ -4506,6 +4506,7 @@ fn is_cloud_file_only_command(
         Command::Govern(govern_cli) => matches!(
             govern_cli.command,
             GovernCommand::Plan(_)
+                | GovernCommand::Policy(_)
                 | GovernCommand::Trajectory(_)
                 | GovernCommand::Artifacts(_)
                 | GovernCommand::ProjectCheck { .. }
@@ -13969,6 +13970,7 @@ mod rpc_handlers {
                 .map_or(true, |bytes| bytes.len() > docs::MAX_CONTEXT_ENVELOPE_BYTES)
             {
                 refused.mandates.clear();
+                refused.context_capsule = None;
                 refused.receipt.governing_anchors.clear();
                 refused.error.as_mut().unwrap().message =
                     "Mandatory context exceeds the complete budget; no authority delivered".into();
@@ -16621,23 +16623,37 @@ fn cloud_admin_rpc_response(
             mandates,
         ),
         Err(error) => {
-            let (code, msg, details, next_ops) = match error {
-                error::DecapodError::CloudAuth(diag) => (
-                    cloud_auth_diagnostic_code(diag),
-                    diag.message.clone(),
-                    serde_json::to_value(diag).ok(),
-                    vec![core::rpc::AllowedOp {
-                        op: "cloud.orgs".to_string(),
-                        reason: diag.next_action.clone(),
-                        required_params: vec![],
-                    }],
-                ),
-                other => (
-                    "validation_error".to_string(),
-                    core::cloud_admin::redact_url_fragment(&other.to_string()),
-                    None,
-                    vec![],
-                ),
+            let (code, msg, details, blocker) = match error {
+                error::DecapodError::CloudAuth(diag) => {
+                    let code = cloud_auth_diagnostic_code(diag);
+                    let recovery = core::rpc::derive_failure_recovery(
+                        &request.op,
+                        &code,
+                        &diag.message,
+                        None,
+                        &mandates,
+                    );
+                    let mut details =
+                        serde_json::to_value(diag).unwrap_or_else(|_| serde_json::json!({}));
+                    if let Some(obj) = details.as_object_mut()
+                        && let Some(rec_obj) = recovery.details.as_object()
+                    {
+                        for (k, v) in rec_obj {
+                            obj.entry(k.clone()).or_insert_with(|| v.clone());
+                        }
+                    }
+                    (code, diag.message.clone(), Some(details), None)
+                }
+                other => {
+                    let (code, blocker, details) =
+                        classify_decapod_error_for_rpc(&request.op, other);
+                    (
+                        code,
+                        core::cloud_admin::redact_url_fragment(&other.to_string()),
+                        details,
+                        blocker,
+                    )
+                }
             };
             let mut response = core::rpc::error_response(
                 request.id.clone(),
@@ -16645,12 +16661,13 @@ fn cloud_admin_rpc_response(
                 safe_params,
                 code,
                 msg,
-                None,
+                blocker,
                 mandates,
             );
-            response.allowed_next_ops = next_ops;
-            if let Some(err) = response.error.as_mut() {
-                err.details = details;
+            if let Some(details) = details
+                && let Some(err) = response.error.as_mut()
+            {
+                err.details = Some(details);
             }
             response
         }
@@ -16767,6 +16784,145 @@ fn parse_rpc_request(cli: &RpcCli) -> Result<core::rpc::RpcRequest, error::Decap
     }
 }
 
+fn classify_decapod_error_for_rpc(
+    _op: &str,
+    err: &error::DecapodError,
+) -> (
+    String,
+    Option<core::rpc::Blocker>,
+    Option<serde_json::Value>,
+) {
+    match err {
+        error::DecapodError::SessionError(msg) => {
+            let code = if msg.to_ascii_lowercase().contains("expired") {
+                "session_expired"
+            } else {
+                "session_required"
+            };
+            (code.to_string(), None, None)
+        }
+        error::DecapodError::PolicyDenied(msg)
+        | error::DecapodError::MutationRejectedBeforeWrite(msg) => (
+            "policy_denied".to_string(),
+            Some(core::rpc::Blocker {
+                kind: core::rpc::BlockerKind::Unauthorized,
+                message: msg.clone(),
+                resolve_hint:
+                    "Operation was denied by repository policy before mutation; do not retry without authorized policy or scope."
+                        .to_string(),
+            }),
+            None,
+        ),
+        error::DecapodError::NotFound(msg) => ("not_found".to_string(), None, Some(serde_json::json!({ "resource": msg }))),
+        error::DecapodError::NotImplemented(_) => ("not_implemented".to_string(), None, None),
+        error::DecapodError::Config(_) => ("invalid_config".to_string(), None, None),
+        error::DecapodError::CloudAuth(diag) => (
+            cloud_auth_diagnostic_code(diag),
+            None,
+            serde_json::to_value(diag).ok(),
+        ),
+        error::DecapodError::CloudTodo(diag) => (
+            "cloud_todo_failed".to_string(),
+            None,
+            serde_json::to_value(diag).ok(),
+        ),
+        error::DecapodError::ValidationError(msg) => {
+            let lower = msg.to_ascii_lowercase();
+            let code = if lower.starts_with("invalid params:") {
+                "invalid_params".to_string()
+            } else if lower.contains("constitutional awareness is stale") {
+                "constitutional_awareness_stale".to_string()
+            } else if lower.contains("constitutional awareness") {
+                "constitutional_awareness_required".to_string()
+            } else if lower.contains("requires isolated git worktree") {
+                if lower.contains("master") || lower.contains("main") {
+                    "protected_branch".to_string()
+                } else {
+                    "worktree_isolation_required".to_string()
+                }
+            } else if let Some((prefix, _)) = msg.split_once(':')
+                && !prefix.is_empty()
+                && prefix
+                    .bytes()
+                    .all(|b| b.is_ascii_uppercase() || b.is_ascii_digit() || b == b'_')
+            {
+                prefix.to_ascii_lowercase()
+            } else {
+                "validation_failed".to_string()
+            };
+            (code, None, None)
+        }
+        other => {
+            let code = match other.storage_failure_kind() {
+                error::StorageFailureKind::Contention => "storage_contention",
+                error::StorageFailureKind::Io => "storage_io",
+                error::StorageFailureKind::Corrupt => "storage_corrupt",
+                error::StorageFailureKind::Constraint => "storage_constraint",
+                error::StorageFailureKind::Capability => "capability_unsupported",
+                error::StorageFailureKind::Query | error::StorageFailureKind::Value => {
+                    "invalid_params"
+                }
+                error::StorageFailureKind::Unknown => "rpc_error",
+            };
+            (code.to_string(), None, None)
+        }
+    }
+}
+
+fn emit_rpc_error_response(
+    project_root: &Path,
+    request: &core::rpc::RpcRequest,
+    err: error::DecapodError,
+    mandates: Vec<core::docs::Mandate>,
+) -> error::DecapodError {
+    let (code, blocker, custom_details) = classify_decapod_error_for_rpc(&request.op, &err);
+    let safe_params = core::cloud_admin::redact_json_value(&request.params);
+    let mut response = core::rpc::error_response(
+        request.id.clone(),
+        request.op.clone(),
+        safe_params.clone(),
+        code,
+        err.to_string(),
+        blocker,
+        mandates,
+    );
+    if let Some(custom) = custom_details
+        && let Some(rpc_err) = response.error.as_mut()
+    {
+        if let Some(serde_json::Value::Object(mut base)) = rpc_err.details.take() {
+            if let serde_json::Value::Object(extra) = custom {
+                for (k, v) in extra {
+                    base.insert(k, v);
+                }
+            } else {
+                base.insert("context".to_string(), custom);
+            }
+            rpc_err.details = Some(serde_json::Value::Object(base));
+        } else {
+            rpc_err.details = Some(custom);
+        }
+    }
+    let trace_event = trace::TraceEvent {
+        trace_id: request.id.clone(),
+        ts: crate::core::time::now_epoch_z(),
+        actor: current_agent_id(),
+        op: request.op.clone(),
+        request: serde_json::to_value(&core::rpc::RpcRequest {
+            op: request.op.clone(),
+            params: safe_params,
+            id: request.id.clone(),
+            session: None,
+        })
+        .unwrap_or(serde_json::Value::Null),
+        response: core::cloud_admin::redact_json_value(
+            &serde_json::to_value(&response).unwrap_or(serde_json::Value::Null),
+        ),
+    };
+    let _ = trace::append_trace(project_root, trace_event);
+    println!("{}", serde_json::to_string_pretty(&response).unwrap());
+    err
+}
+
 fn run_rpc_command(
     cli: RpcCli,
     project_root: &Path,
@@ -16807,12 +16963,18 @@ fn run_rpc_command(
         None => parse_rpc_request(&cli)?,
     };
 
-    enforce_worktree_requirement_for_rpc(&request.op, project_root)?;
-
-    if !rpc_op_bypasses_session(&request.op) {
-        ensure_session_valid()?;
+    if let Err(err) = enforce_worktree_requirement_for_rpc(&request.op, project_root) {
+        return Err(emit_rpc_error_response(project_root, &request, err, vec![]));
     }
-    enforce_constitutional_awareness_for_rpc(&request.op, project_root)?;
+
+    if !rpc_op_bypasses_session(&request.op)
+        && let Err(err) = ensure_session_valid()
+    {
+        return Err(emit_rpc_error_response(project_root, &request, err, vec![]));
+    }
+    if let Err(err) = enforce_constitutional_awareness_for_rpc(&request.op, project_root) {
+        return Err(emit_rpc_error_response(project_root, &request, err, vec![]));
+    }
 
     let governance_root = find_governance_root(project_root);
     let project_store = Store {
@@ -16859,69 +17021,67 @@ fn run_rpc_command(
         mandates: mandates.clone(),
     };
 
-    let response = match request.op.as_str() {
-        "agent.init" => rpc_handlers::handle_agent_init(&rpc_ctx)?,
-        "workspace.status" => rpc_handlers::handle_workspace_status(&rpc_ctx)?,
-        "workspace.ensure" => rpc_handlers::handle_workspace_ensure(&rpc_ctx)?,
-        "workspace.publish" => rpc_handlers::handle_workspace_publish(&rpc_ctx)?,
-        "context.resolve" | "context.scope" => rpc_handlers::handle_context_resolve(&rpc_ctx)?,
-        "context.capsule.query" => rpc_handlers::handle_context_capsule_query(&rpc_ctx)?,
-        "context.bundle.export" => rpc_handlers::handle_context_bundle_export(&rpc_ctx)?,
-        "context.bundle.import" => rpc_handlers::handle_context_bundle_import(&rpc_ctx)?,
-        "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx)?,
-        "constitution.get" => rpc_handlers::handle_constitution_get(&rpc_ctx)?,
-        "constitution.links.query" => rpc_handlers::handle_constitution_links_query(&rpc_ctx)?,
-        "constitution.links.navigate" => {
-            rpc_handlers::handle_constitution_links_navigate(&rpc_ctx)?
-        }
-        "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx)?,
-        "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx)?,
-        "specs.refresh" => rpc_handlers::handle_specs_refresh(&rpc_ctx)?,
-        "intent.reconcile" => rpc_handlers::handle_intent_reconcile(&rpc_ctx)?,
-        "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx)?,
-        "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx)?,
-        "store.query" => rpc_handlers::handle_store_query(&rpc_ctx)?,
-        "validate.run" => rpc_handlers::handle_validate_run(&rpc_ctx)?,
-        "scaffold.next_question" => rpc_handlers::handle_scaffold_next_question(&rpc_ctx)?,
-        "scaffold.apply_answer" => rpc_handlers::handle_scaffold_apply_answer(&rpc_ctx)?,
-        "scaffold.generate_artifacts" => {
-            rpc_handlers::handle_scaffold_generate_artifacts(&rpc_ctx)?
-        }
-        "standards.resolve" => rpc_handlers::handle_standards_resolve(&rpc_ctx)?,
-        "mentor.obligations" => rpc_handlers::handle_mentor_obligations(&rpc_ctx)?,
-        "assurance.evaluate" => rpc_handlers::handle_assurance_evaluate(&rpc_ctx)?,
-        "interop.manifest" => rpc_handlers::handle_interop_manifest(&rpc_ctx)?,
-        "interop.negotiate" => rpc_handlers::handle_interop_negotiate(&rpc_ctx)?,
-        "interop.project" => rpc_handlers::handle_interop_project(&rpc_ctx)?,
+    let outcome = match request.op.as_str() {
+        "agent.init" => rpc_handlers::handle_agent_init(&rpc_ctx),
+        "workspace.status" => rpc_handlers::handle_workspace_status(&rpc_ctx),
+        "workspace.ensure" => rpc_handlers::handle_workspace_ensure(&rpc_ctx),
+        "workspace.publish" => rpc_handlers::handle_workspace_publish(&rpc_ctx),
+        "context.resolve" | "context.scope" => rpc_handlers::handle_context_resolve(&rpc_ctx),
+        "context.capsule.query" => rpc_handlers::handle_context_capsule_query(&rpc_ctx),
+        "context.bundle.export" => rpc_handlers::handle_context_bundle_export(&rpc_ctx),
+        "context.bundle.import" => rpc_handlers::handle_context_bundle_import(&rpc_ctx),
+        "context.bindings" => rpc_handlers::handle_context_bindings(&rpc_ctx),
+        "constitution.get" => rpc_handlers::handle_constitution_get(&rpc_ctx),
+        "constitution.links.query" => rpc_handlers::handle_constitution_links_query(&rpc_ctx),
+        "constitution.links.navigate" => rpc_handlers::handle_constitution_links_navigate(&rpc_ctx),
+        "constitution.migrate" => rpc_handlers::handle_constitution_migrate(&rpc_ctx),
+        "agent.registry.query" => rpc_handlers::handle_agent_registry_query(&rpc_ctx),
+        "specs.refresh" => rpc_handlers::handle_specs_refresh(&rpc_ctx),
+        "intent.reconcile" => rpc_handlers::handle_intent_reconcile(&rpc_ctx),
+        "schema.get" => rpc_handlers::handle_schema_get(&rpc_ctx),
+        "store.upsert" => rpc_handlers::handle_store_upsert(&rpc_ctx),
+        "store.query" => rpc_handlers::handle_store_query(&rpc_ctx),
+        "validate.run" => rpc_handlers::handle_validate_run(&rpc_ctx),
+        "scaffold.next_question" => rpc_handlers::handle_scaffold_next_question(&rpc_ctx),
+        "scaffold.apply_answer" => rpc_handlers::handle_scaffold_apply_answer(&rpc_ctx),
+        "scaffold.generate_artifacts" => rpc_handlers::handle_scaffold_generate_artifacts(&rpc_ctx),
+        "standards.resolve" => rpc_handlers::handle_standards_resolve(&rpc_ctx),
+        "mentor.obligations" => rpc_handlers::handle_mentor_obligations(&rpc_ctx),
+        "assurance.evaluate" => rpc_handlers::handle_assurance_evaluate(&rpc_ctx),
+        "interop.manifest" => rpc_handlers::handle_interop_manifest(&rpc_ctx),
+        "interop.negotiate" => rpc_handlers::handle_interop_negotiate(&rpc_ctx),
+        "interop.project" => rpc_handlers::handle_interop_project(&rpc_ctx),
         "interop.capability_contracts" => {
-            rpc_handlers::handle_interop_capability_contracts(&rpc_ctx)?
+            rpc_handlers::handle_interop_capability_contracts(&rpc_ctx)
         }
-        "interop.cloud_parity" => rpc_handlers::handle_interop_cloud_parity(&rpc_ctx)?,
-        "interop.envelope.verify" => rpc_handlers::handle_interop_envelope_verify(&rpc_ctx)?,
-        "interop.drift.check" => rpc_handlers::handle_interop_drift_check(&rpc_ctx)?,
-        "interop.registry.query" => rpc_handlers::handle_interop_registry_query(&rpc_ctx)?,
-        "interop.skills.select" => rpc_handlers::handle_interop_skills_select(&rpc_ctx)?,
-        "interop.rules.evaluate" => rpc_handlers::handle_interop_rules_evaluate(&rpc_ctx)?,
-        "interop.rules.taxonomy" => rpc_handlers::handle_interop_rules_taxonomy(&rpc_ctx)?,
-        "interop.overlap.classify" => rpc_handlers::handle_interop_overlap_classify(&rpc_ctx)?,
-        "constitution.overlay.status" => {
-            rpc_handlers::handle_constitution_overlay_status(&rpc_ctx)?
-        }
+        "interop.cloud_parity" => rpc_handlers::handle_interop_cloud_parity(&rpc_ctx),
+        "interop.envelope.verify" => rpc_handlers::handle_interop_envelope_verify(&rpc_ctx),
+        "interop.drift.check" => rpc_handlers::handle_interop_drift_check(&rpc_ctx),
+        "interop.registry.query" => rpc_handlers::handle_interop_registry_query(&rpc_ctx),
+        "interop.skills.select" => rpc_handlers::handle_interop_skills_select(&rpc_ctx),
+        "interop.rules.evaluate" => rpc_handlers::handle_interop_rules_evaluate(&rpc_ctx),
+        "interop.rules.taxonomy" => rpc_handlers::handle_interop_rules_taxonomy(&rpc_ctx),
+        "interop.overlap.classify" => rpc_handlers::handle_interop_overlap_classify(&rpc_ctx),
+        "constitution.overlay.status" => rpc_handlers::handle_constitution_overlay_status(&rpc_ctx),
         "observe.specs"
         | "observe.timeline"
         | "observe.workspace"
         | "observe.validation_plan"
         | "observe.pr_manifest"
         | "observe.context_provenance"
-        | "observe.telemetry" => rpc_handlers::handle_observe(&rpc_ctx)?,
-        "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx)?,
-        "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx)?,
-        "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx)?,
+        | "observe.telemetry" => rpc_handlers::handle_observe(&rpc_ctx),
+        "state.resolve" => rpc_handlers::handle_state_resolve(&rpc_ctx),
+        "state.diff" => rpc_handlers::handle_state_diff(&rpc_ctx),
+        "policy.grant.explain" => rpc_handlers::handle_policy_grant_explain(&rpc_ctx),
         "cloud.orgs" | "cloud.members" | "cloud.invites" | "cloud.identity" | "cloud.billing" => {
             let outcome = execute_cloud_admin_rpc(project_root, &request);
-            cloud_admin_rpc_response(&request, &outcome, mandates.clone())
+            Ok(cloud_admin_rpc_response(
+                &request,
+                &outcome,
+                mandates.clone(),
+            ))
         }
-        _ => error_response(
+        _ => Ok(error_response(
             request.id.clone(),
             request.op.clone(),
             request.params.clone(),
@@ -16929,7 +17089,18 @@ fn run_rpc_command(
             format!("Unknown operation: {}", request.op),
             None,
             mandates.clone(),
-        ),
+        )),
+    };
+    let response = match outcome {
+        Ok(response) => response,
+        Err(err) => {
+            return Err(emit_rpc_error_response(
+                project_root,
+                &request,
+                err,
+                mandates,
+            ));
+        }
     };
 
     // Trace the RPC call (always redact secret material).

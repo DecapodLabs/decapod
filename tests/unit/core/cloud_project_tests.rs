@@ -196,3 +196,128 @@ fn project_auth_diagnostic_respects_p0_fields_and_uuid_project_fallback() {
     assert_eq!(diag.status, CloudAuthStatus::OrganizationAlreadyEnrolled);
     assert!(diag.message.contains("cloud-org-uuid-1234"));
 }
+
+#[test]
+fn project_auth_diagnostic_respects_access_disposition_and_admin_contact_required() {
+    let collaborator_denied: Response = serde_json::from_value(json!({
+        "version": 1,
+        "account_id": "00000000-0000-0000-0000-000000000404",
+        "project_id": "DecapodLabs/decapod",
+        "status": "admin_approval_required",
+        "authorization_state": "repo_access_denied",
+        "access_disposition": "seat_available_for_assignment",
+        "admin_contact_required": true,
+        "backend_authorized": false,
+    }))
+    .unwrap();
+    let Err(DecapodError::CloudAuth(diag)) =
+        require_association(&collaborator_denied, Some("DecapodLabs/decapod"))
+    else {
+        panic!("collaborator disposition should fail association");
+    };
+    assert_eq!(diag.status, CloudAuthStatus::AdminApprovalRequired);
+    assert_eq!(diag.error_code_str(), Some("seat_available_for_assignment"));
+    assert!(diag.enrollment_url.is_none());
+    assert!(
+        diag.next_action.contains(
+            "Contact your organization administrator to request access to this repository."
+        )
+    );
+
+    let reservation_ready: Response = serde_json::from_value(json!({
+        "version": 1,
+        "account_id": "00000000-0000-0000-0000-000000000404",
+        "project_id": "DecapodLabs/decapod",
+        "status": "entitlement_required",
+        "authorization_state": "entitlement_required",
+        "access_disposition": "reservation_available_for_binding",
+        "admin_contact_required": false,
+        "backend_authorized": false,
+    }))
+    .unwrap();
+    let Err(DecapodError::CloudAuth(bind_diag)) =
+        require_association(&reservation_ready, Some("DecapodLabs/decapod"))
+    else {
+        panic!("reservation_available_for_binding should surface explicit diagnostic");
+    };
+    assert_eq!(bind_diag.status, CloudAuthStatus::ActionRequired);
+    assert_eq!(
+        bind_diag.error_code_str(),
+        Some("reservation_available_for_binding")
+    );
+}
+
+#[test]
+fn non_admin_never_gets_purchase_cta_and_backend_internals_never_leak() {
+    for disposition in [
+        "payment_required",
+        "signup_required",
+        "repository_reservation_exhausted",
+        "reservation_available_for_binding",
+    ] {
+        let resp: Response = serde_json::from_value(json!({
+            "version": 1,
+            "account_id": "00000000-0000-0000-0000-000000000404",
+            "project_id": "DecapodLabs/decapod",
+            "status": "entitlement_required",
+            "access_disposition": disposition,
+            "admin_contact_required": true,
+            "backend_authorized": false,
+        }))
+        .unwrap();
+        let diag = project_auth_diagnostic(&resp, Some("DecapodLabs/decapod"));
+        assert!(
+            diag.enrollment_url.is_none(),
+            "non-admin `{disposition}` must not expose enrollment_url"
+        );
+        assert!(
+            !diag.next_action.contains("decapodlabs.ai/pricing"),
+            "non-admin `{disposition}` next_action pushed purchase URL: {}",
+            diag.next_action
+        );
+        assert!(
+            diag.next_action.contains(
+                "Contact your organization administrator to request access to this repository."
+            ),
+            "non-admin `{disposition}` should direct to org admin: {}",
+            diag.next_action
+        );
+    }
+
+    let order_pending: Response = serde_json::from_value(json!({
+        "version": 1,
+        "account_id": "00000000-0000-0000-0000-000000000404",
+        "project_id": "DecapodLabs/decapod",
+        "status": "entitlement_required",
+        "access_disposition": "order_pending",
+        "backend_authorized": false,
+    }))
+    .unwrap();
+    let pending_diag = project_auth_diagnostic(&order_pending, Some("DecapodLabs/decapod"));
+    assert_eq!(pending_diag.status, CloudAuthStatus::PendingFulfillment);
+
+    for secret_org in [
+        "t_0123456789abcdef0123456789abcdef",
+        "postgres://user:pass@db.internal:5432/cloud",
+    ] {
+        let already_enrolled: Response = serde_json::from_value(json!({
+            "version": 1,
+            "account_id": "00000000-0000-0000-0000-000000000404",
+            "project_id": "DecapodLabs/decapod",
+            "status": "organization_already_enrolled",
+            "cloud_org_id": secret_org,
+            "backend_authorized": false,
+        }))
+        .unwrap();
+        let Err(DecapodError::CloudAuth(enrolled_diag)) =
+            require_association(&already_enrolled, Some("DecapodLabs/decapod"))
+        else {
+            panic!("organization_already_enrolled should fail association");
+        };
+        assert!(
+            !enrolled_diag.message.contains(secret_org),
+            "backend internal leaked: {}",
+            enrolled_diag.message
+        );
+    }
+}

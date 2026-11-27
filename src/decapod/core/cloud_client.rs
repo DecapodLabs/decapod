@@ -262,6 +262,15 @@ pub(crate) fn diagnostic_for_status_code(
             "The managed account needs a verified code-host link.",
             "Complete account linking in the cloud portal, then retry.",
         ),
+        "signup_required" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::PaymentRequired,
+            "Complete Decapod Cloud signup and subscription enrollment to unlock this repository.",
+            format!(
+                "Open {enroll_url} to complete enrollment for this repository, then retry your command."
+            ),
+        )
+        .with_enrollment_url(enroll_url)
+        .with_error_code(CloudAuthErrorCode::SignupRequired),
         "payment_required" => CloudAuthDiagnostic::new(
             CloudAuthStatus::PaymentRequired,
             "This repository requires an active Decapod Cloud subscription before governed access can resume.",
@@ -270,7 +279,7 @@ pub(crate) fn diagnostic_for_status_code(
             ),
         )
         .with_enrollment_url(enroll_url),
-        "pending_fulfillment" | "payment_pending" => CloudAuthDiagnostic::new(
+        "pending_fulfillment" | "payment_pending" | "order_pending" => CloudAuthDiagnostic::new(
             CloudAuthStatus::PendingFulfillment,
             "Payment is complete and Decapod Cloud is finalizing repository fulfillment.",
             "Keep the saved session (do not restart sign-in), wait briefly for webhook fulfillment to settle, and retry `decapod cloud login --format json` or your original command.",
@@ -278,9 +287,48 @@ pub(crate) fn diagnostic_for_status_code(
         "admin_approval_required" => CloudAuthDiagnostic::new(
             CloudAuthStatus::AdminApprovalRequired,
             "This account does not have an assigned paid repository seat; organization admin privileges alone do not grant repository data access.",
-            "Organization admin access and paid repository seats are separate. Ask an organization administrator to assign a paid seat and approve access for this repository, then retry.",
+            "Organization admin access and paid repository seats are separate. Contact your organization administrator to request access to this repository.",
         )
         .with_error_code(CloudAuthErrorCode::AdminApprovalRequired),
+        "repository_capacity_exhausted" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::QuotaExceeded,
+            "All purchased contributor seats for this repository are currently assigned.",
+            "Contact your organization administrator to request access to this repository.",
+        )
+        .with_error_code(CloudAuthErrorCode::RepositoryCapacityExhausted),
+        "repository_reservation_exhausted" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::QuotaExceeded,
+            "No unbound Cloud repository reservation slots remain for this organization.",
+            format!(
+                "Purchase an additional repository slot at {enroll_url}, or ask an organization administrator to bind or release a reservation slot."
+            ),
+        )
+        .with_enrollment_url(enroll_url)
+        .with_error_code(CloudAuthErrorCode::RepositoryReservationExhausted),
+        "reservation_available_for_binding" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::ActionRequired,
+            "A purchased Cloud repository reservation is ready to bind to this repository.",
+            "Open Cloud Admin -> Repositories to bind an available reservation slot to this repository, then retry.",
+        )
+        .with_error_code(CloudAuthErrorCode::ReservationAvailableForBinding),
+        "repository_not_approved" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::RepositoryDenied,
+            "This repository is not enabled on the organization's Decapod Cloud installation.",
+            "Contact your organization administrator to request access to this repository.",
+        )
+        .with_error_code(CloudAuthErrorCode::RepositoryNotApproved),
+        "seat_available_for_assignment" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::AdminApprovalRequired,
+            "An open repository seat is available under the organization's manual assignment policy.",
+            "Contact your organization administrator to request access to this repository.",
+        )
+        .with_error_code(CloudAuthErrorCode::SeatAvailableForAssignment),
+        "repository_access_denied" => CloudAuthDiagnostic::new(
+            CloudAuthStatus::RepositoryDenied,
+            "Access to this repository is denied by organization policy.",
+            "Contact your organization administrator to request access to this repository.",
+        )
+        .with_error_code(CloudAuthErrorCode::RepositoryAccessDenied),
         "organization_already_enrolled" => CloudAuthDiagnostic::new(
             CloudAuthStatus::OrganizationAlreadyEnrolled,
             "This organization is already enrolled under an existing immutable Cloud organization record.",
@@ -483,11 +531,75 @@ pub fn transport_error_for_repository(
     error: dactyl_db::DactylError,
     repo_slug: Option<&str>,
 ) -> DecapodError {
-    use dactyl_db::AdapterErrorKind;
-    if let Some(code) = error.adapter_code()
+    transport_error_for_operation(error, repo_slug, dactyl_db::OperationKind::Write)
+}
+
+pub fn transport_error_for_operation(
+    error: dactyl_db::DactylError,
+    repo_slug: Option<&str>,
+    operation_kind: dactyl_db::OperationKind,
+) -> DecapodError {
+    use dactyl_db::{AdapterErrorKind, OperationalAction};
+
+    let disposition = error.operational_disposition(operation_kind);
+    if let Some(code) = disposition.code().or_else(|| error.adapter_code())
         && let Some(diagnostic) = diagnostic_for_status_code(code, repo_slug)
     {
         return DecapodError::CloudAuth(diagnostic);
+    }
+    match disposition.action() {
+        OperationalAction::Reconcile => {
+            let mut msg = "The cloud operation failed after sending or returned an uncertain outcome; Decapod did not retry it automatically.".to_string();
+            if let Some(req_id) = disposition.request_id() {
+                msg.push_str(&format!(" (request_id: {req_id})"));
+            }
+            return DecapodError::CloudAuth(
+                CloudAuthDiagnostic::new(
+                    CloudAuthStatus::OutcomeUnknown,
+                    msg,
+                    "Inspect live Cloud state before retrying so a mutating effect is not applied twice.",
+                )
+                .with_error_code(CloudAuthErrorCode::OutcomeUnknown),
+            );
+        }
+        OperationalAction::InspectAndDecide
+            if disposition.error_kind() == Some(AdapterErrorKind::Conflict) =>
+        {
+            return DecapodError::CloudAuth(
+                CloudAuthDiagnostic::new(
+                    CloudAuthStatus::ActionRequired,
+                    "The cloud service rejected this operation due to a state conflict or rolled-back precondition.",
+                    "Inspect live Cloud state and retry with current identifiers or revision.",
+                )
+                .with_error_code(CloudAuthErrorCode::Conflict),
+            );
+        }
+        OperationalAction::Retry => {
+            let retry_hint = disposition
+                .retry_after_seconds()
+                .map(|s| format!(" Wait at least {s}s before retrying."))
+                .unwrap_or_default();
+            match disposition.error_kind() {
+                Some(AdapterErrorKind::RateLimited) => {
+                    return diagnostic(
+                        CloudAuthStatus::ProviderUnavailable,
+                        "The cloud service temporarily rate-limited this request.",
+                        format!("Retry after the rate-limit window.{retry_hint}"),
+                    );
+                }
+                Some(AdapterErrorKind::Timeout | AdapterErrorKind::Transport) => {
+                    return diagnostic(
+                        CloudAuthStatus::Offline,
+                        "The cloud service could not be reached within the bounded request.",
+                        format!(
+                            "Restore connectivity and retry. No cloud data operation was retried or redirected to local storage.{retry_hint}"
+                        ),
+                    );
+                }
+                _ => {}
+            }
+        }
+        OperationalAction::InspectAndDecide | OperationalAction::Stop => {}
     }
     let (status, message, action) = match error {
         dactyl_db::DactylError::Adapter {
@@ -558,19 +670,28 @@ pub(crate) fn admin_transport_error(
     aal2_gated: bool,
     bearer: Option<&str>,
 ) -> DecapodError {
-    use dactyl_db::{AdapterErrorKind, MutationOutcome};
+    use dactyl_db::{AdapterErrorKind, MutationOutcome, OperationKind, OperationalAction};
+
+    let op_kind = if mutating {
+        OperationKind::Write
+    } else {
+        OperationKind::Read
+    };
+    let disposition = error.operational_disposition(op_kind);
 
     if mutating
-        && (error.mutation_outcome() == MutationOutcome::Uncertain
-            || error.adapter_code() == Some("outcome_unknown")
-            || matches!(
-                error.adapter_kind(),
-                Some(
-                    AdapterErrorKind::Transport
-                        | AdapterErrorKind::Timeout
-                        | AdapterErrorKind::Unavailable
-                )
-            ))
+        && (disposition.action() == OperationalAction::Reconcile
+            || disposition.code() == Some("outcome_unknown")
+            || (disposition.code().is_none()
+                && disposition.mutation_outcome() != Some(MutationOutcome::NotAttempted)
+                && matches!(
+                    disposition.error_kind(),
+                    Some(
+                        AdapterErrorKind::Transport
+                            | AdapterErrorKind::Timeout
+                            | AdapterErrorKind::Unavailable
+                    )
+                )))
     {
         return DecapodError::CloudAuth(
             CloudAuthDiagnostic::new(
@@ -582,14 +703,14 @@ pub(crate) fn admin_transport_error(
         );
     }
 
-    if let Some(code) = error.adapter_code()
+    if let Some(code) = disposition.code().or_else(|| error.adapter_code())
         && let Some(diagnostic) = diagnostic_for_status_code(code, repo_slug)
     {
         return DecapodError::CloudAuth(diagnostic);
     }
 
-    if error.adapter_kind() == Some(AdapterErrorKind::Authorization)
-        && error.adapter_code().is_none()
+    if disposition.error_kind() == Some(AdapterErrorKind::Authorization)
+        && disposition.code().is_none()
     {
         if aal2_gated && bearer.and_then(bearer_aal2_claim) != Some(true) {
             return DecapodError::CloudAuth(
@@ -611,7 +732,10 @@ pub(crate) fn admin_transport_error(
         );
     }
 
-    if error.adapter_kind() == Some(AdapterErrorKind::Conflict) && error.adapter_code().is_none() {
+    if disposition.action() == OperationalAction::InspectAndDecide
+        && disposition.error_kind() == Some(AdapterErrorKind::Conflict)
+        && disposition.code().is_none()
+    {
         return DecapodError::CloudAuth(
             CloudAuthDiagnostic::new(
                 CloudAuthStatus::ActionRequired,
@@ -622,8 +746,8 @@ pub(crate) fn admin_transport_error(
         );
     }
 
-    if error.adapter_kind() == Some(AdapterErrorKind::NotFound)
-        && matches!(error.adapter_code(), None | Some("not_found"))
+    if disposition.error_kind() == Some(AdapterErrorKind::NotFound)
+        && matches!(disposition.code(), None | Some("not_found"))
     {
         return DecapodError::CloudAuth(
             CloudAuthDiagnostic::new(
@@ -635,7 +759,7 @@ pub(crate) fn admin_transport_error(
         );
     }
 
-    transport_error_for_repository(error, repo_slug)
+    transport_error_for_operation(error, repo_slug, op_kind)
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -2506,6 +2630,160 @@ mod cloud_admin_client_tests {
                 .unwrap_or_else(|| panic!("missing diagnostic for `{code}`"));
             assert_eq!(diag.status, expected_status, "wrong status for `{code}`");
             assert_eq!(diag.error_code_str(), Some(code), "wrong code for `{code}`");
+        }
+
+        let collaborator_denials = [
+            (
+                "admin_approval_required",
+                CloudAuthStatus::AdminApprovalRequired,
+            ),
+            (
+                "repository_capacity_exhausted",
+                CloudAuthStatus::QuotaExceeded,
+            ),
+            ("repository_not_approved", CloudAuthStatus::RepositoryDenied),
+            (
+                "seat_available_for_assignment",
+                CloudAuthStatus::AdminApprovalRequired,
+            ),
+            (
+                "repository_access_denied",
+                CloudAuthStatus::RepositoryDenied,
+            ),
+        ];
+        for (code, expected_status) in collaborator_denials {
+            let diag = diagnostic_for_status_code(code, Some("DecapodLabs/decapod"))
+                .unwrap_or_else(|| panic!("missing diagnostic for `{code}`"));
+            assert_eq!(diag.status, expected_status, "wrong status for `{code}`");
+            assert_eq!(diag.error_code_str(), Some(code), "wrong code for `{code}`");
+            assert!(
+                diag.enrollment_url.is_none(),
+                "collaborator denial `{code}` must not prompt duplicate org purchase"
+            );
+            assert!(
+                diag.next_action.contains(
+                    "Contact your organization administrator to request access to this repository."
+                ),
+                "missing administrator contact guidance for `{code}`: {}",
+                diag.next_action
+            );
+        }
+
+        let signup = diagnostic_for_status_code("signup_required", Some("DecapodLabs/decapod"))
+            .expect("signup_required diagnostic");
+        assert_eq!(signup.status, CloudAuthStatus::PaymentRequired);
+        assert!(signup.enrollment_url.is_some());
+
+        let reserve_exhausted = diagnostic_for_status_code(
+            "repository_reservation_exhausted",
+            Some("DecapodLabs/decapod"),
+        )
+        .expect("repository_reservation_exhausted diagnostic");
+        assert_eq!(reserve_exhausted.status, CloudAuthStatus::QuotaExceeded);
+        assert!(reserve_exhausted.enrollment_url.is_some());
+
+        let bind_ready = diagnostic_for_status_code(
+            "reservation_available_for_binding",
+            Some("DecapodLabs/decapod"),
+        )
+        .expect("reservation_available_for_binding diagnostic");
+        assert_eq!(bind_ready.status, CloudAuthStatus::ActionRequired);
+        assert!(
+            bind_ready
+                .next_action
+                .contains("Cloud Admin -> Repositories")
+        );
+
+        let order_pending =
+            diagnostic_for_status_code("order_pending", Some("DecapodLabs/decapod"))
+                .expect("order_pending diagnostic");
+        assert_eq!(order_pending.status, CloudAuthStatus::PendingFulfillment);
+
+        let uncertain_repo_err = transport_error_for_repository(
+            DactylError::Adapter {
+                kind: AdapterErrorKind::Timeout,
+                code: None,
+                message: "remote post-send failure (commit outcome uncertain): after send".into(),
+            },
+            Some("DecapodLabs/decapod"),
+        );
+        match uncertain_repo_err {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::OutcomeUnknown);
+                assert_eq!(diag.error_code_str(), Some("outcome_unknown"));
+            }
+            other => panic!("expected OutcomeUnknown, got {other:?}"),
+        }
+
+        // Read timeout maps via OperationalAction::Retry -> Offline (never false OutcomeUnknown).
+        let read_timeout = DactylError::Adapter {
+            kind: AdapterErrorKind::Timeout,
+            code: None,
+            message: "connect timeout before dispatch".into(),
+        };
+        assert_eq!(
+            read_timeout
+                .operational_disposition(dactyl_db::OperationKind::Read)
+                .action(),
+            dactyl_db::OperationalAction::Retry
+        );
+        match transport_error_for_operation(
+            read_timeout,
+            Some("DecapodLabs/decapod"),
+            dactyl_db::OperationKind::Read,
+        ) {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::Offline);
+            }
+            other => panic!("expected Offline on read timeout, got {other:?}"),
+        }
+
+        // Conflict maps via OperationalAction::InspectAndDecide -> ActionRequired/Conflict.
+        let conflict_err = DactylError::Adapter {
+            kind: AdapterErrorKind::Conflict,
+            code: None,
+            message: "stale optimistic lock".into(),
+        };
+        assert_eq!(
+            conflict_err
+                .operational_disposition(dactyl_db::OperationKind::Write)
+                .action(),
+            dactyl_db::OperationalAction::InspectAndDecide
+        );
+        match transport_error_for_operation(
+            conflict_err,
+            Some("DecapodLabs/decapod"),
+            dactyl_db::OperationKind::Write,
+        ) {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::ActionRequired);
+                assert_eq!(diag.error_code_str(), Some("conflict"));
+            }
+            other => panic!("expected Conflict/ActionRequired, got {other:?}"),
+        }
+
+        // Authorization / 402 maps via OperationalAction::Stop -> RepositoryDenied / PaymentRequired.
+        let denied_err = DactylError::Adapter {
+            kind: AdapterErrorKind::Authorization,
+            code: Some("repository_access_denied".into()),
+            message: "denied".into(),
+        };
+        assert_eq!(
+            denied_err
+                .operational_disposition(dactyl_db::OperationKind::Write)
+                .action(),
+            dactyl_db::OperationalAction::Stop
+        );
+        match transport_error_for_operation(
+            denied_err,
+            Some("DecapodLabs/decapod"),
+            dactyl_db::OperationKind::Write,
+        ) {
+            DecapodError::CloudAuth(diag) => {
+                assert_eq!(diag.status, CloudAuthStatus::RepositoryDenied);
+                assert_eq!(diag.error_code_str(), Some("repository_access_denied"));
+            }
+            other => panic!("expected RepositoryDenied, got {other:?}"),
         }
     }
 }

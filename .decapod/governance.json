@@ -943,6 +943,11 @@
       "id": "section10-storage-parity-v01665-pre",
       "summary": "Merge origin/master (78c5c4d7fb, v0.166.5) and refresh specs and governance",
       "input_digest": "sha256:de00620427309cdedbd6b479cba90ee53267ca9bf93499296531a8ed2a328031"
+    },
+    {
+      "id": "section10-storage-parity-v01665-pr2",
+      "summary": "Merge origin/master (a3bc7c98a9, PR #1968, v0.166.5, dactyl-db 0.21.0) and refresh Section 10 specs and governance",
+      "input_digest": "sha256:ac5151a8319953026b61a60fa52f363264020edaf3e91e0f1ca0124fea7d0812"
     }
   ],
   "intents": {
@@ -986,22 +991,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled Section 10 bounded write contracts, O(N) compaction, Cloud isolation, knowledge.rs supersede validation, and 1933-1936 tests onto 78c5c4d7fb (v0.166.5)",
-          "reviewed_code_fingerprint": "453a19ebfc2d205a2870bb428db99e2dc484209b9aedd7d73d4070210b920610",
-          "spec_material_hash": "dc8f29c5f66efb3ca460a7ee6e518ed42c16875e8cc46275b48379a516f93e24"
+          "reason": "Reconciled Section 10 bounded write contracts, O(N) compaction, Cloud isolation, knowledge.rs supersede validation, and 1933-1936 tests onto a3bc7c98a9 (PR #1968, v0.166.5, dactyl-db 0.21.0)",
+          "reviewed_code_fingerprint": "2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a",
+          "spec_material_hash": "37376d50cc8e0a6c71125f6a1624efb15b8982995413def0e8dfb436f6dbaa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled Section 10 write-admission bounds, snapshot benchmark CLI, and Cloud parity interfaces onto 78c5c4d7fb (v0.166.5)",
-          "reviewed_code_fingerprint": "453a19ebfc2d205a2870bb428db99e2dc484209b9aedd7d73d4070210b920610",
-          "spec_material_hash": "b6b85056431663fd2bc0114e935d8b2690f62523f042247dea50d11025e64976"
+          "reason": "Reconciled Section 10 write-admission bounds, snapshot benchmark CLI, and Cloud parity interfaces onto a3bc7c98a9 (PR #1968, v0.166.5, dactyl-db 0.21.0)",
+          "reviewed_code_fingerprint": "2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a",
+          "spec_material_hash": "79f0e2d7a82a6cd288711da73e1f40e1813f45d97100d3285308ebb12a35986b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Fail-closed Cloud boundaries, NUL/byte-bound write admission, and read-only Dactyl snapshot benchmarking preserve v0.166.5 security boundaries",
-          "reviewed_code_fingerprint": "453a19ebfc2d205a2870bb428db99e2dc484209b9aedd7d73d4070210b920610",
+          "reviewed_code_fingerprint": "2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
@@ -1013,7 +1018,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795763452Z"
+      "updated_at": "1795770665Z"
     },
     "trajectory": {
       "active_boundaries": [

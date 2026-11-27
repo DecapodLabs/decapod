@@ -1,4 +1,10 @@
-# Architecture
+## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
+
+- **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
+- **Cloud workspace admission & container-relay handling (`src/decapod/core/workspace.rs::ensure_cloud_workspace`, `src/decapod/core/cloud_workspace.rs::admit_cloud_checkout`)**:
+  - `admit_cloud_checkout` parses branch-embedded task IDs via `extract_task_ids_from_branch` and fails closed with `TODO_CUSTODY_REQUIRED` whenever `branch_task_ids` is non-empty and none match an active hosted claim.
+  - `ensure_cloud_workspace` validates `WORKSPACE_DESTINATION_MISMATCH` before branching/reusing an active isolated worktree, skips host-credential discovery and container launching when `cloud_workspace::is_container_relay_active()` is true by delegating directly to `cloud_workspace::check_cloud_authoring(..., true)`, and gates `ensure_container_workspace` on `config.use_container && !status.container.in_container` in both `ensure_workspace` and `ensure_cloud_workspace`.
+- **Cloud non-CI, policy, and container-relay integration harness (`tests/cloud_workspace_validation_1886.rs`)**: Extends `CloudControlServer` to mock `/rest/v1/rpc/propodus_governance_v1` (`authorize_exception`, `verify_decision`) and adds `accepted_cloud_workspace_ensure_non_ci_validate_policy_approve_and_container_relay`.
 
 ## Section 10 storage bounds, $O(N)$ lossless compaction & fail-closed Cloud boundaries (`#1630`, `#1933`–`#1936`, `#1110`, `#1118`, `#1120`, `#1132`, `#1220`, `#1221`, `#1369`, `#1378`)
 
@@ -13,6 +19,19 @@
   - `is_cloud_file_only_command` inspects `predecoded_rpc_request` for `decapod rpc --stdin`, `handle_store_upsert` / `handle_store_query` fail closed via `cloud_workspace::is_cloud_project`, and `cloud_parity_matrix::build_parity_matrix` explicitly marks 17 non-todo stores/operations (`knowledge.store`..`store.query`) as unsupported with `never_falls_back_to_sqlite = true`.
 - **Durability/replay extensions & reconciliation docs (`tests/crash_durability_1934.rs`, `tests/lease_fencing_consistency_1935.rs`, `tests/derived_replay_1936.rs`, `tests/cloud_cli_boundary.rs`, `tests/single_datastore.rs`, `docs/datastore-v2/proof-ledger.json`)**:
   - Adds Cloud `OutcomeUnknown` crash isolation, clock-skew lease/custody checks, deterministic Cloud parity replay checks, single-DB `36`-table reconciliation (`#1118`/`#1132`), `MANAGED_CLI_FIXTURE_UNAVAILABLE` hosted proof status (`#1369`/`#1378`), and explicit `#1220` pure-Rust vs `dactyl-db` SQLite conflict record.
+
+## Deterministic RPC/MCP/HTTP failure recovery derivation (`#1948`)
+
+- **Shared recovery classifier (`src/decapod/core/rpc.rs::derive_failure_recovery`)**: Centralizes `FailureClass` (`AuthorityRequired`, `UnknownOutcome`, `StaleState`, `WorkspaceCustody`, `SessionCustody`, `FailedProof`, `RetryablePreflight`, `InvalidInput`, `Unsupported`) so `error_response`, `mcp_denied_result` (`src/decapod/core/agent_interop/mcp.rs`), and `http_transport::error_code_json` (`src/decapod/core/http_transport.rs`) derive consistent, redacted, bounded `ContextCapsule`, `Blocker`, `AllowedOp`, and `RpcError.details` payloads without a second error interpreter.
+- **Structured pre-dispatch RPC failure emission (`src/decapod/lib.rs::emit_rpc_error_response`, `classify_decapod_error_for_rpc`)**: Converts `DecapodError` failures from `enforce_worktree_requirement_for_rpc`, `ensure_session_valid`, `enforce_constitutional_awareness_for_rpc`, `cloud_admin_rpc_response`, and RPC handlers into structured `RpcResponse` JSON + trace entries before returning `Err(err)`, while `handle_context_resolve` clears `context_capsule` if `context_budget_exceeded` remains over `MAX_CONTEXT_ENVELOPE_BYTES`.
+- **Projection fidelity (`src/decapod/core/projection.rs`)**: Extends `classify_response` with refusal codes (`worktree_isolation_required`, `protected_branch`, `constitutional_awareness_required`, `policy_denied`, `human_authorization_required`, `controller_contract_unsupported`, etc.) and preserves `context_capsule` and `error.details` on `ToolOperationProjection` (`#[serde(skip_serializing_if = "Option::is_none")]`).
+
+## Commercial reservation diagnostics, automatic repository reconciliation, and `OperationalDisposition` integration (issues #1896, #1859, #1895)
+
+- **Unselected-project routing & reconciliation (`src/decapod/core/cloud_project.rs`)**: Splits `cloud_project::route` so unset `record.selection` invokes `AccountOperation::Status` (`route_from_status`), handles `registration_required`, persists the resolved `<org_uuid>/<repo_uuid>` selection on authorized projects, and delegates unresolved slug lookups to `reconcile_originating_repository` (disambiguating multiple matching projects via `decapod cloud project use`, or returning typed `PaymentRequired` / `AdminApprovalRequired` / `RepositoryDenied` diagnostics).
+- **Typed `dactyl-db 0.21.0` disposition & commercial diagnostics (`Cargo.toml`, `Cargo.lock`, `src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**: Upgrades `dactyl-db` to crates.io `=0.21.0`, introduces `transport_error_for_operation` consuming `DactylError::operational_disposition(OperationKind)` (`Reconcile -> OutcomeUnknown`, `InspectAndDecide` conflict -> `ActionRequired`, `Retry -> Offline/ProviderUnavailable` with `retry_after_seconds`, `Stop` -> typed auth/quota/denial), preserves admin-mutation uncertainty in `admin_transport_error`, extends `CloudAuthErrorCode` with the 7 Propodus commercial disposition variants + `order_pending`, and redacts `t_<32hex>` / DSNs in `enrich_diagnostic` (`is_safe_public_org_id`).
+
+# Architecture
 
 ## Section 11 governance, knowledge convergence, constitution admission, and Cloud delegated grants (#657, #1774, #1763, #1568)
 
@@ -2143,7 +2162,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `453a19ebfc2d205a2870bb428db99e2dc484209b9aedd7d73d4070210b920610`
+- Repository signal fingerprint: `2a691885ec5c7aa12a15eae5520203566f41f8cd2dd5ed8ab1a2223bd42d464a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
