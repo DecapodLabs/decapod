@@ -1,5 +1,12 @@
 # Intent
 
+## Decapod Cloud pricing & Organization Admin documentation update (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+Updates the human-facing mdBook documentation (`docs/book/`, published at `https://decapodlabs.ai/decapod`) to replace stale `"Coming soon"` / `offerings.html` copy and `https://decapodlabs.github.io/` brand URLs with live **Decapod Cloud** positioning (`$50/contributor/repo/mo`, `$0` surprise overages, multi-repo reservations) and direct navigation to `https://decapodlabs.ai/pricing` and `https://decapodlabs.ai/admin` without changing any CLI or runtime authorization boundaries:
+
+- **Landing page, theme shell & styling (`docs/book/src/index.md`, `docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**: Replaces the stale `"Coming soon"` badge and `offerings.html` links in the Decapod Local & Decapod Cloud section with `.decapod-offering-badge.badge-cloud` (warm coral/espresso) and `.decapod-offering-actions` flex layout linking to `https://decapodlabs.ai/pricing` ("Compare Local & Cloud ↗", "View Cloud pricing ↗") and `https://decapodlabs.ai/admin` ("Organization Admin ↗"), updates brand/asset links to `https://decapodlabs.ai/`, and adds compact `Pricing` and `Admin` links to `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links`.
+- **Guide & reference prose (`docs/book/src/introduction.md`, `quickstart.md`, `workflows/multi-agent.md`, `concepts/faq.md`, `reference/propodus.md`, `reference/cloud-projects.md`)**: Documents Decapod Cloud's `$50/contributor/repo/mo` pricing, `$0` surprise overages, multi-repo reservations, and Organization Admin management scope (subscriptions, repository enrollment, seat assignments, teammate access policies, and billing) while preserving local-first defaults and service-owned authorization boundaries.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1449,7 +1456,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `1d7d28dadc87380ae707297f72c478c69961f2c1bb4ee1e3da062631dbb8b8dd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

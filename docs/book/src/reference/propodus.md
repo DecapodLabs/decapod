@@ -2,11 +2,16 @@
 
 Select `repo.backend = "local"` for **Decapod Local** (the default: free, offline
 local SQLite and Git governance with no account required) or `repo.backend = "cloud"`
-for **Decapod Cloud** (the managed cloud connector). The boundary is
-**agent → Decapod → Dactyl → Decapod Cloud service**. Decapod owns the
-system interface, repository binding, and private session custody. Dactyl
-owns public discovery, the physical connector, sign-in and session transport,
-and subsequent data requests. The service decides who may access a repository.
+for **Decapod Cloud** (**$50/contributor/repo/mo** with **$0 surprise overages**
+and **multi-repo reservations**; see [Cloud Pricing](https://decapodlabs.ai/pricing)).
+The boundary is **agent → Decapod → Dactyl → Decapod Cloud service**. Decapod
+owns the system interface, repository binding, and private session custody.
+Dactyl owns public discovery, the physical connector, sign-in and session
+transport, and subsequent data requests. The service decides who may access a
+repository; initial workspace setup happens in
+[Cloud Signup](https://decapodlabs.ai/signup), and subscriptions, repository
+enrollment, seat assignments, teammate access policies, and billing are managed
+in [Organization Admin](https://decapodlabs.ai/admin).
 
 Project configuration needs only the logical choice:
 

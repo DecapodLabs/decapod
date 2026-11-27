@@ -142,23 +142,41 @@ fn test_public_docs_do_not_overclaim_protocol_or_identity_boundaries() {
 }
 
 #[test]
-fn test_docs_landing_page_links_local_and_coming_soon_cloud_offerings() {
+fn test_docs_landing_page_links_local_and_cloud_offerings() {
     let index = fs::read_to_string("docs/book/src/index.md").expect("read docs/book/src/index.md");
-    assert!(index.contains("https://decapodlabs.github.io/offerings.html"));
+    assert!(index.contains("https://decapodlabs.ai/pricing"));
+    assert!(index.contains("https://decapodlabs.ai/signup"));
+    assert!(index.contains("https://decapodlabs.ai/admin"));
+    assert!(!index.contains("https://decapodlabs.github.io/"));
+    assert!(!index.contains("offerings.html"));
     assert!(index.contains("Decapod Local"));
     assert!(index.contains("Free · Offline · No signup"));
     assert!(index.contains("Decapod Cloud"));
-    assert!(index.contains("Coming soon"));
-    assert!(index.contains("no public pricing or active purchase route"));
-    assert!(!index.contains("/checkout"));
-    assert!(!index.contains("/buy"));
+    assert!(index.contains("$50/contributor/repo/mo"));
+    assert!(index.contains("$0 surprise overages"));
+    assert!(!index.contains("Coming soon"));
+    assert!(!index.contains("no public pricing or active purchase route"));
     assert!(index.contains("quickstart.html"));
     assert!(index.contains("HARNESS AI"));
+
+    let quickstart = fs::read_to_string("docs/book/src/quickstart.md")
+        .expect("read docs/book/src/quickstart.md");
+    assert!(quickstart.contains("https://decapodlabs.ai/pricing"));
+    assert!(quickstart.contains("https://decapodlabs.ai/signup"));
+    assert!(quickstart.contains("https://decapodlabs.ai/admin"));
+
+    let hbs =
+        fs::read_to_string("docs/book/theme/index.hbs").expect("read docs/book/theme/index.hbs");
+    assert!(hbs.contains("https://decapodlabs.ai/pricing"));
+    assert!(hbs.contains("https://decapodlabs.ai/admin"));
+    assert!(!hbs.contains("https://decapodlabs.github.io/"));
 
     let css =
         fs::read_to_string("docs/book/src/custom.css").expect("read docs/book/src/custom.css");
     assert!(css.contains(".decapod-docs-offerings"));
     assert!(css.contains(".decapod-offerings-grid"));
+    assert!(css.contains(".decapod-offering-badge.badge-cloud"));
+    assert!(css.contains(".decapod-offering-actions"));
     assert!(css.contains("@media(max-width:760px)"));
     assert!(css.contains(":focus-visible"));
     assert!(css.contains("prefers-reduced-motion:reduce"));

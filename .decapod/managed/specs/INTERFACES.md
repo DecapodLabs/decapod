@@ -1,5 +1,18 @@
 # Interfaces
 
+## Decapod Cloud documentation links & styling classes (`docs/book/`, `docs_01m8bj4zfm0sm21e`)
+
+- **External documentation navigation URLs**:
+  - Pricing & Local/Cloud comparison: `https://decapodlabs.ai/pricing`
+  - Organization Admin (subscriptions, repository enrollment, seat assignments, teammate access policies, billing): `https://decapodlabs.ai/admin`
+  - Brand & static media origin: `https://decapodlabs.ai/` and `https://decapodlabs.ai/assets/*`
+- **CSS & shell surface classes (`docs/book/src/custom.css`, `docs/book/theme/index.hbs`, `docs/book/src/index.md`)**:
+  - `.decapod-offering-badge.badge-cloud`: coral/espresso pill badge for the live Decapod Cloud offering card.
+  - `.decapod-offering-actions`: wrapping flex container for primary Pricing and secondary Admin action links inside `.decapod-offering-card`.
+  - `.decapod-top-links`, `.decapod-footer-links`, `.decapod-rail-links`: carry concise `Pricing` and `Admin` entries across the mdBook shell.
+- **Runtime CLI boundary**: Unchanged; `repo.backend = "local" | "cloud"` remains logical selection only in `.decapod/config.toml`, with no local price tables, access rosters, or billing authority stored in Git.
+- **Alignment regression (`tests/doc_alignment.rs`)**: `test_docs_landing_page_links_local_and_cloud_offerings` asserts live `decapodlabs.ai/pricing` and `decapodlabs.ai/admin` links, `.decapod-offering-badge.badge-cloud`, `.decapod-offering-actions`, and absence of stale `decapodlabs.github.io` / `offerings.html` / `"Coming soon"` copy.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2596,7 +2609,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `1d7d28dadc87380ae707297f72c478c69961f2c1bb4ee1e3da062631dbb8b8dd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
