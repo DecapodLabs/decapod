@@ -1,5 +1,13 @@
 # Intent
 
+## Accurate agent-facing failure recovery context and next operations (#1948)
+
+Replaces `core::rpc::error_response`'s hardcoded `"Session may be invalid or expired"` / `agent.init` / `context_capsule: None` fallback with deterministic, state-derived recovery metadata across CLI, JSON RPC, HTTP RPC, MCP, and `interop.project`:
+
+- **Nine-class failure taxonomy (`src/decapod/core/rpc.rs::derive_failure_recovery`)**: Distinguishes retryable read/preflight faults (`retryable_preflight_fault`), changed/stale state (`stale_state_reread_required`), repairable proof failures (`failed_proof_repair_required`), missing workspace/protected-branch custody (`workspace_custody_required`), missing/stale session or constitutional awareness (`session_custody_required`), principal-only/controller authority (`authority_required` with empty `allowed_next_ops`), uncertain post-send writes (`unknown_outcome_readback_required` directing readback before replay), invalid parameters/entities (`invalid_input`), and unsupported commands (`unsupported_no_recovery` with empty `allowed_next_ops`).
+- **Pre-dispatch & handler RPC JSON envelopes (`src/decapod/lib.rs`)**: Emits structured `RpcResponse` JSON (plus trace redaction and non-zero exit status) when worktree, session, constitutional awareness, cloud admin, or handler errors fail, without inventing human approval, suggesting bypass flags, or emitting speculative `agent.init` calls.
+- **Projection & MCP parity (`src/decapod/core/projection.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/http_transport.rs`)**: Preserves `context_capsule`, `error.details`, `blocked_by`, and `allowed_next_ops` in `ToolOperationProjection`, `mcp_denied_result`, and `http_transport::error_code_json` while keeping existing golden vectors and redaction invariants intact.
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1449,7 +1457,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `5150bd30c835ab6f53854fac0fa979ed3760816a6d5c9896cb42aa4de211c02c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

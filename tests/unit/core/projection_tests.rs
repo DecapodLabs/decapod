@@ -203,3 +203,39 @@ fn project_request_is_pure_and_serializable() {
     let bad = serde_json::json!({ "kind": "not_a_kind" });
     assert!(serde_json::from_value::<ProjectRequest>(bad).is_err());
 }
+
+#[test]
+fn projection_preserves_failure_context_capsule_details_and_refusal_codes() {
+    for code in [
+        "worktree_isolation_required",
+        "protected_branch",
+        "constitutional_awareness_required",
+        "policy_denied",
+        "human_authorization_required",
+    ] {
+        let resp = response(false, Some(code), vec![]);
+        let proj = project_rpc_response(&resp);
+        assert_eq!(proj.status, OperationStatus::Refused, "code {code}");
+    }
+
+    let rich = crate::core::rpc::error_response(
+        "req-rich".into(),
+        "store.upsert".into(),
+        serde_json::json!({}),
+        "protected_branch".into(),
+        "current checkout branch='master'".into(),
+        None,
+        vec![],
+    );
+    let proj = project_rpc_response(&rich);
+    assert_eq!(proj.status, OperationStatus::Blocked);
+    assert_eq!(
+        proj.allowed_next_ops,
+        vec!["workspace.status", "workspace.ensure"]
+    );
+    assert!(proj.context_capsule.is_some());
+    assert_eq!(
+        proj.error.as_ref().unwrap().details.as_ref().unwrap()["failure_class"],
+        serde_json::json!("workspace_custody_required")
+    );
+}

@@ -1,5 +1,15 @@
 # Interfaces
 
+## `#1948` Agent-facing failure recovery envelope & projection contracts (`src/decapod/core/rpc.rs`, `src/decapod/core/projection.rs`, `src/decapod/core/agent_interop/mcp.rs`)
+
+- **`RpcResponse` failure fields (`core::rpc::error_response`, `core::rpc::derive_failure_recovery`)**:
+  - `context_capsule`: populated with up to 3 mandate `DocFragment`s, bounded redacted `spec` summary, and `standards` (`failure_class`, `recovery_mode`, `retry_safe`, `authority_required`, `readback_required`, `evidence_required`).
+  - `blocked_by`: preserves explicit caller `Blocker` or derives typed `Blocker { kind, message, resolve_hint }` (`ProtectedBranch`, `WorkspaceRequired`, `Unauthorized`, `MissingProof`, `Conflict`, `ValidationFailed`, `MissingAnswer`).
+  - `allowed_next_ops`: ordered lawful recovery ops (`workspace.status`/`workspace.ensure` for custody, `schema.get` for invalid `store.*` entity, `observe.validation_plan`/`specs.refresh`/`validate.run` for repairable proof, readback-only `cloud.orgs`/`store.query`/`observe.timeline` for unknown outcomes), and empty `[]` for `authority_required` and `unsupported_no_recovery` (`unknown_op`).
+  - `error.details`: embeds `{ failure_class, recovery_mode, retry_safe, authority_required, readback_required, evidence_required }` (merged with `CloudAuthDiagnostic` on Cloud Admin errors).
+- **Projection & MCP/HTTP alignment**: `ToolOperationProjection` (`core::projection`) adds optional `context_capsule` and `error.details`; `decapod_governed_mutate` denials (`core::agent_interop::mcp`) and `http_transport::error_code_json` emit `failure_class`, `recovery_mode`, `blocked_by`, `allowed_next_ops`, and `context_capsule`.
+- **Verification (`tests/agent_rpc_suite.rs`, `tests/unit/core/projection_tests.rs`, `src/decapod/core/rpc.rs`)**: Actual-binary tests exercise `unknown_op`, `protected_branch`, `constitutional_awareness_required`, `invalid_entity` -> `schema.get` -> `store.upsert` repair, `interop.project` agreement, trace retention, and secret redaction.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2596,7 +2606,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `5150bd30c835ab6f53854fac0fa979ed3760816a6d5c9896cb42aa4de211c02c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

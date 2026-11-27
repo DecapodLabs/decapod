@@ -1,8 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "ea7bd4275df081e1ed50425ddc09d75986ffd473",
-    "release": "v0.166.1",
+    "accepted_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -871,112 +870,51 @@
     }
   },
   "change": {
-    "id": "change_01M8BTPHKFYT67HHH0HWCBF167",
-    "base_commit": "ea7bd4275df081e1ed50425ddc09d75986ffd473",
+    "id": "change_01M8DDM000RPCRECOVERY1948V1662",
+    "base_commit": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:executor-contract-sh-mode": {
-      "statement": "executor_contract::capture admits 100755 Git blob mode strictly for tracked .sh scripts in profile::definition_files() while preserving 100644 enforcement on non-.sh definitions and carrier files.",
-      "falsifier": "A 100755 .rs definition file or symlink 120000 is admitted, or 100755 .sh definition scripts fail with CONTROLLER_CONTRACT_UNSUPPORTED.",
+    "claim:rpc-failure-recovery": {
+      "statement": "Every agent-facing failure path derives accurate failure_class, typed blockers, bounded redacted context capsules, and lawful allowed_next_ops without speculative agent.init or guard bypasses",
+      "falsifier": "A failed RPC/MCP/HTTP/projection call returns speculative agent.init, omits context_capsule or typed blocked_by, or suggests mutations during unknown_outcome or authority_required",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
-      ]
-    },
-    "claim:stale-accepted-base-reconciliation": {
-      "statement": "qualifies_stale_accepted_base_inventory_reconciliation reconciles stale accepted_base reviewed_sources_digest only when base_oid != head_oid, commands_preserved and reviewed_commands_digest match verbatim, base_tree == head_tree == candidate_sources_digest, and changed_paths is empty.",
-      "falsifier": "Any candidate change to workflows, scripts, manifests, Git file modes, or proof commands succeeds without approval, or base_oid == head_oid bypasses release-only checks.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "tests/unit/core/repository_profile_tests.rs"
+        "tests/agent_rpc_suite.rs",
+        "tests/unit/core/projection_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "code_01m8btae8yj5pbpb",
-      "summary": "Admit 100755 tracked .sh scripts in executor_contract::capture with regression tests",
-      "input_digest": "sha256:aad619bb0a9ee3d6dd3194c3bc59f1ab26ab0b06b0c731f7d4dd9cf10d77f811",
+      "id": "cicd_01m8bmj4mbf5pn71-v1662",
+      "summary": "Rebase #1948 agent-facing failure recovery context and next_ops onto v0.166.2",
+      "input_digest": "sha256:baf4b475d08b2a33d5a8a9c4fc76fb47d163d4b08146bd4de48f6e1ea6e63e84",
       "proof_refs": [
-        "src/decapod/core/validation_runtime/executor_contract.rs"
+        "tests/agent_rpc_suite.rs",
+        "tests/unit/core/projection_tests.rs"
       ]
-    },
-    {
-      "id": "bootstrap-sh-mode-and-stale-base-reconcile",
-      "summary": "Add self-hosting executor_contract regression coverage and qualifies_stale_accepted_base_inventory_reconciliation with negative tests",
-      "input_digest": "sha256:ae154f38bf9f02743a48ba58cda17e54bb310cb7abe337c47872c39ba624e566",
-      "proof_refs": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs"
-      ]
-    },
-    {
-      "id": "reconcile-reviewed-sources-digest",
-      "summary": "Reconcile proof.required_profile.reviewed_sources_digest against origin/master ea7bd4275",
-      "input_digest": "sha256:052f86e259c40a325e75ae4e9f4695a98152059865aec91710ef5646fc3e1c70",
-      "proof_refs": [
-        ".decapod/config.toml"
-      ]
-    },
-    {
-      "id": "cli-roundtrip-and-spec-reviews",
-      "summary": "Add CLI roundtrip regression test in tests/validate_termination.rs and record current spec reviews",
-      "input_digest": "sha256:b440f1ba4d681f36e1639a3df628c521023ea50f1684a63104add553b10557e1",
-      "proof_refs": [
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md",
-        "tests/validate_termination.rs"
-      ]
-    },
-    {
-      "id": "spec-reviews-08a5fb94",
-      "summary": "Record current-fingerprint spec reviews for ARCHITECTURE, INTERFACES, and SECURITY",
-      "input_digest": "sha256:0058ac520c648a8e841fd7ae3bcf1352c695449a0a44a525780bb1a81b486ab7",
-      "proof_refs": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/SECURITY.md"
-      ]
-    },
-    {
-      "id": "safe-bin-validate-termination",
-      "summary": "Exclude container runtimes from PATH in stale_accepted_base_reconciliation_cli_roundtrip so CI Bazel build_lifecycle scratch cleanup succeeds; refreshed specs and verified fmt/clippy/validate_termination/lib tests.",
-      "input_digest": "sha256:a68812cbc5029f13b91a706e9db07e914783155097e3e34c927bedb49c46d0f2"
-    },
-    {
-      "id": "refresh-clean-specs",
-      "summary": "Refresh living specs without local bazel-* symlinks and update spec reviews.",
-      "input_digest": "sha256:a12b5f68de468e1d7e561501e8596ac1bfdce3d5fa2b66eb6456dd8453ae2d7e"
-    },
-    {
-      "id": "selective-status-effective-context",
-      "summary": "Allow exact 7-key CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT=success effective context on selective-core-status and selective-cli-status in source_policy.rs; refreshed living specs and verified fmt/clippy/source_policy tests.",
-      "input_digest": "sha256:2e80ca6b127f3a35ab863cbc1091d251635efc45d42e400b2cc610e6fedcbd25"
     }
   ],
   "intents": {
-    "intent:change_01M8BTPHKFYT67HHH0HWCBF167": {
+    "intent:run_1948_v1662": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Preserve existing success envelopes and redaction; isolated worktree only"
       ],
       "constraints": [
         "core"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+      "id": "intent:run_1948_v1662",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
-      "refined_intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "raw_intent": "Make every agent-facing failure return the correct recovery context and next operation (#1948)",
+      "refined_intent": "Rebase RPC failure recovery context onto v0.166.2 and verify agent_rpc_suite + unit tests",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -989,186 +927,130 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "intent": "Derive typed blockers, failure_class, bounded redacted context capsules, and lawful allowed_next_ops across RPC, CLI, MCP, and HTTP transport",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --test agent_rpc_suite --all-features"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "verify_non_integration_effective_context refines snapshot context validation in validation_runtime/snapshot/source_policy.rs without changing overall component architecture.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "fd3527c27d3eac36aec2f3b4e46082102b5a1dd01a652d14251283df28139161"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Selective shard status effective-context verification validates existing CUSTODY_PREPARE_RESULT/CUSTODY_WORKER_RESULT workflow bindings without altering public interfaces.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
-          "spec_material_hash": "9487951162590ade30d3d3d0bfeddbde89bc438298ce9f1786d4ed9dd3c917fd"
+          "reason": "Authored #1948 RPC failure recovery context and next_ops specs on v0.166.2",
+          "reviewed_code_fingerprint": "5150bd30c835ab6f53854fac0fa979ed3760816a6d5c9896cb42aa4de211c02c",
+          "spec_material_hash": "c224ac4c0d171e7761cc03e7372d4063a4601e4660e18d978432e168dce81545"
         },
         {
           "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Authored #1948 RPC failure recovery context and next_ops specs on v0.166.2",
+          "reviewed_code_fingerprint": "5150bd30c835ab6f53854fac0fa979ed3760816a6d5c9896cb42aa4de211c02c",
+          "spec_material_hash": "5fdc013a4206d67b1d44593af8d24d4d52b2283c78438f49106671059eca2672"
+        },
+        {
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Documented verify_non_integration_effective_context 7-key invariant for selective-core-status and selective-cli-status.",
-          "reviewed_code_fingerprint": "2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910",
+          "reason": "Maintains secret redaction, bounded context capsules, and strict no-authority-escalation failure boundaries across RPC/MCP/HTTP",
+          "reviewed_code_fingerprint": "5150bd30c835ab6f53854fac0fa979ed3760816a6d5c9896cb42aa4de211c02c",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Allow 100755 Git mode for tracked .sh files in executor_contract",
+      "title": "Make agent-facing failures return accurate recovery context and next_ops (#1948)",
       "todo_ids": [
-        "code_01m8btae8yj5pbpb"
+        "cicd_01m8bmj4mbf5pn71"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795735718Z"
+      "updated_at": "1795749007Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Preserve existing success envelopes and redaction; isolated worktree only"
       ],
-      "artifact_hash": "sha256:0e222921728ce1581a6a0c820119739ac3dda30a4f1c425a0a2bdffb09ec882c",
+      "artifact_hash": "sha256:b5695e75ff8a120954faa79e0ee32b418f9e877336acad5e80631736a1e7b3f6",
       "checks": [
         {
-          "name": "cargo_clippy",
+          "name": "agent_rpc_suite",
           "status": "passed"
         },
         {
-          "name": "cargo_clippy_all_targets_all_features",
+          "name": "clippy",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt",
+          "name": "fmt",
           "status": "passed"
         },
         {
-          "name": "cargo_test_consumer_readiness_42",
+          "name": "projection_lib_tests",
           "status": "passed"
         },
         {
-          "name": "cargo_test_lib_2062",
-          "status": "passed"
-        },
-        {
-          "name": "executor_contract_tests",
-          "status": "passed"
-        },
-        {
-          "name": "validate_termination_cli_roundtrip",
+          "name": "rpc_lib_tests",
           "status": "passed"
         }
       ],
-      "completion_claim": "executor_contract .sh 100755 fix and regression tests verified; PR held unopened",
-      "current_phase": "verified",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:run_1948_v1662",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:run_1948_v1662",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+            "detail": "trajectory:run_1948_v1662",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "intent_id": "intent:run_1948_v1662",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "event_id": "event:5",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "event_id": "event:6",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8BTPHPR88ASXG8G4X3NGSS9": {
+          "run_1948_v1662": {
             "evidence_only": true,
-            "id": "branch_01M8BTPHPR88ASXG8G4X3NGSS9",
-            "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+            "id": "run_1948_v1662",
+            "intent_id": "intent:run_1948_v1662",
             "steps": [
               {
-                "action": "verified",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2"
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/agent_interop/mcp.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/agent_interop/mcp.rs",
+                  "src/decapod/core/http_transport.rs",
+                  "src/decapod/core/projection.rs",
+                  "src/decapod/lib.rs",
+                  "tests/agent_rpc_suite.rs",
+                  "tests/unit/core/projection_tests.rs",
+                  "cargo fmt --all -- --check; clippy --all-targets --all-features -D warnings; agent_rpc_suite 6/6; lib rpc:: 2/2; lib projection 60/60 (2 ignored) on 9806bc4d2 (v0.166.2)"
                 ],
                 "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy",
-                  "executor_contract_tests"
+                  "fmt",
+                  "clippy",
+                  "agent_rpc_suite",
+                  "rpc_lib_tests",
+                  "projection_lib_tests"
                 ],
                 "scope": [
                   "core"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "src/decapod/core/validation_runtime/executor_contract.rs",
-                  "src/decapod/core/repository_profile.rs",
-                  "src/decapod/core/validation_rules.rs",
-                  "tests/unit/core/repository_profile_tests.rs",
-                  "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)"
-                ],
-                "proof_refs": [
-                  "cargo_fmt",
-                  "cargo_clippy_all_targets_all_features",
-                  "cargo_test_lib_2062",
-                  "cargo_test_consumer_readiness_42"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "tests/validate_termination.rs",
-                  "tests/validate_termination.rs",
-                  "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
-                ],
-                "proof_refs": [
-                  "validate_termination_cli_roundtrip"
-                ],
-                "scope": [
-                  "core"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1176,36 +1058,31 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
       "evidence": [
-        "cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings; cargo test --lib (2062/2062); cargo test --test consumer_readiness (42/42)",
-        "cargo fmt --all -- --check; clippy --lib and --lib --tests -D warnings; executor_contract::tests 2/2",
-        "cargo test --test validate_termination stale_accepted_base_reconciliation_cli_roundtrip (1/1 passed); cargo fmt --all -- --check; CLIPPY_CONF_DIR=.config cargo clippy --test validate_termination --all-features -- -D warnings"
+        "cargo fmt --all -- --check; clippy --all-targets --all-features -D warnings; agent_rpc_suite 6/6; lib rpc:: 2/2; lib projection 60/60 (2 ignored) on 9806bc4d2 (v0.166.2)"
       ],
       "inspected_files": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/validate_termination.rs"
+        "src/decapod/core/agent_interop/mcp.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:change_01M8BTPHKFYT67HHH0HWCBF167",
+      "intent_id": "intent:run_1948_v1662",
       "modified_files": [
-        "src/decapod/core/repository_profile.rs",
-        "src/decapod/core/validation_rules.rs",
-        "src/decapod/core/validation_runtime/executor_contract.rs",
-        "tests/unit/core/repository_profile_tests.rs",
-        "tests/validate_termination.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "src/decapod/core/agent_interop/mcp.rs",
+        "src/decapod/core/http_transport.rs",
+        "src/decapod/core/projection.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
+        "tests/agent_rpc_suite.rs",
+        "tests/unit/core/projection_tests.rs"
       ],
       "repo_scope": [
         "core"
       ],
-      "run_id": "branch_01M8BTPHPR88ASXG8G4X3NGSS9",
+      "run_id": "run_1948_v1662",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8btae8yj5pbpb",
+      "task_id": "cicd_01m8bmj4mbf5pn71",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

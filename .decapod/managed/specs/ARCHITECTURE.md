@@ -1,5 +1,11 @@
 # Architecture
 
+## Deterministic RPC/MCP/HTTP failure recovery derivation (`#1948`)
+
+- **Shared recovery classifier (`src/decapod/core/rpc.rs::derive_failure_recovery`)**: Centralizes `FailureClass` (`AuthorityRequired`, `UnknownOutcome`, `StaleState`, `WorkspaceCustody`, `SessionCustody`, `FailedProof`, `RetryablePreflight`, `InvalidInput`, `Unsupported`) so `error_response`, `mcp_denied_result` (`src/decapod/core/agent_interop/mcp.rs`), and `http_transport::error_code_json` (`src/decapod/core/http_transport.rs`) derive consistent, redacted, bounded `ContextCapsule`, `Blocker`, `AllowedOp`, and `RpcError.details` payloads without a second error interpreter.
+- **Structured pre-dispatch RPC failure emission (`src/decapod/lib.rs::emit_rpc_error_response`, `classify_decapod_error_for_rpc`)**: Converts `DecapodError` failures from `enforce_worktree_requirement_for_rpc`, `ensure_session_valid`, `enforce_constitutional_awareness_for_rpc`, `cloud_admin_rpc_response`, and RPC handlers into structured `RpcResponse` JSON + trace entries before returning `Err(err)`, while `handle_context_resolve` clears `context_capsule` if `context_budget_exceeded` remains over `MAX_CONTEXT_ENVELOPE_BYTES`.
+- **Projection fidelity (`src/decapod/core/projection.rs`)**: Extends `classify_response` with refusal codes (`worktree_isolation_required`, `protected_branch`, `constitutional_awareness_required`, `policy_denied`, `human_authorization_required`, `controller_contract_unsupported`, etc.) and preserves `context_capsule` and `error.details` on `ToolOperationProjection` (`#[serde(skip_serializing_if = "Option::is_none")]`).
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2108,7 +2114,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `5150bd30c835ab6f53854fac0fa979ed3760816a6d5c9896cb42aa4de211c02c`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
