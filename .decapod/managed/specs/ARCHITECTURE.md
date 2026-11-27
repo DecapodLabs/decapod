@@ -1,3 +1,8 @@
+## Commercial reservation diagnostics, automatic repository reconciliation, and `OperationalDisposition` integration (issues #1896, #1859, #1895)
+
+- **Unselected-project routing & reconciliation (`src/decapod/core/cloud_project.rs`)**: Splits `cloud_project::route` so unset `record.selection` invokes `AccountOperation::Status` (`route_from_status`), handles `registration_required`, persists the resolved `<org_uuid>/<repo_uuid>` selection on authorized projects, and delegates unresolved slug lookups to `reconcile_originating_repository` (disambiguating multiple matching projects via `decapod cloud project use`, or returning typed `PaymentRequired` / `AdminApprovalRequired` / `RepositoryDenied` diagnostics).
+- **Typed `dactyl-db 0.21.0` disposition & commercial diagnostics (`Cargo.toml`, `Cargo.lock`, `src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**: Upgrades `dactyl-db` to crates.io `=0.21.0`, introduces `transport_error_for_operation` consuming `DactylError::operational_disposition(OperationKind)` (`Reconcile -> OutcomeUnknown`, `InspectAndDecide` conflict -> `ActionRequired`, `Retry -> Offline/ProviderUnavailable` with `retry_after_seconds`, `Stop` -> typed auth/quota/denial), preserves admin-mutation uncertainty in `admin_transport_error`, extends `CloudAuthErrorCode` with the 7 Propodus commercial disposition variants + `order_pending`, and redacts `t_<32hex>` / DSNs in `enrich_diagnostic` (`is_safe_public_org_id`).
+
 # Architecture
 
 ## Section 11 governance, knowledge convergence, constitution admission, and Cloud delegated grants (#657, #1774, #1763, #1568)
@@ -2129,7 +2134,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567`
+- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

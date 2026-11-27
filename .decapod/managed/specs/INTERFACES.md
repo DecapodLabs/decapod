@@ -1,3 +1,9 @@
+## `#1896` Automatic Cloud project reconciliation, commercial disposition diagnostics, and `dactyl-db 0.21.0` contracts (`src/decapod/core/cloud_client.rs`, `src/decapod/core/cloud_project.rs`, `src/decapod/core/error.rs`)
+
+- **`CloudAuthErrorCode` (`src/decapod/core/error.rs`)**: Adds `SignupRequired` (`"signup_required"`), `RepositoryCapacityExhausted` (`"repository_capacity_exhausted"`), `RepositoryReservationExhausted` (`"repository_reservation_exhausted"`), `ReservationAvailableForBinding` (`"reservation_available_for_binding"`), `RepositoryNotApproved` (`"repository_not_approved"`), `SeatAvailableForAssignment` (`"seat_available_for_assignment"`), and `RepositoryAccessDenied` (`"repository_access_denied"`).
+- **`cloud_project::route` (`src/decapod/core/cloud_project.rs`, `docs/book/src/reference/cloud-projects.md`)**: Automatically reconciles an unambiguous originating repository via `AccountOperation::Status` (`route_from_status`) and `reconcile_originating_repository` after `decapod cloud login` without requiring manual `decapod cloud projects` / `decapod cloud project use` unless disambiguating multiple org/project bindings.
+- **`transport_error_for_operation` & `admin_transport_error` (`src/decapod/core/cloud_client.rs`, `dactyl-db = "=0.21.0"`)**: Maps `DactylError::operational_disposition(OperationKind)` (`OperationalAction::{Retry, InspectAndDecide, Reconcile, Stop}`), surfacing `OutcomeUnknown` on `Reconcile` (plus non-`NotAttempted` uncoded admin-mutation transport faults), `Offline`/`ProviderUnavailable` with `retry_after_seconds` on `Retry`, `ActionRequired/Conflict` on `InspectAndDecide`, `PendingFulfillment` on `order_pending`, and admin-contact guidance without purchase CTAs when `admin_contact_required == Some(true)`.
+
 # Interfaces
 
 ## Section 11 knowledge CLI/RPC, constitution admission errors, and Cloud delegated-grant fields (#657, #1774, #1568)
@@ -2623,7 +2629,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567`
+- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

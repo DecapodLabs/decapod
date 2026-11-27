@@ -1206,7 +1206,20 @@ mod cloud_admin_proofs {
                 )
                 .with_header("Decapod-Cloud-Notice", "spend cap reached"),
             ),
-            // status --live with overage_cap_exhausted
+            // status --live: 1) route() auto-reconciles originating repo, 2) resource_limits query
+            (
+                "/account-status",
+                MockReply::json(
+                    200,
+                    json!({
+                        "version": 1,
+                        "account_id": "00000000-0000-0000-0000-000000000404",
+                        "project_id": "example/supabase-proof",
+                        "status": "active",
+                        "backend_authorized": true
+                    }),
+                ),
+            ),
             (
                 "/account-status",
                 MockReply::json(

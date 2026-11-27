@@ -103,11 +103,15 @@ struct Service {
     slow_refresh: bool,
     account: String,
     account_status: &'static str,
+    organizations: Vec<(&'static str, bool)>,
     projects: Vec<(String, String)>,
+    project_slug_map: BTreeMap<String, String>,
     project_organizations: BTreeMap<String, String>,
     project_allowed: bool,
     project_status_override: Option<&'static str>,
     authorization_state: Option<&'static str>,
+    access_disposition: Option<&'static str>,
+    admin_contact_required: Option<bool>,
     pending_fulfillment: Option<bool>,
     cloud_org_id: Option<&'static str>,
     admin: Option<bool>,
@@ -192,7 +196,12 @@ impl Service {
                 if self.account_status != "registered" {
                     json!({"version":1,"account_id":self.account,"status":self.account_status,"backend_authorized":false})
                 } else if let Some(project) = request.body["project_id"].as_str() {
-                    let exists = self.projects.iter().any(|(id, _)| id == project);
+                    let resolved = self
+                        .project_slug_map
+                        .get(project)
+                        .cloned()
+                        .unwrap_or_else(|| project.to_string());
+                    let exists = self.projects.iter().any(|(id, _)| id == &resolved);
                     let allowed = exists && self.project_allowed;
                     let status = if allowed {
                         "active"
@@ -206,10 +215,12 @@ impl Service {
                     json!({
                         "version": 1,
                         "account_id": self.account,
-                        "project_id": project,
-                        "organization_id": self.project_organizations.get(project),
+                        "project_id": resolved,
+                        "organization_id": self.project_organizations.get(&resolved),
                         "status": status,
                         "authorization_state": self.authorization_state,
+                        "access_disposition": self.access_disposition,
+                        "admin_contact_required": self.admin_contact_required,
                         "pending_fulfillment": self.pending_fulfillment,
                         "cloud_org_id": self.cloud_org_id,
                         "admin": self.admin,
@@ -217,8 +228,20 @@ impl Service {
                         "backend_authorized": allowed
                     })
                 } else {
+                    let mut orgs: Vec<Value> = self
+                        .organizations
+                        .iter()
+                        .map(|(id, admin)| json!({"id": id, "admin": admin}))
+                        .collect();
+                    if orgs.is_empty() {
+                        orgs = self
+                            .project_organizations
+                            .values()
+                            .map(|id| json!({"id": id}))
+                            .collect();
+                    }
                     json!({"version":1,"account_id":self.account,"status":"registered","backend_authorized":false,
-                      "organizations":self.project_organizations.values().map(|id|json!({"id":id})).collect::<Vec<_>>(),
+                      "organizations":orgs,
                       "projects":self.projects.iter().map(|(id,name)|json!({"project_id":id,"name":name})).collect::<Vec<_>>()})
                 }
             }
@@ -316,11 +339,15 @@ impl Fixture {
             slow_refresh: false,
             account: ACCOUNT.into(),
             account_status: "registered",
-            projects: Vec::new(),
+            organizations: Vec::new(),
+            projects: vec![(repository.to_owned(), repository.to_owned())],
+            project_slug_map: BTreeMap::new(),
             project_organizations: BTreeMap::new(),
             project_allowed: true,
             project_status_override: None,
             authorization_state: None,
+            access_disposition: None,
+            admin_contact_required: None,
             pending_fulfillment: None,
             cloud_org_id: None,
             admin: None,
@@ -1284,7 +1311,11 @@ fn managed_project_creation_requires_current_account_association() {
     let f = Fixture::new("example/project-association");
     f.proof();
     f.seed(false);
-    f.service.lock().unwrap().register_associated = false;
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects.clear();
+        s.register_associated = false;
+    }
     failed(
         &f.run(&["cloud", "project", "create", "Team repository"]),
         "admin_approval_required",
@@ -1613,4 +1644,151 @@ fn p0_organization_already_enrolled_surfaces_cloud_org_id() {
     assert_no_secrets(&blocked);
     assert_eq!(f.count(QUERY), 0);
     f.assert_no_fallback();
+}
+
+#[test]
+fn post_login_auto_reconciles_originating_repo_uuid_without_cloud_project_use() {
+    let f = Fixture::new("DecapodLabs/AutoOnboard");
+    const SERVER_UUID_PROJECT: &str = "org-uuid-1/repo-uuid-1";
+    {
+        let mut s = f.service.lock().unwrap();
+        s.account_status = "registration_required";
+        s.projects = vec![(SERVER_UUID_PROJECT.into(), "DecapodLabs/AutoOnboard".into())];
+        s.project_slug_map =
+            BTreeMap::from([("DecapodLabs/AutoOnboard".into(), SERVER_UUID_PROJECT.into())]);
+        s.project_organizations =
+            BTreeMap::from([(SERVER_UUID_PROJECT.into(), "org-uuid-1".into())]);
+    }
+    let first = f.init();
+    failed(&first, "onboarding_pending");
+    let login = f.run(&["cloud", "login", "--format", "json"]);
+    assert!(login.status.success(), "{}", output(&login));
+    assert_eq!(f.count(ACCOUNT_REGISTER), 1);
+
+    // Original operation continues immediately without `cloud projects` or `cloud project use`,
+    // and routes native queries using the server's resolved <org_uuid>/<repo_uuid>.
+    let listed = f.run(&["todo", "list", "--format", "json"]);
+    assert!(listed.status.success(), "{}", output(&listed));
+    let requests = f.requests.lock().unwrap();
+    let queries: Vec<_> = requests.iter().filter(|r| r.path == QUERY).collect();
+    assert_eq!(queries.len(), 2);
+    for query in queries {
+        assert_eq!(
+            query.body["request"]["context"]["payload"]["route"]["Cloud"]["repository"]["canonical_name"],
+            SERVER_UUID_PROJECT
+        );
+    }
+    drop(requests);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn unauthorized_teammate_auto_reconcile_surfaces_admin_contact_without_purchase_cta() {
+    let f = Fixture::new("DecapodLabs/TeamClone");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![(
+            "org-uuid-1/repo-uuid-2".into(),
+            "DecapodLabs/TeamClone".into(),
+        )];
+        s.project_slug_map = BTreeMap::from([(
+            "DecapodLabs/TeamClone".into(),
+            "org-uuid-1/repo-uuid-2".into(),
+        )]);
+        s.project_organizations =
+            BTreeMap::from([("org-uuid-1/repo-uuid-2".into(), "org-uuid-1".into())]);
+        s.project_allowed = false;
+        s.project_status_override = Some("admin_approval_required");
+        s.authorization_state = Some("repo_access_denied");
+        s.access_disposition = Some("seat_available_for_assignment");
+        s.admin_contact_required = Some(true);
+    }
+    let denied = f.run(&["todo", "list", "--format", "json"]);
+    failed(&denied, "admin_approval_required");
+    let text = output(&denied);
+    assert!(
+        text.contains(
+            "Contact your organization administrator to request access to this repository."
+        ),
+        "{text}"
+    );
+    assert!(!text.contains("decapodlabs.ai/pricing"), "{text}");
+    assert_eq!(f.count(QUERY), 0);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn ambiguous_directory_and_unenrolled_repo_fail_closed_with_exact_guidance() {
+    // 1. Ambiguous directory match across two organizations requires explicit `cloud project use`.
+    let f = Fixture::new("DecapodLabs/SharedName");
+    f.proof();
+    f.seed(false);
+    {
+        let mut s = f.service.lock().unwrap();
+        s.projects = vec![
+            ("org-one/repo-a".into(), "DecapodLabs/SharedName".into()),
+            ("org-two/repo-b".into(), "DecapodLabs/SharedName".into()),
+        ];
+        s.project_organizations = BTreeMap::from([
+            ("org-one/repo-a".into(), "org-one".into()),
+            ("org-two/repo-b".into(), "org-two".into()),
+        ]);
+        s.access_disposition = Some("repository_not_approved");
+    }
+    let ambiguous = f.run(&["todo", "list", "--format", "json"]);
+    failed(&ambiguous, "action_required");
+    assert!(
+        output(&ambiguous).contains("decapod cloud project use"),
+        "{}",
+        output(&ambiguous)
+    );
+    assert_eq!(f.count(QUERY), 0);
+    f.assert_no_fallback();
+
+    // 2. Brand-new customer with 0 organizations gets signup_required + repo-scoped pricing URL.
+    let new_cust = Fixture::new("DecapodLabs/FreshSignup");
+    new_cust.proof();
+    new_cust.seed(false);
+    {
+        let mut s = new_cust.service.lock().unwrap();
+        s.projects.clear();
+        s.organizations.clear();
+        s.access_disposition = Some("repository_not_approved");
+    }
+    let signup = new_cust.run(&["todo", "list", "--format", "json"]);
+    failed(&signup, "payment_required");
+    assert!(
+        output(&signup).contains("https://decapodlabs.ai/pricing?repo=DecapodLabs%2FFreshSignup"),
+        "{}",
+        output(&signup)
+    );
+    assert_eq!(new_cust.count(QUERY), 0);
+    new_cust.assert_no_fallback();
+
+    // 3. Existing org admin initializing an un-enrolled repo gets repository_not_approved +
+    // Cloud Admin / enroll / pricing guidance without needing manual `cloud project use`.
+    let existing_admin = Fixture::new("DecapodLabs/NewOrgRepo");
+    existing_admin.proof();
+    existing_admin.seed(false);
+    {
+        let mut s = existing_admin.service.lock().unwrap();
+        s.projects.clear();
+        s.organizations = vec![("org-admin-1", true)];
+        s.access_disposition = Some("repository_not_approved");
+    }
+    let admin_enroll = existing_admin.run(&["todo", "list", "--format", "json"]);
+    failed(&admin_enroll, "action_required");
+    let admin_text = output(&admin_enroll);
+    assert!(
+        admin_text.contains("Cloud Admin -> Repositories"),
+        "{admin_text}"
+    );
+    assert!(
+        admin_text.contains("https://decapodlabs.ai/pricing?repo=DecapodLabs%2FNewOrgRepo"),
+        "{admin_text}"
+    );
+    assert_eq!(existing_admin.count(QUERY), 0);
+    existing_admin.assert_no_fallback();
 }

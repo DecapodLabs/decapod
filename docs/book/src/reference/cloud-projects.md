@@ -1,8 +1,8 @@
 # Choose a managed cloud project
 
-A Git checkout and a managed cloud project have different identifiers. Signing in establishes the managed session; the service still decides which project the account may use. Decapod stores the selected routing reference privately alongside its repository-scoped session, outside Git. Local mode continues to work independently.
+A Git checkout and a managed cloud project have different identifiers. Signing in establishes the managed session; the service still decides which project the account may use. When the originating Git repository resolves unambiguously to a single Cloud project, Decapod automatically reconciles and routes it after `decapod cloud login`, so manual project selection is not required. Decapod stores any explicit override routing reference privately alongside its repository-scoped session, outside Git. Local mode continues to work independently.
 
-After signing in with `decapod init --backend cloud`, an agent or a human can inspect available projects:
+When overriding or disambiguating across multiple projects after signing in with `decapod init --backend cloud`, an agent or a human can inspect available projects:
 
 ```sh
 decapod cloud projects

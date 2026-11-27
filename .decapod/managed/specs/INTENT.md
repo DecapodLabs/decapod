@@ -1,3 +1,8 @@
+## Align Decapod Cloud CLI diagnostics, automatic repository reconciliation, and `dactyl-db 0.21.0` `OperationalDisposition` (issues #1896, #1859, #1895)
+
+- **Automatic originating-repository reconciliation (`src/decapod/core/cloud_project.rs`, `docs/book/src/reference/cloud-projects.md`)**: Eliminates the manual post-login `decapod cloud projects` + `decapod cloud project use <owner/repo>` step when `record.selection` is unset on a valid managed session (`!is_dpop_access_token(bearer)`). `cloud_project::route` queries `AccountOperation::Status` for the originating repository slug, registers cleanly when `registration_required`, resolves the server-assigned `<org_uuid>/<repo_uuid>` project ID directly (`route_from_status`), and falls back to `reconcile_originating_repository` across the project directory only when ambiguous or unenrolled (`signup_required` for empty orgs, admin enroll/reservation CTA when `admin == Some(true)`, or collaborator administrator-contact guidance without duplicate purchase prompts).
+- **Reservation, teammate policy, and `dactyl-db 0.21.0` `OperationalDisposition` handling (`Cargo.toml`, `Cargo.lock`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/error.rs`)**: Bumps `dactyl-db = "=0.21.0"` from crates.io (zero path overrides), wires `DactylError::operational_disposition(OperationKind)` and `OperationalAction::{Retry, InspectAndDecide, Reconcile, Stop}` into `transport_error_for_operation`, `transport_error_for_repository`, and `admin_transport_error` (preserving `OutcomeUnknown` for post-send mutation uncertainty without false positives on pre-send/read timeouts), maps Propodus `access_disposition` and all 11 Cloud onboarding/access states, suppresses purchase CTAs when `admin_contact_required == true`, and filters `t_<32hex>` / URI credentials via `is_safe_public_org_id`.
+
 # Intent
 
 ## Section 11 governance, provenance knowledge convergence, constitution integrity, phase-correct admission, and Cloud delegated grants (#657, #1774, #1772, #1763, #1367, #1568, #1735, #1944)
@@ -1471,7 +1476,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567`
+- Repository signal fingerprint: `9784a348de570ff27e133e731c02b572bc0fc86d2f4492c68a22c0ce28d8463b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

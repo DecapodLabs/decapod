@@ -108,6 +108,13 @@ pub enum CloudAuthErrorCode {
     IdempotencyInProgress,
     VersionConflict,
     TransactionAborted,
+    SignupRequired,
+    RepositoryCapacityExhausted,
+    RepositoryReservationExhausted,
+    ReservationAvailableForBinding,
+    RepositoryNotApproved,
+    SeatAvailableForAssignment,
+    RepositoryAccessDenied,
 }
 
 impl CloudAuthErrorCode {
@@ -169,6 +176,13 @@ impl CloudAuthErrorCode {
             Self::IdempotencyInProgress => "idempotency_in_progress",
             Self::VersionConflict => "version_conflict",
             Self::TransactionAborted => "transaction_aborted",
+            Self::SignupRequired => "signup_required",
+            Self::RepositoryCapacityExhausted => "repository_capacity_exhausted",
+            Self::RepositoryReservationExhausted => "repository_reservation_exhausted",
+            Self::ReservationAvailableForBinding => "reservation_available_for_binding",
+            Self::RepositoryNotApproved => "repository_not_approved",
+            Self::SeatAvailableForAssignment => "seat_available_for_assignment",
+            Self::RepositoryAccessDenied => "repository_access_denied",
         }
     }
 
@@ -230,6 +244,13 @@ impl CloudAuthErrorCode {
             "idempotency_in_progress" => Some(Self::IdempotencyInProgress),
             "version_conflict" => Some(Self::VersionConflict),
             "transaction_aborted" => Some(Self::TransactionAborted),
+            "signup_required" => Some(Self::SignupRequired),
+            "repository_capacity_exhausted" => Some(Self::RepositoryCapacityExhausted),
+            "repository_reservation_exhausted" => Some(Self::RepositoryReservationExhausted),
+            "reservation_available_for_binding" => Some(Self::ReservationAvailableForBinding),
+            "repository_not_approved" => Some(Self::RepositoryNotApproved),
+            "seat_available_for_assignment" => Some(Self::SeatAvailableForAssignment),
+            "repository_access_denied" => Some(Self::RepositoryAccessDenied),
             _ => None,
         }
     }
