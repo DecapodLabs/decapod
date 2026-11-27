@@ -1,12 +1,5 @@
 # Intent
 
-## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
-
-Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
-
-- **Targeted `.sh` blob-mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)**: Allows both `100644 blob ` and `100755 blob ` in `executor_contract::capture` strictly for `.sh` paths returned by `profile::definition_files()` while preserving strict `100644 blob ` enforcement on `.rs` executor definitions, `assets/tools/source_ci_custody.rs` protocol marker, and `verify_carrier_modes`.
-- **Stale accepted-base `reviewed_sources_digest` reconciliation (`src/decapod/core/repository_profile.rs`)**: Eliminates false-positive `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` (`changed_paths=[]`) failures on consumer repos (such as Dactyl `origin/main` `fa4a10b7`) when the accepted base carries a stale `reviewed_sources_digest` in `.decapod/config.toml` while `commands_preserved && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`, `base_tree.inventory.digest() == candidate_sources_digest`, `head_tree.inventory.digest() == candidate_sources_digest`, and `changed_paths.is_empty()` (`qualifies_stale_accepted_base_inventory_reconciliation`). Any candidate modification to workflows, scripts, manifests, file modes, or proof commands still fails closed.
-
 ## Section 10 storage bounds, dogfood compaction benchmarks, Cloud parity & durability (`#1630`, `#1933`–`#1936`, `#1110`, `#1118`, `#1120`, `#1132`, `#1220`, `#1221`, `#1369`, `#1378`)
 
 Hardens Decapod's single-datastore local SQLite guarantees, non-task store write bounds, real dogfood lossless compaction, and fail-closed Cloud boundary isolation without introducing competing storage engines:
@@ -15,6 +8,19 @@ Hardens Decapod's single-datastore local SQLite guarantees, non-task store write
 - **Real dogfood snapshot compaction & $O(N)$ event-scan fix (`#1630`, `src/decapod/core/storage_compaction.rs`, `src/decapod/core/houseboat.rs`, `docs/datastore-v2/compaction-benchmarks-v0.166.md`)**: Eliminates an $O(N^2)$ full-table-scan pagination bottleneck (`(seq > ?1 OR ...)` without a `(seq, event_id)` index) across `compact_historical_events`, `collect_event_embedded_component_keys`, and `logical_events_inventory` by paging over SQLite `rowid > ?1 ORDER BY rowid ASC LIMIT 1024`, then adds `decapod houseboat storage-snapshot-benchmark` (`DactylBridge::open_canonical(..., AccessMode::ReadOnly)` + `backup`) and measures `85,512,192` bytes saved (`16.82%`) across real snapshots of `dactyl`, `propodus`, and `decapod` (`508,391,424 -> 422,879,232` bytes) with `100%` `lossless_verified`, `todo_stream_parity`, and `task_journal_parity`.
 - **Single-DB & schema reconciliation (`#1118`, `#1132`, `tests/single_datastore.rs`, `docs/datastore-v2/table-inventory-reconciliation.md`)**: Verifies all 13 subsystem initializers persist exclusively to `.decapod/data/decapod.db` with zero per-subsystem `*.db` or `*.events.jsonl` writes and documents the `46` DDL constants in `schemas.rs` vs `36` active runtime tables.
 - **Cloud SQLite fallback fix, fail-closed non-todo matrix, `1933`–`1936` Cloud coverage & conflict disclosure (`#1110`, `#1120`, `#1221`, `#1369`, `#1378`, `#1220`)**: Fixes `lib.rs::ensure_session_valid` so expired cloud session renewal skips `todo::cleanup_stale_agent_assignments` on `&store_root`, threads `predecoded_rpc_request` into `is_cloud_file_only_command` (`decapod rpc --stdin`), adds `is_cloud_project` guards to `handle_store_upsert`/`handle_store_query`, enumerates 17 unsupported non-todo store operations in `cloud_parity_matrix.rs`, adds Cloud crash/clock-skew/derived-parity tests to `1934`–`1936`, preserves fail-closed `MANAGED_CLI_FIXTURE_UNAVAILABLE` in `tests/supabase_service.rs`, and records `#1220` truthfully as an irreducible conflict with `dactyl-db` SQLite custody (`docs/datastore-v2/cloud-parity-and-boundaries.md`).
+
+## Scope `selective-core-2` and `selective-core-3` selection to `core_full(paths)` (`assets/tools/source_ci_profile.rs`)
+
+Fixes a `source-ci-profile` custody failure (`required source-CI recipe is empty`) on PRs touching `src/decapod/core/*` files outside `core_full(paths)`:
+
+- **Shard-selection alignment (`assets/tools/source_ci_profile.rs`, `tests/source_ci_profile_policy.rs`)**: Restricts `Selection::Core` selection for `"selective-core-2"` and `"selective-core-3"` in `profile::selected` to `core_full(paths)`, matching `profile::commands` (which already returns an empty recipe for shards `2` and `3` when `!core_full(paths)` while routing partial `src/decapod/core/` tests through `"selective-core-1"` and `"selective-core-status"`). Preserves full `core_full` 3-shard coverage for `core_test_inputs` and shared manifests while preventing empty-recipe aborts in `source-ci-custody` and CI shard status reporting.
+
+## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
+
+Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
+
+- **Targeted `.sh` blob-mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)**: Allows both `100644 blob ` and `100755 blob ` in `executor_contract::capture` strictly for `.sh` paths returned by `profile::definition_files()` while preserving strict `100644 blob ` enforcement on `.rs` executor definitions, `assets/tools/source_ci_custody.rs` protocol marker, and `verify_carrier_modes`.
+- **Stale accepted-base `reviewed_sources_digest` reconciliation (`src/decapod/core/repository_profile.rs`)**: Eliminates false-positive `ACCEPTED_REPOSITORY_CONTRACT_CHANGED` (`changed_paths=[]`) failures on consumer repos (such as Dactyl `origin/main` `fa4a10b7`) when the accepted base carries a stale `reviewed_sources_digest` in `.decapod/config.toml` while `commands_preserved && candidate.reviewed_commands_digest == accepted.reviewed_commands_digest`, `base_tree.inventory.digest() == candidate_sources_digest`, `head_tree.inventory.digest() == candidate_sources_digest`, and `changed_paths.is_empty()` (`qualifies_stale_accepted_base_inventory_reconciliation`). Any candidate modification to workflows, scripts, manifests, file modes, or proof commands still fails closed.
 
 ## Scope `repo.pr-readiness.v1` inventory transitions to proof-relevant inputs, surface transition diagnostics, and route governed WAL checkpoint via Dactyl write path (#1949)
 
@@ -1458,7 +1464,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aac52a1b78bcfd92216ba8a79f6ed130bd868d3ccce662dc1dcc6fee28011087`
+- Repository signal fingerprint: `1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

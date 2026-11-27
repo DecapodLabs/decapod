@@ -2519,3 +2519,48 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
         }
     }
 }
+
+#[test]
+fn non_full_core_paths_do_not_select_empty_shard_two_or_three() {
+    for path in [
+        "src/decapod/core/storage_compaction.rs",
+        "src/decapod/core/cloud_client.rs",
+        "src/decapod/core/repository_profile.rs",
+        "src/decapod/core/hash.rs",
+    ] {
+        let changed = paths(&[path]);
+        assert!(
+            !profile::core_full(&changed),
+            "path should not trigger core_full: {path}"
+        );
+        for id in ["selective-core-1", "selective-core-status"] {
+            let check = find_check(id).expect("check exists");
+            assert!(
+                selected(check, &changed, false),
+                "{id} must be selected for {path}"
+            );
+            assert!(
+                !commands(check, &changed).unwrap().is_empty(),
+                "{id} must emit commands when selected for {path}"
+            );
+        }
+        for id in ["selective-core-2", "selective-core-3"] {
+            let check = find_check(id).expect("check exists");
+            assert!(
+                !selected(check, &changed, false),
+                "{id} must NOT be selected when !core_full for {path}"
+            );
+            assert!(commands(check, &changed).unwrap().is_empty());
+        }
+        for check in profile::CHECKS {
+            if selected(check, &changed, false) && !profile::workflow_owned::artifact_worker(check)
+            {
+                assert!(
+                    !commands(check, &changed).unwrap().is_empty(),
+                    "selected check {} had empty recipe for {path}",
+                    check.id
+                );
+            }
+        }
+    }
+}

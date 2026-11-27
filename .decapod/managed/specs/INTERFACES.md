@@ -1,10 +1,5 @@
 # Interfaces
 
-## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
-
-- **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
-- **`verify_accepted_transition` (`qualifies_stale_accepted_base_inventory_reconciliation`)**: Admits `repo.pr-readiness.v1` transitions with a stale `accepted_base` `reviewed_sources_digest` strictly when commands and `reviewed_commands_digest` are preserved verbatim, both `base_tree` and `head_tree` inventory digests match `candidate_sources_digest`, and `changed_paths` is empty (`[]`).
-
 ## Section 10 write-admission contracts, dogfood snapshot benchmark CLI, and fail-closed Cloud surfaces (`#1630`, `#1933`–`#1936`, `#1110`, `#1118`, `#1120`, `#1132`, `#1220`, `#1221`, `#1369`, `#1378`)
 
 - **`core::storage_contracts` plugin admission & manifest exports**:
@@ -15,6 +10,15 @@
 - **Cloud parity matrix & fail-closed RPC interfaces (`src/decapod/core/cloud_parity_matrix.rs`, `src/decapod/lib.rs`)**:
   - `unsupported_cloud_operations` explicitly classifies `knowledge.store`, `federation.store`, `decide.store`, `health.store`, `aptitude.store`, `archive.store`, `feedback.store`, `cron.store`, `reflex.store`, `lcm.store`, `primitives.store`, `map.store`, `policy.store`, `data.broker`, `data.compact`, `store.upsert`, and `store.query` (`never_falls_back_to_sqlite: true`).
   - `decapod rpc --stdin` routes through `is_cloud_file_only_command(&cli.command, predecoded_rpc_request.as_ref())` and `handle_store_upsert`/`handle_store_query` fail closed via `cloud_backend::unavailable_error()` when `cloud_workspace::is_cloud_project(ctx.project_root)`.
+
+## Source-CI `profile::selected` shard invariant (`assets/tools/source_ci_profile.rs`)
+
+- **`profile::selected` (`Selection::Core`)**: For every non-`workflow_owned::artifact_worker` check, `selected(check, &paths, false)` now guarantees `!commands(check, &paths).unwrap().is_empty()`, including PRs touching `src/decapod/core/*` outside `core_full(paths)` where `.github/workflows/ci.yml` (`test-core`) invokes `candidate-source-ci-profile` for `selective-core-2` and `selective-core-3`.
+
+## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
+
+- **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
+- **`verify_accepted_transition` (`qualifies_stale_accepted_base_inventory_reconciliation`)**: Admits `repo.pr-readiness.v1` transitions with a stale `accepted_base` `reviewed_sources_digest` strictly when commands and `reviewed_commands_digest` are preserved verbatim, both `base_tree` and `head_tree` inventory digests match `candidate_sources_digest`, and `changed_paths` is empty (`[]`).
 
 ## `#1949` `repo.pr-readiness.v1` transition error & untruncated `validate` text surface (`src/decapod/core/repository_profile.rs`, `src/decapod/core/validate.rs`)
 
@@ -2607,7 +2611,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `aac52a1b78bcfd92216ba8a79f6ed130bd868d3ccce662dc1dcc6fee28011087`
+- Repository signal fingerprint: `1c2168a01286a4552cc32f0ed7f034df9833dda57fc9d1db568cf018757c6155`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
