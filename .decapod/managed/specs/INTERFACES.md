@@ -1,5 +1,10 @@
 # Interfaces
 
+## Section 9 collector & Cloud approval interfaces (`#1400`, `#1573`, `#1833`)
+
+- **`GithubWorkflowInventory::artifact_snapshot` & `download_artifact` (`src/decapod/core/snapshot_provider/github_artifacts.rs`)**: Exposes `(artifact_id, sha256_digest, size_in_bytes)` snapshot validation and inventory-authenticated ZIP download without changing `github::download` semantics.
+- **`ApprovalInput::cloud_decision` (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**: Evaluates `DECAPOD_REPO_TRANSITION_DECISION_ID` via `verify_cloud` across both local and `ci_local` transitions when `cloud_backend` is configured, surfacing `CLOUD_POLICY_APPROVAL_DECISION_ID_INVALID` on non-UTF-8 values and `CLOUD_POLICY_APPROVAL_DECISION_UNAVAILABLE` / `CLOUD_POLICY_APPROVAL_UNSUPPORTED` on missing or unverified remote authority.
+
 ## Source-CI `executor_contract::capture` `.sh` mode contract (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`executor_contract::capture`**: Admits `100644` and `100755` Git blob modes for `.sh` scripts in `profile::definition_files()` (such as `assets/tools/source_ci/pre-build-validate.sh` and `assets/tools/source_ci/shard-status.sh`), while rejecting `100755` on non-`.sh` definition files and rejecting symlinks (`120000`) with `PlanningFailure::ControllerContractUnsupported`.
@@ -2596,7 +2601,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `7be846918a85c3fb74abe885f66ac17e72c5c7df2b57eedf661b65287a33a434`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

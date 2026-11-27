@@ -1,5 +1,12 @@
 # Intent
 
+## Section 9 CI/Publication latency, Cloud transition approval, and collector hardening (`#1400`, `#1573`, `#1833`)
+
+Reduces GitHub Actions custody-collection latency and request volume while preserving full cryptographic proof, and extends Cloud policy-transition approvals to `ci_local` execution:
+
+- **Inventory-backed GHA artifact collection (`src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: Eliminates redundant per-artifact `verify_run` and `metadata` API subprocesses during `github_sources` collection (`#1400`, `#1573`) by authenticating the workflow run, jobs, and artifact `Metadata` (ID, size, and `sha256:` digest) once in `discover_workflow`, verifying each downloaded ZIP against those bounds via `GithubWorkflowInventory::download_artifact`, and re-verifying exact `artifact_snapshot` + `Run`/`Jobs` parity via post-loop `discover_workflow`.
+- **Cloud policy-transition approval in `ci_local` (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**: Carries `DECAPOD_REPO_TRANSITION_DECISION_ID` on `ApprovalInput` and evaluates `verify_cloud` whenever `cloud_backend` is active—including `ci_local` remote CI runs—while still blocking local SQLite fallback in `ci_local` (`#1833`).
+
 ## Admit `100755` Git mode for tracked `.sh` definition files in `executor_contract::capture`
 
 Fixes a false `CONTROLLER_CONTRACT_UNSUPPORTED` (`accepted executor mode: assets/tools/source_ci/pre-build-validate.sh`) failure when the accepted base tracks `.sh` executor definition scripts with executable (`100755`) Git mode:
@@ -1449,7 +1456,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `7be846918a85c3fb74abe885f66ac17e72c5c7df2b57eedf661b65287a33a434`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

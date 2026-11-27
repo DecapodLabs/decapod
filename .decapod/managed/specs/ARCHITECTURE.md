@@ -1,5 +1,10 @@
 # Architecture
 
+## Section 9 GHA artifact collection & Cloud transition architecture (`#1400`, `#1573`, `#1833`)
+
+- **Shared ZIP verifier & inventory download (`src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: `download_zip_verified` centralizes ZIP fetch, exact `size_in_bytes` assertion, and `ArtifactFiles::verified` SHA-256 verification for both standalone `github::download` and `GithubWorkflowInventory::download_artifact`. `github_sources` downloads via `inventory.download_artifact` and verifies `current.artifact_snapshot(name) == Some((id, digest, size))` alongside `Run`/`Jobs` equality after the workflow loop.
+- **`ApprovalInput::cloud_decision` ordering (`src/decapod/core/repository_policy_approval.rs`, `src/decapod/core/repository_profile.rs`)**: `ApprovalInput` holds `cloud_decision: Option<std::ffi::OsString>` (`DECAPOD_REPO_TRANSITION_DECISION_ID`), and `verify_accepted_transition` evaluates `verify_signed`, then `cloud_backend` + `verify_cloud`, and only then gates local SQLite fallback behind `!approval.ci_local`.
+
 ## Source-CI executor definition mode admission (`src/decapod/core/validation_runtime/executor_contract.rs`)
 
 - **`is_valid_definition_entry` & `capture`**: Extracts `is_valid_definition_entry(path, entry)` so `profile::definition_files()` entries ending in `.sh` accept `100644 blob ` or `100755 blob ` (single-line `git ls-tree` output), while non-`.sh` definition files, `assets/tools/source_ci_custody.rs` protocol marker checks, and `verify_carrier_modes` retain strict `100644 blob ` enforcement.
@@ -2108,7 +2113,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `7be846918a85c3fb74abe885f66ac17e72c5c7df2b57eedf661b65287a33a434`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

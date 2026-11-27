@@ -1,5 +1,10 @@
 # Security
 
+## Section 9 collector integrity & `ci_local` Cloud approval invariants (`#1400`, `#1573`, `#1833`)
+
+- **Post-loop `artifact_snapshot` re-authentication (`src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: Eliminating per-artifact `verify_run`/`metadata` reads never relaxes ZIP integrity or run identity: `download_artifact` checks exact byte length and SHA-256 before extraction, and `github_sources` re-discovers the workflow after all downloads to assert identical `run_id`, `run_attempt`, `status`, `conclusion`, `jobs`, and every artifact's `(id, digest, size_in_bytes)`.
+- **No SQLite approval trust in `ci_local` or `cloud_backend` (`src/decapod/core/repository_profile.rs`)**: `verify_accepted_transition` evaluates `verify_cloud` in `ci_local` only against the remote Cloud control plane for the exact `(base, head, tree, transition_id, decision_id)` tuple; local SQLite (`has_active_policy_transition_approval`) remains unreachable in both `ci_local` and `cloud_backend` modes.
+
 ## Source-CI executor mode & stale accepted-base reconciliation boundaries
 
 - **Executor definition vs. carrier Git mode boundary (`src/decapod/core/validation_runtime/executor_contract.rs`)**: `is_valid_definition_entry` admits `100755 blob ` strictly for `.sh` paths in `profile::definition_files()`, while non-`.sh` definitions, `assets/tools/source_ci_custody.rs` protocol markers, and `verify_carrier_modes` strictly require `100644 blob `, rejecting symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
@@ -1618,7 +1623,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `7be846918a85c3fb74abe885f66ac17e72c5c7df2b57eedf661b65287a33a434`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,11 @@
 # Validation
 
+## Section 9 CI/Publication latency & Cloud `ci_local` verification (`#1400`, `#1573`, `#1833`)
+
+- `src/decapod/core/snapshot_provider/github_artifacts.rs` (`inventory_download_uses_discovered_metadata_without_redundant_reads_and_verifies_zip`) verifies `GithubWorkflowInventory::download_artifact` incurs 0 redundant pre/post API reads while validating exact byte size, SHA-256 digest, and failing closed on tampered ZIP bytes.
+- `tests/unit/core/repository_profile_tests.rs` (`cloud_backend_evaluates_decision_id_in_both_local_and_ci_local_without_sqlite_fallback`) verifies Cloud-backend repositories evaluate `DECAPOD_REPO_TRANSITION_DECISION_ID` in both `local` and `ci_local` modes without consulting local SQLite, while failing closed when no decision ID is supplied.
+- Local verification after final code edit (`v0.166.2` base `9806bc4d2`): `cargo fmt --all -- --check`, `CARGO_BUILD_JOBS=2 CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings`, `github_artifacts` (`10/10`), `source_import` (`11/11`), and `repository_profile` (`40/40`) all passed.
+
 ## Bootstrap `.sh` mode (`executor_contract`) & stale accepted-base `repo.pr-readiness.v1` reconciliation
 
 - `src/decapod/core/validation_runtime/executor_contract.rs` unit tests verify `100755 blob ` admission strictly for `.sh` scripts in `profile::definition_files()`, strict `100644 blob ` enforcement on `.rs` definitions, protocol marker, and `verify_carrier_modes`, and fail-closed rejection of symlinks (`120000`), arbitrary modes, and unauthorized byte mutations.
@@ -2894,7 +2900,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2a9402ce2b25262f3069cbfeaabbdecb83e66977c3a21a6e8f8888320604a910`
+- Repository signal fingerprint: `7be846918a85c3fb74abe885f66ac17e72c5c7df2b57eedf661b65287a33a434`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (40 files), `bindings/` (5 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (292 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

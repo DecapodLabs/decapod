@@ -1503,6 +1503,7 @@ mod release_only_inventory_transition_tests {
         transition_approval::ApprovalInput {
             ci_local,
             signed: None,
+            cloud_decision: None,
             ci_target: if ci_local { Some("main".into()) } else { None },
         }
     }
@@ -2604,6 +2605,85 @@ mod release_only_inventory_transition_tests {
         assert!(
             err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
             "{err}"
+        );
+    }
+
+    #[test]
+    fn cloud_backend_evaluates_decision_id_in_both_local_and_ci_local_without_sqlite_fallback() {
+        let (dir, _prior_sha, prior_digest) = setup_dactyl_style_repo();
+        let root = dir.path();
+
+        fs::create_dir_all(root.join(".decapod")).unwrap();
+        fs::write(
+            root.join(".decapod/config.toml"),
+            "[repo]\nbackend = \"cloud\"\n",
+        )
+        .unwrap();
+        let base_sha = commit_all(root, "chore: configure cloud backend");
+
+        fs::write(
+            root.join(".github/workflows/rust-contract.yml"),
+            "name: changed\n",
+        )
+        .unwrap();
+        let head_sha = commit_all(root, "feat: change proof script on candidate");
+        let head_digest = discover_source_inventory(root).unwrap().digest().unwrap();
+
+        let accepted_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: prior_digest,
+        };
+        let candidate_decl = ProfileDeclaration {
+            id: REQUIRED_PROFILE.into(),
+            reviewed_sources_digest: head_digest,
+        };
+        let (cmds, repo_contract) = dactyl_contract();
+
+        // Missing cloud decision must fail closed with ACCEPTED_REPOSITORY_CONTRACT_CHANGED
+        // in both local and ci_local modes (never consulting local SQLite).
+        for ci_local in [false, true] {
+            let err = verify_accepted_transition(
+                root,
+                &base_sha,
+                &head_sha,
+                Some(&accepted_decl),
+                Some(&candidate_decl),
+                &cmds,
+                &cmds,
+                Some(&repo_contract),
+                Some(&repo_contract),
+                approval_input(ci_local),
+            )
+            .unwrap_err()
+            .to_string();
+            assert!(
+                err.contains("ACCEPTED_REPOSITORY_CONTRACT_CHANGED"),
+                "ci_local={ci_local}: {err}"
+            );
+        }
+
+        // In ci_local, providing a Cloud decision ID must reach verify_cloud instead of
+        // short-circuiting to `false` before cloud verification (#1833).
+        let mut ci_with_decision = approval_input(true);
+        ci_with_decision.cloud_decision = Some("00000000-0000-4000-8000-000000000001".into());
+        let err = verify_accepted_transition(
+            root,
+            &base_sha,
+            &head_sha,
+            Some(&accepted_decl),
+            Some(&candidate_decl),
+            &cmds,
+            &cmds,
+            Some(&repo_contract),
+            Some(&repo_contract),
+            ci_with_decision,
+        )
+        .unwrap_err()
+        .to_string();
+        assert!(
+            err.contains("CLOUD_POLICY_APPROVAL_DECISION_UNAVAILABLE")
+                || err.contains("CLOUD_POLICY_APPROVAL_UNSUPPORTED"),
+            "expected cloud verification attempt in ci_local; got: {err}"
         );
     }
 }

@@ -129,6 +129,54 @@ fn validate_metadata(m: &Metadata, s: &GithubArtifactSelection) -> Result<()> {
     )?;
     Ok(())
 }
+fn download_zip_verified(
+    runner: &mut impl Runner,
+    root: &Path,
+    selection: &GithubArtifactSelection,
+    expected_bytes: u64,
+    expected_digest: &str,
+    budget: &Budget<'_>,
+) -> Result<ArtifactFiles> {
+    let mut spec = super::provider::gh_spec(
+        root,
+        &format!(
+            "{}/actions/artifacts/{}/zip",
+            selection.repository.api(),
+            selection.artifact_id
+        ),
+    );
+    spec.provider_request = Some(ProviderRequest::GithubArtifactZip {
+        repository: selection.repository.clone(),
+        artifact_id: selection.artifact_id,
+        expected_bytes: expected_bytes as usize,
+    });
+    spec.authorize_provider_read()?;
+    budget.remaining()?;
+    let reply = runner.execute(&spec, budget)?;
+    if reply.exit_code != 0 {
+        return Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "configured GitHub artifact download failed; authorization or provider availability must be resolved without extracting tokens",
+        ));
+    }
+    ensure(
+        reply.stdout.len() as u64 == expected_bytes,
+        "downloaded archive size mismatch",
+    )?;
+    ArtifactFiles::verified(
+        format!(
+            "github:{}/runs/{}/attempts/{}/artifacts/{}",
+            selection.repository.full_name(),
+            selection.run_id,
+            selection.run_attempt,
+            selection.artifact_id
+        ),
+        expected_digest,
+        &reply.stdout,
+        budget,
+    )
+}
+
 /// Download a single metadata-authenticated raw ZIP using the configured official
 /// GitHub CLI/host runner. No extraction, caller-chosen URL, credential handoff,
 /// or fallback after authentication failure. The CLI owns its documented redirect
@@ -142,42 +190,12 @@ pub fn download(
     validate_selection(selection)?;
     verify_run(runner, root, selection, budget)?;
     let before = metadata(runner, root, selection, budget)?;
-    let mut spec = super::provider::gh_spec(
+    let files = download_zip_verified(
+        runner,
         root,
-        &format!(
-            "{}/actions/artifacts/{}/zip",
-            selection.repository.api(),
-            selection.artifact_id
-        ),
-    );
-    spec.provider_request = Some(ProviderRequest::GithubArtifactZip {
-        repository: selection.repository.clone(),
-        artifact_id: selection.artifact_id,
-        expected_bytes: before.size_in_bytes as usize,
-    });
-    spec.authorize_provider_read()?;
-    budget.remaining()?;
-    let reply = runner.execute(&spec, budget)?;
-    if reply.exit_code != 0 {
-        return Err(io::Error::new(
-            io::ErrorKind::PermissionDenied,
-            "configured GitHub artifact download failed; authorization or provider availability must be resolved without extracting tokens",
-        ));
-    }
-    ensure(
-        reply.stdout.len() as u64 == before.size_in_bytes,
-        "downloaded archive size mismatch",
-    )?;
-    let files = ArtifactFiles::verified(
-        format!(
-            "github:{}/runs/{}/attempts/{}/artifacts/{}",
-            selection.repository.full_name(),
-            selection.run_id,
-            selection.run_attempt,
-            selection.artifact_id
-        ),
+        selection,
+        before.size_in_bytes,
         &before.digest,
-        &reply.stdout,
         budget,
     )?;
     ensure(
@@ -391,13 +409,10 @@ impl GithubWorkflowInventory {
     pub fn artifact_names(&self) -> impl Iterator<Item = &str> {
         self.artifacts.iter().map(|a| a.name.as_str())
     }
-    /// Artifact metadata does not carry job ID/attempt. Reviewed unique upload
-    /// naming, actual required upload step, and inner producer manifests must
-    /// bind the selection to the exact job and current attempt before use.
-    pub fn artifact_selection(&self, name: &str) -> Result<Option<GithubArtifactSelection>> {
+    fn resolve_artifact(&self, name: &str) -> Result<Option<(GithubArtifactSelection, &Metadata)>> {
         let rows: Vec<_> = self.artifacts.iter().filter(|a| a.name == name).collect();
         ensure(rows.len() <= 1, "ambiguous GitHub artifact name")?;
-        let Some(m) = rows.first() else {
+        let Some(&m) = rows.first() else {
             return Ok(None);
         };
         let selection = GithubArtifactSelection {
@@ -410,8 +425,55 @@ impl GithubWorkflowInventory {
             artifact_id: m.id,
             artifact_name: m.name.clone(),
         };
+        validate_selection(&selection)?;
         validate_metadata(m, &selection)?;
-        Ok(Some(selection))
+        Ok(Some((selection, m)))
+    }
+
+    /// Artifact metadata does not carry job ID/attempt. Reviewed unique upload
+    /// naming, actual required upload step, and inner producer manifests must
+    /// bind the selection to the exact job and current attempt before use.
+    pub fn artifact_selection(&self, name: &str) -> Result<Option<GithubArtifactSelection>> {
+        Ok(self.resolve_artifact(name)?.map(|(selection, _)| selection))
+    }
+
+    pub fn artifact_snapshot(&self, name: &str) -> Result<Option<(u64, String, u64)>> {
+        Ok(self.resolve_artifact(name)?.map(|(selection, meta)| {
+            (
+                selection.artifact_id,
+                meta.digest.clone(),
+                meta.size_in_bytes,
+            )
+        }))
+    }
+
+    /// Download and SHA-256 verify an artifact using metadata already authenticated
+    /// by `discover_workflow`, avoiding per-artifact `verify_run`/`metadata` RPCs.
+    /// Callers must still re-verify `discover_workflow` after batch collection.
+    pub fn download_artifact(
+        &self,
+        runner: &mut impl Runner,
+        root: &Path,
+        name: &str,
+        budget: &Budget<'_>,
+    ) -> Result<Option<(GithubArtifactSelection, String, u64, ArtifactFiles)>> {
+        let Some((selection, meta)) = self.resolve_artifact(name)? else {
+            return Ok(None);
+        };
+        let files = download_zip_verified(
+            runner,
+            root,
+            &selection,
+            meta.size_in_bytes,
+            &meta.digest,
+            budget,
+        )?;
+        Ok(Some((
+            selection,
+            meta.digest.clone(),
+            meta.size_in_bytes,
+            files,
+        )))
     }
 }
 fn terminal_shape(status: &str, conclusion: Option<&str>) -> Result<()> {
@@ -1100,6 +1162,80 @@ mod tests {
                 .unwrap()
                 .len(),
             1024 * 1024
+        );
+    }
+
+    #[test]
+    fn inventory_download_uses_discovered_metadata_without_redundant_reads_and_verifies_zip() {
+        let zip_bytes = super::super::artifact_archive::tests::zip(
+            "fmt/preparation/preparation.json",
+            b"{}",
+            0x8000,
+        );
+        let mut r = discovery_fixture();
+        let art_path = "repos/org/repo/actions/runs/7/artifacts?per_page=100&page=1";
+        let artifacts = r.bodies.get_mut(art_path).unwrap()["artifacts"]
+            .as_array_mut()
+            .unwrap();
+        artifacts[0]["size_in_bytes"] = zip_bytes.len().into();
+        artifacts[0]["digest"] = hash(&zip_bytes).into();
+
+        struct ZipRunner {
+            discovery: DiscoveryMock,
+            zip_bytes: Vec<u8>,
+            downloads: usize,
+            api_calls_during_download: usize,
+        }
+        impl Runner for ZipRunner {
+            fn execute(&mut self, spec: &CommandSpec, b: &Budget<'_>) -> Result<Reply> {
+                if let Some(ProviderRequest::GithubArtifactZip { expected_bytes, .. }) =
+                    spec.provider_request()
+                {
+                    spec.authorize_provider_read()?;
+                    assert_eq!(*expected_bytes, self.zip_bytes.len());
+                    self.downloads += 1;
+                    return Ok(Reply {
+                        exit_code: 0,
+                        stdout: self.zip_bytes.clone(),
+                    });
+                }
+                self.api_calls_during_download += 1;
+                self.discovery.execute(spec, b)
+            }
+        }
+
+        let c = Cancellation::default();
+        let b = Budget::new(Duration::from_secs(3), 1024 * 1024, &c).unwrap();
+        let inventory = discover_workflow(&mut r, &prepared(), ".github/workflows/ci.yml", &b)
+            .unwrap()
+            .unwrap();
+
+        let mut zip_runner = ZipRunner {
+            discovery: r,
+            zip_bytes: zip_bytes.clone(),
+            downloads: 0,
+            api_calls_during_download: 0,
+        };
+        let (sel, digest, size, files) = inventory
+            .download_artifact(&mut zip_runner, Path::new("."), "source-proof", &b)
+            .unwrap()
+            .unwrap();
+        assert_eq!(sel.artifact_id, 9);
+        assert_eq!(digest, hash(&zip_bytes));
+        assert_eq!(size, zip_bytes.len() as u64);
+        assert_eq!(zip_runner.downloads, 1);
+        assert_eq!(zip_runner.api_calls_during_download, 0);
+        assert_eq!(
+            files.file("fmt/preparation/preparation.json").unwrap(),
+            b"{}"
+        );
+
+        // Tampered ZIP bytes must still fail closed on SHA-256 verification.
+        zip_runner.zip_bytes[0] ^= 1;
+        assert!(
+            inventory
+                .download_artifact(&mut zip_runner, Path::new("."), "source-proof", &b)
+                .is_err()
         );
     }
 }
