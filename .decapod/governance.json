@@ -892,6 +892,11 @@
       "id": "verify-recover-1892",
       "summary": "Rebase #1892 onto 78b9c0f18a, bind bugs_01m8fe5c7kejq9vb plan/trajectory, and preserve INCOMPATIBLE_NATIVE_EXECUTABLE diagnostic fidelity (Bootstrap controller 78b9c0f18a sha256:4a252e0832abd30f verified #506)",
       "input_digest": "sha256:01f244c380884225a42cb923cd608740fda9808f3ecc6368ea789a491b4e9591"
+    },
+    {
+      "id": "verify-recover-1892-inventory",
+      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for v0.169.2 Cargo.toml/Cargo.lock bump on 78b9c0f18a (Bootstrap controller 78b9c0f18a sha256:4a252e0832abd30f verified #506)",
+      "input_digest": "sha256:c629a0f9e1b219e7643c527fc2c70408d13d75b75fc4106140e06f86c0afdb7a"
     }
   ],
   "intents": {
