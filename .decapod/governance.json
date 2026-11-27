@@ -966,6 +966,14 @@
       "proof_refs": [
         "verify_checkpoints_publication_material"
       ]
+    },
+    {
+      "id": "code_01m8d524nefyjt0n-slot2-sec-review",
+      "summary": "Re-review SECURITY.md against merged fecd81a1d code fingerprint",
+      "input_digest": "sha256:fabb9756abac305bf937c3c7f81f8833acf69e3b95e872fe167ab8ec84a8faa5",
+      "proof_refs": [
+        "verify_checkpoints_publication_material"
+      ]
     }
   ],
   "intents": {
@@ -1028,8 +1036,8 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Existing SECURITY trust boundaries hold without weakening; url: HTTPS/loopback provenance guard, constitution non-self-promotion checks, and Propodus 037 fail-closed expiry/digest parsing are documented in ARCHITECTURE.md and INTERFACES.md.",
-          "reviewed_code_fingerprint": "72539df0f76cb880de2e39b63c23a7840741a2469676b2b2bbdca0badc89af54",
+          "reason": "Verified SECURITY.md invariants remain unchanged against merged fecd81a1d codebase fingerprint 3def4264",
+          "reviewed_code_fingerprint": "3def4264b69a5e4f524d2b24aeda1a6501d30a7c3ef36380c697107d8d0a4567",
           "spec_material_hash": "a8c0e29cc520ff904fcdcbabdb450ffa3275a46260128859db5d35ff44529046"
         }
       ],
@@ -1041,7 +1049,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795758888Z"
+      "updated_at": "1795758916Z"
     },
     "trajectory": {
       "active_boundaries": [
