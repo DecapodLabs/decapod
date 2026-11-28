@@ -1,5 +1,11 @@
 # Operations
 
+## Building and Auditing Documentation (`#1977`, `#1978`)
+
+- **Local preview build & static discovery verification**: Run `mdbook build docs/book -d /tmp/decapod-book-preview && python3 assets/tools/docs_seo.py /tmp/decapod-book-preview` (using native arm64 `mdbook 0.4.40` on Apple Silicon) to verify 31 public rendered HTML pages, self-hosted `fonts/Geist*.woff2`, `sitemap.xml`, `llms.txt`, and canonical/JSON-LD tags without polluting the Git working tree.
+- **Alignment & headless browser readability audit**: Run `cargo test --test doc_alignment` (`5/5` passing) and audit served preview HTML in headless Chrome CDP across `index.html`, `quickstart.html`, `concepts/proof.html`, `reference/cli.html`, and `reference/errors.html` in `light`, `rust`, `navy`, `coal`, and `ayu` at `320px`, `390px`, `768px`, `1024px`, and `1440px` plus `1.25×` enlarged text (`0` failures, `before`/`after` screenshots inspected), verifying `>= 4.5:1` contrast (prose, links, tables, buttons, `pre > code`, `.hljs-*`), zero sticky-header overlap on load, fragments, `#searchresults` jumps, and keyboard `:focus-visible`, `>= 16px` body and `>= 14px` UI typography, zero horizontal overflow, working success and forced-failure `aria-live="polite"` feedback on `#decapod-copy-agent-btn` and `.clip-button`, working `⌘K` search, and zero third-party font requests.
+- **Clean-environment Quickstart verification (`decapod v0.169.4`, `2026-11-27`)**: Exercised on Apple Silicon macOS with official `/Users/arx/.cargo/bin/decapod` (`0.169.4`, SHA-256 `09da623e4eab7c7832d88283b87fb67810b826b4f123193a5cbb296ebe11841f`, `cargo-binstall 1.25.3`, `rustc 1.99.1`, `Python 3.9.6`) in an isolated temp repo (`/tmp/decapod-quickstart-verify`, commit `5b5ab5e` -> `decapod init with ... --proof-command "unit=python3 -m unittest"` -> `eval` allow -> `session acquire` -> `todo claim` `bugs_01m8g2j7g1nh4mxn` -> `workspace ensure` -> fix `backoff.py` & `python3 -m unittest` OK -> `specs.refresh` & `checkpoint` `b1746c5` -> `govern plan approve` `66b667d` -> `decapod validate`: `194` Four Invariants gates passed, fail-closed `1` issue `READINESS_PROFILE_REQUIRED` until `[proof.required_profile]` is explicitly reviewed).
+
 ## Harness installation, native TS addon builds, and 3-arm study telemetry (#875, #1277, #1095, #880)
 
 - **Install or remove harness discovery & hooks cleanly**: Run `decapod integration harness install --harness <id> --executable <path>` (or `--all`) inside a repository root to write conflict-safe MCP configs, `SKILL.md`, and Claude/OpenCode hooks; run `decapod integration harness remove --all` to strip Decapod-managed entries while preserving unrelated user configs.
@@ -558,7 +564,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

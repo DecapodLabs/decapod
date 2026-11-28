@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "accepted_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,64 +872,96 @@
     }
   },
   "change": {
-    "id": "test_01m8fksbstm838m1",
-    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "id": "docs_01m8fjpadj5ywkv7",
+    "base_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:hop1-batch-unbundle-and-next-hop": {
-      "statement": "Bounded-parallel GHA artifact download (max 6 threads), unbundled standalone CLI/entrypoint targets, and next-hop release.yml digest admission preserve full sha256 custody, selector coverage, and fail-closed verification.",
-      "falsifier": "Tampered ZIP bytes, missing artifact, duplicate obligation, unreviewed workflow SHA-256, or RULE-POLICY-003 mutation passes admission.",
+    "claim:docs-first-governed-result": {
+      "statement": "Docs lead directly to Local/Cloud routes, separate human install/init from agent workflow using a short outcome-only prompt, explain standing project delegation once, and separate implemented gates from target #1981-#1983 defaults.",
+      "falsifier": "Quickstart omits prerequisites/legacy anchors, teaches command-checklist incantations, claims unobserved #1981-#1983 defaults as active everywhere, or breaks doc_alignment assertions.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "tests/source_ci_profile_policy.rs"
+        "tests/doc_alignment.rs",
+        "tests/workunit_verified_proof_1660.rs"
+      ]
+    },
+    "claim:docs-reading-shell-accessibility": {
+      "statement": "Docs shell renders all 5 themes at >=4.5:1 text/code/control contrast with zero sticky-header overlap, zero overflow (320..1440 + 1.25x zoom), self-hosted Geist fonts, accessible live copy status, and working Cmd+K search.",
+      "falsifier": "Any theme or viewport in 320..1440 exhibits <4.5:1 contrast, horizontal overflow, header clipping on load/fragments/search/focus, Google Fonts network calls, or missing clipboard status feedback.",
+      "status": "supported",
+      "proof_refs": [
+        "assets/tools/docs_seo.py",
+        "tests/doc_alignment.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp_1672_hop1_initial",
-      "summary": "CI shard unbundling (#1672 Hop 1), bounded-parallel GHA custody downloads (#1400/#1573), and reviewed_next_hop_workflow_digests for release.yml",
-      "input_digest": "sha256:9c47b67377e408f93744efb9603884ad11a0e87f05b6a8194d1e1bb2697c7b7e"
+      "id": "cp-1-fonts",
+      "summary": "Vendor self-hosted Geist fonts and OFL license",
+      "input_digest": "sha256:7579585400d5ac1f1cb9e952c4f7a725dc2e9b26ee79fdbbfc2fd483568dbd9f"
     },
     {
-      "id": "cp_1672_hop1_config_reconciled",
-      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for #1672 Hop 1 off origin/master@2ed6e67ee",
-      "input_digest": "sha256:3eafafe83dc006dfb272cd0eddc36af0f8a110b8c0541820a35a9d22a0966781"
+      "id": "cp-2-layout",
+      "summary": "Upgrade OpenShell reading layout, code contrast, and sticky header clearance",
+      "input_digest": "sha256:c8fca9669f369acb5beda0f977a1baceb08f17625554e757fe6f0a9a44eb4c7c"
     },
     {
-      "id": "cp_1672_hop1_official_0169_3",
-      "summary": "Refresh release-bound manifest and Dockerfile.decapod via official v0.169.3",
-      "input_digest": "sha256:c2db6dc115c7209ef3906166a1feaa1f7f2f485639d80b66566a20e762c74ef4"
+      "id": "cp-3-journey",
+      "summary": "Streamline 3-route landing and First Governed Result quickstart",
+      "input_digest": "sha256:4931bb586e4944d2d84438c727ca323b23f135b3496f5c3e14e88ed70387d97d"
     },
     {
-      "id": "cp_1672_hop1_dockerfile_0169_3",
-      "summary": "Refresh managed Dockerfile.decapod to v0.169.3 via official v0.169.3 CLI",
-      "input_digest": "sha256:60123cdf83d3e187ad2c04ca33a66c01b9c6c5b9d7c98c0cdd711d879fe84ece"
+      "id": "cp-4-specs",
+      "summary": "Author living specs and refresh projections for #1977 and #1978",
+      "input_digest": "sha256:42025edbfaefe94d699edf6328bffac367145fcba533277f07a5dc78238fc172"
+    },
+    {
+      "id": "cp-5-quickstart-aliases",
+      "summary": "Add coding-agent example prompt, legacy anchor aliases, and refresh INTERFACES spec",
+      "input_digest": "sha256:65fb849f0e9fe6fbae236f72fa6262c2f96dd1e0bda1401f6292698e2fa248e7"
+    },
+    {
+      "id": "chk-merge-v0169-4",
+      "summary": "Merge origin/master v0.169.4 and reconcile governance/specs",
+      "input_digest": "sha256:53cbc200f287d0ff38e45840ad67cdbf7903b9e69f13a1d55bf9f676ec661474"
+    },
+    {
+      "id": "chk-v0169-4-uplift-final",
+      "summary": "Finalize #1977 copy/focus/header/hero fixes and #1978 short outcome prompt + standing project delegation + v0.169.4 clean-env specs",
+      "input_digest": "sha256:22a4909eaa8c001e53566a1aee796ca39401771369679a32ac47be1c812142fa"
+    },
+    {
+      "id": "chk-v0169-4-dockerfile-claims",
+      "summary": "Pin v0.169.4 Dockerfile, refresh specs manifest, and record PR claims (#1977, #1978)",
+      "input_digest": "sha256:12b19bb4f5d9eb6a21ec138c08b6df2df104988bed9ddb50b7d638716613c97e"
+    },
+    {
+      "id": "cp_docs_01m8fjpadj5ywkv7_reconcile_v0169_4",
+      "summary": "Reconcile reviewed_sources_digest for v0.169.4 base a2d7266db",
+      "input_digest": "sha256:c19d81e5e38f7ddbe276c33947ba0dd72c18750fcbee2cb3f0b3cd2bb0d60d9f"
     }
   ],
   "intents": {
-    "intent:run_1672_hop1": {
+    "intent:branch_docs_01m8fjpadj5ywkv7": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "decapod_hop1"
+        "docs/book/**"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1672_hop1",
+      "id": "intent:branch_docs_01m8fjpadj5ywkv7",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute #1672 Hop 1, #1400, #1573, and two-hop release workflow digest admission off origin/master.",
-      "refined_intent": "Unbundle CLI/entrypoint tests, implement bounded-parallel OfficialCli/GithubWorkflowInventory batch downloads, and admit Hop 2 release.yml SHA-256 via readiness_profile::reviewed_next_hop_workflow_digests.",
+      "raw_intent": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
+      "refined_intent": "Upgrade mdBook OpenShell layout, self-hosted Geist fonts, 5-theme code contrast, sticky header clearance, and 3-route index/First Governed Result quickstart (#1977, #1978)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -942,87 +974,70 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Unbundle overloaded CLI/entrypoint Bazel test targets and drop duplicate/unnecessary serial locks (#1672 Hop 1), parallelize distinct GHA artifact downloads up to 6 bounded workers (#1400/#1573), and add reviewed_next_hop_workflow_digests for Hop 2 release.yml without altering workflows in Hop 1.",
+      "intent": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "cargo test --test doc_alignment",
+        "decapod validate"
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs architecture.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs interfaces.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "spec_material_hash": "0abab150f54aae1c6b93aaffacbfc2972b4f9db6912394293bf6748a5ae3a61e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod pin via official CLI; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "reason": "Reconciled .decapod/config.toml reviewed_sources_digest to v0.169.4 base a2d7266db; security boundaries unchanged.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "CI shard unbundling (#1672 Hop 1), parallel GHA custody downloads (#1400/#1573), and next-hop release workflow admission",
+      "title": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
       "todo_ids": [
-        "test_01m8fksbstm838m1"
+        "docs_01m8fjpadj5ywkv7"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795828991Z"
+      "updated_at": "1795837198Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e89114ea25e26e9b42833aea58f6798c9424b713456ea141a1d54c6d44d4198e",
+      "artifact_hash": "sha256:b78ab45b3505e7a46761340231e2332473aceceee9bfa624a4182c28b0131ca1",
       "checks": [
         {
-          "name": "cargo_clippy_d_warnings",
+          "name": "chrome_qa_5themes_5viewports",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt_check",
+          "name": "clean_env_quickstart_v0169_4",
           "status": "passed"
         },
         {
-          "name": "init_reconciliation_22",
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "init_reconciliation_config_digest",
+          "name": "mdbook_docs_seo",
           "status": "passed"
         },
         {
-          "name": "official_0169_3_dockerfile_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "official_0169_3_specs_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "readiness_profile_35",
-          "status": "passed"
-        },
-        {
-          "name": "snapshot_provider_219",
-          "status": "passed"
-        },
-        {
-          "name": "source_import_11",
-          "status": "passed"
-        },
-        {
-          "name": "unbundled_cli_and_policy_suites",
+          "name": "quickstart_legacy_anchors_chrome",
           "status": "passed"
         }
       ],
@@ -1030,83 +1045,68 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
             "event_id": "event:4",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
             "event_id": "event:5",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
             "event_id": "event:6",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:7",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:8",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1672_hop1": {
+          "branch_docs_01m8fjpadj5ywkv7": {
             "evidence_only": true,
-            "id": "run_1672_hop1",
-            "intent_id": "intent:run_1672_hop1",
+            "id": "branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  ".config/build/decapod.BUILD.bzl"
+                  "docs/book/theme/fonts/Geist-Variable.woff2",
+                  "docs/book/theme/fonts/GeistMono-Variable.woff2",
+                  "docs/book/theme/fonts/OFL-LICENSE.txt",
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/custom.css",
+                  "docs/book/src/index.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/configuration.md",
+                  "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
                 ],
                 "proof_refs": [
-                  "cargo_fmt_check",
-                  "cargo_clippy_d_warnings",
-                  "snapshot_provider_219",
-                  "source_import_11",
-                  "readiness_profile_35",
-                  "init_reconciliation_22",
-                  "unbundled_cli_and_policy_suites"
+                  "doc_alignment",
+                  "mdbook_docs_seo",
+                  "chrome_qa_5themes_5viewports"
                 ],
                 "scope": [
-                  "decapod_hop1"
+                  "docs/book/**"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1115,26 +1115,13 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  "assets/tools/source_ci_profile.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/readiness_profile/tests.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "tests/cli_contracts.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/effective_grant_cli_contracts.rs",
-                  "tests/entrypoint_correctness.rs",
-                  "tests/entrypoint_validation_contracts.rs",
-                  "tests/governance_fault_detection_1795.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  "tests/support/cli_bin.rs"
+                  "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5"
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "quickstart_legacy_anchors_chrome"
+                ],
                 "scope": [
-                  "decapod_hop1"
+                  "docs/book/**"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -1143,46 +1130,25 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/config.toml"
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/custom.css",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/configuration.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify"
                 ],
                 "proof_refs": [
-                  "init_reconciliation_config_digest"
+                  "doc_alignment",
+                  "mdbook_docs_seo",
+                  "chrome_qa_5themes_5viewports",
+                  "clean_env_quickstart_v0169_4"
                 ],
                 "scope": [
-                  "decapod_hop1"
+                  "docs/book/**"
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/.manifest.json",
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_specs_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_dockerfile_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1190,44 +1156,33 @@
         }
       },
       "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+      "evidence": [
+        "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5",
+        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify",
+        "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
       ],
-      "intent_id": "intent:run_1672_hop1",
+      "inspected_files": [],
+      "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        ".decapod/managed/.manifest.json",
-        ".decapod/managed/Dockerfile.decapod",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/cli_contracts.rs",
-        "tests/consumer_readiness.rs",
-        "tests/effective_grant_cli_contracts.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/entrypoint_validation_contracts.rs",
-        "tests/governance_fault_detection_1795.rs",
-        "tests/source_ci_profile_policy.rs",
-        "tests/support/cli_bin.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        "docs/book/src/configuration.md",
+        "docs/book/src/custom.css",
+        "docs/book/src/index.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/theme/fonts/Geist-Variable.woff2",
+        "docs/book/theme/fonts/GeistMono-Variable.woff2",
+        "docs/book/theme/fonts/OFL-LICENSE.txt",
+        "docs/book/theme/index.hbs"
       ],
       "repo_scope": [
-        "decapod_hop1"
+        "docs/book/**"
       ],
-      "run_id": "run_1672_hop1",
+      "run_id": "branch_docs_01m8fjpadj5ywkv7",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m8fksbstm838m1",
+      "task_id": "docs_01m8fjpadj5ywkv7",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
