@@ -877,6 +877,14 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "claim:checked-in-cloud-uses-repository-grant": {
+      "statement": "A minimally configured Cloud checkout resolves the Git repository and asks Propodus to activate the verified identity's existing grant through released Dactyl transport.",
+      "falsifier": "A managed Cloud contributor request requires project selection or purchase before its exact repository grant is checked, or a denied grant is admitted.",
+      "status": "open",
+      "proof_refs": [
+        "tests/common/cloud_managed_scenarios.rs"
+      ]
+    },
     "contributor-repo-admission": {
       "statement": "Ordinary Cloud requests attempt the service's exact repository contributor activation without project selection or administrator setup.",
       "falsifier": "A denied contributor reaches the directory, Signup, another repository, or Local SQLite.",
@@ -932,6 +940,11 @@
       "id": "contributor-generated-guidance",
       "summary": "Regenerate contributor configuration and command guidance with the source-built candidate.",
       "input_digest": "sha256:7bc360f0ed7811cf99747555c7a601233752f3673a49d7b92411e97b21675d54"
+    },
+    {
+      "id": "current-pr-falsifiable-claim",
+      "summary": "Preserve the exact candidate and record its current falsifiable publication claim.",
+      "input_digest": "sha256:c566a524ee471b64fd78c56f1c318f1956d654bacae7a5f37b30e2b9c4155f1f"
     }
   ],
   "intents": {
