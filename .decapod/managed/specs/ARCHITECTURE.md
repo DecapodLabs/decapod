@@ -44,6 +44,17 @@
   - Streamlines `index.md` around three entry routes (`Start locally with your agent`, `Coordinate a team with Cloud`, `Inspect recorded proof`) while preserving all `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings` invariants (`decapodlabs.ai/pricing`, `signup`, `admin`, `Decapod Local`, `Decapod Cloud`, `$50/contributor/repo/mo`, `$0 surprise overages`).
   - Separates human one-time install/`decapod init` from agent-invoked kernel commands in `quickstart.md`, uses a short outcome-only coding-agent prompt (`Fix the failing retry-backoff test.`) instead of command-checklist incantations, links [Standing Project Delegation](configuration.md#standing-project-delegation) (distinguishing `[governance].main_merge = false` human PR review from explicit `main_merge = true` autonomous merge opt-in), moves legacy JSONL migration and `config-backups` prose to `configuration.md#legacy-upgrades-and-config-backups`, and separates currently demonstrated behavior (`/proof.html`, `tests/workunit_verified_proof_1660.rs`, `#880`) from target outcome-only defaults tracked in `#1981`, `#1982`, and `#1983`.
 
+## Hosted Cloud lease fencing, crash-safe custody reconciliation, and proof-state client (#1809)
+
+- **Custody transport extensions (`src/decapod/core/cloud_proof.rs`)**:
+  - Adds `DactylProofControlTransport::from_storage_context(&StorageContext)` and typed client RPCs `custody_renew`, `custody_handoff`, `custody_release`, and `check_shared_resources` targeting `propodus_proof_acceptance_v1` (writes) and `propodus_proof_acceptance_get_v1` (reads).
+  - Expands `reconcile_operation_after_unknown` terminal/committed receipt recognition across `custody_bound`, `custody_current`, `custody_renewed`, `custody_handed_off`, `custody_released`, `custody_yielded`, and `custody_revoked`, keeping `heartbeat = true` pinned to `(expected_task_revision, expected_fencing_generation)` (`LEASE_HEARTBEAT_STALE` on mismatch).
+- **Durable machine-local lease metadata & crash recovery (`src/decapod/core/cloud_workspace.rs`, `src/decapod/core/authoring.rs`)**:
+  - Keeps `CloudCustodyRecord` schema untouched and stores per-`(project_id, task_id)` recovery metadata in private `CloudLeaseMetadata` (`lease_<sha256>.json` inside `CloudCustodyStore`) tracking `pending_operation_id`, `pending_action`, `pending_target_actor`, `scope`, `intent_anchor`, and `last_attestation_*` outside `.decapod/data/decapod.db`.
+  - `custody_renew_or_reconcile`, `custody_handoff_or_reconcile`, and `custody_release_or_reconcile` share `should_preserve_pending_operation` (`CLOUD_OUTCOME_UNKNOWN`, `CLOUD_CONTROL_UNAVAILABLE`, `CLOUD_QUOTA_EXCEEDED`), reconcile persisted `pending_operation_id` via `get_operation` before re-submitting writes across CLI restarts, and delegate `authoring::enforce_shared_resource_available` on Cloud brokers to `enforce_cloud_shared_resources`.
+- **Non-fabricated proof capture & parity alignment (`src/decapod/core/todo.rs`, `src/decapod/core/cloud_parity_matrix.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
+  - `todo::build_cloud_proof_capture_request_with_store` binds real workspace `CloudCustodyStore` or container-relay (`RelayProofControlTransport`) `(workspace_id, custody_id, task_revision, fencing_generation)` into `ProofSubject` (`CLOUD_CUSTODY_UNBOUND` when absent), pre-checks `custody_get` on `todo done --validated`, routes `todo claim`/`renew`/`heartbeat`/`release`/`yield`/`handoff` through `DactylTodoStore` + `CloudCustodyStore`, exposes `CloudCommand::Proof`, and promotes `todo.lease.lifecycle` to `SupportedLogicalParity` (`cloud_parity_matrix.rs`).
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2251,8 +2262,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (298 files)
+- Repository signal fingerprint: `c1b514fbd3cf08b67b868e3e21ade772c2402237c616d54107d83286d9be4764`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (299 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

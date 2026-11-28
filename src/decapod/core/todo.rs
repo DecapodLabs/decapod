@@ -4,7 +4,7 @@ use crate::core::broker::DbBroker;
 use crate::core::cloud_todo_operation::{
     self, Diagnostic as CloudTodoDiagnostic, Journal as CloudTodoJournal, OperationRecord, Outcome,
 };
-use crate::core::dactyl_todo::{CLOUD_LEASE_RENEW_UNSUPPORTED, DactylTodoStore};
+use crate::core::dactyl_todo::DactylTodoStore;
 use crate::core::db::{Connection, OptionalExtension, Result as SqlResult, params, types::ToSql};
 use crate::core::error;
 use crate::core::external_action::{self, ExternalCapability};
@@ -5304,9 +5304,14 @@ pub(crate) fn heartbeat_claim_lease_at(
     }
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
-        return Err(error::DecapodError::NotImplemented(
-            "The cloud service does not expose a task-lease heartbeat.".into(),
-        ));
+        return cloud_heartbeat_or_renew_lease(
+            root,
+            id,
+            agent_id,
+            lease_seconds,
+            expected_generation,
+            true,
+        );
     }
     let lease_secs = lease_seconds
         .unwrap_or(DEFAULT_CLAIM_LEASE_SECS)
@@ -6143,7 +6148,7 @@ fn handoff_task_impl(
     }
     let root = &store.root;
     if DbBroker::new(root).is_cloud() {
-        return Err(error::DecapodError::NotImplemented("HANDOFF_PROFILE_UNSUPPORTED: cloud task/event v1 has no authorized lease handoff operation".into()));
+        return cloud_handoff_task(root, id, to, from, summary, lease_seconds, acting_agent);
     }
     let expected = handoff_snapshot(root, id)?;
     let target = expected
@@ -8597,10 +8602,65 @@ fn check_cloud_todo_preflight(
     root: &Path,
     command: &TodoCommand,
 ) -> Result<(), error::DecapodError> {
-    if matches!(command, TodoCommand::Renew { .. }) {
-        return Err(error::DecapodError::NotImplemented(
-            CLOUD_LEASE_RENEW_UNSUPPORTED.into(),
+    if let TodoCommand::Add { scope, .. } = command
+        && scope.trim().eq_ignore_ascii_case("resource:")
+    {
+        return Err(error::DecapodError::ValidationError(
+            "CLOUD_RESOURCE_SCOPE_INVALID: resource: scope requires a non-empty resource name"
+                .into(),
         ));
+    }
+    if let TodoCommand::Claim {
+        mode,
+        lease_seconds,
+        ..
+    } = command
+    {
+        if *mode != ClaimMode::Exclusive {
+            return Err(error::DecapodError::NotImplemented(
+                "CLOUD_CLAIM_MODE_UNSUPPORTED: Cloud backend only supports exclusive claims; --mode shared is unsupported (no local fallback)".into(),
+            ));
+        }
+        if let Some(secs) = lease_seconds
+            && !(60..=86400).contains(secs)
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLOUD_LEASE_TTL_INVALID: Cloud claim --lease-seconds must be in 60..=86400, got {secs}"
+            )));
+        }
+    }
+    if let TodoCommand::Renew { lease_seconds, .. } = command
+        && let Some(secs) = lease_seconds
+        && !(60..=86400).contains(secs)
+    {
+        return Err(error::DecapodError::ValidationError(format!(
+            "CLOUD_LEASE_TTL_INVALID: Cloud renew --lease-seconds must be in 60..=86400, got {secs}"
+        )));
+    }
+    if let TodoCommand::Handoff {
+        to,
+        from,
+        lease_seconds,
+        ..
+    } = command
+    {
+        if to.trim().is_empty() {
+            return Err(error::DecapodError::ValidationError(
+                "HANDOFF_INVALID_TARGET: handoff requires a non-empty --to agent id".into(),
+            ));
+        }
+        if from.as_deref() == Some(to.as_str()) {
+            return Err(error::DecapodError::ValidationError(format!(
+                "HANDOFF_SAME_AGENT: handoff from and to must differ; both are '{to}'"
+            )));
+        }
+        if let Some(secs) = lease_seconds
+            && !(60..=86400).contains(secs)
+        {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLOUD_LEASE_TTL_INVALID: Cloud handoff --lease-seconds must be in 60..=86400, got {secs}"
+            )));
+        }
     }
     if let TodoCommand::Done {
         validated: true,
@@ -8652,7 +8712,124 @@ pub(crate) fn build_cloud_proof_capture_request(
     artifacts: &[String],
     commit_override: Option<&str>,
 ) -> Result<crate::core::cloud_proof::ProofCaptureRequest, error::DecapodError> {
+    build_cloud_proof_capture_request_with_store(
+        root,
+        repo_id,
+        task_id,
+        task_revision,
+        fencing_generation,
+        artifacts,
+        commit_override,
+        None,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn build_cloud_proof_capture_request_with_store(
+    root: &Path,
+    repo_id: &str,
+    task_id: &str,
+    _task_revision: i64,
+    _fencing_generation: i64,
+    artifacts: &[String],
+    commit_override: Option<&str>,
+    store_override: Option<&crate::core::cloud_workspace::CloudCustodyStore>,
+) -> Result<crate::core::cloud_proof::ProofCaptureRequest, error::DecapodError> {
     use crate::core::cloud_proof::*;
+    use crate::core::cloud_workspace::{
+        CloudCustodyStore, RelayProofControlTransport, is_container_relay_active,
+    };
+    let main_repo =
+        crate::core::workspace::get_main_repo_root(root).unwrap_or_else(|_| root.to_path_buf());
+    let toplevel = crate::core::workspace::git_toplevel(root)
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| root.to_path_buf());
+
+    let (ws_id, custody_id, bound_task_rev, bound_fence_gen, bound_op_id) = if store_override
+        .is_none()
+        && is_container_relay_active()
+    {
+        let relay = RelayProofControlTransport::from_env()?;
+        let tid = relay.task_id().to_string();
+        if tid != task_id {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLOUD_CUSTODY_CHECKOUT_MISMATCH: bound container relay task '{tid}' does not match requested task '{task_id}'"
+            )));
+        }
+        let ws_id =
+            env::var(crate::core::cloud_workspace::CLOUD_WORKSPACE_ID_ENV).map_err(|_| {
+                error::DecapodError::ValidationError(
+                    "CLOUD_CUSTODY_UNBOUND: container relay missing workspace_id".into(),
+                )
+            })?;
+        let cid = env::var(crate::core::cloud_workspace::CLOUD_CUSTODY_ID_ENV).map_err(|_| {
+            error::DecapodError::ValidationError(
+                "CLOUD_CUSTODY_UNBOUND: container relay missing custody_id".into(),
+            )
+        })?;
+        let rev = env::var(crate::core::cloud_workspace::CLOUD_TASK_REVISION_ENV)
+            .ok()
+            .and_then(|v| v.parse::<i64>().ok())
+            .filter(|v| *v > 0)
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "CLOUD_CUSTODY_UNBOUND: container relay missing positive task_revision".into(),
+                )
+            })?;
+        let fence_gen = env::var(crate::core::cloud_workspace::CLOUD_FENCING_GENERATION_ENV)
+            .ok()
+            .and_then(|v| v.parse::<i64>().ok())
+            .filter(|v| *v > 0)
+            .ok_or_else(|| {
+                error::DecapodError::ValidationError(
+                    "CLOUD_CUSTODY_UNBOUND: container relay missing positive fencing_generation"
+                        .into(),
+                )
+            })?;
+        (ws_id, cid, rev, fence_gen, None)
+    } else {
+        let owned_store;
+        let custody_store = match store_override {
+            Some(store) => store,
+            None => {
+                owned_store = CloudCustodyStore::machine()?;
+                &owned_store
+            }
+        };
+        let record = custody_store
+                .find_custody_for_task(&main_repo, Some(&toplevel), repo_id, task_id, None)?
+                .or_else(|| custody_store.load(&main_repo, &toplevel).ok().flatten())
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(format!(
+                        "CLOUD_CUSTODY_UNBOUND: checkout '{}' has no bound hosted custody record for task '{task_id}'; run `decapod workspace ensure` before proof capture",
+                        toplevel.display()
+                    ))
+                })?;
+        if record.task_id != task_id {
+            return Err(error::DecapodError::ValidationError(format!(
+                "CLOUD_CUSTODY_CHECKOUT_MISMATCH: checkout custody is bound to task '{}', not '{task_id}'",
+                record.task_id
+            )));
+        }
+        let (Some(rev), Some(fence_gen)) = (record.task_revision, record.fencing_generation) else {
+            return Err(error::DecapodError::ValidationError(
+                    "CLOUD_CUSTODY_UNCONFIRMED: workspace custody fence is unconfirmed; run `decapod workspace ensure` to reconcile".into(),
+                ));
+        };
+        let pending_op = custody_store
+            .load_lease_metadata(&record.project_id, task_id)?
+            .filter(|m| m.pending_action.as_deref() == Some("capture"))
+            .and_then(|m| m.pending_operation_id);
+        (
+            record.workspace_id,
+            record.custody_id,
+            rev,
+            fence_gen,
+            pending_op,
+        )
+    };
+
     let git_rev = |rev: &str| -> Result<String, error::DecapodError> {
         let out = std::process::Command::new("git")
             .args([
@@ -8717,9 +8894,10 @@ pub(crate) fn build_cloud_proof_capture_request(
             provenance_digest: fallback_digest,
         });
     }
-    let op_id = new_uuid_v4()?;
-    let ws_id = format!("ws_{}", crate::core::ulid::new_ulid().to_lowercase());
-    let custody_id = format!("custody_{}", crate::core::ulid::new_ulid().to_lowercase());
+    let op_id = match bound_op_id {
+        Some(existing) => existing,
+        None => new_uuid_v4()?,
+    };
     Ok(ProofCaptureRequest {
         contract: PROOF_CAPTURE_CONTRACT_ID.to_string(),
         contract_digest: PROOF_CAPTURE_CONTRACT_DIGEST.to_string(),
@@ -8729,11 +8907,11 @@ pub(crate) fn build_cloud_proof_capture_request(
             task_id: task_id.to_string(),
             workspace_id: ws_id,
             custody_id,
-            task_revision: task_revision.max(1),
-            fencing_generation: fencing_generation.max(1),
+            task_revision: bound_task_rev,
+            fencing_generation: bound_fence_gen,
             candidate: ProofGitIdentity {
                 commit: candidate_commit.clone(),
-                tree: candidate_tree,
+                tree: candidate_tree.clone(),
             },
             accepted_target: ProofGitIdentity {
                 commit: accepted_commit,
@@ -8742,7 +8920,7 @@ pub(crate) fn build_cloud_proof_capture_request(
             integration: None,
             policy_digest: policy_digest.clone(),
             requirements_digest: policy_digest.clone(),
-            material_digest: hash_hex(candidate_commit.as_bytes()),
+            material_digest: hash_hex(candidate_tree.as_bytes()),
             prerequisites_digest: policy_digest,
         },
         evidence,
@@ -8988,13 +9166,34 @@ async fn run_cloud_todo_command_with_store_async(
             let task_id = resolve_task_id_arg(id, id_positional, "todo show")?;
             cloud_get_task(root, store, &task_id, Some(repo_id)).await?
         }
-        TodoCommand::Claim { id, agent, .. } => {
+        TodoCommand::Claim {
+            id,
+            agent,
+            mode,
+            lease_seconds,
+            intent_anchor,
+        } => {
+            if *mode != ClaimMode::Exclusive {
+                return Err(error::DecapodError::NotImplemented(
+                    "CLOUD_CLAIM_MODE_UNSUPPORTED: Cloud backend only supports exclusive claims; --mode shared is unsupported (no local fallback)".into(),
+                ));
+            }
             let effective_actor = agent.as_deref().unwrap_or(&actor).to_string();
             if authoring::is_missing_or_unknown_actor(&effective_actor) {
                 return Err(authoring::authoring_actor_required_error());
             }
+            let resolved_anchor = intent_anchor
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(ToOwned::to_owned);
             let task = store
-                .claim_task(id, effective_actor)
+                .claim_task_with_options(
+                    id,
+                    effective_actor,
+                    *lease_seconds,
+                    resolved_anchor.clone(),
+                )
                 .await
                 .map_err(|error| cloud_error(error, Some(repo_id)))?;
             serde_json::json!({
@@ -9004,10 +9203,108 @@ async fn run_cloud_todo_command_with_store_async(
                 "root": root.to_string_lossy(),
                 "backend": "dactyl",
                 "id": id,
+                "mode": "exclusive",
+                "lease_seconds": lease_seconds.unwrap_or(1800),
+                "intent_anchor": resolved_anchor,
                 "item": task,
             })
         }
+        TodoCommand::ClaimStatus { id } => {
+            let item = store
+                .get_task(id)
+                .await
+                .map_err(|error| cloud_error(error, Some(repo_id)))?;
+            let Some(task) = item else {
+                return Ok(serde_json::json!({
+                    "ts": now_iso(),
+                    "cmd": "todo.claim-status",
+                    "status": "not_found",
+                    "root": root.to_string_lossy(),
+                    "backend": "dactyl",
+                    "id": id,
+                }));
+            };
+            let (project_root, main_repo, toplevel) = resolve_cloud_repo_roots(root);
+            let custody_store = crate::core::cloud_workspace::CloudCustodyStore::machine()?;
+            let bound = custody_store.find_custody_for_task(
+                &main_repo,
+                Some(&toplevel),
+                repo_id,
+                id,
+                None,
+            )?;
+            let meta = custody_store.load_lease_metadata(repo_id, id)?;
+            let mut live_custody = None;
+            #[cfg(feature = "supabase-cloud")]
+            if let Some(rec) = &bound
+                && let (Some(rev), Some(fence_gen)) = (rec.task_revision, rec.fencing_generation)
+                && let Ok(identity) =
+                    crate::core::repo_identity::resolve_repository_identity(&project_root)
+                && let Ok((transport, routed)) =
+                    crate::core::cloud_proof::DactylProofControlTransport::from_context(
+                        &main_repo, &identity,
+                    )
+            {
+                let live = crate::core::cloud_proof::custody_get(
+                    &transport,
+                    &crate::core::cloud_proof::CustodyGetRequest {
+                        project_id: routed.canonical_name,
+                        task_id: id.to_string(),
+                        workspace_id: rec.workspace_id.clone(),
+                        custody_id: rec.custody_id.clone(),
+                        task_revision: rev,
+                        fencing_generation: fence_gen,
+                    },
+                )?;
+                live_custody = Some(live);
+            }
+            serde_json::json!({
+                "ts": now_iso(),
+                "cmd": "todo.claim-status",
+                "status": "ok",
+                "source": "dactyl",
+                "root": root.to_string_lossy(),
+                "backend": "dactyl",
+                "id": id,
+                "claim_status": {
+                    "task_status": task.status,
+                    "assigned_to": task.assignee.clone().unwrap_or_default(),
+                    "updated_at": crate::core::time::format_rfc3339_nanos(task.updated_at).unwrap_or_default(),
+                    "scope": task.scope,
+                    "version": task.version,
+                    "custody_id": bound.as_ref().map(|r| r.custody_id.clone()).or_else(|| meta.as_ref().and_then(|m| m.custody_id.clone())),
+                    "workspace_id": bound.as_ref().map(|r| r.workspace_id.clone()).or_else(|| meta.as_ref().and_then(|m| m.workspace_id.clone())),
+                    "task_revision": live_custody.as_ref().map(|l| l.task_revision).or_else(|| bound.as_ref().and_then(|r| r.task_revision)),
+                    "fencing_generation": live_custody.as_ref().map(|l| l.fencing_generation).or_else(|| bound.as_ref().and_then(|r| r.fencing_generation)),
+                    "lease_expires_at": live_custody.as_ref().map(|l| l.expires_at.clone()).or_else(|| bound.as_ref().and_then(|r| r.expires_at.clone())),
+                    "intent_anchor": meta.as_ref().and_then(|m| m.intent_anchor.clone()),
+                }
+            })
+        }
+        TodoCommand::Renew {
+            id,
+            agent,
+            lease_seconds,
+            heartbeat,
+        } => {
+            let effective_actor = agent.as_deref().unwrap_or(&actor).to_string();
+            if authoring::is_missing_or_unknown_actor(&effective_actor) {
+                return Err(authoring::authoring_actor_required_error());
+            }
+            cloud_heartbeat_or_renew_lease(
+                root,
+                id,
+                &effective_actor,
+                *lease_seconds,
+                None,
+                *heartbeat,
+            )?
+        }
         TodoCommand::Release { id } => {
+            if authoring::is_missing_or_unknown_actor(&actor) {
+                return Err(authoring::authoring_actor_required_error());
+            }
+            cloud_release_custody_if_bound(root, id, &actor, "released", false)?;
             let task = store
                 .release_task(id, actor)
                 .await
@@ -9022,9 +9319,19 @@ async fn run_cloud_todo_command_with_store_async(
                 "item": task,
             })
         }
-        TodoCommand::Yield { id, .. } => {
+        TodoCommand::Yield { id, agent, reason } => {
+            let effective_actor = agent.as_deref().unwrap_or(&actor).to_string();
+            if authoring::is_missing_or_unknown_actor(&effective_actor) {
+                return Err(authoring::authoring_actor_required_error());
+            }
+            if effective_actor != actor {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "TODO_ACTOR_MISMATCH: acting actor '{actor}' cannot yield on behalf of '{effective_actor}'"
+                )));
+            }
+            cloud_release_custody_if_bound(root, id, &effective_actor, reason, true)?;
             let task = store
-                .release_task(id, actor)
+                .release_task(id, effective_actor)
                 .await
                 .map_err(|error| cloud_error(error, Some(repo_id)))?;
             serde_json::json!({
@@ -9034,9 +9341,25 @@ async fn run_cloud_todo_command_with_store_async(
                 "root": root.to_string_lossy(),
                 "backend": "dactyl",
                 "id": id,
+                "reason": reason,
                 "item": task,
             })
         }
+        TodoCommand::Handoff {
+            id,
+            to,
+            from,
+            summary,
+            lease_seconds,
+        } => cloud_handoff_task(
+            root,
+            id,
+            to,
+            from.as_deref(),
+            summary,
+            *lease_seconds,
+            &actor,
+        )?,
         TodoCommand::Done {
             id,
             id_positional,
@@ -9065,17 +9388,55 @@ async fn run_cloud_todo_command_with_store_async(
                 let fingerprint = crate::core::cloud_proof::proof_capture_fingerprint(&submission)?;
                 #[cfg(feature = "supabase-cloud")]
                 {
-                    let identity = crate::core::repo_identity::resolve_repository_identity(root)?;
+                    let (project_root, _main_repo, _toplevel) = resolve_cloud_repo_roots(root);
+                    let identity =
+                        crate::core::repo_identity::resolve_repository_identity(&project_root)?;
                     let (transport, routed) =
                         crate::core::cloud_proof::DactylProofControlTransport::from_context(
-                            root, &identity,
+                            &project_root,
+                            &identity,
                         )?;
+                    let _live = crate::core::cloud_proof::custody_get(
+                        &transport,
+                        &crate::core::cloud_proof::CustodyGetRequest {
+                            project_id: routed.canonical_name.clone(),
+                            task_id: task_id.clone(),
+                            workspace_id: submission.subject.workspace_id.clone(),
+                            custody_id: submission.subject.custody_id.clone(),
+                            task_revision: submission.subject.task_revision,
+                            fencing_generation: submission.subject.fencing_generation,
+                        },
+                    )?;
+                    let custody_store = crate::core::cloud_workspace::CloudCustodyStore::machine()?;
+                    let mut meta = custody_store
+                        .load_lease_metadata(&routed.canonical_name, &task_id)?
+                        .unwrap_or_else(|| {
+                            crate::core::cloud_workspace::CloudLeaseMetadata::new(
+                                &routed.canonical_name,
+                                &task_id,
+                                &actor,
+                            )
+                        });
+                    meta.pending_operation_id = Some(submission.operation_id.clone());
+                    meta.pending_action = Some("capture".to_string());
+                    let _ = custody_store.save_lease_metadata(&meta);
                     let receipt = crate::core::cloud_proof::submit_capture(
                         &transport,
                         &routed.canonical_name,
                         i64::from(current.version),
                         &submission,
                     )?;
+                    let attestation_id = receipt
+                        .get("attestation_id")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(&submission.operation_id)
+                        .to_string();
+                    meta.pending_operation_id = None;
+                    meta.pending_action = None;
+                    meta.last_attestation_id = Some(attestation_id.clone());
+                    meta.last_attestation_fingerprint = Some(fingerprint.clone());
+                    meta.last_attestation_state = Some("captured".to_string());
+                    let _ = custody_store.save_lease_metadata(&meta);
                     return Ok(serde_json::json!({
                         "ts": now_iso(),
                         "cmd": "todo.done",
@@ -9083,6 +9444,7 @@ async fn run_cloud_todo_command_with_store_async(
                         "root": root.to_string_lossy(),
                         "backend": "dactyl",
                         "id": task_id,
+                        "attestation_id": attestation_id,
                         "fingerprint": fingerprint,
                         "operation_id": submission.operation_id,
                         "proof_receipt": receipt,
@@ -9118,6 +9480,338 @@ async fn run_cloud_todo_command_with_store_async(
         }
     };
     Ok(result)
+}
+
+fn resolve_cloud_repo_roots(
+    root: &Path,
+) -> (std::path::PathBuf, std::path::PathBuf, std::path::PathBuf) {
+    let project_root = if root.file_name().is_some_and(|n| n == "data")
+        && root
+            .parent()
+            .and_then(|p| p.file_name())
+            .is_some_and(|n| n == ".decapod")
+    {
+        root.parent()
+            .and_then(|p| p.parent())
+            .unwrap_or(root)
+            .to_path_buf()
+    } else {
+        root.to_path_buf()
+    };
+    let main_repo = crate::core::workspace::get_main_repo_root(&project_root)
+        .unwrap_or_else(|_| project_root.clone());
+    let toplevel = crate::core::workspace::git_toplevel(&project_root)
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| project_root.clone());
+    (project_root, main_repo, toplevel)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn cloud_heartbeat_or_renew_lease(
+    root: &Path,
+    id: &str,
+    agent_id: &str,
+    lease_seconds: Option<u64>,
+    expected_generation: Option<i64>,
+    heartbeat: bool,
+) -> Result<JsonValue, error::DecapodError> {
+    use crate::core::cloud_workspace::{
+        CLOUD_CUSTODY_ID_ENV, CLOUD_FENCING_GENERATION_ENV, CLOUD_PROJECT_ID_ENV,
+        CLOUD_TASK_REVISION_ENV, CLOUD_WORKSPACE_ID_ENV, CloudCustodyStore,
+        RelayProofControlTransport, custody_renew_or_reconcile, is_container_relay_active,
+    };
+    if authoring::is_missing_or_unknown_actor(agent_id) {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    let ttl = lease_seconds.unwrap_or(DEFAULT_CLAIM_LEASE_SECS);
+    if !(60..=86400).contains(&ttl) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "CLOUD_LEASE_TTL_INVALID: lease_seconds must be in 60..=86400, got {ttl}"
+        )));
+    }
+    let (project_root, main_repo, toplevel) = resolve_cloud_repo_roots(root);
+    if is_container_relay_active() {
+        let relay = RelayProofControlTransport::from_env()?;
+        if relay.task_id() != id {
+            return Err(error::DecapodError::ValidationError(format!(
+                "LEASE_HEARTBEAT_STALE: container relay bound to '{}', cannot renew '{id}'",
+                relay.task_id()
+            )));
+        }
+        let pid = env::var(CLOUD_PROJECT_ID_ENV).map_err(|_| {
+            error::DecapodError::ValidationError("CLOUD_CUSTODY_UNBOUND: missing project_id".into())
+        })?;
+        let ws = env::var(CLOUD_WORKSPACE_ID_ENV).map_err(|_| {
+            error::DecapodError::ValidationError(
+                "CLOUD_CUSTODY_UNBOUND: missing workspace_id".into(),
+            )
+        })?;
+        let cid = env::var(CLOUD_CUSTODY_ID_ENV).map_err(|_| {
+            error::DecapodError::ValidationError("CLOUD_CUSTODY_UNBOUND: missing custody_id".into())
+        })?;
+        let rev = env::var(CLOUD_TASK_REVISION_ENV)
+            .ok()
+            .and_then(|v| v.parse::<i64>().ok())
+            .filter(|v| *v > 0)
+            .unwrap_or(1);
+        let fence_gen = env::var(CLOUD_FENCING_GENERATION_ENV)
+            .ok()
+            .and_then(|v| v.parse::<i64>().ok())
+            .filter(|v| *v > 0)
+            .unwrap_or(1);
+        if expected_generation.is_some_and(|exp| exp != fence_gen) {
+            return Err(error::DecapodError::ValidationError(
+                "LEASE_HEARTBEAT_STALE: expected fencing generation mismatch".into(),
+            ));
+        }
+        let receipt = crate::core::cloud_proof::custody_renew(
+            &relay,
+            &crate::core::cloud_proof::CustodyRenewRequest {
+                project_id: pid,
+                operation_id: crate::core::cloud_proof::new_uuid_v4()?,
+                task_id: id.to_string(),
+                workspace_id: ws,
+                custody_id: cid,
+                expected_task_revision: rev,
+                expected_fencing_generation: fence_gen,
+                ttl_seconds: ttl as i64,
+                heartbeat,
+            },
+        )?;
+        return Ok(serde_json::json!({
+            "ts": now_iso(),
+            "cmd": if heartbeat { "todo.heartbeat" } else { "todo.renew" },
+            "status": "ok",
+            "backend": "dactyl",
+            "id": id,
+            "result": {
+                "lease_expires_at": receipt.expires_at,
+                "lease_seconds": ttl,
+                "lease_generation": receipt.fencing_generation,
+                "task_revision": receipt.task_revision,
+                "extended": true,
+            }
+        }));
+    }
+
+    let identity = crate::core::repo_identity::resolve_repository_identity(&project_root)?;
+    let (transport, routed) =
+        crate::core::cloud_proof::DactylProofControlTransport::from_context(&main_repo, &identity)?;
+    let custody_store = CloudCustodyStore::machine()?;
+    let mut record = custody_store
+        .find_custody_for_task(
+            &main_repo,
+            Some(&toplevel),
+            &routed.canonical_name,
+            id,
+            Some(agent_id),
+        )?
+        .ok_or_else(|| {
+            error::DecapodError::ValidationError(format!(
+                "CLOUD_CUSTODY_UNBOUND: no bound hosted custody fence for task '{id}' and actor '{agent_id}'; run `decapod workspace ensure`"
+            ))
+        })?;
+    if let Some(exp) = expected_generation
+        && record.fencing_generation != Some(exp)
+    {
+        return Err(error::DecapodError::ValidationError(
+            "LEASE_HEARTBEAT_STALE: expected fencing generation mismatch".into(),
+        ));
+    }
+    let receipt = custody_renew_or_reconcile(
+        &transport,
+        &custody_store,
+        &main_repo,
+        &mut record,
+        ttl as i64,
+        heartbeat,
+    )?;
+    Ok(serde_json::json!({
+        "ts": now_iso(),
+        "cmd": if heartbeat { "todo.heartbeat" } else { "todo.renew" },
+        "status": "ok",
+        "backend": "dactyl",
+        "id": id,
+        "lease_expires_at": receipt.expires_at,
+        "lease_seconds": ttl,
+        "lease_generation": receipt.fencing_generation,
+        "task_revision": receipt.task_revision,
+        "custody_id": record.custody_id,
+        "result": {
+            "lease_expires_at": receipt.expires_at,
+            "lease_seconds": ttl,
+            "lease_generation": receipt.fencing_generation,
+            "task_revision": receipt.task_revision,
+            "extended": true,
+        }
+    }))
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+fn cloud_heartbeat_or_renew_lease(
+    _root: &Path,
+    _id: &str,
+    _agent_id: &str,
+    _lease_seconds: Option<u64>,
+    _expected_generation: Option<i64>,
+    _heartbeat: bool,
+) -> Result<JsonValue, error::DecapodError> {
+    Err(error::DecapodError::NotImplemented(
+        "CLOUD_CAPABILITY_DISABLED: hosted lease renewal requires supabase-cloud".into(),
+    ))
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn cloud_release_custody_if_bound(
+    root: &Path,
+    id: &str,
+    actor: &str,
+    reason: &str,
+    yield_lease: bool,
+) -> Result<(), error::DecapodError> {
+    use crate::core::cloud_workspace::{CloudCustodyStore, custody_release_or_reconcile};
+    let (project_root, main_repo, toplevel) = resolve_cloud_repo_roots(root);
+    let Ok(identity) = crate::core::repo_identity::resolve_repository_identity(&project_root)
+    else {
+        return Ok(());
+    };
+    let custody_store = CloudCustodyStore::machine()?;
+    let bound = custody_store.find_custody_for_task(
+        &main_repo,
+        Some(&toplevel),
+        &identity.canonical_name,
+        id,
+        None,
+    )?;
+    let meta = custody_store.load_lease_metadata(&identity.canonical_name, id)?;
+    let has_fence = bound
+        .as_ref()
+        .is_some_and(|r| r.fencing_generation.is_some())
+        || meta
+            .as_ref()
+            .is_some_and(|m| m.fencing_generation.is_some());
+    if !has_fence {
+        let _ = custody_store.remove_lease_metadata(&identity.canonical_name, id);
+        return Ok(());
+    }
+    let (transport, routed) =
+        crate::core::cloud_proof::DactylProofControlTransport::from_context(&main_repo, &identity)?;
+    custody_release_or_reconcile(
+        &transport,
+        &custody_store,
+        &main_repo,
+        &routed.canonical_name,
+        id,
+        actor,
+        reason,
+        yield_lease,
+        bound.as_ref(),
+    )?;
+    Ok(())
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+fn cloud_release_custody_if_bound(
+    _root: &Path,
+    _id: &str,
+    _actor: &str,
+    _reason: &str,
+    _yield_lease: bool,
+) -> Result<(), error::DecapodError> {
+    Ok(())
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn cloud_handoff_task(
+    root: &Path,
+    id: &str,
+    to: &str,
+    from: Option<&str>,
+    summary: &str,
+    lease_seconds: Option<u64>,
+    acting_agent: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    use crate::core::cloud_workspace::{CloudCustodyStore, custody_handoff_or_reconcile};
+    if authoring::is_missing_or_unknown_actor(acting_agent) {
+        return Err(authoring::authoring_actor_required_error());
+    }
+    if to.trim().is_empty() {
+        return Err(error::DecapodError::ValidationError(
+            "HANDOFF_INVALID_TARGET: handoff requires a non-empty --to agent id".into(),
+        ));
+    }
+    if from.is_some_and(|agent| agent == to) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "HANDOFF_SAME_AGENT: handoff from and to must differ; both are '{to}'"
+        )));
+    }
+    let ttl = lease_seconds.unwrap_or(DEFAULT_CLAIM_LEASE_SECS);
+    if !(60..=86400).contains(&ttl) {
+        return Err(error::DecapodError::ValidationError(format!(
+            "CLOUD_LEASE_TTL_INVALID: lease_seconds must be in 60..=86400, got {ttl}"
+        )));
+    }
+    let (project_root, main_repo, toplevel) = resolve_cloud_repo_roots(root);
+    let identity = crate::core::repo_identity::resolve_repository_identity(&project_root)?;
+    let (transport, routed) =
+        crate::core::cloud_proof::DactylProofControlTransport::from_context(&main_repo, &identity)?;
+    let custody_store = CloudCustodyStore::machine()?;
+    let bound = custody_store.find_custody_for_task(
+        &main_repo,
+        Some(&toplevel),
+        &routed.canonical_name,
+        id,
+        None,
+    )?;
+    let receipt = custody_handoff_or_reconcile(
+        &transport,
+        &custody_store,
+        &main_repo,
+        &routed.canonical_name,
+        id,
+        acting_agent,
+        to,
+        from,
+        ttl as i64,
+        summary,
+        bound.as_ref(),
+    )?;
+    Ok(serde_json::json!({
+        "ts": now_iso(),
+        "cmd": "todo.handoff",
+        "status": "ok",
+        "root": root.to_string_lossy(),
+        "backend": "dactyl",
+        "id": id,
+        "from": from.unwrap_or(acting_agent),
+        "to": to,
+        "task_revision": receipt.task_revision,
+        "fencing_generation": receipt.fencing_generation,
+        "lease_expires_at": receipt.expires_at,
+        "result": {
+            "status": "ok",
+            "assigned_to": receipt.assigned_to,
+            "task_revision": receipt.task_revision,
+            "lease_generation": receipt.fencing_generation,
+            "lease_expires_at": receipt.expires_at,
+        }
+    }))
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+fn cloud_handoff_task(
+    _root: &Path,
+    _id: &str,
+    _to: &str,
+    _from: Option<&str>,
+    _summary: &str,
+    _lease_seconds: Option<u64>,
+    _acting_agent: &str,
+) -> Result<JsonValue, error::DecapodError> {
+    Err(error::DecapodError::NotImplemented(
+        "HANDOFF_PROFILE_UNSUPPORTED: hosted lease handoff requires supabase-cloud".into(),
+    ))
 }
 
 pub fn run_cloud_todo_command_with_store(

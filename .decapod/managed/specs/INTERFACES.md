@@ -42,6 +42,17 @@
 - **Onboarding & boundary contracts (`docs/book/src/index.md`, `docs/book/src/quickstart.md`, `docs/book/src/configuration.md`)**:
   - Satisfies `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings`, avoids unqualified timing claims in `quickstart.md`, documents `cargo binstall decapod` vs `cargo install decapod --locked`, uses a short outcome-only coding-agent prompt (`Fix the failing retry-backoff test.`) paired with a visible proof summary, explains `[governance].main_merge` standing project delegation once in `configuration.md#standing-project-delegation` (preserving human PR review vs explicit opt-in merge distinction and labeling `#1981`/`#1982`/`#1983` target defaults as in-progress), preserves legacy Quickstart anchor IDs (`#1-installation-human` through `#8-checkpoints-validation-and-proof-agent-invoked`), and distinguishes exact-commit `decapod validate` gating (with stale-receipt invalidation on commit edits) from arbitrary semantic correctness.
 
+## `#1809` Hosted Cloud lease fencing & candidate proof CLI/RPC contracts (`src/decapod/core/cloud_proof.rs`, `cloud_workspace.rs`, `dactyl_todo.rs`, `todo.rs`, `cli.rs`)
+
+- **Cloud `todo` lease flags & parity matrix (`src/decapod/core/todo.rs`, `src/decapod/core/dactyl_todo.rs`, `src/decapod/core/cloud_parity_matrix.rs`)**:
+  - `decapod todo add` / `claim` / `renew` / `heartbeat` / `release` / `yield` / `handoff`: rejects `--mode shared` (`CLOUD_CLAIM_MODE_UNSUPPORTED`), out-of-range `--lease-seconds` (`CLOUD_LEASE_TTL_INVALID`, `60..=86400`), and empty `resource:` `--scope` (`CLOUD_RESOURCE_SCOPE_INVALID`); forwards valid `mode`, `lease_ttl_seconds`, and `intent_anchor` into `DactylTodoStore::claim_task_with_options_blocking` and `check_shared_resources` (`SHARED_RESOURCE_OCCUPIED` on active cross-task conflict).
+  - `cloud_parity_matrix::build_parity_matrix`: classifies `todo.lease.lifecycle` under `supported_logical_operations` and keeps `todo.claim.shared` in `unsupported_cloud_operations` (`never_falls_back_to_sqlite: true`).
+- **`decapod cloud proof` subcommands (`src/decapod/cli.rs::CloudProofCommand`, `src/decapod/lib.rs::run_cloud_proof_command`)**:
+  - `capture` (`--task`, `--artifact`, `--commit`), `verify` (`--task`, `--attestation`, `--fingerprint`, `--evidence-digest`, `--verifier-scope`, `--commit`), `admit` & `publish` (`--task`, `--attestation`, `--fingerprint`, `--accepted-commit`), `retire` (`--attestation`, `--fingerprint`, `--reason`), and `inspect` (`--attestation` / `--task`).
+- **Proof-acceptance control operations (`propodus_proof_acceptance_v1` / `_get_v1`)**:
+  - Additions: `custody_renew` (preserves `task_revision` & `fencing_generation` under active same-authority `heartbeat`), `custody_handoff` (`to_actor`, `expected_fencing_generation`, advances fence), `custody_release` (`yield_lease`, clears held resources & advances fence), and `resource_check` (`resources`, optional `exclude_task_id`).
+- **Verification scope (`tests/cloud_lease_fencing_1809.rs`, `tests/unit/core/todo_tests.rs`)**: Verified against in-process stateful `MockProofServer` (`ProofControlTransport`) and local Git fixtures; live Postgres 17 execution depends on `DecapodLabs/propodus#283`.
+
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -2785,8 +2796,8 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (298 files)
+- Repository signal fingerprint: `c1b514fbd3cf08b67b868e3e21ade772c2402237c616d54107d83286d9be4764`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (299 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
 

@@ -1262,6 +1262,99 @@ pub(crate) enum CloudCommand {
         #[clap(subcommand)]
         command: CloudUpgradesCommand,
     },
+    /// Submit, verify, admit, publish, retire, or reconstruct commit-bound Cloud proof attestations.
+    Proof {
+        #[clap(subcommand)]
+        command: CloudProofCommand,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum CloudProofCommand {
+    /// Capture commit/custody-bound proof evidence without asserting independent verification.
+    Capture {
+        #[clap(long)]
+        task_id: String,
+        #[clap(long)]
+        commit: Option<String>,
+        #[clap(long = "artifact")]
+        artifact: Vec<String>,
+        #[clap(long)]
+        operation_id: Option<String>,
+    },
+    /// Advance a captured attestation to `independently_verified` as an independent verifier.
+    Verify {
+        #[clap(long)]
+        attestation_id: String,
+        #[clap(long)]
+        fingerprint: String,
+        #[clap(long)]
+        candidate_commit: String,
+        #[clap(long)]
+        candidate_tree: String,
+        #[clap(long)]
+        evidence_digest: String,
+        #[clap(long)]
+        verifier_scope: String,
+        #[clap(long)]
+        operation_id: Option<String>,
+    },
+    /// Advance an independently verified attestation to `currently_admissible` against live fence/target/policy.
+    Admit {
+        #[clap(long)]
+        attestation_id: String,
+        #[clap(long)]
+        fingerprint: String,
+        #[clap(long)]
+        task_revision: i64,
+        #[clap(long)]
+        fencing_generation: i64,
+        #[clap(long)]
+        candidate_commit: String,
+        #[clap(long)]
+        accepted_target_commit: String,
+        #[clap(long)]
+        policy_digest: String,
+        #[clap(long)]
+        operation_id: Option<String>,
+    },
+    /// Advance an admissible attestation to `published` against live fence/target/policy.
+    Publish {
+        #[clap(long)]
+        attestation_id: String,
+        #[clap(long)]
+        fingerprint: String,
+        #[clap(long)]
+        task_revision: i64,
+        #[clap(long)]
+        fencing_generation: i64,
+        #[clap(long)]
+        candidate_commit: String,
+        #[clap(long)]
+        accepted_target_commit: String,
+        #[clap(long)]
+        policy_digest: String,
+        #[clap(long)]
+        operation_id: Option<String>,
+    },
+    /// Retire a published attestation to `historically_accepted`.
+    Retire {
+        #[clap(long)]
+        attestation_id: String,
+        #[clap(long)]
+        fingerprint: String,
+        #[clap(long)]
+        reason: String,
+        #[clap(long)]
+        operation_id: Option<String>,
+    },
+    /// Reconstruct hosted attestation state via `propodus_proof_acceptance_get_v1`.
+    Inspect {
+        #[clap(long)]
+        attestation_id: Option<String>,
+        #[clap(long)]
+        task_id: Option<String>,
+    },
 }
 
 #[derive(Subcommand, Debug)]

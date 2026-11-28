@@ -311,7 +311,11 @@ pub fn enforce_shared_resource_available(
     }
     let broker = DbBroker::new(root);
     if broker.is_cloud() {
-        return Ok(());
+        return crate::core::cloud_workspace::enforce_cloud_shared_resources(
+            root,
+            requested_resources,
+            affected_operation,
+        );
     }
     let db_path = todo_db_path(root);
     if !db_path.exists() {

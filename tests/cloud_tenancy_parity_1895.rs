@@ -1945,14 +1945,14 @@ fn multi_org_cloud_tenancy_parity_and_no_sqlite_fallback() {
     assert_eq!(completed.status, "completed");
     assert_eq!(completed.version, 3);
 
-    // Verify cloud unsupported operation (`todo.lease.renew` & `todo.edit`) fails closed without SQLite fallback
+    // Verify hosted renew without active custody / non-holder fails closed without SQLite fallback
     let renew_err = winner_store
         .renew_task_lease_blocking(&task_1a_id, winner_actor.clone(), 120)
-        .expect_err("cloud lease renew must be unsupported");
+        .expect_err("cloud lease renew without active bound custody must fail closed");
     assert!(
-        renew_err
-            .to_string()
-            .contains("CLOUD_LEASE_RENEW_UNSUPPORTED")
+        renew_err.to_string().contains("LEASE_RENEW_DENIED")
+            || renew_err.to_string().contains("CLOUD_CUSTODY_UNBOUND"),
+        "unexpected renew_err: {renew_err}"
     );
     let edit_err = run_cli(
         &repo_1a,

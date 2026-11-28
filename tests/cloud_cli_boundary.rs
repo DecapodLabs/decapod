@@ -233,11 +233,16 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
         &factory,
     )
     .expect_err("a hosted claim cannot renew without a hosted write");
-    assert!(matches!(
-        renewal,
-        DecapodError::NotImplemented(message)
-            if message.starts_with("CLOUD_LEASE_RENEW_UNSUPPORTED:")
-    ));
+    let renewal_msg = renewal.to_string();
+    assert!(
+        matches!(
+            renewal,
+            DecapodError::CloudAuth(_) | DecapodError::ValidationError(_)
+        ) && (renewal_msg.contains("CLOUD_")
+            || renewal_msg.contains("Dactyl cloud")
+            || renewal_msg.contains("login")),
+        "hosted renew without bound custody / configured transport must fail closed with typed cloud error: {renewal_msg}"
+    );
     let route = BackendRoute::Cloud {
         repository: resolve_repository_identity(project.path()).expect("fixture repository"),
         uri: "invalid fixture URI".into(),
@@ -247,12 +252,13 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
     let adapter = DactylTodoStore::new(context, "DecapodLabs/decapod");
     let renewal = adapter
         .renew_task_lease_blocking("cloud-cli-1", "cloud-cli-agent".into(), 300)
-        .expect_err("remote adapter cannot renew via its local lease cache");
+        .expect_err("remote adapter cannot renew without bound hosted custody or remote RPC");
+    let adapter_msg = renewal.to_string();
     assert!(
-        renewal
-            .to_string()
-            .starts_with("CLOUD_LEASE_RENEW_UNSUPPORTED:"),
-        "unexpected adapter error: {renewal}"
+        adapter_msg.contains("CLOUD_CUSTODY_UNBOUND")
+            || adapter_msg.contains("Dactyl cloud")
+            || adapter_msg.contains("invalid fixture URI"),
+        "unexpected adapter error: {adapter_msg}"
     );
     run_todo_cli_with_cloud_factory(
         &decapod_store,
@@ -274,7 +280,7 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
         store.calls(),
         ["list", "add", "list", "list", "claim", "complete", "list"]
     );
-    assert_eq!(*factory.builds.lock().expect("builds lock"), 7);
+    assert_eq!(*factory.builds.lock().expect("builds lock"), 8);
     assert!(
         factory
             .identities
@@ -328,7 +334,7 @@ fn production_cli_dispatch_uses_remote_store_and_never_local_sqlite() {
             .last()
             .is_some_and(|identity| identity == "someone/decapod")
     );
-    assert_eq!(*factory.builds.lock().expect("builds lock"), 8);
+    assert_eq!(*factory.builds.lock().expect("builds lock"), 9);
 }
 
 #[test]

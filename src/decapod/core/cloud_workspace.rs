@@ -12,8 +12,10 @@ use crate::core::backend::{BackendRoute, BackendSelection, StorageContext};
 use crate::core::bounded_process::{BoundedCommand, CONTROL_TIMEOUT};
 use crate::core::cloud_proof::{
     CloudControlDenialKind, CloudControlError, CustodyBindReceipt, CustodyBindRequest,
-    CustodyGetRequest, PROOF_ACCEPTANCE_CONTROL_OP, PROOF_ACCEPTANCE_READ_OP,
-    ProofControlTransport, custody_bind, custody_get, new_uuid_v4,
+    CustodyGetRequest, CustodyHandoffReceipt, CustodyHandoffRequest, CustodyReleaseReceipt,
+    CustodyReleaseRequest, CustodyRenewRequest, PROOF_ACCEPTANCE_CONTROL_OP,
+    PROOF_ACCEPTANCE_READ_OP, ProofControlTransport, ResourceCheckRequest, check_shared_resources,
+    custody_bind, custody_get, custody_handoff, custody_release, custody_renew, new_uuid_v4,
     reconcile_operation_after_unknown,
 };
 use crate::core::container_runtime;
@@ -174,6 +176,182 @@ impl CloudCustodyStore {
             Ok(()) => Ok(()),
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(()),
             Err(err) => Err(DecapodError::IoError(err)),
+        }
+    }
+
+    fn lease_meta_path(&self, project_id: &str, task_id: &str) -> PathBuf {
+        let mut hasher = Sha256::new();
+        hasher.update(b"cloud-lease-meta.v1");
+        hasher.update([0u8]);
+        hasher.update(project_id.as_bytes());
+        hasher.update([0u8]);
+        hasher.update(task_id.as_bytes());
+        let key = format!("{:x}", hasher.finalize())[..32].to_string();
+        self.directory.join(format!("lease_{key}.json"))
+    }
+
+    pub fn load_lease_metadata(
+        &self,
+        project_id: &str,
+        task_id: &str,
+    ) -> Result<Option<CloudLeaseMetadata>, DecapodError> {
+        let path = self.lease_meta_path(project_id, task_id);
+        if !path.exists() {
+            return Ok(None);
+        }
+        let bytes = fs::read(&path).map_err(DecapodError::IoError)?;
+        let meta: CloudLeaseMetadata = serde_json::from_slice(&bytes).map_err(|e| {
+            DecapodError::ValidationError(format!(
+                "CLOUD_CUSTODY_RECORD_INVALID: unreadable lease metadata {}: {e}",
+                path.display()
+            ))
+        })?;
+        Ok(Some(meta))
+    }
+
+    pub fn save_lease_metadata(&self, meta: &CloudLeaseMetadata) -> Result<(), DecapodError> {
+        fs_permissions::ensure_private_dir(&self.directory).map_err(DecapodError::IoError)?;
+        let path = self.lease_meta_path(&meta.project_id, &meta.task_id);
+        let bytes = serde_json::to_vec_pretty(meta).map_err(|e| {
+            DecapodError::ValidationError(format!("failed serializing cloud lease metadata: {e}"))
+        })?;
+        fs_permissions::write_private(&path, bytes).map_err(DecapodError::IoError)
+    }
+
+    pub fn remove_lease_metadata(
+        &self,
+        project_id: &str,
+        task_id: &str,
+    ) -> Result<(), DecapodError> {
+        let path = self.lease_meta_path(project_id, task_id);
+        match fs::remove_file(path) {
+            Ok(()) => Ok(()),
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(err) => Err(DecapodError::IoError(err)),
+        }
+    }
+
+    /// Resolve a bound checkout custody record for `(project_id, task_id)`, preferring
+    /// `checkout_hint` if bound, otherwise scanning non-symlink records in `self.directory`.
+    pub fn find_custody_for_task(
+        &self,
+        main_root: &Path,
+        checkout_hint: Option<&Path>,
+        project_id: &str,
+        task_id: &str,
+        actor: Option<&str>,
+    ) -> Result<Option<CloudCustodyRecord>, DecapodError> {
+        if let Some(hint) = checkout_hint
+            && let Some(rec) = self.load(main_root, hint)?
+            && rec.project_id == project_id
+            && rec.task_id == task_id
+            && actor.is_none_or(|a| rec.actor == a)
+        {
+            return Ok(Some(rec));
+        }
+        if !self.directory.exists() {
+            return Ok(None);
+        }
+        let entries = fs::read_dir(&self.directory).map_err(DecapodError::IoError)?;
+        let mut best: Option<CloudCustodyRecord> = None;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+                continue;
+            };
+            if !name.ends_with(".json") || name.starts_with("lease_") {
+                continue;
+            }
+            let Ok(meta) = fs::symlink_metadata(&path) else {
+                continue;
+            };
+            if !meta.file_type().is_file() {
+                continue;
+            }
+            let Ok(bytes) = fs::read(&path) else {
+                continue;
+            };
+            let Ok(rec) = serde_json::from_slice::<CloudCustodyRecord>(&bytes) else {
+                continue;
+            };
+            if rec.version == CUSTODY_RECORD_VERSION
+                && rec.project_id == project_id
+                && rec.task_id == task_id
+                && actor.is_none_or(|a| rec.actor == a)
+            {
+                best = Some(rec);
+                break;
+            }
+        }
+        Ok(best)
+    }
+}
+
+/// Non-secret machine-local durable tracking for hosted task lease metadata,
+/// pending operation IDs (for `outcome_unknown` reconciliation across CLI restarts),
+/// and bound proof-attestation IDs. Authority always remains server-owned.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct CloudLeaseMetadata {
+    pub version: u16,
+    pub project_id: String,
+    pub task_id: String,
+    pub actor: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intent_anchor: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workspace_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub custody_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub task_revision: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fencing_generation: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_operation_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_action: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_target_actor: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_ttl_seconds: Option<i64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_attestation_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_attestation_fingerprint: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub last_attestation_state: Option<String>,
+}
+
+impl CloudLeaseMetadata {
+    pub fn new(
+        project_id: impl Into<String>,
+        task_id: impl Into<String>,
+        actor: impl Into<String>,
+    ) -> Self {
+        Self {
+            version: CUSTODY_RECORD_VERSION,
+            project_id: project_id.into(),
+            task_id: task_id.into(),
+            actor: actor.into(),
+            scope: None,
+            intent_anchor: None,
+            workspace_id: None,
+            custody_id: None,
+            task_revision: None,
+            fencing_generation: None,
+            expires_at: None,
+            pending_operation_id: None,
+            pending_action: None,
+            pending_target_actor: None,
+            pending_ttl_seconds: None,
+            last_attestation_id: None,
+            last_attestation_fingerprint: None,
+            last_attestation_state: None,
         }
     }
 }
@@ -482,6 +660,410 @@ pub fn custody_bind_or_reconcile<T: ProofControlTransport>(
     record.expires_at = Some(live.expires_at.clone());
     store.save(main_root, &record)?;
     Ok((record, live))
+}
+
+fn should_preserve_pending_operation(err: &DecapodError) -> bool {
+    let msg = err.to_string();
+    msg.contains("CLOUD_OUTCOME_UNKNOWN")
+        || msg.contains("CLOUD_CONTROL_UNAVAILABLE")
+        || msg.contains("CLOUD_QUOTA_EXCEEDED")
+}
+
+fn operation_not_found_during_reconcile(err: &DecapodError) -> bool {
+    err.to_string()
+        .contains("operation not found during reconciliation")
+}
+
+/// Crash-safe renewal or heartbeat of an active Cloud custody lease.
+/// Persists the generated `operation_id` in machine-local `CloudLeaseMetadata`
+/// before submit so commit-before-ack loss reconciles via `get_operation`.
+pub fn custody_renew_or_reconcile<T: ProofControlTransport>(
+    transport: &T,
+    store: &CloudCustodyStore,
+    main_root: &Path,
+    record: &mut CloudCustodyRecord,
+    ttl_seconds: i64,
+    heartbeat: bool,
+) -> Result<CustodyBindReceipt, DecapodError> {
+    let task_revision = record.task_revision.ok_or_else(|| {
+        DecapodError::ValidationError(
+            "CLOUD_CUSTODY_UNCONFIRMED: cannot renew unconfirmed custody binding".into(),
+        )
+    })?;
+    let fencing_generation = record.fencing_generation.ok_or_else(|| {
+        DecapodError::ValidationError(
+            "CLOUD_CUSTODY_UNCONFIRMED: cannot renew unconfirmed custody fence".into(),
+        )
+    })?;
+    let mut meta = store
+        .load_lease_metadata(&record.project_id, &record.task_id)?
+        .unwrap_or_else(|| {
+            CloudLeaseMetadata::new(&record.project_id, &record.task_id, &record.actor)
+        });
+    let mut resumed_op_id = None;
+    if meta.pending_action.as_deref() == Some("custody_renew")
+        && let Some(pending_op_id) = meta.pending_operation_id.clone()
+    {
+        match reconcile_operation_after_unknown(transport, &record.project_id, &pending_op_id, None)
+        {
+            Ok(reconciled) => {
+                let (reconciled_rev, reconciled_gen) = validate_reconciled_bind_identity(
+                    &reconciled,
+                    &record.project_id,
+                    &record.task_id,
+                    &record.workspace_id,
+                    &record.custody_id,
+                    &pending_op_id,
+                )?;
+                let live = custody_get(
+                    transport,
+                    &CustodyGetRequest {
+                        project_id: record.project_id.clone(),
+                        task_id: record.task_id.clone(),
+                        workspace_id: record.workspace_id.clone(),
+                        custody_id: record.custody_id.clone(),
+                        task_revision: reconciled_rev,
+                        fencing_generation: reconciled_gen,
+                    },
+                )?;
+                record.task_revision = Some(live.task_revision);
+                record.fencing_generation = Some(live.fencing_generation);
+                record.expires_at = Some(live.expires_at.clone());
+                store.save(main_root, record)?;
+                meta.task_revision = Some(live.task_revision);
+                meta.fencing_generation = Some(live.fencing_generation);
+                meta.expires_at = Some(live.expires_at.clone());
+                meta.pending_operation_id = None;
+                meta.pending_action = None;
+                store.save_lease_metadata(&meta)?;
+                return Ok(live);
+            }
+            Err(err) if operation_not_found_during_reconcile(&err) => {
+                resumed_op_id = Some(pending_op_id);
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    let op_id = match resumed_op_id {
+        Some(existing) => existing,
+        None => {
+            let fresh = new_uuid_v4()?;
+            meta.workspace_id = Some(record.workspace_id.clone());
+            meta.custody_id = Some(record.custody_id.clone());
+            meta.task_revision = Some(task_revision);
+            meta.fencing_generation = Some(fencing_generation);
+            meta.pending_operation_id = Some(fresh.clone());
+            meta.pending_action = Some("custody_renew".to_string());
+            store.save_lease_metadata(&meta)?;
+            fresh
+        }
+    };
+
+    let receipt = match custody_renew(
+        transport,
+        &CustodyRenewRequest {
+            project_id: record.project_id.clone(),
+            operation_id: op_id,
+            task_id: record.task_id.clone(),
+            workspace_id: record.workspace_id.clone(),
+            custody_id: record.custody_id.clone(),
+            expected_task_revision: task_revision,
+            expected_fencing_generation: fencing_generation,
+            ttl_seconds,
+            heartbeat,
+        },
+    ) {
+        Ok(r) => r,
+        Err(err) => {
+            if !should_preserve_pending_operation(&err) {
+                meta.pending_operation_id = None;
+                meta.pending_action = None;
+                let _ = store.save_lease_metadata(&meta);
+            }
+            return Err(err);
+        }
+    };
+
+    record.task_revision = Some(receipt.task_revision);
+    record.fencing_generation = Some(receipt.fencing_generation);
+    record.expires_at = Some(receipt.expires_at.clone());
+    store.save(main_root, record)?;
+    meta.task_revision = Some(receipt.task_revision);
+    meta.fencing_generation = Some(receipt.fencing_generation);
+    meta.expires_at = Some(receipt.expires_at.clone());
+    meta.pending_operation_id = None;
+    meta.pending_action = None;
+    store.save_lease_metadata(&meta)?;
+    Ok(receipt)
+}
+
+/// Crash-safe authorized handoff of an active Cloud custody lease.
+/// Retires any bound local `CloudCustodyRecord` for the old holder once transferred.
+#[allow(clippy::too_many_arguments)]
+pub fn custody_handoff_or_reconcile<T: ProofControlTransport>(
+    transport: &T,
+    store: &CloudCustodyStore,
+    main_root: &Path,
+    project_id: &str,
+    task_id: &str,
+    actor: &str,
+    to_actor: &str,
+    from_actor: Option<&str>,
+    ttl_seconds: i64,
+    summary: &str,
+    bound_record: Option<&CloudCustodyRecord>,
+) -> Result<CustodyHandoffReceipt, DecapodError> {
+    let mut meta = store
+        .load_lease_metadata(project_id, task_id)?
+        .unwrap_or_else(|| CloudLeaseMetadata::new(project_id, task_id, actor));
+    let expected_fence = bound_record
+        .and_then(|r| r.fencing_generation)
+        .or(meta.fencing_generation);
+    let mut resumed_op_id = None;
+    if meta.pending_action.as_deref() == Some("custody_handoff")
+        && meta.pending_target_actor.as_deref() == Some(to_actor)
+        && let Some(existing_op) = meta.pending_operation_id.clone()
+    {
+        match reconcile_operation_after_unknown(transport, project_id, &existing_op, None) {
+            Ok(reconciled) => {
+                let receipt = CustodyHandoffReceipt {
+                    task_revision: reconciled["task_revision"].as_i64().unwrap_or(1),
+                    fencing_generation: reconciled["fencing_generation"].as_i64().unwrap_or(1),
+                    assigned_to: reconciled["assigned_to"]
+                        .as_str()
+                        .unwrap_or(to_actor)
+                        .to_string(),
+                    expires_at: reconciled["expires_at"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_string(),
+                };
+                if let Some(rec) = bound_record {
+                    let _ = store.remove(main_root, &rec.worktree_path);
+                }
+                meta.actor = to_actor.to_string();
+                meta.task_revision = Some(receipt.task_revision);
+                meta.fencing_generation = Some(receipt.fencing_generation);
+                meta.expires_at = Some(receipt.expires_at.clone());
+                meta.pending_operation_id = None;
+                meta.pending_action = None;
+                meta.pending_target_actor = None;
+                store.save_lease_metadata(&meta)?;
+                return Ok(receipt);
+            }
+            Err(err) if operation_not_found_during_reconcile(&err) => {
+                resumed_op_id = Some(existing_op);
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    let op_id = match resumed_op_id {
+        Some(existing) => existing,
+        None => {
+            let fresh = new_uuid_v4()?;
+            meta.pending_operation_id = Some(fresh.clone());
+            meta.pending_action = Some("custody_handoff".to_string());
+            meta.pending_target_actor = Some(to_actor.to_string());
+            store.save_lease_metadata(&meta)?;
+            fresh
+        }
+    };
+
+    let receipt = match custody_handoff(
+        transport,
+        &CustodyHandoffRequest {
+            project_id: project_id.to_string(),
+            operation_id: op_id,
+            task_id: task_id.to_string(),
+            to_actor: to_actor.to_string(),
+            from_actor: from_actor.map(ToOwned::to_owned),
+            expected_fencing_generation: expected_fence,
+            ttl_seconds,
+            summary: summary.to_string(),
+        },
+    ) {
+        Ok(r) => r,
+        Err(err) => {
+            if !should_preserve_pending_operation(&err) {
+                meta.pending_operation_id = None;
+                meta.pending_action = None;
+                meta.pending_target_actor = None;
+                let _ = store.save_lease_metadata(&meta);
+            }
+            return Err(err);
+        }
+    };
+
+    if let Some(rec) = bound_record {
+        let _ = store.remove(main_root, &rec.worktree_path);
+    }
+    meta.actor = to_actor.to_string();
+    meta.task_revision = Some(receipt.task_revision);
+    meta.fencing_generation = Some(receipt.fencing_generation);
+    meta.expires_at = Some(receipt.expires_at.clone());
+    meta.pending_operation_id = None;
+    meta.pending_action = None;
+    meta.pending_target_actor = None;
+    store.save_lease_metadata(&meta)?;
+    Ok(receipt)
+}
+
+/// Crash-safe deterministic release/yield of an active Cloud custody lease.
+#[allow(clippy::too_many_arguments)]
+pub fn custody_release_or_reconcile<T: ProofControlTransport>(
+    transport: &T,
+    store: &CloudCustodyStore,
+    main_root: &Path,
+    project_id: &str,
+    task_id: &str,
+    actor: &str,
+    reason: &str,
+    yield_lease: bool,
+    bound_record: Option<&CloudCustodyRecord>,
+) -> Result<CustodyReleaseReceipt, DecapodError> {
+    let mut meta = store
+        .load_lease_metadata(project_id, task_id)?
+        .unwrap_or_else(|| CloudLeaseMetadata::new(project_id, task_id, actor));
+    let expected_fence = bound_record
+        .and_then(|r| r.fencing_generation)
+        .or(meta.fencing_generation);
+    let mut resumed_op_id = None;
+    if meta.pending_action.as_deref() == Some("custody_release")
+        && let Some(existing_op) = meta.pending_operation_id.clone()
+    {
+        match reconcile_operation_after_unknown(transport, project_id, &existing_op, None) {
+            Ok(reconciled) => {
+                let receipt = CustodyReleaseReceipt {
+                    status: reconciled["status"]
+                        .as_str()
+                        .unwrap_or("custody_released")
+                        .to_string(),
+                    task_revision: reconciled["task_revision"].as_i64().unwrap_or(1),
+                    fencing_generation: reconciled["fencing_generation"].as_i64().unwrap_or(1),
+                };
+                if let Some(rec) = bound_record {
+                    let _ = store.remove(main_root, &rec.worktree_path);
+                }
+                let _ = store.remove_lease_metadata(project_id, task_id);
+                return Ok(receipt);
+            }
+            Err(err) if operation_not_found_during_reconcile(&err) => {
+                resumed_op_id = Some(existing_op);
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    let op_id = match resumed_op_id {
+        Some(existing) => existing,
+        None => {
+            let fresh = new_uuid_v4()?;
+            meta.pending_operation_id = Some(fresh.clone());
+            meta.pending_action = Some("custody_release".to_string());
+            store.save_lease_metadata(&meta)?;
+            fresh
+        }
+    };
+
+    let receipt = match custody_release(
+        transport,
+        &CustodyReleaseRequest {
+            project_id: project_id.to_string(),
+            operation_id: op_id,
+            task_id: task_id.to_string(),
+            expected_fencing_generation: expected_fence,
+            reason: reason.to_string(),
+            yield_lease,
+        },
+    ) {
+        Ok(r) => r,
+        Err(err) => {
+            if !should_preserve_pending_operation(&err) {
+                meta.pending_operation_id = None;
+                meta.pending_action = None;
+                let _ = store.save_lease_metadata(&meta);
+            }
+            return Err(err);
+        }
+    };
+
+    if let Some(rec) = bound_record {
+        let _ = store.remove(main_root, &rec.worktree_path);
+    }
+    let _ = store.remove_lease_metadata(project_id, task_id);
+    Ok(receipt)
+}
+
+/// Enforce named exclusive shared-resource reservations (`resource:<name>`) on
+/// Cloud projects via hosted `propodus_proof_acceptance_get_v1` (`resource_check`),
+/// failing closed without local SQLite fallback.
+#[cfg(feature = "supabase-cloud")]
+pub fn enforce_cloud_shared_resources(
+    root: &Path,
+    requested_resources: &[&str],
+    affected_operation: &str,
+) -> Result<(), DecapodError> {
+    if requested_resources.is_empty() {
+        return Ok(());
+    }
+    let project_root = if root.file_name().is_some_and(|n| n == "data")
+        && root
+            .parent()
+            .and_then(|p| p.file_name())
+            .is_some_and(|n| n == ".decapod")
+    {
+        root.parent()
+            .and_then(|p| p.parent())
+            .unwrap_or(root)
+            .to_path_buf()
+    } else {
+        root.to_path_buf()
+    };
+    let main_repo = workspace::get_main_repo_root(&project_root).unwrap_or(project_root.clone());
+    let identity = resolve_repository_identity(&main_repo)?;
+    let (transport, routed) =
+        crate::core::cloud_proof::DactylProofControlTransport::from_context(&main_repo, &identity)?;
+    let store = CloudCustodyStore::machine().ok();
+    let exclude_task_id = store
+        .as_ref()
+        .and_then(|s| {
+            workspace::git_toplevel(&project_root)
+                .ok()
+                .flatten()
+                .and_then(|tl| s.load(&main_repo, &tl).ok().flatten())
+        })
+        .map(|rec| rec.task_id);
+    let req = ResourceCheckRequest {
+        project_id: routed.canonical_name,
+        resources: requested_resources
+            .iter()
+            .map(|s| (*s).to_string())
+            .collect(),
+        exclude_task_id,
+    };
+    if let Some(conflict) = check_shared_resources(&transport, &req)? {
+        return Err(DecapodError::ValidationError(format!(
+            "SHARED_RESOURCE_OCCUPIED: operation '{affected_operation}' requires shared resource '{}', which is exclusively reserved by active hosted task '{}' (holder '{}', predicate=resource_reservation, affected_operation={affected_operation}). Wait for custody release or coordinate handoff before mutating '{}'.",
+            conflict.resource, conflict.task_id, conflict.holder, conflict.resource
+        )));
+    }
+    Ok(())
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+pub fn enforce_cloud_shared_resources(
+    _root: &Path,
+    requested_resources: &[&str],
+    _affected_operation: &str,
+) -> Result<(), DecapodError> {
+    if requested_resources.is_empty() {
+        return Ok(());
+    }
+    Err(DecapodError::NotImplemented(
+        "CLOUD_CAPABILITY_DISABLED: hosted shared resource checks require supabase-cloud".into(),
+    ))
 }
 
 /// Returns true if execution is running inside a Decapod Cloud container using
@@ -1222,10 +1804,16 @@ pub fn admit_cloud_checkout(
             )));
         }
         let store = CloudCustodyStore::machine()?;
+        let existing_meta = store.load_lease_metadata(&routed.canonical_name, &primary_task.id)?;
+        let requested_ttl = existing_meta
+            .as_ref()
+            .and_then(|m| m.pending_ttl_seconds)
+            .unwrap_or(DEFAULT_CUSTODY_TTL_SECONDS)
+            .clamp(60, 86400);
         let workspace_id = workspace_id_for_checkout(main_root, worktree_path);
         let params = CloudCustodyBindParams {
             origin,
-            project_id: routed.canonical_name,
+            project_id: routed.canonical_name.clone(),
             task_id: primary_task.id.clone(),
             task_title: primary_task.title.clone(),
             native_task_version: i64::from(primary_task.version).max(1),
@@ -1233,11 +1821,22 @@ pub fn admit_cloud_checkout(
             worktree_path: worktree_path.to_path_buf(),
             branch: branch.to_string(),
             actor: actor.to_string(),
-            ttl_seconds: DEFAULT_CUSTODY_TTL_SECONDS,
+            ttl_seconds: requested_ttl,
             invocation_id: invocation_id.map(ToOwned::to_owned),
             container_expected,
         };
-        let (record, _receipt) = custody_bind_or_reconcile(&transport, &store, main_root, &params)?;
+        let (record, receipt) = custody_bind_or_reconcile(&transport, &store, main_root, &params)?;
+        let mut meta = existing_meta.unwrap_or_else(|| {
+            CloudLeaseMetadata::new(&routed.canonical_name, &primary_task.id, actor)
+        });
+        meta.actor = actor.to_string();
+        meta.scope = Some(primary_task.scope.clone());
+        meta.workspace_id = Some(record.workspace_id.clone());
+        meta.custody_id = Some(record.custody_id.clone());
+        meta.task_revision = Some(receipt.task_revision);
+        meta.fencing_generation = Some(receipt.fencing_generation);
+        meta.expires_at = Some(receipt.expires_at.clone());
+        let _ = store.save_lease_metadata(&meta);
         let todo_tasks: Vec<TodoTask> = matching_tasks
             .iter()
             .map(storage_task_to_todo_task)

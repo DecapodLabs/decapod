@@ -345,23 +345,35 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
                 "tests/cloud_tenancy_parity_1895.rs".to_string(),
             ],
         },
+        ParityOperationEntry {
+            operation_id: "todo.lease.lifecycle".to_string(),
+            domain: ParityDomain::CustodyAndLeases,
+            support_class: ParitySupportClass::SupportedLogicalParity,
+            local_carrier: "`.decapod/data/todo.db` lease columns + monotonic `lease_generation` + `authoring_bindings`".to_string(),
+            cloud_carrier: "Propodus `propodus_proof_acceptance_v1` (`custody_bind`/`custody_renew`/`custody_handoff`/`custody_release`) + `proof_task_fences`".to_string(),
+            local_semantics: "Enforces exclusive claims, same-generation heartbeat renewal, generation-advancing handoff/release, and cross-task `resource:<name>` locks.".to_string(),
+            cloud_semantics: "Uses server-authoritative time, principal/account identity, `task_revision`, `fencing_generation`, and cross-task `resource:<name>` exclusion without SQLite fallback.".to_string(),
+            shared_invariants: vec![
+                "INV-FENCING-MONOTONIC".to_string(),
+                "INV-ATOMIC-TASK-EVENT".to_string(),
+                "INV-NO-SILENT-FALLBACK".to_string(),
+            ],
+            failure_mode_on_denial_or_offline: "Stale fence, non-holder, or expired lease fails closed (`403`/`409`) without local SQLite fallback; `outcome_unknown` reconciles via `get_operation`.".to_string(),
+            proof_refs: vec![
+                "src/decapod/core/cloud_proof.rs".to_string(),
+                "src/decapod/core/cloud_workspace.rs".to_string(),
+                "tests/cloud_tenancy_parity_1895.rs".to_string(),
+            ],
+        },
     ];
 
     let unsupported_cloud_operations = vec![
         UnsupportedCloudOperation {
-            operation_id: "todo.lease.renew".to_string(),
-            domain: ParityDomain::CustodyAndLeases,
-            local_supported: true,
-            cloud_behavior: "Fails closed immediately with `CLOUD_LEASE_RENEW_UNSUPPORTED`; hosted task contract has no authoritative lease renewal op.".to_string(),
-            reason_code: "CLOUD_LEASE_RENEW_UNSUPPORTED".to_string(),
-            never_falls_back_to_sqlite: true,
-        },
-        UnsupportedCloudOperation {
             operation_id: "todo.claim.shared".to_string(),
             domain: ParityDomain::AuthorizationScopedTransitions,
             local_supported: true,
-            cloud_behavior: "Fails closed (`governance.allow_basic_shared_claims` is local-only); Cloud-backed claims do not use cooperative local shared-claim opt-in.".to_string(),
-            reason_code: "CLOUD_UNSUPPORTED_OPERATION".to_string(),
+            cloud_behavior: "Fails closed immediately with `CLOUD_CLAIM_MODE_UNSUPPORTED` (`governance.allow_basic_shared_claims` is local-only); Cloud-backed claims do not silently downgrade `--mode shared`.".to_string(),
+            reason_code: "CLOUD_CLAIM_MODE_UNSUPPORTED".to_string(),
             never_falls_back_to_sqlite: true,
         },
         UnsupportedCloudOperation {
@@ -377,14 +389,6 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
             domain: ParityDomain::TaskEventCasOrdering,
             local_supported: true,
             cloud_behavior: "Returns `NotImplemented` without touching `.decapod/data/decapod.db`.".to_string(),
-            reason_code: "CLOUD_UNSUPPORTED_OPERATION".to_string(),
-            never_falls_back_to_sqlite: true,
-        },
-        UnsupportedCloudOperation {
-            operation_id: "todo.handoff".to_string(),
-            domain: ParityDomain::AuthorizationScopedTransitions,
-            local_supported: true,
-            cloud_behavior: "Returns `NotImplemented` without local SQLite fallback.".to_string(),
             reason_code: "CLOUD_UNSUPPORTED_OPERATION".to_string(),
             never_falls_back_to_sqlite: true,
         },
@@ -826,9 +830,16 @@ mod tests {
         assert!(check.cloud_sqlite_fallback_forbidden);
         assert!(
             first
+                .operations
+                .iter()
+                .any(|op| op.operation_id == "todo.lease.lifecycle"
+                    && op.support_class == ParitySupportClass::SupportedLogicalParity)
+        );
+        assert!(
+            first
                 .unsupported_cloud_operations
                 .iter()
-                .any(|op| op.operation_id == "todo.lease.renew")
+                .any(|op| op.operation_id == "todo.claim.shared")
         );
         assert!(
             first

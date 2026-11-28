@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a9468771e4c725df0bb2ec288f451ca599dffbb2",
+    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,55 +872,102 @@
     }
   },
   "change": {
-    "id": "feat_01m8g099z2crqzh3",
-    "base_commit": "a9468771e4c725df0bb2ec288f451ca599dffbb2",
+    "id": "change_01M8G0C9WCRSM039C751ZSMRRK",
+    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1981-1983-professional-defaults": {
-      "statement": "Decapod derives outcome-implied professional duties across code and non-code profiles (#1981), enforces behavior-relevant verification coverage (#1982), and advances authorized standing delivery endpoints across cold workunit continuation (#1983, #1367) without regressing bug-fix verification defaults.",
-      "falsifier": "Any unit or integration test in tests/professional_defaults_1981_1983.rs, tests/infer_precision.rs, tests/unit/core/effective_grant_tests.rs, tests/unit/core/validate_tests.rs, or tests/unit/lib_init_prompt_tests.rs fails, or remote CI/Decapod Validate rejects the candidate.",
+    "claim_1809_fencing": {
+      "statement": "Cloud todo claims, renew/heartbeat, handoff, release/yield, named resource:<name> checks, crash reconciliation, and candidate proof capture enforce server-authoritative fencing without fabricated custody IDs or SQLite fallback (21/21 integration tests pass locally against MockProofServer; remote GHA decapod validate & live PG17 propodus#283 pending)",
+      "falsifier": "cloud_lease_fencing_1809/cloud_cli_boundary/cloud_tenancy_parity_1895/cloud_wave_parity/cloud_workspace_validation_1886 or unit tests fail, or SQLite decapod.db is created under backend=cloud",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/professional_defaults.rs",
-        "tests/professional_defaults_1981_1983.rs",
-        "tests/unit/core/effective_grant_tests.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/lib_init_prompt_tests.rs"
+        "tests/cloud_lease_fencing_1809.rs",
+        "tests/unit/core/todo_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-1981-1983-a9468771e",
-      "summary": "Rebase #1981/#1982/#1983/#1367 outcome-implied professional defaults, behavior-relevant proof, and standing delivery endpoints onto origin/master@a9468771e4c7",
-      "input_digest": "sha256:fae9fea6e14975b0a7cad129a342634f88632b03fc4693e3b09e118672d9cbbc"
+      "id": "chk-1809-v01694",
+      "summary": "Implement #1809 hosted lease fencing, crash-safe CloudLeaseMetadata reconciliation, non-fabricated proof capture, Cloud tests, and v0.169.4 specs",
+      "input_digest": "sha256:f9ab708d248e2e2e6032e77ab55dbad34c098d929c4888c5bb0acbd8a6080aa3"
     },
     {
-      "id": "chk-1981-1983-clippy-fix",
-      "summary": "Fix clippy::too_many_arguments on make_duty and verify zero clippy warnings across --all-targets --all-features",
-      "input_digest": "sha256:0eb81063f34753cd344b6c10448a3403610ad6f5abc964751cfe267cfd2ab072"
+      "id": "chk-1809-v01694-supported",
+      "summary": "Promote claim_1809_fencing to supported with verified Cloud integration & unit proof refs",
+      "input_digest": "sha256:cbcbb6b936becff4c0347c11b0038c7934ac44c77404d14499a53e6ddd5b5bd6"
+    },
+    {
+      "id": "chk-1809-v01694-digest",
+      "summary": "Pin exact 64-hex reviewed_sources_digest for a2d7266db and refresh specs manifest",
+      "input_digest": "sha256:3c96ea35f5959817b8168cf042e0a5364d0acca405e8778215b7855fe12d84ed"
+    },
+    {
+      "id": "chk-1809-v01694-reviewed",
+      "summary": "Record review-spec dispositions, supported claim_1809_fencing, exact reviewed_sources_digest, and v0.169.4 Dockerfile",
+      "input_digest": "sha256:baf665352a59362ef017e307629f2b064a7016b56f76f53bae49b79f74dcfd12"
+    },
+    {
+      "id": "chk-1809-v01694-clean",
+      "summary": "Checkpoint all #1809 code, tests/cloud_cli_boundary.rs assertions, v0.169.4 Dockerfile, and refreshed specs",
+      "input_digest": "sha256:84f811515b02f8f79b0d274746289f7a71c6090fecd69e1a3157469c67c16b3e"
+    },
+    {
+      "id": "chk-1809-v01694-docs-sync",
+      "summary": "Sync docs/agent/command-contracts.md via decapod docs build and refresh .manifest.json",
+      "input_digest": "sha256:0268c8e418740b6d5e36178355b70aee7ed03dddc261c9d45ba00ea68fc1ae3d"
+    },
+    {
+      "id": "feat_01m8g09m935yavyn",
+      "summary": "Fix clippy -D warnings in cloud_workspace.rs, lib.rs, and cloud_lease_fencing_1809.rs for #1809",
+      "input_digest": "sha256:df77a76aa29a7e1ed93ebaa0914db65b54d115ddaae64d7ecb7264ffbd0b119a"
+    },
+    {
+      "id": "rebase-b04913596-wt3",
+      "summary": "Rebase #1809 onto origin/master@b04913596 preserving #1977/#1978 specs",
+      "input_digest": "sha256:7d4bbbf644c61a8543201e57c14d3092f980fd121ff6887ebd5aff5917348041"
+    },
+    {
+      "id": "rebase-170efc04a-wt3",
+      "summary": "Rebase #1809 onto origin/master@170efc04a",
+      "input_digest": "sha256:1acdfb2ef007aa6f1f9a11cfed8f4237db0d81887b79391904050f28fa2ecde9"
+    },
+    {
+      "id": "refresh-01695-wt3",
+      "summary": "Refresh release-bound entrypoints, Dockerfile, and specs for official Decapod v0.169.5 (#1809)",
+      "input_digest": "sha256:69bbe42499c322e2fc1bebb4c7c0222ce918750653073baca2b07dca6db3507f"
+    },
+    {
+      "id": "final-01695-wt3",
+      "summary": "Refresh Dockerfile.decapod and .manifest.json to official Decapod v0.169.5 (#1809)",
+      "input_digest": "sha256:b06008e8d068af5c8ac713be5ff4a107862eb0591a302061dddf409ee2989577"
+    },
+    {
+      "id": "rebase-9e58329fc-wt3",
+      "summary": "Rebase #1809 cleanly onto origin/master@9e58329fc90a (Merge-Train #9)",
+      "input_digest": "sha256:57a0dcdfbbe5b91bf8e4ec1fae428335926732b90dce8ee53b7da9c290033db0"
     }
   ],
   "intents": {
-    "intent:run-1981-1983-rebase-a9468771e": {
+    "intent:change_01M8G0C9WCRSM039C751ZSMRRK": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Isolated git worktree bound to feat_01m8g099z2crqzh3; zero deletions in existing living specs; issues #1981/#1982/#1983/#1367 remain open (Refs only)."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1981-1983-rebase-a9468771e",
+      "id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement outcome-implied professional defaults (#1981), behavior-relevant proof coverage (#1982), and standing authorized delivery endpoints with cold continuation (#1983, #1367).",
-      "refined_intent": "Rebase verified #1981-#1983 implementation and tests cleanly onto origin/master@a9468771e4c725df0bb2ec288f451ca599dffbb2 with Decapod v0.169.5 governance alignment.",
+      "raw_intent": "Implement Decapod #1809 Cloud claim mode/lease fencing, renew/heartbeat/handoff, and proof acceptance",
+      "refined_intent": "Implement Decapod #1809 Cloud claim mode/lease fencing, renew/heartbeat/handoff, and proof acceptance",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,92 +980,102 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement deterministic outcome-implied professional duty derivation (#1981), behavior-relevant verification coverage enforcement (#1982), and standing authorized delivery-endpoint progression with cold continuation (#1983, #1367) while preserving bug-fix regression defaults.",
+      "intent": "Implement Decapod #1809 Cloud claim mode/lease fencing, renew/heartbeat/handoff, and proof acceptance",
       "phases": [],
       "proof_hooks": [
-        "Remote GitHub Actions CI, Decapod Validate, Docs, Deploy Docs, Constitution Sync, and official decapod v0.169.5 publication_ready validation pass on this exact candidate commit."
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Confirmed #1981-#1983 architecture spec remains accurate after #[allow(clippy::too_many_arguments)] lint fix on make_duty.",
-          "reviewed_code_fingerprint": "d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44",
-          "spec_material_hash": "a634944329f420f94718fe6ea09ba6172c0443b204ab67abc4bc0113371311e2"
+          "reason": "Rebased #1809 cleanly onto origin/master@9e58329fc90a preserving #1997-#2012 code and specs; verified clippy --all-targets --all-features -D warnings.",
+          "reviewed_code_fingerprint": "c1b514fbd3cf08b67b868e3e21ade772c2402237c616d54107d83286d9be4764",
+          "spec_material_hash": "f09b457ddd18ac23846e30aea85ac7c23e67588f33ca0d25b64254b39f063147"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Confirmed #1981-#1983 interfaces spec remains accurate after #[allow(clippy::too_many_arguments)] lint fix on make_duty.",
-          "reviewed_code_fingerprint": "d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44",
-          "spec_material_hash": "07cf4f8ca3e7a082f233cd5a5e1b0b10c9870f77764ede28bfc767245a98f11e"
+          "reason": "Rebased #1809 cleanly onto origin/master@9e58329fc90a preserving #1997-#2012 code and specs; verified clippy --all-targets --all-features -D warnings.",
+          "reviewed_code_fingerprint": "c1b514fbd3cf08b67b868e3e21ade772c2402237c616d54107d83286d9be4764",
+          "spec_material_hash": "27d6d0931e837e7f66b02cfbf084a9241f35237633872cbc77424d67a21cf67f"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Confirmed #1981-#1983 security spec remains accurate after #[allow(clippy::too_many_arguments)] lint fix on make_duty.",
-          "reviewed_code_fingerprint": "d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44",
+          "reason": "Rebased #1809 cleanly onto origin/master@9e58329fc90a preserving #1997-#2012 code and specs; verified clippy --all-targets --all-features -D warnings.",
+          "reviewed_code_fingerprint": "c1b514fbd3cf08b67b868e3e21ade772c2402237c616d54107d83286d9be4764",
           "spec_material_hash": "f8c11cb159306f16563b40338fd4253eb338c87860127e9b9291f708770f3d98"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [
-        "Stop if any test in tests/professional_defaults_1981_1983.rs, tests/infer_precision.rs, or remote CI fails, or if any prior spec lines are deleted."
-      ],
-      "title": "Outcome-implied professional defaults, behavior-relevant proof, and standing delivery endpoints (#1981, #1982, #1983, #1367)",
+      "stop_conditions": [],
+      "title": "Implement Decapod #1809 Cloud claim mode/lease fencing, renew/heartbeat/handoff, and proof acceptance",
       "todo_ids": [
-        "feat_01m8g099z2crqzh3"
+        "feat_01m8g09m935yavyn"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795881029Z"
+      "updated_at": "1795883016Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Isolated git worktree bound to feat_01m8g099z2crqzh3; zero deletions in existing living specs; issues #1981/#1982/#1983/#1367 remain open (Refs only)."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b04dbf02b87baef506557b2a2f268e38fb7b7166e30487c8a63d68bb056865bb",
+      "artifact_hash": "sha256:768193f9bfa70292d716ab45e259fc60e36b1aa513f5c0073723dd7170401707",
       "checks": [
         {
-          "name": "cargo_clippy_all_targets_warnings",
+          "name": "cloud_cli_boundary",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt_check",
+          "name": "cloud_lease_fencing_1809",
           "status": "passed"
         },
         {
-          "name": "git_apply_3way_a9468771e",
+          "name": "cloud_tenancy_parity_1895",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_wave_parity",
+          "status": "passed"
+        },
+        {
+          "name": "cloud_workspace_validation_1886",
+          "status": "passed"
+        },
+        {
+          "name": "specs.refresh",
           "status": "passed"
         }
       ],
-      "current_phase": "rebase_and_prebuild_verification",
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+            "intent_id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+            "intent_id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1981-1983-rebase-a9468771e",
+            "detail": "trajectory:branch_01M8G0CA2VBNE4TSDAMTYW6WME",
             "event_id": "event:4",
-            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+            "intent_id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:run-1981-1983-rebase-a9468771e",
+            "detail": "trajectory:branch_01M8G0CA2VBNE4TSDAMTYW6WME",
             "event_id": "event:5",
-            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+            "intent_id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           }
@@ -1027,64 +1084,56 @@
         "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1981-1983-rebase-a9468771e": {
+          "branch_01M8G0CA2VBNE4TSDAMTYW6WME": {
             "evidence_only": true,
-            "id": "run-1981-1983-rebase-a9468771e",
-            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+            "id": "branch_01M8G0CA2VBNE4TSDAMTYW6WME",
+            "intent_id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/professional_defaults.rs",
-                  "src/decapod/core/effective_grant.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/lib.rs",
-                  "tests/professional_defaults_1981_1983.rs",
-                  "src/decapod/core/professional_defaults.rs",
-                  "src/decapod/core/effective_grant.rs",
-                  "src/decapod/core/workunit.rs",
-                  "src/decapod/core/validate.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/governance_document/merge_reconcile.rs",
-                  "src/decapod/core/mod.rs",
-                  "src/decapod/plan_governance.rs",
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/cloud_proof.rs",
+                  "src/decapod/core/cloud_workspace.rs",
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/authoring.rs",
+                  "src/decapod/core/storage.rs",
+                  "src/decapod/core/cloud_parity_matrix.rs",
+                  "src/decapod/core/docs_cli.rs",
                   "src/decapod/cli.rs",
                   "src/decapod/lib.rs",
-                  "docs/agent/config-schema.md",
-                  "docs/agent/repository-readiness.md",
-                  "tests/professional_defaults_1981_1983.rs",
-                  "tests/unit/core/effective_grant_tests.rs",
-                  "tests/unit/core/validate_tests.rs",
-                  "tests/unit/lib_init_prompt_tests.rs",
-                  "16 code/doc/test files applied cleanly via git apply --3way onto origin/master@a9468771e4c7; 4 authored spec sections appended with zero deletions; prior targeted verification passed tests/professional_defaults_1981_1983.rs (4/4) and tests/infer_precision.rs (1/1); remote GHA CI + Decapod Validate will execute full build and test suite."
+                  "tests/cloud_lease_fencing_1809.rs",
+                  "tests/cloud_cli_boundary.rs",
+                  "tests/cloud_tenancy_parity_1895.rs",
+                  "tests/unit/core/todo_tests.rs"
                 ],
                 "proof_refs": [
-                  "git_apply_3way_a9468771e",
-                  "cargo_fmt_check"
+                  "specs.refresh"
                 ],
                 "scope": [
-                  "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
+                  "root"
                 ],
                 "sequence": 4,
-                "validation_findings": [
-                  "Remote GitHub Actions CI and Decapod Validate verify full compilation and test execution on this exact commit before PR merge."
-                ]
+                "validation_findings": []
               },
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
-                "observations": [
-                  "src/decapod/core/professional_defaults.rs",
-                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings exited 0 after adding #[allow(clippy::too_many_arguments)] on make_duty."
-                ],
+                "observations": [],
                 "proof_refs": [
-                  "cargo_clippy_all_targets_warnings",
-                  "cargo_fmt_check"
+                  "cloud_cli_boundary",
+                  "cloud_lease_fencing_1809",
+                  "cloud_tenancy_parity_1895",
+                  "cloud_wave_parity",
+                  "cloud_workspace_validation_1886"
                 ],
                 "scope": [
-                  "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
@@ -1094,49 +1143,43 @@
         }
       },
       "declared_commands": [],
-      "destination": "Merge-ready PR on DecapodLabs/decapod referencing #1981, #1982, #1983, #1367 (all kept OPEN).",
-      "evidence": [
-        "16 code/doc/test files applied cleanly via git apply --3way onto origin/master@a9468771e4c7; 4 authored spec sections appended with zero deletions; prior targeted verification passed tests/professional_defaults_1981_1983.rs (4/4) and tests/infer_precision.rs (1/1); remote GHA CI + Decapod Validate will execute full build and test suite.",
-        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings exited 0 after adding #[allow(clippy::too_many_arguments)] on make_duty."
-      ],
+      "destination": "pull request",
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/effective_grant.rs",
-        "src/decapod/core/professional_defaults.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "tests/professional_defaults_1981_1983.rs"
+        "src/decapod/core/cloud_proof.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/todo.rs"
       ],
-      "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+      "intent_id": "intent:change_01M8G0C9WCRSM039C751ZSMRRK",
       "modified_files": [
-        "docs/agent/config-schema.md",
-        "docs/agent/repository-readiness.md",
         "src/decapod/cli.rs",
-        "src/decapod/core/effective_grant.rs",
-        "src/decapod/core/governance_document/merge_reconcile.rs",
-        "src/decapod/core/mod.rs",
-        "src/decapod/core/professional_defaults.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/core/validate.rs",
-        "src/decapod/core/workunit.rs",
+        "src/decapod/core/authoring.rs",
+        "src/decapod/core/cloud_parity_matrix.rs",
+        "src/decapod/core/cloud_proof.rs",
+        "src/decapod/core/cloud_workspace.rs",
+        "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/storage.rs",
+        "src/decapod/core/todo.rs",
         "src/decapod/lib.rs",
-        "src/decapod/plan_governance.rs",
-        "tests/professional_defaults_1981_1983.rs",
-        "tests/unit/core/effective_grant_tests.rs",
-        "tests/unit/core/validate_tests.rs",
-        "tests/unit/lib_init_prompt_tests.rs"
+        "tests/cloud_cli_boundary.rs",
+        "tests/cloud_lease_fencing_1809.rs",
+        "tests/cloud_tenancy_parity_1895.rs",
+        "tests/unit/core/todo_tests.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
+        "root"
       ],
-      "run_id": "run-1981-1983-rebase-a9468771e",
+      "run_id": "branch_01M8G0CA2VBNE4TSDAMTYW6WME",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "feat_01m8g099z2crqzh3",
+      "task_id": "feat_01m8g09m935yavyn",
       "tool_calls": [],
-      "unresolved_assumptions": [
-        "Remote GitHub Actions CI and Decapod Validate verify full compilation and test execution on this exact commit before PR merge."
-      ]
+      "unresolved_assumptions": []
     }
   },
   "legacy_digests": {

@@ -1362,7 +1362,7 @@ fn capability_contracts_command_contract() -> &'static str {
 
 - **Intent:** Deterministic, read-only inspection of the versioned Local vs Cloud logical operation and evidence parity matrix (`decapod.cloud-parity-matrix.v1`), including explicit enumeration of unsupported Cloud operations and placement opacity boundaries.
 - **Usage:** `decapod capabilities parity [--dir <PATH>] [--format text|json]` (also via RPC `interop.cloud_parity`).
-- **No blanket parity / no local SQLite fallback:** Reports supported logical operations separately from Cloud-unsupported operations (`todo.lease.renew`, `todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.handoff`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) and never creates or touches `.decapod/data/decapod.db`."#
+- **No blanket parity / no local SQLite fallback:** Reports supported logical operations separately from Cloud-unsupported operations (`todo.claim.shared`, `todo.edit`, `todo.comment`, `todo.archive`, `todo.transfer.export_import`, `todo.journal.reconcile_legacy`, `qa.verify.commit`, `data.database.maintenance`) and never creates or touches `.decapod/data/decapod.db`."#
 }
 
 fn constitution_overlay_command_contract() -> &'static str {

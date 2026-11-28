@@ -347,6 +347,44 @@ impl DactylProofControlTransport {
             crate::core::cloud_client::connect_control(project_root, identity)?;
         Ok((Self::new(connector, bearer), routed))
     }
+
+    pub fn from_storage_context(
+        context: &crate::core::backend::StorageContext,
+    ) -> Result<(Self, crate::core::repo_identity::RepositoryIdentity), DecapodError> {
+        use crate::core::backend::BackendRoute;
+        context.validate()?;
+        let BackendRoute::Cloud { uri, repository } = context.route() else {
+            return Err(DecapodError::Config(
+                "Cloud control transport requires a Cloud backend route".into(),
+            ));
+        };
+        let bearer = context.bearer().ok_or_else(|| {
+            DecapodError::ValidationError(
+                "CLOUD_CUSTODY_UNAUTHORIZED: cloud control transport requires an active bearer"
+                    .into(),
+            )
+        })?;
+        let mut connector = dactyl_db::CloudConnector::discover(uri).map_err(|error| {
+            crate::core::cloud_client::transport_error_for_repository(
+                error,
+                Some(&repository.canonical_name),
+            )
+        })?;
+        if crate::core::cloud_dpop::is_dpop_access_token(bearer) {
+            connector = connector.with_device_gateway();
+        }
+        if let Ok(cwd) = std::env::current_dir()
+            && let Some(signer) = crate::core::cloud_dpop::request_proof_signer_for_bearer(
+                connector.origin(),
+                &repository.canonical_name,
+                &cwd,
+                bearer,
+            )
+        {
+            connector = connector.with_device_gateway().with_proof_signer(signer);
+        }
+        Ok((Self::new(connector, bearer.to_owned()), repository.clone()))
+    }
 }
 
 #[cfg(feature = "supabase-cloud")]
@@ -579,6 +617,360 @@ pub fn custody_revoke<T: ProofControlTransport>(
     transport
         .write_control(PROOF_ACCEPTANCE_CONTROL_OP, &payload)
         .map_err(|err| err.to_decapod_error(Some(&req.operation_id)))
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustodyRenewRequest {
+    pub project_id: String,
+    pub operation_id: String,
+    pub task_id: String,
+    pub workspace_id: String,
+    pub custody_id: String,
+    pub expected_task_revision: i64,
+    pub expected_fencing_generation: i64,
+    pub ttl_seconds: i64,
+    pub heartbeat: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustodyHandoffRequest {
+    pub project_id: String,
+    pub operation_id: String,
+    pub task_id: String,
+    pub to_actor: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub from_actor: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expected_fencing_generation: Option<i64>,
+    pub ttl_seconds: i64,
+    pub summary: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustodyHandoffReceipt {
+    pub task_revision: i64,
+    pub fencing_generation: i64,
+    pub assigned_to: String,
+    pub expires_at: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustodyReleaseRequest {
+    pub project_id: String,
+    pub operation_id: String,
+    pub task_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expected_fencing_generation: Option<i64>,
+    pub reason: String,
+    pub yield_lease: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustodyReleaseReceipt {
+    pub status: String,
+    pub task_revision: i64,
+    pub fencing_generation: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResourceCheckRequest {
+    pub project_id: String,
+    pub resources: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exclude_task_id: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ResourceConflict {
+    pub resource: String,
+    pub task_id: String,
+    pub holder: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<String>,
+}
+
+/// Renew or heartbeat an existing active Cloud custody lease using
+/// server-authoritative time while preserving legitimate same-authority fences.
+pub fn custody_renew<T: ProofControlTransport>(
+    transport: &T,
+    req: &CustodyRenewRequest,
+) -> Result<CustodyBindReceipt, DecapodError> {
+    if req.expected_task_revision <= 0 || req.expected_fencing_generation <= 0 {
+        return Err(DecapodError::ValidationError(
+            "CLOUD_CUSTODY_FENCE_INVALID: renewal requires positive expected revision and fencing generation".into(),
+        ));
+    }
+    if !(60..=86400).contains(&req.ttl_seconds) {
+        return Err(DecapodError::ValidationError(format!(
+            "CLOUD_LEASE_TTL_INVALID: lease ttl_seconds must be in 60..=86400, got {}",
+            req.ttl_seconds
+        )));
+    }
+    let payload = json!({
+        "version": 1,
+        "action": "custody_renew",
+        "project_id": req.project_id,
+        "operation_id": req.operation_id,
+        "task_id": req.task_id,
+        "workspace_id": req.workspace_id,
+        "custody_id": req.custody_id,
+        "expected_task_revision": req.expected_task_revision,
+        "expected_fencing_generation": req.expected_fencing_generation,
+        "ttl_seconds": req.ttl_seconds,
+        "heartbeat": req.heartbeat,
+    });
+    let resp = execute_proof_transition(
+        transport,
+        &req.project_id,
+        &req.operation_id,
+        None,
+        &payload,
+        |receipt| {
+            let status = receipt.get("status").and_then(JsonValue::as_str);
+            if !matches!(status, Some("custody_renewed" | "custody_current")) {
+                return Err(invalid_custody_receipt());
+            }
+            if receipt.get("operation_id") != payload.get("operation_id") {
+                return Err(invalid_custody_receipt());
+            }
+            let parsed = custody_receipt(receipt, &payload, status.unwrap_or("custody_renewed"))?;
+            if parsed.task_revision < req.expected_task_revision
+                || parsed.fencing_generation < req.expected_fencing_generation
+            {
+                return Err(invalid_custody_receipt());
+            }
+            if req.heartbeat
+                && (parsed.task_revision != req.expected_task_revision
+                    || parsed.fencing_generation != req.expected_fencing_generation)
+            {
+                return Err(DecapodError::ValidationError(
+                    "LEASE_HEARTBEAT_STALE: heartbeat must preserve current legitimate revision and fencing generation".into(),
+                ));
+            }
+            Ok(())
+        },
+    )?;
+    let status = resp
+        .get("status")
+        .and_then(JsonValue::as_str)
+        .unwrap_or("custody_renewed");
+    custody_receipt(&resp, &payload, status)
+}
+
+/// Transfer an active Cloud task custody lease to another holder and advance
+/// monotonic fencing so the prior holder's stale custody fails closed.
+pub fn custody_handoff<T: ProofControlTransport>(
+    transport: &T,
+    req: &CustodyHandoffRequest,
+) -> Result<CustodyHandoffReceipt, DecapodError> {
+    if req.to_actor.trim().is_empty() {
+        return Err(DecapodError::ValidationError(
+            "HANDOFF_INVALID_TARGET: handoff requires a non-empty target actor".into(),
+        ));
+    }
+    if !(60..=86400).contains(&req.ttl_seconds) {
+        return Err(DecapodError::ValidationError(format!(
+            "CLOUD_LEASE_TTL_INVALID: handoff lease ttl_seconds must be in 60..=86400, got {}",
+            req.ttl_seconds
+        )));
+    }
+    let mut payload = json!({
+        "version": 1,
+        "action": "custody_handoff",
+        "project_id": req.project_id,
+        "operation_id": req.operation_id,
+        "task_id": req.task_id,
+        "to_actor": req.to_actor,
+        "ttl_seconds": req.ttl_seconds,
+        "summary": req.summary,
+    });
+    if let Some(from) = &req.from_actor {
+        payload["from_actor"] = json!(from);
+    }
+    if let Some(fence_gen) = req.expected_fencing_generation {
+        payload["expected_fencing_generation"] = json!(fence_gen);
+    }
+    let resp = execute_proof_transition(
+        transport,
+        &req.project_id,
+        &req.operation_id,
+        None,
+        &payload,
+        |receipt| {
+            if receipt["version"] != 1
+                || receipt["profile"] != "candidate-acceptance-v1"
+                || receipt["status"] != "custody_handed_off"
+                || receipt.get("operation_id") != payload.get("operation_id")
+                || receipt.get("project_id") != payload.get("project_id")
+                || receipt.get("task_id") != payload.get("task_id")
+            {
+                return Err(invalid_custody_receipt());
+            }
+            if receipt.get("assigned_to").and_then(JsonValue::as_str) != Some(req.to_actor.as_str())
+            {
+                return Err(invalid_custody_receipt());
+            }
+            let rev = receipt["task_revision"]
+                .as_i64()
+                .filter(|v| *v > 0)
+                .ok_or_else(invalid_custody_receipt)?;
+            let fence_gen = receipt["fencing_generation"]
+                .as_i64()
+                .filter(|v| *v > 0)
+                .ok_or_else(invalid_custody_receipt)?;
+            if let Some(prev) = req.expected_fencing_generation
+                && fence_gen <= prev
+            {
+                return Err(invalid_custody_receipt());
+            }
+            let _ = rev;
+            let _ = receipt["expires_at"]
+                .as_str()
+                .filter(|v| {
+                    crate::core::time::parse_rfc3339(v)
+                        .is_ok_and(|exp| exp > time::OffsetDateTime::now_utc())
+                })
+                .ok_or_else(invalid_custody_receipt)?;
+            Ok(())
+        },
+    )?;
+    Ok(CustodyHandoffReceipt {
+        task_revision: resp["task_revision"].as_i64().unwrap_or(1),
+        fencing_generation: resp["fencing_generation"].as_i64().unwrap_or(1),
+        assigned_to: resp["assigned_to"].as_str().unwrap_or_default().to_string(),
+        expires_at: resp["expires_at"].as_str().unwrap_or_default().to_string(),
+    })
+}
+
+/// Deterministically release or yield a Cloud task custody lease and any held
+/// exclusive resource reservation, advancing fencing generation.
+pub fn custody_release<T: ProofControlTransport>(
+    transport: &T,
+    req: &CustodyReleaseRequest,
+) -> Result<CustodyReleaseReceipt, DecapodError> {
+    let mut payload = json!({
+        "version": 1,
+        "action": "custody_release",
+        "project_id": req.project_id,
+        "operation_id": req.operation_id,
+        "task_id": req.task_id,
+        "reason": req.reason,
+        "yield_lease": req.yield_lease,
+    });
+    if let Some(fence_gen) = req.expected_fencing_generation {
+        payload["expected_fencing_generation"] = json!(fence_gen);
+    }
+    let resp = execute_proof_transition(
+        transport,
+        &req.project_id,
+        &req.operation_id,
+        None,
+        &payload,
+        |receipt| {
+            if receipt["version"] != 1
+                || receipt["profile"] != "candidate-acceptance-v1"
+                || !matches!(
+                    receipt["status"].as_str(),
+                    Some("custody_released" | "custody_yielded" | "custody_revoked")
+                )
+                || receipt.get("operation_id") != payload.get("operation_id")
+                || receipt.get("project_id") != payload.get("project_id")
+                || receipt.get("task_id") != payload.get("task_id")
+            {
+                return Err(invalid_custody_receipt());
+            }
+            let _ = receipt["task_revision"]
+                .as_i64()
+                .filter(|v| *v > 0)
+                .ok_or_else(invalid_custody_receipt)?;
+            let _ = receipt["fencing_generation"]
+                .as_i64()
+                .filter(|v| *v > 0)
+                .ok_or_else(invalid_custody_receipt)?;
+            Ok(())
+        },
+    )?;
+    Ok(CustodyReleaseReceipt {
+        status: resp["status"]
+            .as_str()
+            .unwrap_or("custody_released")
+            .to_string(),
+        task_revision: resp["task_revision"].as_i64().unwrap_or(1),
+        fencing_generation: resp["fencing_generation"].as_i64().unwrap_or(1),
+    })
+}
+
+/// Query hosted shared-resource reservations (`resource:<name>`) without local SQLite fallback.
+pub fn check_shared_resources<T: ProofControlTransport>(
+    transport: &T,
+    req: &ResourceCheckRequest,
+) -> Result<Option<ResourceConflict>, DecapodError> {
+    if req.resources.is_empty() {
+        return Ok(None);
+    }
+    let mut payload = json!({
+        "version": 1,
+        "action": "resource_check",
+        "project_id": req.project_id,
+        "resources": req.resources,
+    });
+    if let Some(exclude) = &req.exclude_task_id {
+        payload["exclude_task_id"] = json!(exclude);
+    }
+    let resp = transport
+        .read_control(PROOF_ACCEPTANCE_READ_OP, &payload)
+        .map_err(|mut err| {
+            if err.kind == CloudControlDenialKind::OutcomeUnknown {
+                err.kind = CloudControlDenialKind::Unavailable;
+            }
+            err.to_decapod_error(None)
+        })?;
+    if resp.get("occupied").and_then(JsonValue::as_bool) == Some(true) {
+        let resource = resp["blocking_resource"]
+            .as_str()
+            .or_else(|| {
+                resp["conflicts"]
+                    .as_array()
+                    .and_then(|arr| arr.first())
+                    .and_then(|c| c.get("resource"))
+                    .and_then(JsonValue::as_str)
+            })
+            .unwrap_or("resource")
+            .to_string();
+        let task_id = resp["blocking_task_id"]
+            .as_str()
+            .or_else(|| {
+                resp["conflicts"]
+                    .as_array()
+                    .and_then(|arr| arr.first())
+                    .and_then(|c| c.get("task_id"))
+                    .and_then(JsonValue::as_str)
+            })
+            .unwrap_or("unknown")
+            .to_string();
+        let holder = resp["blocking_holder"]
+            .as_str()
+            .or_else(|| {
+                resp["conflicts"]
+                    .as_array()
+                    .and_then(|arr| arr.first())
+                    .and_then(|c| c.get("holder"))
+                    .and_then(JsonValue::as_str)
+            })
+            .unwrap_or("unknown")
+            .to_string();
+        let expires_at = resp
+            .get("expires_at")
+            .and_then(JsonValue::as_str)
+            .map(ToOwned::to_owned);
+        return Ok(Some(ResourceConflict {
+            resource,
+            task_id,
+            holder,
+            expires_at,
+        }));
+    }
+    Ok(None)
 }
 
 fn invalid_proof_receipt(detail: &str) -> DecapodError {
@@ -1073,6 +1465,10 @@ pub fn reconcile_operation_after_unknown<T: ProofControlTransport>(
                 | "historically_accepted"
                 | "custody_bound"
                 | "custody_current"
+                | "custody_renewed"
+                | "custody_handed_off"
+                | "custody_released"
+                | "custody_yielded"
                 | "custody_revoked"
         )
     ) {

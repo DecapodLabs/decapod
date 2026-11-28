@@ -15,7 +15,6 @@ use async_trait::async_trait;
 use time::{OffsetDateTime, PlainDateTime};
 
 const TASK_COLUMNS: &str = "repo_id, id, hash, title, description, status, assigned_to AS assignee, scope, dir_path, priority, category, tags, created_at, updated_at, version";
-pub(crate) const CLOUD_LEASE_RENEW_UNSUPPORTED: &str = "CLOUD_LEASE_RENEW_UNSUPPORTED: the hosted task contract has no authoritative lease renewal operation";
 
 /// Dactyl-backed todo store used by the cloud command path.
 pub use crate::core::cloud_proof::LeaseCustodyRecord;
@@ -387,7 +386,7 @@ impl DactylTodoStore {
     }
 
     fn claim_task_blocking(&self, id: &str, actor: String) -> Result<Task> {
-        self.claim_task_with_lease_inner(id, actor, None)
+        self.claim_task_with_lease_inner(id, actor, None, None)
     }
 
     pub fn claim_task_with_lease_blocking(
@@ -396,7 +395,17 @@ impl DactylTodoStore {
         actor: String,
         lease_ttl_seconds: u64,
     ) -> Result<Task> {
-        self.claim_task_with_lease_inner(id, actor, Some(lease_ttl_seconds))
+        self.claim_task_with_lease_inner(id, actor, Some(lease_ttl_seconds), None)
+    }
+
+    pub fn claim_task_with_options_blocking(
+        &self,
+        id: &str,
+        actor: String,
+        explicit_lease_seconds: Option<u64>,
+        intent_anchor: Option<String>,
+    ) -> Result<Task> {
+        self.claim_task_with_lease_inner(id, actor, explicit_lease_seconds, intent_anchor)
     }
 
     fn claim_task_with_lease_inner(
@@ -404,8 +413,54 @@ impl DactylTodoStore {
         id: &str,
         actor: String,
         explicit_lease_seconds: Option<u64>,
+        intent_anchor: Option<String>,
     ) -> Result<Task> {
-        let ttl = explicit_lease_seconds.unwrap_or(1800).clamp(60, 86400);
+        if let Some(requested) = explicit_lease_seconds
+            && !(60..=86400).contains(&requested)
+        {
+            return Err(anyhow!(
+                "CLOUD_LEASE_TTL_INVALID: lease_ttl_seconds must be in 60..=86400, got {requested}"
+            ));
+        }
+        #[cfg(feature = "supabase-cloud")]
+        if self.context.is_remote()
+            && self.context.cloud_datastore() == crate::core::backend::CloudDatastore::Managed
+            && let Some(existing) = self.get_task_blocking(id)?
+        {
+            let lower_scope = existing.scope.trim().to_ascii_lowercase();
+            if lower_scope.starts_with("resource:") {
+                let (transport, routed) =
+                    crate::core::cloud_proof::DactylProofControlTransport::from_storage_context(
+                        &self.context,
+                    )
+                    .map_err(|err| anyhow!("{err}"))?;
+                let resources: Vec<String> = existing
+                    .scope
+                    .split([',', '|'])
+                    .map(str::trim)
+                    .filter(|s| s.to_ascii_lowercase().starts_with("resource:"))
+                    .map(ToOwned::to_owned)
+                    .collect();
+                if let Some(conflict) = crate::core::cloud_proof::check_shared_resources(
+                    &transport,
+                    &crate::core::cloud_proof::ResourceCheckRequest {
+                        project_id: routed.canonical_name,
+                        resources,
+                        exclude_task_id: Some(id.to_string()),
+                    },
+                )
+                .map_err(|err| anyhow!("{err}"))?
+                {
+                    return Err(anyhow!(
+                        "SHARED_RESOURCE_OCCUPIED: task '{id}' requires shared resource '{}', which is exclusively reserved by active hosted task '{}' (holder '{}')",
+                        conflict.resource,
+                        conflict.task_id,
+                        conflict.holder
+                    ));
+                }
+            }
+        }
+        let ttl = explicit_lease_seconds.unwrap_or(1800);
         let ts = Self::operation_timestamp();
         let now_secs = OffsetDateTime::now_utc().unix_timestamp();
         let expires_at_dt = OffsetDateTime::from_unix_timestamp(now_secs + ttl as i64)
@@ -415,17 +470,20 @@ impl DactylTodoStore {
         let custody_id = format!("custody_{}", crate::core::ulid::new_ulid().to_lowercase());
 
         let event_id = crate::core::ulid::new_ulid().to_string();
-        let payload = if explicit_lease_seconds.is_some() {
-            serde_json::json!({
-                "assigned_to": actor,
-                "custody_id": custody_id,
-                "lease_ttl_seconds": ttl,
-                "lease_expires_at": lease_expires_at,
-            })
-            .to_string()
-        } else {
-            serde_json::json!({ "assigned_to": actor }).to_string()
-        };
+        let mut payload_obj = serde_json::json!({ "assigned_to": actor });
+        if let Some(secs) = explicit_lease_seconds {
+            payload_obj["custody_id"] = serde_json::json!(custody_id);
+            payload_obj["lease_ttl_seconds"] = serde_json::json!(secs);
+            payload_obj["lease_expires_at"] = serde_json::json!(lease_expires_at);
+        }
+        if let Some(anchor) = intent_anchor
+            .as_deref()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+        {
+            payload_obj["intent_anchor"] = serde_json::json!(anchor);
+        }
+        let payload = payload_obj.to_string();
         let bridge = self.bridge()?;
         let result = Self::atomic_mutation(
             &bridge,
@@ -439,7 +497,7 @@ impl DactylTodoStore {
                 id.into(),
                 "task.claim".into(),
                 payload.into(),
-                actor.into(),
+                actor.clone().into(),
             ],
             id.into(),
         )?;
@@ -463,7 +521,27 @@ impl DactylTodoStore {
                 ));
             }
         };
-        if let Ok(mut leases) = self.leases.lock() {
+        if self.context.is_remote() {
+            if let Ok(store) = crate::core::cloud_workspace::CloudCustodyStore::machine() {
+                let mut meta = store
+                    .load_lease_metadata(&self.repository, id)
+                    .ok()
+                    .flatten()
+                    .unwrap_or_else(|| {
+                        crate::core::cloud_workspace::CloudLeaseMetadata::new(
+                            &self.repository,
+                            id,
+                            &actor,
+                        )
+                    });
+                meta.actor = actor;
+                meta.scope = Some(claimed.scope.clone());
+                meta.intent_anchor = intent_anchor.or(meta.intent_anchor);
+                meta.pending_ttl_seconds = Some(ttl as i64);
+                meta.task_revision = Some(i64::from(claimed.version).max(1));
+                let _ = store.save_lease_metadata(&meta);
+            }
+        } else if let Ok(mut leases) = self.leases.lock() {
             leases.insert(
                 id.to_string(),
                 LeaseCustodyRecord {
@@ -484,10 +562,125 @@ impl DactylTodoStore {
         actor: String,
         lease_ttl_seconds: u64,
     ) -> Result<LeaseCustodyRecord> {
-        if self.context.is_remote() {
-            return Err(anyhow!(CLOUD_LEASE_RENEW_UNSUPPORTED));
+        self.renew_task_lease_with_mode_blocking(id, actor, lease_ttl_seconds, false)
+    }
+
+    pub fn renew_task_lease_with_mode_blocking(
+        &self,
+        id: &str,
+        actor: String,
+        lease_ttl_seconds: u64,
+        heartbeat: bool,
+    ) -> Result<LeaseCustodyRecord> {
+        if !(60..=86400).contains(&lease_ttl_seconds) {
+            return Err(anyhow!(
+                "CLOUD_LEASE_TTL_INVALID: lease_ttl_seconds must be in 60..=86400, got {lease_ttl_seconds}"
+            ));
         }
-        let ttl = lease_ttl_seconds.clamp(60, 86400);
+        let ttl = lease_ttl_seconds;
+        if self.context.is_remote() {
+            #[cfg(not(feature = "supabase-cloud"))]
+            {
+                let _ = (id, actor, ttl, heartbeat);
+                return Err(anyhow!(
+                    "CLOUD_CAPABILITY_DISABLED: hosted lease renewal requires supabase-cloud"
+                ));
+            }
+            #[cfg(feature = "supabase-cloud")]
+            {
+                let (transport, routed) =
+                    crate::core::cloud_proof::DactylProofControlTransport::from_storage_context(
+                        &self.context,
+                    )
+                    .map_err(|err| anyhow!("{err}"))?;
+                let task = self
+                    .get_task_blocking(id)?
+                    .ok_or_else(|| anyhow!("Task {id} not found for lease renewal"))?;
+                if task.status != "in_progress" || task.assignee.as_deref() != Some(actor.as_str())
+                {
+                    return Err(anyhow!(
+                        "LEASE_RENEW_DENIED: task {id} is not actively held by {actor}"
+                    ));
+                }
+                let custody_store = crate::core::cloud_workspace::CloudCustodyStore::machine()
+                    .map_err(|err| anyhow!("{err}"))?;
+                let mut meta = custody_store
+                    .load_lease_metadata(&routed.canonical_name, id)
+                    .map_err(|err| anyhow!("{err}"))?
+                    .unwrap_or_else(|| {
+                        crate::core::cloud_workspace::CloudLeaseMetadata::new(
+                            &routed.canonical_name,
+                            id,
+                            &actor,
+                        )
+                    });
+                let (workspace_id, custody_id, expected_task_revision, expected_fencing_generation) =
+                    match (
+                        meta.workspace_id.clone(),
+                        meta.custody_id.clone(),
+                        meta.task_revision,
+                        meta.fencing_generation,
+                    ) {
+                        (Some(ws), Some(cid), Some(rev), Some(fence_gen)) => {
+                            (ws, cid, rev, fence_gen)
+                        }
+                        _ => {
+                            return Err(anyhow!(
+                                "CLOUD_CUSTODY_UNBOUND: hosted task '{id}' has no bound workspace custody fence; run `decapod workspace ensure` before renewing custody"
+                            ));
+                        }
+                    };
+                let op_id = if meta.pending_action.as_deref() == Some("custody_renew")
+                    && let Some(existing_op) = meta.pending_operation_id.clone()
+                {
+                    existing_op
+                } else {
+                    let fresh =
+                        crate::core::cloud_proof::new_uuid_v4().map_err(|err| anyhow!("{err}"))?;
+                    meta.pending_operation_id = Some(fresh.clone());
+                    meta.pending_action = Some("custody_renew".to_string());
+                    let _ = custody_store.save_lease_metadata(&meta);
+                    fresh
+                };
+                let receipt = match crate::core::cloud_proof::custody_renew(
+                    &transport,
+                    &crate::core::cloud_proof::CustodyRenewRequest {
+                        project_id: routed.canonical_name.clone(),
+                        operation_id: op_id,
+                        task_id: id.to_string(),
+                        workspace_id,
+                        custody_id: custody_id.clone(),
+                        expected_task_revision,
+                        expected_fencing_generation,
+                        ttl_seconds: ttl as i64,
+                        heartbeat,
+                    },
+                ) {
+                    Ok(r) => r,
+                    Err(err) => {
+                        if !err.to_string().contains("CLOUD_OUTCOME_UNKNOWN") {
+                            meta.pending_operation_id = None;
+                            meta.pending_action = None;
+                            let _ = custody_store.save_lease_metadata(&meta);
+                        }
+                        return Err(anyhow!("{err}"));
+                    }
+                };
+                meta.task_revision = Some(receipt.task_revision);
+                meta.fencing_generation = Some(receipt.fencing_generation);
+                meta.expires_at = Some(receipt.expires_at.clone());
+                meta.pending_operation_id = None;
+                meta.pending_action = None;
+                let _ = custody_store.save_lease_metadata(&meta);
+                return Ok(LeaseCustodyRecord {
+                    custody_id,
+                    fencing_generation: receipt.fencing_generation,
+                    lease_ttl_seconds: ttl,
+                    lease_expires_at: receipt.expires_at,
+                    heartbeat_at: Self::operation_timestamp(),
+                });
+            }
+        }
         let task = self
             .get_task_blocking(id)?
             .ok_or_else(|| anyhow!("Task {id} not found for lease renewal"))?;
@@ -557,7 +750,11 @@ impl DactylTodoStore {
             .get(1)
             .ok_or_else(|| anyhow!("Dactyl release returned no event result"))?;
         Self::require_write(event, "release event")?;
-        if let Ok(mut leases) = self.leases.lock() {
+        if self.context.is_remote() {
+            if let Ok(store) = crate::core::cloud_workspace::CloudCustodyStore::machine() {
+                let _ = store.remove_lease_metadata(&self.repository, id);
+            }
+        } else if let Ok(mut leases) = self.leases.lock() {
             leases.remove(id);
         }
         match observation {
@@ -650,6 +847,19 @@ impl TodoStore for DactylTodoStore {
         let id = id.to_string();
         self.blocking(move |store| store.claim_task_blocking(&id, actor))
             .await
+    }
+    async fn claim_task_with_options(
+        &self,
+        id: &str,
+        actor: String,
+        lease_seconds: Option<u64>,
+        intent_anchor: Option<String>,
+    ) -> Result<Task> {
+        let id = id.to_string();
+        self.blocking(move |store| {
+            store.claim_task_with_options_blocking(&id, actor, lease_seconds, intent_anchor)
+        })
+        .await
     }
     async fn release_task(&self, id: &str, actor: String) -> Result<Task> {
         let id = id.to_string();

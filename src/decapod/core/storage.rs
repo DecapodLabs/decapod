@@ -76,6 +76,15 @@ pub trait TodoStore: Send + Sync {
     }
     async fn add_task(&self, task: Task, actor: String, intent: String) -> Result<Task>;
     async fn claim_task(&self, id: &str, actor: String) -> Result<Task>;
+    async fn claim_task_with_options(
+        &self,
+        id: &str,
+        actor: String,
+        _lease_seconds: Option<u64>,
+        _intent_anchor: Option<String>,
+    ) -> Result<Task> {
+        self.claim_task(id, actor).await
+    }
     /// Release an active claim back to the open state.
     ///
     /// The default keeps older adapters source-compatible while making an

@@ -996,7 +996,226 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             }
             Ok(())
         }
+        CloudCommand::Proof { command } => {
+            let report = run_cloud_admin_action(&format, |root, identity| {
+                run_cloud_proof_command(root, identity, command)
+            })?;
+            if format != "json" {
+                println!(
+                    "Cloud proof transition: state={} attestation_id={}",
+                    report["state"]
+                        .as_str()
+                        .or_else(|| report["status"].as_str())
+                        .unwrap_or("ok"),
+                    report["attestation_id"].as_str().unwrap_or("-")
+                );
+            }
+            Ok(())
+        }
     }
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn run_cloud_proof_command(
+    project_root: &Path,
+    identity: &core::repo_identity::RepositoryIdentity,
+    command: CloudProofCommand,
+) -> Result<serde_json::Value, error::DecapodError> {
+    use core::cloud_proof::*;
+    let (transport, routed) = DactylProofControlTransport::from_context(project_root, identity)?;
+    match command {
+        CloudProofCommand::Capture {
+            task_id,
+            commit,
+            artifact,
+            operation_id,
+        } => {
+            if artifact.is_empty() && commit.is_none() {
+                return Err(error::DecapodError::ValidationError(
+                    "CLOUD_PROOF_CAPTURE_PREFLIGHT_FAILED: cloud proof capture requires --artifact and/or --commit".into(),
+                ));
+            }
+            let mut req = core::todo::build_cloud_proof_capture_request(
+                project_root,
+                &routed.canonical_name,
+                &task_id,
+                1,
+                1,
+                &artifact,
+                commit.as_deref(),
+            )?;
+            if let Some(op_id) = operation_id {
+                req.operation_id = op_id;
+            }
+            let _live = custody_get(
+                &transport,
+                &CustodyGetRequest {
+                    project_id: routed.canonical_name.clone(),
+                    task_id: task_id.clone(),
+                    workspace_id: req.subject.workspace_id.clone(),
+                    custody_id: req.subject.custody_id.clone(),
+                    task_revision: req.subject.task_revision,
+                    fencing_generation: req.subject.fencing_generation,
+                },
+            )?;
+            let custody_store = core::cloud_workspace::CloudCustodyStore::machine()?;
+            let mut meta = custody_store
+                .load_lease_metadata(&routed.canonical_name, &task_id)?
+                .unwrap_or_else(|| {
+                    core::cloud_workspace::CloudLeaseMetadata::new(
+                        &routed.canonical_name,
+                        &task_id,
+                        current_agent_id(),
+                    )
+                });
+            meta.pending_operation_id = Some(req.operation_id.clone());
+            meta.pending_action = Some("capture".to_string());
+            let _ = custody_store.save_lease_metadata(&meta);
+            let receipt = submit_capture(
+                &transport,
+                &routed.canonical_name,
+                req.subject.task_revision,
+                &req,
+            )?;
+            meta.pending_operation_id = None;
+            meta.pending_action = None;
+            meta.last_attestation_id = receipt
+                .get("attestation_id")
+                .and_then(|v| v.as_str())
+                .map(ToOwned::to_owned)
+                .or_else(|| Some(req.operation_id.clone()));
+            meta.last_attestation_fingerprint = Some(proof_capture_fingerprint(&req)?);
+            meta.last_attestation_state = Some("captured".to_string());
+            let _ = custody_store.save_lease_metadata(&meta);
+            Ok(receipt)
+        }
+        CloudProofCommand::Verify {
+            attestation_id,
+            fingerprint,
+            candidate_commit,
+            candidate_tree,
+            evidence_digest,
+            verifier_scope,
+            operation_id,
+        } => {
+            let op_id = match operation_id {
+                Some(op) => op,
+                None => new_uuid_v4()?,
+            };
+            submit_verify(
+                &transport,
+                &VerifyProofTransitionRequest {
+                    project_id: routed.canonical_name,
+                    operation_id: op_id,
+                    attestation_id,
+                    expected_fingerprint: fingerprint,
+                    expected_candidate_commit: candidate_commit,
+                    expected_candidate_tree: candidate_tree,
+                    verified_evidence_digest: evidence_digest,
+                    verifier_scope,
+                },
+            )
+        }
+        CloudProofCommand::Admit {
+            attestation_id,
+            fingerprint,
+            task_revision,
+            fencing_generation,
+            candidate_commit,
+            accepted_target_commit,
+            policy_digest,
+            operation_id,
+        } => {
+            let op_id = match operation_id {
+                Some(op) => op,
+                None => new_uuid_v4()?,
+            };
+            submit_admit_or_publish(
+                &transport,
+                "admit",
+                &AdmitOrPublishProofRequest {
+                    project_id: routed.canonical_name,
+                    operation_id: op_id,
+                    attestation_id,
+                    expected_fingerprint: fingerprint,
+                    expected_task_revision: task_revision,
+                    expected_fencing_generation: fencing_generation,
+                    expected_candidate_commit: candidate_commit,
+                    expected_accepted_target_commit: accepted_target_commit,
+                    expected_policy_digest: policy_digest,
+                },
+            )
+        }
+        CloudProofCommand::Publish {
+            attestation_id,
+            fingerprint,
+            task_revision,
+            fencing_generation,
+            candidate_commit,
+            accepted_target_commit,
+            policy_digest,
+            operation_id,
+        } => {
+            let op_id = match operation_id {
+                Some(op) => op,
+                None => new_uuid_v4()?,
+            };
+            submit_admit_or_publish(
+                &transport,
+                "publish",
+                &AdmitOrPublishProofRequest {
+                    project_id: routed.canonical_name,
+                    operation_id: op_id,
+                    attestation_id,
+                    expected_fingerprint: fingerprint,
+                    expected_task_revision: task_revision,
+                    expected_fencing_generation: fencing_generation,
+                    expected_candidate_commit: candidate_commit,
+                    expected_accepted_target_commit: accepted_target_commit,
+                    expected_policy_digest: policy_digest,
+                },
+            )
+        }
+        CloudProofCommand::Retire {
+            attestation_id,
+            fingerprint,
+            reason,
+            operation_id,
+        } => {
+            let op_id = match operation_id {
+                Some(op) => op,
+                None => new_uuid_v4()?,
+            };
+            submit_retire_historical(
+                &transport,
+                &routed.canonical_name,
+                &op_id,
+                &attestation_id,
+                &fingerprint,
+                &reason,
+            )
+        }
+        CloudProofCommand::Inspect {
+            attestation_id,
+            task_id,
+        } => reconstruct_attestation(
+            &transport,
+            &routed.canonical_name,
+            attestation_id.as_deref(),
+            task_id.as_deref(),
+        ),
+    }
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+fn run_cloud_proof_command(
+    _project_root: &Path,
+    _identity: &core::repo_identity::RepositoryIdentity,
+    _command: CloudProofCommand,
+) -> Result<serde_json::Value, error::DecapodError> {
+    Err(error::DecapodError::NotImplemented(
+        "CLOUD_PROOF_ACCEPTANCE_CAPABILITY_DISABLED: cloud proof transitions require supabase-cloud".into(),
+    ))
 }
 
 fn run_cloud_admin_action<F>(format: &str, f: F) -> Result<serde_json::Value, error::DecapodError>

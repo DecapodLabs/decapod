@@ -548,3 +548,92 @@ fn claim_task_recovers_legacy_unknown_claim_without_real_custody_and_blocks_if_b
     assert_eq!(blocked["status"], "conflict", "{blocked}");
     assert_eq!(blocked["result"]["assigned_to"], "unknown");
 }
+
+#[test]
+fn cloud_proof_capture_request_requires_bound_custody_and_binds_real_record() {
+    let tmp = tempfile::tempdir().unwrap();
+    let repo_root = tmp.path().join("repo");
+    let custody_dir = tmp.path().join("custody");
+    std::fs::create_dir_all(&repo_root).unwrap();
+    let run_git = |args: &[&str]| {
+        let out = std::process::Command::new("git")
+            .args(args)
+            .current_dir(&repo_root)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    };
+    run_git(&["init", "-b", "main"]);
+    run_git(&["config", "user.email", "test@decapodlabs.ai"]);
+    run_git(&["config", "user.name", "Test"]);
+    std::fs::write(repo_root.join("README.md"), b"hello\n").unwrap();
+    run_git(&["add", "README.md"]);
+    run_git(&["commit", "-m", "init"]);
+
+    let store = crate::core::cloud_workspace::CloudCustodyStore::at(&custody_dir);
+    // Unbound checkout must fail closed with CLOUD_CUSTODY_UNBOUND (never fabricate ws_/custody_).
+    let err = super::build_cloud_proof_capture_request_with_store(
+        &repo_root,
+        "DecapodLabs/decapod",
+        "feat_1809_test",
+        99,
+        99,
+        &[],
+        None,
+        Some(&store),
+    )
+    .expect_err("unbound checkout must not fabricate custody ids");
+    assert!(
+        err.to_string().contains("CLOUD_CUSTODY_UNBOUND"),
+        "err={err}"
+    );
+
+    let bound = crate::core::cloud_workspace::CloudCustodyRecord {
+        version: 1,
+        origin: "https://api.dactyl.example".into(),
+        project_id: "DecapodLabs/decapod".into(),
+        task_id: "feat_1809_test".into(),
+        task_title: "Test bound custody".into(),
+        native_task_version: 3,
+        workspace_id: "ws_real_bound_1809".into(),
+        worktree_path: repo_root
+            .canonicalize()
+            .unwrap_or_else(|_| repo_root.clone()),
+        branch: "main".into(),
+        actor: "alice".into(),
+        custody_id: "custody_real_bound_1809".into(),
+        pending_operation_id: None,
+        pending_custody_id: None,
+        pending_native_task_version: None,
+        task_revision: Some(7),
+        fencing_generation: Some(4),
+        expires_at: Some("2099-01-01T00:00:00Z".into()),
+        invocation_id: None,
+        container_expected: false,
+        container_runtime: None,
+        container_name: None,
+        container_id: None,
+    };
+    store.save(&repo_root, &bound).unwrap();
+
+    let req = super::build_cloud_proof_capture_request_with_store(
+        &repo_root,
+        "DecapodLabs/decapod",
+        "feat_1809_test",
+        999,
+        999,
+        &[],
+        None,
+        Some(&store),
+    )
+    .expect("bound custody must produce candidate-bound ProofCaptureRequest");
+    assert_eq!(req.subject.workspace_id, "ws_real_bound_1809");
+    assert_eq!(req.subject.custody_id, "custody_real_bound_1809");
+    assert_eq!(req.subject.task_revision, 7);
+    assert_eq!(req.subject.fencing_generation, 4);
+}
