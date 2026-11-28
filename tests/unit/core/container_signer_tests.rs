@@ -275,3 +275,86 @@ fn container_signer_allows_cloud_control_gateway_path_and_denies_019_admin_ops()
         );
     }
 }
+
+#[test]
+fn container_signer_rejects_origin_suffix_port_userinfo_fragment_and_path_smuggling() {
+    let tmp = TempDir::new().expect("tempdir");
+    let repo = tmp.path().join("repo");
+    std::fs::create_dir_all(&repo).expect("create repo dir");
+    let now = 1_780_000_000;
+    let key_store = DeviceKeyStore::with_root_dir(
+        "https://cloud.example.invalid",
+        "DecapodLabs/decapod",
+        &repo,
+        &tmp.path().join("keys"),
+    )
+    .expect("keystore")
+    .with_os_keychain(false);
+    let key = key_store.load_or_create().expect("key");
+    let policy = ContainerSignerPolicy {
+        allowed_repository: "DecapodLabs/decapod".to_string(),
+        allowed_origin: "https://cloud.example.invalid".to_string(),
+        allowed_agent_id: "container-agent-1".to_string(),
+        credentials: crate::core::container_signer::WorkspaceCredentialsConfig {
+            propodus_cloud: Some("signer-broker".to_string()),
+            ..Default::default()
+        },
+        session_expires_at: now + 300,
+        revoked: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        device_key_store: Some(key_store),
+        access_token_digest: None,
+    };
+
+    for (smuggled_url, expected_code) in [
+        (
+            "https://cloud.example.invalid.evil.com/functions/v1/decapod-onboarding/cloud-query",
+            "CONTAINER_SIGNER_ORIGIN_DENIED",
+        ),
+        (
+            "https://cloud.example.invalid:8443/functions/v1/decapod-onboarding/cloud-query",
+            "CONTAINER_SIGNER_ORIGIN_DENIED",
+        ),
+        (
+            "https://cloud.example.invalid@evil.com/functions/v1/decapod-onboarding/cloud-query",
+            "CONTAINER_SIGNER_ORIGIN_DENIED",
+        ),
+        (
+            "https://cloud.example.invalid/functions/v1/decapod-onboarding/cloud-query#frag",
+            "CONTAINER_SIGNER_ORIGIN_DENIED",
+        ),
+        (
+            "https://cloud.example.invalid/evil/../functions/v1/decapod-onboarding/cloud-query",
+            "CONTAINER_SIGNER_OPERATION_DENIED",
+        ),
+        (
+            "https://cloud.example.invalid/attacker/cloud-query",
+            "CONTAINER_SIGNER_OPERATION_DENIED",
+        ),
+    ] {
+        let resp = policy.sign_request(
+            &ContainerSignRequest {
+                capability: SignerCapabilityKind::PropodusCloud,
+                repository: "DecapodLabs/decapod".to_string(),
+                agent_id: "container-agent-1".to_string(),
+                method: "POST".to_string(),
+                url: smuggled_url.to_string(),
+                nonce: None,
+                aud: Some("https://cloud.example.invalid".to_string()),
+                access_token_sha256: Some("ath_test".to_string()),
+            },
+            now,
+            Some(&key),
+        );
+        assert!(
+            !resp.ok,
+            "smuggled URL must be denied: {smuggled_url} -> {:?}",
+            resp
+        );
+        assert_eq!(
+            resp.code.as_deref(),
+            Some(expected_code),
+            "unexpected code for {smuggled_url}: {:?}",
+            resp
+        );
+    }
+}

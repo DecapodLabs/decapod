@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "accepted_commit": "ed2608fa702c5b78f2b5f67969dc64aded737a2a",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,62 +872,50 @@
     }
   },
   "change": {
-    "id": "change_01M8GCM9JPZQMFPC94VGWF1YJB",
-    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "id": "pr_hardening_1934_1964",
+    "base_commit": "ed2608fa702c5b78f2b5f67969dc64aded737a2a",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:docs-ia-nav-1995": {
-      "statement": "Docs shell removes .decapod-sidebar-mobile-links, renders semantic ul.decapod-rail-list right-rail and inline TOC with scroll/hashchange aria-current=location, versions custom.css (?v=20261128-docs-ia), links Writing, and fixes book.js:635 .menu-title TypeError with 0 runtime exceptions.",
-      "falsifier": "Any page renders .decapod-sidebar-mobile-links, throws a JS page-load exception, loads unversioned custom.css, concatenates rail links inline, or breaks doc_alignment assertions.",
+    "hardening-1934-1936-1964": {
+      "statement": "ContainerSignerPolicy enforces exact origin authority and canonical path allowlist, lcm rebuild_index preserves originals_index atomically on hash mismatch, and crash/lease-fencing/replay/mutation suites prove boundary fail-closed behavior.",
+      "falsifier": "Any origin/userinfo/fragment/path smuggling bypasses container_signer, corrupt lcm replay wipes originals_index, SIGKILL leaves unrecoverable workspace reservation, competing-agent clock skew breaks lease_generation monotonicity, or any assurance fault spec passes undetected.",
       "status": "supported",
       "proof_refs": [
-        "assets/tools/docs_seo.py",
-        "tests/doc_alignment.rs"
+        "tests/crash_durability_1934.rs",
+        "tests/derived_replay_1936.rs",
+        "tests/lease_fencing_consistency_1935.rs",
+        "tests/security_guarantee_assurance_1964.rs",
+        "tests/unit/core/container_signer_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-docs-ia-nav-1995",
-      "summary": "Polish docs side navigation, semantic rail lists, CSS cache versioning, Writing nav, and .menu-title fix (#1995)",
-      "input_digest": "sha256:2eae62286153d29ca81b3fabf7a1de1757e29d64c58437eb04013bd0fe90031b"
-    },
-    {
-      "id": "cp_bugs_01m8gcen6vkjv9gz_reconcile_v0169_5",
-      "summary": "Reconcile reviewed_sources_digest for v0.169.5 base 170efc04a",
-      "input_digest": "sha256:1eb586f87bf2cd9dfc6d6485bd638b13225b3a7949c00bbb90c300b2b097163a"
-    },
-    {
-      "id": "cp_bugs_01m8gcen6vkjv9gz_refresh_v0169_5",
-      "summary": "Refresh v0.169.5 Dockerfile pin, entrypoints, and specs manifest",
-      "input_digest": "sha256:df4ea7760ee59e2ff4aaad611d51b5121cfa9b674b4d0a0ce5098b993e6f32c9"
-    },
-    {
-      "id": "cp_bugs_01m8gcen6vkjv9gz_merge_e10831742",
-      "summary": "Merge origin/master (e10831742 / PR #1997) and refresh specs",
-      "input_digest": "sha256:13692995571cdc321762e6fb71274aa3a4d6b01aba8bca874e4e2294a98c7432"
+      "id": "ckpt-hardening-ed2608fa7",
+      "summary": "Harden container_signer, lcm atomic rebuild, and crash/lease/replay/assurance suites (#1934, #1935, #1936, #1964, rebased onto ed2608fa7 v0.169.5)",
+      "input_digest": "sha256:4a90f2ffe1199856e81df1e75a0d755f8978c984e2233702b59dffe152acc10a"
     }
   ],
   "intents": {
-    "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB": {
+    "intent:branch_hardening_1934_1964": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Decapod-only isolated worktree; zero Clack or root checkout mutations"
       ],
       "constraints": [
-        "root"
+        "src/decapod/{core/container_signer.rs,plugins/lcm.rs},tests/,docs/,.decapod/managed/specs/"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
+      "id": "intent:branch_hardening_1934_1964",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
-      "refined_intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
+      "raw_intent": "Close Decapod #1934, #1935, #1936, and #1964 hardening and security-assurance gaps",
+      "refined_intent": "Enforce exact origin/path validation in container_signer, atomic hash-validated lcm index rebuilds, SIGKILL durability, 48-step lease/fencing model check, derived replay determinism, and mutation/fault-injection assurance tests on ed2608fa7",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -940,83 +928,77 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
+      "intent": "Close #1934, #1935, #1936, and #1964 boundary gaps on origin/master@ed2608fa7: exact origin authority and canonical allowlist in container_signer, atomic hash-prevalidated lcm index rebuilds, SIGKILL workspace recovery, 48-step lease fencing model check, derived replay convergence, and RULE-SIGNER-ORIGIN-010 / RULE-HTTP-AUTH-011 assurance tests.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --test crash_durability_1934",
+        "cargo test --test lease_fencing_consistency_1935",
+        "cargo test --test derived_replay_1936",
+        "cargo test --test security_guarantee_assurance_1964"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master (PR #1997 #1630 storage contracts) with #1995 docs navigation architecture and refreshed codebase attestation.",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "71aa8e2d87676fdad0c747f3845a0e51bda3b23a65a03d33395f5490e04f1355"
+          "reason": "Rebased onto ed2608fa7 (v0.169.5): atomic LCM index rebuild, SIGKILL/fencing suites, and container_signer origin boundary (#1934-#1936, #1964)",
+          "reviewed_code_fingerprint": "e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488",
+          "spec_material_hash": "341245a13e69f92b2de407e9715d722f5f7a868a662231f51266abeb2afcd62d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master (PR #1997 #1630 storage contract interfaces) with #1995 docs navigation interfaces and refreshed codebase attestation.",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "a91a1fe17b67dd771650b8605cc2f4e5ab11cc39a0a246fa03898c0f7da315a4"
+          "reason": "Rebased onto ed2608fa7 (v0.169.5): ContainerSignerPolicy origin/path errors and LCM rebuild envelope (#1936, #1964)",
+          "reviewed_code_fingerprint": "e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488",
+          "spec_material_hash": "692e7d4017fbe793138e1c2d767b16cbd2f54a28969fb8efeb63938abc025a4c"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Merged origin/master (PR #1997) cleanly with only generated codebase attestation refreshed; #1995 security boundaries unchanged.",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reason": "Rebased onto ed2608fa7 (v0.169.5): RULE-SIGNER-ORIGIN-010 and RULE-HTTP-AUTH-011 mutation assurance coverage (#1964)",
+          "reviewed_code_fingerprint": "e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488",
+          "spec_material_hash": "f3e87be29e87828b26c711b7e736a15b01b10b56b2e6b9beee1bf0b1397d41f1"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
+      "title": "Harden container_signer origin/allowlist, atomic lcm replay, and crash/lease/assurance suites (#1934, #1935, #1936, #1964)",
       "todo_ids": [
-        "bugs_01m8gcen6vkjv9gz"
+        "secu_01m8fmdbpf4g7g0n"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795853292Z"
+      "updated_at": "1795861129Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Decapod-only isolated worktree; zero Clack or root checkout mutations"
       ],
-      "artifact_hash": "sha256:baf7e637c30a8bef7c6d78cbf56230819817014366554f4c1f72e10ee85910bd",
+      "artifact_hash": "sha256:a56c92c1b2ff9fa5a6b89f4327ea72bc649c3db73a777b01f6733aaef770a5fa",
       "checks": [
         {
-          "name": "chrome_qa_1995",
-          "status": "passed"
-        },
-        {
-          "name": "doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "mdbook_docs_seo",
+          "name": "cargo_fmt",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
+            "intent_id": "intent:branch_hardening_1934_1964",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
+            "intent_id": "intent:branch_hardening_1934_1964",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8GCM9Q9VM817PSY9SGW6JXN",
+            "detail": "trajectory:branch_hardening_1934_1964",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
+            "intent_id": "intent:branch_hardening_1934_1964",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1025,30 +1007,31 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8GCM9Q9VM817PSY9SGW6JXN": {
+          "branch_hardening_1934_1964": {
             "evidence_only": true,
-            "id": "branch_01M8GCM9Q9VM817PSY9SGW6JXN",
-            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
+            "id": "branch_hardening_1934_1964",
+            "intent_id": "intent:branch_hardening_1934_1964",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/book/theme/index.hbs",
-                  "docs/book/src/custom.css",
-                  "docs/book/src/index.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP audit-decapod-1995.mjs ok=true exceptionsCount=0 failures=[] across 320..1440 + 1.25x zoom + 5 themes"
+                  "src/decapod/core/container_signer.rs",
+                  "src/decapod/plugins/lcm.rs",
+                  "tests/crash_durability_1934.rs",
+                  "tests/lease_fencing_consistency_1935.rs",
+                  "tests/derived_replay_1936.rs",
+                  "tests/security_guarantee_assurance_1964.rs",
+                  "tests/unit/core/container_signer_tests.rs",
+                  "docs/derived-data-and-replay.md",
+                  "docs/durability-and-fencing.md",
+                  "docs/security-assurance-matrix.md"
                 ],
                 "proof_refs": [
-                  "doc_alignment",
-                  "mdbook_docs_seo",
-                  "chrome_qa_1995"
+                  "cargo_fmt"
                 ],
                 "scope": [
-                  "root"
+                  "src/decapod/{core/container_signer.rs,plugins/lcm.rs},tests/,docs/,.decapod/managed/specs/"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1058,30 +1041,28 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [
-        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP audit-decapod-1995.mjs ok=true exceptionsCount=0 failures=[] across 320..1440 + 1.25x zoom + 5 themes"
-      ],
+      "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
+      "intent_id": "intent:branch_hardening_1934_1964",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "docs/book/src/custom.css",
-        "docs/book/src/index.md",
-        "docs/book/theme/index.hbs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "docs/derived-data-and-replay.md",
+        "docs/durability-and-fencing.md",
+        "docs/security-assurance-matrix.md",
+        "src/decapod/core/container_signer.rs",
+        "src/decapod/plugins/lcm.rs",
+        "tests/crash_durability_1934.rs",
+        "tests/derived_replay_1936.rs",
+        "tests/lease_fencing_consistency_1935.rs",
+        "tests/security_guarantee_assurance_1964.rs",
+        "tests/unit/core/container_signer_tests.rs"
       ],
       "repo_scope": [
-        "root"
+        "src/decapod/{core/container_signer.rs,plugins/lcm.rs},tests/,docs/,.decapod/managed/specs/"
       ],
-      "run_id": "branch_01M8GCM9Q9VM817PSY9SGW6JXN",
+      "run_id": "branch_hardening_1934_1964",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m8gcen6vkjv9gz",
+      "task_id": "secu_01m8fmdbpf4g7g0n",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

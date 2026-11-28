@@ -34,6 +34,10 @@ All 13 registered canonical streams (`events::STREAMS`): `broker`, `workspace_li
 - **Workunit Journal (`src/decapod/core/workunit.rs`)**:
   - Each `workunit.snapshot` carries monotonic `generation`, `predecessor` (`record_hash` of prior snapshot), `operation_id`, `manifest_hash`, optional `ExecutionStateBinding`, and `proof_hashes`.
   - Reordered or tampered predecessors fail closed (`WORKUNIT_JOURNAL_CONFLICT` / `WORKUNIT_JOURNAL_INVALID`).
+- **Federation & LCM Derived Indexes (`src/decapod/plugins/{federation,lcm}.rs`)**:
+  - `federation::rebuild_from_events` runs inside `BEGIN IMMEDIATE ... COMMIT` and rolls back on corrupt events, preserving the prior `nodes`/`node_edges` projection.
+  - `lcm::rebuild_index` validates ledger event content hashes before opening a single `BEGIN IMMEDIATE ... COMMIT` transaction to replace `originals_index`; any content-hash mismatch returns `status = "failed"` without wiping the existing derived index.
+  - `lcm::rebuild_index_from_ledger` rebuilds `originals_index` atomically under `BEGIN IMMEDIATE ... COMMIT`.
 - **Validation History (`src/decapod/core/validation_history.rs`)**:
   - Records are commit-addressed (`subject_kind = "commit"`, `subject_id = candidate_sha`) and verified via `CompletionRecord::verify()` (`record_digest`, `proof.verify()`, envelope/row parity).
 
