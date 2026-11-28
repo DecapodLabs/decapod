@@ -37,7 +37,6 @@
       <div class="decapod-offerings-kicker">DEPLOYMENT OFFERINGS</div>
       <h2 id="decapod-offerings-heading">Decapod Local &amp; Decapod Cloud</h2>
     </div>
-    <a class="decapod-offerings-compare" href="https://decapodlabs.ai/pricing">Compare Local &amp; Cloud <span aria-hidden="true">↗</span></a>
   </div>
   <div class="decapod-offerings-grid">
     <article class="decapod-offering-card offering-local">
@@ -55,15 +54,15 @@
     <article class="decapod-offering-card offering-cloud">
       <div class="decapod-offering-meta">
         <h3>Decapod Cloud</h3>
-        <span class="decapod-offering-badge badge-cloud">$50/contributor/repo/mo · $0 surprise overages</span>
+        <span class="decapod-offering-badge badge-cloud">Team Workspace · Hosted custody</span>
       </div>
-      <p>Hosted team task coordination, repository-bound sessions, and organization seat management with predictable per-repo pricing and multi-repo reservations.</p>
+      <p>Hosted team task coordination, repository-bound sessions, and organization seat management for repositories running <code>backend = "cloud"</code>.</p>
       <ul class="decapod-offering-points">
         <li>Shared repository custody (<code>backend = "cloud"</code>)</li>
-        <li>Manage seats, repo enrollment, and billing in <a href="https://decapodlabs.ai/admin">Organization Admin</a></li>
+        <li>Manage seats, repo enrollment, and access policies in <a href="https://decapodlabs.ai/admin">Organization Admin</a></li>
       </ul>
       <div class="decapod-offering-actions">
-        <a class="decapod-offering-action" href="https://decapodlabs.ai/pricing">View Cloud pricing <span aria-hidden="true">↗</span></a>
+        <a class="decapod-offering-action" href="reference/cloud-projects.html">Cloud project docs <span aria-hidden="true">→</span></a>
         <a class="decapod-offering-action secondary" href="https://decapodlabs.ai/signup">Sign up <span aria-hidden="true">↗</span></a>
         <a class="decapod-offering-action secondary" href="https://decapodlabs.ai/admin">Organization Admin <span aria-hidden="true">↗</span></a>
       </div>

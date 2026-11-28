@@ -1,3 +1,9 @@
+## Hide `/pricing` Navigation & Commercial Copy in mdBook Documentation (`docs/book/`, `docs_01m8h2gp0mg0nnbj`)
+
+- **mdBook theme shell (`docs/book/theme/index.hbs`)**: Drops the three `https://decapodlabs.ai/pricing` anchor links across `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` without altering `.decapod-top-links` layout, self-hosted Geist font rules, or `docs/book/src/custom.css`.
+- **Book source chapters (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Routes the `Decapod Cloud` card primary action on `index.md` to internal `reference/cloud-projects.html` (`Cloud project docs →`), replaces commercial `$50/contributor/repo/mo` / `$0 surprise overages` prose with factual `backend = "cloud"` coordination boundaries, and preserves `https://decapodlabs.ai/signup` and `https://decapodlabs.ai/admin` links with zero edits under `src/`.
+- **Alignment test (`tests/doc_alignment.rs`)**: Updates `test_docs_landing_page_links_local_and_cloud_offerings` to assert `reference/cloud-projects.html`, `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs` and all affected `docs/book/src/` chapters.
+
 ## Container Custody Root-UID Preflight, Supabase 3-Mode Topology & Local PG17 Proof (`#1379`, `#1378`, `#1369`)
 
 - **Privileged container read-only & filesystem preflight (`#1379`, `src/decapod/core/db.rs::storage_health_preflight`, `tests/sqlite_hardening.rs`)**: Under `#[cfg(unix)]`, `storage_health_preflight` inspects `fs::symlink_metadata(store_root)` and rejects `mode & 0o222 == 0` with `STORAGE_PREFLIGHT_FAILED` before `write_probe` so Linux `uid=0` (`CAP_DAC_OVERRIDE`) containers cannot silently bypass `0o555` store permissions; `detect_fs_type` inspects `/proc/self/mountinfo` to fail closed on `UNSUPPORTED_FS_TYPES` (`nfs`, `nfs4`, `cifs`, `smbfs`, `9p`, `vboxsf`) while permitting `virtiofs`/`fuse*`, and `tests/sqlite_hardening.rs` synchronizes `DECAPOD_STORAGE_FAULT_STAGE` via `RwLock<()>`.
@@ -2225,7 +2231,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
+- Repository signal fingerprint: `50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

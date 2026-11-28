@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3868461b441bbfa04cbc676922b983ac9d61483d",
+    "accepted_commit": "4dbafaebd14414c7e39ef660d7fa7b0943af0193",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,51 +872,52 @@
     }
   },
   "change": {
-    "id": "pr-1378-1379-1369",
-    "base_commit": "3868461b441bbfa04cbc676922b983ac9d61483d",
+    "id": "change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+    "base_commit": "4dbafaebd14414c7e39ef660d7fa7b0943af0193",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1378-1379-1369-container-supabase": {
-      "statement": "storage_health_preflight rejects unix mode&0o222==0 before write_probe under uid=0 CAP_DAC_OVERRIDE, sqlite_hardening serializes DECAPOD_STORAGE_FAULT_STAGE, Supabase 3-mode topology and hosted boundaries are documented, and local_native_managed_project_revocation aligns with #1896.",
-      "falsifier": "Any failure of sqlite_hardening, datastore_contract, shared_state_semantics_1247, storage_filesystem_tests, container_signer, plugins::container, supabase_service, or Decapod CI/Validate checks.",
+    "claim:docs-hide-pricing-links": {
+      "statement": "Decapod mdBook theme and source chapters contain zero decapodlabs.ai/pricing links and zero  commercial pricing claims while preserving factual Organization Admin, Cloud Signup, and reference/cloud-projects.html routes without modifying src/ Rust files.",
+      "falsifier": "Any decapodlabs.ai/pricing link or /contributor/repo/mo copy appears in docs/book/ source or rendered mdBook HTML, or tests/doc_alignment.rs fails, or any file under src/ is modified.",
       "status": "supported",
       "proof_refs": [
-        "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 TestPostgresNativeManagedProjectConsumer pass; host cargo clippy --offline --all-targets -- -D warnings = 0"
+        "docs/book/src/index.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-1378-1379-1369-rebased",
-      "summary": "Rebased #1378/#1379/#1369 onto origin/master@3868461b4 with official v0.169.5 preserving all PR #1997/#2000/#2002/#2003 code and living specs.",
-      "input_digest": "sha256:ffa099dba90a8bed47fc5e9630c3bf7c44c9f428864faffc79572e994d8fc5e8"
-    },
-    {
-      "id": "chk-1378-1379-1369-rebased-v2",
-      "summary": "Rebased #1378/#1379/#1369 onto origin/master@3868461b4 with official v0.169.5, full spec reviews, preserving all PR #1997/#2000/#2002/#2003 code and living specs.",
-      "input_digest": "sha256:bed9a06c3679744203570978829346b145083b6f3898deeb887b238e52e984eb"
+      "id": "chk-1-docs-hide-pricing",
+      "summary": "Hide /pricing links and  commercial claims across docs/book, update doc_alignment test, and refresh living specs",
+      "input_digest": "sha256:a631e377c121604ab7bd388c205b15d5bdd81e4f01f7352846a3f9aaca4f8a5b",
+      "proof_refs": [
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:run-1378-1379-1369-20261128113649": {
+    "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero weakening of fail-closed storage or hosted-credential checks; $0/mo; zero BYPASSRLS; zero workflow edits; preserve all merged PR #1997/#2000/#2002/#2003 code and living specs."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1378-1379-1369-20261128113649",
+      "id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Harden Linux container root-UID storage preflight, fix sqlite_hardening fault-env race, document 3-mode Supabase/PG17 topology and align seat-revocation diagnostics (#1378, #1379, #1369)",
-      "refined_intent": "Reject mode&0o222==0 before write_probe under #[cfg(unix)] for uid=0 CAP_DAC_OVERRIDE containers, synchronize DECAPOD_STORAGE_FAULT_STAGE via RwLock<()>, align local_native_managed_project_revocation with #1896 diagnostics, document direct/session/transaction pooler modes & hosted fail-closed boundaries, and keep #1378/#1379/#1369 OPEN pending hosted/multi-clone/Gatekeeper E2E.",
+      "raw_intent": "Hide /pricing links in Decapod docs (Track C)",
+      "refined_intent": "Hide /pricing links in Decapod docs (Track C)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -929,84 +930,72 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Harden privileged-UID Linux container storage preflight, eliminate sqlite_hardening env race, document Supabase direct/session/transaction-pooler modes and hosted boundary, and align seat-revocation assertions with #1896.",
+      "intent": "Hide /pricing links in Decapod docs (Track C)",
       "phases": [],
       "proof_hooks": [
-        "Podman Linux uid=0 fuse/virtiofs 95/95 pass (sqlite_hardening, datastore_contract, shared_state_semantics_1247, storage_filesystem_tests, container_signer, plugins::container)",
-        "Disposable PG 17.11 + PostgREST 16.5 TestPostgresNativeManagedProjectConsumer pass",
-        "GitHub Actions CI + Decapod Validate on rebased HEAD"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Prepended #1378/#1379/#1369 container root-UID preflight and Supabase 3-mode topology architecture prose while preserving all PR #1997/#2000/#2002/#2003 sections.",
-          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
-          "spec_material_hash": "fc670ee91bb962e73803b4607efa43e7107c6d0203166aa17f7da0650a837953"
+          "reason": "Documented mdBook shell, landing page, chapter prose, and doc_alignment test updates without touching src/ Rust files",
+          "reviewed_code_fingerprint": "50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163",
+          "spec_material_hash": "12e981a911e8e775df5e0fba8d6ebf8865707edf25ff957577a70af6b3c142e9"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Prepended #1378/#1379/#1369 storage_health_preflight and Supabase/PG17 interface contract prose while preserving all PR #1997/#2000/#2002/#2003 sections.",
-          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
-          "spec_material_hash": "3dca4c65824c977e243c52746064aaa89b6ede3c94a78bb1d72506e2853792c7"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed SECURITY.md: root-UID mode&0o222==0 rejection and hosted fail-closed boundaries tighten existing storage and credential invariants without weakening security guarantees.",
-          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
-          "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
+          "reason": "Documented updated docs/book navigation routes, Cloud project docs CTA, and tests/doc_alignment.rs contract",
+          "reviewed_code_fingerprint": "50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163",
+          "spec_material_hash": "51ae79176ac9f9991300ff78abb87da649573d2f7a907a958dc82bcf9279c33b"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Container root-UID preflight, sqlite_hardening sync, Supabase 3-mode docs & PG17 native proof (#1378, #1379, #1369)",
+      "title": "Hide /pricing links in Decapod docs (Track C)",
       "todo_ids": [
-        "code_01m8fkaw28vkrt2c"
+        "docs_01m8h2gp0mg0nnbj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795865895Z"
+      "updated_at": "1795870016Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero weakening of fail-closed storage or hosted-credential checks; $0/mo; zero BYPASSRLS; zero workflow edits; preserve all merged PR #1997/#2000/#2002/#2003 code and living specs."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b4b253729e776f7da9876ae7f8519d36d91a11653cc3ee4f7f59746f395a0f61",
+      "artifact_hash": "sha256:74d417f91a496983aff5a6dd7de8e27bff41ac5137f6a2dc71db258be030a3c0",
       "checks": [
         {
-          "name": "host_sqlite_hardening_supabase_db_clippy",
+          "name": "mdbook_build_and_seo",
           "status": "passed"
         },
         {
-          "name": "pg17_postgrest_native_consumer",
-          "status": "passed"
-        },
-        {
-          "name": "podman_uid0_virtiofs_95_of_95",
+          "name": "rg_zero_pricing_refs",
           "status": "passed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1378-1379-1369-20261128113649",
+            "detail": "trajectory:branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
             "event_id": "event:4",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1015,34 +1004,45 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1378-1379-1369-20261128113649": {
+          "branch_01M8H2VNVAX4XPB39P8H5N0Y4S": {
             "evidence_only": true,
-            "id": "run-1378-1379-1369-20261128113649",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "id": "branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verification",
+                "command": "mdbook build docs/book -d /tmp/decapod-book-hide-pricing && python3 assets/tools/docs_seo.py /tmp/decapod-book-hide-pricing",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/db.rs",
-                  "tests/sqlite_hardening.rs",
-                  "tests/supabase_service.rs",
-                  "docs/book/src/reference/supabase-validation.md",
-                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
-                  "src/decapod/core/db.rs",
-                  "tests/sqlite_hardening.rs",
-                  "tests/supabase_service.rs",
-                  "docs/book/src/reference/supabase-validation.md",
-                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
-                  "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 native consumer pass; host clippy clean"
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/index.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/concepts/faq.md",
+                  "docs/book/src/reference/cloud-projects.md",
+                  "docs/book/src/reference/propodus.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "tests/doc_alignment.rs",
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/index.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/concepts/faq.md",
+                  "docs/book/src/reference/cloud-projects.md",
+                  "docs/book/src/reference/propodus.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "tests/doc_alignment.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "mdbook 0.4.40 + docs_seo.py built 31 public pages with 0 decapodlabs.ai/pricing and 0 /contributor/repo/mo matches"
                 ],
                 "proof_refs": [
-                  "podman_uid0_virtiofs_95_of_95",
-                  "pg17_postgrest_native_consumer",
-                  "host_sqlite_hardening_supabase_db_clippy"
+                  "mdbook_build_and_seo",
+                  "rg_zero_pricing_refs"
                 ],
                 "scope": [
-                  "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1051,32 +1051,49 @@
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "mdbook build docs/book -d /tmp/decapod-book-hide-pricing && python3 assets/tools/docs_seo.py /tmp/decapod-book-hide-pricing"
+      ],
+      "destination": "pull request",
       "evidence": [
-        "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 native consumer pass; host clippy clean"
+        "mdbook 0.4.40 + docs_seo.py built 31 public pages with 0 decapodlabs.ai/pricing and 0 /contributor/repo/mo matches"
       ],
       "inspected_files": [
-        "docs/book/src/reference/supabase-validation.md",
-        "docs/datastore-v2/cloud-parity-and-boundaries.md",
-        "src/decapod/core/db.rs",
-        "tests/sqlite_hardening.rs",
-        "tests/supabase_service.rs"
+        "docs/book/src/concepts/faq.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/reference/cloud-projects.md",
+        "docs/book/src/reference/propodus.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ],
-      "intent_id": "intent:run-1378-1379-1369-20261128113649",
+      "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
       "modified_files": [
-        "docs/book/src/reference/supabase-validation.md",
-        "docs/datastore-v2/cloud-parity-and-boundaries.md",
-        "src/decapod/core/db.rs",
-        "tests/sqlite_hardening.rs",
-        "tests/supabase_service.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        "docs/book/src/concepts/faq.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/reference/cloud-projects.md",
+        "docs/book/src/reference/propodus.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
+        "root"
       ],
-      "run_id": "run-1378-1379-1369-20261128113649",
+      "run_id": "branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fkaw28vkrt2c",
+      "task_id": "docs_01m8h2gp0mg0nnbj",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

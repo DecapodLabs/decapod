@@ -21,7 +21,7 @@ decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
 
 While each agent edits files in an isolated worktree, durable project context stays shared:
 
-- **Tasks, scope & governance:** Task state lives in `.decapod/data/decapod.db` (`backend = "local"`) or the authorized **Decapod Cloud** service (`backend = "cloud"`, **$50/contributor/repo/mo**, **$0 surprise overages**, and **multi-repo reservations**; see [Cloud Pricing](https://decapodlabs.ai/pricing) and [Organization Admin](https://decapodlabs.ai/admin) for subscriptions, repository enrollment, seat assignments, teammate access policies, and billing), while plans, claims, trajectories, and living specs live in `.decapod/governance.json` and `.decapod/managed/specs/*`.
+- **Tasks, scope & governance:** Task state lives in `.decapod/data/decapod.db` (`backend = "local"`) or the authorized **Decapod Cloud** service (`backend = "cloud"`; see [Cloud project routing](../reference/cloud-projects.md) and [Organization Admin](https://decapodlabs.ai/admin) for repository enrollment, seat assignments, and teammate access policies), while plans, claims, trajectories, and living specs live in `.decapod/governance.json` and `.decapod/managed/specs/*`.
 - **Aptitude & federated knowledge:** Agents can record and retrieve project conventions and procedural observations via `decapod data aptitude` and `decapod data federation`.
 - **Heartbeats & presence:** Agents can record liveness via `decapod todo heartbeat` and renew active leases via `decapod todo renew`.
 

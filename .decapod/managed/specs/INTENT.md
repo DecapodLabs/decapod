@@ -1,3 +1,10 @@
+## Hide `/pricing` links and `$50` commercial claims across `docs/book/` (`docs_01m8h2gp0mg0nnbj`)
+
+Removes public `https://decapodlabs.ai/pricing` links and `$50/contributor/repo/mo` / `$0 surprise overages` commercial pricing copy from the human-facing mdBook documentation (`docs/book/`) while the pricing page is hidden, keeping `Decapod Local`, `Decapod Cloud` technical documentation, `Cloud Signup` (`https://decapodlabs.ai/signup`), and `Organization Admin` (`https://decapodlabs.ai/admin`) factual and intact without touching `src/` Rust files:
+
+- **Theme shell navigation (`docs/book/theme/index.hbs`)**: Removes all three `https://decapodlabs.ai/pricing` entries (top navigation `Pricing`, footer `Pricing ↗`, and right-rail Quick routes `Pricing ↗`) while keeping `Admin ↗` (`https://decapodlabs.ai/admin`), `Trust ↗`, `Evaluation ↗`, `Writing`, `Clack`, and `GitHub ↗` intact.
+- **Landing page & guide prose (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Removes the `Compare Local & Cloud` `/pricing` header link and `$50` badge/claims in `index.md`, replaces the primary `View Cloud pricing` CTA with `Cloud project docs →` (`reference/cloud-projects.html`), removes `/pricing` links and `$50` copy across the onboarding, FAQ, workflow, and Cloud reference pages while retaining factual `Organization Admin` and `Cloud Signup` routes, and updates `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings` to enforce zero `/pricing` or `$50/contributor/repo/mo` regressions across `docs/book/`.
+
 ## Container Custody Root-UID Preflight, Supabase Connection Modes & Local PG17 Native Proof (`#1379`, `#1378`, `#1369`)
 
 Hardens Linux container storage custody and documents the three Supabase/PostgreSQL 17 operational boundaries without weakening fail-closed checks:
@@ -1547,7 +1554,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
+- Repository signal fingerprint: `50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

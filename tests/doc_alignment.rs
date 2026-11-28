@@ -144,7 +144,9 @@ fn test_public_docs_do_not_overclaim_protocol_or_identity_boundaries() {
 #[test]
 fn test_docs_landing_page_links_local_and_cloud_offerings() {
     let index = fs::read_to_string("docs/book/src/index.md").expect("read docs/book/src/index.md");
-    assert!(index.contains("https://decapodlabs.ai/pricing"));
+    assert!(!index.contains("https://decapodlabs.ai/pricing"));
+    assert!(index.contains("reference/cloud-projects.html"));
+    assert!(index.contains("Cloud project docs"));
     assert!(index.contains("https://decapodlabs.ai/signup"));
     assert!(index.contains("https://decapodlabs.ai/admin"));
     assert!(!index.contains("https://decapodlabs.github.io/"));
@@ -152,8 +154,8 @@ fn test_docs_landing_page_links_local_and_cloud_offerings() {
     assert!(index.contains("Decapod Local"));
     assert!(index.contains("Free · Offline · No signup"));
     assert!(index.contains("Decapod Cloud"));
-    assert!(index.contains("$50/contributor/repo/mo"));
-    assert!(index.contains("$0 surprise overages"));
+    assert!(!index.contains("$50/contributor/repo/mo"));
+    assert!(!index.contains("$0 surprise overages"));
     assert!(!index.contains("Coming soon"));
     assert!(!index.contains("no public pricing or active purchase route"));
     assert!(index.contains("quickstart.html"));
@@ -161,13 +163,32 @@ fn test_docs_landing_page_links_local_and_cloud_offerings() {
 
     let quickstart = fs::read_to_string("docs/book/src/quickstart.md")
         .expect("read docs/book/src/quickstart.md");
-    assert!(quickstart.contains("https://decapodlabs.ai/pricing"));
+    assert!(!quickstart.contains("https://decapodlabs.ai/pricing"));
+    assert!(!quickstart.contains("$50/contributor/repo/mo"));
     assert!(quickstart.contains("https://decapodlabs.ai/signup"));
     assert!(quickstart.contains("https://decapodlabs.ai/admin"));
 
+    for path in [
+        "docs/book/src/introduction.md",
+        "docs/book/src/concepts/faq.md",
+        "docs/book/src/reference/cloud-projects.md",
+        "docs/book/src/reference/propodus.md",
+        "docs/book/src/workflows/multi-agent.md",
+    ] {
+        let content = fs::read_to_string(path).expect("read book page");
+        assert!(
+            !content.contains("https://decapodlabs.ai/pricing"),
+            "{path} must not link to hidden /pricing route"
+        );
+        assert!(
+            !content.contains("$50/contributor/repo/mo"),
+            "{path} must not include hidden $50 pricing copy"
+        );
+    }
+
     let hbs =
         fs::read_to_string("docs/book/theme/index.hbs").expect("read docs/book/theme/index.hbs");
-    assert!(hbs.contains("https://decapodlabs.ai/pricing"));
+    assert!(!hbs.contains("https://decapodlabs.ai/pricing"));
     assert!(hbs.contains("https://decapodlabs.ai/admin"));
     assert!(!hbs.contains("https://decapodlabs.github.io/"));
 

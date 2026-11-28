@@ -1,3 +1,11 @@
+## Public Documentation Navigation & Cloud Route Contracts (`docs/book/`, `docs_01m8h2gp0mg0nnbj`)
+
+- **Shell & page routes (`docs/book/theme/index.hbs`, `docs/book/src/index.md`)**:
+  - Top navigation exposes `Home`, `Docs`, `Writing`, `Clack`, and `GitHub ↗` (no `Pricing` link); footer and right-rail Quick routes retain `Admin ↗` (`https://decapodlabs.ai/admin`), `Trust ↗`, and `Evaluation ↗` without `Pricing ↗`.
+  - The `Decapod Cloud` offering card in `docs/book/src/index.md` displays badge `Team Workspace · Hosted custody` (preserving `.decapod-offering-badge.badge-cloud`), routes its primary CTA to `reference/cloud-projects.html` (`Cloud project docs →`), and retains secondary `Sign up ↗` (`https://decapodlabs.ai/signup`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) links.
+- **Guide & reference chapters (`docs/book/src/{quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Contain zero `https://decapodlabs.ai/pricing` links and zero `$50/contributor/repo/mo` commercial claims while keeping factual `Cloud Signup`, `Organization Admin`, and `backend = "cloud"` runtime boundaries intact.
+- **Regression contract (`tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings`)**: Enforces absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs`, `docs/book/src/index.md`, `quickstart.md`, `introduction.md`, `concepts/faq.md`, `reference/cloud-projects.md`, `reference/propodus.md`, and `workflows/multi-agent.md`, while preserving `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and CSS/layout class invariants. Runtime Rust CLI/RPC modules under `src/` are unchanged.
+
 ## Container Custody & Supabase 3-Mode Interface Contract (`#1379`, `#1378`, `#1369`)
 
 - **`core::db::storage_health_preflight(store_root)`**: Rejects `#[cfg(unix)]` directories with `mode & 0o222 == 0` (`STORAGE_PREFLIGHT_FAILED: store root '...' has read-only mode (...); refuse write probe under privileged UID.`) before `detect_fs_type` (`UNSUPPORTED_FS_TYPES`: `nfs`, `nfs4`, `cifs`, `smbfs`, `9p`, `vboxsf`; permitting `virtiofs`/`fuse*`) and `write_probe`.
@@ -2760,7 +2768,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
+- Repository signal fingerprint: `50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -68,9 +68,9 @@ The agent preserves accepted intent, stays within explicit boundaries, maintains
 
 It establishes that required checks ran against identified repository state, produced the required evidence, and permitted the governed completion or publication transition.
 
-## Is Decapod free, or what does Decapod Cloud cost?
+## How do Decapod Local and Decapod Cloud differ?
 
-**Decapod Local** (`repo.backend = "local"`, default) is free, offline, and local-first, with no account required. **Decapod Cloud** (`repo.backend = "cloud"`) is **$50/contributor/repo/mo** with **$0 surprise overages** and **multi-repo reservations** for teams that want hosted repository-bound task custody and coordination. Compare plans at [Decapod Cloud Pricing](https://decapodlabs.ai/pricing) or create a workspace at [Cloud Signup](https://decapodlabs.ai/signup).
+**Decapod Local** (`repo.backend = "local"`, default) is free, offline, and local-first, with no account required. **Decapod Cloud** (`repo.backend = "cloud"`) provides hosted repository-bound task custody and team coordination for organizations and repositories enrolled through [Cloud Signup](https://decapodlabs.ai/signup) and [Organization Admin](https://decapodlabs.ai/admin). See [Cloud project routing](../reference/cloud-projects.md) and [Decapod Cloud sign-in and task access](../reference/propodus.md) for the exact runtime boundary.
 
 ## How do teams manage Decapod Cloud subscriptions and repository access?
 
