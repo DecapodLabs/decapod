@@ -880,7 +880,7 @@
     "shared-repository-context": {
       "statement": "Current repository guidance is read in one authorized observation and corrections preserve history.",
       "falsifier": "Corrections overwrite prior records, competing replacements both succeed, or hosted context reads Local SQLite.",
-      "status": "open",
+      "status": "supported",
       "proof_refs": [
         "src/decapod/core/cloud_context.rs"
       ]
@@ -891,6 +891,14 @@
       "id": "repository-operational-context-consumer",
       "summary": "Route compound and ordinary knowledge operations to current hosted records with scoped correction history.",
       "input_digest": "sha256:e1a3409dc2c43951ebfbdf993553653d6e35535c2c865ea389be0fa66f0dcbf7",
+      "proof_refs": [
+        "src/decapod/core/cloud_context.rs"
+      ]
+    },
+    {
+      "id": "shared-context-consumer-01694",
+      "summary": "Incorporate the v0.169.4 accepted target and refresh reviewed context guidance.",
+      "input_digest": "sha256:30a156917fd991e1639aa339ad6c97827d7ad569bfa19e5b60308face4dac8e0",
       "proof_refs": [
         "src/decapod/core/cloud_context.rs"
       ]
@@ -937,22 +945,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current hosted context authority, protocol and private custody are described in the authored changes.",
-          "reviewed_code_fingerprint": "af2f07cb271cfaf4cef04748ee167801e83f96377264a77d7845ea91309b6949",
+          "reason": "Rescoped review of current hosted context authority and custody against released accepted target.",
+          "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "568e3bc261252f30ac9cf615c6baa2d2321e6ed1a900ad7303cd3164ccd5e040"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Current hosted context authority, protocol and private custody are described in the authored changes.",
-          "reviewed_code_fingerprint": "af2f07cb271cfaf4cef04748ee167801e83f96377264a77d7845ea91309b6949",
+          "reason": "Rescoped review of current hosted context authority and custody against released accepted target.",
+          "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "c72399e060514832308c9aae049d9a2100635900b80f415a17e2e750560ddd15"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Current hosted context authority, protocol and private custody are described in the authored changes.",
-          "reviewed_code_fingerprint": "af2f07cb271cfaf4cef04748ee167801e83f96377264a77d7845ea91309b6949",
+          "reason": "Rescoped review of current hosted context authority and custody against released accepted target.",
+          "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "dd7ac27adb32274254a2dba14e8ed4a30e972b0875c0ab3a19bafa5989dd763e"
         }
       ],
@@ -964,21 +972,25 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795835414Z"
+      "updated_at": "1795835844Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Private sessions, Git files and proof admission have separate authority"
       ],
-      "artifact_hash": "sha256:5327c0dfc60a8d5c8b8de98904d0097a9b2443e936ebe2ab808439bcd61f0e39",
+      "artifact_hash": "sha256:04fcd9de26b936c0ee50cfe7514b350f0c352507087fbf7d8fbf15a958092bcf",
       "checks": [
         {
           "name": "diff-check",
           "status": "passed"
+        },
+        {
+          "name": "focused-rust-context",
+          "status": "passed"
         }
       ],
-      "current_phase": "implementation",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -999,10 +1011,17 @@
             "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8G10SJN3ZD7B959CNN083TP": {
@@ -1024,6 +1043,22 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/cloud_context.rs"
+                ],
+                "proof_refs": [
+                  "focused-rust-context"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1031,7 +1066,9 @@
       },
       "declared_commands": [],
       "destination": "pull request",
-      "evidence": [],
+      "evidence": [
+        "src/decapod/core/cloud_context.rs"
+      ],
       "inspected_files": [],
       "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
       "modified_files": [
