@@ -386,6 +386,8 @@ publication readiness; the configured exact-candidate checks still govern releas
 
 ## Bounded context and host observations
 
+An ordinary Cloud connection from a checkout with committed project configuration looks up only the current GitHub origin through `account-register` with `operation: contributor_access`. The managed human session supplies the authenticated identity and the service returns the operational repository reference. A denial tells the contributor to contact their organization administrator. The CLI omits the account directory and checkout routes for this operation. Explicit administrator initialization retains the purchaser setup path.
+
 `context.resolve` retains its fragment contract and adds selection reasons, stable source identities, a scoped advisory knowledge projection, and current governed-plan context with explicit task binding. It returns an explicit no-match result for advisory queries and retains mandatory obligations. New capsule and bundle fields are versioned. Legacy hashes stay stable when the optional fields are absent. The complete context envelope is capped at 262,144 bytes, with at most twelve fragments and 8,192 excerpt bytes.
 
 `infer boundary --input` accepts a bounded `decapod.native-boundary.v1` request with a host agent ID. `trace flight-recorder compare --input` reads compact outcome observations and preserves missing metrics and incomplete runs. `trace flight-recorder acceptance --capture` continues to correlate the independently captured observer inputs.
@@ -2731,7 +2733,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `7b988e3e80f945ac336a07eea9638ae3ab85a98c1af0b629380c7bbb3bf5e989`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

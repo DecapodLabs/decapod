@@ -299,9 +299,18 @@ fn ensure_project_cloud_session(
     Ok(identity)
 }
 
-fn bootstrap_cloud_session(project_root: &Path, restart: bool) -> Result<(), error::DecapodError> {
+fn bootstrap_cloud_session(
+    project_root: &Path,
+    restart: bool,
+    administrator_setup: bool,
+) -> Result<(), error::DecapodError> {
     let identity = core::repo_identity::resolve_repository_identity(project_root)?;
-    match core::cloud_client::connect(project_root, &identity, restart, true).map(|_| identity) {
+    let session = if administrator_setup {
+        core::cloud_client::connect_for_setup(project_root, &identity, restart)
+    } else {
+        core::cloud_client::connect(project_root, &identity, restart, true)
+    };
+    match session.map(|_| identity) {
         Ok(identity) => {
             println!(
                 "Cloud setup ready for {}; the service confirmed repository read access. Credentials remain machine-private.",
@@ -336,7 +345,7 @@ fn run_cloud_command(cloud_cli: CloudCli) -> Result<(), error::DecapodError> {
             // actionable origin error rather than a misleading config error.
             core::repo_identity::resolve_repository_identity(&current_dir)?;
             let project_root = find_decapod_project_root(&current_dir)?;
-            match bootstrap_cloud_session(&project_root, restart) {
+            match bootstrap_cloud_session(&project_root, restart, false) {
                 Ok(()) => Ok(()),
                 Err(error @ error::DecapodError::CloudAuth(_)) => {
                     if let error::DecapodError::CloudAuth(diagnostic) = &error {
@@ -3944,7 +3953,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                         "Cloud configuration prepared for proof; sign-in and server readiness were not evaluated."
                     );
                 } else if let Err(error) =
-                    bootstrap_cloud_session(&target_dir, init_with.restart_cloud_signin)
+                    bootstrap_cloud_session(&target_dir, init_with.restart_cloud_signin, true)
                 {
                     if let error::DecapodError::CloudAuth(diagnostic) = &error {
                         print_cloud_auth_json_if_needed(diagnostic, None);

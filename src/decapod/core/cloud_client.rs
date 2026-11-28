@@ -959,6 +959,36 @@ fn acquire_with_metadata(
     ),
     DecapodError,
 > {
+    acquire_for_journey(project_root, identity, restart, false)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn uses_contributor_admission(project_root: &Path) -> bool {
+    // The explicit init path owns first-purchaser setup. A checkout with a
+    // committed project configuration uses the exact-repository contributor path.
+    crate::core::cloud_workspace::is_cloud_project(project_root)
+        && std::process::Command::new("git")
+            .current_dir(project_root)
+            .args(["cat-file", "-e", "HEAD:.decapod/config.toml"])
+            .stderr(std::process::Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success())
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn acquire_for_journey(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    restart: bool,
+    contributor: bool,
+) -> Result<
+    (
+        dactyl_db::CloudConnector,
+        SessionGuard,
+        dactyl_db::CloudResponseMetadata,
+    ),
+    DecapodError,
+> {
     let selected = selected_origin()?;
     let (mut connector, discover_meta) =
         dactyl_db::CloudConnector::discover_with_metadata(&selected).map_err(|error| {
@@ -1047,7 +1077,11 @@ fn acquire_with_metadata(
         state.bootstrap = Some(bootstrap);
         state.phase = Phase::Preparing;
         guard.replace(state.clone())?;
-        let flow = match connector.start_authentication(&identity.canonical_name, &private) {
+        let flow = match connector.start_authentication_with_purpose(
+            &identity.canonical_name,
+            &private,
+            contributor.then_some("contributor"),
+        ) {
             Ok(flow) => flow,
             Err(error) => {
                 persist_restart(&mut guard, state)?;
@@ -1237,15 +1271,43 @@ pub fn connect(
     restart: bool,
     check_readiness: bool,
 ) -> Result<StorageContext, DecapodError> {
-    let (connector, mut guard) = acquire(project_root, identity, restart)?;
+    connect_for_journey(
+        project_root,
+        identity,
+        restart,
+        check_readiness,
+        uses_contributor_admission(project_root),
+    )
+}
+
+#[cfg(feature = "supabase-cloud")]
+pub(crate) fn connect_for_setup(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    restart: bool,
+) -> Result<StorageContext, DecapodError> {
+    connect_for_journey(project_root, identity, restart, true, false)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn connect_for_journey(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    restart: bool,
+    check_readiness: bool,
+    contributor: bool,
+) -> Result<StorageContext, DecapodError> {
+    let (connector, mut guard, _) =
+        acquire_for_journey(project_root, identity, restart, contributor)?;
     let state = guard.state().clone();
     let human_session = state.session.as_ref().ok_or_else(restart_required)?.clone();
     let control_connector = connector.clone().with_device_gateway();
-    let result = crate::core::cloud_project::route(
+    let result = route_project(
         &control_connector,
         &guard,
         &human_session.access_token,
         identity,
+        contributor,
     );
     let routed = account_result(&mut guard, result)?;
     let (_active_connector, active_session) = resolve_operational_session(
@@ -1289,6 +1351,21 @@ pub fn connect(
         }
     }
     Ok(context)
+}
+
+#[cfg(feature = "supabase-cloud")]
+fn route_project(
+    connector: &dactyl_db::CloudConnector,
+    guard: &SessionGuard,
+    bearer: &str,
+    identity: &RepositoryIdentity,
+    contributor: bool,
+) -> Result<RepositoryIdentity, DecapodError> {
+    if contributor {
+        crate::core::cloud_project::contributor_route(connector, bearer, identity)
+    } else {
+        crate::core::cloud_project::route(connector, guard, bearer, identity)
+    }
 }
 
 /// Account/project administration stays reachable before data eligibility.
@@ -1343,6 +1420,15 @@ pub fn connect(
 ) -> Result<StorageContext, DecapodError> {
     selected_origin()?;
     unreachable!("disabled cloud returns an error")
+}
+
+#[cfg(not(feature = "supabase-cloud"))]
+pub(crate) fn connect_for_setup(
+    project_root: &Path,
+    identity: &RepositoryIdentity,
+    restart: bool,
+) -> Result<StorageContext, DecapodError> {
+    connect(project_root, identity, restart, true)
 }
 
 /// Inspect private state without sending a credential or claiming live access.
@@ -2114,15 +2200,18 @@ pub fn connect_control(
     project_root: &Path,
     identity: &RepositoryIdentity,
 ) -> Result<(dactyl_db::CloudConnector, RepositoryIdentity, String), DecapodError> {
-    let (connector, mut guard) = acquire(project_root, identity, false)?;
+    let contributor = uses_contributor_admission(project_root);
+    let (connector, mut guard, _) =
+        acquire_for_journey(project_root, identity, false, contributor)?;
     let state = guard.state().clone();
     let human_session = state.session.as_ref().ok_or_else(restart_required)?.clone();
     let control_connector = connector.clone().with_device_gateway();
-    let result = crate::core::cloud_project::route(
+    let result = route_project(
         &control_connector,
         &guard,
         &human_session.access_token,
         identity,
+        contributor,
     );
     let routed = account_result(&mut guard, result)?;
     let (active_connector, active_session) = resolve_operational_session(

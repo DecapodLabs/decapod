@@ -572,8 +572,12 @@ pub enum InitDiagramStyle {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecapodProjectConfig {
-    #[serde(deserialize_with = "deserialize_config_schema_version")]
+    #[serde(
+        default = "default_config_schema_version",
+        deserialize_with = "deserialize_config_schema_version"
+    )]
     pub schema_version: String,
+    #[serde(default)]
     pub init: InitConfigSection,
     pub repo: RepoContext,
     #[serde(default)]
@@ -624,6 +628,10 @@ impl WorkspaceConfigSection {
 }
 
 const CONFIG_SCHEMA_VERSION: &str = "1.0.0";
+
+fn default_config_schema_version() -> String {
+    CONFIG_SCHEMA_VERSION.to_string()
+}
 
 fn deserialize_config_schema_version<'de, D>(deserializer: D) -> Result<String, D::Error>
 where
@@ -1123,19 +1131,8 @@ impl DecapodProjectConfig {
 impl Default for DecapodProjectConfig {
     fn default() -> Self {
         Self {
-            schema_version: "1.0.0".to_string(),
-            init: InitConfigSection {
-                specs: true,
-                ci: true,
-                readme_badge: true,
-                diagram_style: InitDiagramStyle::Ascii,
-                entrypoints: vec![
-                    "AGENTS.md".to_string(),
-                    "CLAUDE.md".to_string(),
-                    "GEMINI.md".to_string(),
-                    "CODEX.md".to_string(),
-                ],
-            },
+            schema_version: default_config_schema_version(),
+            init: InitConfigSection::default(),
             repo: RepoContext::default(),
             governance: GovernanceConfig::default(),
             proof: crate::core::proof::ProjectProofConfig::default(),
@@ -1146,6 +1143,23 @@ impl Default for DecapodProjectConfig {
             maintenance: crate::core::db_maintenance::DbMaintenanceConfig::default(),
             agent_maintenance: crate::core::db_maintenance::DbMaintenanceConfig::default(),
             laya: crate::core::laya_readiness::Configuration::default(),
+        }
+    }
+}
+
+impl Default for InitConfigSection {
+    fn default() -> Self {
+        Self {
+            specs: true,
+            ci: true,
+            readme_badge: true,
+            diagram_style: InitDiagramStyle::Ascii,
+            entrypoints: vec![
+                "AGENTS.md".to_string(),
+                "CLAUDE.md".to_string(),
+                "GEMINI.md".to_string(),
+                "CODEX.md".to_string(),
+            ],
         }
     }
 }

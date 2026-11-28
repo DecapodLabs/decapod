@@ -2,8 +2,12 @@
 
 ```rust
 pub struct DecapodProjectConfig {
-    #[serde(deserialize_with = "deserialize_config_schema_version")]
+    #[serde(
+        default = "default_config_schema_version",
+        deserialize_with = "deserialize_config_schema_version"
+    )]
     pub schema_version: String,
+    #[serde(default)]
     pub init: InitConfigSection,
     pub repo: RepoContext,
     #[serde(default)]
@@ -40,6 +44,8 @@ pub struct DecapodProjectConfig {
 
 ## Invalid configuration and repair (#1771)
 
+A repository can commit a minimal `[repo]` section with `backend = "cloud"`.
+Omitted `schema_version` and `[init]` use the current defaults. An explicit
 `schema_version` must be `"1.0.0"`. Invalid TOML, known field types/enums,
 unsupported versions and unknown fields in protected sections reject ordinary
 mutation with `INVALID_CONFIG_SCHEMA`. The diagnostic identifies the offending

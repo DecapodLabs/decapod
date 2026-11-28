@@ -864,6 +864,67 @@ fn route_from_status(
     })
 }
 
+/// Resolve only the checkout's originating repository through live admission.
+pub(crate) fn contributor_route(
+    connector: &CloudConnector,
+    bearer: &str,
+    original: &RepositoryIdentity,
+) -> Result<RepositoryIdentity, DecapodError> {
+    // An already bound device session cannot perform human account activation.
+    // The service still checks live repository access on its next operation.
+    if crate::core::cloud_dpop::is_dpop_access_token(bearer) {
+        return Ok(original.clone());
+    }
+    let response = request(
+        connector,
+        bearer,
+        AccountOperation::Register,
+        json!({"version":1,"operation":"contributor_access","project_id":original.canonical_name}),
+        Some(&original.canonical_name),
+    )
+    .map_err(|error| match error {
+        DecapodError::CloudAuth(ref diagnostic)
+            if diagnostic.enrollment_url.is_some()
+                || matches!(
+                    diagnostic.status,
+                    CloudAuthStatus::AdminApprovalRequired
+                        | CloudAuthStatus::EntitlementDenied
+                        | CloudAuthStatus::RepositoryDenied
+                        | CloudAuthStatus::RegistrationRequired
+                        | CloudAuthStatus::ProviderLinkStepupRequired
+                        | CloudAuthStatus::UnauthorizedIdentity
+                        | CloudAuthStatus::PaymentRequired
+                        | CloudAuthStatus::PendingFulfillment
+                        | CloudAuthStatus::OrganizationAlreadyEnrolled
+                ) =>
+        {
+            contributor_denied()
+        }
+        _ => error,
+    })?;
+    if response.backend_authorized
+        && response.status == "active"
+        && response.pending_fulfillment != Some(true)
+    {
+        if response.project_id.is_none() {
+            return Err(invalid());
+        }
+        return route_from_status(&response, original);
+    }
+    Err(contributor_denied())
+}
+
+fn contributor_denied() -> DecapodError {
+    DecapodError::CloudAuth(
+        CloudAuthDiagnostic::new(
+            CloudAuthStatus::AdminApprovalRequired,
+            "The service did not authorize this GitHub identity for the repository.",
+            "Contact your organization administrator to request access to this repository.",
+        )
+        .with_error_code(CloudAuthErrorCode::AdminApprovalRequired),
+    )
+}
+
 fn reconcile_originating_repository(
     connector: &CloudConnector,
     bearer: &str,

@@ -247,6 +247,32 @@ impl Service {
             }
             ACCOUNT_REGISTER => {
                 assert!(request.headers.contains_key("authorization"));
+                if request.body["operation"] == "contributor_access" {
+                    assert_eq!(
+                        request.body,
+                        json!({"version":1,"operation":"contributor_access","project_id":self.repository}),
+                    );
+                    if !self.project_allowed {
+                        // No organization directory or admin fields are needed
+                        // to handle a nonmember denial.
+                        return Some((
+                            200,
+                            json!({
+                                "version":1, "account_id":self.account, "backend_authorized":false,
+                                "status":"admin_approval_required", "admin_contact_required":true,
+                            }),
+                        ));
+                    }
+                    self.account_status = "registered";
+                    return Some((
+                        200,
+                        json!({
+                            "version":1, "account_id":self.account, "backend_authorized":true,
+                            "status":"active",
+                            "project_id":self.project_slug_map.get(&self.repository).unwrap_or(&self.repository),
+                        }),
+                    ));
+                }
                 if request.body["operation"] == "account" {
                     assert_eq!(request.body, json!({"version":1,"operation":"account"}));
                     self.account_status = "registered";
@@ -424,6 +450,30 @@ impl Fixture {
     fn proof(&self) {
         let result = self.run(&["init", "--backend", "cloud", "--force", "--proof"]);
         assert!(result.status.success(), "{}", output(&result));
+    }
+    fn admin_committed_cloud_config(&self) {
+        let repo = self.project.path();
+        std::fs::create_dir(repo.join(".decapod")).unwrap();
+        std::fs::write(
+            repo.join(".decapod/config.toml"),
+            "[repo]\nbackend = \"cloud\"\n",
+        )
+        .unwrap();
+        git(repo, &["add", ".decapod/config.toml"]);
+        git(
+            repo,
+            &[
+                "-c",
+                "user.name=Cloud Admin Fixture",
+                "-c",
+                "user.email=admin-fixture@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "-m",
+                "Configure Cloud once",
+            ],
+        );
     }
     fn status(&self) -> Value {
         let result = self.run(&["cloud", "status"]);
@@ -1715,6 +1765,75 @@ fn unauthorized_teammate_auto_reconcile_surfaces_admin_contact_without_purchase_
         "{text}"
     );
     assert!(!text.contains("decapodlabs.ai/pricing"), "{text}");
+    assert_eq!(f.count(QUERY), 0);
+    f.assert_no_fallback();
+}
+
+#[test]
+fn committed_cloud_clone_uses_exact_contributor_admission_before_shared_reads() {
+    let f = Fixture::new("DecapodLabs/TeamClone");
+    f.admin_committed_cloud_config();
+    const SERVICE_PROJECT: &str = "fixture-org/fixture-repo";
+    {
+        let mut service = f.service.lock().unwrap();
+        service.account_status = "registration_required";
+        service.projects.clear();
+        service.project_slug_map =
+            BTreeMap::from([("DecapodLabs/TeamClone".into(), SERVICE_PROJECT.into())]);
+    }
+    let first = f.run(&["todo", "list", "--format", "json"]);
+    failed(&first, "onboarding_pending");
+    let resumed = f.run(&["todo", "list", "--format", "json"]);
+    assert!(resumed.status.success(), "{}", output(&resumed));
+    let again = f.run(&["todo", "list", "--format", "json"]);
+    assert!(again.status.success(), "{}", output(&again));
+    assert_eq!(
+        f.count(START),
+        1,
+        "subsequent process reuses managed session"
+    );
+    assert_eq!(f.count(ACCOUNT_STATUS), 0, "no directory lookup");
+    assert_eq!(
+        f.count(ACCOUNT_REGISTER),
+        2,
+        "same atomic admission on each operation"
+    );
+    {
+        let requests = f.requests.lock().unwrap();
+        let start = requests
+            .iter()
+            .find(|request| request.path == START)
+            .unwrap();
+        assert_eq!(start.body["purpose"], "contributor");
+        for query in requests.iter().filter(|request| request.path == QUERY) {
+            assert_eq!(
+                query.body["request"]["context"]["payload"]["route"]["Cloud"]["repository"]["canonical_name"],
+                SERVICE_PROJECT
+            );
+        }
+    }
+    f.assert_no_fallback();
+}
+
+#[test]
+fn committed_cloud_clone_denial_does_not_use_signup_or_the_directory() {
+    let f = Fixture::new("DecapodLabs/RestrictedClone");
+    f.admin_committed_cloud_config();
+    f.seed(false);
+    {
+        let mut service = f.service.lock().unwrap();
+        service.project_allowed = false;
+        service.projects.clear();
+    }
+    let denied = f.run(&["todo", "list", "--format", "json"]);
+    failed(&denied, "admin_approval_required");
+    let report = output(&denied);
+    assert!(report.contains("Contact your organization administrator"));
+    assert!(
+        !report.contains("pricing") && !report.contains("signup"),
+        "{report}"
+    );
+    assert_eq!(f.count(ACCOUNT_STATUS), 0);
     assert_eq!(f.count(QUERY), 0);
     f.assert_no_fallback();
 }
