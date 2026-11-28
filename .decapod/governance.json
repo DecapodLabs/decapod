@@ -902,6 +902,11 @@
       "proof_refs": [
         "tests/common/cloud_managed_scenarios.rs"
       ]
+    },
+    {
+      "id": "contributor-guide",
+      "summary": "Document repository-scoped contributor authorization and agent-owned exact-action continuation.",
+      "input_digest": "sha256:6c2e8f5465afd7d2734fa9e720ec7cf74e1edef1d7ba711c42777514966f6717"
     }
   ],
   "intents": {

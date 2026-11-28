@@ -19,19 +19,21 @@ output when a caller must distinguish failure kinds.
 
 ### Agent-owned cloud connection
 
-The human runs `decapod init` once per repository. Own subsequent Decapod
-operations, including sign-in continuation and recovery. On `onboarding_pending`
-with `authorization_url`, share the validated browser link, then run
-`decapod cloud login` every two seconds for up to five minutes. Resume work as
-soon as it succeeds; do not wait for another user message saying sign-in is
-done. Preserve an incomplete flow for later continuation. Never copy private
-session, PKCE, polling, or refresh material into chat or Git.
+Use the checked-in Cloud configuration and the Git remote of the originating
+checkout. The repository administrator establishes repository authority once.
+Continue the contributor's original request through the managed connection and
+reuse its current trusted session. On `onboarding_pending` with
+`authorization_url`, share the validated GitHub sign-in link, then run
+`decapod cloud login` every two seconds for up to five minutes. Resume the
+originating action as soon as authorization succeeds. Preserve an incomplete
+flow for later continuation. Keep private session, PKCE, polling, and refresh
+material out of chat and Git.
 
 An interrupted one-time exchange remains uncertain. Follow `restart_required`
 using `decapod cloud login --restart`, share the fresh browser link, and resume
 normally. Preserve the task and its operation ID. Account confirmation can be
-retried with the saved session; `repository_denied` and `action_required` need
-the stated account action rather than repeated browser sign-in.
+retried with the saved session. If the service reports that the repository
+administrator must act, retain the original work and surface the reason once.
 
 For a cloud `todo add` handoff, retain the returned `operation_id`. After login,
 repeat the original arguments with that same `--operation-id`; a fresh add is
