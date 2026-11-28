@@ -894,6 +894,14 @@
       "proof_refs": [
         "tests/init_config_behavior.rs"
       ]
+    },
+    {
+      "id": "delivery-reconciliation-e108",
+      "summary": "Preserve accepted #1997 storage and refresh exact post-PR diagnosis reviews.",
+      "input_digest": "sha256:0a5fe63be9a1537cacc3b661cad2b7d419f6a5a4deb0e91c84e8d2bdee721fa0",
+      "proof_refs": [
+        "git:e108317423a8d6fc12cbc3bc01017c76706dc1e2"
+      ]
     }
   ],
   "intents": {
@@ -941,22 +949,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Document post-PR readback through existing exact forge and checkout evidence.",
-          "reviewed_code_fingerprint": "9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566",
-          "spec_material_hash": "eeda601079ef5721fb96978793d2c54bcb8fc5b086f038b40a678dc1f70f73f6"
+          "reason": "Exact post-PR readback continues through the existing GitHub reader and the accepted storage ownership changes remain intact.",
+          "reviewed_code_fingerprint": "1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5",
+          "spec_material_hash": "3c2b1e981d3c424bc313b928fbc3dda309ffc349f7d87d148a96bf93c0f43348"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document the distinct bounded merge states and exact checkout matching field.",
-          "reviewed_code_fingerprint": "9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566",
-          "spec_material_hash": "99db44159f7238daef47e49f935356a6d9fc4a6dfd18786fc7e7030d06c0f827"
+          "reason": "The workspace diagnosis projection and accepted datastore interfaces retain their distinct existing sources.",
+          "reviewed_code_fingerprint": "1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5",
+          "spec_material_hash": "832b6462c7a4179e33e23ba814654aacc1039a5760eed5c2955f424d0cd71530"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Document immutable repository binding, fresh readback, and existing authority separation.",
-          "reviewed_code_fingerprint": "9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566",
+          "reason": "Observed remote merge evidence retains its existing identity and authorization boundary after the accepted storage changes.",
+          "reviewed_code_fingerprint": "1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5",
           "spec_material_hash": "3642a7262289c0f60c8d477a3afebb1c4735581498cf8e11f19be225384b81d7"
         }
       ],
@@ -968,14 +976,22 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795846381Z"
+      "updated_at": "1795853513Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Read-only workspace diagnosis. Use existing forge identity and proof custody."
       ],
-      "artifact_hash": "sha256:15a253116e0da5e8a1380ac76230976288785e93ba73057db1a7cb6a32c19747",
+      "artifact_hash": "sha256:b068903ec8e50c6b8d7da9e912457e7d040261cfbd10ab2fc975a01c1cb5d7fd",
       "checks": [
+        {
+          "name": "accepted-storage-merge",
+          "status": "passed"
+        },
+        {
+          "name": "current-candidate-provider",
+          "status": "partial"
+        },
         {
           "name": "native-diagnostic",
           "status": "passed"
@@ -1002,10 +1018,17 @@
             "intent_id": "intent:delivery-reconciliation-1983",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:delivery-reconciliation-1983",
+            "event_id": "event:5",
+            "intent_id": "intent:delivery-reconciliation-1983",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "delivery-reconciliation-1983": {
@@ -1031,6 +1054,26 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, events, TODO, config, tests, and docs against original target bytes. Post-PR diagnosis implementation, docs and regression fixture are unchanged. The prior provider receipt is historical."
+                ],
+                "proof_refs": [
+                  "accepted-storage-merge",
+                  "current-candidate-provider"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs/agent",
+                  "src/decapod/core/workspace_diagnostic.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "tests/init_config_behavior.rs"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1038,7 +1081,8 @@
       },
       "declared_commands": [],
       "evidence": [
-        "The compiled CLI fixture restarted over scripted forge responses and preserved open, unmerged closure, observed merge, and unavailable states. Tests proved mismatch and race handling, with no remote mutation or authority."
+        "The compiled CLI fixture restarted over scripted forge responses and preserved open, unmerged closure, observed merge, and unavailable states. Tests proved mismatch and race handling, with no remote mutation or authority.",
+        "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, events, TODO, config, tests, and docs against original target bytes. Post-PR diagnosis implementation, docs and regression fixture are unchanged. The prior provider receipt is historical."
       ],
       "inspected_files": [],
       "intent_id": "intent:delivery-reconciliation-1983",

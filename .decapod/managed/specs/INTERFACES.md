@@ -6,6 +6,12 @@
 and configured target. Unstable or unavailable forge access leaves the
 requested PR observation unavailable.
 
+## `#1630` Storage contract manifest, SQLite trigger names & benchmark report schema (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`, `docs/datastore-v2/`)
+
+- **Rust & JSON contract surface (`core::storage_contracts`)**: Exports `FieldContractSpec`, `FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql(&FieldContractSpec)`, and `ensure_sqlite_write_boundary_triggers(&Connection)`; `contract_manifest()` adds `field_table` and `propodus_abi_v1_reconciliation`, synchronized with `docs/datastore-v2/logical_contract_v1.json` (`release: "0.169.1"`).
+- **SQLite write-boundary trigger & proxy surface**: Installs idempotent triggers `trg_decapod_tasks_ins_contract`, `trg_decapod_tasks_upd_contract`, `trg_decapod_task_verification_ins_contract`, `trg_decapod_task_verification_upd_contract`, `trg_decapod_events_ins_contract`, and `trg_decapod_events_upd_contract` via `SELECT`-only schema inspection (`pragma_table_info(?1)` + `sqlite_schema`) and `storage_owner::permitted_create_trigger`, rejecting NUL (`0x00`) or over-limit UTF-8 writes with `STORAGE_CONTRACT_VIOLATION` while allowing unrelated-column updates on legacy oversized rows.
+- **`StorageCompactionBenchmarkReport` additive metrics (`decapod houseboat storage-benchmark`)**: Adds `bytes_per_task_before`, `bytes_per_task_after_reclaim`, `p99_op_micros`, `cpu_user_micros`, `cpu_sys_micros`, `max_rss_bytes`, `components_stored`, `component_refs_stored`, `v1_uncompacted_baseline_bytes`, and `v1_to_v2_savings_bytes`; machine-readable `v0.169.1` suite stored at `docs/datastore-v2/dogfood-compaction-v0.169.1.json` and summarized in `docs/datastore-v2/compaction-benchmarks-v0.169.1.md`.
+
 ## Public Documentation Reading Shell and Onboarding Contracts (`#1977`, `#1978`)
 
 - **Public documentation shell & accessibility interface (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**:
@@ -2747,7 +2753,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566`
+- Repository signal fingerprint: `1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
