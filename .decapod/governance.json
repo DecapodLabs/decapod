@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,55 +872,97 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
-    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "id": "change_01M8G1AWDFF30XK1GCP8W7WYE8",
+    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
-      "status": "supported",
+    "cloud-claim-options": {
+      "statement": "Only the default exclusive Cloud assignment enters the task store. Unsupported claim parameters are rejected before connector initialization.",
+      "falsifier": "A shared claim, explicit lease duration or explicit intent anchor reaches the remote store or touches Local state.",
+      "status": "open",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "tests/cloud_command_path.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
+      "id": "refuse-unsupported-cloud-claim-semantics",
+      "summary": "Reject unsupported shared, explicit-duration and explicit-intent claims before Cloud dispatch",
+      "input_digest": "sha256:006a2f4f265b193bc1f8988b4129efe703c117d856aee96348075553339c64a9",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
     },
     {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "claim-options-current-release-base",
+      "summary": "Bind the unchanged claim option guard to the accepted 0.169.4 source tree",
+      "input_digest": "sha256:8e9cf2545c4569b3fc4fb90811cbf7d8a0bd08e154f912bf1e012aab5283b335",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
+    },
+    {
+      "id": "claim-options-current-spec-reviews",
+      "summary": "Bind release-current spec reviews to the claim option guard",
+      "input_digest": "sha256:4eef1657d82423a390d2712b1cf15fc942b9f1953bcd0cad445b61a6aa7d6d76",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
+    },
+    {
+      "id": "guard-1694-release-inventory",
+      "summary": "Bind the exact released 0.169.4 source inventory and generated workspace pins",
+      "input_digest": "sha256:211eda55c6adf43cd7b8e0b537d7c10ef0610b893489554e4a70e633a945e780",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
+    },
+    {
+      "id": "guard-b049-accepted-integration",
+      "summary": "Integrate the accepted documentation update and bind the unchanged Cloud claim guard to the new candidate",
+      "input_digest": "sha256:052463044dc5de9435520df7ad3c1a69f471c779ba0db8d99e47aaf9eaa08859",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
+    },
+    {
+      "id": "guard-170efc-release-integration",
+      "summary": "Integrate the accepted 0.169.5 release and bind its current controller projections to the Cloud claim guard",
+      "input_digest": "sha256:71a4c67d648325fe659394d6118a42514c80ef6579c8921660669ff9cf1c37fc",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
+    },
+    {
+      "id": "guard-e108-storage-integration",
+      "summary": "Integrate the accepted storage contract while preserving the Cloud claim safety boundary",
+      "input_digest": "sha256:6d2a5d0a95cf98198fc50b7b75ec32adfcad5abf8ad4745fdf2082ed1e40a5bb",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Preserve explicit Cloud task claim semantics (#1809)\n\nReject unavailable explicit claim options before dispatch to the native task store, preserve supported defaults and local behavior",
+      "refined_intent": "Preserve explicit Cloud task claim semantics (#1809)\n\nReject unavailable explicit claim options before dispatch to the native task store, preserve supported defaults and local behavior",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,126 +975,197 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Preserve ordinary exclusive Cloud claims; refuse shared mode, explicit lease seconds and explicit intent anchors before adapter dispatch, with named diagnostics and no SQLite fallback.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cloud_command_path checks the supported default and refusal before any TodoStore call"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
+          "reason": "The candidate adopts the accepted storage field architecture and keeps the existing hosted transport boundary for claim options.",
+          "reviewed_code_fingerprint": "d516f8d0be6f6545dd0f90c2e59f2b42beb0370f72b1cc71776d37f557210c14",
           "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "reason": "Preserve the accepted storage field and SQLite trigger interfaces alongside the exact hosted claim-option contract.",
+          "reviewed_code_fingerprint": "d516f8d0be6f6545dd0f90c2e59f2b42beb0370f72b1cc71776d37f557210c14",
+          "spec_material_hash": "5422e558a60478a77385d8c01ecdacb3afc08dec668186186c082f7b3879bbe8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
+          "reason": "The candidate preserves accepted SQLite write-boundary triggers and rejects unsupported Cloud claim inputs before transport.",
+          "reviewed_code_fingerprint": "d516f8d0be6f6545dd0f90c2e59f2b42beb0370f72b1cc71776d37f557210c14",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Preserve explicit Cloud task claim semantics (#1809)",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "cicd_01m8g14ka2gpabew"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853396Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:61d8ae82fcc8b48acad403802495762f41bfa23e3f4d3fe6dd661310138c2e36",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
-          "status": "passed"
-        },
-        {
-          "name": "pg17_utf8_gc_parity",
-          "status": "passed"
-        },
-        {
-          "name": "storage_contracts::tests",
-          "status": "passed"
-        },
-        {
-          "name": "storage_owner::tests",
-          "status": "passed"
-        },
-        {
-          "name": "tests/group_broker",
+          "name": "format",
           "status": "passed"
         }
       ],
+      "current_phase": "implementation",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "branch_01M8G1AWNJJTEYVQCJYPHA28FQ": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
                   "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  "src/decapod/core/dactyl_todo.rs",
+                  "src/decapod/core/todo.rs",
+                  "tests/cloud_command_path.rs",
+                  "Shared, explicit duration and explicit intent were discarded in the main Cloud dispatch; the same preflight now checks CLI and direct entry points."
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "format"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  "root"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/.manifest.json",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Checksum-verified v0.169.4 reported the accepted source inventory sha256:cb01a74e37d2bf94fd3e4aab8561168079123a40a773bedc2400cd696d36a7ee and regenerated release-bound projections. Full configured validation is still required."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Accepted b049135963d158139a610904752cc546c22e606d carries the published book and its authored living specs. Preserved those bytes and the Cloud claim guard, regenerated only managed projections, and will validate against the new exact target. Earlier PR admission is historical."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "CHANGELOG.md",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "Accepted release merge 170efc04ae39ec9ba78e27db941ac86731c9969e changed the package/lock version and CHANGELOG. The official controller will bind the reviewed source inventory sha256:0d87fdfabf5eccda9438e69cb40e495e888d441c38f5031a4e7ceec5d7a9ffbe. The earlier b049 push-context proof became stale on target movement."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/storage_contracts.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 integrates the #1997 storage contract. Independent staged diff comparisons preserve both SQLite trigger hooks and each prior Cloud-claim guard hunk. Prior bc0221bda release-controller proof applies to the historical 170efc04 pair."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1060,26 +1173,42 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "Accepted b049135963d158139a610904752cc546c22e606d carries the published book and its authored living specs. Preserved those bytes and the Cloud claim guard, regenerated only managed projections, and will validate against the new exact target. Earlier PR admission is historical.",
+        "Accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 integrates the #1997 storage contract. Independent staged diff comparisons preserve both SQLite trigger hooks and each prior Cloud-claim guard hunk. Prior bc0221bda release-controller proof applies to the historical 170efc04 pair.",
+        "Accepted release merge 170efc04ae39ec9ba78e27db941ac86731c9969e changed the package/lock version and CHANGELOG. The official controller will bind the reviewed source inventory sha256:0d87fdfabf5eccda9438e69cb40e495e888d441c38f5031a4e7ceec5d7a9ffbe. The earlier b049 push-context proof became stale on target movement.",
+        "Checksum-verified v0.169.4 reported the accepted source inventory sha256:cb01a74e37d2bf94fd3e4aab8561168079123a40a773bedc2400cd696d36a7ee and regenerated release-bound projections. Full configured validation is still required.",
+        "Shared, explicit duration and explicit intent were discarded in the main Cloud dispatch; the same preflight now checks CLI and direct entry points."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
-      "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
+      "inspected_files": [
+        ".decapod/managed/specs/INTERFACES.md",
+        "CHANGELOG.md",
+        "Cargo.lock",
+        "Cargo.toml",
+        "src/decapod/core/dactyl_todo.rs",
         "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
+        "src/decapod/core/todo.rs"
+      ],
+      "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+      "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
+        ".decapod/managed/Dockerfile.decapod",
+        ".decapod/managed/specs/INTERFACES.md",
         "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
+        "tests/cloud_command_path.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "cicd_01m8g14ka2gpabew",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -125,7 +125,7 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
         &TodoCommand::Claim {
             id: "cloud-1".into(),
             agent: Some("agent-two".into()),
-            mode: ClaimMode::Shared,
+            mode: ClaimMode::Exclusive,
             lease_seconds: None,
             intent_anchor: None,
         },
@@ -157,4 +157,47 @@ fn active_cloud_commands_use_the_storage_adapter_without_local_fallback() {
         store.calls(),
         ["add", "list", "get", "claim", "release", "complete"]
     );
+}
+
+#[test]
+fn cloud_claim_refuses_unsupported_options_before_storage_dispatch() {
+    let root = tempdir().expect("tempdir");
+    let store = RecordingStore::default();
+
+    for (mode, lease_seconds, intent_anchor, expected) in [
+        (
+            ClaimMode::Shared,
+            None,
+            None,
+            "CLOUD_SHARED_CLAIM_UNSUPPORTED",
+        ),
+        (
+            ClaimMode::Exclusive,
+            Some(1800),
+            None,
+            "CLOUD_CLAIM_LEASE_UNSUPPORTED",
+        ),
+        (
+            ClaimMode::Exclusive,
+            None,
+            Some("intent:review".into()),
+            "CLOUD_CLAIM_INTENT_ANCHOR_UNSUPPORTED",
+        ),
+    ] {
+        let error = run_cloud_todo_command_with_store(
+            root.path(),
+            &TodoCommand::Claim {
+                id: "cloud-task".into(),
+                agent: Some("contributor".into()),
+                mode,
+                lease_seconds,
+                intent_anchor,
+            },
+            &store,
+        )
+        .expect_err("unsupported request must be refused");
+        assert!(error.to_string().contains(expected), "{error}");
+    }
+    assert!(store.calls().is_empty());
+    assert!(!root.path().join(".decapod/data/decapod.db").exists());
 }
