@@ -946,6 +946,11 @@
       "id": "release-current-spec-review",
       "summary": "Bind the current interface and surrounding contract reviews to the accepted release and exact source.",
       "input_digest": "sha256:0932b55de3efdfbd3d61fb71cb67c2dc377998e6aa979f0e4af76f3bab54e0ae"
+    },
+    {
+      "id": "accepted-storage-integration",
+      "summary": "Preserve the contributor changes while integrating the accepted storage contract.",
+      "input_digest": "sha256:dfa755132b7884f753a6396cd452fcb4eebbc1a49e0779e74c6e4b515034b5aa"
     }
   ],
   "intents": {
@@ -991,22 +996,22 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Documented backend selection before retained SQLite is consulted, with unchanged authority owners.",
-          "reviewed_code_fingerprint": "b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc",
-          "spec_material_hash": "395fc7375f7a150fed5064c2c2d8cae15884413f84bb9d54b50095351aac5c9f"
+          "reviewed_code_fingerprint": "45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6",
+          "spec_material_hash": "28884285ee1525a33dc1bf3e742c02471e59f1159d88f199bce61f4ce65f4031"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Represented Cloud knowledge unavailable while preserving file and Constitution context.",
-          "reviewed_code_fingerprint": "b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc",
-          "spec_material_hash": "251943ef54d5b891b9120fe19d6721a73096b6d310861df183f7991863b598bb"
+          "reviewed_code_fingerprint": "45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6",
+          "spec_material_hash": "77f8f50ca0317277f8ab6ad0a3f7a1da259791cf87506c6c9a39405175bde83e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Compound context checks existing backend authority and skips the retained Local working data. Managed identity, session access, and Git source policy stay in their current owners.",
-          "reviewed_code_fingerprint": "b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc",
-          "spec_material_hash": "4f0722f8f82a71ed39351e0e19aac413f968aad28c13d7a0932a699fd33cf52a"
+          "reviewed_code_fingerprint": "45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6",
+          "spec_material_hash": "c833430c412a48824d5cc4b93fe48f9e937438e720a2fee83956b7b1a8f801c9"
         }
       ],
       "state": "APPROVED",
@@ -1017,7 +1022,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795848136Z"
+      "updated_at": "1795853432Z"
     },
     "trajectory": {
       "active_boundaries": [

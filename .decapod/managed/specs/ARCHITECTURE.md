@@ -1,3 +1,9 @@
+## `#1630` Unified storage field table, compact SQLite write-boundary triggers & v0.169.1 benchmark pipeline (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`)
+
+- **Per-column contract registry (`storage_contracts::FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql`)**: Const-table architecture indexing active persisted columns by `(table, column, field_class, max_utf8_bytes, non_empty, nullable, max_json_depth, max_collection_len, propodus_abi_v1_max_bytes)` and surfacing `field_table` + `propodus_abi_v1_reconciliation` inside `contract_manifest()`.
+- **Compact per-table SQLite triggers (`ensure_sqlite_write_boundary_triggers`, `storage_owner.rs::permitted_create_trigger`)**: `todo::ensure_schema` and `events::ensure_tables` attach two triggers per guarded table (`tasks`, `task_verification`, `events`) via single-statement `conn.execute(...)` using `SELECT name FROM pragma_table_info(?1)` and `sqlite_schema` skip checks plus `permitted_create_trigger` so `DECAPOD_STORAGE_OWNER=1` proxy connections succeed cleanly while direct SQL overflows fail closed with `STORAGE_CONTRACT_VIOLATION`.
+- **Apples-to-apples v1-vs-v2 synthetic & dogfood benchmark (`houseboat::run_local_storage_compaction_benchmark`, `measure_v1_uncompacted_baseline`)**: Clones the compacted v2 benchmark DB, reconstructs verbose v1 envelopes, clears `storage_component_refs` / `storage_components`, and `VACUUM`s (`1,114,112 -> 946,176` B, `15.07%` savings on 25 tasks / 75 ops, `components_stored = 1`, `component_refs_stored = 75`, `p99 = 318,187 µs`, `max_rss = 21,807,104` B via `libc::getrusage`), complementing `v0.169.1` read-only `DactylBridge::backup` dogfood compaction (`85,794,816` B / `15.98%` saved across `dactyl`, `propodus`, and `decapod`).
+
 ## Documentation Reading Shell and First Governed Result Journey (`#1977`, `#1978`)
 
 - **OpenShell-inspired mdBook reading shell & self-hosted Geist typography (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`, `docs/book/theme/fonts/`)**:
@@ -2208,8 +2214,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc`
+- Repository signal fingerprint: `45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
-- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
