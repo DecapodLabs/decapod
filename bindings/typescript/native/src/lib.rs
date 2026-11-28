@@ -142,16 +142,13 @@ pub fn execute_rpc_async(
     };
     Ok(match signal {
         Some(sig) => {
-            // Mark cancelled immediately if aborted before or during execution.
+            // Wire AbortSignal::on_abort into the cooperative AtomicBool so
+            // long-running native calls observe cancellation mid-flight.
             let flag = Arc::clone(&cancelled);
-            AsyncTask::with_optional_signal(
-                task,
-                Some({
-                    // AbortSignal fires on abort; track in AtomicBool via on_abort callback if supported
-                    let _ = &flag;
-                    sig
-                }),
-            )
+            sig.on_abort(move || {
+                flag.store(true, std::sync::atomic::Ordering::SeqCst);
+            });
+            AsyncTask::with_optional_signal(task, Some(sig))
         }
         None => AsyncTask::new(task),
     })
