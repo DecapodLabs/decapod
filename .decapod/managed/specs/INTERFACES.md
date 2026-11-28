@@ -402,6 +402,8 @@ publication readiness; the configured exact-candidate checks still govern releas
 
 `context.resolve` retains its fragment contract and adds selection reasons, stable source identities, a scoped advisory knowledge projection, and current governed-plan context with explicit task binding. It returns an explicit no-match result for advisory queries and retains mandatory obligations. New capsule and bundle fields are versioned. Legacy hashes stay stable when the optional fields are absent. The complete context envelope is capped at 262,144 bytes, with at most twelve fragments and 8,192 excerpt bytes.
 
+`context.resolve`, `context.scope`, and `context.capsule.query` return their Git-owned or embedded context in Cloud mode. The knowledge component reports `cloud_knowledge_unavailable` until hosted knowledge is supported for the invocation. Local mode keeps its existing scoped knowledge and provenance. Both RPC argument and stdin requests apply the same rule, including from a worktree whose configuration differs from the accepted base.
+
 `infer boundary --input` accepts a bounded `decapod.native-boundary.v1` request with a host agent ID. `trace flight-recorder compare --input` reads compact outcome observations and preserves missing metrics and incomplete runs. `trace flight-recorder acceptance --capture` continues to correlate the independently captured observer inputs.
 
 `mentor.obligations` accepts authenticated queries before source authoring. The reflection engine verifies workspace and task custody before it updates a continuation. Its result does not grant publication authority.
@@ -2745,7 +2747,8 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`

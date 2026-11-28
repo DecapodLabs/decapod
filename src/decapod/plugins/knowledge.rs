@@ -54,7 +54,7 @@ fn context_json(value: &impl Serialize) -> Result<Vec<u8>, error::DecapodError> 
     })
 }
 
-/// Disposable advisory projection from the existing local knowledge owners.
+/// Resolve advisory knowledge at the repository backend boundary.
 /// Current plan/policy authority remains in its canonical sibling surfaces.
 pub fn resolve_context(
     store: &Store,
@@ -71,6 +71,13 @@ pub fn resolve_context(
     };
     if store.kind != crate::core::store::StoreKind::Repo {
         packet.status = "private_store_excluded".into();
+        return Ok(packet);
+    }
+    // A worktree can select Cloud, but it cannot downgrade an accepted Cloud
+    // repository. Check the invocation's project before consulting the store
+    // path, which points at the main checkout even from a linked worktree.
+    if crate::core::cloud_workspace::is_cloud_project(repo_root) {
+        packet.status = "cloud_knowledge_unavailable".into();
         return Ok(packet);
     }
     if !knowledge_db_path(&store.root).is_file() {

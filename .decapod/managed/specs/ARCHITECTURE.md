@@ -693,6 +693,11 @@ service-authorized task query; health checks never stand in for authorization.
 Unsupported cloud repository-datastore commands fail before local migration,
 presence, group-broker, or SQLite startup. Explicit file-only controls retain
 their own path; this is a capability boundary, not remote kernel parity.
+`plugins/knowledge.rs::resolve_context` checks the invoking worktree and the
+accepted repository backend before consulting the Local database path. This
+protects compound routes such as context capsules even when their store points
+to the main checkout. A Cloud repository keeps any retained Local database and
+its sidecars outside context resolution.
 `tests/cloud_managed_session.rs` exercises the binary through local fixtures;
 it cannot establish server RLS, PostgreSQL atomicity, or protected hosted policy.
 
@@ -2209,7 +2214,8 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`

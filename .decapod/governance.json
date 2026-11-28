@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,55 +872,106 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
-    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "id": "change_01M8G0QWSKBZCE5J7YDVWMP5KV",
+    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
+    "claim:cloud-context-retained-store-isolation": {
+      "statement": "Effective Cloud context keeps retained Local knowledge outside resolution while preserving Git and Constitution context.",
+      "falsifier": "A Cloud RPC returns retained Local sentinel knowledge, opens a retained store, or changes its database, sidecar, or audit state.",
+      "status": "open",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
+    },
+    "cloud-context-store-isolation": {
+      "statement": "Cloud context RPC ignores retained Local SQLite, keeps file and embedded context, and explicitly reports unavailable shared knowledge.",
+      "falsifier": "A Cloud invocation opens a retained database or sidecar, changes audit evidence, or returns the Local sentinel.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "tests/context_capsule_rpc.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
+      "id": "cloud-context-1986-candidate",
+      "summary": "Fence compound context knowledge at the effective backend before retained SQLite access",
+      "input_digest": "sha256:6ae18523979f3e377b41a05b54faf18ad7bd574e17f353389148e8ff083b712e",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
     },
     {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "cloud-context-1986-wal",
+      "summary": "Exercise the file boundary with a valid retained WAL store and independent broker audit readback",
+      "input_digest": "sha256:b9f80ca0e044d98b33d36fedab351acea2a9ed6a924058dbea919e591bba066e",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
+    },
+    {
+      "id": "cloud-context-1986-accepted-release",
+      "summary": "Reconcile the reviewed source inventory for the accepted package-version-only release and preserve mandatory proof",
+      "input_digest": "sha256:27ef9cb76b759a64b7681a61bd6a4b074d1b4ef9c76e334aeb48a1989b4aed02",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
+    },
+    {
+      "id": "cloud-context-1986-release-projection",
+      "summary": "Regenerate the managed workspace pin with v0.169.4 after source CI measured Dockerfile drift",
+      "input_digest": "sha256:15e24c994a49753e6d30d0a4eb41257409597ac014b0041d218aa23fdfc86e81",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/46102880516"
+      ]
+    },
+    {
+      "id": "accepted-docs-integration",
+      "summary": "Preserve the active work and merge accepted documentation and living specifications.",
+      "input_digest": "sha256:095794d7f85254324ac0913f9ba440c6dd5d83fb27571d41ca0cec3041d05c92"
+    },
+    {
+      "id": "accepted-v01695-release",
+      "summary": "Integrate the accepted v0.169.5 release and refresh release-bound verification inputs.",
+      "input_digest": "sha256:6e1f12ec5d246fd14d62d4bd0ce91b3d6b8c3caf755fe411a2706ce61e0bed7a"
+    },
+    {
+      "id": "current-pr-falsifiable-claim",
+      "summary": "Preserve the exact candidate and record its current falsifiable publication claim.",
+      "input_digest": "sha256:0ff2b7a417055dfcb3b769caa7e54536805f3e08b4f9008da5975d778146d91c"
+    },
+    {
+      "id": "release-current-spec-review",
+      "summary": "Bind the current interface and surrounding contract reviews to the accepted release and exact source.",
+      "input_digest": "sha256:0932b55de3efdfbd3d61fb71cb67c2dc377998e6aa979f0e4af76f3bab54e0ae"
+    },
+    {
+      "id": "accepted-storage-integration",
+      "summary": "Preserve the contributor changes while integrating the accepted storage contract.",
+      "input_digest": "sha256:dfa755132b7884f753a6396cd452fcb4eebbc1a49e0779e74c6e4b515034b5aa"
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Keep Cloud context off retained Local knowledge (GH #1986)\n\nResolve effective repository backend before any local knowledge access and verify normal/stdin RPC across clean and retained Local stores.",
+      "refined_intent": "Keep Cloud context off retained Local knowledge (GH #1986)\n\nResolve effective repository backend before any local knowledge access and verify normal/stdin RPC across clean and retained Local stores.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,126 +984,155 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Backend selection controls operational knowledge before any local file access. Keep file and Constitution context available and preserve Local behavior and stored bytes.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "CLI context_capsule_rpc repeats both context operations via flags and stdin from clean and retained stores, including linked worktree selector skew.",
+        "Full configured Decapod validation against current accepted master."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
+          "reason": "Documented backend selection before retained SQLite is consulted, with unchanged authority owners.",
+          "reviewed_code_fingerprint": "45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6",
+          "spec_material_hash": "28884285ee1525a33dc1bf3e742c02471e59f1159d88f199bce61f4ce65f4031"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "reason": "Represented Cloud knowledge unavailable while preserving file and Constitution context.",
+          "reviewed_code_fingerprint": "45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6",
+          "spec_material_hash": "77f8f50ca0317277f8ab6ad0a3f7a1da259791cf87506c6c9a39405175bde83e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reason": "Compound context checks existing backend authority and skips the retained Local working data. Managed identity, session access, and Git source policy stay in their current owners.",
+          "reviewed_code_fingerprint": "45df39ae20cac3fc45331f8293bd7ffb0b3337b7565eb7e2b5d42aa9dfae56f6",
+          "spec_material_hash": "c833430c412a48824d5cc4b93fe48f9e937438e720a2fee83956b7b1a8f801c9"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Isolate retained Local knowledge from Cloud context",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "code_01m8g0py4fvmk64v"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853432Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:7e23479ab16245c4be97902f00c669ab19e48f71d0241f16b6fb6cc50f2209b5",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
+          "name": "native_context_isolation",
           "status": "passed"
         },
         {
-          "name": "pg17_utf8_gc_parity",
-          "status": "passed"
-        },
-        {
-          "name": "storage_contracts::tests",
-          "status": "passed"
-        },
-        {
-          "name": "storage_owner::tests",
-          "status": "passed"
-        },
-        {
-          "name": "tests/group_broker",
-          "status": "passed"
+          "name": "released_local_context_isolation",
+          "status": "failed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:branch_01M8G0QWYPF22H8WQ00AMY9NW1",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8G0QWYPF22H8WQ00AMY9NW1",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8G0QWYPF22H8WQ00AMY9NW1",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "branch_01M8G0QWYPF22H8WQ00AMY9NW1": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "branch_01M8G0QWYPF22H8WQ00AMY9NW1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/context_capsule.rs",
+                  "src/decapod/core/broker.rs",
+                  "src/decapod/plugins/knowledge.rs",
+                  "tests/context_capsule_rpc.rs",
+                  "Decapod v0.169.3 disposable fixture returned the Local sentinel via both RPC forms for both operations under Cloud and changed decapod.db SHA-256; Local positive retained."
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "released_local_context_isolation"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  "root"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Native macOS candidate context_capsule_rpc regression passed: both RPC forms, root and linked worktree selector skew, fresh clone, real Local WAL/SHM and unchanged broker audit count."
+                ],
+                "proof_refs": [
+                  "native_context_isolation"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "Accepted PR #1988 changed only the Decapod package version in Cargo.toml and Cargo.lock plus CHANGELOG. The v0.169.4 controller inspected the complete new source inventory. The reviewed digest refresh preserves the existing required graph and checks."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1060,26 +1140,35 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "Accepted PR #1988 changed only the Decapod package version in Cargo.toml and Cargo.lock plus CHANGELOG. The v0.169.4 controller inspected the complete new source inventory. The reviewed digest refresh preserves the existing required graph and checks.",
+        "Decapod v0.169.3 disposable fixture returned the Local sentinel via both RPC forms for both operations under Cloud and changed decapod.db SHA-256; Local positive retained.",
+        "Native macOS candidate context_capsule_rpc regression passed: both RPC forms, root and linked worktree selector skew, fresh clone, real Local WAL/SHM and unchanged broker audit count."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "src/decapod/core/broker.rs",
+        "src/decapod/core/context_capsule.rs",
+        "src/decapod/lib.rs"
+      ],
+      "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
       "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
+        "src/decapod/plugins/knowledge.rs",
+        "tests/context_capsule_rpc.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks",
+        "validation"
       ],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "branch_01M8G0QWYPF22H8WQ00AMY9NW1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "code_01m8g0py4fvmk64v",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
