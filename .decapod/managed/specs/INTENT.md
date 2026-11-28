@@ -1,11 +1,3 @@
-## Scoped `qa verify recover` Executable-Format & Platform Diagnostic Fidelity (`#1892`, `#1544`)
-
-Restores diagnostic fidelity when `decapod qa verify recover` inspects native validation failures (such as `worldofgeese/den`-style `repo.pr-readiness.v1` failures on a foreign ELF or Mach-O binary), so closed-set label extraction preserves actionable recovery labels instead of collapsing to generic `READINESS_BLOCKED`:
-
-- **Typed native executable-format failure (`src/decapod/core/native_proof.rs`, `src/decapod/core/validation_runtime.rs`)**: Introduces `IncompatibleNativeExecutableError` in `native_executable` and `validate_invocation`, preserves its typed chain inside `run_native`, and classifies it in `ValidationReport::finish` as `"INCOMPATIBLE_NATIVE_EXECUTABLE"`.
-- **Scoped diagnostic allowlist & structured extraction (`src/decapod/plugins/verify.rs`, `docs/agent/error-recovery.md`)**: Adds `INCOMPATIBLE_NATIVE_EXECUTABLE`, `REPOSITORY_COMMAND_PLATFORM`, `MISSING_PLATFORM_EXECUTION`, `INCOMPATIBLE_TARGET_EXECUTOR`, and `UNKNOWN_DEPLOYMENT_TARGET` to `SAFE_BLOCKER_LABELS`, and extracts `INCOMPATIBLE_NATIVE_EXECUTABLE` from structured native executable-format messages while preserving closed-set redaction without leaking tool paths or raw filenames.
-- **Regression & Den-style fixture proof (`tests/unit/plugins/verify_tests.rs`, `tests/consumer_readiness.rs`, `tests/recovery_workflows_1956_1957.rs`)**: Verifies `ValidationReport.blockers` and end-to-end `qa verify recover --json` retain `INCOMPATIBLE_NATIVE_EXECUTABLE` at `stage=readiness` across both legacy wrapped errors and typed errors.
-
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -37,6 +29,14 @@ Replaces `core::rpc::error_response`'s hardcoded `"Session may be invalid or exp
 - **Reservation, teammate policy, and `dactyl-db 0.21.0` `OperationalDisposition` handling (`Cargo.toml`, `Cargo.lock`, `src/decapod/core/cloud_client.rs`, `src/decapod/core/error.rs`)**: Bumps `dactyl-db = "=0.21.0"` from crates.io (zero path overrides), wires `DactylError::operational_disposition(OperationKind)` and `OperationalAction::{Retry, InspectAndDecide, Reconcile, Stop}` into `transport_error_for_operation`, `transport_error_for_repository`, and `admin_transport_error` (preserving `OutcomeUnknown` for post-send mutation uncertainty without false positives on pre-send/read timeouts), maps Propodus `access_disposition` and all 11 Cloud onboarding/access states, suppresses purchase CTAs when `admin_contact_required == true`, and filters `t_<32hex>` / URI credentials via `is_safe_public_org_id`.
 
 # Intent
+
+## CI shard unbundling, bounded-parallel GHA custody download, and next-hop release admission (`#1672` Hop 1, `#1400`, `#1573`)
+
+Advances three linked throughput and quota reliability tracks off `origin/master` without altering `.github/workflows/*.yml` in Hop 1:
+
+- **Bounded-parallel GHA custody artifact collection (`#1400`, `#1573`, `src/decapod/core/snapshot_provider/mod.rs`, `src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: Preserves single-pass `discover_workflow` authentication and existing ETag `304` zero-quota revalidation (`src/decapod/core/snapshot_provider/github_quota.rs`), and executes distinct missing artifact ZIP fetches concurrently across up to `6` bounded workers via `Runner::execute_batch` / `OfficialCli::execute_batch` and `GithubWorkflowInventory::download_artifacts_batch` while keeping per-artifact size, `sha256:` verification, and `artifact_snapshot` parity deterministic and fail-closed.
+- **Core and CLI test unbundling & Bazel parallelization (`#1672` Hop 1, `.config/build/decapod.BUILD.bzl`, `assets/tools/source_ci_profile.rs`, `tests/source_ci_profile_policy.rs`, `tests/*.rs`)**: Splits overloaded aggregates by introducing `tests/support/cli_bin.rs`, extracting `tests/effective_grant_cli_contracts.rs` from `tests/cli_contracts.rs` (removing duplicated `mod consumer_readiness`, `mod init_ci_scaffolding`, `mod init_config_behavior`, and `mod sqlite_maintenance`), extracting `tests/entrypoint_validation_contracts.rs` from `tests/entrypoint_correctness.rs` (removing duplicated `mod infer_precision`), adding missing `#[test]` / `#[cfg_attr(..., test)]` attributes to the `6` standalone tests in `tests/consumer_readiness.rs`, removing redundant `//:group_broker --exact` reruns and unnecessary `--test-threads=1` / `"exclusive"` serialization on `TempDir`-isolated targets, and balancing `selective-core-1..3` and `selective-cli-1..3`.
+- **Two-hop release workflow digest admission (`src/decapod/core/readiness_profile.rs`, `src/decapod/core/init_reconciliation/mod.rs`, `tests/governance_fault_detection_1795.rs`)**: Keeps `.github/workflows/ci.yml` and `.github/workflows/release.yml` untouched in Hop 1 while admitting `reviewed_next_hop_workflow_digests()` alongside `reviewed_workflow_digests()` via `is_reviewed_workflow_digest` for the reviewed GitHub Release tarball replacement in `.github/workflows/release.yml` (`sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310`), avoiding `axodotdev` HTTP 429 failures in Hop 2 without loosening unknown workflow rejection.
 
 ## Terminal reflection recovery & machine-only completed-task proof boundary (`#1956`, `#1957`)
 
@@ -1524,15 +1524,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 652 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (294)
-- Core modules: 149 | Workflows: 9 | Integration targets: 177
+- Tracked significant codebase files: 655 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (297)
+- Core modules: 149 | Workflows: 9 | Integration targets: 180
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

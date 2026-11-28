@@ -1,5 +1,12 @@
 # Validation
 
+## `#1672` Hop 1 shard unbundling, `#1400` batch custody download & next-hop workflow digest verification
+
+Verified in `WT_B` (`agent/decapod-ci-seo/test_01m8fksbstm838m1-ci-sharding-latency` off `origin/master@78b9c0f18a`, `CARGO_BUILD_JOBS=2`):
+
+- Unit suites: `snapshot_provider` (`219 passed, 0 failed`, incl. `official_cli_execute_batch_runs_concurrently_preserving_order_and_failures` and `download_artifacts_batch_verifies_ordered_outcomes_and_handles_missing`), `source_import` (`11 passed, 0 failed`), `readiness_profile::tests` (`35 passed, 0 failed`, incl. `reviewed_next_hop_release_workflow_digest_is_admitted_without_weakening_unknown_digests`), and `init_reconciliation::tests` (`22 passed, 0 failed`).
+- Unbundled CLI & policy targets: `ci_checkout_policy` (`33/33`), `cli_contracts` (`26/26`, `31.06s`), `consumer_readiness` (`48/48`, `93.62s`, incl. all `6` newly annotated standalone tests), `effective_grant_cli_contracts` (`3/3`, `47.64s`), `entrypoint_correctness` (`28/28`, `40.57s`), `entrypoint_validation_contracts` (`7/7`, `308.16s`), `infer_precision` (`10/10`, `32.26s`), `init_ci_scaffolding` (`4/4`), `init_config_behavior` (`39/39`), `release_metadata_policy` (`37/37`), `release_workflow_policy` (`22/22`), `group_broker_strict` (`1/1`), and `source_ci_profile_policy` (`57/57` with `--skip actual_runner_ --skip provider_carrier_executes_immutable_r_and_wrapper_preserves_fixed_context_and_failure`, filtering only the `4` Linux-x86_64 / macOS `/var` canonical-path environment tests).
+
 ## Recovery workflow documentation & end-to-end verification (`#1956`, `#1957`)
 
 - `tests/recovery_workflows_1956_1957.rs` (`issue_1956_terminal_reflection_uncommitted_recovery_preserves_budget_and_honors_authority`, `issue_1957_machine_only_completed_task_preserves_unverified_history_while_unblocking_code_candidate`) and `cli_contract_enforcement::test_agent_docs_ingest_works` verify both non-destructive recovery workflows end-to-end against `CARGO_BIN_EXE_decapod` (`2/2` and `1/1` passed).
@@ -2909,14 +2916,14 @@ Generated capability obligations: `persistent-state` is declared for this projec
 ## Codebase Contract Snapshot
 
 - CI workflows (9): `.github/workflows/ci.yml`, `.github/workflows/constitution-sync.yml`, `.github/workflows/decapod-validate.yml`, `.github/workflows/docs.yml`, `.github/workflows/docs_autosync.yml`, `.github/workflows/docs_sync.yml`, `.github/workflows/nix-flake.yml`, `.github/workflows/release.yml`, `.github/workflows/security-audit.yml`
-- Integration test targets (177): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+161 more)
+- Integration test targets (180): `tests/acceptance/publication_admission.rs`, `tests/activation_conformance.rs`, `tests/agent_eval.rs`, `tests/agent_interop_conformance.rs`, `tests/agent_rpc_suite.rs`, `tests/analyze_readonly.rs`, `tests/assets_schema_contract.rs`, `tests/assurance_harness.rs`, `tests/build_layout_policy.rs`, `tests/canonical_evidence_gate.rs`, `tests/capability_contract_drift.rs`, `tests/chaos_replay.rs`, `tests/ci_checkout_policy.rs`, `tests/ci_event_context_policy.rs`, `tests/cli_contract_enforcement.rs`, `tests/cli_contracts.rs`, (+164 more)
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

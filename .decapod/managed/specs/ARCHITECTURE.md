@@ -1,9 +1,3 @@
-## Typed Executable-Format Error Propagation in Native Readiness & Scoped Recovery (`#1892`)
-
-- **Core native proof (`src/decapod/core/native_proof.rs`)**: `IncompatibleNativeExecutableError` implements `std::error::Error` and carries optional check job context alongside the existing display diagnostic for foreign ELF/Mach-O headers or mismatched platform closures.
-- **Validation runtime (`src/decapod/core/validation_runtime.rs`)**: `ValidationReport::finish` downcasts `IncompatibleNativeExecutableError` before falling back to generic `READINESS_BLOCKED`, emitting blocker code `"INCOMPATIBLE_NATIVE_EXECUTABLE"`.
-- **Scoped `qa verify recover` (`src/decapod/plugins/verify.rs`)**: `SAFE_BLOCKER_LABELS` and `extract_labels_from_structured_text` recognize `INCOMPATIBLE_NATIVE_EXECUTABLE` and platform/executor codes (`REPOSITORY_COMMAND_PLATFORM`, `MISSING_PLATFORM_EXECUTION`, `INCOMPATIBLE_TARGET_EXECUTOR`, `UNKNOWN_DEPLOYMENT_TARGET`) and prioritize explicit diagnostic labels ahead of catch-all `READINESS_BLOCKED`.
-
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -38,6 +32,13 @@
 - **Typed `dactyl-db 0.21.0` disposition & commercial diagnostics (`Cargo.toml`, `Cargo.lock`, `src/decapod/core/error.rs`, `src/decapod/core/cloud_client.rs`)**: Upgrades `dactyl-db` to crates.io `=0.21.0`, introduces `transport_error_for_operation` consuming `DactylError::operational_disposition(OperationKind)` (`Reconcile -> OutcomeUnknown`, `InspectAndDecide` conflict -> `ActionRequired`, `Retry -> Offline/ProviderUnavailable` with `retry_after_seconds`, `Stop` -> typed auth/quota/denial), preserves admin-mutation uncertainty in `admin_transport_error`, extends `CloudAuthErrorCode` with the 7 Propodus commercial disposition variants + `order_pending`, and redacts `t_<32hex>` / DSNs in `enrich_diagnostic` (`is_safe_public_org_id`).
 
 # Architecture
+
+## Bounded-parallel custody download, unbundled CLI/core targets & next-hop workflow admission (`#1400`, `#1573`, `#1672` Hop 1)
+
+- **Batch `Runner` & `OfficialCli` execution (`src/decapod/core/snapshot_provider/mod.rs`)**: Extracts `OfficialCli::prepare_command` and `OfficialCli::run_prepared_command` (preserving `GITHUB_TOKEN`/`GH_TOKEN`/Buildkite env scrubbing and `ProcessLimits`) and implements `Runner::execute_batch` / `OfficialCli::execute_batch` using `std::thread::scope` (`MAX_CONCURRENT_SUBPROCESSES = 6`, checking `budget.remaining()` and `budget.cancel` per task, returning deterministic ordered outcomes).
+- **Ordered batch ZIP verification & source import (`src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: `GithubWorkflowInventory::download_artifacts_batch` resolves metadata once, invokes `runner.execute_batch` for resolved `GithubArtifactZip` specs, and applies `verify_zip_reply` (`size_in_bytes`, `sha256:` digest, ZIP extraction bounds). `github_sources` pre-validates every required job and upload step, collects distinct missing artifact names, fetches them in one `download_artifacts_batch` call per workflow run, and retains final `discover_workflow` + `artifact_snapshot` equality checks.
+- **Unbundled integration graph (`.config/build/decapod.BUILD.bzl`, `assets/tools/source_ci_profile.rs`, `tests/*.rs`)**: Moves shared `CARGO_BIN_EXE_decapod` / `RUNFILES_DIR` binary and fixture helpers to `tests/support/cli_bin.rs`, keeps `justfile_inventory` in `tests/cli_contracts.rs` (preserving `golden-vectors-macos`), runs `effective_grant_cli_contracts`, `entrypoint_validation_contracts`, `consumer_readiness`, `init_ci_scaffolding`, `init_config_behavior`, `infer_precision`, and `sqlite_maintenance` as standalone Bazel targets without `"exclusive"` or `--test-threads=1`, and removes the two redundant `--exact` `//:group_broker` commands from `selective-core-1`.
+- **Two-hop transition digest (`src/decapod/core/readiness_profile.rs`, `src/decapod/core/init_reconciliation/mod.rs`)**: Adds `reviewed_next_hop_workflow_digests()` and `is_reviewed_workflow_digest()` used by `required_source_catalog_with_executor` and `init_reconciliation::reconcile`, preserving `RULE-POLICY-003` fault detection in `tests/governance_fault_detection_1795.rs`.
 
 ## Terminal reflection recovery & machine-only task archive boundaries (`#1956`, `#1957`)
 
@@ -2193,7 +2194,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

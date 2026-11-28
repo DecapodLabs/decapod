@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
+    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,57 +872,49 @@
     }
   },
   "change": {
-    "id": "change_1892_slot2",
-    "base_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
+    "id": "test_01m8fksbstm838m1",
+    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
     "target_base": "origin/master"
   },
   "claims": {
-    "verify-recover-1892": {
-      "statement": "Scoped qa verify recover preserves INCOMPATIBLE_NATIVE_EXECUTABLE and concrete native execution codes instead of collapsing to READINESS_BLOCKED.",
-      "falsifier": "Incompatible Mach-O or executable format failures collapse to READINESS_BLOCKED in scoped qa verify recover output.",
+    "claim:hop1-batch-unbundle-and-next-hop": {
+      "statement": "Bounded-parallel GHA artifact download (max 6 threads), unbundled standalone CLI/entrypoint targets, and next-hop release.yml digest admission preserve full sha256 custody, selector coverage, and fail-closed verification.",
+      "falsifier": "Tampered ZIP bytes, missing artifact, duplicate obligation, unreviewed workflow SHA-256, or RULE-POLICY-003 mutation passes admission.",
       "status": "supported",
       "proof_refs": [
-        "tests/recovery_workflows_1956_1957.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "src/decapod/core/readiness_profile/tests.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "tests/source_ci_profile_policy.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "verify-recover-1892",
-      "summary": "Rebase #1892 onto 78b9c0f18a, bind bugs_01m8fe5c7kejq9vb plan/trajectory, and preserve INCOMPATIBLE_NATIVE_EXECUTABLE diagnostic fidelity (Bootstrap controller 78b9c0f18a sha256:4a252e0832abd30f verified #506)",
-      "input_digest": "sha256:01f244c380884225a42cb923cd608740fda9808f3ecc6368ea789a491b4e9591"
-    },
-    {
-      "id": "verify-recover-1892-inventory",
-      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for v0.169.2 Cargo.toml/Cargo.lock bump on 78b9c0f18a (Bootstrap controller 78b9c0f18a sha256:4a252e0832abd30f verified #506)",
-      "input_digest": "sha256:c629a0f9e1b219e7643c527fc2c70408d13d75b75fc4106140e06f86c0afdb7a"
-    },
-    {
-      "id": "verify-recover-1892-dockerfile",
-      "summary": "Commit v0.169.2 refreshed Dockerfile.decapod and .manifest.json from evaluating bootstrap controller 78b9c0f18a (sha256:4a252e0832abd30f verified #506)",
-      "input_digest": "sha256:e3253a52059d71f69e954d270b9ef319e652d8813375ff36b1e8c11ca6658173"
+      "id": "cp_1672_hop1_initial",
+      "summary": "CI shard unbundling (#1672 Hop 1), bounded-parallel GHA custody downloads (#1400/#1573), and reviewed_next_hop_workflow_digests for release.yml",
+      "input_digest": "sha256:9c47b67377e408f93744efb9603884ad11a0e87f05b6a8194d1e1bb2697c7b7e"
     }
   ],
   "intents": {
-    "intent:run_1892_slot2": {
+    "intent:run_1672_hop1": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Modify only verify/native_proof/validation_runtime, error-recovery docs, tests, and #1892 living specs in isolated worktree."
+        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
       ],
       "constraints": [
-        "root"
+        "decapod_hop1"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1892_slot2",
+      "id": "intent:run_1672_hop1",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Fix diagnostic propagation so #1544 incompatible-executable format / Mach-O failures retain their explicit diagnostic label instead of collapsing to READINESS_BLOCKED in scoped qa verify recover (#1892).",
-      "refined_intent": "Add IncompatibleNativeExecutableError in native_proof.rs, propagate INCOMPATIBLE_NATIVE_EXECUTABLE in validation_runtime.rs, update SAFE_BLOCKER_LABELS in verify.rs, document in error-recovery.md, and verify with unit, consumer, and recovery workflow tests.",
+      "raw_intent": "Execute #1672 Hop 1, #1400, #1573, and two-hop release workflow digest admission off origin/master.",
+      "refined_intent": "Unbundle CLI/entrypoint tests, implement bounded-parallel OfficialCli/GithubWorkflowInventory batch downloads, and admit Hop 2 release.yml SHA-256 via readiness_profile::reviewed_next_hop_workflow_digests.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -935,126 +927,168 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Fix diagnostic propagation so incompatible executable format / Mach-O failures retain INCOMPATIBLE_NATIVE_EXECUTABLE and concrete codes in scoped qa verify recover instead of collapsing to READINESS_BLOCKED (#1892).",
+      "intent": "Unbundle overloaded CLI/entrypoint Bazel test targets and drop duplicate/unnecessary serial locks (#1672 Hop 1), parallelize distinct GHA artifact downloads up to 6 bounded workers (#1400/#1573), and add reviewed_next_hop_workflow_digests for Hop 2 release.yml without altering workflows in Hop 1.",
       "phases": [],
-      "proof_hooks": [
-        "decapod validate"
-      ],
+      "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented native_proof IncompatibleNativeExecutableError and verify SAFE_BLOCKER_LABELS propagation (#1892)",
-          "reviewed_code_fingerprint": "76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397",
-          "spec_material_hash": "6d893de1999224cec2eadeadccd40a548169fc9ca9e6ee33f658a744a6676211"
+          "reason": "Updated for #1672 Hop 1 unbundled test shards, #1400/#1573 bounded-parallel custody downloads, and reviewed_next_hop_workflow_digests.",
+          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Propagated INCOMPATIBLE_NATIVE_EXECUTABLE and preserved specific failure codes in scoped qa verify recover (#1892)",
-          "reviewed_code_fingerprint": "76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397",
-          "spec_material_hash": "206726180a6007ea1010036173b314ae8e3999a2cd1e1badc64d9b3bdbb6b1b5"
+          "reason": "Updated for #1672 Hop 1 unbundled test shards, #1400/#1573 bounded-parallel custody downloads, and reviewed_next_hop_workflow_digests.",
+          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No change to security boundaries; label preservation only affects explicit diagnostic fidelity (#1892)",
-          "reviewed_code_fingerprint": "76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397",
+          "reason": "Hop 1 retains all workflow/carrier digests, sha256 artifact checks, and fail-closed admission rules while only admitting the reviewed next-hop release.yml SHA-256.",
+          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Preserve INCOMPATIBLE_NATIVE_EXECUTABLE diagnostic fidelity in scoped qa verify recover (#1892)",
+      "title": "CI shard unbundling (#1672 Hop 1), parallel GHA custody downloads (#1400/#1573), and next-hop release workflow admission",
       "todo_ids": [
-        "bugs_01m8fe5c7kejq9vb"
+        "test_01m8fksbstm838m1"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795823207Z"
+      "updated_at": "1795827195Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Modify only verify/native_proof/validation_runtime, error-recovery docs, tests, and #1892 living specs in isolated worktree."
+        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
       ],
-      "artifact_hash": "sha256:2c9f001962604a7a764b4d25433656d51890f1175cc5dd47860785af5db87649",
+      "artifact_hash": "sha256:27663814f2c9a01d2416bcc072e38ff871b6e93a73677b6d3a26f56d0ef604b3",
       "checks": [
         {
-          "name": "clippy",
+          "name": "cargo_clippy_d_warnings",
           "status": "passed"
         },
         {
-          "name": "consumer_readiness",
+          "name": "cargo_fmt_check",
           "status": "passed"
         },
         {
-          "name": "recovery_workflows_1956_1957",
+          "name": "init_reconciliation_22",
           "status": "passed"
         },
         {
-          "name": "verify_tests",
+          "name": "readiness_profile_35",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot_provider_219",
+          "status": "passed"
+        },
+        {
+          "name": "source_import_11",
+          "status": "passed"
+        },
+        {
+          "name": "unbundled_cli_and_policy_suites",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1892_slot2",
+            "intent_id": "intent:run_1672_hop1",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1892_slot2",
+            "intent_id": "intent:run_1672_hop1",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1892_slot2",
+            "detail": "trajectory:run_1672_hop1",
             "event_id": "event:4",
-            "intent_id": "intent:run_1892_slot2",
+            "intent_id": "intent:run_1672_hop1",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run_1672_hop1",
+            "event_id": "event:5",
+            "intent_id": "intent:run_1672_hop1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1892_slot2": {
+          "run_1672_hop1": {
             "evidence_only": true,
-            "id": "run_1892_slot2",
-            "intent_id": "intent:run_1892_slot2",
+            "id": "run_1672_hop1",
+            "intent_id": "intent:run_1672_hop1",
             "steps": [
               {
-                "action": "verification",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/native_proof.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "src/decapod/core/native_proof.rs",
-                  "src/decapod/core/validation_runtime.rs",
-                  "src/decapod/plugins/verify.rs",
-                  "docs/agent/error-recovery.md",
-                  "tests/unit/plugins/verify_tests.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/recovery_workflows_1956_1957.rs",
-                  "Rebased cleanly onto origin/master@78b9c0f18a using #506-verified bootstrap controller (sha256:4a252e0832abd30f)."
+                  "src/decapod/core/snapshot_provider/mod.rs",
+                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "assets/tools/source_ci_profile.rs",
+                  ".config/build/decapod.BUILD.bzl"
                 ],
                 "proof_refs": [
-                  "verify_tests",
-                  "recovery_workflows_1956_1957",
-                  "consumer_readiness",
-                  "clippy"
+                  "cargo_fmt_check",
+                  "cargo_clippy_d_warnings",
+                  "snapshot_provider_219",
+                  "source_import_11",
+                  "readiness_profile_35",
+                  "init_reconciliation_22",
+                  "unbundled_cli_and_policy_suites"
                 ],
                 "scope": [
-                  "root"
+                  "decapod_hop1"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".config/build/decapod.BUILD.bzl",
+                  "assets/tools/source_ci_profile.rs",
+                  "src/decapod/core/init_reconciliation/mod.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/readiness_profile/tests.rs",
+                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
+                  "src/decapod/core/snapshot_provider/mod.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "tests/cli_contracts.rs",
+                  "tests/consumer_readiness.rs",
+                  "tests/effective_grant_cli_contracts.rs",
+                  "tests/entrypoint_correctness.rs",
+                  "tests/entrypoint_validation_contracts.rs",
+                  "tests/governance_fault_detection_1795.rs",
+                  "tests/source_ci_profile_policy.rs",
+                  "tests/support/cli_bin.rs"
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "decapod_hop1"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1062,31 +1096,41 @@
         }
       },
       "declared_commands": [],
-      "evidence": [
-        "Rebased cleanly onto origin/master@78b9c0f18a using #506-verified bootstrap controller (sha256:4a252e0832abd30f)."
-      ],
+      "evidence": [],
       "inspected_files": [
-        "src/decapod/core/native_proof.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/plugins/verify.rs"
+        ".config/build/decapod.BUILD.bzl",
+        "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
       ],
-      "intent_id": "intent:run_1892_slot2",
+      "intent_id": "intent:run_1672_hop1",
       "modified_files": [
-        "docs/agent/error-recovery.md",
-        "src/decapod/core/native_proof.rs",
-        "src/decapod/core/validation_runtime.rs",
-        "src/decapod/plugins/verify.rs",
+        ".config/build/decapod.BUILD.bzl",
+        "assets/tools/source_ci_profile.rs",
+        "src/decapod/core/init_reconciliation/mod.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/readiness_profile/tests.rs",
+        "src/decapod/core/snapshot_provider/github_artifacts.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/cli_contracts.rs",
         "tests/consumer_readiness.rs",
-        "tests/recovery_workflows_1956_1957.rs",
-        "tests/unit/plugins/verify_tests.rs"
+        "tests/effective_grant_cli_contracts.rs",
+        "tests/entrypoint_correctness.rs",
+        "tests/entrypoint_validation_contracts.rs",
+        "tests/governance_fault_detection_1795.rs",
+        "tests/source_ci_profile_policy.rs",
+        "tests/support/cli_bin.rs"
       ],
       "repo_scope": [
-        "root"
+        "decapod_hop1"
       ],
-      "run_id": "run_1892_slot2",
+      "run_id": "run_1672_hop1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bugs_01m8fe5c7kejq9vb",
+      "task_id": "test_01m8fksbstm838m1",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -535,7 +535,9 @@ fn cli_test_inputs(path: &str) -> bool {
             path,
             "tests/cli_contract_enforcement.rs"
                 | "tests/entrypoint_correctness.rs"
+                | "tests/entrypoint_validation_contracts.rs"
                 | "tests/cli_contracts.rs"
+                | "tests/effective_grant_cli_contracts.rs"
                 | "tests/consumer_readiness.rs"
                 | "tests/init_ci_scaffolding.rs"
                 | "tests/init_config_behavior.rs"
@@ -781,23 +783,34 @@ pub fn commands(check: &Check, paths: &[String]) -> io::Result<Vec<Invocation>> 
         "cli-contracts" => vec![bazel(&["test", "//:cli_contract_enforcement", "--test_arg=--test-threads=1"])],
         "migration-tests" => vec![bazel(&["test", "//:core_tests", "--test_arg=migration_", "--test_arg=--ignored", "--test_arg=--test-threads=1"])],
         "selective-core-1" if core_full(paths) => vec![
-            bazel(&["test", "//:group_broker", "--test_arg=committed_claim_preparation_does_not_hold_broker_or_repeat_on_retry", "--test_arg=--exact", "--test_arg=--nocapture", "--test_output=all"]),
-            bazel(&["test", "//:group_broker", "--test_arg=broker_no_sqlite_busy_surfaced_under_concurrent_mutators", "--test_arg=--exact", "--test_arg=--nocapture", "--test_output=all"]),
-            bazel(&["test", "//:todo_enforcement", "//:validate_termination", "//:group_broker", "//:group_broker_strict", "--test_arg=--test-threads=1"]),
+            bazel(&["test", "//:todo_enforcement", "//:validate_termination", "//:group_broker", "//:group_broker_strict"]),
         ],
-        "selective-core-1" => vec![bazel(&["test", "//:entrypoint_correctness", "--test_arg=--test-threads=1"])],
+        "selective-core-1" => vec![bazel(&["test", "//:entrypoint_correctness", "//:entrypoint_validation_contracts", "//:infer_precision"])],
         "selective-core-2" if core_full(paths) => vec![
-            bazel(&["test", "//:workspace_interlock", "//:spec_workspace_ownership", "//:workspace_prune_regression", "//:hermes_governance_substrate", "--test_arg=--test-threads=1"]),
+            bazel(&["test", "//:workspace_interlock", "//:spec_workspace_ownership", "//:workspace_prune_regression", "//:hermes_governance_substrate"]),
         ],
         "selective-core-2" => vec![],
         "selective-core-3" if core_full(paths) => vec![
-            bazel(&["test", "//:workunit_cli", "//:context_capsule_cli", "//:interop_conformance", "--test_arg=--test-threads=1"]),
+            bazel(&["test", "//:workunit_cli", "//:context_capsule_cli", "//:interop_conformance"]),
         ],
         "selective-core-3" => vec![],
         "selective-plugins" => vec![bazel(&["test", "//:plugins_todo_tests", "//:plugins_policy_tests", "//:plugins_health_tests", "//:plugins_aptitude_tests", "//:plugins_internalize_tests", "//:plugins_federation_tests", "//:plugins_decide_tests", "//:plugins_obligation_tests", "--test_arg=--test-threads=1"])],
-        "selective-cli-1" => vec![bazel(&["test", "//:cli_contract_enforcement", "--test_arg=--test-threads=1"])],
-        "selective-cli-2" => vec![bazel(&["test", "//:entrypoint_correctness", "--test_arg=--test-threads=1"])],
-        "selective-cli-3" => vec![bazel(&["test", "//:cli_contracts", "--test_arg=--test-threads=1"])],
+        "selective-cli-1" => vec![bazel(&["test", "//:cli_contract_enforcement"])],
+        "selective-cli-2" => vec![bazel(&[
+            "test",
+            "//:entrypoint_correctness",
+            "//:entrypoint_validation_contracts",
+            "//:infer_precision",
+            "//:init_ci_scaffolding",
+            "//:init_config_behavior",
+        ])],
+        "selective-cli-3" => vec![bazel(&[
+            "test",
+            "//:cli_contracts",
+            "//:effective_grant_cli_contracts",
+            "//:consumer_readiness",
+            "//:sqlite_maintenance",
+        ])],
         "supabase-consumer" => vec![
             cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "core::fs_permissions::tests::recovery_fixture_selection_rejects_incompatible_candidates", "--", "--exact", "--nocapture"]),
             cargo(&["test", "--locked", "--features", "supabase-cloud", "--lib", "--test", "cloud_supabase_boundary", "--test", "cloud_dactyl_boundary", "--test", "release_dependency_policy", "--test", "cloud_cli_boundary", "--test", "cloud_command_path", "--test", "cloud_todo_resume_wire", "--test", "propodus_contract", "--test", "supabase_service"]),
