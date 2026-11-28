@@ -927,6 +927,11 @@
       "id": "reviewed-dactyl022-inventory",
       "summary": "Reconcile the proof inventory after verifying that only the published Dactyl dependency inputs changed.",
       "input_digest": "sha256:f001fd8b3c4f3d2398852e984f2e72d6a929699985b32d957e49dd68a64a5a6b"
+    },
+    {
+      "id": "contributor-generated-guidance",
+      "summary": "Regenerate contributor configuration and command guidance with the source-built candidate.",
+      "input_digest": "sha256:7bc360f0ed7811cf99747555c7a601233752f3673a49d7b92411e97b21675d54"
     }
   ],
   "intents": {

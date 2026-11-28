@@ -819,7 +819,8 @@ fn db_maintenance_command_contract() -> &'static str {
 fn cloud_admin_command_contract() -> &'static str {
     r#"### Decapod Cloud Onboarding & Administration (`decapod cloud ...` / `cloud.*` RPC)
 
-- **Control-plane surface:** `decapod cloud {orgs,members,invites,identity,billing,admins,recovery,policies,upgrades}` plus `decapod cloud project enroll` and matching JSON RPC ops (`cloud.orgs`, `cloud.members`, `cloud.invites`, `cloud.identity`, `cloud.billing`, `cloud.enroll`, `cloud.admins`, `cloud.recovery`, `cloud.policies`, `cloud.upgrades`) route strictly through Dactyl `0.19.0` `AccountOperation::{Register, Status, Manage, Portal, RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades}` without touching or creating `.decapod/data/decapod.db` or `todo.db`.
+- **Control-plane surface:** `decapod cloud {orgs,members,invites,identity,billing,admins,recovery,policies,upgrades}` plus `decapod cloud project enroll` and matching JSON RPC ops (`cloud.orgs`, `cloud.members`, `cloud.invites`, `cloud.identity`, `cloud.billing`, `cloud.enroll`, `cloud.admins`, `cloud.recovery`, `cloud.policies`, `cloud.upgrades`) route through Dactyl's `AccountOperation::{Register, Status, Manage, Portal, RepositoryEnroll, ResourceLimits, OrgAdmins, OrgRecovery, PolicyTemplates, OrgUpgrades}`. Operational data stays in the selected Cloud service.
+- **Repository contributor access:** A Cloud-configured checkout uses its Git remote for repository routing. Dactyl forwards the contributor authentication purpose. Propodus verifies the GitHub identity and activates the existing repository grant. The agent resumes the originating action after authorization.
 - **DPoP device gateway & container signer:** Operational cloud reads/writes/control RPCs auto-enroll Ed25519 device keys, retry `use_dpop_nonce` challenges, cache repository-scoped `dpc_at_`/`dpc_rt_` sidecar sessions, and route through `/functions/v1/decapod-onboarding/cloud-{query,batch,control}` with RFC 9449 DPoP proofs (or host container signer Unix socket), while human-bearer admin operations remain strictly bearer-authenticated without DPoP downgrade.
 - **Orthogonal roles & zero-seat invites (#215):** `orgs` and `admins` explicitly surface `admin` vs `paid_repo_seat_assigned` and `paid_repo_count`; `invites create` / `accept` state explicitly that workspace membership grants zero paid repository seats until an admin assigns a seat via `cloud members assign`.
 - **Secret handling:** `invites accept --secret-stdin` and `identity confirm-link --secret-stdin` read secrets strictly from stdin (zero secret CLI flags); RPC secret operations reject `--params` argv secrets and require `decapod rpc --stdin`. All secrets and URL fragments are redacted from `Debug`, stderr, error diagnostics, and RPC receipts.
@@ -861,6 +862,8 @@ fn backend_selection_config_contract() -> &'static str {
 fn shared_claim_config_contract() -> &'static str {
     r#"## Invalid configuration and repair (#1771)
 
+A repository can commit a minimal `[repo]` section with `backend = "cloud"`.
+Omitted `schema_version` and `[init]` use the current defaults. An explicit
 `schema_version` must be `"1.0.0"`. Invalid TOML, known field types/enums,
 unsupported versions and unknown fields in protected sections reject ordinary
 mutation with `INVALID_CONFIG_SCHEMA`. The diagnostic identifies the offending
