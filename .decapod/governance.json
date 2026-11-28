@@ -945,6 +945,11 @@
       "id": "current-pr-falsifiable-claim",
       "summary": "Preserve the exact candidate and record its current falsifiable publication claim.",
       "input_digest": "sha256:c566a524ee471b64fd78c56f1c318f1956d654bacae7a5f37b30e2b9c4155f1f"
+    },
+    {
+      "id": "release-current-spec-review",
+      "summary": "Bind contributor admission and its generated guidance to the current reviewed contract.",
+      "input_digest": "sha256:74a030eca5ace3751ac0905ea3c822ec831efa325667df3b98e430391bc71032"
     }
   ],
   "intents": {
@@ -989,22 +994,22 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "The existing client, transport and hosted authorization boundaries own the operation.",
-          "reviewed_code_fingerprint": "7b988e3e80f945ac336a07eea9638ae3ab85a98c1af0b629380c7bbb3bf5e989",
-          "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
+          "reviewed_code_fingerprint": "00d27c5f848c811d2f76915d3079cdaa46e085e78e914e8137229ac6709c0006",
+          "spec_material_hash": "6db41292697d73f3952414b8a712979541f94bc79850d44024033595a2d6483c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "The contributor route activates verified authority for the originating repository.",
-          "reviewed_code_fingerprint": "7b988e3e80f945ac336a07eea9638ae3ab85a98c1af0b629380c7bbb3bf5e989",
-          "spec_material_hash": "d8e30554c82393395c5e56ba2d4b1e66deffc35904c073a6079ba9919d78527f"
+          "reviewed_code_fingerprint": "00d27c5f848c811d2f76915d3079cdaa46e085e78e914e8137229ac6709c0006",
+          "spec_material_hash": "91373c4c48a9928396553b15e52f43faf1ab6b2004b9facec30a6b7cfaa6b706"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "All grants still require verified managed identity and server admission.",
-          "reviewed_code_fingerprint": "7b988e3e80f945ac336a07eea9638ae3ab85a98c1af0b629380c7bbb3bf5e989",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reviewed_code_fingerprint": "00d27c5f848c811d2f76915d3079cdaa46e085e78e914e8137229ac6709c0006",
+          "spec_material_hash": "4f0722f8f82a71ed39351e0e19aac413f968aad28c13d7a0932a699fd33cf52a"
         }
       ],
       "state": "APPROVED",
@@ -1015,7 +1020,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795838117Z"
+      "updated_at": "1795848251Z"
     },
     "trajectory": {
       "active_boundaries": [
