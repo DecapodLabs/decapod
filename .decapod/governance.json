@@ -912,6 +912,11 @@
       "id": "accepted-docs-integration",
       "summary": "Preserve contributor admission and the accepted documentation revision.",
       "input_digest": "sha256:64bd842739904ca8798ba36e119bad18d361ce15c829e8008cc90d7705f41e5d"
+    },
+    {
+      "id": "accepted-v01695-release",
+      "summary": "Integrate the accepted v0.169.5 release and refresh release-bound verification inputs.",
+      "input_digest": "sha256:fa6c2b85d224850728d95cfff3ab499fa31eac512ac39763bd7ad086199fdcf7"
     }
   ],
   "intents": {
