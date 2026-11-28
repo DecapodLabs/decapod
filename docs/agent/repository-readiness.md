@@ -183,8 +183,10 @@ using an independently supported released controller before publication.
 Validation establishes whether the agent's work has converged on the user's
 declared intent and satisfies the conditions for integration. Its assurance is
 bounded by the declared requirements and checks. A subsequent readiness decision
-can evaluate that result; the agent publishes through the applicable gate and
-the human retains merge authority. This principle adds no unimplemented guarantee.
+can evaluate that result. The project principal controls standing delegation.
+Agents execute the steps delegated by accepted policy when current proof and
+forge controls permit them. Required reviews, checks, and merge queues still
+apply to the repository's delivery path.
 
 ## Optional Laya post-validation assessment
 

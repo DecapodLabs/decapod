@@ -231,7 +231,14 @@ reports `scope=pre_build`, `publication_ready=false`, and `proof_ready=false`.
 checkout and custody state, accepted policy, candidate config and override
 proposals, artifact freshness, top-level `dirty_files`, ordered `next_actions`,
 and historical proof. Optional GitHub readback observes the exact PR head and
-required forge checks. `--offline` skips remote reads. Credentials appear as
+required forge checks. For a requested PR, `target_pr.merge_observation` reports
+`open`, `closed_unmerged`, `observed_merged` with the forge's merge commit, or
+`unavailable`. Two compatible reads must agree on the repository, PR identity,
+head, base, and merge outcome. `matches_workspace_candidate` describes whether
+that observation matches the unchanged checkout and configured target branch.
+Reopen the diagnosis after an interrupted merge request to inspect the same PR.
+Current validation and delegated authority remain independent of historical
+merge evidence. `--offline` skips remote reads. Credentials appear as
 capability status. Diagnosis does not acquire sessions or repair files.
 
 JSON uses `decapod.workspace-diagnostic.v1`. Exit 0 means the selected local

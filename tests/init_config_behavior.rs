@@ -243,6 +243,155 @@ fn diagnostic_reports_broken_config_without_initializing_control_state() {
     assert_eq!(entries, [std::ffi::OsString::from("config.toml")]);
 }
 
+#[cfg(unix)]
+#[test]
+fn diagnostic_reconciles_exact_pr_delivery_across_processes() {
+    use serde_json::{Value, json};
+    use std::os::unix::fs::PermissionsExt;
+
+    let tmp = tempdir().unwrap();
+    let root = tmp.path().join("repo");
+    fs::create_dir(&root).unwrap();
+    run_git(&root, &["init", "-q", "-b", "main"]);
+    run_git(&root, &["config", "user.email", "test@test.example"]);
+    run_git(&root, &["config", "user.name", "Test"]);
+    fs::create_dir(root.join(".decapod")).unwrap();
+    fs::write(
+        root.join(".decapod/config.toml"),
+        r#"schema_version = "1.0.0"
+[init]
+diagram_style = "mermaid"
+entrypoints = []
+[repo]
+base_branch = "main"
+container_workspaces = false
+"#,
+    )
+    .unwrap();
+    run_git(&root, &["add", ".decapod/config.toml"]);
+    run_git(&root, &["commit", "-qm", "accepted"]);
+    run_git(&root, &["checkout", "-qb", "work"]);
+    run_git(&root, &["commit", "--allow-empty", "-qm", "candidate"]);
+    run_git(
+        &root,
+        &[
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/example/project.git",
+        ],
+    );
+    let revision = |reference| {
+        let result = Command::new("git")
+            .current_dir(&root)
+            .args(["rev-parse", reference])
+            .output()
+            .unwrap();
+        assert!(result.status.success());
+        String::from_utf8(result.stdout).unwrap().trim().to_owned()
+    };
+    let base = revision("main");
+    let candidate = revision("HEAD");
+    let merge_commit = "c".repeat(40);
+    let open = json!({
+        "number": 7, "html_url": "https://github.com/example/project/pull/7",
+        "state": "open", "merged": false, "merge_commit_sha": merge_commit,
+        "head": {"ref": "work", "sha": candidate, "repo": {"full_name": "example/project", "id": 31}},
+        "base": {"ref": "main", "sha": base, "repo": {"full_name": "example/project", "id": 31}},
+        "changed_files": 0
+    });
+    let gh = tmp.path().join("gh");
+    fs::write(
+        &gh,
+        r#"#!/bin/sh
+set -eu
+case "$1 $2" in
+  "api --method")
+    [ "$3 $4" = "GET repos/example/project/pulls/7" ]
+    if [ -f "$DECAPOD_PR_FIXTURE/first-read" ]; then
+      cat "$DECAPOD_PR_FIXTURE/second.json"
+    else
+      : > "$DECAPOD_PR_FIXTURE/first-read"
+      cat "$DECAPOD_PR_FIXTURE/first.json"
+    fi
+    ;;
+  "pr checks") printf '[]\n' ;;
+  *) exit 1 ;;
+esac
+"#,
+    )
+    .unwrap();
+    fs::set_permissions(&gh, fs::Permissions::from_mode(0o755)).unwrap();
+    let path = std::env::join_paths(
+        std::iter::once(tmp.path().to_path_buf())
+            .chain(std::env::split_paths(&std::env::var_os("PATH").unwrap())),
+    )
+    .unwrap();
+    let inspect = |first: &Value, second: &Value| -> Value {
+        let _ = fs::remove_file(tmp.path().join("first-read"));
+        fs::write(tmp.path().join("first.json"), first.to_string()).unwrap();
+        fs::write(tmp.path().join("second.json"), second.to_string()).unwrap();
+        let out = Command::new(resolve_decapod_bin())
+            .current_dir(&root)
+            .args(["workspace", "diagnose", "--json", "--pr", "7"])
+            .env("PATH", &path)
+            .env("DECAPOD_PR_FIXTURE", tmp.path())
+            .env("XDG_CONFIG_HOME", tmp.path().join("private-config"))
+            .env("GIT_ALLOW_PROTOCOL", "file")
+            .output()
+            .unwrap();
+        serde_json::from_slice(&out.stdout)
+            .unwrap_or_else(|err| panic!("{err}: {}", String::from_utf8_lossy(&out.stderr)))
+    };
+
+    let pending = inspect(&open, &open);
+    assert_eq!(pending["effective_authority"]["status"], "resolved");
+    assert_eq!(
+        pending["target_pr"]["merge_observation"],
+        json!({"state": "open"})
+    );
+    assert_eq!(pending["target_pr"]["matches_workspace_candidate"], true);
+
+    let mut closed = open.clone();
+    closed["state"] = "closed".into();
+    assert_eq!(
+        inspect(&closed, &closed)["target_pr"]["merge_observation"],
+        json!({"state": "closed_unmerged"})
+    );
+    closed["merged"] = true.into();
+    let after_restart = inspect(&closed, &closed);
+    assert_eq!(after_restart["target_pr"]["github_repository_id"], 31);
+    assert_eq!(
+        after_restart["target_pr"]["merge_observation"],
+        json!({"state": "observed_merged", "merge_commit": merge_commit})
+    );
+    assert_eq!(
+        after_restart["target_pr"]["matches_workspace_candidate"],
+        true
+    );
+    assert_eq!(after_restart["merge_authorized"], false);
+
+    assert!(inspect(&open, &closed)["target_pr"].is_null());
+    let mut changed_repository = closed.clone();
+    changed_repository["head"]["repo"]["id"] = 99.into();
+    changed_repository["base"]["repo"]["id"] = 99.into();
+    assert!(inspect(&closed, &changed_repository)["target_pr"].is_null());
+    let mut incomplete = closed.clone();
+    incomplete["merge_commit_sha"] = Value::Null;
+    assert_eq!(
+        inspect(&incomplete, &incomplete)["target_pr"]["merge_observation"]["state"],
+        "unavailable"
+    );
+
+    run_git(&root, &["commit", "--allow-empty", "-qm", "new candidate"]);
+    let moved = inspect(&closed, &closed);
+    assert_eq!(
+        moved["target_pr"]["merge_observation"]["state"],
+        "observed_merged"
+    );
+    assert_eq!(moved["target_pr"]["matches_workspace_candidate"], false);
+}
+
 #[test]
 fn init_persists_remote_default_base_branch() {
     let tmp = tempdir().expect("tempdir");

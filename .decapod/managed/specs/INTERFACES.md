@@ -1,3 +1,11 @@
+## Exact PR delivery readback (#1983)
+
+`workspace diagnose --pr <number> --format json` includes the
+`target_pr.merge_observation` state and available merge commit. The
+`matches_workspace_candidate` field identifies the exact checked-out head
+and configured target. Unstable or unavailable forge access leaves the
+requested PR observation unavailable.
+
 ## Public Documentation Reading Shell and Onboarding Contracts (`#1977`, `#1978`)
 
 - **Public documentation shell & accessibility interface (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`)**:
@@ -2739,7 +2747,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Repository signal fingerprint: `9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

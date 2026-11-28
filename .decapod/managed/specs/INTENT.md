@@ -1,3 +1,10 @@
+## Recover observed delivery after interruption (#1983)
+
+An agent can reopen workspace diagnosis for the same PR after an interrupted
+delivery. It can distinguish an open PR, closure without merge, and an
+observed merge even after a new process starts. The agent retains the
+remaining validation and authority obligations from the governed workflow.
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1532,7 +1539,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Repository signal fingerprint: `9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

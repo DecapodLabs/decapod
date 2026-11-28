@@ -1,3 +1,11 @@
+## Post-PR delivery observation (#1983)
+
+`workspace_publication::diagnostic_read_pr` reconciles the requested PR with
+two GitHub snapshots around the existing required-check read. The observed
+merge commit and exact PR head are independent of the live validation proof.
+`workspace_diagnostic` maps the PR observation to the unchanged checkout
+using the exact head revision, head branch, and configured target branch.
+
 ## Documentation Reading Shell and First Governed Result Journey (`#1977`, `#1978`)
 
 - **OpenShell-inspired mdBook reading shell & self-hosted Geist typography (`docs/book/theme/index.hbs`, `docs/book/src/custom.css`, `docs/book/theme/fonts/`)**:
@@ -2203,7 +2211,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Repository signal fingerprint: `9468d6c09e236126a6538afd62305e8d3faacc075bb0efa5814d0ca62bb10566`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
