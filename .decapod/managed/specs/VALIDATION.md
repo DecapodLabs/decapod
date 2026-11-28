@@ -1,5 +1,9 @@
 # Validation
 
+## Host measurement and GitHub source polling verification (#1989)
+
+The v0.169.5 release merge (`170efc04`) changes the Decapod package version in `Cargo.toml` and `Cargo.lock` and updates the changelog. All 112 discovered proof source entries on this branch match the accepted release. Reconciliation updates the reviewed digest and retains the existing provider, required workflow set, and final exact-attempt readback. Source checks on `e8f3e349` passed before this reconciliation. Full validation must establish evidence for the new exact commit.
+
 ## `#1672` Hop 1 shard unbundling, `#1400` batch custody download & next-hop workflow digest verification
 
 Verified in `WT_B` (`agent/decapod-ci-seo/test_01m8fksbstm838m1-ci-sharding-latency` off `origin/master@78b9c0f18a`, `CARGO_BUILD_JOBS=2`):

@@ -910,6 +910,14 @@
       "proof_refs": [
         "src/decapod/core/snapshot_provider/automatic/tests.rs"
       ]
+    },
+    {
+      "id": "code_01m8gd8dzpvdrmwp",
+      "summary": "Reconcile the 112 accepted v0.169.5 validation source entries without changing the required profile or workflow semantics",
+      "input_digest": "sha256:2c79399adf962a61dfc5e09d621e8b856d7f0dfaeaf2c1c5dd2d2cf90f68181b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/46119565038"
+      ]
     }
   ],
   "intents": {
@@ -956,21 +964,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The GitHub metadata barrier retains terminal successes only for intermediate polls. Every source workflow remains independently re-read at the final barrier.",
+          "reason": "The GitHub metadata barrier retains terminal successes only for intermediate polls and rereads every exact workflow at the final barrier. All workflow inputs match the accepted release.",
           "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
           "spec_material_hash": "0f856bc014a0ea7252b21ea6b7b06eef5b7444c9b9af46be7fe5a76293a48972"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Records fewer intermediate provider reads with unchanged terminal attempt, authorization and evidence semantics.",
+          "reason": "The measurements view is opt-in and preserves default comparison output. Provider attempt, authorization and evidence semantics remain exact.",
           "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
           "spec_material_hash": "a8ab136c7aff7bc45f45e68e4459e2c0d55fda114d1b3f4dacfa9daa7746add8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The final barrier still authenticates the original exact source plan and provider identities. The new successful set is memory-only and carries no publication authority.",
+          "reason": "The final barrier still authenticates the original source plan and provider identities. All proof inputs match the accepted release, and the memory-only successful-path set provides no publication authority.",
           "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
@@ -983,16 +991,24 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795849169Z"
+      "updated_at": "1795853189Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:d18adfba22b889630522fed16ffed08c4f4b24092eb55794cfd5b3b607ce9eb3",
+      "artifact_hash": "sha256:86ff1ad637e1e570d741ec6eed3aed02cf48578b540c8bd4c85c3f4a971c9fba",
       "checks": [
         {
+          "name": "accepted release inventory comparison",
+          "status": "passed"
+        },
+        {
           "name": "focused_flight_recorder_native",
+          "status": "passed"
+        },
+        {
+          "name": "historical e8f3e349 source Actions (5)",
           "status": "passed"
         },
         {
@@ -1004,7 +1020,7 @@
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
@@ -1039,10 +1055,17 @@
             "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8GDCK4RM8QH7PK0V5F86HFH": {
@@ -1100,6 +1123,27 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "CHANGELOG.md",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Verified hashes and canonical symlinks for all 112 discovered inventory entries against accepted 170efc04. Compared the preceding accepted tree; only the two Cargo version entries changed in the inventory. Existing source Actions are historical for the next milestone."
+                ],
+                "proof_refs": [
+                  "accepted release inventory comparison",
+                  "historical e8f3e349 source Actions (5)"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1110,23 +1154,32 @@
       "evidence": [
         "25 snapshot-provider automatic native tests passed. The two-workflow request-count fixture uses 26 instead of 48 intermediate reads, then fresh reads both exact workflows and rejects changed attempts. Existing pending-attempt, source-binding, authorization and Buildkite cases passed.",
         "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted.",
-        "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection."
+        "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection.",
+        "Verified hashes and canonical symlinks for all 112 discovered inventory entries against accepted 170efc04. Compared the preceding accepted tree; only the two Cargo version entries changed in the inventory. Existing source Actions are historical for the next milestone."
       ],
       "inspected_files": [
+        "CHANGELOG.md",
+        "Cargo.lock",
+        "Cargo.toml",
         "docs/research/host-outcome-pilot/sec12-antigravity-input.json",
         "src/decapod/core/flight_recorder/outcomes.rs"
       ],
       "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
       "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         "src/decapod/core/flight_recorder.rs",
         "src/decapod/core/snapshot_provider/automatic.rs",
         "src/decapod/core/snapshot_provider/automatic/tests.rs",
         "tests/unit/core/outcome_comparison_tests.rs"
       ],
       "next_transitions": [
+        "Checkpoint and obtain source validation for the exact reconciled commit",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
         "root"
       ],
       "run_id": "branch_01M8GDCK4RM8QH7PK0V5F86HFH",
