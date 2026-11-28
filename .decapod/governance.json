@@ -910,6 +910,14 @@
       "proof_refs": [
         "tests/context_capsule_rpc.rs"
       ]
+    },
+    {
+      "id": "cloud-context-1986-release-projection",
+      "summary": "Regenerate the managed workspace pin with v0.169.4 after source CI measured Dockerfile drift",
+      "input_digest": "sha256:15e24c994a49753e6d30d0a4eb41257409597ac014b0041d218aa23fdfc86e81",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/46102880516"
+      ]
     }
   ],
   "intents": {
