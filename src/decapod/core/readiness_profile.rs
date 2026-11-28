@@ -92,6 +92,23 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
     ]
 }
 
+/// Reviewed next-hop transition digests admitted alongside `reviewed_workflow_digests()`
+/// so a controller cut before a workflow rollout can still validate that single
+/// reviewed transition without breaking concurrent PRs or lowering policy checks.
+pub fn reviewed_next_hop_workflow_digests() -> &'static [(&'static str, &'static str)] {
+    &[(
+        ".github/workflows/release.yml",
+        "sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310",
+    )]
+}
+
+pub fn is_reviewed_workflow_digest(path: &str, expected: &str, actual: Option<&str>) -> bool {
+    actual == Some(expected)
+        || reviewed_next_hop_workflow_digests()
+            .iter()
+            .any(|(next_path, next_digest)| *next_path == path && actual == Some(*next_digest))
+}
+
 /// Exact helper bytes compiled into the reviewed finite execution adapter.
 /// Tests reuse the same manifest; provider output never defines this authority.
 pub fn definition_files() -> Vec<(&'static str, &'static [u8])> {
@@ -629,7 +646,11 @@ pub(crate) fn required_source_catalog_for_provider(
         }
     }
     for (path, expected) in reviewed_workflow_digests() {
-        if discovered.files.get(*path).map(String::as_str) != Some(*expected) {
+        if !is_reviewed_workflow_digest(
+            path,
+            expected,
+            discovered.files.get(*path).map(String::as_str),
+        ) {
             return Err(PlanningFailure::ControllerContractUnsupported(
                 (*path).into(),
             ));

@@ -1,8 +1,3 @@
-## `#1892` Scoped `qa verify recover` & `ValidationReport` Blocker Codes (`src/decapod/core/native_proof.rs`, `src/decapod/core/validation_runtime.rs`, `src/decapod/plugins/verify.rs`)
-
-- **New typed error & blocker code**: `core::native_proof::IncompatibleNativeExecutableError` propagates `"INCOMPATIBLE_NATIVE_EXECUTABLE"` into `ValidationReport.blockers[].code` during native repository-profile validation.
-- **Scoped `qa verify recover --json` labels**: `plugins::verify::SAFE_BLOCKER_LABELS` emits `"INCOMPATIBLE_NATIVE_EXECUTABLE"`, `"REPOSITORY_COMMAND_PLATFORM"`, `"MISSING_PLATFORM_EXECUTION"`, `"INCOMPATIBLE_TARGET_EXECUTOR"`, and `"UNKNOWN_DEPLOYMENT_TARGET"` when present in child readiness output or structured messages without exposing host tool paths or local filenames.
-
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -39,6 +34,18 @@
 - **`transport_error_for_operation` & `admin_transport_error` (`src/decapod/core/cloud_client.rs`, `dactyl-db = "=0.21.0"`)**: Maps `DactylError::operational_disposition(OperationKind)` (`OperationalAction::{Retry, InspectAndDecide, Reconcile, Stop}`), surfacing `OutcomeUnknown` on `Reconcile` (plus non-`NotAttempted` uncoded admin-mutation transport faults), `Offline`/`ProviderUnavailable` with `retry_after_seconds` on `Retry`, `ActionRequired/Conflict` on `InspectAndDecide`, `PendingFulfillment` on `order_pending`, and admin-contact guidance without purchase CTAs when `admin_contact_required == Some(true)`.
 
 # Interfaces
+
+## Batch custody transport, unbundled CI test targets & next-hop workflow admission (`#1400`, `#1573`, `#1672` Hop 1)
+
+- **`snapshot_provider::Runner::execute_batch` & `GithubWorkflowInventory::download_artifacts_batch`**:
+  - `Runner::execute_batch(&mut self, commands: &[&CommandSpec], budget: &Budget<'_>) -> Vec<Result<Reply>>` executes independent `CommandSpec` requests (up to `6` concurrent subprocesses in `OfficialCli::execute_batch`), returning results aligned 1:1 with `commands`.
+  - `GithubWorkflowInventory::download_artifacts_batch(&self, runner: &mut impl Runner, root: &Path, names: &[&str], budget: &Budget<'_>) -> Vec<DownloadedArtifactOutcome>` batches artifact ZIP fetches while preserving order and returning per-item `Ok(None)`, `Ok(Some(...))`, or `Err(...)`.
+- **`source_ci_profile` & Bazel CLI/core shard inventory (`assets/tools/source_ci_profile.rs`, `.config/build/decapod.BUILD.bzl`)**:
+  - `cli_test_inputs` includes `tests/effective_grant_cli_contracts.rs` and `tests/entrypoint_validation_contracts.rs`; `selective-cli-1..3` now cover all `10` standalone CLI targets (`//:cli_contract_enforcement`; `//:entrypoint_correctness`, `//:entrypoint_validation_contracts`, `//:infer_precision`, `//:init_ci_scaffolding`, `//:init_config_behavior`; `//:cli_contracts`, `//:effective_grant_cli_contracts`, `//:consumer_readiness`, `//:sqlite_maintenance`) without `--test-threads=1`.
+  - `selective-core-1` (`!core_full`) runs `//:entrypoint_correctness`, `//:entrypoint_validation_contracts`, and `//:infer_precision`; `selective-core-1..3` (`core_full`) retain all `11` core targets without duplicate `//:group_broker --exact` passes.
+  - `tests/entrypoint_validation_contracts.rs` carries `timeout = "long"` in `.config/build/decapod.BUILD.bzl`; `"exclusive"` is restricted to `tests/group_broker.rs` and `tests/validate_termination.rs`.
+- **`readiness_profile::reviewed_next_hop_workflow_digests` & `is_reviewed_workflow_digest`**:
+  - Exports the exact next-hop `.github/workflows/release.yml` SHA-256 (`sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310`) evaluated alongside `reviewed_workflow_digests()` in `required_source_catalog_with_executor` and `init_reconciliation::reconcile`.
 
 ## Recovery workflow documentation & end-to-end verification surfaces (`#1956`, `#1957`)
 
@@ -2724,7 +2731,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

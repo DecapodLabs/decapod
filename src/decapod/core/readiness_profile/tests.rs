@@ -310,6 +310,46 @@ fn accepted_executor_never_authorizes_changed_candidate_workflows_or_carriers() 
 }
 
 #[test]
+fn reviewed_next_hop_release_workflow_digest_is_admitted_without_weakening_unknown_digests() {
+    let executor = accepted_executor();
+    let (mut declaration, mut sources, facts) = accepted_executor_inputs();
+    let (_, next_digest) = reviewed_next_hop_workflow_digests()
+        .iter()
+        .find(|(path, _)| *path == ".github/workflows/release.yml")
+        .unwrap();
+    sources.files.insert(
+        ".github/workflows/release.yml".into(),
+        (*next_digest).into(),
+    );
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    assert!(
+        required_source_catalog_with_executor(
+            Some(&declaration),
+            &sources,
+            &facts,
+            Some(&executor),
+        )
+        .is_ok()
+    );
+
+    sources.files.insert(
+        ".github/workflows/release.yml".into(),
+        d("unreviewed release edit"),
+    );
+    declaration.reviewed_sources_digest = sources.digest().unwrap();
+    assert!(matches!(
+        required_source_catalog_with_executor(
+            Some(&declaration),
+            &sources,
+            &facts,
+            Some(&executor),
+        ),
+        Err(PlanningFailure::ControllerContractUnsupported(rejected))
+            if rejected == ".github/workflows/release.yml"
+    ));
+}
+
+#[test]
 fn accepted_executor_never_authorizes_unknown_candidate_execution_surfaces() {
     let executor = accepted_executor();
     for path in [

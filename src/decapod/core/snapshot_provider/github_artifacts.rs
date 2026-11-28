@@ -129,14 +129,12 @@ fn validate_metadata(m: &Metadata, s: &GithubArtifactSelection) -> Result<()> {
     )?;
     Ok(())
 }
-fn download_zip_verified(
-    runner: &mut impl Runner,
+fn artifact_zip_spec(
     root: &Path,
     selection: &GithubArtifactSelection,
     expected_bytes: u64,
-    expected_digest: &str,
     budget: &Budget<'_>,
-) -> Result<ArtifactFiles> {
+) -> Result<CommandSpec> {
     let mut spec = super::provider::gh_spec(
         root,
         &format!(
@@ -152,7 +150,16 @@ fn download_zip_verified(
     });
     spec.authorize_provider_read()?;
     budget.remaining()?;
-    let reply = runner.execute(&spec, budget)?;
+    Ok(spec)
+}
+
+fn verify_zip_reply(
+    reply: Reply,
+    selection: &GithubArtifactSelection,
+    expected_bytes: u64,
+    expected_digest: &str,
+    budget: &Budget<'_>,
+) -> Result<ArtifactFiles> {
     if reply.exit_code != 0 {
         return Err(io::Error::new(
             io::ErrorKind::PermissionDenied,
@@ -175,6 +182,22 @@ fn download_zip_verified(
         &reply.stdout,
         budget,
     )
+}
+
+pub(crate) type DownloadedArtifactOutcome =
+    Result<Option<(GithubArtifactSelection, String, u64, ArtifactFiles)>>;
+
+fn download_zip_verified(
+    runner: &mut impl Runner,
+    root: &Path,
+    selection: &GithubArtifactSelection,
+    expected_bytes: u64,
+    expected_digest: &str,
+    budget: &Budget<'_>,
+) -> Result<ArtifactFiles> {
+    let spec = artifact_zip_spec(root, selection, expected_bytes, budget)?;
+    let reply = runner.execute(&spec, budget)?;
+    verify_zip_reply(reply, selection, expected_bytes, expected_digest, budget)
 }
 
 /// Download a single metadata-authenticated raw ZIP using the configured official
@@ -474,6 +497,83 @@ impl GithubWorkflowInventory {
             meta.size_in_bytes,
             files,
         )))
+    }
+
+    /// Batch-download and SHA-256 verify artifacts resolved from the discovered
+    /// workflow inventory, preserving input order and per-artifact isolation.
+    pub fn download_artifacts_batch(
+        &self,
+        runner: &mut impl Runner,
+        root: &Path,
+        names: &[&str],
+        budget: &Budget<'_>,
+    ) -> Vec<DownloadedArtifactOutcome> {
+        enum Entry<'a> {
+            Skip(Box<DownloadedArtifactOutcome>),
+            Fetch {
+                selection: GithubArtifactSelection,
+                meta: &'a Metadata,
+                spec: Box<CommandSpec>,
+            },
+        }
+        let mut entries = Vec::with_capacity(names.len());
+        for &name in names {
+            match self.resolve_artifact(name) {
+                Ok(None) => entries.push(Entry::Skip(Box::new(Ok(None)))),
+                Ok(Some((selection, meta))) => {
+                    match artifact_zip_spec(root, &selection, meta.size_in_bytes, budget) {
+                        Ok(spec) => entries.push(Entry::Fetch {
+                            selection,
+                            meta,
+                            spec: Box::new(spec),
+                        }),
+                        Err(err) => entries.push(Entry::Skip(Box::new(Err(err)))),
+                    }
+                }
+                Err(err) => entries.push(Entry::Skip(Box::new(Err(err)))),
+            }
+        }
+        let specs: Vec<&CommandSpec> = entries
+            .iter()
+            .filter_map(|entry| match entry {
+                Entry::Fetch { spec, .. } => Some(spec.as_ref()),
+                Entry::Skip(_) => None,
+            })
+            .collect();
+        let mut replies = if specs.is_empty() {
+            Vec::new()
+        } else {
+            runner.execute_batch(&specs, budget)
+        }
+        .into_iter();
+        entries
+            .into_iter()
+            .map(|entry| match entry {
+                Entry::Skip(res) => *res,
+                Entry::Fetch {
+                    selection,
+                    meta,
+                    spec: _,
+                } => {
+                    let reply = replies
+                        .next()
+                        .unwrap_or_else(|| Err(invalid("batch runner returned too few replies")))?;
+                    let files = verify_zip_reply(
+                        reply,
+                        &selection,
+                        meta.size_in_bytes,
+                        &meta.digest,
+                        budget,
+                    )?;
+                    Ok(Some((
+                        selection,
+                        meta.digest.clone(),
+                        meta.size_in_bytes,
+                        files,
+                    )))
+                }
+            })
+            .collect()
     }
 }
 fn terminal_shape(status: &str, conclusion: Option<&str>) -> Result<()> {
@@ -1237,5 +1337,67 @@ mod tests {
                 .download_artifact(&mut zip_runner, Path::new("."), "source-proof", &b)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn download_artifacts_batch_verifies_ordered_outcomes_and_handles_missing() {
+        let zip_bytes = super::super::artifact_archive::tests::zip(
+            "fmt/preparation/preparation.json",
+            b"{}",
+            0x8000,
+        );
+        let mut r = discovery_fixture();
+        let art_path = "repos/org/repo/actions/runs/7/artifacts?per_page=100&page=1";
+        let artifacts = r.bodies.get_mut(art_path).unwrap()["artifacts"]
+            .as_array_mut()
+            .unwrap();
+        artifacts[0]["size_in_bytes"] = zip_bytes.len().into();
+        artifacts[0]["digest"] = hash(&zip_bytes).into();
+
+        struct BatchRunner {
+            discovery: DiscoveryMock,
+            zip_bytes: Vec<u8>,
+            calls: usize,
+        }
+        impl Runner for BatchRunner {
+            fn execute(&mut self, spec: &CommandSpec, b: &Budget<'_>) -> Result<Reply> {
+                if let Some(ProviderRequest::GithubArtifactZip { .. }) = spec.provider_request() {
+                    spec.authorize_provider_read()?;
+                    self.calls += 1;
+                    return Ok(Reply {
+                        exit_code: 0,
+                        stdout: self.zip_bytes.clone(),
+                    });
+                }
+                self.discovery.execute(spec, b)
+            }
+        }
+        let c = Cancellation::default();
+        let b = Budget::new(Duration::from_secs(3), 1024 * 1024, &c).unwrap();
+        let inventory = discover_workflow(&mut r, &prepared(), ".github/workflows/ci.yml", &b)
+            .unwrap()
+            .unwrap();
+        let mut runner = BatchRunner {
+            discovery: r,
+            zip_bytes: zip_bytes.clone(),
+            calls: 0,
+        };
+        let outcomes = inventory.download_artifacts_batch(
+            &mut runner,
+            Path::new("."),
+            &["missing-artifact", "source-proof"],
+            &b,
+        );
+        assert_eq!(outcomes.len(), 2);
+        assert!(outcomes[0].as_ref().unwrap().is_none());
+        let (sel, digest, size, files) = outcomes[1].as_ref().unwrap().as_ref().unwrap();
+        assert_eq!(sel.artifact_id, 9);
+        assert_eq!(digest, &hash(&zip_bytes));
+        assert_eq!(*size, zip_bytes.len() as u64);
+        assert_eq!(
+            files.file("fmt/preparation/preparation.json").unwrap(),
+            b"{}"
+        );
+        assert_eq!(runner.calls, 1);
     }
 }
