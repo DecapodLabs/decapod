@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.169.4](https://github.com/DecapodLabs/decapod/compare/v0.169.3...v0.169.4) - 2026-11-28
+
+### Other
+
+- refresh 0.169.3 Dockerfile pin
+- refresh 0.169.3 manifest and Dockerfile pins
+- reconcile reviewed_sources_digest for #1672 hop 1
+- unbundle shards (#1672 hop 1), batch custody ([#1400](https://github.com/DecapodLabs/decapod/pull/1400)), next-hop release digest
+
 ## [0.169.3](https://github.com/DecapodLabs/decapod/compare/v0.169.2...v0.169.3) - 2026-11-28
 
 ### Fixed
