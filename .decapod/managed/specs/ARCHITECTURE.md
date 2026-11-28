@@ -1800,7 +1800,7 @@ The machine-private cloud todo receipt file uses a version-two envelope around i
 
 ## PR 1666: accepted v0.143.2 source integration
 
-`snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative after removal of a redundant earlier binding read.
+`snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative. The in-process GitHub Actions poll state retains successful exact attempts to skip repeat intermediate reads. The terminal barrier creates fresh state and verifies every required workflow before accepting the source set.
 
 ## PR1666 current-master integration
 
@@ -2203,7 +2203,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326`
+- Repository signal fingerprint: `2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

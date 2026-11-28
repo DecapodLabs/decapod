@@ -258,7 +258,7 @@ Decapod Cloud enables a streamlined "select Cloud, sign in, pay, and use" flow w
 
 ## Applicable context and verifiable outcomes
 
-The flight recorder distinguishes run-wide cost from observed stage costs. A reviewer can inspect recorded clocks, context and response volume, and unavailable measurements without gaining execution authority.
+The flight recorder distinguishes run-wide cost from observed stage costs. A reviewer can inspect recorded clocks, context and response volume, and unavailable measurements without gaining execution authority. Source preflight spends its intermediate GitHub Actions reads on pending workflows while preserving a fresh exact-attempt check for the entire plan.
 
 Decapod keeps the global Constitution and repository decisions durable. An agent requests a bounded projection for the current task. Explicit policy and current intent determine authority, while provenance distinguishes guidance, replaced decisions, and observed execution. The pilot records retain failed attempts and distinguish a functional result from admitted completion. (#1772, #1774, #657, #880, #1095, #879)
 
@@ -1534,7 +1534,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326`
+- Repository signal fingerprint: `2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

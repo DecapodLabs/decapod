@@ -884,6 +884,14 @@
       "proof_refs": [
         "tests/unit/core/outcome_comparison_tests.rs"
       ]
+    },
+    "terminal-github-intermediate-reads": {
+      "statement": "An exact successful GitHub Actions attempt is retained only for intermediate polling. Every final workflow read is fresh and a changed run attempt prevents source admission.",
+      "falsifier": "The fixture makes more than 26 intermediate GitHub metadata reads across its 12 cycles, or a fresh final read accepts the changed attempt.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/snapshot_provider/automatic/tests.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -893,6 +901,14 @@
       "input_digest": "sha256:b739650c046f67d5d221cc3409eda072717a1b514a2b97b8b2f02334ced84320",
       "proof_refs": [
         "tests/unit/core/outcome_comparison_tests.rs"
+      ]
+    },
+    {
+      "id": "source-ci-intermediate-github-success",
+      "summary": "Avoid repeat intermediate reads of successful GitHub attempts and preserve final source suite checks",
+      "input_digest": "sha256:0b6bc04985180698180283b1690a4ea9085ebeaaa25feae5c06ba89f7d080f89",
+      "proof_refs": [
+        "src/decapod/core/snapshot_provider/automatic/tests.rs"
       ]
     }
   ],
@@ -929,32 +945,33 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Render a read-only digest-bearing measurement view over the existing outcome comparison. Preserve existing captures, narrow authority and unknowns. Describe the historical observed clocks without inferring startup cost or full host qualification.",
+      "intent": "Render a read-only digest-bearing measurement view over the existing outcome comparison. Skip repeat intermediate GitHub Actions metadata requests only for already successful exact workflow attempts and retain fresh complete final authorization checks. Preserve Buildkite, capture semantics, and all proof gates.",
       "phases": [],
       "proof_hooks": [
-        "flight recorder legacy and optional metric tests"
+        "flight recorder legacy and optional metric tests",
+        "GitHub source workflow metadata polling and final attempt regression tests"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The new measurements view is a read-only projection of validated preserved host observations; no runtime or evidence boundary moved.",
-          "reviewed_code_fingerprint": "321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326",
-          "spec_material_hash": "2d5c2f290f9b9fa51b30e817c5c26017803f71f2f224b897de8ee242138a9227"
+          "reason": "The GitHub metadata barrier retains terminal successes only for intermediate polls. Every source workflow remains independently re-read at the final barrier.",
+          "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
+          "spec_material_hash": "0f856bc014a0ea7252b21ea6b7b06eef5b7444c9b9af46be7fe5a76293a48972"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documents the opt-in measurements schema and unchanged default comparison path.",
-          "reviewed_code_fingerprint": "321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326",
-          "spec_material_hash": "93cfaf0d445374921b99fe486e1787e6ac29b52b6b1d663c782a46954d112b5d"
+          "reason": "Records fewer intermediate provider reads with unchanged terminal attempt, authorization and evidence semantics.",
+          "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
+          "spec_material_hash": "a8ab136c7aff7bc45f45e68e4459e2c0d55fda114d1b3f4dacfa9daa7746add8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The existing bounded local file, redacted identifiers, and evidence validation remain in force and the view grants no authority.",
-          "reviewed_code_fingerprint": "321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326",
+          "reason": "The final barrier still authenticates the original exact source plan and provider identities. The new successful set is memory-only and carries no publication authority.",
+          "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -966,13 +983,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847448Z"
+      "updated_at": "1795849169Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:58f8e1a28926761742a182311b77c64a4910ec1aba78de7d9716a99ff0fae062",
+      "artifact_hash": "sha256:d18adfba22b889630522fed16ffed08c4f4b24092eb55794cfd5b3b607ce9eb3",
       "checks": [
         {
           "name": "focused_flight_recorder_native",
@@ -980,6 +997,10 @@
         },
         {
           "name": "historical_capture_pre_implementation_readback",
+          "status": "passed"
+        },
+        {
+          "name": "native_snapshot_provider_automatic",
           "status": "passed"
         }
       ],
@@ -1011,10 +1032,17 @@
             "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8GDCK4RM8QH7PK0V5F86HFH": {
@@ -1055,6 +1083,23 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "src/decapod/core/snapshot_provider/automatic/tests.rs",
+                  "25 snapshot-provider automatic native tests passed. The two-workflow request-count fixture uses 26 instead of 48 intermediate reads, then fresh reads both exact workflows and rejects changed attempts. Existing pending-attempt, source-binding, authorization and Buildkite cases passed."
+                ],
+                "proof_refs": [
+                  "native_snapshot_provider_automatic"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1063,6 +1108,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "25 snapshot-provider automatic native tests passed. The two-workflow request-count fixture uses 26 instead of 48 intermediate reads, then fresh reads both exact workflows and rejects changed attempts. Existing pending-attempt, source-binding, authorization and Buildkite cases passed.",
         "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted.",
         "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection."
       ],
@@ -1073,6 +1119,8 @@
       "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
       "modified_files": [
         "src/decapod/core/flight_recorder.rs",
+        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/snapshot_provider/automatic/tests.rs",
         "tests/unit/core/outcome_comparison_tests.rs"
       ],
       "next_transitions": [
