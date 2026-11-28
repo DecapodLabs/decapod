@@ -910,6 +910,14 @@
       "proof_refs": [
         "tests/cloud_command_path.rs"
       ]
+    },
+    {
+      "id": "guard-1694-release-inventory",
+      "summary": "Bind the exact released 0.169.4 source inventory and generated workspace pins",
+      "input_digest": "sha256:211eda55c6adf43cd7b8e0b537d7c10ef0610b893489554e4a70e633a945e780",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
     }
   ],
   "intents": {
@@ -953,21 +961,21 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Current accepted release metadata does not change the existing transport or Local authority boundaries.",
+          "reason": "The release inventory refresh retains the guard scope and existing Decapod, Dactyl, and Propodus authority.",
           "reviewed_code_fingerprint": "12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137",
           "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Re-review the exact gate contract after the accepted release and lockfile advanced.",
+          "reason": "Cloud claim input checks and stable diagnostics are documented by the existing guard commit.",
           "reviewed_code_fingerprint": "12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137",
           "spec_material_hash": "a44c8d8d62bb45cfd76a8124fdb6f9773c7972d95727199e85ab235e3498d1cd"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The explicit unsupported claim preflight continues preceding the current authentication and transport boundary.",
+          "reason": "No authentication or authority changes accompany the released validator inventory refresh.",
           "reviewed_code_fingerprint": "12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
@@ -980,13 +988,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795835264Z"
+      "updated_at": "1795838026Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:35e83cccccf3e257d720156653750b60a717fb39a2c017e65c1d4d0b59a3ec0d",
+      "artifact_hash": "sha256:a2167aee84d238bb3c5b2841b4dd18b456f12fcde4d19b568c01dbca67eb5744",
       "checks": [
         {
           "name": "format",
@@ -1014,10 +1022,17 @@
             "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8G1AWNJJTEYVQCJYPHA28FQ": {
@@ -1043,6 +1058,22 @@
                 ],
                 "sequence": 4,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/.manifest.json",
+                  ".decapod/managed/Dockerfile.decapod",
+                  "Checksum-verified v0.169.4 reported the accepted source inventory sha256:cb01a74e37d2bf94fd3e4aab8561168079123a40a773bedc2400cd696d36a7ee and regenerated release-bound projections. Full configured validation is still required."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
               }
             ]
           }
@@ -1051,6 +1082,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Checksum-verified v0.169.4 reported the accepted source inventory sha256:cb01a74e37d2bf94fd3e4aab8561168079123a40a773bedc2400cd696d36a7ee and regenerated release-bound projections. Full configured validation is still required.",
         "Shared, explicit duration and explicit intent were discarded in the main Cloud dispatch; the same preflight now checks CLI and direct entry points."
       ],
       "inspected_files": [
@@ -1059,6 +1091,9 @@
       ],
       "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
       "modified_files": [
+        ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
+        ".decapod/managed/Dockerfile.decapod",
         "src/decapod/core/todo.rs",
         "tests/cloud_command_path.rs"
       ],
