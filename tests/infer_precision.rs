@@ -975,6 +975,8 @@ fn test_infer_orientation_with_task_id() {
             "todo",
             "add",
             "fix the broken tests",
+            "--description",
+            "Preserve the existing timeout and finish with a reproducible command.",
             "--scope",
             "tests/core",
         ],
@@ -1005,7 +1007,10 @@ fn test_infer_orientation_with_task_id() {
     assert!(output.status.success());
 
     let json = extract_json(&output);
-    assert_eq!(json["user_goal"], "fix the broken tests");
+    assert_eq!(
+        json["user_goal"],
+        "fix the broken tests\n\nPreserve the existing timeout and finish with a reproducible command."
+    );
     assert_eq!(json["task_id"].as_str().unwrap(), task_id);
     assert!(
         json["allowed_scope"]

@@ -386,6 +386,8 @@ publication readiness; the configured exact-candidate checks still govern releas
 
 ## Bounded context and host observations
 
+Task orientation exposes the task-bound original request from the trajectory. A differing supplied request remains visible as an intent reconciliation need. For tasks without a bound trajectory, orientation keeps the supplied request, or the task title and full description when orienting by ID alone.
+
 `context.resolve` retains its fragment contract and adds selection reasons, stable source identities, a scoped advisory knowledge projection, and current governed-plan context with explicit task binding. It returns an explicit no-match result for advisory queries and retains mandatory obligations. New capsule and bundle fields are versioned. Legacy hashes stay stable when the optional fields are absent. The complete context envelope is capped at 262,144 bytes, with at most twelve fragments and 8,192 excerpt bytes.
 
 `infer boundary --input` accepts a bounded `decapod.native-boundary.v1` request with a host agent ID. `trace flight-recorder compare --input` reads compact outcome observations and preserves missing metrics and incomplete runs. `trace flight-recorder acceptance --capture` continues to correlate the independently captured observer inputs.
@@ -2731,7 +2733,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `177b42b65f4bf20336fe23cdf0e5765fb22dc54c7ba5ee050cb0edffbc68b45a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

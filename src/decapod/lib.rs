@@ -18256,12 +18256,28 @@ fn run_infer_orientation(
     };
 
     if let Some(ref id) = cli.task_id {
+        let bound_goal = crate::core::trajectory::load_trajectory_cookie(project_root)?
+            .filter(|trajectory| trajectory.task_id.as_deref() == Some(id.as_str()))
+            .map(|trajectory| trajectory.original_intent);
+        if let Some(goal) = bound_goal.as_ref() {
+            if cli.intent.as_ref().is_some_and(|provided| provided != goal) {
+                packet.known_unknowns.push(
+                    "The supplied goal differs from the task's recorded original request. Use governed intent reconciliation to record a revision.".to_string(),
+                );
+            }
+            packet.user_goal.clone_from(goal);
+        }
         let store_root = find_governance_root(project_root)
             .join(".decapod")
             .join("data");
         if let Some(task) = todo::get_task(&store_root, id)? {
-            packet.user_goal = task.title.clone();
-            if !task.description.is_empty() {
+            if bound_goal.is_none() && cli.intent.is_none() {
+                packet.user_goal = if task.description.trim().is_empty() {
+                    task.title
+                } else {
+                    format!("{}\n\n{}", task.title, task.description)
+                };
+            } else if !task.description.is_empty() {
                 packet
                     .known_unknowns
                     .push(format!("Task detail: {}", task.description));
