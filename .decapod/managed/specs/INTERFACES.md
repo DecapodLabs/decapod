@@ -1,3 +1,11 @@
+## Public Documentation Navigation & Cloud Route Contracts (`docs/book/`, `docs_01m8h2gp0mg0nnbj`)
+
+- **Shell & page routes (`docs/book/theme/index.hbs`, `docs/book/src/index.md`)**:
+  - Top navigation exposes `Home`, `Docs`, `Writing`, `Clack`, and `GitHub ↗` (no `Pricing` link); footer and right-rail Quick routes retain `Admin ↗` (`https://decapodlabs.ai/admin`), `Trust ↗`, and `Evaluation ↗` without `Pricing ↗`.
+  - The `Decapod Cloud` offering card in `docs/book/src/index.md` displays badge `Team Workspace · Hosted custody` (preserving `.decapod-offering-badge.badge-cloud`), routes its primary CTA to `reference/cloud-projects.html` (`Cloud project docs →`), and retains secondary `Sign up ↗` (`https://decapodlabs.ai/signup`) and `Organization Admin ↗` (`https://decapodlabs.ai/admin`) links.
+- **Guide & reference chapters (`docs/book/src/{quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Contain zero `https://decapodlabs.ai/pricing` links and zero `$50/contributor/repo/mo` commercial claims while keeping factual `Cloud Signup`, `Organization Admin`, and `backend = "cloud"` runtime boundaries intact.
+- **Regression contract (`tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings`)**: Enforces absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs`, `docs/book/src/index.md`, `quickstart.md`, `introduction.md`, `concepts/faq.md`, `reference/cloud-projects.md`, `reference/propodus.md`, and `workflows/multi-agent.md`, while preserving `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and CSS/layout class invariants. Runtime Rust CLI/RPC modules under `src/` are unchanged.
+
 ## `#1367` Cold Continuation CLI Inspection & Workunit Re-Checkpoint Contracts (`src/decapod/lib.rs`, `src/decapod/core/workunit.rs`)
 
 - **Cold pre-handoff read-only CLI surfaces (`src/decapod/lib.rs`)**: `decapod govern plan status`, `decapod govern workunit {get, status, journal-status}`, `decapod govern trajectory {status, verify-resume}`, `decapod data broker {audit, verify}`, and dry-run `decapod data broker repair` execute read-only inside another actor's isolated worktree without returning `AUTHORING_CUSTODY_STALE`; all mutating `govern` and `data broker repair --apply` commands remain gated on active exclusive custody.
@@ -2771,7 +2779,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af`
+- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

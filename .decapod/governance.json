@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
+    "accepted_commit": "4dbafaebd14414c7e39ef660d7fa7b0943af0193",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,90 +872,61 @@
     }
   },
   "change": {
-    "id": "change_1367_731219081",
-    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
+    "id": "change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+    "base_commit": "4dbafaebd14414c7e39ef660d7fa7b0943af0193",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:cold-continuation-custody": {
-      "statement": "Cold replacement harnesses inspect canonical plan/workunit/trajectory/broker read-only without custody rejection and non-Verified drifted workunits re-checkpoint cleanly while Verified baselines remain enforced.",
-      "falsifier": "Cold pre-handoff read-only inspection rejects with AUTHORING_CUSTODY_STALE, mutating paths bypass custody, or Verified baseline passes without re-verification.",
+    "claim:docs-hide-pricing-links": {
+      "statement": "Decapod mdBook theme and source chapters contain zero decapodlabs.ai/pricing links and zero  commercial pricing claims while preserving factual Organization Admin, Cloud Signup, and reference/cloud-projects.html routes without modifying src/ Rust files.",
+      "falsifier": "Any decapodlabs.ai/pricing link or /contributor/repo/mo copy appears in docs/book/ source or rendered mdBook HTML, or tests/doc_alignment.rs fails, or any file under src/ is modified.",
       "status": "supported",
       "proof_refs": [
-        "tests/gate_admission_and_resilience.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
+        "docs/book/src/index.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cold-continue-1367-hop1",
-      "summary": "Rebase #1367 onto origin/master@731219081 with official v0.169.3",
-      "input_digest": "sha256:372fc827ca474ed927ea0896268deb363d9e160d25665c882f5a42bed5720713"
-    },
-    {
-      "id": "cp-1367-v01694-rebase",
-      "summary": "Rebase #1367 onto origin/master@a2d7266db and refresh v0.169.4 Dockerfile/specs pins",
-      "input_digest": "sha256:ba926fbf94f6c9b76a633de2fd445f0ada66ee93bf30a5a7301e12b53d665e3b",
+      "id": "chk-1-docs-hide-pricing",
+      "summary": "Hide /pricing links and  commercial claims across docs/book, update doc_alignment test, and refresh living specs",
+      "input_digest": "sha256:a631e377c121604ab7bd388c205b15d5bdd81e4f01f7352846a3f9aaca4f8a5b",
       "proof_refs": [
-        ".decapod/managed/Dockerfile.decapod"
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "cp-1367-cold-continue-v01694",
-      "summary": "Cold pre-handoff observers and non-Verified drifted workunit re-checkpointing (#1367, v0.169.4)",
-      "input_digest": "sha256:97bad40e64317c08a5895d57072ccc217e3a23a59b7cad5eb192c1f90d49dc39",
+      "id": "chk-2-merge-origin-master",
+      "summary": "Merge origin/master (PR #2005) and refresh living specs and manifest",
+      "input_digest": "sha256:7bd347ae948058c67a9f5382ff1309a1e56e9fe65f89c9c5286c3ee1020425f3",
       "proof_refs": [
-        "tests/gate_admission_and_resilience.rs"
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "cp-1367-cold-continue-v01694-r2",
-      "summary": "Cold pre-handoff observers and non-Verified drifted workunit re-checkpointing (#1367, v0.169.4)",
-      "input_digest": "sha256:ee2c0ffde1786bfd14aa1042c2fd02ac07605c1fdd5f9c192663b4a83ac61c4d",
+      "id": "chk-3-security-spec-review",
+      "summary": "Record SECURITY.md unchanged-with-reason spec review for docs-only hide-pricing PR",
+      "input_digest": "sha256:c6cae418423406baed2767a7ef44b8a2cafdf71afa393fb12e8e21be0f0dccc2",
       "proof_refs": [
-        "tests/gate_admission_and_resilience.rs"
+        "tests/doc_alignment.rs"
       ]
     },
     {
-      "id": "cp-1367-cold-continue-v01694-r3",
-      "summary": "Sync reviewed_sources_digest for v0.169.4 base a2d7266db (#1367)",
-      "input_digest": "sha256:1cc5ace30039291ea03f54e201c58ee668de381921a6dc999f51dcd4379677b3",
+      "id": "chk-4-merge-master-2006",
+      "summary": "Merge origin/master (PR #2006), refresh living specs, and record all 3 spec reviews",
+      "input_digest": "sha256:c39764c45ca0930057c9c2cb4f8b8041c40bb48afc6b2c492845cc785e23aaa6",
       "proof_refs": [
-        ".decapod/config.toml"
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ]
-    },
-    {
-      "id": "cp-1367-cold-continue-v01694-r4",
-      "summary": "Sync .manifest.json config_input_hash after reviewed_sources_digest update (#1367, v0.169.4)",
-      "input_digest": "sha256:e077969dcff05e88f3a87dd0385af85c2677a6a037d42955b9d716afec1a3b84",
-      "proof_refs": [
-        ".decapod/managed/.manifest.json"
-      ]
-    },
-    {
-      "id": "ckpt-wt2-1367-rebased",
-      "summary": "Rebased #1367 cold continuation onto origin/master@b04913596",
-      "input_digest": "sha256:2fb9bccdd3f3b51e0c13cf65e16d6b392193c929e2385090197be28e6743eda0"
-    },
-    {
-      "id": "ckpt-wt2-1367-170efc",
-      "summary": "Rebased #1367 cold continuation onto origin/master@170efc04a",
-      "input_digest": "sha256:e6c3b99f76758f8ae69b87e1716ca44820cea6983009b4eed43b16299ff0174b"
-    },
-    {
-      "id": "ckpt-wt2-1367-v01695",
-      "summary": "Refreshed #1367 cold continuation for official Decapod v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:1a89e539d3044e0f103958a5570a4e9e17df6ccf6756fd73b15b15b90b6a7c57"
-    },
-    {
-      "id": "ckpt-wt2-1367-60af3115",
-      "summary": "Rebased #1367 cold continuation onto origin/master@60af3115ec6e (v0.169.5)",
-      "input_digest": "sha256:8e1f47429883ac81ad0f46152481518b6238c2a36d55c5355cb9490dc86e5921"
     }
   ],
   "intents": {
-    "intent:run_1367_731219081": {
+    "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -965,14 +936,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1367_731219081",
+      "id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute #1367/#1735 cold cross-harness Continue PR continuation proof",
-      "refined_intent": "Allow cold replacement harnesses to inspect plan/workunit/trajectory/broker read-only before handoff and allow checkpoint_workunit on drifted non-Verified workunits to clear stale proof instead of deadlocking.",
+      "raw_intent": "Hide /pricing links in Decapod docs (Track C)",
+      "refined_intent": "Hide /pricing links in Decapod docs (Track C)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -985,7 +956,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Allow cold replacement harnesses to inspect plan/workunit/trajectory/broker read-only before handoff and allow checkpoint_workunit on drifted non-Verified workunits to clear stale proof instead of deadlocking.",
+      "intent": "Hide /pricing links in Decapod docs (Track C)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -995,84 +966,69 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rebased #1367 onto origin/master@60af3115ec6e (v0.169.5) preserving all prior PR #1997/#2002/#2003/#2004/#2005 specs",
-          "reviewed_code_fingerprint": "f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af",
-          "spec_material_hash": "c16fd0f8a50b54892a00805a2435112db787e71824f356b0e2ac32930280be3e"
+          "reason": "Merged origin/master (#2006) and preserved mdBook hide-pricing architecture spec updates",
+          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
+          "spec_material_hash": "94e19ce1e4940ae29dfee38f505ba04e5142a421177c26e1544d3126318acbf8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased #1367 onto origin/master@60af3115ec6e (v0.169.5) preserving all prior PR #1997/#2002/#2003/#2004/#2005 specs",
-          "reviewed_code_fingerprint": "f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af",
-          "spec_material_hash": "aed2120675dfcebf06ff83f4e7e8c53dfbbeac6a88ecabf8a565c55996f12f11"
+          "reason": "Merged origin/master (#2006) and preserved mdBook hide-pricing and doc_alignment interface spec updates",
+          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
+          "spec_material_hash": "66514f95ab932ff0779ba9b983df2ea94ac1fd92e3de6b31c5a352808e17342c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No security surface changes beyond command_requires_worktree read-only observer exemptions (#1367)",
-          "reviewed_code_fingerprint": "f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af",
+          "reason": "Docs-only mdBook pricing-link removal and tests/doc_alignment.rs update after merging origin/master (#2006); zero src/ Rust, auth, egress, or credential changes",
+          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
           "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Fix cold pre-handoff read-only inspection and non-Verified drifted workunit re-checkpointing (#1367, #1735)",
+      "title": "Hide /pricing links in Decapod docs (Track C)",
       "todo_ids": [
-        "code_01m8fh2bm7qsyb95"
+        "docs_01m8h2gp0mg0nnbj"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795870592Z"
+      "updated_at": "1795873807Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4f8afb8cc2b7b433ec5f4af84a22bd9a929ba38e5ad6aab9137945968bcc81c1",
+      "artifact_hash": "sha256:74d417f91a496983aff5a6dd7de8e27bff41ac5137f6a2dc71db258be030a3c0",
       "checks": [
         {
-          "name": "cross_harness_agy_to_codex_cold_continue",
+          "name": "mdbook_build_and_seo",
           "status": "passed"
         },
         {
-          "name": "gate_admission_and_resilience",
-          "status": "passed"
-        },
-        {
-          "name": "shared_state_semantics_1247",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_cli",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_journal_tests",
-          "status": "passed"
-        },
-        {
-          "name": "workunit_publish_gate",
+          "name": "rg_zero_pricing_refs",
           "status": "passed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1367_731219081",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1367_731219081",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1367_731219081",
+            "detail": "trajectory:branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
             "event_id": "event:4",
-            "intent_id": "intent:run_1367_731219081",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1081,35 +1037,42 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1367_731219081": {
+          "branch_01M8H2VNVAX4XPB39P8H5N0Y4S": {
             "evidence_only": true,
-            "id": "run_1367_731219081",
-            "intent_id": "intent:run_1367_731219081",
+            "id": "branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
+            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verification",
+                "command": "mdbook build docs/book -d /tmp/decapod-book-hide-pricing && python3 assets/tools/docs_seo.py /tmp/decapod-book-hide-pricing",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/workunit.rs",
-                  "tests/gate_admission_and_resilience.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
-                  "src/decapod/lib.rs",
-                  "src/decapod/core/workunit.rs",
-                  "tests/gate_admission_and_resilience.rs",
-                  "tests/unit/core/workunit_journal_tests.rs",
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/index.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/concepts/faq.md",
+                  "docs/book/src/reference/cloud-projects.md",
+                  "docs/book/src/reference/propodus.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "tests/doc_alignment.rs",
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/index.md",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/introduction.md",
+                  "docs/book/src/concepts/faq.md",
+                  "docs/book/src/reference/cloud-projects.md",
+                  "docs/book/src/reference/propodus.md",
+                  "docs/book/src/workflows/multi-agent.md",
+                  "tests/doc_alignment.rs",
                   ".decapod/managed/specs/INTENT.md",
                   ".decapod/managed/specs/ARCHITECTURE.md",
                   ".decapod/managed/specs/INTERFACES.md",
-                  "Aligned onto origin/master@731219081 (PR #1987 Hop 1); verifier-4 2077/2077 lib + 5/5 gate_admission + CI 46092308756 success"
+                  "mdbook 0.4.40 + docs_seo.py built 31 public pages with 0 decapodlabs.ai/pricing and 0 /contributor/repo/mo matches"
                 ],
                 "proof_refs": [
-                  "workunit_journal_tests",
-                  "gate_admission_and_resilience",
-                  "shared_state_semantics_1247",
-                  "workunit_cli",
-                  "workunit_publish_gate",
-                  "cross_harness_agy_to_codex_cold_continue"
+                  "mdbook_build_and_seo",
+                  "rg_zero_pricing_refs"
                 ],
                 "scope": [
                   "root"
@@ -1121,33 +1084,49 @@
           }
         }
       },
-      "declared_commands": [],
+      "declared_commands": [
+        "mdbook build docs/book -d /tmp/decapod-book-hide-pricing && python3 assets/tools/docs_seo.py /tmp/decapod-book-hide-pricing"
+      ],
+      "destination": "pull request",
       "evidence": [
-        "Aligned onto origin/master@731219081 (PR #1987 Hop 1); verifier-4 2077/2077 lib + 5/5 gate_admission + CI 46092308756 success"
+        "mdbook 0.4.40 + docs_seo.py built 31 public pages with 0 decapodlabs.ai/pricing and 0 /contributor/repo/mo matches"
       ],
       "inspected_files": [
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "tests/gate_admission_and_resilience.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
+        "docs/book/src/concepts/faq.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/reference/cloud-projects.md",
+        "docs/book/src/reference/propodus.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
       ],
-      "intent_id": "intent:run_1367_731219081",
+      "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "src/decapod/core/workunit.rs",
-        "src/decapod/lib.rs",
-        "tests/gate_admission_and_resilience.rs",
-        "tests/unit/core/workunit_journal_tests.rs"
+        "docs/book/src/concepts/faq.md",
+        "docs/book/src/index.md",
+        "docs/book/src/introduction.md",
+        "docs/book/src/quickstart.md",
+        "docs/book/src/reference/cloud-projects.md",
+        "docs/book/src/reference/propodus.md",
+        "docs/book/src/workflows/multi-agent.md",
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "run_1367_731219081",
+      "run_id": "branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fh2bm7qsyb95",
+      "task_id": "docs_01m8h2gp0mg0nnbj",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

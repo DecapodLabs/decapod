@@ -1,3 +1,10 @@
+## Hide `/pricing` links and `$50` commercial claims across `docs/book/` (`docs_01m8h2gp0mg0nnbj`)
+
+Removes public `https://decapodlabs.ai/pricing` links and `$50/contributor/repo/mo` / `$0 surprise overages` commercial pricing copy from the human-facing mdBook documentation (`docs/book/`) while the pricing page is hidden, keeping `Decapod Local`, `Decapod Cloud` technical documentation, `Cloud Signup` (`https://decapodlabs.ai/signup`), and `Organization Admin` (`https://decapodlabs.ai/admin`) factual and intact without touching `src/` Rust files:
+
+- **Theme shell navigation (`docs/book/theme/index.hbs`)**: Removes all three `https://decapodlabs.ai/pricing` entries (top navigation `Pricing`, footer `Pricing ↗`, and right-rail Quick routes `Pricing ↗`) while keeping `Admin ↗` (`https://decapodlabs.ai/admin`), `Trust ↗`, `Evaluation ↗`, `Writing`, `Clack`, and `GitHub ↗` intact.
+- **Landing page & guide prose (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Removes the `Compare Local & Cloud` `/pricing` header link and `$50` badge/claims in `index.md`, replaces the primary `View Cloud pricing` CTA with `Cloud project docs →` (`reference/cloud-projects.html`), removes `/pricing` links and `$50` copy across the onboarding, FAQ, workflow, and Cloud reference pages while retaining factual `Organization Admin` and `Cloud Signup` routes, and updates `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings` to enforce zero `/pricing` or `$50/contributor/repo/mo` regressions across `docs/book/`.
+
 ## Cold Cross-Harness Continuation Custody & Non-Deadlocking Workunit Re-Checkpointing (`#1367`, `#1735`)
 
 Eliminates two kernel continuation gaps discovered during genuine cross-harness (`agy` -> `codex`) `"Continue PR #42"` execution with active owner + stale pass + unknown-outcome mutation:
@@ -1562,7 +1569,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af`
+- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

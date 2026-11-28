@@ -1,3 +1,9 @@
+## Hide `/pricing` Navigation & Commercial Copy in mdBook Documentation (`docs/book/`, `docs_01m8h2gp0mg0nnbj`)
+
+- **mdBook theme shell (`docs/book/theme/index.hbs`)**: Drops the three `https://decapodlabs.ai/pricing` anchor links across `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` without altering `.decapod-top-links` layout, self-hosted Geist font rules, or `docs/book/src/custom.css`.
+- **Book source chapters (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Routes the `Decapod Cloud` card primary action on `index.md` to internal `reference/cloud-projects.html` (`Cloud project docs →`), replaces commercial `$50/contributor/repo/mo` / `$0 surprise overages` prose with factual `backend = "cloud"` coordination boundaries, and preserves `https://decapodlabs.ai/signup` and `https://decapodlabs.ai/admin` links with zero edits under `src/`.
+- **Alignment test (`tests/doc_alignment.rs`)**: Updates `test_docs_landing_page_links_local_and_cloud_offerings` to assert `reference/cloud-projects.html`, `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs` and all affected `docs/book/src/` chapters.
+
 ## Cross-Harness Continuation Inspection & Stale-Proof Invalidation (`#1367`)
 
 - **Read-only observer exemption (`src/decapod/lib.rs::command_requires_worktree`)**: Exempts `PlanCommand::Status`, `WorkunitCommand::{Get, Status, JournalStatus}`, `TrajectoryCommand::{Status, VerifyResume}`, and `DataCommand::Broker(BrokerCommand::{Audit, Verify, Repair { apply: false, .. }})` from authoring-lease custody rejection so cold replacement actors can inspect canonical state and crash divergences before `todo.handoff`.
@@ -2239,7 +2245,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af`
+- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

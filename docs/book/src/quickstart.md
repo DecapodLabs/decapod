@@ -34,15 +34,15 @@ Run `decapod init` from your repository root:
 # Free local mode (SQLite in .decapod/data/decapod.db, offline, no signup):
 decapod init
 
-# Or Decapod Cloud ($50/contributor/repo/mo, $0 surprise overages):
+# Or Decapod Cloud (hosted team task coordination and repository-bound custody):
 decapod init --backend cloud
 ```
 
 Interactive terminal setup steps through **Project → Preferences → Review** to generate `.decapod/config.toml`, `.decapod/governance.json`, living spec templates under `.decapod/managed/specs/`, and agent entrypoints. Scripted setups use `decapod init with` or `--proof` (for config-only preparation without signing in or claiming readiness). Existing repo upgrades and legacy JSONL imports are documented in [Configuration: Legacy Upgrades](configuration.md#legacy-upgrades-and-config-backups).
 
 For **Decapod Cloud** teams:
-- Start a personal or team workspace and subscription at [Cloud Signup](https://decapodlabs.ai/signup) (see [Cloud Pricing](https://decapodlabs.ai/pricing)).
-- Manage repository enrollment, seats, access policies, and billing in [Organization Admin](https://decapodlabs.ai/admin).
+- Start a personal or team workspace at [Cloud Signup](https://decapodlabs.ai/signup) and review [Cloud project routing](reference/cloud-projects.md).
+- Manage repository enrollment, seats, access policies, and organization administration in [Organization Admin](https://decapodlabs.ai/admin).
 - Each teammate signs in per machine with `decapod cloud login`; credentials stay private, and missing authorization (`action_required` or `repository_denied`) fails closed without falling back to local SQLite (see [Decapod Cloud Boundary](reference/propodus.md)).
 
 ---
