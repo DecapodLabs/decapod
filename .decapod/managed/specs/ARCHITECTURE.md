@@ -340,7 +340,7 @@
 
 `assets/build/compress_constitution.rs` calls the shared source admission check before compression. The check reserves explicit binding and router identities, checks references, and requires review declarations for binding guidance. `assets/tools/constitution_history.rs` produces a reproducible chronology from immutable accepted source and a dated public release capture.
 
-The native boundary adapter delegates through literal arguments to the current kernel. The flight recorder keeps the merged acceptance observer and adds an opt-in comparison over compact observations. Each operation uses the existing governance and proof owners.
+The native boundary adapter delegates through literal arguments to the current kernel. The flight recorder keeps the merged acceptance observer and adds an opt-in comparison over compact observations. Its per-run measurements view reuses the same bounded observer input, validates optional stage clocks and volume counters, and preserves provenance and pair status. Historical observations without a measured stage expose a null and its reason. Each operation uses the existing governance and proof owners.
 
 ## Pure report projection does not authenticate proof (#1726)
 
@@ -2203,7 +2203,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Repository signal fingerprint: `321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

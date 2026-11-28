@@ -270,3 +270,83 @@ fn harmful_context_requires_observed_delivery_and_reviewed_bounded_rate() {
         .evidence = Some(evidence(EvidenceClass::OperatorReport));
     assert!(compare(input(vec![record])).is_err());
 }
+
+#[test]
+fn historical_measurements_preserve_observed_clocks_and_explicit_unknowns() {
+    let input: Input = serde_json::from_str(include_str!(
+        "../../../docs/research/host-outcome-pilot/sec12-antigravity-input.json"
+    ))
+    .unwrap();
+    let report = compare(input).unwrap();
+    let historical = serde_json::to_value(&report).unwrap();
+    assert_eq!(
+        historical["schema_version"],
+        "decapod.outcome-comparison.v1"
+    );
+    assert!(historical["runs"][2]["metrics"].get("kernel_ms").is_none());
+
+    let view = serde_json::to_value(report.measurements()).unwrap();
+    assert_eq!(view["incomplete_pairs"], historical["incomplete_pairs"]);
+    let governed = view["runs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|run| run["run_id"] == "agy-cold-governed")
+        .unwrap();
+    assert_eq!(governed["status"], "partial");
+    assert_eq!(governed["metrics"]["wall_ms"]["value"], 162_534.156);
+    assert_eq!(
+        governed["metrics"]["setup_ms"]["evidence"]["class"],
+        "operator_report"
+    );
+    assert_eq!(
+        governed["metrics"]["validation_ms"]["evidence"]["class"],
+        "independent_check"
+    );
+    assert_eq!(
+        governed["metrics"]["context_bytes"]["value"].as_f64(),
+        Some(15_898.0)
+    );
+    for name in [
+        "kernel_ms",
+        "process_startup_ms",
+        "provider_wait_ms",
+        "decapod_response_bytes",
+        "repeated_setup_calls",
+    ] {
+        let metric = &governed["metrics"][name];
+        assert!(metric["value"].is_null());
+        assert!(metric["evidence"].is_null());
+        assert_eq!(metric["missing_reason"], "not_observed");
+    }
+    assert_eq!(
+        governed["metrics"]["active_human_minutes"]["missing_reason"],
+        "not_reviewed"
+    );
+}
+
+#[test]
+fn optional_stages_remain_bounded_evidence_referenced_observations() {
+    let mut record = run("run-1", Arm::Governed);
+    let observed = Metric {
+        value: Some(3.75),
+        evidence: Some(evidence(EvidenceClass::OperatorReport)),
+        missing_reason: None,
+    };
+    record.metrics.insert("kernel_ms".into(), observed.clone());
+    let report = compare(input(vec![record.clone()])).unwrap();
+    let view = serde_json::to_value(report.measurements()).unwrap();
+    assert_eq!(view["runs"][0]["metrics"]["kernel_ms"]["value"], 3.75);
+    assert_eq!(
+        view["runs"][0]["metrics"]["kernel_ms"]["evidence"]["sha256"],
+        "a".repeat(64)
+    );
+
+    for name in ["repeated_setup_calls", "undeclared_model_ms"] {
+        let mut invalid = record.clone();
+        invalid.metrics.insert(name.into(), observed.clone());
+        assert!(compare(input(vec![invalid])).is_err(), "{name}");
+    }
+    record.metrics.get_mut("kernel_ms").unwrap().evidence = None;
+    assert!(compare(input(vec![record])).is_err());
+}

@@ -42,5 +42,28 @@ Related issues: `#880`, `#1888`, `#1095`, `#1277`, `#875`.
 ## Empirical Conclusions (No Spin)
 
 1. **Autonomous discovery & custody isolation worked end-to-end (`#880`)**: Without mentioning `decapod` in the prompt, `antigravity 1.5.18` autonomously discovered `GEMINI.md`/`AGENTS.md`, passed `decapod eval --stdin`, ingested `decapod docs ingest`, acquired a session, created and claimed a todo, spawned an isolated `.decapod/workspaces/*` git worktree (`wt=true`), resolved orientation/context, and leaked zero decoy `B` (`harmful_context_rate = 0.0`).
-2. **Governance CLI latency & token tax are large on trivial tasks (`#1095`, motivating `#1277`)**: Under a fixed `180s` turn cap on a 1-file Rust fixture, both `baseline` and `static` finished in `25–33s` (`31–36k` input tokens), whereas both `governed` runs spent `162–177s` (`210–223k` input tokens, `10–12` `decapod` CLI ceremonies) and timed out before completing validation/publication (`status: partial`, `reported_verified_useful_work: 0`). This directly quantifies the CLI process startup and ceremony bottleneck targeted by `#1277` (`decapod-napi` in-process native bindings).
+2. **Whole-run cost and incomplete outcomes (`#1095`, `#1989`)**. Under the configured 180-second cap, the baseline and static runs completed in 25–33 seconds with 31–36k input tokens. The governed runs remained partial after 162.534 and 177.782 seconds, 210–223k input tokens, and 10–12 Decapod calls. The cold governed arm used a different task-source digest. Stage clocks and the original report's pair disposition are shown below.
+
+### Run measurement boundaries
+
+Use the read-only measurements view to inspect the original captured clocks.
+The original comparison JSON remains available through the same command
+without the measurements flag.
+
+```sh
+decapod trace flight-recorder compare --measurements \
+  --input docs/research/host-outcome-pilot/sec12-antigravity-input.json
+```
+
+| Governed run | Host wall | Reported setup | Independent checker | Recorded context |
+| --- | ---: | ---: | ---: | ---: |
+| Cold, different source digest | 162,534.156 ms | 719.831 ms | 1,175.754 ms | 15,898 bytes |
+| Adversarial | 177,782.426 ms | 1,189.805 ms | 1,228.513 ms | 15,898 bytes |
+
+The checker and setup measurements have separate capture references and
+clock scopes. The evidence leaves process startup, actual kernel execution,
+provider wait, recovery, final handoff, total Decapod response bytes, and repeated
+setup count unobserved. The available timings cannot allocate the remaining
+host wall time. The context counter describes the recorded input material.
+Actual model delivery and reviewed human attention remain unobserved.
 3. **`decapod init` `README.md` overwrite hazard**: Initializing Decapod onto an existing repo containing a custom `README.md` replaced `README.md`, altering `task_source_sha256` relative to baseline. Future clean-repo studies should either pass `--force` expectations explicitly or separate task prompts from `README.md`.

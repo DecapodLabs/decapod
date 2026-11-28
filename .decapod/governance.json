@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
+    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,96 +872,49 @@
     }
   },
   "change": {
-    "id": "docs_01m8fjpadj5ywkv7",
-    "base_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
+    "id": "change_01M8GDCK16H3HWCVEW6QEKRTK8",
+    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:docs-first-governed-result": {
-      "statement": "Docs lead directly to Local/Cloud routes, separate human install/init from agent workflow using a short outcome-only prompt, explain standing project delegation once, and separate implemented gates from target #1981-#1983 defaults.",
-      "falsifier": "Quickstart omits prerequisites/legacy anchors, teaches command-checklist incantations, claims unobserved #1981-#1983 defaults as active everywhere, or breaks doc_alignment assertions.",
+    "host-measurement-availability": {
+      "statement": "The opt-in measurements view preserves published run status and measurement provenance and leaves unobserved historical phase timings explicit.",
+      "falsifier": "A historical incomplete pair becomes matched, a partial run becomes completed, a missing timing becomes zero, or a measured timing loses its capture reference.",
       "status": "supported",
       "proof_refs": [
-        "tests/doc_alignment.rs",
-        "tests/workunit_verified_proof_1660.rs"
-      ]
-    },
-    "claim:docs-reading-shell-accessibility": {
-      "statement": "Docs shell renders all 5 themes at >=4.5:1 text/code/control contrast with zero sticky-header overlap, zero overflow (320..1440 + 1.25x zoom), self-hosted Geist fonts, accessible live copy status, and working Cmd+K search.",
-      "falsifier": "Any theme or viewport in 320..1440 exhibits <4.5:1 contrast, horizontal overflow, header clipping on load/fragments/search/focus, Google Fonts network calls, or missing clipboard status feedback.",
-      "status": "supported",
-      "proof_refs": [
-        "assets/tools/docs_seo.py",
-        "tests/doc_alignment.rs"
+        "tests/unit/core/outcome_comparison_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp-1-fonts",
-      "summary": "Vendor self-hosted Geist fonts and OFL license",
-      "input_digest": "sha256:7579585400d5ac1f1cb9e952c4f7a725dc2e9b26ee79fdbbfc2fd483568dbd9f"
-    },
-    {
-      "id": "cp-2-layout",
-      "summary": "Upgrade OpenShell reading layout, code contrast, and sticky header clearance",
-      "input_digest": "sha256:c8fca9669f369acb5beda0f977a1baceb08f17625554e757fe6f0a9a44eb4c7c"
-    },
-    {
-      "id": "cp-3-journey",
-      "summary": "Streamline 3-route landing and First Governed Result quickstart",
-      "input_digest": "sha256:4931bb586e4944d2d84438c727ca323b23f135b3496f5c3e14e88ed70387d97d"
-    },
-    {
-      "id": "cp-4-specs",
-      "summary": "Author living specs and refresh projections for #1977 and #1978",
-      "input_digest": "sha256:42025edbfaefe94d699edf6328bffac367145fcba533277f07a5dc78238fc172"
-    },
-    {
-      "id": "cp-5-quickstart-aliases",
-      "summary": "Add coding-agent example prompt, legacy anchor aliases, and refresh INTERFACES spec",
-      "input_digest": "sha256:65fb849f0e9fe6fbae236f72fa6262c2f96dd1e0bda1401f6292698e2fa248e7"
-    },
-    {
-      "id": "chk-merge-v0169-4",
-      "summary": "Merge origin/master v0.169.4 and reconcile governance/specs",
-      "input_digest": "sha256:53cbc200f287d0ff38e45840ad67cdbf7903b9e69f13a1d55bf9f676ec661474"
-    },
-    {
-      "id": "chk-v0169-4-uplift-final",
-      "summary": "Finalize #1977 copy/focus/header/hero fixes and #1978 short outcome prompt + standing project delegation + v0.169.4 clean-env specs",
-      "input_digest": "sha256:22a4909eaa8c001e53566a1aee796ca39401771369679a32ac47be1c812142fa"
-    },
-    {
-      "id": "chk-v0169-4-dockerfile-claims",
-      "summary": "Pin v0.169.4 Dockerfile, refresh specs manifest, and record PR claims (#1977, #1978)",
-      "input_digest": "sha256:12b19bb4f5d9eb6a21ec138c08b6df2df104988bed9ddb50b7d638716613c97e"
-    },
-    {
-      "id": "cp_docs_01m8fjpadj5ywkv7_reconcile_v0169_4",
-      "summary": "Reconcile reviewed_sources_digest for v0.169.4 base a2d7266db",
-      "input_digest": "sha256:c19d81e5e38f7ddbe276c33947ba0dd72c18750fcbee2cb3f0b3cd2bb0d60d9f"
+      "id": "host-stage-measurements",
+      "summary": "Render whole-run observations with separate captured clocks and explicit unknowns",
+      "input_digest": "sha256:b739650c046f67d5d221cc3409eda072717a1b514a2b97b8b2f02334ced84320",
+      "proof_refs": [
+        "tests/unit/core/outcome_comparison_tests.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:branch_docs_01m8fjpadj5ywkv7": {
+    "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "docs/book/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_docs_01m8fjpadj5ywkv7",
+      "id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
-      "refined_intent": "Upgrade mdBook OpenShell layout, self-hosted Geist fonts, 5-theme code contrast, sticky header clearance, and 3-route index/First Governed Result quickstart (#1977, #1978)",
+      "raw_intent": "Expose whole-run host measurements with provenance and unknowns\n\nDecapod #1989. Render existing flight recorder stage observations per run, retain honest missing measurements and accepted proof, and make no host or runtime claim.",
+      "refined_intent": "Expose whole-run host measurements with provenance and unknowns\n\nDecapod #1989. Render existing flight recorder stage observations per run, retain honest missing measurements and accepted proof, and make no host or runtime claim.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -970,143 +923,120 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": []
+        "forbidden_paths": [
+          "src/decapod/lib.rs"
+        ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
+      "intent": "Render a read-only digest-bearing measurement view over the existing outcome comparison. Preserve existing captures, narrow authority and unknowns. Describe the historical observed clocks without inferring startup cost or full host qualification.",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test doc_alignment",
-        "decapod validate"
+        "flight recorder legacy and optional metric tests"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs architecture.",
-          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
-          "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
+          "reason": "The new measurements view is a read-only projection of validated preserved host observations; no runtime or evidence boundary moved.",
+          "reviewed_code_fingerprint": "321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326",
+          "spec_material_hash": "2d5c2f290f9b9fa51b30e817c5c26017803f71f2f224b897de8ee242138a9227"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs interfaces.",
-          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
-          "spec_material_hash": "0abab150f54aae1c6b93aaffacbfc2972b4f9db6912394293bf6748a5ae3a61e"
+          "reason": "Documents the opt-in measurements schema and unchanged default comparison path.",
+          "reviewed_code_fingerprint": "321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326",
+          "spec_material_hash": "93cfaf0d445374921b99fe486e1787e6ac29b52b6b1d663c782a46954d112b5d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled .decapod/config.toml reviewed_sources_digest to v0.169.4 base a2d7266db; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "reason": "The existing bounded local file, redacted identifiers, and evidence validation remain in force and the view grants no authority.",
+          "reviewed_code_fingerprint": "321308badfcb1ec1454e239fc59997e7fecd1e834586beddfe448ee7cc05a326",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
+      "title": "Expose whole-run host measurements",
       "todo_ids": [
-        "docs_01m8fjpadj5ywkv7"
+        "code_01m8gd8dzpvdrmwp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795837198Z"
+      "updated_at": "1795847448Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b78ab45b3505e7a46761340231e2332473aceceee9bfa624a4182c28b0131ca1",
+      "artifact_hash": "sha256:58f8e1a28926761742a182311b77c64a4910ec1aba78de7d9716a99ff0fae062",
       "checks": [
         {
-          "name": "chrome_qa_5themes_5viewports",
+          "name": "focused_flight_recorder_native",
           "status": "passed"
         },
         {
-          "name": "clean_env_quickstart_v0169_4",
-          "status": "passed"
-        },
-        {
-          "name": "doc_alignment",
-          "status": "passed"
-        },
-        {
-          "name": "mdbook_docs_seo",
-          "status": "passed"
-        },
-        {
-          "name": "quickstart_legacy_anchors_chrome",
+          "name": "historical_capture_pre_implementation_readback",
           "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
             "event_id": "event:4",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
             "event_id": "event:5",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "trajectory_step_recorded",
             "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
-            "event_id": "event:6",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_docs_01m8fjpadj5ywkv7": {
+          "branch_01M8GDCK4RM8QH7PK0V5F86HFH": {
             "evidence_only": true,
-            "id": "branch_docs_01m8fjpadj5ywkv7",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "id": "branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/book/theme/fonts/Geist-Variable.woff2",
-                  "docs/book/theme/fonts/GeistMono-Variable.woff2",
-                  "docs/book/theme/fonts/OFL-LICENSE.txt",
-                  "docs/book/theme/index.hbs",
-                  "docs/book/src/custom.css",
-                  "docs/book/src/index.md",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/configuration.md",
-                  "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
+                  "docs/research/host-outcome-pilot/sec12-antigravity-input.json",
+                  "src/decapod/core/flight_recorder/outcomes.rs",
+                  "src/decapod/core/flight_recorder.rs",
+                  "tests/unit/core/outcome_comparison_tests.rs",
+                  "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection."
                 ],
                 "proof_refs": [
-                  "doc_alignment",
-                  "mdbook_docs_seo",
-                  "chrome_qa_5themes_5viewports"
+                  "historical_capture_pre_implementation_readback"
                 ],
                 "scope": [
-                  "docs/book/**"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1115,40 +1045,15 @@
                 "action": "trajectory.record",
                 "custody_event_id": "event:5",
                 "observations": [
-                  "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5"
+                  "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted."
                 ],
                 "proof_refs": [
-                  "quickstart_legacy_anchors_chrome"
+                  "focused_flight_recorder_native"
                 ],
                 "scope": [
-                  "docs/book/**"
+                  "root"
                 ],
                 "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "docs/book/theme/index.hbs",
-                  "docs/book/src/custom.css",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/configuration.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  ".decapod/managed/specs/OPERATIONS.md",
-                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify"
-                ],
-                "proof_refs": [
-                  "doc_alignment",
-                  "mdbook_docs_seo",
-                  "chrome_qa_5themes_5viewports",
-                  "clean_env_quickstart_v0169_4"
-                ],
-                "scope": [
-                  "docs/book/**"
-                ],
-                "sequence": 6,
                 "validation_findings": []
               }
             ]
@@ -1156,33 +1061,30 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5",
-        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify",
-        "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
+        "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted.",
+        "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+      "inspected_files": [
+        "docs/research/host-outcome-pilot/sec12-antigravity-input.json",
+        "src/decapod/core/flight_recorder/outcomes.rs"
+      ],
+      "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        ".decapod/managed/specs/OPERATIONS.md",
-        "docs/book/src/configuration.md",
-        "docs/book/src/custom.css",
-        "docs/book/src/index.md",
-        "docs/book/src/quickstart.md",
-        "docs/book/theme/fonts/Geist-Variable.woff2",
-        "docs/book/theme/fonts/GeistMono-Variable.woff2",
-        "docs/book/theme/fonts/OFL-LICENSE.txt",
-        "docs/book/theme/index.hbs"
+        "src/decapod/core/flight_recorder.rs",
+        "tests/unit/core/outcome_comparison_tests.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "docs/book/**"
+        "root"
       ],
-      "run_id": "branch_docs_01m8fjpadj5ywkv7",
+      "run_id": "branch_01M8GDCK4RM8QH7PK0V5F86HFH",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "docs_01m8fjpadj5ywkv7",
+      "task_id": "code_01m8gd8dzpvdrmwp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
