@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.169.5](https://github.com/DecapodLabs/decapod/compare/v0.169.4...v0.169.5) - 2026-11-28
+
+### Added
+
+- *(docs)* upgrade OpenShell reading layout, code contrast, and header clearance ([#1977](https://github.com/DecapodLabs/decapod/pull/1977))
+
+### Other
+
+- *(proof)* reconcile reviewed_sources_digest for v0.169.4 base a2d7266db
+- pin v0.169.4 Dockerfile and record PR claims (#1977, #1978)
+- complete #1977 UI/copy/focus fixes and #1978 outcome prompt & standing delegation on v0.169.4
+- Merge remote-tracking branch 'origin/master' into agent/antigravity/docs-01m8fjpadj5ywkv7
+- *(book)* add coding-agent example prompt, anchor aliases, and spec refresh (#1977, #1978)
+- update living specs and governance checkpoint (#1977, #1978)
+- *(book)* streamline 3-route landing and first governed result quickstart ([#1978](https://github.com/DecapodLabs/decapod/pull/1978))
+- *(book)* vendor self-hosted Geist fonts and OFL license ([#1977](https://github.com/DecapodLabs/decapod/pull/1977))
+
 ## [0.169.4](https://github.com/DecapodLabs/decapod/compare/v0.169.3...v0.169.4) - 2026-11-28
 
 ### Other

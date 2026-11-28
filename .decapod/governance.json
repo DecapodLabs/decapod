@@ -889,6 +889,11 @@
       "id": "accepted-docs-integration",
       "summary": "Preserve the active work and merge accepted documentation and living specifications.",
       "input_digest": "sha256:de3893ff80e232a8d4816d84d4f1c54e23678cc75300d1b260c298ae09bedc12"
+    },
+    {
+      "id": "accepted-v01695-release",
+      "summary": "Integrate the accepted v0.169.5 release and refresh release-bound verification inputs.",
+      "input_digest": "sha256:17815dd0f0bdb29d5aedf72f28376dba7f2a1c44292e2ab6938e5a770d5de511"
     }
   ],
   "intents": {
