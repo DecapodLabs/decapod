@@ -892,6 +892,11 @@
       "id": "chk-docs-ia-nav-1995",
       "summary": "Polish docs side navigation, semantic rail lists, CSS cache versioning, Writing nav, and .menu-title fix (#1995)",
       "input_digest": "sha256:2eae62286153d29ca81b3fabf7a1de1757e29d64c58437eb04013bd0fe90031b"
+    },
+    {
+      "id": "cp_bugs_01m8gcen6vkjv9gz_reconcile_v0169_5",
+      "summary": "Reconcile reviewed_sources_digest for v0.169.5 base 170efc04a",
+      "input_digest": "sha256:1eb586f87bf2cd9dfc6d6485bd638b13225b3a7949c00bbb90c300b2b097163a"
     }
   ],
   "intents": {
@@ -935,16 +940,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented #1995 removal of .decapod-sidebar-mobile-links, semantic ul.decapod-rail-list TOC/Quick routes, versioned CSS cache-busting, and .menu-title button fix",
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master 170efc04a (v0.169.5) alongside #1995 docs navigation updates.",
           "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
           "spec_material_hash": "a184155fffbd6a7c7a36a8ff0a270d9fbd3194d952e56243310d15749127f381"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented #1995 Writing nav link, .menu-title scroll-to-top contract, aria-current=location sync, and semantic rail list contract",
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master 170efc04a (v0.169.5) alongside #1995 docs navigation interfaces.",
           "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
           "spec_material_hash": "0b279ef8598a6f238c4cb3ec9c91acbcebcb8d0fa013bda0980395e9a08b76d9"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reconciled .decapod/config.toml reviewed_sources_digest for v0.169.5 base 170efc04a; security boundaries unchanged.",
+          "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
+          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
@@ -955,7 +967,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847263Z"
+      "updated_at": "1795847915Z"
     },
     "trajectory": {
       "active_boundaries": [

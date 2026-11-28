@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "template_version": "scaffold-v5",
-  "generated_at": "1795847197Z",
+  "generated_at": "1795847886Z",
   "repo_signal_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
   "declared_capabilities": [
     "agent-helper",
@@ -16,7 +16,7 @@
     "scheduled-jobs"
   ],
   "capability_definition_version": "1.0.0",
-  "config_input_hash": "0806e1c6eecae241ea8f7c927336026147aa44878dc477f1602ad347f0ff4fce",
+  "config_input_hash": "5cc1b89be8a59a14d2263d45fc5f64ad967db556055599aca1ffb1571aeacf88",
   "spec_input_hash": "3099df77f1bf9b70103c18e655f6c66b1f73088de7070a3f01a601ca2c1c0414",
   "decapod_release": "0.169.5",
   "entrypoints": [
