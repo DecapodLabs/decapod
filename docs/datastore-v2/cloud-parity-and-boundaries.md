@@ -8,7 +8,24 @@ This note reconciles the remaining Section 10 storage/parity trackers (`#1110`, 
   - `backend = "local"` persists all subsystems into canonical `.decapod/data/decapod.db`.
   - `backend = "cloud"` delegates governed tasks, claims, releases, completions, custody binding, and proof capture exclusively to Propodus/Dactyl HTTP/Supabase contracts.
 - **Explicit Fail-Closed Non-Todo Boundaries**:
-  - `src/decapod/core/cloud_parity_matrix.rs` explicitly enumerates all 17 non-todo / local-only store surfaces (`knowledge.store`, `federation.store`, `decide.store`, `health.store`, `aptitude.store`, `archive.store`, `feedback.store`, `cron.store`, `reflex.store`, `lcm.store`, `primitives.store`, `map.store`, `policy.store`, `data.broker`, `data.compact`, `store.upsert`, `store.query`) with `never_falls_back_to_sqlite = true`.
+  - `src/decapod/core/cloud_parity_matrix.rs` enumerates supported operations and remaining Local-only surfaces. The latter return a typed refusal without accessing SQLite in Cloud mode.
+
+## Shared operational context
+
+In a Cloud repository, `decapod data knowledge add` records scoped guidance with an immutable `--id`, `--title`, `--text`, and `--provenance`. Use `--kind decision` to record a decision and `--scope repo`, `--scope task:<id>`, or `--scope path:<relative-path>` to set its relevance. A correction uses its own ID and `--supersedes <current-id>`. The service records the authenticated writer and time, refuses a concurrent correction of the same predecessor, and retains the old record for `decapod data knowledge show --id <id>`. Use the original ID and arguments to reconcile an uncertain result. Context records are advisory and always retain their provenance.
+
+`context.resolve` and context capsules use a single hosted statement to observe eligible current guidance, the requested task's version and assignment, and the todo event watermark. The response includes the observed revision and truncation status. The existing capsule and bundle checks independently bind the Git-owned plan, config and specs and require refresh when their bytes or the hosted observation change. This boundary does not provide a joint database transaction with a Git worktree or a reservation of task custody. Publication must still verify live custody and candidate-bound proof.
+
+| Ownership | Content |
+| --- | --- |
+| Shared operational authority | Hosted tasks and events, custody, proof references, and the supported knowledge and decision revision profile |
+| Git-owned authority | Source, project config, living specs, plan, policy, and repository-native evidence references |
+| Private custody | Human session, DPoP keys, checkout bindings, and local broker data |
+| Local-only or derived | Full decision trees, federation, feedback, promotion, archival, telemetry, and maintenance surfaces as listed in the parity matrix |
+
+## Existing Local repositories
+
+The backend selector changes which authority Decapod contacts. A lossless Local-to-Cloud migration remains unavailable. Leave the repository in Local mode when active Local work, decision history or evidence must carry forward. A supported cutover needs an operator preview, Local writer quiescence, verified actor and owner mapping, exact history and evidence reconciliation, a restartable import, and a tested rollback point before changing authority. Retain the original database and sidecars. The Cloud profile never imports them or consults them as fallback.
   - `src/decapod/lib.rs` enforces this fail-closed contract across:
     1. Top-level CLI routing (`is_cloud_file_only_command`), now honoring `predecoded_rpc_request` for `decapod rpc --stdin`.
     2. Session auto-renewal (`ensure_session_valid`), skipping `todo::cleanup_stale_agent_assignments` on `&store_root` when `is_cloud == true` so expired session renewal never creates `.decapod/data/decapod.db`.

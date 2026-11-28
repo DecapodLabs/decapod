@@ -1,3 +1,7 @@
+## Shared repository operational context (#1110, #1221)
+
+The Cloud branch of `plugins::knowledge::resolve_context` reads the selected sealed repository through `core::cloud_context` and Dactyl. Its single hosted observation combines the current knowledge and decision records with a requested task's revision and todo event watermark. Existing capsule checks compare the observation and independently compare Git-owned plan, config and spec inputs before reuse. Checkout-local authentication, source, and proof custody retain their own boundaries.
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2185,7 +2189,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Contract Snapshot
 
-- Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
+- Core modules (150): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+134 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
 - Build manifests (10): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, (+2 more)
 <!-- decapod:codebase-contract:end -->
@@ -2194,7 +2198,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `af2f07cb271cfaf4cef04748ee167801e83f96377264a77d7845ea91309b6949`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

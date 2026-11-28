@@ -21,6 +21,7 @@ pub mod capsule_policy;
 pub mod cloud_admin;
 pub mod cloud_backend;
 pub mod cloud_client;
+pub mod cloud_context;
 pub mod cloud_dpop;
 pub mod cloud_parity_matrix;
 #[cfg(feature = "supabase-cloud")]
