@@ -936,6 +936,11 @@
       "id": "chk-v0169-4-dockerfile-claims",
       "summary": "Pin v0.169.4 Dockerfile, refresh specs manifest, and record PR claims (#1977, #1978)",
       "input_digest": "sha256:12b19bb4f5d9eb6a21ec138c08b6df2df104988bed9ddb50b7d638716613c97e"
+    },
+    {
+      "id": "cp_docs_01m8fjpadj5ywkv7_reconcile_v0169_4",
+      "summary": "Reconcile reviewed_sources_digest for v0.169.4 base a2d7266db",
+      "input_digest": "sha256:c19d81e5e38f7ddbe276c33947ba0dd72c18750fcbee2cb3f0b3cd2bb0d60d9f"
     }
   ],
   "intents": {
@@ -980,16 +985,23 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated reading shell layout, hero contrast, focus/search clearance, per-codeblock live copy, and #1978 short-prompt / standing-delegation notes",
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs architecture.",
           "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented per-codeblock live copy status badges, focus/search sticky clearance, and #1978 onboarding contracts",
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs interfaces.",
           "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "0abab150f54aae1c6b93aaffacbfc2972b4f9db6912394293bf6748a5ae3a61e"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Reconciled .decapod/config.toml reviewed_sources_digest to v0.169.4 base a2d7266db; security boundaries unchanged.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
@@ -1000,7 +1012,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795836396Z"
+      "updated_at": "1795837198Z"
     },
     "trajectory": {
       "active_boundaries": [
