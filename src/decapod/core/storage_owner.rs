@@ -583,6 +583,87 @@ fn reset_connection(conn: &crate::core::db::Connection) -> Result<()> {
     Ok(())
 }
 
+fn permitted_create_trigger(statement: &str) -> bool {
+    let mut upper_unquoted = String::with_capacity(statement.len());
+    let mut chars = statement.chars().peekable();
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+    while let Some(ch) = chars.next() {
+        if in_single_quote {
+            if ch == '\'' {
+                if chars.peek() == Some(&'\'') {
+                    chars.next();
+                } else {
+                    in_single_quote = false;
+                }
+            }
+            upper_unquoted.push(' ');
+            continue;
+        }
+        if in_double_quote {
+            if ch == '"' {
+                if chars.peek() == Some(&'"') {
+                    chars.next();
+                } else {
+                    in_double_quote = false;
+                }
+            }
+            upper_unquoted.push(' ');
+            continue;
+        }
+        match ch {
+            '\'' => {
+                in_single_quote = true;
+                upper_unquoted.push(' ');
+            }
+            '"' => {
+                in_double_quote = true;
+                upper_unquoted.push(' ');
+            }
+            '-' if chars.peek() == Some(&'-') => return false,
+            '/' if chars.peek() == Some(&'*') => return false,
+            ';' => upper_unquoted.push_str(" ; "),
+            c if c.is_ascii_alphanumeric() || c == '_' => {
+                upper_unquoted.push(c.to_ascii_uppercase())
+            }
+            _ => upper_unquoted.push(' '),
+        }
+    }
+    if in_single_quote || in_double_quote {
+        return false;
+    }
+    let tokens: Vec<&str> = upper_unquoted.split_whitespace().collect();
+    if tokens.first().copied() != Some("CREATE") || tokens.get(1).copied() != Some("TRIGGER") {
+        return false;
+    }
+    let Some(begin_pos) = tokens.iter().position(|&t| t == "BEGIN") else {
+        return false;
+    };
+    if tokens[..begin_pos].contains(&";") {
+        return false;
+    }
+    let mut case_depth = 0usize;
+    let mut trigger_end_pos = None;
+    for (idx, &tok) in tokens.iter().enumerate().skip(begin_pos + 1) {
+        if trigger_end_pos.is_some() {
+            return false;
+        }
+        match tok {
+            "SAVEPOINT" | "RELEASE" | "PRAGMA" | "ATTACH" | "DETACH" | "ROLLBACK" => return false,
+            "CASE" => case_depth += 1,
+            "END" => {
+                if case_depth > 0 {
+                    case_depth -= 1;
+                } else {
+                    trigger_end_pos = Some(idx);
+                }
+            }
+            _ => {}
+        }
+    }
+    trigger_end_pos.is_some()
+}
+
 /// The reusable path currently supports full transactions only. Reject
 /// savepoints and rollback-to rather than approximating physical transaction
 /// state. Reject leading comments and multi-statements for an unambiguous gate.
@@ -592,14 +673,19 @@ fn permitted_write(sql: &str) -> bool {
     }
     let trimmed = sql.trim();
     let statement = trimmed.strip_suffix(';').unwrap_or(trimmed);
-    if statement.contains(';') {
-        return false;
-    }
     let words: Vec<_> = statement
         .split_whitespace()
         .take(3)
         .map(str::to_ascii_uppercase)
         .collect();
+    if words.first().map(String::as_str) == Some("CREATE")
+        && words.get(1).map(String::as_str) == Some("TRIGGER")
+    {
+        return permitted_create_trigger(statement);
+    }
+    if statement.contains(';') {
+        return false;
+    }
     match words.first().map(String::as_str) {
         Some("SAVEPOINT" | "RELEASE") | None => false,
         Some("ROLLBACK") => words.len() == 1 || (words.len() == 2 && words[1] == "TRANSACTION"),
@@ -609,7 +695,7 @@ fn permitted_write(sql: &str) -> bool {
         Some("INSERT" | "UPDATE" | "DELETE" | "REPLACE" | "BEGIN" | "COMMIT" | "END") => true,
         Some("CREATE") => matches!(
             words.get(1).map(String::as_str),
-            Some("TABLE" | "INDEX" | "UNIQUE" | "VIEW" | "TRIGGER")
+            Some("TABLE" | "INDEX" | "UNIQUE" | "VIEW")
         ),
         Some("ALTER" | "DROP") => matches!(
             words.get(1).map(String::as_str),
@@ -1209,5 +1295,21 @@ mod tests {
                 (a, b) => assert_eq!(a, b),
             }
         }
+    }
+
+    #[test]
+    fn create_trigger_gate_admits_single_trigger_and_rejects_multistatement() {
+        assert!(permitted_write(
+            "CREATE TRIGGER IF NOT EXISTS trg_decapod_tasks_ins_contract BEFORE INSERT ON tasks FOR EACH ROW WHEN length(CAST(NEW.title AS BLOB))>1024 BEGIN SELECT RAISE(ABORT,'STORAGE_CONTRACT_VIOLATION: tasks write bound'); END"
+        ));
+        assert!(!permitted_write(
+            "CREATE TRIGGER bad BEFORE INSERT ON tasks BEGIN SELECT 1; END; DROP TABLE tasks"
+        ));
+        assert!(!permitted_write(
+            "CREATE TRIGGER bad BEFORE INSERT ON tasks BEGIN SAVEPOINT s; SELECT 1; END"
+        ));
+        assert!(!permitted_write(
+            "CREATE TRIGGER /* hidden */ bad BEFORE INSERT ON tasks BEGIN SELECT 1; END"
+        ));
     }
 }
