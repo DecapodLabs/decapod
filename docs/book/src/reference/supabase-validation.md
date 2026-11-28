@@ -176,3 +176,32 @@ The service harness verifies the ledger and adds separate deliberate-failure
 rollback, equal-timestamp stale-CAS, type/count, fresh-schema and permission
 proof. Those are service-side assertions, not conclusions inferred from a
 successful client response.
+
+## PostgreSQL and Supavisor Connection Modes (`#1378`, `#1369`)
+
+Decapod Cloud clients talk exclusively to Propodus HTTP Edge/PostgREST endpoints
+(`CloudConnector` / `dactyl-db`) over HTTPS or literal loopback and never embed
+direct PostgreSQL credentials or open `psql`/TCP database sockets from the CLI.
+Backend schema migrations, RLS policy enforcement, and PostgREST pool execution on
+Supabase/PostgreSQL 17 span three distinct connection topologies:
+
+| Connection Mode | Typical Endpoint / Port | Session & Prepared Statements | RLS / GUC Lifetime & Decapod Contract |
+| :--- | :--- | :--- | :--- |
+| **Direct connection** | `db.<project-ref>.supabase.co:5432` | Dedicated PG backend session; prepared statements and session-level `SET` persist across transactions. | Used only by privileged schema owner/DDL migration runners (Propodus `Migrate`, `ProvisionAuthBridge`) and `TestPostgresNativeManagedProjectConsumer` admin fixtures, never by Decapod CLI clients. |
+| **Supavisor session pooler** | `aws-0-<region>.pooler.supabase.com:5432` | Session-pinned backend; preserves session GUCs (`set_config(..., false)`) and prepared statements until client disconnect. | Compatible with migrations and long-lived server tools when IPv4 egress is required; not required by Decapod CLI HTTP transport. |
+| **Supavisor transaction pooler** | `aws-0-<region>.pooler.supabase.com:6543` | Backend returned to pool after each transaction (`COMMIT`/`ROLLBACK`); session-level `SET`, `LISTEN`, advisory locks across statements, and server-side prepared statements are invalid across pooled transactions. | PostgREST / Edge runtime requires simple-query / disabled prepared statements (`PGRST_DB_PREPARED_STATEMENTS=false`) and transaction-local GUCs (`SELECT set_config(..., true)` cleared on `COMMIT`, verified against PostgreSQL 17.11) so tenant/user RLS claims cannot leak across pooled clients. |
+
+### Hosted vs. Local Disposable Verification Boundary
+
+- `local_postgres_service_contract` and `protected_hosted_supabase_service_contract`
+  in `tests/supabase_service.rs` remain `#[ignore]` and fail closed with
+  `MANAGED_CLI_FIXTURE_UNAVAILABLE` via `require_managed_cli_fixture()` because
+  legacy ambient-token fixtures cannot bind DPoP/device-gateway custody.
+- Any hosted Supabase check must remain read-only on free/customer projects
+  (`$0/mo`, zero `BYPASSRLS`, zero billing or customer org mutation) unless an
+  isolated disposable project fixture is explicitly provisioned and torn down by
+  its external owner.
+- `local_native_managed_project_contract` and `local_native_managed_project_revocation`
+  verify real `DECAPOD_NATIVE_PROJECT_FIXTURE` client/project selection, task/event
+  CAS, and member revocation end-to-end against a disposable local PostgreSQL 17
+  + PostgREST (`PGRST_DB_PREPARED_STATEMENTS=false`) service boundary.

@@ -433,6 +433,18 @@ pub fn storage_health_preflight(store_root: &Path) -> Result<(), error::DecapodE
             store_root.display()
         )));
     }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let meta = fs::symlink_metadata(store_root).map_err(error::DecapodError::IoError)?;
+        if meta.permissions().mode() & 0o222 == 0 {
+            return Err(error::DecapodError::ValidationError(format!(
+                "STORAGE_PREFLIGHT_FAILED: store root '{}' has read-only mode ({:04o}); refuse write probe under privileged UID.",
+                store_root.display(),
+                meta.permissions().mode() & 0o7777
+            )));
+        }
+    }
     if let Some(fs_type) = detect_fs_type(store_root) {
         let fs_type_l = fs_type.to_ascii_lowercase();
         if UNSUPPORTED_FS_TYPES.iter().any(|t| *t == fs_type_l) {
@@ -695,6 +707,40 @@ mod storage_filesystem_tests {
         assert_eq!(
             fs_type_from_mountinfo(Path::new("/repo"), mounts).as_deref(),
             Some("ext4")
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn storage_health_preflight_rejects_read_only_directory_even_under_root_uid() {
+        use std::os::unix::fs::PermissionsExt;
+
+        struct ModeGuard {
+            path: std::path::PathBuf,
+            mode: u32,
+        }
+        impl Drop for ModeGuard {
+            fn drop(&mut self) {
+                let _ = std::fs::set_permissions(
+                    &self.path,
+                    std::fs::Permissions::from_mode(self.mode),
+                );
+            }
+        }
+
+        let dir = tempfile::tempdir().expect("create tempdir");
+        let guard = ModeGuard {
+            path: dir.path().to_path_buf(),
+            mode: 0o755,
+        };
+        std::fs::set_permissions(&guard.path, std::fs::Permissions::from_mode(0o555))
+            .expect("chmod 0555");
+        let err = super::storage_health_preflight(&guard.path)
+            .expect_err("read-only 0555 store root must fail storage_health_preflight");
+        assert!(
+            err.to_string().contains("STORAGE_PREFLIGHT_FAILED")
+                && err.to_string().contains("0555"),
+            "unexpected preflight error: {err}"
         );
     }
 }

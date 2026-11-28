@@ -740,10 +740,24 @@ fn local_native_managed_project_revocation() {
         !denied.status.success(),
         "revoked managed account retained native access"
     );
+    let stdout = String::from_utf8_lossy(&denied.stdout);
+    let stderr = String::from_utf8_lossy(&denied.stderr);
+    let denial_surfaced = [
+        "action_required",
+        "entitlement_denied",
+        "seat_revoked",
+        "admin_approval_required",
+        "seat_available_for_assignment",
+        "repository_denied",
+        "selected cloud project",
+        "paid repository seat was revoked",
+        "not granted seat access",
+    ]
+    .iter()
+    .any(|needle| stdout.contains(needle) || stderr.contains(needle));
     assert!(
-        String::from_utf8_lossy(&denied.stdout).contains("action_required")
-            || String::from_utf8_lossy(&denied.stderr).contains("selected cloud project"),
-        "revocation did not surface current project denial"
+        denial_surfaced,
+        "revocation did not surface current project/seat denial; stdout={stdout} stderr={stderr}"
     );
     native_success(managed_client(
         &fixture,

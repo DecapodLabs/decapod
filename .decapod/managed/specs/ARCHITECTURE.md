@@ -1,3 +1,8 @@
+## Container Custody Root-UID Preflight, Supabase 3-Mode Topology & Local PG17 Proof (`#1379`, `#1378`, `#1369`)
+
+- **Privileged container read-only & filesystem preflight (`#1379`, `src/decapod/core/db.rs::storage_health_preflight`, `tests/sqlite_hardening.rs`)**: Under `#[cfg(unix)]`, `storage_health_preflight` inspects `fs::symlink_metadata(store_root)` and rejects `mode & 0o222 == 0` with `STORAGE_PREFLIGHT_FAILED` before `write_probe` so Linux `uid=0` (`CAP_DAC_OVERRIDE`) containers cannot silently bypass `0o555` store permissions; `detect_fs_type` inspects `/proc/self/mountinfo` to fail closed on `UNSUPPORTED_FS_TYPES` (`nfs`, `nfs4`, `cifs`, `smbfs`, `9p`, `vboxsf`) while permitting `virtiofs`/`fuse*`, and `tests/sqlite_hardening.rs` synchronizes `DECAPOD_STORAGE_FAULT_STAGE` via `RwLock<()>`.
+- **Supabase 3-mode topology & hosted vs. local disposable PG17 contract (`#1378`, `#1369`, `docs/book/src/reference/supabase-validation.md`, `docs/datastore-v2/cloud-parity-and-boundaries.md`)**: Documents `direct :5432`, `Supavisor session pooler :5432`, and `Supavisor transaction pooler :6543` (`PGRST_DB_PREPARED_STATEMENTS=false`, transaction-local `set_config(..., true)` RLS GUCs) alongside the fail-closed `MANAGED_CLI_FIXTURE_UNAVAILABLE` hosted boundary (`$0/mo`, zero `BYPASSRLS`), and aligns `tests/supabase_service.rs::local_native_managed_project_revocation` with `#1896` seat-revocation diagnostics.
+
 ## `#1630` Unified storage field table, compact SQLite write-boundary triggers & v0.169.1 benchmark pipeline (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`)
 
 - **Per-column contract registry (`storage_contracts::FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql`)**: Const-table architecture indexing active persisted columns by `(table, column, field_class, max_utf8_bytes, non_empty, nullable, max_json_depth, max_collection_len, propodus_abi_v1_max_bytes)` and surfacing `field_table` + `propodus_abi_v1_reconciliation` inside `contract_manifest()`.
@@ -2220,7 +2225,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
+- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

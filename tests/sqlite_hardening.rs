@@ -2,16 +2,17 @@ use decapod::core::db::Connection;
 use decapod::core::{db, error::DecapodError, pool, storage_lock::lock_path};
 use fs2::FileExt;
 use std::fs::OpenOptions;
-use std::sync::{Mutex, OnceLock};
+use std::sync::{OnceLock, RwLock};
 use tempfile::TempDir;
 
-fn env_lock() -> &'static Mutex<()> {
-    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
-    LOCK.get_or_init(|| Mutex::new(()))
+fn env_lock() -> &'static RwLock<()> {
+    static LOCK: OnceLock<RwLock<()>> = OnceLock::new();
+    LOCK.get_or_init(|| RwLock::new(()))
 }
 
 #[test]
 fn sqlite_pool_write_reports_busy_under_exclusive_lock_and_recovers_after_release() {
+    let _guard = env_lock().read().expect("lock env");
     let tmp = TempDir::new().expect("tempdir");
     let db_path = tmp.path().join("retry.db");
 
@@ -63,7 +64,7 @@ fn sqlite_pool_write_reports_busy_under_exclusive_lock_and_recovers_after_releas
 
 #[test]
 fn sqlite_fault_injection_produces_deterministic_io_error_path() {
-    let _guard = env_lock().lock().expect("lock env");
+    let _guard = env_lock().write().expect("lock env");
     let tmp = TempDir::new().expect("tempdir");
     let db_path = tmp.path().join("fault.db");
 
@@ -83,6 +84,7 @@ fn sqlite_fault_injection_produces_deterministic_io_error_path() {
 fn storage_preflight_fails_for_non_writable_directory() {
     use std::os::unix::fs::PermissionsExt;
 
+    let _guard = env_lock().read().expect("lock env");
     let tmp = TempDir::new().expect("tempdir");
     let store_root = tmp.path().join("data");
     std::fs::create_dir_all(&store_root).expect("create store root");
@@ -107,6 +109,7 @@ fn storage_preflight_fails_for_non_writable_directory() {
 
 #[test]
 fn sqlite_pool_read_path_remains_available_for_concurrent_queries() {
+    let _guard = env_lock().read().expect("lock env");
     let tmp = TempDir::new().expect("tempdir");
     let db_path = tmp.path().join("readonly.db");
     let setup = Connection::open(&db_path).expect("open setup");
@@ -129,6 +132,7 @@ fn sqlite_pool_read_path_remains_available_for_concurrent_queries() {
 
 #[test]
 fn canonical_connection_retains_the_cross_process_coordination_lock() {
+    let _guard = env_lock().read().expect("lock env");
     let tmp = TempDir::new().expect("tempdir");
     let db_path = tmp.path().join("canonical.db");
     let setup = Connection::open(&db_path).expect("open setup");
