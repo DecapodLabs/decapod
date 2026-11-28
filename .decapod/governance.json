@@ -899,6 +899,11 @@
       "id": "cp_1672_hop1_config_reconciled",
       "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for #1672 Hop 1 off origin/master@2ed6e67ee",
       "input_digest": "sha256:3eafafe83dc006dfb272cd0eddc36af0f8a110b8c0541820a35a9d22a0966781"
+    },
+    {
+      "id": "cp_1672_hop1_official_0169_3",
+      "summary": "Refresh release-bound manifest and Dockerfile.decapod via official v0.169.3",
+      "input_digest": "sha256:c2db6dc115c7209ef3906166a1feaa1f7f2f485639d80b66566a20e762c74ef4"
     }
   ],
   "intents": {
@@ -940,21 +945,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml after #1672 Hop 1 + #1400 + #1573.",
+          "reason": "Refreshed with official v0.169.3 controller for #1672 Hop 1 + #1400 + #1573 + next-hop release.yml.",
           "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml after #1672 Hop 1 + #1400 + #1573.",
+          "reason": "Refreshed with official v0.169.3 controller for #1672 Hop 1 + #1400 + #1573 + next-hop release.yml.",
           "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled .decapod/config.toml digest only; security boundaries unchanged.",
+          "reason": "Refreshed manifest/Dockerfile headers via official v0.169.3; security boundaries unchanged.",
           "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
@@ -967,13 +972,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795827326Z"
+      "updated_at": "1795828464Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
       ],
-      "artifact_hash": "sha256:fe3747ded4ca2b43ead560fd0ad3400862938c1080be26d7a9e8614a529d4317",
+      "artifact_hash": "sha256:4d64906b1946638e45a284bca761b1b78045136c3e7552ea39a2817262c16d92",
       "checks": [
         {
           "name": "cargo_clippy_d_warnings",
@@ -989,6 +994,10 @@
         },
         {
           "name": "init_reconciliation_config_digest",
+          "status": "passed"
+        },
+        {
+          "name": "official_0169_3_specs_refresh",
           "status": "passed"
         },
         {
@@ -1042,10 +1051,17 @@
             "intent_id": "intent:run_1672_hop1",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:run_1672_hop1",
+            "event_id": "event:7",
+            "intent_id": "intent:run_1672_hop1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "run_1672_hop1": {
@@ -1121,6 +1137,22 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  ".decapod/managed/.manifest.json",
+                  ".decapod/managed/Dockerfile.decapod"
+                ],
+                "proof_refs": [
+                  "official_0169_3_specs_refresh"
+                ],
+                "scope": [
+                  "decapod_hop1"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1140,6 +1172,8 @@
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
         ".decapod/config.toml",
+        ".decapod/managed/.manifest.json",
+        ".decapod/managed/Dockerfile.decapod",
         "assets/tools/source_ci_profile.rs",
         "src/decapod/core/init_reconciliation/mod.rs",
         "src/decapod/core/readiness_profile.rs",
