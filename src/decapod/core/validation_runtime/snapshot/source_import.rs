@@ -608,7 +608,7 @@ pub(super) fn source_dependencies(
 
 /// Names are finite reviewed workflow contracts; no expression/YAML interpreter
 /// and no observed label is accepted as its own expected mapping.
-fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<String> {
+pub(super) fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<String> {
     let simple = match (workflow, job) {
         (".github/workflows/ci.yml", "release-metadata") => "Release Metadata Classification",
         (".github/workflows/ci.yml", "pre-build-validate") => {

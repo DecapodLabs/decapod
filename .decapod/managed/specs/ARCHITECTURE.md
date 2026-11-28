@@ -1,3 +1,9 @@
+## PR readiness A–H acceptance controls, anti-forgery path enforcement, and GitHub carrier simulation (`#1069`, `#1070`, `#1890`)
+
+- **Opt-in A–H observer harness (`tests/acceptance/native_readiness.py`, `docs/native-readiness-acceptance.md`)**: Preserves default `publication_ready = true` checks in `passed(...)` while supporting `--local-git-target` (`scope == "repository_local_git_readiness"`, `readiness.ready = true`, `publication_ready = false`), clean early non-zero stderr rejection capture in `invoke(...)`, and optional A–H negative control verifiers (`--forged-project`, `--unavailable-external-project` confirming absent `observations.json` / zero local fallback, and `--target-moved-root` invoking `todo done --validated`).
+- **Forge-resistant `observed_path` integration check (`tests/consumer_readiness.rs`)**: Exercises `required_observed_path_rejects_forged_trajectory_and_unobserved_remote_carrier` with accepted `observed_path.required = true`, committed forged `sections.trajectory.checks` / `sections.observed_path`, and `host.unobserved_execution = true`, asserting `report.ready == false` (`OBSERVED_PATH_NOT_PROVEN`) and no published `completion/native-readiness-receipt.json`.
+- **Automatic `GithubCarrier` fixture harness (`src/decapod/core/validation_runtime/snapshot/{source_import.rs,automatic_tests.rs}`)**: Exposes `source_import::job_name` as `pub(super)` and extends `FixtureRunner::github_get` + `Fixture::new` with `GithubFault` variants (`MissingShard`, `SkippedJob`, `CancelledJob`, `SkippedUploadStep`, `MismatchedHeadRun`) and mock `/actions/workflows`, `/runs`, `/attempts/1/jobs`, and `/artifacts` endpoints exercised by `automatic_github_actions_rejects_missing_shard_skipped_cancelled_and_skipped_upload` and `automatic_github_actions_rejects_mismatched_head_run_and_never_uses_buildkite`.
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2194,7 +2200,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `9e83e176d09ae7642fb1d79b5a0a9ce57dbd5456b5af86bb1b370c49dbf1371b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

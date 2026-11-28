@@ -48,6 +48,13 @@ for each run and the controller's byte hash, and checks:
 4. A genuine failed native observation with no success completion bundle.
 5. Rejection of the dirty candidate, without publishing another success bundle,
    followed by exact restoration of the original source/candidate.
+6. Optional A–H negative controls when configured (`--forged-project` rejecting
+   forged validation/trajectory claims, `--unavailable-external-project` rejecting
+   unavailable remote CI contracts with zero local fallback, and
+   `--target-moved-root` rejecting stale historical completion after the accepted
+   target advances). Pass `--local-git-target` only when exercising a
+   `canonical_local_target = true` repo (`scope = "repository_local_git_readiness"`,
+   `readiness.ready = true`, `publication_ready = false`).
 
 For a failed native check, the external evidence directory also contains
 `native-N.diagnostic.json` records identifying the check and relating its

@@ -1,3 +1,11 @@
+## PR readiness A–H negative controls, forged-path refusal, and GitHub Actions carrier custody tests (`#1069`, `#1070`, `#1398`, `#1399`, `#1052`, `#1890`)
+
+Extends released-CLI acceptance and automatic snapshot carrier verification without weakening existing publication or observed-path boundaries:
+
+- **Released-CLI A–H native acceptance controls (`#1069`, `tests/acceptance/native_readiness.py`, `docs/native-readiness-acceptance.md`)**: Adds explicit opt-in `--forged-project`, `--unavailable-external-project`, `--target-moved-root` (`--target-moved-task-id`, `--target-moved-commit`), and `--local-git-target` controls while keeping full-publication `publication_ready = true` mandatory by default, plus bounded stderr rejection handling in `invoke` when pre-validation gates fail before emitting JSON. Verified live against official `Decapod v0.169.4` across `failed_native`, `dirty_candidate`, `forged_outcome`, `unavailable_external_carrier`, and `moved_accepted_target` (including pre-validated `VALIDATION_HISTORY` target-movement refusal).
+- **Required observed-path anti-forgery parity (`#1070`, `#1767`, `tests/consumer_readiness.rs`)**: Adds `required_observed_path_rejects_forged_trajectory_and_unobserved_remote_carrier` proving that self-reported `trajectory.checks`, `proof_refs`, and `sections.observed_path` entries in `.decapod/governance.json` never satisfy `observed_path.required = true` (`OBSERVED_PATH_NOT_PROVEN`) when `host.unobserved_execution = true`.
+- **Automatic GitHub Actions carrier custody coverage (`#1890`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`, `src/decapod/core/validation_runtime/snapshot/automatic_tests.rs`)**: Adds `GithubFault` and `Scenario::GithubCarrier(GithubFault)` coverage in `automatic_tests` verifying fail-closed rejection of omitted matrix shards (`Tests (core 1/3)`), skipped jobs (`Lint (fmt)`), cancelled jobs (`Commit Lint`), skipped custody upload steps (`source::custody::UPLOAD_STEP_NAME`), and mismatched workflow `head_sha` runs without fallback to Buildkite (`#1052`, `#1398`, `#1399` tracked honestly alongside open Hop 2/workflow blockers).
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1532,7 +1540,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `9e83e176d09ae7642fb1d79b5a0a9ce57dbd5456b5af86bb1b370c49dbf1371b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

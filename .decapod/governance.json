@@ -887,6 +887,16 @@
         "src/decapod/core/snapshot_provider/mod.rs",
         "tests/source_ci_profile_policy.rs"
       ]
+    },
+    "pr-readiness-ah-carrier": {
+      "statement": "Released v0.169.4 native_readiness.py A-H controls pass live and Rust observed_path anti-forgery + GithubCarrier fault tests pass on GHA validate",
+      "falsifier": "Any A-H control, forged observed_path check, or GithubCarrier fault test fails or permits false readiness",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/validation_runtime/snapshot/automatic_tests.rs",
+        "tests/acceptance/native_readiness.py",
+        "tests/consumer_readiness.rs"
+      ]
     }
   },
   "checkpoints": [
@@ -909,6 +919,31 @@
       "id": "cp_1672_hop1_dockerfile_0169_3",
       "summary": "Refresh managed Dockerfile.decapod to v0.169.3 via official v0.169.3 CLI",
       "input_digest": "sha256:60123cdf83d3e187ad2c04ca33a66c01b9c6c5b9d7c98c0cdd711d879fe84ece"
+    },
+    {
+      "id": "cp-1069-pr-readiness-ah",
+      "summary": "Add native_readiness.py A-H negative controls, forged observed_path consumer readiness check, and GithubCarrier automatic snapshot fault tests (#1069, #1070, #1890)",
+      "input_digest": "sha256:c3a0b5cd5c95c7731d3d36988d19c37e6754c229a16251e95a740ee003325ffc"
+    },
+    {
+      "id": "cp-1069-pr-readiness-ah-supported",
+      "summary": "Promote claim pr-readiness-ah-carrier to supported and re-checkpoint A-H negative controls, forged observed_path check, and GHA carrier tests",
+      "input_digest": "sha256:a28b0e35efd00e5c1f2cb0b77c73b6bc3d9b64c80444fc3e53cb38426ee5c9d0"
+    },
+    {
+      "id": "cp-1069-pr-readiness-ah-sources",
+      "summary": "Reconcile reviewed_sources_digest to a2d7266db v0.169.4 inventory alongside A-H acceptance controls, forged observed_path check, and GHA carrier tests",
+      "input_digest": "sha256:956f380ef132c6be029765f6e4232d7410c4dfbf9eb5fc8e2b940302f0720e46"
+    },
+    {
+      "id": "cp-1069-pr-readiness-ah-compile-fix",
+      "summary": "Fix SnapshotHost::select Blocker error binding in automatic_tests and verify cargo check --all-targets",
+      "input_digest": "sha256:d4d3384c5caa42d2d66493ecb6bd4a989f4efa4584933e7654fe9b44c7cfd6fd"
+    },
+    {
+      "id": "cp-1069-pr-readiness-ah-nonvacuous-blocker",
+      "summary": "Require GITHUB_* or *CUSTODY blocker codes directly in automatic_tests GithubCarrier assertions (#742)",
+      "input_digest": "sha256:e823500e64524a0c9317b9c6173678b2ce13488f061f888c09c06d3101723fa3"
     }
   ],
   "intents": {
@@ -950,22 +985,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
+          "reason": "Verified non-vacuous GithubCarrier automatic snapshot assertions and cargo check --all-targets pass",
+          "reviewed_code_fingerprint": "9e83e176d09ae7642fb1d79b5a0a9ce57dbd5456b5af86bb1b370c49dbf1371b",
+          "spec_material_hash": "036eebc874c807a02e6636a4faa5320c3d354f6db6b1b7f0102fbe3e389c0b1a"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
+          "reason": "Verified non-vacuous GithubCarrier GITHUB_/CUSTODY blocker assertions in automatic_tests alongside native_readiness.py A-H negative controls",
+          "reviewed_code_fingerprint": "9e83e176d09ae7642fb1d79b5a0a9ce57dbd5456b5af86bb1b370c49dbf1371b",
+          "spec_material_hash": "e35cfe8c43c20606c8a00937586269b802a2e6478ef2f35ec9b64a394ecb2bb5"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod pin via official CLI; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "reason": "Tightened GithubCarrier test blocker assertion to GITHUB_*/*CUSTODY only without relaxing any verification boundary",
+          "reviewed_code_fingerprint": "9e83e176d09ae7642fb1d79b5a0a9ce57dbd5456b5af86bb1b370c49dbf1371b",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -977,13 +1012,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795828991Z"
+      "updated_at": "1795842084Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
       ],
-      "artifact_hash": "sha256:e89114ea25e26e9b42833aea58f6798c9424b713456ea141a1d54c6d44d4198e",
+      "artifact_hash": "sha256:d64d46b892d276bf4a6ac33c57925ba2932cd89d4f99df7617cf49266b389147",
       "checks": [
         {
           "name": "cargo_clippy_d_warnings",
@@ -999,6 +1034,10 @@
         },
         {
           "name": "init_reconciliation_config_digest",
+          "status": "passed"
+        },
+        {
+          "name": "native_readiness_ah_v0_169_4",
           "status": "passed"
         },
         {
@@ -1074,10 +1113,17 @@
             "intent_id": "intent:run_1672_hop1",
             "kind": "trajectory_step_recorded",
             "sequence": 8
+          },
+          {
+            "detail": "trajectory:run_1672_hop1",
+            "event_id": "event:9",
+            "intent_id": "intent:run_1672_hop1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 9
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 9,
         "schema_version": "1.1.0",
         "trajectories": {
           "run_1672_hop1": {
@@ -1184,6 +1230,30 @@
                 ],
                 "sequence": 8,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:9",
+                "observations": [
+                  "docs/native-readiness-acceptance.md",
+                  "tests/acceptance/native_readiness.py",
+                  "tests/consumer_readiness.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "src/decapod/core/validation_runtime/snapshot/automatic_tests.rs",
+                  "docs/native-readiness-acceptance.md",
+                  "tests/acceptance/native_readiness.py",
+                  "tests/consumer_readiness.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "src/decapod/core/validation_runtime/snapshot/automatic_tests.rs"
+                ],
+                "proof_refs": [
+                  "native_readiness_ah_v0_169_4"
+                ],
+                "scope": [
+                  "decapod_hop1"
+                ],
+                "sequence": 9,
+                "validation_findings": []
               }
             ]
           }
@@ -1194,10 +1264,14 @@
       "inspected_files": [
         ".config/build/decapod.BUILD.bzl",
         "assets/tools/source_ci_profile.rs",
+        "docs/native-readiness-acceptance.md",
         "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/snapshot_provider/github_artifacts.rs",
         "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+        "src/decapod/core/validation_runtime/snapshot/automatic_tests.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/acceptance/native_readiness.py",
+        "tests/consumer_readiness.rs"
       ],
       "intent_id": "intent:run_1672_hop1",
       "modified_files": [
@@ -1206,12 +1280,15 @@
         ".decapod/managed/.manifest.json",
         ".decapod/managed/Dockerfile.decapod",
         "assets/tools/source_ci_profile.rs",
+        "docs/native-readiness-acceptance.md",
         "src/decapod/core/init_reconciliation/mod.rs",
         "src/decapod/core/readiness_profile.rs",
         "src/decapod/core/readiness_profile/tests.rs",
         "src/decapod/core/snapshot_provider/github_artifacts.rs",
         "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/validation_runtime/snapshot/automatic_tests.rs",
         "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/acceptance/native_readiness.py",
         "tests/cli_contracts.rs",
         "tests/consumer_readiness.rs",
         "tests/effective_grant_cli_contracts.rs",

@@ -14,12 +14,21 @@ const JOB: &str = "33333333-3333-3333-3333-333333333333";
 const STEP: &str = "44444444-4444-4444-4444-444444444444";
 
 #[derive(Clone, Copy, Debug)]
+enum GithubFault {
+    MissingShard,
+    SkippedJob,
+    CancelledJob,
+    SkippedUploadStep,
+    MismatchedHeadRun,
+}
+#[derive(Clone, Copy, Debug)]
 enum Scenario {
     Progress,
     BuildkiteTerminal(&'static str),
     MissingBuildkite,
     DeniedMetadata,
     CancelMetadata,
+    GithubCarrier(GithubFault),
 }
 struct State {
     scenario: Scenario,
@@ -29,6 +38,7 @@ struct State {
     base: String,
     published: Option<(String, String)>,
     buildkite: Vec<String>,
+    github_actions: bool,
     cycle: usize,
     calls: BTreeMap<String, usize>,
     events: Vec<String>,
@@ -136,10 +146,12 @@ impl Runner for FixtureRunner {
             .expect("typed fixture provider request")
         {
             ProviderRequest::GithubGet { path } => {
-                assert!(
-                    !path.contains("/actions/"),
-                    "Buildkite-only preflight must not read GitHub Actions execution APIs"
-                );
+                if !self.state.borrow().github_actions {
+                    assert!(
+                        !path.contains("/actions/"),
+                        "Buildkite-only preflight must not read GitHub Actions execution APIs"
+                    );
+                }
                 self.state
                     .borrow_mut()
                     .record(format!("github-read:{path}"));
@@ -157,6 +169,134 @@ impl FixtureRunner {
     fn github_get(&self, path: &str) -> io::Result<Value> {
         let endpoint = path.strip_prefix("repos/fixture/decapod/").unwrap();
         let mut state = self.state.borrow_mut();
+        if state.github_actions && endpoint.starts_with("actions/") {
+            let (snapshot, _) = state.snapshot();
+            let snapshot = snapshot.to_string();
+            let fault = match state.scenario {
+                Scenario::GithubCarrier(f) => f,
+                _ => unreachable!("github_actions scenario required"),
+            };
+            if let Some(wf) = endpoint.strip_prefix("actions/workflows/") {
+                if let Some((wf_id, _query)) = wf.split_once("/runs?") {
+                    let wf_id: u64 = wf_id.parse().unwrap();
+                    let wf_path = match wf_id {
+                        1 => ".github/workflows/ci.yml",
+                        2 => ".github/workflows/constitution-sync.yml",
+                        3 => ".github/workflows/decapod-validate.yml",
+                        4 => ".github/workflows/docs.yml",
+                        5 => ".github/workflows/docs_sync.yml",
+                        _ => panic!("unknown workflow id {wf_id}"),
+                    };
+                    let head_sha = if matches!(fault, GithubFault::MismatchedHeadRun) {
+                        "e".repeat(40)
+                    } else {
+                        snapshot
+                    };
+                    return Ok(json!({
+                        "total_count": 1,
+                        "workflow_runs": [{
+                            "id": 1000 + wf_id,
+                            "run_attempt": 1,
+                            "workflow_id": wf_id,
+                            "path": wf_path,
+                            "head_sha": head_sha,
+                            "head_branch": "work",
+                            "event": "push",
+                            "status": "completed",
+                            "conclusion": "success",
+                            "repository": {"id": 100, "full_name": "fixture/decapod"},
+                            "head_repository": {"id": 100, "full_name": "fixture/decapod"}
+                        }]
+                    }));
+                }
+                let (wf_id, wf_path) = match wf {
+                    "ci.yml" => (1, ".github/workflows/ci.yml"),
+                    "constitution-sync.yml" => (2, ".github/workflows/constitution-sync.yml"),
+                    "decapod-validate.yml" => (3, ".github/workflows/decapod-validate.yml"),
+                    "docs.yml" => (4, ".github/workflows/docs.yml"),
+                    "docs_sync.yml" => (5, ".github/workflows/docs_sync.yml"),
+                    _ => panic!("unknown workflow file {wf}"),
+                };
+                return Ok(json!({
+                    "id": wf_id,
+                    "path": wf_path,
+                    "state": "active",
+                    "url": format!("https://api.github.com/repos/fixture/decapod/actions/workflows/{wf_id}")
+                }));
+            }
+            if let Some(rest) = endpoint.strip_prefix("actions/runs/") {
+                if let Some((run_id_str, _)) = rest.split_once("/attempts/1/jobs?") {
+                    let run_id: u64 = run_id_str.parse().unwrap();
+                    let wf_path = match run_id {
+                        1001 => ".github/workflows/ci.yml",
+                        1002 => ".github/workflows/constitution-sync.yml",
+                        1003 => ".github/workflows/decapod-validate.yml",
+                        1004 => ".github/workflows/docs.yml",
+                        1005 => ".github/workflows/docs_sync.yml",
+                        _ => panic!("unknown run_id {run_id}"),
+                    };
+                    let changed = vec!["src/decapod/lib.rs".to_string()];
+                    let mut jobs = Vec::new();
+                    let mut next_id = run_id * 100;
+                    let mut seen_names = BTreeSet::new();
+                    let mut omitted = false;
+                    for inst in source::inventory(&changed, false) {
+                        let inst_wf = format!(".github/workflows/{}", inst.workflow);
+                        if inst_wf != wf_path || !inst.applicable {
+                            continue;
+                        }
+                        let name = super::source_import::job_name(&inst_wf, inst.job, inst.matrix)?;
+                        if !seen_names.insert(name.clone()) {
+                            continue;
+                        }
+                        if matches!(fault, GithubFault::MissingShard) && name == "Tests (core 1/3)"
+                        {
+                            omitted = true;
+                            continue;
+                        }
+                        next_id += 1;
+                        let mut job_conclusion = "success";
+                        let mut upload_conclusion = "success";
+                        if matches!(fault, GithubFault::SkippedJob) && name == "Lint (fmt)" {
+                            job_conclusion = "skipped";
+                        } else if matches!(fault, GithubFault::CancelledJob)
+                            && name == "Commit Lint"
+                        {
+                            job_conclusion = "cancelled";
+                        } else if matches!(fault, GithubFault::SkippedUploadStep)
+                            && name == "Lint (fmt)"
+                        {
+                            upload_conclusion = "skipped";
+                        }
+                        jobs.push(json!({
+                            "id": next_id,
+                            "run_id": run_id,
+                            "run_attempt": 1,
+                            "head_sha": snapshot,
+                            "name": name,
+                            "status": "completed",
+                            "conclusion": job_conclusion,
+                            "steps": [{
+                                "name": source::custody::UPLOAD_STEP_NAME,
+                                "number": 1,
+                                "status": "completed",
+                                "conclusion": upload_conclusion
+                            }]
+                        }));
+                    }
+                    if matches!(fault, GithubFault::MissingShard)
+                        && wf_path == ".github/workflows/ci.yml"
+                    {
+                        assert!(omitted, "MissingShard fixture must omit core 1/3 shard");
+                    }
+                    return Ok(json!({"total_count": jobs.len(), "jobs": jobs}));
+                }
+                if rest.contains("/artifacts?") {
+                    return Ok(json!({"total_count": 0, "artifacts": []}));
+                }
+            }
+            panic!("unexpected fixture GitHub Actions endpoint: {endpoint}");
+        }
         if let Some(head) = endpoint.strip_prefix("git/commits/") {
             let (snapshot, _) = state.snapshot();
             assert!([snapshot, state.source_head.as_str()].contains(&head));
@@ -296,9 +436,14 @@ impl Fixture {
         command(&root, &["init", "-b", "work"]);
         command(&root, &["config", "user.name", "Automatic Runtime Fixture"]);
         command(&root, &["config", "user.email", "fixture@example.invalid"]);
+        let github_actions = matches!(scenario, Scenario::GithubCarrier(_));
         fs::write(
             root.join(CONFIG),
-            "[proof]\nvalidation_buildkite_preflights=true\n",
+            if github_actions {
+                "[proof]\nvalidation_github_actions_preflights=true\n"
+            } else {
+                "[proof]\nvalidation_buildkite_preflights=true\n"
+            },
         )
         .unwrap();
         fs::write(root.join(GOVERNANCE), "{}\n").unwrap();
@@ -307,15 +452,29 @@ impl Fixture {
         command(&root, &["commit", "-m", "base"]);
         let base = command(&root, &["rev-parse", "HEAD"]);
         command(&root, &["update-ref", "refs/remotes/origin/master", &base]);
-        fs::write(root.join("source"), "candidate").unwrap();
-        command(&root, &["add", "source"]);
+        if github_actions {
+            fs::create_dir_all(root.join("src/decapod")).unwrap();
+            fs::write(root.join("src/decapod/lib.rs"), "// candidate\n").unwrap();
+        } else {
+            fs::write(root.join("source"), "candidate").unwrap();
+        }
+        command(&root, &["add", "."]);
         command(&root, &["commit", "-m", "candidate"]);
         let project = project(&root);
         let plan = source_import::source_run_plan(&project).unwrap();
-        assert!(
-            plan.github_workflows.is_empty(),
-            "source preflight plan must be Buildkite-only"
-        );
+        let buildkite = if github_actions {
+            assert!(
+                plan.buildkite_pipelines.is_empty(),
+                "source preflight plan must be GitHub-Actions-only"
+            );
+            Vec::new()
+        } else {
+            assert!(
+                plan.github_workflows.is_empty(),
+                "source preflight plan must be Buildkite-only"
+            );
+            plan.buildkite_pipelines[0].workflows.clone()
+        };
         let state = Rc::new(RefCell::new(State {
             scenario,
             cancel: cancel.clone(),
@@ -323,7 +482,8 @@ impl Fixture {
             source_tree: command(&root, &["rev-parse", "HEAD^{tree}"]),
             base,
             published: None,
-            buildkite: plan.buildkite_pipelines[0].workflows.clone(),
+            buildkite,
+            github_actions,
             cycle: 0,
             calls: BTreeMap::new(),
             events: vec![],
@@ -374,12 +534,15 @@ impl Fixture {
                 Ok(ProjectPrerequisites::ProviderRequired)
             },
         )
-        .unwrap()
-        .with_public_buildkite_reader(
-            FixtureBuildkite(self.state.clone()),
-            ReviewedBuildkiteImporter::reviewed(),
-        )
         .unwrap();
+        if !self.state.borrow().github_actions {
+            host = host
+                .with_public_buildkite_reader(
+                    FixtureBuildkite(self.state.clone()),
+                    ReviewedBuildkiteImporter::reviewed(),
+                )
+                .unwrap();
+        }
         let cancel = self.state.borrow().cancel.clone();
         assert_eq!(
             host.project_check(&runtime_budget(&cancel, Duration::from_secs(30)))
@@ -738,4 +901,65 @@ fn dirty_source_and_moved_accepted_base_never_publish() {
         assert!(host.verified_checks.is_empty());
         assert_eq!(fixture.state.borrow().count("publish"), 0, "{change}");
     }
+}
+
+#[test]
+fn automatic_github_actions_rejects_missing_shard_skipped_cancelled_and_skipped_upload() {
+    for (fault, expected) in [
+        (GithubFault::MissingShard, "missing"),
+        (GithubFault::SkippedJob, "incomplete"),
+        (GithubFault::CancelledJob, "cancelled"),
+        (GithubFault::SkippedUploadStep, "upload_step"),
+    ] {
+        let cancel = Cancellation::default();
+        let fixture = Fixture::new(Scenario::GithubCarrier(fault), &cancel);
+        let mut host = fixture.host();
+        let blockers = host
+            .select(
+                &fixture.project,
+                &runtime_budget(&cancel, Duration::from_secs(30)),
+            )
+            .err()
+            .expect("faulty GitHub Actions carrier must never satisfy readiness");
+        assert!(
+            blockers
+                .iter()
+                .any(|b| b.code.starts_with("GITHUB_") || b.code.contains("CUSTODY")),
+            "{fault:?}: blockers={blockers:?}; expected tag={expected}"
+        );
+        assert!(host.verified_checks.is_empty(), "{fault:?}");
+        assert_eq!(fixture.state.borrow().count("publish"), 0, "{fault:?}");
+        fixture.assert_source_preserved();
+    }
+}
+
+#[test]
+fn automatic_github_actions_rejects_mismatched_head_run_and_never_uses_buildkite() {
+    let cancel = Cancellation::default();
+    let fixture = Fixture::new(
+        Scenario::GithubCarrier(GithubFault::MismatchedHeadRun),
+        &cancel,
+    );
+    let mut host = fixture.host();
+    let blockers = host
+        .select(
+            &fixture.project,
+            &runtime_budget(&cancel, Duration::from_secs(30)),
+        )
+        .err()
+        .expect("mismatched workflow run head_sha must never verify");
+    assert!(!blockers.is_empty());
+    let state = fixture.state.borrow();
+    assert_eq!(state.count("publish"), 0, "blockers={blockers:?}");
+    assert!(
+        !state
+            .events
+            .iter()
+            .any(|event| event.contains("buildkite") || event.contains("build_create")),
+        "GitHub carrier fixture must never touch Buildkite: {:?}",
+        state.events
+    );
+    assert!(host.verified_checks.is_empty());
+    drop(state);
+    fixture.assert_source_preserved();
 }

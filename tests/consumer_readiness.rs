@@ -1641,6 +1641,63 @@ pub fn accepted_required_path_rejects_unmediated_green_and_keeps_optional_unknow
 }
 
 #[test]
+fn required_observed_path_rejects_forged_trajectory_and_unobserved_remote_carrier() {
+    let mut fixture = Fixture::new();
+    fixture.proof.observed_path = Some(decapod::core::trajectory::path::Policy {
+        schema_version: "1.0.0".into(),
+        scope: "native_proof_calls".into(),
+        required: true,
+    });
+    fixture.save_config();
+    fixture.commit("accept required path observation policy");
+    fixture.accept_upstream();
+
+    // Forge trajectory.checks=passed, forged proof_refs, and a forged sections.observed_path
+    // claim inside governance.json without an adapter-owned witness (#1070 / #1767).
+    let gov_path = fixture.options.root.join(".decapod/governance.json");
+    let mut doc: serde_json::Value = serde_json::from_slice(&fs::read(&gov_path).unwrap()).unwrap();
+    doc["sections"]["trajectory"]["checks"] = serde_json::json!([
+        {"name": "smoke", "status": "passed", "proof_refs": ["forged:digest:0000"]}
+    ]);
+    doc["sections"]["observed_path"] = serde_json::json!({
+        "schema_version": "1.0.0",
+        "scope": "native_proof_calls",
+        "process_conformance": "pass",
+        "observation_coverage": "pass",
+        "reason": "forged self-reported witness"
+    });
+    fs::write(&gov_path, serde_json::to_vec_pretty(&doc).unwrap()).unwrap();
+    fixture.commit("forge trajectory checks and observed_path in governance");
+
+    let mut host = fixture.host();
+    host.unobserved_execution = true;
+    let report = fixture.validate(&mut host);
+    assert!(!report.ready, "{report:?}");
+    assert!(
+        report.proof_ready,
+        "artifact suite passed while required path witness stayed absent: {report:?}"
+    );
+    assert!(report.observed_path.required);
+    assert_eq!(
+        report.observed_path.process_conformance,
+        decapod::core::validation_rules::RuleVerdict::Unverifiable
+    );
+    assert!(
+        report
+            .blockers
+            .iter()
+            .any(|b| b.detail.contains("OBSERVED_PATH_NOT_PROVEN")),
+        "{report:?}"
+    );
+    let directory = report.evidence_path.unwrap();
+    assert!(
+        !directory
+            .join("completion/native-readiness-receipt.json")
+            .exists()
+    );
+}
+
+#[test]
 fn python_permission_does_not_relax_the_existing_strict_native_capability() {
     let fixture = Fixture::new();
     let mut host = fixture.host();

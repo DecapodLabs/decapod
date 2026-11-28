@@ -1,3 +1,14 @@
+## `#1069` / `#1070` / `#1890` Native readiness observer CLI flags & carrier test interfaces
+
+- **`tests/acceptance/native_readiness.py` CLI options (`docs/native-readiness-acceptance.md`)**:
+  - `--forged-project <PATH>`: verifies non-zero rejection and absence of completion bundle on forged governance claims.
+  - `--unavailable-external-project <PATH>`: verifies non-zero rejection and absence of external `observations.json` when remote CI is unavailable without local fallback.
+  - `--target-moved-root <PATH> --target-moved-task-id <ID> --target-moved-commit <SHA>`: verifies `decapod todo done --validated --commit <SHA>` rejects stale historical readiness after accepted-target movement.
+  - `--local-git-target`: verifies `canonical_local_target = true` local-git acceptance (`scope = "repository_local_git_readiness"`, `readiness.ready = true`, `readiness.proof_ready = true`, `publication_ready = false`).
+- **Snapshot module & integration interfaces (`src/decapod/core/validation_runtime/snapshot/source_import.rs`, `tests/consumer_readiness.rs`)**:
+  - `source_import::job_name` widened to `pub(super)` so `automatic_tests` derives canonical GitHub Actions job display names directly from reviewed workflow mappings.
+  - `tests/consumer_readiness.rs::required_observed_path_rejects_forged_trajectory_and_unobserved_remote_carrier` covers `observed_path.required = true` rejection of forged `trajectory.checks` and `sections.observed_path`.
+
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -2731,7 +2742,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `9e83e176d09ae7642fb1d79b5a0a9ce57dbd5456b5af86bb1b370c49dbf1371b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

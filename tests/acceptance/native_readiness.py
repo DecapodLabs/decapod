@@ -69,6 +69,9 @@ def invoke(binary, root, output, label, timeout):
         raise
     (output / f"{label}.stdout.json").write_bytes(stdout)
     (output / f"{label}.stderr.txt").write_bytes(stderr)
+    if process.returncode != 0 and not stdout.strip() and stderr.strip():
+        return process.returncode, {"publication_ready": False, "readiness": None,
+                                   "stderr": stderr.decode(errors="replace")}
     report = json.loads(stdout)
     require(report.get("scope") != "ci_local", "CI-local proof cannot qualify")
     return process.returncode, report
@@ -84,9 +87,17 @@ def evidence(report, root):
     return directory
 
 
-def passed(report, returncode, root, before):
-    require(returncode == 0 and report.get("publication_ready") is True,
-            "Released CLI did not establish full publication readiness")
+def passed(report, returncode, root, before, local_git_target=False):
+    readiness = report.get("readiness") or {}
+    if local_git_target:
+        require(returncode == 0 and readiness.get("ready") is True and
+                readiness.get("proof_ready") is True and
+                readiness.get("scope") == "repository_local_git_readiness" and
+                report.get("publication_ready") is False,
+                "Released CLI did not establish scoped canonical local-git readiness")
+    else:
+        require(returncode == 0 and report.get("publication_ready") is True,
+                "Released CLI did not establish full publication readiness")
     require(report.get("report", {}).get("fail_count") == 0,
             "Actual project prerequisite gates did not all pass")
     directory = evidence(report, root)
@@ -145,6 +156,16 @@ def main():
     parser.add_argument("--failing-project", type=Path, required=True)
     parser.add_argument("--stale-file", required=True,
                         help="Tracked ordinary source file in passing project; restored after probe")
+    parser.add_argument("--forged-project", type=Path, default=None,
+                        help="Optional governed candidate containing forged validation/trajectory claims")
+    parser.add_argument("--unavailable-external-project", type=Path, default=None,
+                        help="Optional governed project requiring unavailable remote CI without local fallback")
+    parser.add_argument("--target-moved-root", type=Path, default=None,
+                        help="Optional repo root whose accepted base moved after historical validation")
+    parser.add_argument("--target-moved-task-id", default=None)
+    parser.add_argument("--target-moved-commit", default=None)
+    parser.add_argument("--local-git-target", action="store_true",
+                        help="Expect repository_local_git_readiness (ready=true, publication_ready=false) for canonical_local_target=true repos")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--timeout", type=int, default=7200)
     args = parser.parse_args()
@@ -156,8 +177,12 @@ def main():
     failing = args.failing_project.resolve(strict=True)
     require(passing != failing, "Failure control must be a separate governed candidate")
     output = args.output.resolve()
+    roots = [passing, failing]
+    for extra in (args.forged_project, args.unavailable_external_project, args.target_moved_root):
+        if extra is not None:
+            roots.append(extra.resolve(strict=True))
     require(not any(output.is_relative_to(root) or binary.is_relative_to(root)
-                    for root in (passing, failing)), "Binary/output must be external")
+                    for root in roots), "Binary/output must be external")
     before, negative = identity(passing), identity(failing)
     require(before["configuration"] == negative["configuration"] and
             before["remote"] == negative["remote"],
@@ -175,7 +200,8 @@ def main():
     (output / "controller.json").write_text(json.dumps({"path": str(binary),
                                                         "sha256": sha(binary.read_bytes())}))
     code, report = invoke(binary, passing, output, "passing", args.timeout)
-    positive_evidence = passed(report, code, passing, before)
+    positive_evidence = passed(report, code, passing, before,
+                               local_git_target=args.local_git_target)
     code, report = invoke(binary, failing, output, "failing", args.timeout)
     failed_evidence = rejected(report, code, failing)
     require(identity(failing) == negative, "Failure run changed its committed candidate")
@@ -196,9 +222,35 @@ def main():
                 "Source changed concurrently; retained bytes for agent recovery instead of overwriting")
         stale.write_bytes(original)
     require(identity(passing) == before, "Stale probe did not restore the candidate")
+    controls = ["failed_native", "dirty_candidate"]
+    if args.forged_project is not None:
+        forged = args.forged_project.resolve(strict=True)
+        code, report = invoke(binary, forged, output, "forged", args.timeout)
+        rejected(report, code, forged)
+        controls.append("forged_outcome")
+    if args.unavailable_external_project is not None:
+        ext = args.unavailable_external_project.resolve(strict=True)
+        code, report = invoke(binary, ext, output, "unavailable_external", args.timeout)
+        ext_dir = rejected(report, code, ext)
+        require(ext_dir is None or not (ext_dir / "observations.json").exists(),
+                "Unavailable external contract must not fall back to local native execution")
+        controls.append("unavailable_external_carrier")
+    if args.target_moved_root is not None:
+        require(bool(args.target_moved_task_id and args.target_moved_commit),
+                "Target-moved control requires --target-moved-task-id and --target-moved-commit")
+        moved_root = args.target_moved_root.resolve(strict=True)
+        proc = subprocess.run(
+            [str(binary), "todo", "done", "--id", args.target_moved_task_id,
+             "--validated", "--commit", args.target_moved_commit, "--format", "json"],
+            cwd=moved_root, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=args.timeout
+        )
+        (output / "target_moved.stdout.json").write_bytes(proc.stdout)
+        (output / "target_moved.stderr.txt").write_bytes(proc.stderr)
+        require(proc.returncode != 0, "Stale target-moved validation was erroneously accepted")
+        controls.append("moved_accepted_target")
     (output / "acceptance.json").write_text(json.dumps({"status": "passed",
         "candidate": before, "passing_evidence": positive_evidence,
-        "failing_evidence": str(failed_evidence), "controls": ["failed_native", "dirty_candidate"]}, indent=2))
+        "failing_evidence": str(failed_evidence), "controls": controls}, indent=2))
     print("Released CLI acceptance passed; no PR publication was performed.")
 
 
