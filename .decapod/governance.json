@@ -950,6 +950,11 @@
       "id": "release-current-spec-review",
       "summary": "Bind contributor admission and its generated guidance to the current reviewed contract.",
       "input_digest": "sha256:74a030eca5ace3751ac0905ea3c822ec831efa325667df3b98e430391bc71032"
+    },
+    {
+      "id": "released-dactyl-bazel-pin",
+      "summary": "Regenerate the Bazel crate-universe lock for the verified Dactyl package and bind the current reviews.",
+      "input_digest": "sha256:69783955841eefd8ccda0f0e001af77276819a02bc36df467e27c531cdd3488c"
     }
   ],
   "intents": {
@@ -1020,7 +1025,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795848251Z"
+      "updated_at": "1795850604Z"
     },
     "trajectory": {
       "active_boundaries": [
