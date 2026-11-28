@@ -5,6 +5,13 @@ Removes public `https://decapodlabs.ai/pricing` links and `$50/contributor/repo/
 - **Theme shell navigation (`docs/book/theme/index.hbs`)**: Removes all three `https://decapodlabs.ai/pricing` entries (top navigation `Pricing`, footer `Pricing ↗`, and right-rail Quick routes `Pricing ↗`) while keeping `Admin ↗` (`https://decapodlabs.ai/admin`), `Trust ↗`, `Evaluation ↗`, `Writing`, `Clack`, and `GitHub ↗` intact.
 - **Landing page & guide prose (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Removes the `Compare Local & Cloud` `/pricing` header link and `$50` badge/claims in `index.md`, replaces the primary `View Cloud pricing` CTA with `Cloud project docs →` (`reference/cloud-projects.html`), removes `/pricing` links and `$50` copy across the onboarding, FAQ, workflow, and Cloud reference pages while retaining factual `Organization Admin` and `Cloud Signup` routes, and updates `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings` to enforce zero `/pricing` or `$50/contributor/repo/mo` regressions across `docs/book/`.
 
+## End-to-End Propodus `037` Cloud Delegated-Grant Admission Across `data db` CLI & RPC (`#1568`)
+
+Wires Propodus migration `037` Cloud repository-access (`propodus_repository_access_v1`) and delegated-grant (`propodus_delegated_grants_v1`) resolution into every live `decapod data db` CLI and `data.database.*` RPC discovery/execution path when `[repo].backend = "cloud"`, while preserving fail-closed unauthenticated refusal (`CLOUD_PRINCIPAL_UNVERIFIED`) and prohibiting any local `.decapod/data/decapod.db` SQLite open/create fallback (`CLOUD_LOCAL_SQLITE_UNSUPPORTED`):
+
+- **End-to-end Cloud authority admission (`src/decapod/core/db_maintenance.rs`, `src/decapod/lib.rs`)**: Introduces `resolve_cloud_maintenance_authority`, `evaluate_capability_decision_with_cloud_authority`, `build_capabilities_report_with_cloud_authority`, and `execute_governed_capability_with_grant`, resolving DPoP-authenticated `connect_control` checks during both discovery (`capabilities`) and execution (`verify`, `maintain.*`, `lock.*`, `backup`, `recover`), failing closed on missing sessions (`CLOUD_PRINCIPAL_UNVERIFIED`), missing grants (`CLOUD_DELEGATED_GRANT_REQUIRED`), ungranted operations (`CLOUD_DELEGATED_OPERATION_NOT_GRANTED`), revoked/expired grants (`CLOUD_DELEGATED_GRANT_REVOKED` / `CLOUD_DELEGATED_GRANT_EXPIRED`), stale generations (`CLOUD_DELEGATED_GRANT_GENERATION_STALE`), or `grant_policy_digest` drift (`POLICY_SNAPSHOT_STALE`).
+- **Cloud CLI/RPC `--delegated-grant-id` & SQLite guard (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/docs_cli.rs`, `docs/agent/command-contracts.md`)**: Threads `--delegated-grant-id` / `delegated_grant_id` across CLI subcommands and JSON-RPC `Database*Params` structs, guards every local SQLite maintenance runner (`run_maintain_{inspect,verify,lock_diagnose,lock_release_own,wal_checkpoint,backup}`, bounded-lock helpers, and `run_maintain_lock_retry_with_grant`) against `[repo].backend = "cloud"`, and validates the full CLI + RPC DPoP contract in `tests/cloud_wave_parity.rs`.
+
 ## Container Custody Root-UID Preflight, Supabase Connection Modes & Local PG17 Native Proof (`#1379`, `#1378`, `#1369`)
 
 Hardens Linux container storage custody and documents the three Supabase/PostgreSQL 17 operational boundaries without weakening fail-closed checks:
@@ -1554,7 +1561,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163`
+- Repository signal fingerprint: `dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

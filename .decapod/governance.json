@@ -897,6 +897,15 @@
         "docs/book/theme/index.hbs",
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "chk-2-merge-origin-master",
+      "summary": "Merge origin/master (PR #2005) and refresh living specs and manifest",
+      "input_digest": "sha256:7bd347ae948058c67a9f5382ff1309a1e56e9fe65f89c9c5286c3ee1020425f3",
+      "proof_refs": [
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -940,16 +949,16 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Documented mdBook shell, landing page, chapter prose, and doc_alignment test updates without touching src/ Rust files",
-          "reviewed_code_fingerprint": "50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163",
-          "spec_material_hash": "12e981a911e8e775df5e0fba8d6ebf8865707edf25ff957577a70af6b3c142e9"
+          "reason": "Merged origin/master (#2005) and preserved mdBook hide-pricing architecture spec updates",
+          "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
+          "spec_material_hash": "aeeaddd890d3dd43d34a9566b825bbea5037ba91edf498e4afe6c6330e82eddf"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Documented updated docs/book navigation routes, Cloud project docs CTA, and tests/doc_alignment.rs contract",
-          "reviewed_code_fingerprint": "50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163",
-          "spec_material_hash": "51ae79176ac9f9991300ff78abb87da649573d2f7a907a958dc82bcf9279c33b"
+          "reason": "Merged origin/master (#2005) and preserved mdBook hide-pricing and doc_alignment interface spec updates",
+          "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
+          "spec_material_hash": "b1676599865a98ec59d155b13ca033cebc232a0f28c7cbcadf96a03ac6507578"
         }
       ],
       "state": "APPROVED",
@@ -960,7 +969,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795870016Z"
+      "updated_at": "1795870525Z"
     },
     "trajectory": {
       "active_boundaries": [

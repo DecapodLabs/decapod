@@ -4,6 +4,15 @@
 - **Book source chapters (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Routes the `Decapod Cloud` card primary action on `index.md` to internal `reference/cloud-projects.html` (`Cloud project docs →`), replaces commercial `$50/contributor/repo/mo` / `$0 surprise overages` prose with factual `backend = "cloud"` coordination boundaries, and preserves `https://decapodlabs.ai/signup` and `https://decapodlabs.ai/admin` links with zero edits under `src/`.
 - **Alignment test (`tests/doc_alignment.rs`)**: Updates `test_docs_landing_page_links_local_and_cloud_offerings` to assert `reference/cloud-projects.html`, `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs` and all affected `docs/book/src/` chapters.
 
+## End-to-End Cloud `037` Delegated-Grant Authority Wiring & Local SQLite Isolation (`#1568`)
+
+- **Control-plane authority resolver (`src/decapod/core/db_maintenance.rs`)**:
+  - `resolve_cloud_maintenance_authority` validates `delegated_grant_id` (`valid_delegated_grant_id`), acquires a DPoP control-plane handle via `cloud_client::connect_control(&policy.main_root, &identity)`, fetches `propodus_repository_access_v1`, and—when requested—fetches `propodus_delegated_grants_v1`.
+  - `evaluate_cloud_capability_with_delegated_grant` additionally checks `grant.grant_policy_digest` against canonical `policy.policy_sha256` (`POLICY_SNAPSHOT_STALE`), while `evaluate_capability_decision_with_cloud_authority` routes unauthenticated callers to `CLOUD_PRINCIPAL_UNVERIFIED`, ungranted `db.recover` owner repair to `evaluate_cloud_capability_decision_with_access`, and all other Cloud capabilities through `evaluate_cloud_capability_with_delegated_grant`.
+  - `execute_governed_capability_with_grant` and `build_capabilities_report_with_cloud_authority` replace hardcoded `None` Cloud access inside `lib.rs::{run_database_command, run_governed_database_rpc}` and record `delegated_grant_id` preconditions in the maintenance audit journal.
+- **No-SQLite-fallback backend enforcement (`src/decapod/core/db_maintenance.rs`)**:
+  - `ensure_local_sqlite_maintenance_backend` guards `run_maintain_{inspect,verify,lock_diagnose,lock_release_own,wal_checkpoint,backup}`, `run_verify_with_bounded_lock`, `run_backup_with_bounded_lock`, and `run_maintain_lock_retry_with_grant`, returning `CLOUD_LOCAL_SQLITE_UNSUPPORTED` on `[repo].backend = "cloud"` without opening or creating `.decapod/data/decapod.db`.
+
 ## Container Custody Root-UID Preflight, Supabase 3-Mode Topology & Local PG17 Proof (`#1379`, `#1378`, `#1369`)
 
 - **Privileged container read-only & filesystem preflight (`#1379`, `src/decapod/core/db.rs::storage_health_preflight`, `tests/sqlite_hardening.rs`)**: Under `#[cfg(unix)]`, `storage_health_preflight` inspects `fs::symlink_metadata(store_root)` and rejects `mode & 0o222 == 0` with `STORAGE_PREFLIGHT_FAILED` before `write_probe` so Linux `uid=0` (`CAP_DAC_OVERRIDE`) containers cannot silently bypass `0o555` store permissions; `detect_fs_type` inspects `/proc/self/mountinfo` to fail closed on `UNSUPPORTED_FS_TYPES` (`nfs`, `nfs4`, `cifs`, `smbfs`, `9p`, `vboxsf`) while permitting `virtiofs`/`fuse*`, and `tests/sqlite_hardening.rs` synchronizes `DECAPOD_STORAGE_FAULT_STAGE` via `RwLock<()>`.
@@ -2231,7 +2240,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `50af628834a3b37775d9728d982f431688963a20fdd9a2079cbdafda2ee7a163`
+- Repository signal fingerprint: `dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
