@@ -877,6 +877,14 @@
     "target_base": "origin/master"
   },
   "claims": {
+    "claim:cloud-context-retained-store-isolation": {
+      "statement": "Effective Cloud context keeps retained Local knowledge outside resolution while preserving Git and Constitution context.",
+      "falsifier": "A Cloud RPC returns retained Local sentinel knowledge, opens a retained store, or changes its database, sidecar, or audit state.",
+      "status": "open",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
+    },
     "cloud-context-store-isolation": {
       "statement": "Cloud context RPC ignores retained Local SQLite, keeps file and embedded context, and explicitly reports unavailable shared knowledge.",
       "falsifier": "A Cloud invocation opens a retained database or sidecar, changes audit evidence, or returns the Local sentinel.",
@@ -928,6 +936,11 @@
       "id": "accepted-v01695-release",
       "summary": "Integrate the accepted v0.169.5 release and refresh release-bound verification inputs.",
       "input_digest": "sha256:6e1f12ec5d246fd14d62d4bd0ce91b3d6b8c3caf755fe411a2706ce61e0bed7a"
+    },
+    {
+      "id": "current-pr-falsifiable-claim",
+      "summary": "Preserve the exact candidate and record its current falsifiable publication claim.",
+      "input_digest": "sha256:0ff2b7a417055dfcb3b769caa7e54536805f3e08b4f9008da5975d778146d91c"
     }
   ],
   "intents": {
