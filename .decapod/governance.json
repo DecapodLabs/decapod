@@ -884,6 +884,11 @@
       "proof_refs": [
         "tests/infer_precision.rs"
       ]
+    },
+    {
+      "id": "accepted-docs-integration",
+      "summary": "Preserve the active work and merge accepted documentation and living specifications.",
+      "input_digest": "sha256:de3893ff80e232a8d4816d84d4f1c54e23678cc75300d1b260c298ae09bedc12"
     }
   ],
   "intents": {
