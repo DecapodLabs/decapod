@@ -668,6 +668,7 @@ pub fn ensure_tables(conn: &Connection) -> Result<(), error::DecapodError> {
     migrate_legacy_stream_tables_into_events(conn)?;
     conn.execute(schemas::EVENTS_TABLE_STREAM_SUBJECT_SEQ_INDEX, [])?;
     crate::core::storage_compaction::reconcile_v2_storage_format_metadata(conn)?;
+    crate::core::storage_contracts::ensure_sqlite_write_boundary_triggers(conn)?;
     Ok(())
 }
 

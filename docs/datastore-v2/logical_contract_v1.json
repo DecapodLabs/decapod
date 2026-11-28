@@ -1,8 +1,8 @@
 {
   "schema": "decapod.logical-storage-inventory.v1",
   "status": "provisional_source_inventory_requires_effective_runtime_and_postgres_catalog_proof",
-  "release": "0.166.2",
-  "pinned_source_sha": "9806bc4d21f21143dbcd3a31dcd62a1c3a9990c3",
+  "release": "0.169.1",
+  "pinned_source_sha": "74ecb590874080fd201c168de6e55e663b03bda1",
   "inventory_blob_sha": "f409aa80ea5cfa17aa82365b2dab7c69ace15160",
   "field_policy": "explicit_utf8_byte_json_and_collection_bounds_enforced_fail_closed_on_writes_historical_reads_lossless",
   "field_contracts": {
@@ -10,11 +10,16 @@
     "unit": "utf8_bytes",
     "nul_byte_policy": "reject_0x00_on_all_writes",
     "historical_oversized_read_policy": "lossless_untruncated_read",
+    "sqlite_write_boundary_triggers": "trg_decapod_{tasks,task_verification,events}_{ins,upd}_contract",
     "sql_boundary_parity": {
       "rust_utf8_len": "str::len(value) in UTF-8 bytes + fail-closed NUL rejection",
       "sqlite_length_function": "length(CAST(col AS BLOB))",
       "postgres_length_function": "octet_length(convert_to(col, 'UTF8'))",
       "null_byte_parity": "PostgreSQL TEXT rejects 0x00 natively; Rust validator enforces identical fail-closed rejection on SQLite/local stores"
+    },
+    "propodus_abi_v1_reconciliation": {
+      "abi_id": "decapod.logical_storage_abi.v1",
+      "policy": "decapod local bounds are strictly <= propodus v1 bounds except runtime events.payload which stays 1 MiB locally while cloud/wire adapters bound payloads at 262144 bytes"
     },
     "limits": {
       "id_bytes": 128,

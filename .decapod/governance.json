@@ -914,6 +914,11 @@
       "id": "release-current-spec-review",
       "summary": "Bind the current interface and surrounding contract reviews to the accepted release and exact source.",
       "input_digest": "sha256:c9dc796587e5aea5271b4e00446de7f6a83ee458547cc01022a28ac79c0b8ccf"
+    },
+    {
+      "id": "accepted-storage-integration",
+      "summary": "Preserve the contributor changes while integrating the accepted storage contract.",
+      "input_digest": "sha256:36fb2afc9a29513e8b365fe5bfab65d5e7a627e182089938130f8fca2e8c0912"
     }
   ],
   "intents": {
@@ -958,22 +963,22 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "The existing task and trajectory readers remain the input owners.",
-          "reviewed_code_fingerprint": "061bb4fbd888ae330f42f66d03c8cb30c5e3a97f037cb7ec7eaceab8f79f581b",
-          "spec_material_hash": "6db41292697d73f3952414b8a712979541f94bc79850d44024033595a2d6483c"
+          "reviewed_code_fingerprint": "cedd421b2270645521dfbcbce1915987b5dc956b0b5aa51b0de4e8075b6c56c5",
+          "spec_material_hash": "6ccfc1f91bea2a46893f3016945fce79834664695aa4af692efa50012d755b53"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Orientation retains the original request and reports differing supplied intent.",
-          "reviewed_code_fingerprint": "061bb4fbd888ae330f42f66d03c8cb30c5e3a97f037cb7ec7eaceab8f79f581b",
-          "spec_material_hash": "2878e692c1a44c36100a3df8c557f127f2107712ecf5ddd9f319637cb38caaa4"
+          "reviewed_code_fingerprint": "cedd421b2270645521dfbcbce1915987b5dc956b0b5aa51b0de4e8075b6c56c5",
+          "spec_material_hash": "b8cd486fa134897c7bc779d28d6dd4a48a8f0fb4239c7dbb361da780abd76e6e"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Only the requested task's bound trajectory can supply durable text.",
-          "reviewed_code_fingerprint": "061bb4fbd888ae330f42f66d03c8cb30c5e3a97f037cb7ec7eaceab8f79f581b",
-          "spec_material_hash": "4f0722f8f82a71ed39351e0e19aac413f968aad28c13d7a0932a699fd33cf52a"
+          "reviewed_code_fingerprint": "cedd421b2270645521dfbcbce1915987b5dc956b0b5aa51b0de4e8075b6c56c5",
+          "spec_material_hash": "c833430c412a48824d5cc4b93fe48f9e937438e720a2fee83956b7b1a8f801c9"
         }
       ],
       "state": "APPROVED",
@@ -984,7 +989,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795848136Z"
+      "updated_at": "1795853432Z"
     },
     "trajectory": {
       "active_boundaries": [
