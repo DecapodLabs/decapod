@@ -917,6 +917,11 @@
       "id": "accepted-v01695-release",
       "summary": "Integrate the accepted v0.169.5 release and refresh release-bound verification inputs.",
       "input_digest": "sha256:fa6c2b85d224850728d95cfff3ab499fa31eac512ac39763bd7ad086199fdcf7"
+    },
+    {
+      "id": "released-dactyl022",
+      "summary": "Pin the checksum-verified Dactyl 0.22.0 transport for repository contributor admission.",
+      "input_digest": "sha256:ac623d7ebc72ad0d9a7c67dca19845ba4b36005a9d8115e6095f6bb0ed4ecfef"
     }
   ],
   "intents": {
