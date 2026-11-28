@@ -902,6 +902,11 @@
       "id": "cp_bugs_01m8gcen6vkjv9gz_refresh_v0169_5",
       "summary": "Refresh v0.169.5 Dockerfile pin, entrypoints, and specs manifest",
       "input_digest": "sha256:df4ea7760ee59e2ff4aaad611d51b5121cfa9b674b4d0a0ce5098b993e6f32c9"
+    },
+    {
+      "id": "cp_bugs_01m8gcen6vkjv9gz_merge_e10831742",
+      "summary": "Merge origin/master (e10831742 / PR #1997) and refresh specs",
+      "input_digest": "sha256:13692995571cdc321762e6fb71274aa3a4d6b01aba8bca874e4e2294a98c7432"
     }
   ],
   "intents": {
@@ -945,22 +950,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed v0.169.5 Dockerfile.decapod and entrypoints alongside #1995 docs navigation updates.",
-          "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
-          "spec_material_hash": "a184155fffbd6a7c7a36a8ff0a270d9fbd3194d952e56243310d15749127f381"
+          "reason": "Merged origin/master (PR #1997 #1630 storage contracts) with #1995 docs navigation architecture and refreshed codebase attestation.",
+          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
+          "spec_material_hash": "71aa8e2d87676fdad0c747f3845a0e51bda3b23a65a03d33395f5490e04f1355"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed v0.169.5 Dockerfile.decapod and entrypoints alongside #1995 docs navigation interfaces.",
-          "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
-          "spec_material_hash": "0b279ef8598a6f238c4cb3ec9c91acbcebcb8d0fa013bda0980395e9a08b76d9"
+          "reason": "Merged origin/master (PR #1997 #1630 storage contract interfaces) with #1995 docs navigation interfaces and refreshed codebase attestation.",
+          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
+          "spec_material_hash": "a91a1fe17b67dd771650b8605cc2f4e5ab11cc39a0a246fa03898c0f7da315a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed v0.169.5 Dockerfile.decapod and entrypoints only; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
+          "reason": "Merged origin/master (PR #1997) cleanly with only generated codebase attestation refreshed; #1995 security boundaries unchanged.",
+          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -972,7 +977,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795849044Z"
+      "updated_at": "1795853292Z"
     },
     "trajectory": {
       "active_boundaries": [
