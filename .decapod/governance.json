@@ -876,6 +876,16 @@
     "base_commit": "a2d7266db2c63fea15f86c2de75a84f2cb55e8f3",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:orientation-preserves-original-request": {
+      "statement": "Orientation preserves the original request bound to a task and surfaces a conflicting supplied request for governed reconciliation.",
+      "falsifier": "A task title or substituted orientation argument replaces a task-bound original request or its constraints.",
+      "status": "open",
+      "proof_refs": [
+        "tests/infer_precision.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "exact-task-request-orientation",
@@ -894,6 +904,11 @@
       "id": "accepted-v01695-release",
       "summary": "Integrate the accepted v0.169.5 release and refresh release-bound verification inputs.",
       "input_digest": "sha256:17815dd0f0bdb29d5aedf72f28376dba7f2a1c44292e2ab6938e5a770d5de511"
+    },
+    {
+      "id": "current-pr-falsifiable-claim",
+      "summary": "Preserve the exact candidate and record its current falsifiable publication claim.",
+      "input_digest": "sha256:21d41a26d39e9c829c92a31cde503ae0622fe219127fc6fd7327bd3502a53e4e"
     }
   ],
   "intents": {
