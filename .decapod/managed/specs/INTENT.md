@@ -1,3 +1,7 @@
+## Shared repository guidance (#1110, #1221)
+
+Authorized contributors record scoped operational knowledge and decisions for the agents who follow them. A correction updates current advice while preserving the original assertion and both authors' provenance. Cloud context reports whether the hosted observation was available. Local remains an offline operational authority and an existing Local history stays in place until a lossless cutover is available.
+
 ## Section 10 storage contracts, SQLite write-boundary triggers & v0.169.1 dogfood benchmarks (`#1630`)
 
 Closes the remaining `#1630` unified storage contract, SQLite/PostgreSQL boundary enforcement, and `v0.169.1` dogfood growth measurement obligations without introducing shadow tables or weakening legacy read guarantees:
@@ -1532,15 +1536,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 655 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (297)
-- Core modules: 149 | Workflows: 9 | Integration targets: 180
+- Tracked significant codebase files: 656 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (287), `tests/` (297)
+- Core modules: 150 | Workflows: 9 | Integration targets: 180
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -1,5 +1,9 @@
 # Security
 
+## Hosted repository guidance trust (#1110, #1221)
+
+The session selects the authorized repository and its hosted context. A guidance record carries the authenticated writer and server-recorded revision, while the supplied source remains an author assertion. Evidence bound to the current candidate and live custody is still required for proof admission. An unavailable hosted read leaves retained Local database files untouched.
+
 ## Section 12 Host Integration, Caller Isolation, and Privacy Boundaries (#875, #1277, #1095, #880, #1888)
 
 - **Harness packaging isolation (`src/decapod/core/agent_interop/registry.rs`)**: `install_harness_package` and `remove_harness_package` refuse symlink targets (`symlink_metadata`), verify version skew (`version_skew`), preserve unrelated user MCP/hook entries via `decapodManaged = true` tagging, and construct harness config directory literals safely without bypassing repository namespace gates.
@@ -1631,7 +1635,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

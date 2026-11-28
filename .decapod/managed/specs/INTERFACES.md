@@ -1,3 +1,7 @@
+## Shared repository context and revision readback (#1110, #1221)
+
+In a Cloud repository, `decapod data knowledge add` records immutable scoped guidance and optionally a decision through `--kind decision`. A correction supplies a fresh ID and `--supersedes`. `show --id` reads preserved history. Normal context retrieval reports the current records plus `cloud_observation`, which binds the repository revision, requested task version, and todo event watermark. Run a fresh context query after a changed observation. The Git-bound plan, policy, and proof checks retain their own sources.
+
 ## `#1630` Storage contract manifest, SQLite trigger names & benchmark report schema (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`, `docs/datastore-v2/`)
 
 - **Rust & JSON contract surface (`core::storage_contracts`)**: Exports `FieldContractSpec`, `FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql(&FieldContractSpec)`, and `ensure_sqlite_write_boundary_triggers(&Connection)`; `contract_manifest()` adds `field_table` and `propodus_abi_v1_reconciliation`, synchronized with `docs/datastore-v2/logical_contract_v1.json` (`release: "0.169.1"`).
@@ -2745,7 +2749,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

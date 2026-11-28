@@ -222,7 +222,7 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
             local_carrier: "Dactyl SQLite transaction + `authoring_bindings`".to_string(),
             cloud_carrier: "Dactyl `/rest/v1/rpc/dactyl_batch_v1` CAS update + `task.claim` event".to_string(),
             local_semantics: "Single-winner exclusive claim checks open/unassigned state, increments version, and emits `task.claim`.".to_string(),
-            cloud_semantics: "Single-winner CAS update (`WHERE status IN ('open','pending') AND (assigned_to = '' OR assigned_to IS NULL)`), increments `version`, emits ordered `task.claim` event and local lease custody fence.".to_string(),
+            cloud_semantics: "Single-winner CAS update (`WHERE status IN ('open','pending') AND (assigned_to = '' OR assigned_to IS NULL)`) increments `version` and emits an ordered `task.claim` event. Workspace custody has a separate hosted contract.".to_string(),
             shared_invariants: vec![
                 "INV-ATOMIC-TASK-EVENT".to_string(),
                 "INV-SINGLE-WINNER-CAS".to_string(),
@@ -328,6 +328,33 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
             ],
         },
         ParityOperationEntry {
+            operation_id: "context.repository_snapshot".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            support_class: ParitySupportClass::SupportedCloudBoundary,
+            local_carrier: "Local advisory knowledge projection, typed federation, and Git-owned context".to_string(),
+            cloud_carrier: "Device-bound Dactyl repository context profile".to_string(),
+            local_semantics: "Local context resolves eligible knowledge from the selected repository's SQLite store.".to_string(),
+            cloud_semantics: "One hosted statement observes current knowledge and decisions, an optional task revision, and the todo event watermark. Bundle refresh compares this observation and independently bound Git policy and specs.".to_string(),
+            shared_invariants: vec!["INV-NO-SILENT-FALLBACK".to_string()],
+            failure_mode_on_denial_or_offline: "Returns explicit cloud knowledge unavailability and preserves usable file-backed context.".to_string(),
+            proof_refs: vec![
+                "src/decapod/core/cloud_context.rs".to_string(),
+                "docs/datastore-v2/cloud-parity-and-boundaries.md".to_string(),
+            ],
+        },
+        ParityOperationEntry {
+            operation_id: "knowledge.repository_revision".to_string(),
+            domain: ParityDomain::BackendIsolationAndPlacement,
+            support_class: ParitySupportClass::SupportedCloudBoundary,
+            local_carrier: "SQLite knowledge records and replacement edges".to_string(),
+            cloud_carrier: "Immutable repository context revisions through Dactyl".to_string(),
+            local_semantics: "Local knowledge and decisions retain their existing independent lifecycles.".to_string(),
+            cloud_semantics: "Append immutable repository guidance and replace a current predecessor once. Provenance includes the authenticated writer and server time. Historic rows remain available by ID.".to_string(),
+            shared_invariants: vec!["INV-NO-SILENT-FALLBACK".to_string(), "INV-IDEMPOTENT-REPLAY-BOUND".to_string()],
+            failure_mode_on_denial_or_offline: "Current authorization gates reads and writes. A stale predecessor conflicts. An uncertain write reconciles by original immutable ID and exact request.".to_string(),
+            proof_refs: vec!["src/decapod/core/cloud_context.rs".to_string()],
+        },
+        ParityOperationEntry {
             operation_id: "backend.isolation.no_local_sqlite".to_string(),
             domain: ParityDomain::BackendIsolationAndPlacement,
             support_class: ParitySupportClass::SupportedCloudBoundary,
@@ -360,8 +387,8 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
             operation_id: "todo.claim.shared".to_string(),
             domain: ParityDomain::AuthorizationScopedTransitions,
             local_supported: true,
-            cloud_behavior: "Fails closed (`governance.allow_basic_shared_claims` is local-only); Cloud-backed claims do not use cooperative local shared-claim opt-in.".to_string(),
-            reason_code: "CLOUD_UNSUPPORTED_OPERATION".to_string(),
+            cloud_behavior: "Fails closed before connector dispatch. Cooperative task claims use the Local profile.".to_string(),
+            reason_code: "CLOUD_SHARED_CLAIM_UNSUPPORTED".to_string(),
             never_falls_back_to_sqlite: true,
         },
         UnsupportedCloudOperation {
@@ -429,10 +456,10 @@ pub fn build_parity_matrix() -> CloudParityMatrix {
             never_falls_back_to_sqlite: true,
         },
         UnsupportedCloudOperation {
-            operation_id: "knowledge.store".to_string(),
+            operation_id: "knowledge.promotion_feedback".to_string(),
             domain: ParityDomain::BackendIsolationAndPlacement,
             local_supported: true,
-            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); knowledge store is local-only and never falls back to SQLite under `backend = \"cloud\"`.".to_string(),
+            cloud_behavior: "Fails closed (`CLOUD_BACKEND_UNAVAILABLE`); hosted context revisions do not provide Local promotion, feedback, or expiry semantics.".to_string(),
             reason_code: "CLOUD_BACKEND_UNAVAILABLE".to_string(),
             never_falls_back_to_sqlite: true,
         },
@@ -843,7 +870,7 @@ mod tests {
                 .any(|op| op.operation_id == "qa.verify.commit")
         );
         for op_id in [
-            "knowledge.store",
+            "knowledge.promotion_feedback",
             "federation.store",
             "decide.store",
             "health.store",

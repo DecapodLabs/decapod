@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,55 +872,90 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
-    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "id": "change_01M8G10SDMHY4MBNK6QA2537QF",
+    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
+    "shared-repository-context": {
+      "statement": "Current repository guidance is read in one authorized observation and corrections preserve history.",
+      "falsifier": "Corrections overwrite prior records, competing replacements both succeed, or hosted context reads Local SQLite.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "src/decapod/core/cloud_context.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
+      "id": "repository-operational-context-consumer",
+      "summary": "Route compound and ordinary knowledge operations to current hosted records with scoped correction history.",
+      "input_digest": "sha256:e1a3409dc2c43951ebfbdf993553653d6e35535c2c865ea389be0fa66f0dcbf7",
+      "proof_refs": [
+        "src/decapod/core/cloud_context.rs"
+      ]
     },
     {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "shared-context-consumer-01694",
+      "summary": "Incorporate the v0.169.4 accepted target and refresh reviewed context guidance.",
+      "input_digest": "sha256:30a156917fd991e1639aa339ad6c97827d7ad569bfa19e5b60308face4dac8e0",
+      "proof_refs": [
+        "src/decapod/core/cloud_context.rs"
+      ]
+    },
+    {
+      "id": "shared-context-release-inventory",
+      "summary": "Refresh the reviewed source inventory after the accepted 0.169.4 package version change. Preserve the existing workflow and check requirements.",
+      "input_digest": "sha256:6fd09637119ee771776dc3ffea49b9cf28cce68c6cdc381cf11411834a6c3337",
+      "proof_refs": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ]
+    },
+    {
+      "id": "shared-context-accepted-b049",
+      "summary": "Reconcile the accepted #1992 documentation changes and refresh shared context proof against the new master.",
+      "input_digest": "sha256:f70e27cd666c63be4e1454c268d3711a93edd069c99809131ccb9c7610d96b63",
+      "proof_refs": [
+        "git:b049135963d158139a610904752cc546c22e606d"
+      ]
+    },
+    {
+      "id": "shared-context-accepted-170e",
+      "summary": "Integrate accepted v0.169.5 metadata and reconcile the verified package-only inventory.",
+      "input_digest": "sha256:22035a5e798506331f9ad42f66d9ba4b3169266ec610bb274d7db3d073216f45",
+      "proof_refs": [
+        "git:170efc04ae39ec9ba78e27db941ac86731c9969e"
+      ]
+    },
+    {
+      "id": "shared-context-accepted-e108",
+      "summary": "Preserve accepted #1997 storage, reconciled shared context specifications and current review bindings.",
+      "input_digest": "sha256:d92cf01ea9a1c2538fd38264f7ec8537ad4a1040c9ecf7db8f614c453332c3df",
+      "proof_refs": [
+        "git:e108317423a8d6fc12cbc3bc01017c76706dc1e2"
+      ]
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:change_01M8G10SDMHY4MBNK6QA2537QF": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Hosted repository knowledge and coherent operational context",
+      "refined_intent": "Hosted repository knowledge and coherent operational context",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,126 +968,215 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Persist authorized repository knowledge and decision revisions and expose one bounded task and guidance observation. Keep Local SQLite, Git artifacts, private device custody and proof authority intact.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "Focused native or deterministic tests plus configured Decapod validation"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
+          "reason": "Preserve the shared Cloud snapshot contract alongside the accepted storage field and write-trigger architecture.",
+          "reviewed_code_fingerprint": "cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20",
+          "spec_material_hash": "1c3897b21737c8a7cdd7947f45c8e71f3a5230317e42d4202d96224d527ded68"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "reason": "The hosted knowledge and revision readback and the accepted datastore manifest and triggers retain their documented interfaces.",
+          "reviewed_code_fingerprint": "cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20",
+          "spec_material_hash": "18f7d9bd50e8e6edfbd19a22403f64a2c15c941255a97dfe7caf289c68be342f"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reason": "Cloud operational context bypasses the retained Local database. The accepted storage owner and write guards remain intact.",
+          "reviewed_code_fingerprint": "cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20",
+          "spec_material_hash": "dd7ac27adb32274254a2dba14e8ed4a30e972b0875c0ab3a19bafa5989dd763e"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Hosted repository knowledge and coherent operational context",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "code_01m8g0nzss5d8aar"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853492Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch",
+        "Private sessions, Git files and proof admission have separate authority"
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:b77d91c83f5f855d799a30d96491388d194f231508d73df132eec54632b32038",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
+          "name": "accepted-release-merge",
           "status": "passed"
         },
         {
-          "name": "pg17_utf8_gc_parity",
+          "name": "accepted-storage-merge",
           "status": "passed"
         },
         {
-          "name": "storage_contracts::tests",
+          "name": "accepted-target-merge",
           "status": "passed"
         },
         {
-          "name": "storage_owner::tests",
+          "name": "current-candidate-provider",
+          "status": "partial"
+        },
+        {
+          "name": "diff-check",
           "status": "passed"
         },
         {
-          "name": "tests/group_broker",
+          "name": "focused-rust-context",
           "status": "passed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "branch_01M8G10SJN3ZD7B959CNN083TP": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "branch_01M8G10SJN3ZD7B959CNN083TP",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  "src/decapod/core/cloud_context.rs"
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "diff-check"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  "root"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/cloud_context.rs"
+                ],
+                "proof_refs": [
+                  "focused-rust-context"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Integrated accepted b049135963d158139a610904752cc546c22e606d (#1992), preserving both authored spec traditions and using governance merge reconciliation. Source behavior unchanged. Exact configured validation remains required."
+                ],
+                "proof_refs": [
+                  "accepted-target-merge"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Integrated accepted 170efc04ae39ec9ba78e27db941ac86731c9969e, a package version and release changelog change. The released 0.169.5 controller refreshes the release projections and exact reviewed source inventory. Candidate implementation bytes remain unchanged."
+                ],
+                "proof_refs": [
+                  "accepted-release-merge"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, event, TODO, config, tests, and docs against original target bytes. Shared-context implementation is unchanged. Prior provider receipt is historical, and this exact merged candidate requires a fresh receipt."
+                ],
+                "proof_refs": [
+                  "accepted-storage-merge",
+                  "current-candidate-provider"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1060,26 +1184,29 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "Integrated accepted 170efc04ae39ec9ba78e27db941ac86731c9969e, a package version and release changelog change. The released 0.169.5 controller refreshes the release projections and exact reviewed source inventory. Candidate implementation bytes remain unchanged.",
+        "Integrated accepted b049135963d158139a610904752cc546c22e606d (#1992), preserving both authored spec traditions and using governance merge reconciliation. Source behavior unchanged. Exact configured validation remains required.",
+        "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, event, TODO, config, tests, and docs against original target bytes. Shared-context implementation is unchanged. Prior provider receipt is historical, and this exact merged candidate requires a fresh receipt.",
+        "src/decapod/core/cloud_context.rs"
       ],
       "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
+      "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
       "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
+        "src/decapod/core/cloud_context.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "Hosted scoped repository revisions and snapshot",
+        "root"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "branch_01M8G10SJN3ZD7B959CNN083TP",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "code_01m8g0nzss5d8aar",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

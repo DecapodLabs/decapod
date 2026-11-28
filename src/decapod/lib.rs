@@ -4105,6 +4105,14 @@ pub fn run() -> Result<(), error::DecapodError> {
             };
             let cloud_todo_command = is_cloud_todo_command(&cli.command, &workspace_root)?;
             if configured_backend.is_cloud()
+                && let Command::Data(DataCli {
+                    command: DataCommand::Knowledge(knowledge_cli),
+                }) = &cli.command
+                && core::cloud_context::supported(&knowledge_cli.command)
+            {
+                return core::cloud_context::run_command(&workspace_root, &knowledge_cli.command);
+            }
+            if configured_backend.is_cloud()
                 && !cloud_todo_command
                 && !is_cloud_file_only_command(&cli.command, predecoded_rpc_request.as_ref())
             {
@@ -11128,6 +11136,7 @@ fn run_data_command(
             match knowledge_cli.command {
                 KnowledgeCommand::Add {
                     id,
+                    kind,
                     title,
                     text,
                     provenance,
@@ -11137,6 +11146,11 @@ fn run_data_command(
                     supersedes,
                     scope,
                 } => {
+                    if kind != "knowledge" {
+                        return Err(error::DecapodError::ValidationError(
+                            "Use decide record for a Local decision.".into(),
+                        ));
+                    }
                     let conflict_policy = knowledge::parse_conflict_policy(&on_conflict)?;
                     let params = knowledge::AddKnowledgeParams {
                         id: &id,
@@ -11171,6 +11185,10 @@ fn run_data_command(
                         },
                     )?;
                     println!("{}", serde_json::to_string_pretty(&results).unwrap());
+                }
+                KnowledgeCommand::Show { id } => {
+                    let record = knowledge::get_knowledge(project_store, &id)?;
+                    println!("{}", serde_json::to_string_pretty(&record).unwrap());
                 }
                 KnowledgeCommand::Promote {
                     source_entry_id,

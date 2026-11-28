@@ -3279,6 +3279,8 @@ pub(crate) enum KnowledgeCommand {
     Add {
         #[clap(long)]
         id: String,
+        #[clap(long, default_value = "knowledge", value_parser = ["knowledge", "decision"])]
+        kind: String,
         #[clap(long)]
         title: String,
         #[clap(long)]
@@ -3300,6 +3302,11 @@ pub(crate) enum KnowledgeCommand {
     Search {
         #[clap(long)]
         query: String,
+    },
+    /// Inspect one immutable record and its current or historical status
+    Show {
+        #[clap(long)]
+        id: String,
     },
     /// Record explicit promotion of advisory/episodic knowledge into procedural class
     Promote {

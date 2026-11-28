@@ -18,6 +18,10 @@ pub struct KnowledgeContext {
     pub content_bytes: usize,
     pub source_hash: String,
     pub valid_until: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cloud_observation: Option<crate::core::cloud_context::CloudContextObservation>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cloud_unavailable_reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
@@ -54,7 +58,7 @@ fn context_json(value: &impl Serialize) -> Result<Vec<u8>, error::DecapodError> 
     })
 }
 
-/// Disposable advisory projection from the existing local knowledge owners.
+/// Resolve advisory knowledge at the repository backend boundary.
 /// Current plan/policy authority remains in its canonical sibling surfaces.
 pub fn resolve_context(
     store: &Store,
@@ -72,6 +76,18 @@ pub fn resolve_context(
     if store.kind != crate::core::store::StoreKind::Repo {
         packet.status = "private_store_excluded".into();
         return Ok(packet);
+    }
+    // The effective project configuration must be resolved before accessing
+    // the canonical local store, including from a linked worktree.
+    if crate::core::cloud_workspace::is_cloud_project(repo_root) {
+        return match crate::core::cloud_context::resolve(repo_root, query, task_id, touched_paths) {
+            Ok(context) => Ok(context),
+            Err(error) => {
+                packet.status = "cloud_knowledge_unavailable".into();
+                packet.cloud_unavailable_reason = crate::core::cloud_context::reason(&error);
+                Ok(packet)
+            }
+        };
     }
     if !knowledge_db_path(&store.root).is_file() {
         packet.status = "store_uninitialized".into();
