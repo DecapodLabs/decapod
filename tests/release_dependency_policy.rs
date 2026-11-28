@@ -8,7 +8,7 @@ fn manifest() -> toml::Value {
 fn dactyl_release_uses_registry_version_and_matching_lockfile() {
     let manifest = manifest();
     let dependency = &manifest["dependencies"]["dactyl-db"];
-    assert_eq!(dependency["version"].as_str(), Some("=0.21.0"));
+    assert_eq!(dependency["version"].as_str(), Some("=0.22.0"));
     for source in ["git", "rev", "branch", "tag", "path"] {
         assert!(
             dependency.get(source).is_none(),
@@ -24,14 +24,14 @@ fn dactyl_release_uses_registry_version_and_matching_lockfile() {
         .filter(|package| package["name"].as_str() == Some("dactyl-db"))
         .collect();
     assert_eq!(dactyl.len(), 1, "one canonical Dactyl dependency");
-    assert_eq!(dactyl[0]["version"].as_str(), Some("0.21.0"));
+    assert_eq!(dactyl[0]["version"].as_str(), Some("0.22.0"));
     assert_eq!(
         dactyl[0]["source"].as_str(),
         Some("registry+https://github.com/rust-lang/crates.io-index")
     );
     assert_eq!(
         dactyl[0]["checksum"].as_str(),
-        Some("0b24815ef383ab731ccfa6e6b83e2dbb62ba3b444137b973683c17324d9a19d7")
+        Some("881ac006c96be79ec75ddc2379b0aabd6ee2a71cd9e3e8aee95d0146992f731b")
     );
 }
 

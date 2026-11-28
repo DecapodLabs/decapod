@@ -955,6 +955,11 @@
       "id": "released-dactyl-bazel-pin",
       "summary": "Regenerate the Bazel crate-universe lock for the verified Dactyl package and bind the current reviews.",
       "input_digest": "sha256:69783955841eefd8ccda0f0e001af77276819a02bc36df467e27c531cdd3488c"
+    },
+    {
+      "id": "dactyl022-release-policy",
+      "summary": "Keep exact registry provenance checks and audit the checksum-verified Dactyl v0.22.0 artifact.",
+      "input_digest": "sha256:47eae05c920c40110e571d3381e6eb00a514b978ae756417f4aa7fc3437ce75e"
     }
   ],
   "intents": {
@@ -999,21 +1004,21 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "The existing client, transport and hosted authorization boundaries own the operation.",
-          "reviewed_code_fingerprint": "00d27c5f848c811d2f76915d3079cdaa46e085e78e914e8137229ac6709c0006",
+          "reviewed_code_fingerprint": "291ab8f4b148a818dfacf76685999740ca9a2a81941263bc727d512ee2b22201",
           "spec_material_hash": "6db41292697d73f3952414b8a712979541f94bc79850d44024033595a2d6483c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "The contributor route activates verified authority for the originating repository.",
-          "reviewed_code_fingerprint": "00d27c5f848c811d2f76915d3079cdaa46e085e78e914e8137229ac6709c0006",
+          "reviewed_code_fingerprint": "291ab8f4b148a818dfacf76685999740ca9a2a81941263bc727d512ee2b22201",
           "spec_material_hash": "91373c4c48a9928396553b15e52f43faf1ab6b2004b9facec30a6b7cfaa6b706"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "All grants still require verified managed identity and server admission.",
-          "reviewed_code_fingerprint": "00d27c5f848c811d2f76915d3079cdaa46e085e78e914e8137229ac6709c0006",
+          "reviewed_code_fingerprint": "291ab8f4b148a818dfacf76685999740ca9a2a81941263bc727d512ee2b22201",
           "spec_material_hash": "4f0722f8f82a71ed39351e0e19aac413f968aad28c13d7a0932a699fd33cf52a"
         }
       ],
@@ -1025,7 +1030,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795850604Z"
+      "updated_at": "1795852589Z"
     },
     "trajectory": {
       "active_boundaries": [
