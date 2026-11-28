@@ -6,6 +6,11 @@
 - **Guide & reference chapters (`docs/book/src/{quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Contain zero `https://decapodlabs.ai/pricing` links and zero `$50/contributor/repo/mo` commercial claims while keeping factual `Cloud Signup`, `Organization Admin`, and `backend = "cloud"` runtime boundaries intact.
 - **Regression contract (`tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings`)**: Enforces absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs`, `docs/book/src/index.md`, `quickstart.md`, `introduction.md`, `concepts/faq.md`, `reference/cloud-projects.md`, `reference/propodus.md`, and `workflows/multi-agent.md`, while preserving `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and CSS/layout class invariants. Runtime Rust CLI/RPC modules under `src/` are unchanged.
 
+## `#1367` Cold Continuation CLI Inspection & Workunit Re-Checkpoint Contracts (`src/decapod/lib.rs`, `src/decapod/core/workunit.rs`)
+
+- **Cold pre-handoff read-only CLI surfaces (`src/decapod/lib.rs`)**: `decapod govern plan status`, `decapod govern workunit {get, status, journal-status}`, `decapod govern trajectory {status, verify-resume}`, `decapod data broker {audit, verify}`, and dry-run `decapod data broker repair` execute read-only inside another actor's isolated worktree without returning `AUTHORING_CUSTODY_STALE`; all mutating `govern` and `data broker repair --apply` commands remain gated on active exclusive custody.
+- **`checkpoint_workunit` drift transition (`src/decapod/core/workunit.rs`)**: Calling `decapod govern workunit checkpoint` on a previously bound, non-`Verified` workunit whose material, plan, or lease custody drifted strips stale `proof_results` and returns `resumable: true`, `proof_status: "not_proven"`; unbound legacy passing baselines continue to fail with `WORKUNIT_CHECKPOINT_REQUIRED`.
+
 ## `#1568` `data db` CLI & `data.database.*` RPC `--delegated-grant-id` & Cloud Guard Interfaces (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/db_maintenance.rs`, `docs/agent/command-contracts.md`)
 
 - **CLI flags (`src/decapod/cli.rs`)**: Adds `--delegated-grant-id <ID>` (alias `--grant-id`) to `DatabaseCommand::{Capabilities, Verify, Backup, Recover}`, `DatabaseLockCommand::{Diagnose, Retry, ReleaseOwn}`, and `DatabaseMaintainCommand::{Inspect, Verify, LockInspect, WalCheckpoint, Backup, Recover}`.
@@ -2774,7 +2779,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7`
+- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

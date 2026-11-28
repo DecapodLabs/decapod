@@ -914,6 +914,15 @@
       "proof_refs": [
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "chk-4-merge-master-2006",
+      "summary": "Merge origin/master (PR #2006), refresh living specs, and record all 3 spec reviews",
+      "input_digest": "sha256:c39764c45ca0930057c9c2cb4f8b8041c40bb48afc6b2c492845cc785e23aaa6",
+      "proof_refs": [
+        "docs/book/theme/index.hbs",
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -957,22 +966,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master (#2005) and preserved mdBook hide-pricing architecture spec updates",
-          "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
-          "spec_material_hash": "aeeaddd890d3dd43d34a9566b825bbea5037ba91edf498e4afe6c6330e82eddf"
+          "reason": "Merged origin/master (#2006) and preserved mdBook hide-pricing architecture spec updates",
+          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
+          "spec_material_hash": "94e19ce1e4940ae29dfee38f505ba04e5142a421177c26e1544d3126318acbf8"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master (#2005) and preserved mdBook hide-pricing and doc_alignment interface spec updates",
-          "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
-          "spec_material_hash": "b1676599865a98ec59d155b13ca033cebc232a0f28c7cbcadf96a03ac6507578"
+          "reason": "Merged origin/master (#2006) and preserved mdBook hide-pricing and doc_alignment interface spec updates",
+          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
+          "spec_material_hash": "66514f95ab932ff0779ba9b983df2ea94ac1fd92e3de6b31c5a352808e17342c"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Docs-only mdBook pricing-link removal and tests/doc_alignment.rs update; zero src/ Rust, authentication, egress, or credential-boundary changes",
-          "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
+          "reason": "Docs-only mdBook pricing-link removal and tests/doc_alignment.rs update after merging origin/master (#2006); zero src/ Rust, auth, egress, or credential changes",
+          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
           "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
@@ -984,7 +993,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795872351Z"
+      "updated_at": "1795873807Z"
     },
     "trajectory": {
       "active_boundaries": [

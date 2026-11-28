@@ -4,6 +4,11 @@
 - **Book source chapters (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Routes the `Decapod Cloud` card primary action on `index.md` to internal `reference/cloud-projects.html` (`Cloud project docs →`), replaces commercial `$50/contributor/repo/mo` / `$0 surprise overages` prose with factual `backend = "cloud"` coordination boundaries, and preserves `https://decapodlabs.ai/signup` and `https://decapodlabs.ai/admin` links with zero edits under `src/`.
 - **Alignment test (`tests/doc_alignment.rs`)**: Updates `test_docs_landing_page_links_local_and_cloud_offerings` to assert `reference/cloud-projects.html`, `https://decapodlabs.ai/signup`, `https://decapodlabs.ai/admin`, and absence of `https://decapodlabs.ai/pricing` and `$50/contributor/repo/mo` across `docs/book/theme/index.hbs` and all affected `docs/book/src/` chapters.
 
+## Cross-Harness Continuation Inspection & Stale-Proof Invalidation (`#1367`)
+
+- **Read-only observer exemption (`src/decapod/lib.rs::command_requires_worktree`)**: Exempts `PlanCommand::Status`, `WorkunitCommand::{Get, Status, JournalStatus}`, `TrajectoryCommand::{Status, VerifyResume}`, and `DataCommand::Broker(BrokerCommand::{Audit, Verify, Repair { apply: false, .. }})` from authoring-lease custody rejection so cold replacement actors can inspect canonical state and crash divergences before `todo.handoff`.
+- **Stale-pass stripping in `checkpoint_workunit` (`src/decapod/core/workunit.rs`)**: Splits `has_passing_or_hashed_proof` handling so `previous.binding.is_none()` and `WorkUnitStatus::Verified` retain `verify_resume_record` enforcement, whereas non-`Verified` drifted checkpoints clear `proof_results`, `validation_epoch`, `validation_record`, and `proof_hashes` before binding the current commit/custody generation.
+
 ## End-to-End Cloud `037` Delegated-Grant Authority Wiring & Local SQLite Isolation (`#1568`)
 
 - **Control-plane authority resolver (`src/decapod/core/db_maintenance.rs`)**:
@@ -2240,7 +2245,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7`
+- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

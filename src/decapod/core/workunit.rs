@@ -1954,15 +1954,26 @@ pub fn checkpoint_workunit(
                 "recover the projection before checkpointing",
             ));
         }
-        if previous.manifest.status == WorkUnitStatus::Verified
+        let mut next_manifest = previous.manifest.clone();
+        let has_passing_or_hashed_proof = previous.manifest.status == WorkUnitStatus::Verified
             || previous
                 .manifest
                 .proof_results
                 .iter()
                 .any(|proof| proof.status == "pass")
-            || !previous.proof_hashes.is_empty()
-        {
-            verify_resume_record(root, &previous)?;
+            || !previous.proof_hashes.is_empty();
+        let mut stale_proof_cleared = false;
+        if has_passing_or_hashed_proof {
+            if previous.binding.is_none() || previous.manifest.status == WorkUnitStatus::Verified {
+                verify_resume_record(root, &previous)?;
+            } else if verify_resume_record(root, &previous).is_err() {
+                // Material or custody drifted since the previous bound checkpoint:
+                // invalidate stale passing proof results rather than deadlocking fresh checkpoints.
+                next_manifest.proof_results.clear();
+                next_manifest.validation_epoch = None;
+                next_manifest.validation_record = None;
+                stale_proof_cleared = true;
+            }
         }
         let binding = crate::core::trajectory::capture_execution_binding(root, task_id)?;
         if previous.manifest.intent_ref != binding.intent_id {
@@ -1971,10 +1982,14 @@ pub fn checkpoint_workunit(
                 "workunit intent differs from current execution authority",
             ));
         }
-        let hashes = proof_artifact_hashes(root, &previous.manifest)?;
+        let hashes = if stale_proof_cleared {
+            std::collections::BTreeMap::new()
+        } else {
+            proof_artifact_hashes(root, &next_manifest)?
+        };
         let record = append_snapshot(
             root,
-            &previous.manifest,
+            &next_manifest,
             operation_id,
             "checkpoint",
             expected_generation.unwrap_or(previous.generation),

@@ -5,6 +5,14 @@ Removes public `https://decapodlabs.ai/pricing` links and `$50/contributor/repo/
 - **Theme shell navigation (`docs/book/theme/index.hbs`)**: Removes all three `https://decapodlabs.ai/pricing` entries (top navigation `Pricing`, footer `Pricing ↗`, and right-rail Quick routes `Pricing ↗`) while keeping `Admin ↗` (`https://decapodlabs.ai/admin`), `Trust ↗`, `Evaluation ↗`, `Writing`, `Clack`, and `GitHub ↗` intact.
 - **Landing page & guide prose (`docs/book/src/{index.md,quickstart.md,introduction.md,concepts/faq.md,reference/cloud-projects.md,reference/propodus.md,workflows/multi-agent.md}`)**: Removes the `Compare Local & Cloud` `/pricing` header link and `$50` badge/claims in `index.md`, replaces the primary `View Cloud pricing` CTA with `Cloud project docs →` (`reference/cloud-projects.html`), removes `/pricing` links and `$50` copy across the onboarding, FAQ, workflow, and Cloud reference pages while retaining factual `Organization Admin` and `Cloud Signup` routes, and updates `tests/doc_alignment.rs::test_docs_landing_page_links_local_and_cloud_offerings` to enforce zero `/pricing` or `$50/contributor/repo/mo` regressions across `docs/book/`.
 
+## Cold Cross-Harness Continuation Custody & Non-Deadlocking Workunit Re-Checkpointing (`#1367`, `#1735`)
+
+Eliminates two kernel continuation gaps discovered during genuine cross-harness (`agy` -> `codex`) `"Continue PR #42"` execution with active owner + stale pass + unknown-outcome mutation:
+
+- **Read-only continuation inspection before handoff (`src/decapod/lib.rs::command_requires_worktree`)**: Allows a cold replacement harness inside an isolated worktree to inspect `govern plan status`, `govern workunit {get,status,journal-status}`, `govern trajectory {status,verify-resume}`, and read-only `data broker {audit,verify,repair --apply=false}` without hitting `AUTHORING_CUSTODY_STALE`, while keeping all mutating commands and `infer orientation` custody-gated.
+- **Non-deadlocking stale-pass invalidation on fresh workunit checkpoint (`src/decapod/core/workunit.rs::checkpoint_workunit`)**: When a previously bound (`binding.is_some()`), non-`Verified` workunit drifts in source tree or task lease custody, `checkpoint_workunit` clears stale `proof_results`, `proof_hashes`, and `validation_*` fields and captures the current execution binding (`proof_status = "not_proven"`) instead of deadlocking in a self-referential `EXECUTION_MATERIAL_CHANGED` loop, while preserving strict failure for `Verified` and unbound legacy baselines.
+- **Regression & cross-harness proof (`tests/unit/core/workunit_journal_tests.rs`, `tests/gate_admission_and_resilience.rs`)**: Covers drifted `checkpoint_workunit` recovery and cold pre-handoff read-only inspection alongside genuine `agy` -> `codex` same-continuation-unit takeover receipts.
+
 ## End-to-End Propodus `037` Cloud Delegated-Grant Admission Across `data db` CLI & RPC (`#1568`)
 
 Wires Propodus migration `037` Cloud repository-access (`propodus_repository_access_v1`) and delegated-grant (`propodus_delegated_grants_v1`) resolution into every live `decapod data db` CLI and `data.database.*` RPC discovery/execution path when `[repo].backend = "cloud"`, while preserving fail-closed unauthenticated refusal (`CLOUD_PRINCIPAL_UNVERIFIED`) and prohibiting any local `.decapod/data/decapod.db` SQLite open/create fallback (`CLOUD_LOCAL_SQLITE_UNSUPPORTED`):
@@ -1561,7 +1569,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7`
+- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
