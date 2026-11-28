@@ -547,6 +547,7 @@ pub fn resolve_delivery_endpoint(input: &DeliveryResolutionInput) -> ResolvedDel
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn make_duty(
     duty_id: &str,
     function: ProfessionalFunction,
