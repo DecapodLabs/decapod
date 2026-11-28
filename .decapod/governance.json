@@ -960,6 +960,11 @@
       "id": "dactyl022-release-policy",
       "summary": "Keep exact registry provenance checks and audit the checksum-verified Dactyl v0.22.0 artifact.",
       "input_digest": "sha256:47eae05c920c40110e571d3381e6eb00a514b978ae756417f4aa7fc3437ce75e"
+    },
+    {
+      "id": "accepted-storage-integration",
+      "summary": "Preserve the contributor changes while integrating the accepted storage contract.",
+      "input_digest": "sha256:16549e74d1b1913cacaa4dbc70a2df787d54c986fdd61583f41eca6ea4b891c5"
     }
   ],
   "intents": {
@@ -1004,22 +1009,22 @@
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "The existing client, transport and hosted authorization boundaries own the operation.",
-          "reviewed_code_fingerprint": "291ab8f4b148a818dfacf76685999740ca9a2a81941263bc727d512ee2b22201",
-          "spec_material_hash": "6db41292697d73f3952414b8a712979541f94bc79850d44024033595a2d6483c"
+          "reviewed_code_fingerprint": "307ac4647f236b100d139c0c51ab31205678f6303929749ad6230df18802a088",
+          "spec_material_hash": "6ccfc1f91bea2a46893f3016945fce79834664695aa4af692efa50012d755b53"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "The contributor route activates verified authority for the originating repository.",
-          "reviewed_code_fingerprint": "291ab8f4b148a818dfacf76685999740ca9a2a81941263bc727d512ee2b22201",
-          "spec_material_hash": "91373c4c48a9928396553b15e52f43faf1ab6b2004b9facec30a6b7cfaa6b706"
+          "reviewed_code_fingerprint": "307ac4647f236b100d139c0c51ab31205678f6303929749ad6230df18802a088",
+          "spec_material_hash": "e6dc6df9290a2c28bc3c39ef2a08cc41ecb19c1a39b5794a46bc3254c48ca667"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "All grants still require verified managed identity and server admission.",
-          "reviewed_code_fingerprint": "291ab8f4b148a818dfacf76685999740ca9a2a81941263bc727d512ee2b22201",
-          "spec_material_hash": "4f0722f8f82a71ed39351e0e19aac413f968aad28c13d7a0932a699fd33cf52a"
+          "reviewed_code_fingerprint": "307ac4647f236b100d139c0c51ab31205678f6303929749ad6230df18802a088",
+          "spec_material_hash": "c833430c412a48824d5cc4b93fe48f9e937438e720a2fee83956b7b1a8f801c9"
         }
       ],
       "state": "APPROVED",
@@ -1030,7 +1035,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795852589Z"
+      "updated_at": "1795853432Z"
     },
     "trajectory": {
       "active_boundaries": [
