@@ -49,6 +49,17 @@
 
 # Interfaces
 
+## Authenticated `OfficialCli` ETag/304 cache, `selective-prepare` / `run-selective` & Hop 2B `ci.yml` contract (`#1573`, `#1672` Hop 2A)
+
+- **`OfficialCli` `ProviderRequest::GithubGet` wire contract (`src/decapod/core/snapshot_provider/mod.rs`)**: Injects `-i` and conditional `If-None-Match` headers on `gh api` calls, returning stripped JSON response bodies on `200`/`304`, failing closed on unpaired `304`, and pacing polls via `Budget::wait_for_public_github_quota` / `wait_for_public_github_poll`.
+- **`integration_shards` selective subcommands (`assets/tools/integration_shards.rs`, `assets/tools/source_ci/selective-{prepare,worker}.sh`)**:
+  - `integration-shards prepare-selective --output <DIR>` builds `//:build_lifecycle` and all `21` `SELECTIVE_TARGETS` once and stages binaries + `.runfiles` with hard-linked deduplication (`copy_tree`).
+  - `integration-shards run-selective --artifact <DIR> --targets <CSV>` runs selected target binaries concurrently (up to `4` threads) under `build_lifecycle`.
+  - `selective-prepare.sh` emits `target/selective-custody-artifacts/selective-archive.v1` (`<64hex>  <bytes>`), verified in `integration::record` and matched against `input_artifact` `"target/selective-download/selective-tests.tar"` in `source_policy.rs`.
+- **`readiness_profile::reviewed_workflow_digests` & `reviewed_next_hop_workflow_digests`**:
+  - `.github/workflows/release.yml` primary digest updated to `sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310`.
+  - `reviewed_next_hop_workflow_digests()` pre-admits `.github/workflows/ci.yml` at `sha256:ba728f59ffa86f548c9d3946753994def1b220c411c38f7395ff2a83376fb115`.
+
 ## Batch custody transport, unbundled CI test targets & next-hop workflow admission (`#1400`, `#1573`, `#1672` Hop 1)
 
 - **`snapshot_provider::Runner::execute_batch` & `GithubWorkflowInventory::download_artifacts_batch`**:
@@ -2745,7 +2756,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `2c7a6039ef4394cefc1230d76e27ee303e03d1e8478c9e51f40ff6ec66cb1b2a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

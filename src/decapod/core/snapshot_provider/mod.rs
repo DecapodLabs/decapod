@@ -239,11 +239,15 @@ pub trait Runner {
 /// installation, login, token extraction or persistent settings changes occur here.
 type AuthorizationCheck = Box<dyn FnMut(&CommandSpec, &Path) -> Result<()>>;
 
+const GITHUB_ETAG_CACHE_MAX_ENTRIES: usize = 128;
+const GITHUB_ETAG_CACHE_MAX_BODY_BYTES: usize = 2 * 1024 * 1024;
+
 pub struct OfficialCli {
     git: PathBuf,
     gh: Option<PathBuf>,
     bk: Option<PathBuf>,
     authorize: AuthorizationCheck,
+    etag_cache: std::collections::BTreeMap<String, (String, Vec<u8>)>,
 }
 impl OfficialCli {
     /// Git-only transport paired with a sealed public reader or a trusted host.
@@ -261,6 +265,7 @@ impl OfficialCli {
             gh: None,
             bk: None,
             authorize: Box::new(authorize),
+            etag_cache: std::collections::BTreeMap::new(),
         })
     }
     pub fn new<A>(git: PathBuf, gh: PathBuf, bk: Option<PathBuf>, authorize: A) -> Result<Self>
@@ -278,6 +283,7 @@ impl OfficialCli {
             gh: Some(gh),
             bk,
             authorize: Box::new(authorize),
+            etag_cache: std::collections::BTreeMap::new(),
         })
     }
 }
@@ -416,9 +422,99 @@ impl OfficialCli {
             stdout: captured.output.stdout,
         })
     }
+    fn execute_github_get(
+        &mut self,
+        spec: &CommandSpec,
+        path: &str,
+        budget: &Budget<'_>,
+    ) -> Result<Reply> {
+        budget.wait_for_public_github_quota()?;
+        spec.authorize_provider_read()?;
+        let program = self.gh.as_ref().ok_or_else(|| {
+            io::Error::new(io::ErrorKind::NotFound, "configured GitHub CLI unavailable")
+        })?;
+        (self.authorize)(spec, program)?;
+        let mut c = Command::new(program);
+        c.current_dir(&spec.cwd);
+        c.env("GH_PROMPT_DISABLED", "1")
+            .env("GH_PAGER", "cat")
+            .env("PAGER", "cat")
+            .env_remove("GH_DEBUG")
+            .env_remove("DEBUG")
+            .env_remove("GH_FORCE_TTY");
+        let cached_etag = self.etag_cache.get(path).map(|(etag, _)| etag.clone());
+        ensure(
+            spec.args.first().map(String::as_str) == Some("api"),
+            "unexpected official GitHub API argv",
+        )?;
+        c.arg("api").arg("-i");
+        if let Some(etag) = &cached_etag {
+            c.args(["--header", &format!("If-None-Match: {etag}")]);
+        }
+        c.args(&spec.args[1..]);
+        let limits = ProcessLimits {
+            timeout: budget.remaining()?.min(Duration::from_secs(30)),
+            max_output_bytes: budget.max_bytes,
+        };
+        let reply = Self::run_prepared_command(c, limits, false, budget.cancel)?;
+        let Ok((status, header_bytes, body)) = parse_github_cli_http_response(&reply.stdout) else {
+            return Ok(Reply {
+                exit_code: if reply.exit_code == 0 {
+                    1
+                } else {
+                    reply.exit_code
+                },
+                stdout: Vec::new(),
+            });
+        };
+        if status == 304 {
+            let (_, cached_body) = self.etag_cache.get(path).ok_or_else(|| {
+                invalid(
+                    "authenticated GitHub endpoint returned HTTP 304 without a matching in-process ETag",
+                )
+            })?;
+            budget.observe_public_github_not_modified(header_bytes)?;
+            return Ok(Reply {
+                exit_code: 0,
+                stdout: cached_body.clone(),
+            });
+        }
+        budget.observe_public_github_quota(header_bytes)?;
+        if reply.exit_code != 0 || status != 200 {
+            return Ok(Reply {
+                exit_code: if reply.exit_code == 0 {
+                    1
+                } else {
+                    reply.exit_code
+                },
+                stdout: Vec::new(),
+            });
+        }
+        if let Some(etag) = parse_valid_etag(header_bytes)
+            && body.len() <= GITHUB_ETAG_CACHE_MAX_BODY_BYTES
+        {
+            if self.etag_cache.len() >= GITHUB_ETAG_CACHE_MAX_ENTRIES
+                && !self.etag_cache.contains_key(path)
+                && let Some(oldest) = self.etag_cache.keys().next().cloned()
+            {
+                self.etag_cache.remove(&oldest);
+            }
+            self.etag_cache
+                .insert(path.to_string(), (etag, body.to_vec()));
+        }
+        Ok(Reply {
+            exit_code: 0,
+            stdout: body.to_vec(),
+        })
+    }
 }
 impl Runner for OfficialCli {
     fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+        if spec.program == Program::Github
+            && let Some(ProviderRequest::GithubGet { path }) = spec.provider_request()
+        {
+            return self.execute_github_get(spec, path, budget);
+        }
         let (cmd, limits, is_artifact_zip) = self.prepare_command(spec, budget)?;
         Self::run_prepared_command(cmd, limits, is_artifact_zip, budget.cancel)
     }
@@ -630,16 +726,57 @@ pub(crate) fn public_network_environment(command: &mut Command) {
 const PUBLIC_GITHUB_ETAG_CACHE_MAX_ENTRIES: usize = 64;
 const PUBLIC_GITHUB_ETAG_CACHE_MAX_BODY_BYTES: usize = 2 * 1024 * 1024;
 
+fn parse_github_cli_http_response(bytes: &[u8]) -> Result<(u16, &[u8], &[u8])> {
+    let (end, sep_len) = bytes
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .map(|pos| (pos, 4))
+        .or_else(|| {
+            bytes
+                .windows(2)
+                .position(|w| w == b"\n\n")
+                .map(|pos| (pos, 2))
+        })
+        .ok_or_else(|| invalid("official GitHub CLI response lacks HTTP headers"))?;
+    ensure(end <= 64 * 1024, "provider HTTP headers exceed bound")?;
+    let headers =
+        std::str::from_utf8(&bytes[..end]).map_err(|_| invalid("invalid provider HTTP headers"))?;
+    let mut lines = headers.split('\n').map(|line| line.trim_end_matches('\r'));
+    let status_line = lines
+        .next()
+        .ok_or_else(|| invalid("missing provider HTTP status"))?;
+    let mut status_parts = status_line.split_whitespace();
+    ensure(
+        matches!(
+            status_parts.next(),
+            Some("HTTP/1.0" | "HTTP/1.1" | "HTTP/2" | "HTTP/2.0" | "HTTP/3")
+        ),
+        "unsupported provider HTTP protocol",
+    )?;
+    let status = status_parts
+        .next()
+        .and_then(|s| s.parse::<u16>().ok())
+        .ok_or_else(|| invalid("invalid provider HTTP status"))?;
+    Ok((status, &bytes[..end + sep_len], &bytes[end + sep_len..]))
+}
+
 fn parse_valid_etag(bytes: &[u8]) -> Option<String> {
-    let end = bytes.windows(4).position(|w| w == b"\r\n\r\n")?;
+    let end = bytes
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .or_else(|| bytes.windows(2).position(|w| w == b"\n\n"))?;
     if end > 64 * 1024 {
         return None;
     }
     let headers = std::str::from_utf8(&bytes[..end]).ok()?;
-    let mut values = headers.split("\r\n").skip(1).filter_map(|line| {
-        let (key, value) = line.split_once(':')?;
-        key.eq_ignore_ascii_case("etag").then_some(value.trim())
-    });
+    let mut values = headers
+        .split('\n')
+        .map(|line| line.trim_end_matches('\r'))
+        .skip(1)
+        .filter_map(|line| {
+            let (key, value) = line.split_once(':')?;
+            key.eq_ignore_ascii_case("etag").then_some(value.trim())
+        });
     let value = values.next()?;
     if values.next().is_some()
         || value.len() < 2
@@ -1073,5 +1210,129 @@ mod request_failure_tests {
                 assert!(text.contains(&format!("artifacts/{id}/zip")), "{text}");
             }
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn official_cli_github_get_uses_etag_304_cache_and_quota_observation() {
+        use std::os::unix::fs::PermissionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let git = temp.path().join("fake-git");
+        let gh = temp.path().join("fake-gh");
+        let state = temp.path().join("calls");
+        std::fs::write(&git, "#!/bin/sh\nexit 0\n").unwrap();
+        std::fs::write(
+            &gh,
+            format!(
+                "#!/bin/sh\n\
+                case \"$*\" in *'api -i '*) ;; *) exit 98;; esac\n\
+                n=$(($(cat \"{}\" 2>/dev/null || echo 0) + 1))\n\
+                echo \"$n\" > \"{}\"\n\
+                if [ \"$n\" = 1 ]; then\n\
+                  printf 'HTTP/2.0 200 OK\\nETag: W/\"run-1\"\\r\\nX-RateLimit-Remaining: 4990\\r\\nX-RateLimit-Reset: 1899999999\\r\\n\\r\\n{{\"id\":7}}'\n\
+                  exit 0\n\
+                fi\n\
+                case \"$*\" in *'If-None-Match: W/\"run-1\"'*) ;; *) exit 97;; esac\n\
+                printf 'HTTP/2.0 304 Not Modified\\nETag: W/\"run-1\"\\r\\nX-RateLimit-Remaining: 4990\\r\\nX-RateLimit-Reset: 1899999999\\r\\n\\r\\n'\n\
+                echo 'gh: HTTP 304' >&2\n\
+                exit 1\n",
+                state.display(),
+                state.display()
+            ),
+        )
+        .unwrap();
+        std::fs::set_permissions(&git, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let mut runner = OfficialCli::new(git, gh, None, |spec, _| {
+            spec.authorize_provider_read()?;
+            Ok(())
+        })
+        .unwrap();
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(5), 65536, &cancel).unwrap();
+        let spec = provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7");
+
+        let r1 = checked(&mut runner, spec, &budget).unwrap();
+        assert_eq!(r1, br#"{"id":7}"#);
+        assert_eq!(budget.public_github_requests().unwrap(), 1);
+
+        // Second poll sends If-None-Match; fake-gh exits 1 with HTTP/2.0 304 Not Modified.
+        let r2 = checked(
+            &mut runner,
+            provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7"),
+            &budget,
+        )
+        .unwrap();
+        assert_eq!(r2, br#"{"id":7}"#);
+        assert_eq!(budget.public_github_requests().unwrap(), 1);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn official_cli_github_get_rejects_unpaired_304_and_records_rate_limit() {
+        use std::os::unix::fs::PermissionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let git = temp.path().join("fake-git");
+        let gh = temp.path().join("fake-gh");
+        std::fs::write(&git, "#!/bin/sh\nexit 0\n").unwrap();
+        std::fs::write(
+            &gh,
+            "#!/bin/sh\nprintf 'HTTP/2.0 304 Not Modified\\nETag: W/\"x\"\\r\\n\\r\\n'\nexit 1\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&git, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let mut runner = OfficialCli::new(git.clone(), gh.clone(), None, |spec, _| {
+            spec.authorize_provider_read()?;
+            Ok(())
+        })
+        .unwrap();
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(2), 65536, &cancel).unwrap();
+        let err = runner
+            .execute(
+                &provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7"),
+                &budget,
+            )
+            .unwrap_err()
+            .to_string();
+        assert!(
+            err.contains("HTTP 304 without a matching in-process ETag"),
+            "{err}"
+        );
+
+        // 403 rate-limit exhaustion blocks subsequent request immediately until reset.
+        std::fs::write(
+            &gh,
+            "#!/bin/sh\nprintf 'HTTP/2.0 403 Forbidden\\nX-RateLimit-Remaining: 0\\r\\nX-RateLimit-Reset: 1899999999\\r\\n\\r\\n{\"message\":\"API rate limit exceeded\"}'\nexit 1\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let mut runner = OfficialCli::new(git, gh, None, |spec, _| {
+            spec.authorize_provider_read()?;
+            Ok(())
+        })
+        .unwrap();
+        let tight_budget = Budget::new(Duration::from_millis(50), 65536, &cancel).unwrap();
+        let first = runner
+            .execute(
+                &provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7"),
+                &tight_budget,
+            )
+            .unwrap();
+        assert_eq!(first.exit_code, 1);
+        assert!(first.stdout.is_empty());
+        let second = runner
+            .execute(
+                &provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7"),
+                &tight_budget,
+            )
+            .unwrap_err();
+        assert_eq!(second.kind(), std::io::ErrorKind::TimedOut);
+        assert!(
+            second
+                .to_string()
+                .contains("rate_limit_reset_unix=1899999999")
+        );
     }
 }

@@ -38,6 +38,14 @@ Replaces `core::rpc::error_response`'s hardcoded `"Session may be invalid or exp
 
 # Intent
 
+## Direct `cargo-dist` release pinning, authenticated `OfficialCli` ETag/304 quota pacing & Hop 2B selective-prepare runtime (`#1573`, `#1672` Hop 2A, `#1400`)
+
+Advances Hop 2A off `e10831742` while keeping `.github/workflows/ci.yml` untouched until its exact Hop 2B digest is admitted:
+
+- **Direct GitHub Release `cargo-dist v0.22.1` tarballs (`.github/workflows/release.yml`, `tests/fixtures/release_pinned_preparation.yml`)**: Replaces the `axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh` shell installer (which triggered HTTP 429 rate-limiting on `axodotdev.host`) with pinned direct GitHub Release `.tar.xz` downloads and SHA-256 checksum verification (`772bd100cb51335462cee66fc336252e6b12123cde8e761c07bbc410ada43ad7` on Linux x86_64, `a1a76d7c2e93af7380e00a3662c463f5c70b3e8f0e8e9be30194843ee5920cb7` on macOS aarch64, `e9ccae8d88103d2e42f2b6378df7cecb9466f2d6159da38bd32f31da41b6da05` on macOS x86_64) matching Hop 1's pre-admitted `release.yml` SHA-256 (`sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310`).
+- **Authenticated `OfficialCli` ETag/304 & adaptive quota pacing (`#1573`, `src/decapod/core/snapshot_provider/mod.rs`, `src/decapod/core/snapshot_provider/github_quota.rs`)**: Routes `ProviderRequest::GithubGet` through `gh api -i` with bounded in-process `If-None-Match` (`ETag`) caching, handling `gh`'s non-zero exit (`1`) on `HTTP/2.0 304 Not Modified` without charging `GithubQuota`, parsing `\n`-terminated status lines alongside `\r\n` rate-limit headers, failing closed on unpaired `304`s, and feeding `X-RateLimit-Remaining` / `X-RateLimit-Reset` into `Budget::wait_for_public_github_poll` / `wait_for_public_github_quota`.
+- **Compile-once selective test helpers & Hop 2B `ci.yml` pre-admission (`assets/tools/integration_shards.rs`, `assets/tools/source_ci/selective-{prepare,worker}.sh`, `src/decapod/core/validation_runtime/snapshot/`, `src/decapod/core/readiness_profile.rs`)**: Ships `prepare-selective` / `run-selective` custody helpers (`selective-archive.v1`), dynamic `test-core`/`test-cli` job-name & `test-prepare` producer wiring, and admits Hop 2B's 6-shard compile-once `.github/workflows/ci.yml` (`sha256:ba728f59ffa86f548c9d3946753994def1b220c411c38f7395ff2a83376fb115`) in `reviewed_next_hop_workflow_digests()`.
+
 ## CI shard unbundling, bounded-parallel GHA custody download, and next-hop release admission (`#1672` Hop 1, `#1400`, `#1573`)
 
 Advances three linked throughput and quota reliability tracks off `origin/master` without altering `.github/workflows/*.yml` in Hop 1:
@@ -1540,7 +1548,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `2c7a6039ef4394cefc1230d76e27ee303e03d1e8478c9e51f40ff6ec66cb1b2a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

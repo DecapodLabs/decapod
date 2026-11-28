@@ -141,11 +141,21 @@ pub(super) fn github_sources(
         }
         // Authenticated shared-binary producers are consumed before dependent
         // health/governance jobs. Ordering never changes catalog obligations.
+        let core_total = obligations
+            .iter()
+            .filter(|o| o.key.workflow == workflow && o.key.job == "test-core")
+            .count()
+            .max(1);
+        let cli_total = obligations
+            .iter()
+            .filter(|o| o.key.workflow == workflow && o.key.job == "test-cli")
+            .count()
+            .max(1);
         let mut jobs: Vec<_> = jobs.into_iter().collect();
         jobs.sort_by_key(|((job, _), _)| match job.as_str() {
             "setup" => 0,
-            "integration-prepare" => 1,
-            "integration-status" => 3,
+            "integration-prepare" | "test-prepare" => 1,
+            "integration-status" | "test-core-status" | "test-cli-status" => 3,
             _ => 2,
         });
         enum JobPlan<'a> {
@@ -160,7 +170,13 @@ pub(super) fn github_sources(
         let mut seen_batch = BTreeSet::new();
         for ((logical, matrix), job_obligations) in jobs {
             let prep = (|| -> io::Result<String> {
-                let name = job_name(workflow, &logical, matrix.as_deref())?;
+                let name = job_name_with_counts(
+                    workflow,
+                    &logical,
+                    matrix.as_deref(),
+                    core_total,
+                    cli_total,
+                )?;
                 let matched_jobs: Vec<_> = inventory
                     .jobs()
                     .iter()
@@ -580,10 +596,18 @@ pub(super) fn source_dependencies(
     check: &source::Check,
     provider: evidence::Provider,
 ) -> io::Result<Vec<evidence::Dependency>> {
+    let has_test_prepare = project
+        .catalog
+        .obligations()
+        .iter()
+        .any(|o| o.key.job == "test-prepare");
     let jobs: &[&str] = match check.id {
         "health" | "governance-artifacts" => &["setup"],
         "integration-status" => &["integration-prepare", "test-integration"],
         _ if check.job == "test-integration" => &["integration-prepare"],
+        "selective-core-status" if has_test_prepare => &["test-prepare", "test-core"],
+        "selective-cli-status" if has_test_prepare => &["test-prepare", "test-cli"],
+        _ if has_test_prepare && matches!(check.job, "test-core" | "test-cli") => &["test-prepare"],
         _ => &[],
     };
     let dependencies: Vec<_> = project
@@ -608,7 +632,18 @@ pub(super) fn source_dependencies(
 
 /// Names are finite reviewed workflow contracts; no expression/YAML interpreter
 /// and no observed label is accepted as its own expected mapping.
+#[cfg(test)]
 fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<String> {
+    job_name_with_counts(workflow, job, matrix, 3, 3)
+}
+
+fn job_name_with_counts(
+    workflow: &str,
+    job: &str,
+    matrix: Option<&str>,
+    core_total: usize,
+    cli_total: usize,
+) -> io::Result<String> {
     let simple = match (workflow, job) {
         (".github/workflows/ci.yml", "release-metadata") => "Release Metadata Classification",
         (".github/workflows/ci.yml", "pre-build-validate") => {
@@ -633,6 +668,7 @@ fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<Strin
         (".github/workflows/ci.yml", "deps-lint") => "Lint (dependencies)",
         (".github/workflows/ci.yml", "health") => "Decapod Validate",
         (".github/workflows/ci.yml", "setup") => "Setup & Build Shared Binary",
+        (".github/workflows/ci.yml", "test-prepare") => "Prepare Selective Tests",
         (".github/workflows/ci.yml", "test-core-status") => "Tests (core)",
         (".github/workflows/ci.yml", "test-cli-status") => "Tests (cli)",
         (".github/workflows/ci.yml", "integration-prepare") => "Prepare Integration Tests",
@@ -669,20 +705,20 @@ fn job_name(workflow: &str, job: &str, matrix: Option<&str>) -> io::Result<Strin
                 .ok_or_else(|| invalid("unknown test source matrix"));
         }
         (".github/workflows/ci.yml", "test-core") => {
-            return match matrix {
-                Some("core-1") => Ok("Tests (core 1/3)".into()),
-                Some("core-2") => Ok("Tests (core 2/3)".into()),
-                Some("core-3") => Ok("Tests (core 3/3)".into()),
-                _ => Err(invalid("unknown core shard source matrix")),
-            };
+            return matrix
+                .and_then(|m| m.strip_prefix("core-"))
+                .and_then(|n| n.parse::<usize>().ok())
+                .filter(|&n| n >= 1 && n <= core_total && core_total <= 6)
+                .map(|n| format!("Tests (core {n}/{core_total})"))
+                .ok_or_else(|| invalid("unknown core shard source matrix"));
         }
         (".github/workflows/ci.yml", "test-cli") => {
-            return match matrix {
-                Some("cli-1") => Ok("Tests (cli 1/3)".into()),
-                Some("cli-2") => Ok("Tests (cli 2/3)".into()),
-                Some("cli-3") => Ok("Tests (cli 3/3)".into()),
-                _ => Err(invalid("unknown cli shard source matrix")),
-            };
+            return matrix
+                .and_then(|m| m.strip_prefix("cli-"))
+                .and_then(|n| n.parse::<usize>().ok())
+                .filter(|&n| n >= 1 && n <= cli_total && cli_total <= 6)
+                .map(|n| format!("Tests (cli {n}/{cli_total})"))
+                .ok_or_else(|| invalid("unknown cli shard source matrix"));
         }
         (".github/workflows/ci.yml", "test-integration") => {
             return matrix
@@ -834,8 +870,8 @@ pub(super) fn buildkite_sources(
         let mut expected: Vec<_> = expected.into_iter().collect();
         expected.sort_by_key(|((job, _), _)| match job.as_str() {
             "setup" => 0,
-            "integration-prepare" => 1,
-            "integration-status" => 3,
+            "integration-prepare" | "test-prepare" => 1,
+            "integration-status" | "test-core-status" | "test-cli-status" => 3,
             _ => 2,
         });
         let mut known_inputs = integration::Dependencies::default();
@@ -1413,5 +1449,47 @@ mod tests {
         )
         .unwrap();
         assert_eq!(verified, jobs);
+    }
+
+    #[test]
+    fn selective_prepare_and_six_shard_job_names_resolve_deterministically() {
+        assert_eq!(
+            job_name_with_counts(".github/workflows/ci.yml", "test-prepare", None, 6, 6).unwrap(),
+            "Prepare Selective Tests"
+        );
+        for n in 1..=6 {
+            assert_eq!(
+                job_name_with_counts(
+                    ".github/workflows/ci.yml",
+                    "test-core",
+                    Some(&format!("core-{n}")),
+                    6,
+                    6
+                )
+                .unwrap(),
+                format!("Tests (core {n}/6)")
+            );
+            assert_eq!(
+                job_name_with_counts(
+                    ".github/workflows/ci.yml",
+                    "test-cli",
+                    Some(&format!("cli-{n}")),
+                    6,
+                    6
+                )
+                .unwrap(),
+                format!("Tests (cli {n}/6)")
+            );
+        }
+        assert!(
+            job_name_with_counts(
+                ".github/workflows/ci.yml",
+                "test-core",
+                Some("core-4"),
+                3,
+                3
+            )
+            .is_err()
+        );
     }
 }

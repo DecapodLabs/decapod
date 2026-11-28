@@ -83,7 +83,7 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
         ),
         (
             ".github/workflows/release.yml",
-            "sha256:5db0e38c1c013138048e4c0dea5f968511265033eb3a1561485c3ea1eeb350a4",
+            "sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310",
         ),
         (
             ".github/workflows/security-audit.yml",
@@ -97,8 +97,8 @@ pub fn reviewed_workflow_digests() -> &'static [(&'static str, &'static str)] {
 /// reviewed transition without breaking concurrent PRs or lowering policy checks.
 pub fn reviewed_next_hop_workflow_digests() -> &'static [(&'static str, &'static str)] {
     &[(
-        ".github/workflows/release.yml",
-        "sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310",
+        ".github/workflows/ci.yml",
+        "sha256:ba728f59ffa86f548c9d3946753994def1b220c411c38f7395ff2a83376fb115",
     )]
 }
 

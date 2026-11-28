@@ -30,15 +30,22 @@ fn wait_error(error: std::io::Error, reset: u64) -> std::io::Error {
 // Accept one bounded decimal header; duplicate or malformed hints are unknown.
 // Never retain arbitrary headers, cookies, response bodies or diagnostics.
 fn decimal_header(bytes: &[u8], name: &str) -> Option<u64> {
-    let end = bytes.windows(4).position(|w| w == b"\r\n\r\n")?;
+    let end = bytes
+        .windows(4)
+        .position(|w| w == b"\r\n\r\n")
+        .or_else(|| bytes.windows(2).position(|w| w == b"\n\n"))?;
     if end > 64 * 1024 {
         return None;
     }
     let headers = std::str::from_utf8(&bytes[..end]).ok()?;
-    let mut values = headers.split("\r\n").skip(1).filter_map(|line| {
-        let (key, value) = line.split_once(':')?;
-        key.eq_ignore_ascii_case(name).then_some(value.trim())
-    });
+    let mut values = headers
+        .split('\n')
+        .map(|line| line.trim_end_matches('\r'))
+        .skip(1)
+        .filter_map(|line| {
+            let (key, value) = line.split_once(':')?;
+            key.eq_ignore_ascii_case(name).then_some(value.trim())
+        });
     let value = values.next()?;
     if values.next().is_some()
         || value.is_empty()
@@ -411,6 +418,13 @@ fi
             let spec = provider::gh_spec(temp.path(), "repos/org/repo/actions/runs/7");
             let error = reader.execute(&spec, &budget).unwrap_err().to_string();
             assert!(error.contains("HTTP 304 without a matching in-process ETag"));
+        }
+
+        #[test]
+        fn parses_gh_cli_lf_status_line_and_crlf_rate_limit_headers() {
+            let raw = b"HTTP/2.0 200 OK\nX-RateLimit-Remaining: 4999\r\nX-RateLimit-Reset: 1899999999\r\n\r\n{}";
+            assert_eq!(decimal_header(raw, "x-ratelimit-remaining"), Some(4999));
+            assert_eq!(decimal_header(raw, "x-ratelimit-reset"), Some(1899999999));
         }
     }
 }
