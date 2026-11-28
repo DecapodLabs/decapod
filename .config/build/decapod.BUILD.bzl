@@ -250,25 +250,17 @@ def decapod_targets():
             # Contract enforcement runs 22 real CLI cases sequentially; its
             # 300s aggregate expired after 16 completed cases in hosted CI.
             # The shared helper retains a separate 60s subprocess deadline.
-            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contracts.rs", "tests/cli_contract_enforcement.rs", "tests/entrypoint_correctness.rs"] else "moderate",
+            timeout = "long" if path in ["tests/gatling.rs", "tests/group_broker.rs", "tests/interop_conformance.rs", "tests/cli_contract_enforcement.rs", "tests/entrypoint_validation_contracts.rs"] else "moderate",
             # These suites depend on finite process/request deadlines. Rust's
             # test-threads flag alone does not isolate concurrent Bazel targets.
             # Keep all broker clients concurrent within its exclusive target.
             tags = ["exclusive"] if path in [
                 "tests/group_broker.rs",
                 "tests/validate_termination.rs",
-                "tests/cli_contract_enforcement.rs",
-                # This aggregate launches real CLI fixtures sequentially. Its
-                # 300s deadline also needs isolation from the entrypoint suite.
-                "tests/cli_contracts.rs",
-                "tests/entrypoint_correctness.rs",
             ] else [],
             srcs = [path] + [
-                "tests/consumer_readiness.rs",
-                "tests/sqlite_maintenance.rs",
                 "tests/common/consumer_readiness_fixture.rs",
-                "tests/init_ci_scaffolding.rs",
-                "tests/init_config_behavior.rs",
+                "tests/support/cli_bin.rs",
                 "tests/support/cli_workunit_recovery.rs",
                 "tests/support/justfile_inventory.rs",
                 "tests/support/storage_inventory.rs",
@@ -278,11 +270,14 @@ def decapod_targets():
                 "tests/fixtures/justfile_consumer/src/temperature.rs",
             ] if path == "tests/cli_contracts.rs" else [
                 path,
+                "tests/support/cli_bin.rs",
+            ] if path in ["tests/effective_grant_cli_contracts.rs", "tests/entrypoint_correctness.rs"] else [
+                path,
+                "tests/support/cli_bin.rs",
                 "tests/common/consumer_readiness_fixture.rs",
                 "tests/support/fresh_docs_readiness.rs",
                 "tests/acceptance/publication_admission.rs",
-                "tests/infer_precision.rs",
-            ] if path == "tests/entrypoint_correctness.rs" else [
+            ] if path == "tests/entrypoint_validation_contracts.rs" else [
                 path,
                 "tests/support/recovery_filesystem.rs",
             ] if path == "tests/sqlite_maintenance.rs" else [
@@ -328,7 +323,7 @@ def decapod_targets():
             compile_data = native.glob(["assets/tools/source_ci/*.sh"]) + ["assets/tools/docs_seo.py"] + ([
                 "assets/constitution.json",
                 "assets/schemas/constitution.schema.json",
-            ] if path == "tests/constitution_scaffolding.rs" else ["src/decapod/lib.rs"] if path in ["tests/consumer_readiness.rs", "tests/cli_contracts.rs"] else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
+            ] if path == "tests/constitution_scaffolding.rs" else ["src/decapod/lib.rs"] if path == "tests/consumer_readiness.rs" else [".github/actions/ci-context/action.yml"] if path == "tests/ci_event_context_policy.rs" else [".github/workflows/ci.yml", ".github/workflows/decapod-validate.yml", ".github/workflows/docs.yml", ".github/workflows/docs_sync.yml"] if path == "tests/integration_custody_policy.rs" else ["tests/fixtures/native_proof_fixture.rs"] if path == "tests/native_proof_execution.rs" else ["Cargo.toml", "Cargo.lock"] if path == "tests/release_dependency_policy.rs" else [
                 ".github/workflows/ci.yml",
                 ".github/workflows/nix-flake.yml",
             ] if path == "tests/release_metadata_policy.rs" else [

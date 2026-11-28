@@ -269,6 +269,7 @@ impl Fixture {
 
 /// Scripted accepted-policy fixture, with actual native command execution and
 /// actual CLI/RPC readback. Local Git acceptance is not authenticated human input.
+#[cfg_attr(any(target_os = "linux", target_os = "macos"), test)]
 pub fn selected_roots_reject_omission_and_require_executed_repair() {
     use decapod::core::{
         intent_reconcile::selected::{RootRequirement, SelectedWork},
@@ -477,6 +478,7 @@ pub fn selected_roots_reject_omission_and_require_executed_repair() {
     assert_eq!(host.execution_attempts, 0);
 }
 
+#[cfg_attr(any(target_os = "linux", target_os = "macos"), test)]
 pub fn accepted_global_triangle_requires_policy_repair_and_fresh_mapping() {
     use decapod::core::{
         intent_reconcile::selected::{Relation, RootRequirement, SelectedWork},
@@ -637,6 +639,7 @@ pub fn accepted_global_triangle_requires_policy_repair_and_fresh_mapping() {
     assert!(!conflict.ready && !proposal.ready && !stale_mapping.ready);
 }
 
+#[cfg_attr(any(target_os = "linux", target_os = "macos"), test)]
 pub fn source_history_refuses_counterfeit_origin_then_accepts_restored_fresh_source() {
     use decapod::core::{governance_document, trajectory};
     let fixture = Fixture::new();
@@ -727,6 +730,7 @@ pub fn source_history_refuses_counterfeit_origin_then_accepts_restored_fresh_sou
 /// Scripted accepted-policy fixture, not authenticated human authorship or a
 /// real-model observation. The negative criterion is fixed on the independently
 /// read upstream before the candidate introduces its cross-tenant defect.
+#[cfg_attr(any(target_os = "linux", target_os = "macos"), test)]
 pub fn accepted_tenant_negative_control_rejects_green_positives_and_proves_repair() {
     let mut fixture = Fixture::new();
     let root = &fixture.options.root;
@@ -1314,6 +1318,7 @@ fn candidate_repinning_cannot_replace_an_accepted_required_local_check() {
 }
 
 /// Registered explicitly by the required CLI target so selection includes it.
+#[cfg_attr(any(target_os = "linux", target_os = "macos"), test)]
 pub fn candidate_cannot_repin_a_rewritten_accepted_check_script() {
     let mut fixture = Fixture::new();
     git(&fixture.options.root, &["push", "origin", "HEAD:main"]);
@@ -1572,6 +1577,7 @@ fn proof_authorization_denial_stops_before_native_execution() {
 
 /// Scripted real native execution, not a model-selected or whole-host trace.
 /// Green artifact evidence alone cannot mint an owned mediated-path witness.
+#[test]
 pub fn accepted_required_path_rejects_unmediated_green_and_keeps_optional_unknown() {
     let mut fixture = Fixture::new();
     let first = fixture.validate(&mut fixture.host());
@@ -3288,6 +3294,12 @@ fn per_platform_contract_rejects_missing_host_platform_and_incompatible_native_f
     assert!(!wrong_report.ready, "{wrong_report:?}");
     assert!(!wrong_report.proof_ready);
     assert_eq!(wrong_host.execution_attempts, 1);
+    blocked(&wrong_report, "INCOMPATIBLE_NATIVE_EXECUTABLE");
+    assert_eq!(
+        wrong_report.blockers.last().map(|b| b.code.as_str()),
+        Some("INCOMPATIBLE_NATIVE_EXECUTABLE"),
+        "incompatible executable blocker must not collapse to READINESS_BLOCKED: {wrong_report:?}"
+    );
     blocked(&wrong_report, &foreign_path);
     blocked(&wrong_report, expected_detected);
     blocked(&wrong_report, expected_host_phrase);

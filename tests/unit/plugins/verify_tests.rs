@@ -756,3 +756,113 @@ fn scoped_validation_diagnostics_distinguish_all_task_history_and_unbound_precon
     );
     assert!(!diag.message.contains("code_secret"));
 }
+
+#[test]
+fn scoped_validation_diagnostics_preserve_incompatible_native_executable_and_platform_codes() {
+    // 1. Current runtime emits typed INCOMPATIBLE_NATIVE_EXECUTABLE alongside #1544 check/path detail.
+    let den_typed = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "publication_ready": false,
+        "report": {
+            "status": "fail",
+            "fail_count": 1,
+            "failures": [
+                "publication_readiness: INCOMPATIBLE_NATIVE_EXECUTABLE: fmt: /nix/store/secret-den-hash-alejandra-4.1.0/bin/alejandra is Mach-O arm64; native Linux validation requires ELF x86_64"
+            ]
+        },
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [{
+                "code": "INCOMPATIBLE_NATIVE_EXECUTABLE",
+                "detail": "fmt: /nix/store/secret-den-hash-alejandra-4.1.0/bin/alejandra is Mach-O arm64; native Linux validation requires ELF x86_64"
+            }]
+        }
+    });
+    let typed_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&den_typed).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(typed_diag.stage, Some("readiness"));
+    assert_eq!(typed_diag.scope, Some("repository_local_readiness"));
+    assert_eq!(typed_diag.labels, vec!["INCOMPATIBLE_NATIVE_EXECUTABLE"]);
+    assert!(
+        typed_diag
+            .message
+            .contains("INCOMPATIBLE_NATIVE_EXECUTABLE")
+    );
+    assert!(!typed_diag.message.contains("/nix/store"));
+    assert!(!typed_diag.message.contains("alejandra"));
+    assert!(typed_diag.message.len() < 1024);
+
+    // 2. Legacy/wrapped READINESS_BLOCKED carrying #1544 executable-format text still surfaces INCOMPATIBLE_NATIVE_EXECUTABLE first.
+    let den_wrapped = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "publication_ready": false,
+        "report": {
+            "status": "fail",
+            "fail_count": 1,
+            "failures": [
+                "publication_readiness: READINESS_BLOCKED: shellcheck: /nix/store/secret-den-hash-shellcheck/bin/shellcheck is ELF x86_64 (64-bit); native macOS validation requires Mach-O arm64"
+            ]
+        },
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [{
+                "code": "READINESS_BLOCKED",
+                "detail": "shellcheck: /nix/store/secret-den-hash-shellcheck/bin/shellcheck is ELF x86_64 (64-bit); native macOS validation requires Mach-O arm64"
+            }]
+        }
+    });
+    let wrapped_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&den_wrapped).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(wrapped_diag.stage, Some("readiness"));
+    assert_eq!(wrapped_diag.scope, Some("repository_local_readiness"));
+    assert_eq!(
+        wrapped_diag.labels,
+        vec!["INCOMPATIBLE_NATIVE_EXECUTABLE", "READINESS_BLOCKED"]
+    );
+    assert!(!wrapped_diag.message.contains("/nix/store"));
+    assert!(!wrapped_diag.message.contains("shellcheck"));
+
+    // 3. Per-platform contract selection blockers also survive scoped recovery cleanly.
+    let platform_doc = serde_json::json!({
+        "status": "fail",
+        "scope": "publication_readiness",
+        "readiness": {
+            "scope": "repository_local_readiness",
+            "ready": false,
+            "proof_ready": false,
+            "blockers": [
+                {
+                    "code": "REPOSITORY_COMMAND_CONTRACT",
+                    "detail": "MISSING_PLATFORM_EXECUTION: no reviewed execution entry for host platform linux-x86_64"
+                },
+                {
+                    "code": "REPOSITORY_COMMAND_CONTRACT",
+                    "detail": "INCOMPATIBLE_TARGET_EXECUTOR: deployment target \"macos-only\" requires platform [\"macos-aarch64\"]"
+                }
+            ]
+        }
+    });
+    let platform_diag = super::extract_safe_validation_diagnostic(
+        serde_json::to_string(&platform_doc).unwrap().as_bytes(),
+        b"",
+    );
+    assert_eq!(
+        platform_diag.labels,
+        vec![
+            "MISSING_PLATFORM_EXECUTION",
+            "REPOSITORY_COMMAND_CONTRACT",
+            "INCOMPATIBLE_TARGET_EXECUTOR"
+        ]
+    );
+    assert!(!platform_diag.message.contains("macos-only"));
+}

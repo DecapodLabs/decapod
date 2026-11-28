@@ -420,6 +420,11 @@ const SAFE_BLOCKER_LABELS: &[&str] = &[
     "REPOSITORY_CONTRACT_INVALID",
     "REPOSITORY_CONTRACT_REQUIRED",
     "REPOSITORY_COMMAND_CONTRACT",
+    "REPOSITORY_COMMAND_PLATFORM",
+    "MISSING_PLATFORM_EXECUTION",
+    "INCOMPATIBLE_TARGET_EXECUTOR",
+    "UNKNOWN_DEPLOYMENT_TARGET",
+    "INCOMPATIBLE_NATIVE_EXECUTABLE",
     "REPOSITORY_PROOF_SEAL",
     "READINESS_SNAPSHOT_ADOPTED_PROOF_PENDING",
     "READINESS_INVOCATION_INVALID",
@@ -1154,6 +1159,15 @@ fn extract_labels_from_structured_text(raw: &str, labels: &mut Vec<&'static str>
     // Validation error: EXECUTION_STATE_CHANGED: EXECUTION_POLICY_CHANGED: ...`)
     // while checking non-code nested wrappers.
     for _ in 0..6 {
+        if (current.contains(" is ")
+            && (current.contains("; native Linux validation requires ")
+                || current.contains("; native macOS validation requires ")))
+            || current == "reviewed execution profile requires a different platform"
+            || current.ends_with(": reviewed execution profile requires a different platform")
+        {
+            push_unique_label(labels, "INCOMPATIBLE_NATIVE_EXECUTABLE");
+            break;
+        }
         let Some((token, after)) = split_leading_code_token(current) else {
             break;
         };

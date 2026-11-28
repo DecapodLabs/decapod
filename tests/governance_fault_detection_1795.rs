@@ -248,7 +248,11 @@ fn five_fault_specs() -> Vec<FaultSpec> {
             source_symbol: "readiness_profile::required_source_catalog_with_executor",
             fault_operator: "relax_fence",
             target_snippet: r#"    for (path, expected) in reviewed_workflow_digests() {
-        if discovered.files.get(*path).map(String::as_str) != Some(*expected) {
+        if !is_reviewed_workflow_digest(
+            path,
+            expected,
+            discovered.files.get(*path).map(String::as_str),
+        ) {
             return Err(PlanningFailure::ControllerContractUnsupported(
                 (*path).into(),
             ));

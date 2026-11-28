@@ -148,19 +148,28 @@ pub(super) fn github_sources(
             "integration-status" => 3,
             _ => 2,
         });
-        for ((logical, matrix), obligations) in jobs {
-            let mut transport_failed = false;
-            let imported = (|| -> io::Result<()> {
+        enum JobPlan<'a> {
+            Missing(Vec<&'a profile::Obligation>, io::Error),
+            Ready {
+                obligations: Vec<&'a profile::Obligation>,
+                artifact_name: String,
+            },
+        }
+        let mut plans = Vec::with_capacity(jobs.len());
+        let mut batch_names = Vec::new();
+        let mut seen_batch = BTreeSet::new();
+        for ((logical, matrix), job_obligations) in jobs {
+            let prep = (|| -> io::Result<String> {
                 let name = job_name(workflow, &logical, matrix.as_deref())?;
-                let jobs: Vec<_> = inventory
+                let matched_jobs: Vec<_> = inventory
                     .jobs()
                     .iter()
                     .filter(|j| j.name() == name)
                     .collect();
-                if jobs.len() != 1 {
+                if matched_jobs.len() != 1 {
                     return Err(invalid("actual source job missing or ambiguous"));
                 }
-                let job = jobs[0];
+                let job = matched_jobs[0];
                 if job.status() != "completed" || job.conclusion() != Some("success") {
                     return Err(invalid(
                         "required actual source job did not complete successfully",
@@ -179,11 +188,53 @@ pub(super) fn github_sources(
                         "reviewed measured-custody upload step missing/skipped/failed",
                     ));
                 }
-                let artifact_name = source::custody::artifact_name(
+                source::custody::artifact_name(
                     &logical,
                     matrix.as_deref(),
                     &inventory.run_attempt().to_string(),
-                )?;
+                )
+            })();
+            match prep {
+                Ok(artifact_name) => {
+                    if directory.is_none() && seen_batch.insert(artifact_name.clone()) {
+                        batch_names.push(artifact_name.clone());
+                    }
+                    plans.push(JobPlan::Ready {
+                        obligations: job_obligations,
+                        artifact_name,
+                    });
+                }
+                Err(error) => plans.push(JobPlan::Missing(job_obligations, error)),
+            }
+        }
+        let mut downloaded = BTreeMap::new();
+        if directory.is_none() && !batch_names.is_empty() {
+            let refs: Vec<&str> = batch_names.iter().map(String::as_str).collect();
+            let batch_results =
+                inventory.download_artifacts_batch(runner, &options.root, &refs, budget);
+            for (artifact_name, outcome) in batch_names.into_iter().zip(batch_results) {
+                downloaded.insert(artifact_name, outcome);
+            }
+        }
+        for plan in plans {
+            let (obligations, artifact_name) = match plan {
+                JobPlan::Missing(obligations, error) => {
+                    for obligation in &obligations {
+                        collection.failure(
+                            &obligation.key,
+                            "SOURCE_EXECUTION_CUSTODY_BLOCKED",
+                            &error,
+                        );
+                    }
+                    continue;
+                }
+                JobPlan::Ready {
+                    obligations,
+                    artifact_name,
+                } => (obligations, artifact_name),
+            };
+            let mut transport_failed = false;
+            let imported = (|| -> io::Result<()> {
                 let (selection, artifact_digest, artifact_size, files) = if let Some(directory) =
                     directory
                 {
@@ -221,11 +272,16 @@ pub(super) fn github_sources(
                             })?;
                     (selection, digest, size, files)
                 } else {
-                    // Normal validate owns the exact authenticated download using
+                    // Normal validate owns the exact authenticated batch download using
                     // the run/metadata snapshot already fetched by discover_workflow
                     // (and re-verified against `current` after the workflow loop).
-                    inventory
-                        .download_artifact(runner, &options.root, &artifact_name, budget)
+                    downloaded
+                        .remove(&artifact_name)
+                        .unwrap_or_else(|| {
+                            Err(invalid(format!(
+                                "duplicate selected source artifact: {artifact_name}"
+                            )))
+                        })
                         .map_err(|error| {
                             transport_failed = true;
                             io::Error::new(

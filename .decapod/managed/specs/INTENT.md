@@ -30,6 +30,14 @@ Replaces `core::rpc::error_response`'s hardcoded `"Session may be invalid or exp
 
 # Intent
 
+## CI shard unbundling, bounded-parallel GHA custody download, and next-hop release admission (`#1672` Hop 1, `#1400`, `#1573`)
+
+Advances three linked throughput and quota reliability tracks off `origin/master` without altering `.github/workflows/*.yml` in Hop 1:
+
+- **Bounded-parallel GHA custody artifact collection (`#1400`, `#1573`, `src/decapod/core/snapshot_provider/mod.rs`, `src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: Preserves single-pass `discover_workflow` authentication and existing ETag `304` zero-quota revalidation (`src/decapod/core/snapshot_provider/github_quota.rs`), and executes distinct missing artifact ZIP fetches concurrently across up to `6` bounded workers via `Runner::execute_batch` / `OfficialCli::execute_batch` and `GithubWorkflowInventory::download_artifacts_batch` while keeping per-artifact size, `sha256:` verification, and `artifact_snapshot` parity deterministic and fail-closed.
+- **Core and CLI test unbundling & Bazel parallelization (`#1672` Hop 1, `.config/build/decapod.BUILD.bzl`, `assets/tools/source_ci_profile.rs`, `tests/source_ci_profile_policy.rs`, `tests/*.rs`)**: Splits overloaded aggregates by introducing `tests/support/cli_bin.rs`, extracting `tests/effective_grant_cli_contracts.rs` from `tests/cli_contracts.rs` (removing duplicated `mod consumer_readiness`, `mod init_ci_scaffolding`, `mod init_config_behavior`, and `mod sqlite_maintenance`), extracting `tests/entrypoint_validation_contracts.rs` from `tests/entrypoint_correctness.rs` (removing duplicated `mod infer_precision`), adding missing `#[test]` / `#[cfg_attr(..., test)]` attributes to the `6` standalone tests in `tests/consumer_readiness.rs`, removing redundant `//:group_broker --exact` reruns and unnecessary `--test-threads=1` / `"exclusive"` serialization on `TempDir`-isolated targets, and balancing `selective-core-1..3` and `selective-cli-1..3`.
+- **Two-hop release workflow digest admission (`src/decapod/core/readiness_profile.rs`, `src/decapod/core/init_reconciliation/mod.rs`, `tests/governance_fault_detection_1795.rs`)**: Keeps `.github/workflows/ci.yml` and `.github/workflows/release.yml` untouched in Hop 1 while admitting `reviewed_next_hop_workflow_digests()` alongside `reviewed_workflow_digests()` via `is_reviewed_workflow_digest` for the reviewed GitHub Release tarball replacement in `.github/workflows/release.yml` (`sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310`), avoiding `axodotdev` HTTP 429 failures in Hop 2 without loosening unknown workflow rejection.
+
 ## Terminal reflection recovery & machine-only completed-task proof boundary (`#1956`, `#1957`)
 
 Documents two non-destructive recovery workflows grounded directly in the current Decapod binary and adds real-binary integration coverage in `tests/recovery_workflows_1956_1957.rs`:
@@ -1516,15 +1524,15 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 652 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (294)
-- Core modules: 149 | Workflows: 9 | Integration targets: 177
+- Tracked significant codebase files: 655 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (297)
+- Core modules: 149 | Workflows: 9 | Integration targets: 180
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7cedfa78a02749565b4fa4e28901d1b6fb2a00b57d5e82b46b88977ee4713c9b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

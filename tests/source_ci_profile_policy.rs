@@ -882,7 +882,7 @@ fn selectors_preserve_unanchored_source_patterns_and_exact_migration_path() {
         commands(core1, &paths(&["src/decapod/core/todo.rs"]))
             .unwrap()
             .len(),
-        3
+        1
     );
     assert_eq!(
         commands(core2, &paths(&["src/decapod/core/todo.rs"]))
@@ -2400,7 +2400,7 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
         .iter()
         .map(|c| commands(c, &paths(&["src/decapod/lib.rs"])).unwrap())
         .collect();
-    // Verify all 11 core targets and 3 cli targets appear in exact shard partition (no drops or duplicates).
+    // Verify all 11 core targets and 10 unbundled cli targets appear in exact shard partition (no drops or duplicates).
     let core_all_targets: Vec<&str> = core_recipes
         .iter()
         .flat_map(|r| r.iter())
@@ -2436,7 +2436,14 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
         vec![
             "//:cli_contract_enforcement",
             "//:entrypoint_correctness",
-            "//:cli_contracts"
+            "//:entrypoint_validation_contracts",
+            "//:infer_precision",
+            "//:init_ci_scaffolding",
+            "//:init_config_behavior",
+            "//:cli_contracts",
+            "//:effective_grant_cli_contracts",
+            "//:consumer_readiness",
+            "//:sqlite_maintenance",
         ]
     );
     for (checks, expected, changed) in [
@@ -2464,12 +2471,15 @@ fn required_test_source_changes_retain_the_complete_owning_recipe() {
             vec![
                 "tests/cli_contract_enforcement.rs",
                 "tests/entrypoint_correctness.rs",
+                "tests/entrypoint_validation_contracts.rs",
                 "tests/cli_contracts.rs",
+                "tests/effective_grant_cli_contracts.rs",
                 "tests/consumer_readiness.rs",
                 "tests/init_ci_scaffolding.rs",
                 "tests/init_config_behavior.rs",
                 "tests/infer_precision.rs",
                 "tests/sqlite_maintenance.rs",
+                "tests/support/cli_bin.rs",
                 "tests/support/fresh_docs_readiness.rs",
                 "tests/support/cli_workunit_recovery.rs",
                 "tests/support/storage_inventory.rs",

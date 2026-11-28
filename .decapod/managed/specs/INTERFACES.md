@@ -43,6 +43,18 @@
 
 # Interfaces
 
+## Batch custody transport, unbundled CI test targets & next-hop workflow admission (`#1400`, `#1573`, `#1672` Hop 1)
+
+- **`snapshot_provider::Runner::execute_batch` & `GithubWorkflowInventory::download_artifacts_batch`**:
+  - `Runner::execute_batch(&mut self, commands: &[&CommandSpec], budget: &Budget<'_>) -> Vec<Result<Reply>>` executes independent `CommandSpec` requests (up to `6` concurrent subprocesses in `OfficialCli::execute_batch`), returning results aligned 1:1 with `commands`.
+  - `GithubWorkflowInventory::download_artifacts_batch(&self, runner: &mut impl Runner, root: &Path, names: &[&str], budget: &Budget<'_>) -> Vec<DownloadedArtifactOutcome>` batches artifact ZIP fetches while preserving order and returning per-item `Ok(None)`, `Ok(Some(...))`, or `Err(...)`.
+- **`source_ci_profile` & Bazel CLI/core shard inventory (`assets/tools/source_ci_profile.rs`, `.config/build/decapod.BUILD.bzl`)**:
+  - `cli_test_inputs` includes `tests/effective_grant_cli_contracts.rs` and `tests/entrypoint_validation_contracts.rs`; `selective-cli-1..3` now cover all `10` standalone CLI targets (`//:cli_contract_enforcement`; `//:entrypoint_correctness`, `//:entrypoint_validation_contracts`, `//:infer_precision`, `//:init_ci_scaffolding`, `//:init_config_behavior`; `//:cli_contracts`, `//:effective_grant_cli_contracts`, `//:consumer_readiness`, `//:sqlite_maintenance`) without `--test-threads=1`.
+  - `selective-core-1` (`!core_full`) runs `//:entrypoint_correctness`, `//:entrypoint_validation_contracts`, and `//:infer_precision`; `selective-core-1..3` (`core_full`) retain all `11` core targets without duplicate `//:group_broker --exact` passes.
+  - `tests/entrypoint_validation_contracts.rs` carries `timeout = "long"` in `.config/build/decapod.BUILD.bzl`; `"exclusive"` is restricted to `tests/group_broker.rs` and `tests/validate_termination.rs`.
+- **`readiness_profile::reviewed_next_hop_workflow_digests` & `is_reviewed_workflow_digest`**:
+  - Exports the exact next-hop `.github/workflows/release.yml` SHA-256 (`sha256:6cb40c461a58e84aa507fad13fe328d91ecb49dfca36ce4759809691f11c9310`) evaluated alongside `reviewed_workflow_digests()` in `required_source_catalog_with_executor` and `init_reconciliation::reconcile`.
+
 ## Recovery workflow documentation & end-to-end verification surfaces (`#1956`, `#1957`)
 
 - **Embedded agent documentation (`docs/agent/error-recovery.md`, `docs/agent/state-model.md`)**:
@@ -2727,7 +2739,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7cedfa78a02749565b4fa4e28901d1b6fb2a00b57d5e82b46b88977ee4713c9b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

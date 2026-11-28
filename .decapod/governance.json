@@ -901,6 +901,11 @@
       "id": "cp-5-quickstart-aliases",
       "summary": "Add coding-agent example prompt, legacy anchor aliases, and refresh INTERFACES spec",
       "input_digest": "sha256:65fb849f0e9fe6fbae236f72fa6262c2f96dd1e0bda1401f6292698e2fa248e7"
+    },
+    {
+      "id": "chk-merge-v0169-4",
+      "summary": "Merge origin/master v0.169.4 and reconcile governance/specs",
+      "input_digest": "sha256:53cbc200f287d0ff38e45840ad67cdbf7903b9e69f13a1d55bf9f676ec661474"
     }
   ],
   "intents": {

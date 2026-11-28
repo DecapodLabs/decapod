@@ -42,6 +42,13 @@
 
 # Architecture
 
+## Bounded-parallel custody download, unbundled CLI/core targets & next-hop workflow admission (`#1400`, `#1573`, `#1672` Hop 1)
+
+- **Batch `Runner` & `OfficialCli` execution (`src/decapod/core/snapshot_provider/mod.rs`)**: Extracts `OfficialCli::prepare_command` and `OfficialCli::run_prepared_command` (preserving `GITHUB_TOKEN`/`GH_TOKEN`/Buildkite env scrubbing and `ProcessLimits`) and implements `Runner::execute_batch` / `OfficialCli::execute_batch` using `std::thread::scope` (`MAX_CONCURRENT_SUBPROCESSES = 6`, checking `budget.remaining()` and `budget.cancel` per task, returning deterministic ordered outcomes).
+- **Ordered batch ZIP verification & source import (`src/decapod/core/snapshot_provider/github_artifacts.rs`, `src/decapod/core/validation_runtime/snapshot/source_import.rs`)**: `GithubWorkflowInventory::download_artifacts_batch` resolves metadata once, invokes `runner.execute_batch` for resolved `GithubArtifactZip` specs, and applies `verify_zip_reply` (`size_in_bytes`, `sha256:` digest, ZIP extraction bounds). `github_sources` pre-validates every required job and upload step, collects distinct missing artifact names, fetches them in one `download_artifacts_batch` call per workflow run, and retains final `discover_workflow` + `artifact_snapshot` equality checks.
+- **Unbundled integration graph (`.config/build/decapod.BUILD.bzl`, `assets/tools/source_ci_profile.rs`, `tests/*.rs`)**: Moves shared `CARGO_BIN_EXE_decapod` / `RUNFILES_DIR` binary and fixture helpers to `tests/support/cli_bin.rs`, keeps `justfile_inventory` in `tests/cli_contracts.rs` (preserving `golden-vectors-macos`), runs `effective_grant_cli_contracts`, `entrypoint_validation_contracts`, `consumer_readiness`, `init_ci_scaffolding`, `init_config_behavior`, `infer_precision`, and `sqlite_maintenance` as standalone Bazel targets without `"exclusive"` or `--test-threads=1`, and removes the two redundant `--exact` `//:group_broker` commands from `selective-core-1`.
+- **Two-hop transition digest (`src/decapod/core/readiness_profile.rs`, `src/decapod/core/init_reconciliation/mod.rs`)**: Adds `reviewed_next_hop_workflow_digests()` and `is_reviewed_workflow_digest()` used by `required_source_catalog_with_executor` and `init_reconciliation::reconcile`, preserving `RULE-POLICY-003` fault detection in `tests/governance_fault_detection_1795.rs`.
+
 ## Terminal reflection recovery & machine-only task archive boundaries (`#1956`, `#1957`)
 
 - **Stopped-branch archival vs new workstream boundary (`docs/agent/error-recovery.md`, `docs/agent/state-model.md`, `src/decapod/core/governance_document.rs`, `src/decapod/core/mentor/reflection.rs`)**:
@@ -2196,7 +2203,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `7cedfa78a02749565b4fa4e28901d1b6fb2a00b57d5e82b46b88977ee4713c9b`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
+- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

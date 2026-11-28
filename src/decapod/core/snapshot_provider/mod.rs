@@ -221,6 +221,19 @@ pub struct Reply {
 /// Test doubles implement this seam; runtime must use OfficialCli, never import JSON as custody.
 pub trait Runner {
     fn execute(&mut self, command: &CommandSpec, budget: &Budget<'_>) -> Result<Reply>;
+
+    /// Execute independent commands, preserving input order. Test doubles default
+    /// to sequential execution; `OfficialCli` bounds parallel subprocesses.
+    fn execute_batch(
+        &mut self,
+        commands: &[&CommandSpec],
+        budget: &Budget<'_>,
+    ) -> Vec<Result<Reply>> {
+        commands
+            .iter()
+            .map(|spec| self.execute(spec, budget))
+            .collect()
+    }
 }
 /// Paths must identify already installed, trusted official binaries. No discovery,
 /// installation, login, token extraction or persistent settings changes occur here.
@@ -268,8 +281,12 @@ impl OfficialCli {
         })
     }
 }
-impl Runner for OfficialCli {
-    fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+impl OfficialCli {
+    fn prepare_command(
+        &mut self,
+        spec: &CommandSpec,
+        budget: &Budget<'_>,
+    ) -> Result<(Command, ProcessLimits, bool)> {
         budget.remaining()?;
         let program = match spec.program {
             Program::GitLocal | Program::GitTransport => &self.git,
@@ -343,25 +360,40 @@ impl Runner for OfficialCli {
                 .env_remove("BUILDKITE_DEBUG");
         }
         c.args(&spec.args);
-        let captured = if let Some(ProviderRequest::GithubArtifactZip { expected_bytes, .. }) =
-            spec.provider_request()
-        {
+        let (limits, is_artifact_zip) =
+            if let Some(ProviderRequest::GithubArtifactZip { expected_bytes, .. }) =
+                spec.provider_request()
+            {
+                (
+                    ProcessLimits {
+                        timeout: budget.remaining()?.min(Duration::from_secs(300)),
+                        max_output_bytes: expected_bytes + 64 * 1024,
+                    },
+                    true,
+                )
+            } else {
+                (
+                    ProcessLimits {
+                        timeout: budget.remaining()?.min(Duration::from_secs(30)),
+                        max_output_bytes: budget.max_bytes,
+                    },
+                    false,
+                )
+            };
+        Ok((c, limits, is_artifact_zip))
+    }
+
+    fn run_prepared_command(
+        mut c: Command,
+        limits: ProcessLimits,
+        is_artifact_zip: bool,
+        cancel: &Cancellation,
+    ) -> Result<Reply> {
+        let captured = if is_artifact_zip {
             // Metadata-verified declared body, separate from the JSON/log cap.
-            c.bounded_artifact_capture(
-                ProcessLimits {
-                    timeout: budget.remaining()?.min(Duration::from_secs(300)),
-                    max_output_bytes: expected_bytes + 64 * 1024,
-                },
-                budget.cancel,
-            )?
+            c.bounded_artifact_capture(limits, cancel)?
         } else {
-            c.bounded_capture(
-                ProcessLimits {
-                    timeout: budget.remaining()?.min(Duration::from_secs(30)),
-                    max_output_bytes: budget.max_bytes,
-                },
-                budget.cancel,
-            )?
+            c.bounded_capture(limits, cancel)?
         };
         match captured.termination {
             Termination::Exited => {}
@@ -383,6 +415,100 @@ impl Runner for OfficialCli {
             exit_code: captured.output.status.code().unwrap_or(-1),
             stdout: captured.output.stdout,
         })
+    }
+}
+impl Runner for OfficialCli {
+    fn execute(&mut self, spec: &CommandSpec, budget: &Budget<'_>) -> Result<Reply> {
+        let (cmd, limits, is_artifact_zip) = self.prepare_command(spec, budget)?;
+        Self::run_prepared_command(cmd, limits, is_artifact_zip, budget.cancel)
+    }
+
+    fn execute_batch(
+        &mut self,
+        commands: &[&CommandSpec],
+        budget: &Budget<'_>,
+    ) -> Vec<Result<Reply>> {
+        const MAX_CONCURRENT_SUBPROCESSES: usize = 6;
+        if commands.len() <= 1 {
+            return commands
+                .iter()
+                .map(|spec| self.execute(spec, budget))
+                .collect();
+        }
+        struct BatchTask {
+            out_idx: usize,
+            cmd: Command,
+            limits: ProcessLimits,
+            is_zip: bool,
+        }
+        let prepared: Vec<Result<(Command, ProcessLimits, bool)>> = commands
+            .iter()
+            .map(|spec| self.prepare_command(spec, budget))
+            .collect();
+        let mut results: Vec<Option<Result<Reply>>> = (0..prepared.len()).map(|_| None).collect();
+        let mut tasks: Vec<BatchTask> = Vec::new();
+        for (idx, item) in prepared.into_iter().enumerate() {
+            match item {
+                Ok((cmd, limits, is_zip)) => tasks.push(BatchTask {
+                    out_idx: idx,
+                    cmd,
+                    limits,
+                    is_zip,
+                }),
+                Err(err) => results[idx] = Some(Err(err)),
+            }
+        }
+        if !tasks.is_empty() {
+            let workers = MAX_CONCURRENT_SUBPROCESSES.min(tasks.len());
+            let cursor = std::sync::atomic::AtomicUsize::new(0);
+            let slots: Vec<std::sync::Mutex<Option<BatchTask>>> = tasks
+                .into_iter()
+                .map(|item| std::sync::Mutex::new(Some(item)))
+                .collect();
+            let outputs: Vec<std::sync::Mutex<Option<Result<Reply>>>> = (0..results.len())
+                .map(|_| std::sync::Mutex::new(None))
+                .collect();
+            std::thread::scope(|scope| {
+                for _ in 0..workers {
+                    scope.spawn(|| {
+                        loop {
+                            let task_idx =
+                                cursor.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                            if task_idx >= slots.len() {
+                                break;
+                            }
+                            let Some(BatchTask {
+                                out_idx,
+                                cmd,
+                                limits,
+                                is_zip,
+                            }) = slots[task_idx].lock().unwrap().take()
+                            else {
+                                continue;
+                            };
+                            let outcome = match budget.remaining() {
+                                Ok(_) => {
+                                    Self::run_prepared_command(cmd, limits, is_zip, budget.cancel)
+                                }
+                                Err(err) => Err(err),
+                            };
+                            *outputs[out_idx].lock().unwrap() = Some(outcome);
+                        }
+                    });
+                }
+            });
+            for (idx, slot) in outputs.into_iter().enumerate() {
+                if let Some(outcome) = slot.into_inner().unwrap() {
+                    results[idx] = Some(outcome);
+                }
+            }
+        }
+        results
+            .into_iter()
+            .map(|item| {
+                item.unwrap_or_else(|| Err(io::Error::other("missing batch execution outcome")))
+            })
+            .collect()
     }
 }
 pub(crate) fn captured(
@@ -893,6 +1019,58 @@ mod request_failure_tests {
                 let reply = result.unwrap();
                 assert_eq!(reply.exit_code, 0);
                 assert_eq!(reply.stdout, b"{}");
+            }
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn official_cli_execute_batch_runs_concurrently_preserving_order_and_failures() {
+        use std::os::unix::fs::PermissionsExt;
+        let temp = tempfile::tempdir().unwrap();
+        let git = temp.path().join("fake-git");
+        let gh = temp.path().join("fake-gh");
+        std::fs::write(&git, "#!/bin/sh\nexit 0\n").unwrap();
+        std::fs::write(
+            &gh,
+            "#!/bin/sh\nsleep 0.05\ncase \"$*\" in *'/artifacts/2/'*) echo fail >&2; exit 22;; esac\nprintf 'ok-%s' \"$*\"\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&git, std::fs::Permissions::from_mode(0o700)).unwrap();
+        std::fs::set_permissions(&gh, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let mut runner = OfficialCli::new(git, gh, None, |spec, _| {
+            spec.authorize_provider_read()?;
+            Ok(())
+        })
+        .unwrap();
+        let cancel = Cancellation::default();
+        let budget = Budget::new(Duration::from_secs(5), 65536, &cancel).unwrap();
+        let specs: Vec<CommandSpec> = (1u64..=6)
+            .map(|id| {
+                let mut spec = provider::gh_spec(
+                    temp.path(),
+                    &format!("repos/org/repo/actions/artifacts/{id}/zip"),
+                );
+                spec.provider_request = Some(ProviderRequest::GithubArtifactZip {
+                    repository: Repository::new("org", "repo").unwrap(),
+                    artifact_id: id,
+                    expected_bytes: 1024,
+                });
+                spec
+            })
+            .collect();
+        let refs: Vec<&CommandSpec> = specs.iter().collect();
+        let results = runner.execute_batch(&refs, &budget);
+        assert_eq!(results.len(), 6);
+        for (idx, res) in results.into_iter().enumerate() {
+            let reply = res.unwrap();
+            let id = idx + 1;
+            if id == 2 {
+                assert_eq!(reply.exit_code, 22);
+            } else {
+                assert_eq!(reply.exit_code, 0);
+                let text = String::from_utf8(reply.stdout).unwrap();
+                assert!(text.contains(&format!("artifacts/{id}/zip")), "{text}");
             }
         }
     }
