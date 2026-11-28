@@ -876,6 +876,26 @@
     "base_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
     "target_base": "origin/master"
   },
+  "claims": {
+    "claim:docs-first-governed-result": {
+      "statement": "Docs lead directly to Local/Cloud routes, separate human install/init from agent workflow using a short outcome-only prompt, explain standing project delegation once, and separate implemented gates from target #1981-#1983 defaults.",
+      "falsifier": "Quickstart omits prerequisites/legacy anchors, teaches command-checklist incantations, claims unobserved #1981-#1983 defaults as active everywhere, or breaks doc_alignment assertions.",
+      "status": "supported",
+      "proof_refs": [
+        "tests/doc_alignment.rs",
+        "tests/workunit_verified_proof_1660.rs"
+      ]
+    },
+    "claim:docs-reading-shell-accessibility": {
+      "statement": "Docs shell renders all 5 themes at >=4.5:1 text/code/control contrast with zero sticky-header overlap, zero overflow (320..1440 + 1.25x zoom), self-hosted Geist fonts, accessible live copy status, and working Cmd+K search.",
+      "falsifier": "Any theme or viewport in 320..1440 exhibits <4.5:1 contrast, horizontal overflow, header clipping on load/fragments/search/focus, Google Fonts network calls, or missing clipboard status feedback.",
+      "status": "supported",
+      "proof_refs": [
+        "assets/tools/docs_seo.py",
+        "tests/doc_alignment.rs"
+      ]
+    }
+  },
   "checkpoints": [
     {
       "id": "cp-1-fonts",
@@ -911,6 +931,11 @@
       "id": "chk-v0169-4-uplift-final",
       "summary": "Finalize #1977 copy/focus/header/hero fixes and #1978 short outcome prompt + standing project delegation + v0.169.4 clean-env specs",
       "input_digest": "sha256:22a4909eaa8c001e53566a1aee796ca39401771369679a32ac47be1c812142fa"
+    },
+    {
+      "id": "chk-v0169-4-dockerfile-claims",
+      "summary": "Pin v0.169.4 Dockerfile, refresh specs manifest, and record PR claims (#1977, #1978)",
+      "input_digest": "sha256:12b19bb4f5d9eb6a21ec138c08b6df2df104988bed9ddb50b7d638716613c97e"
     }
   ],
   "intents": {
