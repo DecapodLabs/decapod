@@ -1,3 +1,10 @@
+## Container Custody Root-UID Preflight, Supabase Connection Modes & Local PG17 Native Proof (`#1379`, `#1378`, `#1369`)
+
+Hardens Linux container storage custody and documents the three Supabase/PostgreSQL 17 operational boundaries without weakening fail-closed checks:
+
+- **Privileged-UID (`uid=0`) read-only store rejection & Podman custody (`#1379`, `src/decapod/core/db.rs::storage_health_preflight`, `tests/sqlite_hardening.rs`)**: Rejects directories with `mode & 0o222 == 0` under `#[cfg(unix)]` before executing `write_probe` (closing the `CAP_DAC_OVERRIDE` bypass in `uid=0` Podman/Docker containers), serializes `DECAPOD_STORAGE_FAULT_STAGE` env mutation via `RwLock<()>` in `tests/sqlite_hardening.rs`, and passes `sqlite_hardening`, `datastore_contract`, `shared_state_semantics_1247`, `storage_filesystem_tests`, `container_signer`, and `plugins::container` (`95/95`) inside Linux Podman `uid=0` `fuse`/`virtiofs` while documenting container SELinux `recovery_metadata_unsupported` and macOS `vfkit`/`AF_UNIX` signer boundaries (`docs/datastore-v2/cloud-parity-and-boundaries.md`).
+- **Supabase connection modes & PG17/PostgREST native contract (`#1378`, `#1369`, `docs/book/src/reference/supabase-validation.md`, `tests/supabase_service.rs`)**: Documents `direct :5432`, `Supavisor session pooler :5432`, and `Supavisor transaction pooler :6543` (`PGRST_DB_PREPARED_STATEMENTS=false`, transaction-local `set_config(..., true)` GUCs) alongside the fail-closed hosted `MANAGED_CLI_FIXTURE_UNAVAILABLE` boundary, aligns `local_native_managed_project_revocation` with `#1896` seat-revocation diagnostics, and passes `TestPostgresNativeManagedProjectConsumer` against disposable PG 17.11 + PostgREST 16.5.
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1540,7 +1547,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
+- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

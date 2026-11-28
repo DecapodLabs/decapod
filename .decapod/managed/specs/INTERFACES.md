@@ -1,3 +1,8 @@
+## Container Custody & Supabase 3-Mode Interface Contract (`#1379`, `#1378`, `#1369`)
+
+- **`core::db::storage_health_preflight(store_root)`**: Rejects `#[cfg(unix)]` directories with `mode & 0o222 == 0` (`STORAGE_PREFLIGHT_FAILED: store root '...' has read-only mode (...); refuse write probe under privileged UID.`) before `detect_fs_type` (`UNSUPPORTED_FS_TYPES`: `nfs`, `nfs4`, `cifs`, `smbfs`, `9p`, `vboxsf`; permitting `virtiofs`/`fuse*`) and `write_probe`.
+- **Supabase/PG17 Operational Interface (`docs/book/src/reference/supabase-validation.md`, `tests/supabase_service.rs`)**: Documents `direct :5432`, `Supavisor session pooler :5432`, and `Supavisor transaction pooler :6543` (`PGRST_DB_PREPARED_STATEMENTS=false`, transaction-local `set_config(..., true)`), plus `DECAPOD_NATIVE_PROJECT_FIXTURE` (`local_native_managed_project_contract` / `local_native_managed_project_revocation` updated for `#1896` seat-revocation statuses) and fail-closed `MANAGED_CLI_FIXTURE_UNAVAILABLE` hosted gating.
+
 ## `#1630` Storage contract manifest, SQLite trigger names & benchmark report schema (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`, `docs/datastore-v2/`)
 
 - **Rust & JSON contract surface (`core::storage_contracts`)**: Exports `FieldContractSpec`, `FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql(&FieldContractSpec)`, and `ensure_sqlite_write_boundary_triggers(&Connection)`; `contract_manifest()` adds `field_table` and `propodus_abi_v1_reconciliation`, synchronized with `docs/datastore-v2/logical_contract_v1.json` (`release: "0.169.1"`).
@@ -2755,7 +2760,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
+- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

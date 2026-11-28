@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "1a16ec7ef27dfb977ccfa1bfc89d6b3dc68098be",
+    "accepted_commit": "3868461b441bbfa04cbc676922b983ac9d61483d",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,47 +872,51 @@
     }
   },
   "change": {
-    "id": "pr_trust_egress_1944",
-    "base_commit": "1a16ec7ef27dfb977ccfa1bfc89d6b3dc68098be",
+    "id": "pr-1378-1379-1369",
+    "base_commit": "3868461b441bbfa04cbc676922b983ac9d61483d",
     "target_base": "origin/master"
   },
   "claims": {
-    "trust-egress-1944": {
-      "statement": "Decapod enforces validate_egress_url on model_assets::download_public_asset, inventories every production outbound sink and https:// host across src/decapod/, and halts outbound egress immediately on DECAPOD_CHECK_LATEST unset or Cloud-to-local revocation.",
-      "falsifier": "Any uninventoried curl/gh/socket/HTTP sink or https:// host in production src/decapod/, smuggled/undeclared URL accepted by model_assets, or outbound connection after revoking Cloud/DECAPOD_CHECK_LATEST fails trust_egress_gate.",
+    "claim-1378-1379-1369-container-supabase": {
+      "statement": "storage_health_preflight rejects unix mode&0o222==0 before write_probe under uid=0 CAP_DAC_OVERRIDE, sqlite_hardening serializes DECAPOD_STORAGE_FAULT_STAGE, Supabase 3-mode topology and hosted boundaries are documented, and local_native_managed_project_revocation aligns with #1896.",
+      "falsifier": "Any failure of sqlite_hardening, datastore_contract, shared_state_semantics_1247, storage_filesystem_tests, container_signer, plugins::container, supabase_service, or Decapod CI/Validate checks.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/model_assets.rs",
-        "tests/trust_egress_gate.rs"
+        "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 TestPostgresNativeManagedProjectConsumer pass; host cargo clippy --offline --all-targets -- -D warnings = 0"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ckpt-trust-egress-1a16ec7ef",
-      "summary": "Enforce validate_egress_url in model_assets, recursive src/decapod egress/host scanner, and Cloud-to-local revocation runtime gate (#1944, rebased onto 1a16ec7ef v0.169.5)",
-      "input_digest": "sha256:7c43e13b71f37772ff15e538c1a603fb41fcdb149a297d1188ad6816b9e56a37"
+      "id": "chk-1378-1379-1369-rebased",
+      "summary": "Rebased #1378/#1379/#1369 onto origin/master@3868461b4 with official v0.169.5 preserving all PR #1997/#2000/#2002/#2003 code and living specs.",
+      "input_digest": "sha256:ffa099dba90a8bed47fc5e9630c3bf7c44c9f428864faffc79572e994d8fc5e8"
+    },
+    {
+      "id": "chk-1378-1379-1369-rebased-v2",
+      "summary": "Rebased #1378/#1379/#1369 onto origin/master@3868461b4 with official v0.169.5, full spec reviews, preserving all PR #1997/#2000/#2002/#2003 code and living specs.",
+      "input_digest": "sha256:bed9a06c3679744203570978829346b145083b6f3898deeb887b238e52e984eb"
     }
   ],
   "intents": {
-    "intent:branch_trust_egress_1944": {
+    "intent:run-1378-1379-1369-20261128113649": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Decapod-only isolated worktree; Clack (#10) untouched"
+        "Zero weakening of fail-closed storage or hosted-credential checks; $0/mo; zero BYPASSRLS; zero workflow edits; preserve all merged PR #1997/#2000/#2002/#2003 code and living specs."
       ],
       "constraints": [
-        "src/decapod/core/model_assets.rs,tests/trust_egress_gate.rs,docs/trust-and-egress-inventory.md,.decapod/managed/specs/"
+        "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_trust_egress_1944",
+      "id": "intent:run-1378-1379-1369-20261128113649",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Close Decapod gaps in #1944 (whole-src egress scanner, model_assets URL validation, and runtime revocation proof)",
-      "refined_intent": "Enforce validate_egress_url in model_assets::download_public_asset, recursively scan src/decapod/ production sinks/hosts, and prove Cloud-to-local revocation halts egress under live loopback trap on 1a16ec7ef",
+      "raw_intent": "Harden Linux container root-UID storage preflight, fix sqlite_hardening fault-env race, document 3-mode Supabase/PG17 topology and align seat-revocation diagnostics (#1378, #1379, #1369)",
+      "refined_intent": "Reject mode&0o222==0 before write_probe under #[cfg(unix)] for uid=0 CAP_DAC_OVERRIDE containers, synchronize DECAPOD_STORAGE_FAULT_STAGE via RwLock<()>, align local_native_managed_project_revocation with #1896 diagnostics, document direct/session/transaction pooler modes & hosted fail-closed boundaries, and keep #1378/#1379/#1369 OPEN pending hosted/multi-clone/Gatekeeper E2E.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -925,54 +929,63 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Close #1944 Decapod trust-egress gaps on origin/master@1a16ec7ef: enforce validate_egress_url in model_assets::download_public_asset, scan every production outbound sink and https:// host in src/decapod/, and verify Cloud-to-local + DECAPOD_CHECK_LATEST revocation halts outbound egress.",
+      "intent": "Harden privileged-UID Linux container storage preflight, eliminate sqlite_hardening env race, document Supabase direct/session/transaction-pooler modes and hosted boundary, and align seat-revocation assertions with #1896.",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test trust_egress_gate",
-        "cargo test --lib model_assets"
+        "Podman Linux uid=0 fuse/virtiofs 95/95 pass (sqlite_hardening, datastore_contract, shared_state_semantics_1247, storage_filesystem_tests, container_signer, plugins::container)",
+        "Disposable PG 17.11 + PostgREST 16.5 TestPostgresNativeManagedProjectConsumer pass",
+        "GitHub Actions CI + Decapod Validate on rebased HEAD"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rebased onto 1a16ec7ef (v0.169.5): model_assets URL validation and whole-src recursive egress scanner (#1944)",
-          "reviewed_code_fingerprint": "23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4",
-          "spec_material_hash": "349884fe628345d40c95bad646a80a0a0b4061e5dea323dabc2abf82a6ac4eef"
+          "reason": "Prepended #1378/#1379/#1369 container root-UID preflight and Supabase 3-mode topology architecture prose while preserving all PR #1997/#2000/#2002/#2003 sections.",
+          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
+          "spec_material_hash": "fc670ee91bb962e73803b4607efa43e7107c6d0203166aa17f7da0650a837953"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased onto 1a16ec7ef (v0.169.5): model_assets::download_public_asset egress validation and reviewed sink inventory (#1944)",
-          "reviewed_code_fingerprint": "23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4",
-          "spec_material_hash": "0034c21062752dabee4d8525ce1d3fa3ef5c40c8669231faecc17e798b077a5f"
+          "reason": "Prepended #1378/#1379/#1369 storage_health_preflight and Supabase/PG17 interface contract prose while preserving all PR #1997/#2000/#2002/#2003 sections.",
+          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
+          "spec_material_hash": "3dca4c65824c977e243c52746064aaa89b6ede3c94a78bb1d72506e2853792c7"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rebased onto 1a16ec7ef (v0.169.5): whole-src egress scan and Cloud-to-local revocation runtime gate (#1944)",
-          "reviewed_code_fingerprint": "23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4",
+          "reason": "Reviewed SECURITY.md: root-UID mode&0o222==0 rejection and hosted fail-closed boundaries tighten existing storage and credential invariants without weakening security guarantees.",
+          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
           "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Enforce whole-src egress scanner, model_assets URL validation, and cloud revocation gate (#1944)",
+      "title": "Container root-UID preflight, sqlite_hardening sync, Supabase 3-mode docs & PG17 native proof (#1378, #1379, #1369)",
       "todo_ids": [
-        "secu_01m8g08fr42hp6sw"
+        "code_01m8fkaw28vkrt2c"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795863241Z"
+      "updated_at": "1795865895Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Decapod-only isolated worktree; Clack (#10) untouched"
+        "Zero weakening of fail-closed storage or hosted-credential checks; $0/mo; zero BYPASSRLS; zero workflow edits; preserve all merged PR #1997/#2000/#2002/#2003 code and living specs."
       ],
-      "artifact_hash": "sha256:664d871c8300378d3de1b6294fd19c7b87405bb7c1bc8ba3c551d2d3af46e0a8",
+      "artifact_hash": "sha256:b4b253729e776f7da9876ae7f8519d36d91a11653cc3ee4f7f59746f395a0f61",
       "checks": [
         {
-          "name": "cargo_fmt",
+          "name": "host_sqlite_hardening_supabase_db_clippy",
+          "status": "passed"
+        },
+        {
+          "name": "pg17_postgrest_native_consumer",
+          "status": "passed"
+        },
+        {
+          "name": "podman_uid0_virtiofs_95_of_95",
           "status": "passed"
         }
       ],
@@ -980,20 +993,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_trust_egress_1944",
+            "intent_id": "intent:run-1378-1379-1369-20261128113649",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_trust_egress_1944",
+            "intent_id": "intent:run-1378-1379-1369-20261128113649",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_trust_egress_1944",
+            "detail": "trajectory:run-1378-1379-1369-20261128113649",
             "event_id": "event:4",
-            "intent_id": "intent:branch_trust_egress_1944",
+            "intent_id": "intent:run-1378-1379-1369-20261128113649",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1002,24 +1015,34 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_trust_egress_1944": {
+          "run-1378-1379-1369-20261128113649": {
             "evidence_only": true,
-            "id": "branch_trust_egress_1944",
-            "intent_id": "intent:branch_trust_egress_1944",
+            "id": "run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:run-1378-1379-1369-20261128113649",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/trust-and-egress-inventory.md",
-                  "src/decapod/core/model_assets.rs",
-                  "tests/trust_egress_gate.rs"
+                  "src/decapod/core/db.rs",
+                  "tests/sqlite_hardening.rs",
+                  "tests/supabase_service.rs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
+                  "src/decapod/core/db.rs",
+                  "tests/sqlite_hardening.rs",
+                  "tests/supabase_service.rs",
+                  "docs/book/src/reference/supabase-validation.md",
+                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
+                  "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 native consumer pass; host clippy clean"
                 ],
                 "proof_refs": [
-                  "cargo_fmt"
+                  "podman_uid0_virtiofs_95_of_95",
+                  "pg17_postgrest_native_consumer",
+                  "host_sqlite_hardening_supabase_db_clippy"
                 ],
                 "scope": [
-                  "src/decapod/core/model_assets.rs,tests/trust_egress_gate.rs,docs/trust-and-egress-inventory.md,.decapod/managed/specs/"
+                  "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1029,21 +1052,31 @@
         }
       },
       "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [],
-      "intent_id": "intent:branch_trust_egress_1944",
+      "evidence": [
+        "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 native consumer pass; host clippy clean"
+      ],
+      "inspected_files": [
+        "docs/book/src/reference/supabase-validation.md",
+        "docs/datastore-v2/cloud-parity-and-boundaries.md",
+        "src/decapod/core/db.rs",
+        "tests/sqlite_hardening.rs",
+        "tests/supabase_service.rs"
+      ],
+      "intent_id": "intent:run-1378-1379-1369-20261128113649",
       "modified_files": [
-        "docs/trust-and-egress-inventory.md",
-        "src/decapod/core/model_assets.rs",
-        "tests/trust_egress_gate.rs"
+        "docs/book/src/reference/supabase-validation.md",
+        "docs/datastore-v2/cloud-parity-and-boundaries.md",
+        "src/decapod/core/db.rs",
+        "tests/sqlite_hardening.rs",
+        "tests/supabase_service.rs"
       ],
       "repo_scope": [
-        "src/decapod/core/model_assets.rs,tests/trust_egress_gate.rs,docs/trust-and-egress-inventory.md,.decapod/managed/specs/"
+        "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
       ],
-      "run_id": "branch_trust_egress_1944",
+      "run_id": "run-1378-1379-1369-20261128113649",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m8g08fr42hp6sw",
+      "task_id": "code_01m8fkaw28vkrt2c",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
