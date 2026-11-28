@@ -927,6 +927,14 @@
       "proof_refs": [
         "git:170efc04ae39ec9ba78e27db941ac86731c9969e"
       ]
+    },
+    {
+      "id": "shared-context-accepted-e108",
+      "summary": "Preserve accepted #1997 storage, reconciled shared context specifications and current review bindings.",
+      "input_digest": "sha256:d92cf01ea9a1c2538fd38264f7ec8537ad4a1040c9ecf7db8f614c453332c3df",
+      "proof_refs": [
+        "git:e108317423a8d6fc12cbc3bc01017c76706dc1e2"
+      ]
     }
   ],
   "intents": {
@@ -970,22 +978,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The shared Cloud observation architecture remains unchanged after integrating the accepted 0.169.5 release version.",
-          "reviewed_code_fingerprint": "eaa3357a58778642b995b810c17fd6f333cd7254c67ebfc0c6c99b1ba33b0cf8",
-          "spec_material_hash": "f12cbae3ea7a4b1eca3aacd65e2f114e735b13fd6a88afb8cebeb399a3e2eebb"
+          "reason": "Preserve the shared Cloud snapshot contract alongside the accepted storage field and write-trigger architecture.",
+          "reviewed_code_fingerprint": "cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20",
+          "spec_material_hash": "1c3897b21737c8a7cdd7947f45c8e71f3a5230317e42d4202d96224d527ded68"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The scoped knowledge and decision contracts remain applicable after the accepted release-only update.",
-          "reviewed_code_fingerprint": "eaa3357a58778642b995b810c17fd6f333cd7254c67ebfc0c6c99b1ba33b0cf8",
-          "spec_material_hash": "a23207d11ab9783ce7fe24eb2b575f0791e7d1c1deae923404a0759724b0bae4"
+          "reason": "The hosted knowledge and revision readback and the accepted datastore manifest and triggers retain their documented interfaces.",
+          "reviewed_code_fingerprint": "cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20",
+          "spec_material_hash": "18f7d9bd50e8e6edfbd19a22403f64a2c15c941255a97dfe7caf289c68be342f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The shared context authorization and retained Local storage boundaries are unchanged in the accepted release.",
-          "reviewed_code_fingerprint": "eaa3357a58778642b995b810c17fd6f333cd7254c67ebfc0c6c99b1ba33b0cf8",
+          "reason": "Cloud operational context bypasses the retained Local database. The accepted storage owner and write guards remain intact.",
+          "reviewed_code_fingerprint": "cdc591b57fdea1c16b434e046a97c4adeba18f23dbaa6b28b6a72c652c7f1d20",
           "spec_material_hash": "dd7ac27adb32274254a2dba14e8ed4a30e972b0875c0ab3a19bafa5989dd763e"
         }
       ],
@@ -997,22 +1005,30 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795846322Z"
+      "updated_at": "1795853492Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Private sessions, Git files and proof admission have separate authority"
       ],
-      "artifact_hash": "sha256:bf0615a366b11683ead129276fb32cd776f7de2fcefa25b0d0f2be69909bdb32",
+      "artifact_hash": "sha256:b77d91c83f5f855d799a30d96491388d194f231508d73df132eec54632b32038",
       "checks": [
         {
           "name": "accepted-release-merge",
           "status": "passed"
         },
         {
+          "name": "accepted-storage-merge",
+          "status": "passed"
+        },
+        {
           "name": "accepted-target-merge",
           "status": "passed"
+        },
+        {
+          "name": "current-candidate-provider",
+          "status": "partial"
         },
         {
           "name": "diff-check",
@@ -1065,10 +1081,17 @@
             "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8G10SJN3ZD7B959CNN083TP": {
@@ -1138,6 +1161,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, event, TODO, config, tests, and docs against original target bytes. Shared-context implementation is unchanged. Prior provider receipt is historical, and this exact merged candidate requires a fresh receipt."
+                ],
+                "proof_refs": [
+                  "accepted-storage-merge",
+                  "current-candidate-provider"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1148,6 +1188,7 @@
       "evidence": [
         "Integrated accepted 170efc04ae39ec9ba78e27db941ac86731c9969e, a package version and release changelog change. The released 0.169.5 controller refreshes the release projections and exact reviewed source inventory. Candidate implementation bytes remain unchanged.",
         "Integrated accepted b049135963d158139a610904752cc546c22e606d (#1992), preserving both authored spec traditions and using governance merge reconciliation. Source behavior unchanged. Exact configured validation remains required.",
+        "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, event, TODO, config, tests, and docs against original target bytes. Shared-context implementation is unchanged. Prior provider receipt is historical, and this exact merged candidate requires a fresh receipt.",
         "src/decapod/core/cloud_context.rs"
       ],
       "inspected_files": [],
