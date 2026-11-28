@@ -2305,13 +2305,128 @@ pub struct StorageCompactionBenchmarkReport {
     pub after_explicit_reclaim: StorageByteSnapshot,
     pub bytes_per_operation_before: u64,
     pub bytes_per_operation_after_reclaim: u64,
+    pub bytes_per_task_before: u64,
+    pub bytes_per_task_after_reclaim: u64,
     pub p50_op_micros: u64,
     pub p95_op_micros: u64,
+    pub p99_op_micros: u64,
     pub max_op_micros: u64,
+    pub cpu_user_micros: u64,
+    pub cpu_sys_micros: u64,
+    pub max_rss_bytes: u64,
     pub events_compacted: usize,
     pub unreferenced_components_collected: usize,
+    pub components_stored: usize,
+    pub component_refs_stored: usize,
+    pub v1_uncompacted_baseline_bytes: u64,
+    pub v1_to_v2_savings_bytes: i64,
     pub sampling_method: String,
     pub unknown_fields: Vec<String>,
+}
+
+#[cfg(unix)]
+fn sample_process_rusage() -> (u64, u64, u64) {
+    let mut usage: libc::rusage = unsafe { std::mem::zeroed() };
+    let rc = unsafe { libc::getrusage(libc::RUSAGE_SELF, &mut usage) };
+    if rc != 0 {
+        return (0, 0, 0);
+    }
+    let user_us = (usage.ru_utime.tv_sec as u64)
+        .saturating_mul(1_000_000)
+        .saturating_add(usage.ru_utime.tv_usec as u64);
+    let sys_us = (usage.ru_stime.tv_sec as u64)
+        .saturating_mul(1_000_000)
+        .saturating_add(usage.ru_stime.tv_usec as u64);
+    #[cfg(target_os = "macos")]
+    let rss_bytes = usage.ru_maxrss.max(0) as u64;
+    #[cfg(not(target_os = "macos"))]
+    let rss_bytes = (usage.ru_maxrss.max(0) as u64).saturating_mul(1024);
+    (user_us, sys_us, rss_bytes)
+}
+
+#[cfg(not(unix))]
+fn sample_process_rusage() -> (u64, u64, u64) {
+    (0, 0, 0)
+}
+
+fn measure_v1_uncompacted_baseline(
+    scratch_root: &Path,
+    v2_db_path: &Path,
+    repeated_desc: &str,
+) -> Result<u64, DecapodError> {
+    let v1_dir = scratch_root.join(".decapod/v1-baseline");
+    if v1_dir.exists() {
+        let _ = fs::remove_dir_all(&v1_dir);
+    }
+    fs::create_dir_all(&v1_dir).map_err(DecapodError::IoError)?;
+    let v1_db = v1_dir.join("v1_baseline.db");
+    fs::copy(v2_db_path, &v1_db).map_err(DecapodError::IoError)?;
+    let conn = db::db_connect(&v1_db.to_string_lossy())?;
+    type BenchEventRow = (
+        String,
+        String,
+        String,
+        String,
+        String,
+        Option<String>,
+        Option<String>,
+        String,
+    );
+    let rows: Vec<BenchEventRow> = {
+        let mut stmt = conn.prepare(
+            "SELECT stream,event_id,ts,event_type,actor,subject_kind,subject_id,payload FROM events",
+        )?;
+        stmt.query_map([], |r| {
+            Ok((
+                r.get(0)?,
+                r.get(1)?,
+                r.get(2)?,
+                r.get(3)?,
+                r.get(4)?,
+                r.get(5)?,
+                r.get(6)?,
+                r.get(7)?,
+            ))
+        })?
+        .collect::<Result<Vec<_>, _>>()?
+    };
+    for (stream, eid, ts, etype, actor, sk, sid, raw) in rows {
+        let mut verbose = events::reconstruct_stored_payload(
+            &stream,
+            &eid,
+            &ts,
+            &etype,
+            &actor,
+            sk.as_deref(),
+            sid.as_deref(),
+            &raw,
+        )?;
+        if etype == "task.journal.checkpoint"
+            && let Some(ckpt) = verbose
+                .get_mut("payload")
+                .and_then(serde_json::Value::as_object_mut)
+        {
+            ckpt.insert("schema_version".into(), serde_json::json!(1));
+            ckpt.remove("component_refs");
+            if let Some(task_obj) = ckpt
+                .get_mut("projection")
+                .and_then(|p| p.get_mut("task"))
+                .and_then(serde_json::Value::as_object_mut)
+            {
+                task_obj.insert("description".into(), serde_json::json!(repeated_desc));
+            }
+        }
+        conn.execute(
+            "UPDATE events SET payload = ?1 WHERE stream = ?2 AND event_id = ?3",
+            db::params![verbose.to_string(), stream, eid],
+        )?;
+    }
+    conn.execute_batch("DELETE FROM storage_component_refs; DELETE FROM storage_components;")?;
+    let _ = storage_compaction::reclaim_pages_explicit(&conn)?;
+    drop(conn);
+    let size = file_len_or_zero(&v1_db);
+    let _ = fs::remove_dir_all(&v1_dir);
+    Ok(size)
 }
 
 fn file_len_or_zero(path: &Path) -> u64 {
@@ -2351,7 +2466,13 @@ pub fn run_local_storage_compaction_benchmark(
     let data_dir = scratch_root.join(".decapod/data");
     fs::create_dir_all(&data_dir).map_err(DecapodError::IoError)?;
     todo::initialize_todo_db(&data_dir)?;
+    crate::plugins::federation::initialize_federation_db(&data_dir)?;
 
+    let (ru_user_start, ru_sys_start, _) = sample_process_rusage();
+    let repeated_desc = format!(
+        "Repeated structured payload for workload component dedupe: {}",
+        "governance-custody-checkpoint-proof-".repeat(24)
+    );
     let mut latencies_us = Vec::new();
     let mut ops = 0usize;
 
@@ -2359,10 +2480,7 @@ pub fn run_local_storage_compaction_benchmark(
         let t0 = Instant::now();
         let cmd = TodoCommand::Add {
             title: format!("Benchmark task {idx}: verify lossless storage growth"),
-            description: format!(
-                "Repeated structured payload for workload item {idx}: {}",
-                "governance-custody-checkpoint-proof-".repeat(8)
-            ),
+            description: repeated_desc.clone(),
             tags: "benchmark,storage".to_string(),
             owner: "bench-agent".to_string(),
             due: None,
@@ -2402,6 +2520,22 @@ pub fn run_local_storage_compaction_benchmark(
 
     let _vac = storage_compaction::reclaim_pages_explicit(&conn)?;
     let after_explicit_reclaim = measure_sqlite_bytes(&conn, &db_path)?;
+    let components_stored: usize = conn
+        .query_row("SELECT COUNT(*) FROM storage_components", [], |r| {
+            r.get::<_, i64>(0)
+        })
+        .unwrap_or(0)
+        .max(0) as usize;
+    let component_refs_stored: usize = conn
+        .query_row("SELECT COUNT(*) FROM storage_component_refs", [], |r| {
+            r.get::<_, i64>(0)
+        })
+        .unwrap_or(0)
+        .max(0) as usize;
+    drop(conn);
+
+    let (ru_user_end, ru_sys_end, max_rss_bytes) = sample_process_rusage();
+    let v1_baseline = measure_v1_uncompacted_baseline(scratch_root, &db_path, &repeated_desc)?;
 
     latencies_us.sort_unstable();
     let p50 = latencies_us
@@ -2411,9 +2545,14 @@ pub fn run_local_storage_compaction_benchmark(
     let p95_idx =
         ((latencies_us.len().saturating_mul(95)) / 100).min(latencies_us.len().saturating_sub(1));
     let p95 = latencies_us.get(p95_idx).copied().unwrap_or(0);
+    let p99_idx =
+        ((latencies_us.len().saturating_mul(99)) / 100).min(latencies_us.len().saturating_sub(1));
+    let p99 = latencies_us.get(p99_idx).copied().unwrap_or(0);
     let max_us = latencies_us.last().copied().unwrap_or(0);
 
     let ops_u64 = ops.max(1) as u64;
+    let tasks_u64 = task_count.max(1) as u64;
+    let v1_to_v2_savings_bytes = v1_baseline as i64 - after_explicit_reclaim.main_db_bytes as i64;
     Ok(StorageCompactionBenchmarkReport {
         schema_version: STORAGE_BENCHMARK_SCHEMA_VERSION.to_string(),
         binary_version: env!("CARGO_PKG_VERSION").to_string(),
@@ -2424,19 +2563,26 @@ pub fn run_local_storage_compaction_benchmark(
         workload_operations: ops,
         bytes_per_operation_before: before_compaction.main_db_bytes / ops_u64,
         bytes_per_operation_after_reclaim: after_explicit_reclaim.main_db_bytes / ops_u64,
+        bytes_per_task_before: before_compaction.main_db_bytes / tasks_u64,
+        bytes_per_task_after_reclaim: after_explicit_reclaim.main_db_bytes / tasks_u64,
         before_compaction,
         after_compaction,
         after_explicit_reclaim,
         p50_op_micros: p50,
         p95_op_micros: p95,
+        p99_op_micros: p99,
         max_op_micros: max_us,
+        cpu_user_micros: ru_user_end.saturating_sub(ru_user_start),
+        cpu_sys_micros: ru_sys_end.saturating_sub(ru_sys_start),
+        max_rss_bytes,
         events_compacted: event_report.compacted_rows as usize,
         unreferenced_components_collected: gc_report.deleted_components,
+        components_stored,
+        component_refs_stored,
+        v1_uncompacted_baseline_bytes: v1_baseline,
+        v1_to_v2_savings_bytes,
         sampling_method: "exact_per_operation_monotonic_instant".to_string(),
-        unknown_fields: vec![
-            "hosted_postgresql_live_bytes: unavailable_local_only".to_string(),
-            "process_rss_delta_bytes: not_sampled_in_inprocess_harness".to_string(),
-        ],
+        unknown_fields: vec!["hosted_postgresql_live_bytes: unavailable_local_only".to_string()],
     })
 }
 

@@ -1479,6 +1479,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
         "ALTER TABLE tasks ADD COLUMN revision INTEGER NOT NULL DEFAULT 0",
         [],
     );
+    crate::core::storage_contracts::ensure_sqlite_write_boundary_triggers(conn)?;
     if current_version >= schemas::TODO_SCHEMA_VERSION {
         return Ok(());
     }
@@ -1605,6 +1606,7 @@ fn ensure_schema(conn: &Connection) -> Result<(), error::DecapodError> {
     if current_version == 0 {
         crate::core::storage_compaction::stamp_storage_format_metadata(conn)?;
     }
+    crate::core::storage_contracts::ensure_sqlite_write_boundary_triggers(conn)?;
 
     Ok(())
 }

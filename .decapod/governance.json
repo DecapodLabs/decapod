@@ -934,6 +934,14 @@
       "proof_refs": [
         "tests/cloud_command_path.rs"
       ]
+    },
+    {
+      "id": "guard-e108-storage-integration",
+      "summary": "Integrate the accepted storage contract while preserving the Cloud claim safety boundary",
+      "input_digest": "sha256:6d2a5d0a95cf98198fc50b7b75ec32adfcad5abf8ad4745fdf2082ed1e40a5bb",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
     }
   ],
   "intents": {
@@ -977,22 +985,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Only accepted release metadata and generated projections advance from the prior integration. Hosted ownership boundaries remain as reviewed.",
-          "reviewed_code_fingerprint": "2faf668f4cae183163fbc34f8d4ecb271b36ce3a881eaa6afd5a69dec37f926d",
-          "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
+          "reason": "The candidate adopts the accepted storage field architecture and keeps the existing hosted transport boundary for claim options.",
+          "reviewed_code_fingerprint": "d516f8d0be6f6545dd0f90c2e59f2b42beb0370f72b1cc71776d37f557210c14",
+          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The release merge preserves the previously reviewed Cloud claim-options contract against the accepted 0.169.5 source.",
-          "reviewed_code_fingerprint": "2faf668f4cae183163fbc34f8d4ecb271b36ce3a881eaa6afd5a69dec37f926d",
-          "spec_material_hash": "d27e9abdf025b884178feeb99770a5768253ab71851f6ac3866cb34ec500a990"
+          "reason": "Preserve the accepted storage field and SQLite trigger interfaces alongside the exact hosted claim-option contract.",
+          "reviewed_code_fingerprint": "d516f8d0be6f6545dd0f90c2e59f2b42beb0370f72b1cc71776d37f557210c14",
+          "spec_material_hash": "5422e558a60478a77385d8c01ecdacb3afc08dec668186186c082f7b3879bbe8"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The release merge keeps the existing pre-transport refusal and authenticated authority rules.",
-          "reviewed_code_fingerprint": "2faf668f4cae183163fbc34f8d4ecb271b36ce3a881eaa6afd5a69dec37f926d",
+          "reason": "The candidate preserves accepted SQLite write-boundary triggers and rejects unsupported Cloud claim inputs before transport.",
+          "reviewed_code_fingerprint": "d516f8d0be6f6545dd0f90c2e59f2b42beb0370f72b1cc71776d37f557210c14",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -1004,13 +1012,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795845496Z"
+      "updated_at": "1795853396Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:614211f94c87668b38a0f552d0c64a72528bb34d4235acfc7c4eb2f3cf9522ae",
+      "artifact_hash": "sha256:61d8ae82fcc8b48acad403802495762f41bfa23e3f4d3fe6dd661310138c2e36",
       "checks": [
         {
           "name": "format",
@@ -1059,10 +1067,17 @@
             "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8G1AWNJJTEYVQCJYPHA28FQ": {
@@ -1136,6 +1151,22 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "src/decapod/core/todo.rs",
+                  "src/decapod/core/storage_contracts.rs",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 integrates the #1997 storage contract. Independent staged diff comparisons preserve both SQLite trigger hooks and each prior Cloud-claim guard hunk. Prior bc0221bda release-controller proof applies to the historical 170efc04 pair."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1145,6 +1176,7 @@
       "destination": "pull request",
       "evidence": [
         "Accepted b049135963d158139a610904752cc546c22e606d carries the published book and its authored living specs. Preserved those bytes and the Cloud claim guard, regenerated only managed projections, and will validate against the new exact target. Earlier PR admission is historical.",
+        "Accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 integrates the #1997 storage contract. Independent staged diff comparisons preserve both SQLite trigger hooks and each prior Cloud-claim guard hunk. Prior bc0221bda release-controller proof applies to the historical 170efc04 pair.",
         "Accepted release merge 170efc04ae39ec9ba78e27db941ac86731c9969e changed the package/lock version and CHANGELOG. The official controller will bind the reviewed source inventory sha256:0d87fdfabf5eccda9438e69cb40e495e888d441c38f5031a4e7ceec5d7a9ffbe. The earlier b049 push-context proof became stale on target movement.",
         "Checksum-verified v0.169.4 reported the accepted source inventory sha256:cb01a74e37d2bf94fd3e4aab8561168079123a40a773bedc2400cd696d36a7ee and regenerated release-bound projections. Full configured validation is still required.",
         "Shared, explicit duration and explicit intent were discarded in the main Cloud dispatch; the same preflight now checks CLI and direct entry points."
@@ -1155,6 +1187,7 @@
         "Cargo.lock",
         "Cargo.toml",
         "src/decapod/core/dactyl_todo.rs",
+        "src/decapod/core/storage_contracts.rs",
         "src/decapod/core/todo.rs"
       ],
       "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
