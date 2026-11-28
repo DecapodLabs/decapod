@@ -46,7 +46,7 @@
 
         <!-- Custom theme stylesheets -->
         {{#each additional_css}}
-        <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}">
+        <link rel="stylesheet" href="{{ ../path_to_root }}{{ this }}?v=20261128-docs-ia">
         {{/each}}
 
         {{#if mathjax_support}}
@@ -119,14 +119,6 @@
                             <span>Agent governance kernel</span>
                         </span>
                     </a>
-                    <div class="decapod-sidebar-mobile-links" aria-label="Cross-site links">
-                        <a href="https://decapodlabs.ai/">Home</a>
-                        <a href="https://decapodlabs.ai/proof.html">Proof</a>
-                        <a href="https://decapodlabs.ai/pricing">Pricing</a>
-                        <a href="https://decapodlabs.ai/admin">Admin</a>
-                        <a href="https://decapodlabs.ai/trust/">Trust</a>
-                        <a href="https://decapodlabs.ai/tecr.html">Rework</a>
-                    </div>
                     <div class="decapod-sidebar-section-title">Documentation</div>
                 </div>
                 {{#toc}}{{/toc}}
@@ -176,17 +168,16 @@
                                 <img class="decapod-wordmark logo-a" src="https://decapodlabs.ai/assets/logo-a.png" alt="Decapod Labs" width="420" height="140">
                                 <img class="decapod-wordmark logo-c" src="https://decapodlabs.ai/assets/logo-c.png" alt="Decapod Labs" width="420" height="140">
                             </a>
-                            <a class="decapod-docs-chip" href="{{ path_to_root }}index.html">Docs</a>
+                            <button type="button" class="menu-title decapod-docs-chip" title="Back to top" aria-label="Scroll to top">Docs</button>
                         </div>
                     </div>
 
                     <nav class="decapod-top-links" aria-label="Primary navigation">
+                        <a href="https://decapodlabs.ai/">Home</a>
                         <a href="{{ path_to_root }}index.html" class="is-active" aria-current="page">Docs</a>
-                        <a href="https://decapodlabs.ai/proof.html">Proof</a>
                         <a href="https://decapodlabs.ai/pricing">Pricing</a>
-                        <a href="https://decapodlabs.ai/admin">Admin</a>
-                        <a href="https://decapodlabs.ai/trust/">Trust</a>
-                        <a href="https://decapodlabs.ai/tecr.html">Rework</a>
+                        <a href="https://decapodlabs.ai/writing/">Writing</a>
+                        <a href="https://decapodlabs.ai/clack/index.html">Clack</a>
                         <a href="https://github.com/DecapodLabs/decapod">GitHub <span aria-hidden="true">↗</span></a>
                     </nav>
 
@@ -208,11 +199,6 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        {{#if git_repository_edit_url}}
-                        <a href="{{git_repository_edit_url}}" title="Suggest an edit on GitHub" aria-label="Suggest an edit on GitHub">
-                            <i id="git-edit-button" class="fa fa-edit" aria-hidden="true"></i>
-                        </a>
-                        {{/if}}
                         {{#if print_enable}}
                         <a href="{{ path_to_root }}print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print" aria-hidden="true"></i>
@@ -295,10 +281,11 @@
                         <div class="decapod-footer-links">
                             <a href="{{ path_to_root }}quickstart.html">Quickstart</a>
                             <a href="{{ path_to_root }}llms.txt">Agent index</a>
-                            <a href="https://decapodlabs.ai/proof.html">Proof ↗</a>
+                            <a href="https://decapodlabs.ai/proof.html">Evaluation ↗</a>
                             <a href="https://decapodlabs.ai/pricing">Pricing ↗</a>
                             <a href="https://decapodlabs.ai/admin">Admin ↗</a>
                             <a href="https://decapodlabs.ai/trust/">Trust ↗</a>
+                            <a href="https://decapodlabs.ai/writing/">Writing ↗</a>
                             <a href="https://github.com/DecapodLabs/decapod">GitHub ↗</a>
                         </div>
                     </footer>
@@ -311,13 +298,19 @@
                     </div>
                     <div class="decapod-rail-links">
                         <div class="decapod-rail-heading">Quick routes</div>
-                        <a href="{{ path_to_root }}quickstart.html">Quickstart</a>
-                        <a href="{{ path_to_root }}workflows/single-agent.html">Single-agent workflow</a>
-                        <a href="{{ path_to_root }}concepts/proof.html">Proof &amp; gates</a>
-                        <a href="{{ path_to_root }}reference/cli.html">CLI reference</a>
-                        <a href="{{ path_to_root }}llms.txt">Agent index (llms.txt)</a>
-                        <a href="https://decapodlabs.ai/pricing">Pricing ↗</a>
-                        <a href="https://decapodlabs.ai/admin">Admin ↗</a>
+                        <nav aria-label="Quick routes">
+                            <ul class="decapod-rail-list">
+                                <li><a href="{{ path_to_root }}quickstart.html">Quickstart</a></li>
+                                <li><a href="{{ path_to_root }}workflows/single-agent.html">Single-agent workflow</a></li>
+                                <li><a href="{{ path_to_root }}concepts/proof.html">Proof &amp; gates</a></li>
+                                <li><a href="{{ path_to_root }}reference/cli.html">CLI reference</a></li>
+                                <li><a href="{{ path_to_root }}llms.txt">Agent index (llms.txt)</a></li>
+                                <li><a href="https://decapodlabs.ai/proof.html">Evaluation <span aria-hidden="true">↗</span></a></li>
+                                <li><a href="https://decapodlabs.ai/trust/">Trust <span aria-hidden="true">↗</span></a></li>
+                                <li><a href="https://decapodlabs.ai/pricing">Pricing <span aria-hidden="true">↗</span></a></li>
+                                <li><a href="https://decapodlabs.ai/admin">Admin <span aria-hidden="true">↗</span></a></li>
+                            </ul>
+                        </nav>
                     </div>
                 </aside>
             </div>
@@ -437,7 +430,7 @@
                 }
             });
 
-            // Build right-rail & inline "On this page" TOC
+            // Build right-rail & inline "On this page" TOC using semantic <ul><li><a> lists
             var main = document.querySelector('#content main');
             var railToc = document.getElementById('decapod-page-toc');
             var inlineDetails = document.getElementById('decapod-inline-toc');
@@ -447,38 +440,88 @@
                     return !h.closest('.decapod-article-toolbar') && !h.closest('.decapod-inline-toc');
                 });
                 if (headings.length > 0) {
-                    var railLinks = [];
+                    var railList = document.createElement('ul');
+                    railList.className = 'decapod-rail-list';
+                    var inlineList = inlineNav ? document.createElement('ul') : null;
+                    if (inlineList) inlineList.className = 'decapod-rail-list';
+
+                    var tocLinks = [];
                     headings.forEach(function(h) {
                         var id = h.getAttribute('id');
                         var text = h.textContent.trim();
                         if (!id || !text) return;
                         var depthClass = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
 
+                        var liRail = document.createElement('li');
                         var aRail = document.createElement('a');
                         aRail.href = '#' + id;
                         aRail.textContent = text;
                         aRail.className = depthClass;
                         aRail.dataset.tocTarget = id;
-                        railToc.appendChild(aRail);
-                        railLinks.push(aRail);
+                        liRail.appendChild(aRail);
+                        railList.appendChild(liRail);
+                        tocLinks.push(aRail);
 
-                        if (inlineNav) {
+                        if (inlineList) {
+                            var liInline = document.createElement('li');
                             var aInline = document.createElement('a');
                             aInline.href = '#' + id;
                             aInline.textContent = text;
                             aInline.className = depthClass;
+                            aInline.dataset.tocTarget = id;
                             aInline.addEventListener('click', function() {
                                 if (inlineDetails) inlineDetails.open = false;
                             });
-                            inlineNav.appendChild(aInline);
+                            liInline.appendChild(aInline);
+                            inlineList.appendChild(liInline);
+                            tocLinks.push(aInline);
                         }
                     });
-                    if (inlineDetails && inlineNav && inlineNav.children.length > 0) {
+                    railToc.appendChild(railList);
+                    if (inlineDetails && inlineNav && inlineList && inlineList.children.length > 0) {
+                        inlineNav.appendChild(inlineList);
                         inlineDetails.hidden = false;
                     }
 
-                    // Highlight active section on scroll
-                    var updateActiveToc = function() {
+                    // Synchronize active section & aria-current="location" on scroll and fragment changes
+                    var headingIds = new Set(headings.map(function(h) { return h.id; }));
+                    var hashLockId = null;
+                    var hashLockTimer = null;
+                    var applyActiveToc = function(activeId) {
+                        tocLinks.forEach(function(link) {
+                            var isCurrent = link.dataset.tocTarget === activeId;
+                            link.classList.toggle('is-active', isCurrent);
+                            if (isCurrent) {
+                                link.setAttribute('aria-current', 'location');
+                            } else {
+                                link.removeAttribute('aria-current');
+                            }
+                        });
+                    };
+                    var lockHashSelection = function(id) {
+                        if (!headingIds.has(id)) return false;
+                        hashLockId = id;
+                        applyActiveToc(id);
+                        clearTimeout(hashLockTimer);
+                        hashLockTimer = setTimeout(function() { hashLockId = null; }, 750);
+                        return true;
+                    };
+                    tocLinks.forEach(function(link) {
+                        link.addEventListener('click', function() {
+                            lockHashSelection(link.dataset.tocTarget);
+                        });
+                    });
+                    var updateActiveToc = function(preferHash) {
+                        if (preferHash && window.location.hash) {
+                            var hashId = decodeURIComponent(window.location.hash.slice(1));
+                            if (lockHashSelection(hashId)) {
+                                return;
+                            }
+                        }
+                        if (hashLockId) {
+                            applyActiveToc(hashLockId);
+                            return;
+                        }
                         var threshold = 130;
                         var activeId = headings[0].id;
                         for (var i = 0; i < headings.length; i++) {
@@ -486,12 +529,11 @@
                                 activeId = headings[i].id;
                             }
                         }
-                        railLinks.forEach(function(link) {
-                            link.classList.toggle('is-active', link.dataset.tocTarget === activeId);
-                        });
+                        applyActiveToc(activeId);
                     };
-                    window.addEventListener('scroll', updateActiveToc, { passive: true });
-                    updateActiveToc();
+                    window.addEventListener('scroll', function() { updateActiveToc(false); }, { passive: true });
+                    window.addEventListener('hashchange', function() { updateActiveToc(true); });
+                    updateActiveToc(true);
                 } else {
                     var emptyNote = document.createElement('p');
                     emptyNote.className = 'decapod-toc-empty';

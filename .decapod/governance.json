@@ -872,55 +872,62 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
+    "id": "change_01M8GCM9JPZQMFPC94VGWF1YJB",
     "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
+    "claim:docs-ia-nav-1995": {
+      "statement": "Docs shell removes .decapod-sidebar-mobile-links, renders semantic ul.decapod-rail-list right-rail and inline TOC with scroll/hashchange aria-current=location, versions custom.css (?v=20261128-docs-ia), links Writing, and fixes book.js:635 .menu-title TypeError with 0 runtime exceptions.",
+      "falsifier": "Any page renders .decapod-sidebar-mobile-links, throws a JS page-load exception, loads unversioned custom.css, concatenates rail links inline, or breaks doc_alignment assertions.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "assets/tools/docs_seo.py",
+        "tests/doc_alignment.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
+      "id": "chk-docs-ia-nav-1995",
+      "summary": "Polish docs side navigation, semantic rail lists, CSS cache versioning, Writing nav, and .menu-title fix (#1995)",
+      "input_digest": "sha256:2eae62286153d29ca81b3fabf7a1de1757e29d64c58437eb04013bd0fe90031b"
     },
     {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "cp_bugs_01m8gcen6vkjv9gz_reconcile_v0169_5",
+      "summary": "Reconcile reviewed_sources_digest for v0.169.5 base 170efc04a",
+      "input_digest": "sha256:1eb586f87bf2cd9dfc6d6485bd638b13225b3a7949c00bbb90c300b2b097163a"
+    },
+    {
+      "id": "cp_bugs_01m8gcen6vkjv9gz_refresh_v0169_5",
+      "summary": "Refresh v0.169.5 Dockerfile pin, entrypoints, and specs manifest",
+      "input_digest": "sha256:df4ea7760ee59e2ff4aaad611d51b5121cfa9b674b4d0a0ce5098b993e6f32c9"
+    },
+    {
+      "id": "cp_bugs_01m8gcen6vkjv9gz_merge_e10831742",
+      "summary": "Merge origin/master (e10831742 / PR #1997) and refresh specs",
+      "input_digest": "sha256:13692995571cdc321762e6fb71274aa3a4d6b01aba8bca874e4e2294a98c7432"
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
+      "refined_intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,7 +940,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -943,80 +950,73 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
+          "reason": "Merged origin/master (PR #1997 #1630 storage contracts) with #1995 docs navigation architecture and refreshed codebase attestation.",
           "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
+          "spec_material_hash": "71aa8e2d87676fdad0c747f3845a0e51bda3b23a65a03d33395f5490e04f1355"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
+          "reason": "Merged origin/master (PR #1997 #1630 storage contract interfaces) with #1995 docs navigation interfaces and refreshed codebase attestation.",
           "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "spec_material_hash": "a91a1fe17b67dd771650b8605cc2f4e5ab11cc39a0a246fa03898c0f7da315a4"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
+          "reason": "Merged origin/master (PR #1997) cleanly with only generated codebase attestation refreshed; #1995 security boundaries unchanged.",
           "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "bugs_01m8gcen6vkjv9gz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853292Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:baf7e637c30a8bef7c6d78cbf56230819817014366554f4c1f72e10ee85910bd",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
+          "name": "chrome_qa_1995",
           "status": "passed"
         },
         {
-          "name": "pg17_utf8_gc_parity",
+          "name": "doc_alignment",
           "status": "passed"
         },
         {
-          "name": "storage_contracts::tests",
-          "status": "passed"
-        },
-        {
-          "name": "storage_owner::tests",
-          "status": "passed"
-        },
-        {
-          "name": "tests/group_broker",
+          "name": "mdbook_docs_seo",
           "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:branch_01M8GCM9Q9VM817PSY9SGW6JXN",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1025,32 +1025,30 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "branch_01M8GCM9Q9VM817PSY9SGW6JXN": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "branch_01M8GCM9Q9VM817PSY9SGW6JXN",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/custom.css",
+                  "docs/book/src/index.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP audit-decapod-1995.mjs ok=true exceptionsCount=0 failures=[] across 320..1440 + 1.25x zoom + 5 themes"
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "doc_alignment",
+                  "mdbook_docs_seo",
+                  "chrome_qa_1995"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1060,26 +1058,30 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP audit-decapod-1995.mjs ok=true exceptionsCount=0 failures=[] across 320..1440 + 1.25x zoom + 5 themes"
       ],
       "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
+      "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
       "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
+        "docs/book/src/custom.css",
+        "docs/book/src/index.md",
+        "docs/book/theme/index.hbs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "branch_01M8GCM9Q9VM817PSY9SGW6JXN",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "bugs_01m8gcen6vkjv9gz",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

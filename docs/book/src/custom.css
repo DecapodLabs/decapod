@@ -236,6 +236,7 @@ a {
   align-items: center;
   gap: 8px;
   flex: none;
+  position: relative;
 }
 
 #menu-bar .decapod-header-brand {
@@ -287,6 +288,12 @@ a {
   line-height: 1.1;
   padding: 5px 12px;
   text-decoration: none !important;
+  cursor: pointer;
+  flex: none;
+}
+
+.decapod-docs-chip:hover {
+  background: var(--shell-card);
 }
 
 #menu-bar .decapod-top-links {
@@ -296,7 +303,6 @@ a {
   min-width: 0;
 }
 
-.decapod-docs-chip,
 .decapod-repo-icon-link {
   display: none !important;
 }
@@ -318,7 +324,7 @@ a {
   border-color: var(--decapod-orange);
 }
 
-#menu-bar .menu-title {
+#menu-bar .menu-title:not(.decapod-docs-chip) {
   display: none;
 }
 
@@ -370,6 +376,9 @@ a {
 
 #theme-list {
   z-index: 250;
+  left: auto !important;
+  right: 44px;
+  top: calc(100% + 8px);
   background: var(--theme-popup-bg);
   border: 1px solid var(--theme-popup-border);
   border-radius: 14px;
@@ -466,26 +475,6 @@ a {
   font-weight: 700;
   color: var(--shell-strong);
   letter-spacing: -0.02em;
-}
-
-.decapod-sidebar-mobile-links {
-  display: none;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.decapod-sidebar-mobile-links a {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 8px;
-  background: var(--shell-soft);
-  border: 1px solid var(--shell-stroke);
-  color: var(--links);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
 }
 
 .decapod-sidebar-section-title {
@@ -695,27 +684,56 @@ a {
   color: var(--shell-strong);
 }
 
-#decapod-inline-toc-nav {
+/* Semantic vertical rail & inline TOC lists */
+.decapod-rail-list {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+}
+
+.decapod-rail-list li {
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.decapod-rail-list a {
+  display: block;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--shell-muted) !important;
+  text-decoration: none !important;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  overflow-wrap: break-word;
+  transition: color 0.14s, background 0.14s, border-color 0.14s;
+}
+
+.decapod-rail-list a.toc-h3 {
+  padding-left: 20px;
+}
+
+.decapod-rail-list a:hover {
+  color: var(--links) !important;
+  background: var(--shell-soft);
+}
+
+.decapod-rail-list a.is-active,
+.decapod-rail-list a[aria-current="location"] {
+  color: var(--links) !important;
+  background: var(--shell-soft);
+  border-left-color: var(--decapod-orange);
+  font-weight: 700;
+}
+
+#decapod-inline-toc-nav {
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--shell-stroke);
-}
-
-#decapod-inline-toc-nav a {
-  font-size: 14px;
-  text-decoration: none;
-  color: var(--shell-muted);
-}
-
-#decapod-inline-toc-nav a.toc-h3 {
-  padding-left: 14px;
-}
-
-#decapod-inline-toc-nav a:hover {
-  color: var(--links);
 }
 
 /* Prose typography */
@@ -1124,17 +1142,17 @@ a {
 /* Landing page hero, 3-route tiles, and offerings */
 .decapod-docs-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1.48fr) minmax(0, 0.52fr);
+  gap: 18px;
   align-items: center;
-  padding: clamp(24px, 3.6vw, 44px);
-  border-radius: 26px;
+  padding: clamp(18px, 2.4vw, 28px);
+  border-radius: 24px;
   background: radial-gradient(circle at 85% 12%, #ffd8aa 0%, transparent 56%), linear-gradient(145deg, #fff3e2, #ffe8cc);
   background-color: #ffeed9;
   border: 1px solid #eccbb2;
   box-shadow: 0 14px 36px rgba(154, 78, 46, 0.1);
   color: #241b24;
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .decapod-docs-kicker {
@@ -1148,12 +1166,12 @@ a {
 #content main .decapod-docs-hero h1 a.header {
   font-family: var(--sans-font);
   font-weight: 800;
-  font-size: clamp(36px, 4.8vw, 56px);
+  font-size: clamp(32px, 4.1vw, 48px);
   letter-spacing: -0.045em;
   line-height: 1.02;
   color: #241b24 !important;
   text-decoration: none !important;
-  margin: 14px 0 16px;
+  margin: 8px 0 10px;
 }
 
 .decapod-docs-hero h1 em {
@@ -1171,16 +1189,16 @@ a {
 
 .decapod-docs-hero-copy > p {
   color: #3f3139;
-  max-width: 52ch;
-  font-size: 16.5px;
-  line-height: 1.58;
+  max-width: 54ch;
+  font-size: 16px;
+  line-height: 1.52;
   margin: 0;
 }
 
 .decapod-docs-mascot {
   display: block;
   width: 100%;
-  max-width: 240px;
+  max-width: 180px;
   height: auto;
   justify-self: center;
   filter: drop-shadow(0 16px 18px rgba(173, 83, 66, 0.2));
@@ -1189,19 +1207,21 @@ a {
 .decapod-docs-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 22px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .decapod-docs-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 12px 18px;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
   border-radius: 12px !important;
   font-size: 14px;
   font-weight: 700;
+  white-space: nowrap;
   text-decoration: none !important;
   transition: transform 0.16s, box-shadow 0.16s;
 }
@@ -1499,34 +1519,6 @@ a {
     color: var(--shell-strong);
     margin-bottom: 10px;
   }
-  .decapod-page-toc,
-  .decapod-rail-links {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .decapod-page-toc a,
-  .decapod-rail-links a {
-    font-size: 14px;
-    line-height: 1.4;
-    color: var(--shell-muted);
-    text-decoration: none;
-    padding: 4px 8px;
-    border-radius: 8px;
-    border-left: 2px solid transparent;
-    overflow-wrap: anywhere;
-  }
-  .decapod-page-toc a.toc-h3 {
-    padding-left: 18px;
-  }
-  .decapod-page-toc a:hover,
-  .decapod-rail-links a:hover,
-  .decapod-page-toc a.is-active {
-    color: var(--links);
-    background: var(--shell-soft);
-    border-left-color: var(--decapod-orange);
-    font-weight: 600;
-  }
   .decapod-toc-empty {
     font-size: 14px;
     color: var(--shell-muted);
@@ -1534,12 +1526,20 @@ a {
   }
 }
 
+@media (max-width: 1340px) {
+  .decapod-search-label,
+  .decapod-kbd {
+    display: none;
+  }
+  #menu-bar .icon-button.decapod-search-trigger {
+    width: 38px;
+    padding: 0;
+  }
+}
+
 @media (max-width: 1180px) {
   #menu-bar .decapod-top-links {
     display: none;
-  }
-  .decapod-sidebar-mobile-links {
-    display: flex;
   }
   .decapod-repo-icon-link {
     display: inline-flex !important;

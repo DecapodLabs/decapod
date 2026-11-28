@@ -1,11 +1,11 @@
 <div class="decapod-docs-hero">
   <div class="decapod-docs-hero-copy">
-    <div class="decapod-docs-kicker">AGENT-AGNOSTIC · DAEMONLESS · REPO-NATIVE</div>
+    <div class="decapod-docs-kicker">DECAPOD DOCUMENTATION</div>
     <h1>HARNESS AI <em class="decapod-docs-metacognition">METACOGNITION.</em></h1>
     <p>Decapod is an <strong>agent-agnostic, daemonless governance kernel</strong>. Codex, Claude Code, Cursor, Antigravity, and custom harnesses call it via CLI or structured RPC to keep work bounded to explicit intent, isolated in Git worktrees, and gated by exact-commit proof.</p>
     <div class="decapod-docs-actions">
-      <a class="decapod-docs-btn primary" href="quickstart.html">Start in your repo <span aria-hidden="true">↗</span></a>
-      <a class="decapod-docs-btn secondary" href="introduction.html">Architecture overview <span aria-hidden="true">↗</span></a>
+      <a class="decapod-docs-btn primary" href="quickstart.html">Start in your repo <span aria-hidden="true">→</span></a>
+      <a class="decapod-docs-btn secondary" href="introduction.html">Architecture overview <span aria-hidden="true">→</span></a>
     </div>
   </div>
   <img class="decapod-docs-mascot" src="https://decapodlabs.ai/assets/mascot.svg" width="520" height="440" alt="Decapod crab mascot" loading="eager">
