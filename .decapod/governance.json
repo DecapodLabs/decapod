@@ -902,6 +902,15 @@
       "proof_refs": [
         "src/decapod/core/cloud_context.rs"
       ]
+    },
+    {
+      "id": "shared-context-release-inventory",
+      "summary": "Refresh the reviewed source inventory after the accepted 0.169.4 package version change. Preserve the existing workflow and check requirements.",
+      "input_digest": "sha256:6fd09637119ee771776dc3ffea49b9cf28cce68c6cdc381cf11411834a6c3337",
+      "proof_refs": [
+        "Cargo.lock",
+        "Cargo.toml"
+      ]
     }
   ],
   "intents": {
@@ -945,21 +954,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rescoped review of current hosted context authority and custody against released accepted target.",
+          "reason": "Maintains reviewed context behavior under the accepted package-version-only inventory change.",
           "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "568e3bc261252f30ac9cf615c6baa2d2321e6ed1a900ad7303cd3164ccd5e040"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rescoped review of current hosted context authority and custody against released accepted target.",
+          "reason": "Maintains reviewed context behavior under the accepted package-version-only inventory change.",
           "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "c72399e060514832308c9aae049d9a2100635900b80f415a17e2e750560ddd15"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rescoped review of current hosted context authority and custody against released accepted target.",
+          "reason": "Maintains reviewed context behavior under the accepted package-version-only inventory change.",
           "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "dd7ac27adb32274254a2dba14e8ed4a30e972b0875c0ab3a19bafa5989dd763e"
         }
@@ -972,7 +981,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795835844Z"
+      "updated_at": "1795836485Z"
     },
     "trajectory": {
       "active_boundaries": [
