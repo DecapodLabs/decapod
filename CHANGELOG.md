@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.170.0](https://github.com/DecapodLabs/decapod/compare/v0.169.5...v0.170.0) - 2026-11-28
+
+### Added
+
+- *(governance)* outcome-implied professional defaults, behavior-relevant proof & standing delivery endpoints (#1981, #1982, #1983)
+- *(bindings,hosts)* wire N-API AbortSignal, CLI evalPrompt parity, and Wave 8 host pilot (#1277, #880)
+- *(cloud)* wire Propodus 037 delegated grants into data db CLI and RPC ([#1568](https://github.com/DecapodLabs/decapod/pull/1568))
+- *(docs)* polish side navigation, semantic rail lists, CSS cache versioning, and .menu-title fix ([#1995](https://github.com/DecapodLabs/decapod/pull/1995))
+
+### Fixed
+
+- *(lint)* allow clippy::too_many_arguments on make_duty ([#1981](https://github.com/DecapodLabs/decapod/pull/1981))
+- *(workunit)* support cold continuation inspection and drifted re-checkpoint ([#1367](https://github.com/DecapodLabs/decapod/pull/1367))
+
+### Other
+
+- merge origin/master ([#2006](https://github.com/DecapodLabs/decapod/pull/2006)) into hide-pricing docs branch
+- *(governance)* record SECURITY.md unchanged-with-reason review
+- merge origin/master ([#2005](https://github.com/DecapodLabs/decapod/pull/2005)) into hide-pricing docs branch
+- *(book)* hide /pricing links and $50 claims while pricing page is hidden
+- *(#1378,#1379,#1369)* root-UID 0o555 preflight, sqlite_hardening sync, Supabase 3-mode docs & #1896 alignment
+- *(merge)* sync origin/master (PR #1997) and refresh living specs
+- *(decapod)* refresh v0.169.5 Dockerfile pin and entrypoints
+- *(proof)* reconcile reviewed_sources_digest for v0.169.5 base 170efc04a
+- *(#1630)* unified field contracts, SQLite write triggers, storage owner proxy fix, and v0.169.1 benchmarks
+
+### Security
+
+- *(trust)* enforce whole-src egress scanner, model_assets URL validation, and cloud revocation gate ([#1944](https://github.com/DecapodLabs/decapod/pull/1944))
+- *(hardening)* container_signer origin/allowlist, atomic lcm replay, and crash/lease/assurance suites (#1934, #1935, #1936, #1964)
+
 ## [0.169.5](https://github.com/DecapodLabs/decapod/compare/v0.169.4...v0.169.5) - 2026-11-28
 
 ### Added
