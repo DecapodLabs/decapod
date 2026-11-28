@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
+    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,23 +872,14 @@
     }
   },
   "change": {
-    "id": "docs_01m8fjpadj5ywkv7",
-    "base_commit": "78b9c0f18a41d4cee295703bb5a4d8d15f6e49d2",
+    "id": "change_01M8GCM9JPZQMFPC94VGWF1YJB",
+    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:docs-first-governed-result": {
-      "statement": "Docs lead directly to Local/Cloud routes, separate human install/init from agent workflow using a short outcome-only prompt, explain standing project delegation once, and separate implemented gates from target #1981-#1983 defaults.",
-      "falsifier": "Quickstart omits prerequisites/legacy anchors, teaches command-checklist incantations, claims unobserved #1981-#1983 defaults as active everywhere, or breaks doc_alignment assertions.",
-      "status": "supported",
-      "proof_refs": [
-        "tests/doc_alignment.rs",
-        "tests/workunit_verified_proof_1660.rs"
-      ]
-    },
-    "claim:docs-reading-shell-accessibility": {
-      "statement": "Docs shell renders all 5 themes at >=4.5:1 text/code/control contrast with zero sticky-header overlap, zero overflow (320..1440 + 1.25x zoom), self-hosted Geist fonts, accessible live copy status, and working Cmd+K search.",
-      "falsifier": "Any theme or viewport in 320..1440 exhibits <4.5:1 contrast, horizontal overflow, header clipping on load/fragments/search/focus, Google Fonts network calls, or missing clipboard status feedback.",
+    "claim:docs-ia-nav-1995": {
+      "statement": "Docs shell removes .decapod-sidebar-mobile-links, renders semantic ul.decapod-rail-list right-rail and inline TOC with scroll/hashchange aria-current=location, versions custom.css (?v=20261128-docs-ia), links Writing, and fixes book.js:635 .menu-title TypeError with 0 runtime exceptions.",
+      "falsifier": "Any page renders .decapod-sidebar-mobile-links, throws a JS page-load exception, loads unversioned custom.css, concatenates rail links inline, or breaks doc_alignment assertions.",
       "status": "supported",
       "proof_refs": [
         "assets/tools/docs_seo.py",
@@ -898,70 +889,30 @@
   },
   "checkpoints": [
     {
-      "id": "cp-1-fonts",
-      "summary": "Vendor self-hosted Geist fonts and OFL license",
-      "input_digest": "sha256:7579585400d5ac1f1cb9e952c4f7a725dc2e9b26ee79fdbbfc2fd483568dbd9f"
-    },
-    {
-      "id": "cp-2-layout",
-      "summary": "Upgrade OpenShell reading layout, code contrast, and sticky header clearance",
-      "input_digest": "sha256:c8fca9669f369acb5beda0f977a1baceb08f17625554e757fe6f0a9a44eb4c7c"
-    },
-    {
-      "id": "cp-3-journey",
-      "summary": "Streamline 3-route landing and First Governed Result quickstart",
-      "input_digest": "sha256:4931bb586e4944d2d84438c727ca323b23f135b3496f5c3e14e88ed70387d97d"
-    },
-    {
-      "id": "cp-4-specs",
-      "summary": "Author living specs and refresh projections for #1977 and #1978",
-      "input_digest": "sha256:42025edbfaefe94d699edf6328bffac367145fcba533277f07a5dc78238fc172"
-    },
-    {
-      "id": "cp-5-quickstart-aliases",
-      "summary": "Add coding-agent example prompt, legacy anchor aliases, and refresh INTERFACES spec",
-      "input_digest": "sha256:65fb849f0e9fe6fbae236f72fa6262c2f96dd1e0bda1401f6292698e2fa248e7"
-    },
-    {
-      "id": "chk-merge-v0169-4",
-      "summary": "Merge origin/master v0.169.4 and reconcile governance/specs",
-      "input_digest": "sha256:53cbc200f287d0ff38e45840ad67cdbf7903b9e69f13a1d55bf9f676ec661474"
-    },
-    {
-      "id": "chk-v0169-4-uplift-final",
-      "summary": "Finalize #1977 copy/focus/header/hero fixes and #1978 short outcome prompt + standing project delegation + v0.169.4 clean-env specs",
-      "input_digest": "sha256:22a4909eaa8c001e53566a1aee796ca39401771369679a32ac47be1c812142fa"
-    },
-    {
-      "id": "chk-v0169-4-dockerfile-claims",
-      "summary": "Pin v0.169.4 Dockerfile, refresh specs manifest, and record PR claims (#1977, #1978)",
-      "input_digest": "sha256:12b19bb4f5d9eb6a21ec138c08b6df2df104988bed9ddb50b7d638716613c97e"
-    },
-    {
-      "id": "cp_docs_01m8fjpadj5ywkv7_reconcile_v0169_4",
-      "summary": "Reconcile reviewed_sources_digest for v0.169.4 base a2d7266db",
-      "input_digest": "sha256:c19d81e5e38f7ddbe276c33947ba0dd72c18750fcbee2cb3f0b3cd2bb0d60d9f"
+      "id": "chk-docs-ia-nav-1995",
+      "summary": "Polish docs side navigation, semantic rail lists, CSS cache versioning, Writing nav, and .menu-title fix (#1995)",
+      "input_digest": "sha256:2eae62286153d29ca81b3fabf7a1de1757e29d64c58437eb04013bd0fe90031b"
     }
   ],
   "intents": {
-    "intent:branch_docs_01m8fjpadj5ywkv7": {
+    "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
         "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "docs/book/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_docs_01m8fjpadj5ywkv7",
+      "id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
-      "refined_intent": "Upgrade mdBook OpenShell layout, self-hosted Geist fonts, 5-theme code contrast, sticky header clearance, and 3-route index/First Governed Result quickstart (#1977, #1978)",
+      "raw_intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
+      "refined_intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -974,10 +925,9 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
+      "intent": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test doc_alignment",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -985,47 +935,36 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs architecture.",
-          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
-          "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
+          "reason": "Documented #1995 removal of .decapod-sidebar-mobile-links, semantic ul.decapod-rail-list TOC/Quick routes, versioned CSS cache-busting, and .menu-title button fix",
+          "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
+          "spec_material_hash": "a184155fffbd6a7c7a36a8ff0a270d9fbd3194d952e56243310d15749127f381"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml to match origin/master a2d7266db (v0.169.4) alongside #1977/#1978 docs interfaces.",
-          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
-          "spec_material_hash": "0abab150f54aae1c6b93aaffacbfc2972b4f9db6912394293bf6748a5ae3a61e"
-        },
-        {
-          "disposition": "unchanged_with_reason",
-          "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reconciled .decapod/config.toml reviewed_sources_digest to v0.169.4 base a2d7266db; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reason": "Documented #1995 Writing nav link, .menu-title scroll-to-top contract, aria-current=location sync, and semantic rail list contract",
+          "reviewed_code_fingerprint": "1b5091bfd7ca85e3af6cabd57fd2427a13bb536474d94966a497dad6cf66b799",
+          "spec_material_hash": "0b279ef8598a6f238c4cb3ec9c91acbcebcb8d0fa013bda0980395e9a08b76d9"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
+      "title": "Docs IA & navigation polish: remove mobile links drawer, semantic rail lists, CSS cache-bust, fix .menu-title runtime error (#1995)",
       "todo_ids": [
-        "docs_01m8fjpadj5ywkv7"
+        "bugs_01m8gcen6vkjv9gz"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795837198Z"
+      "updated_at": "1795847263Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b78ab45b3505e7a46761340231e2332473aceceee9bfa624a4182c28b0131ca1",
+      "artifact_hash": "sha256:baf7e637c30a8bef7c6d78cbf56230819817014366554f4c1f72e10ee85910bd",
       "checks": [
         {
-          "name": "chrome_qa_5themes_5viewports",
-          "status": "passed"
-        },
-        {
-          "name": "clean_env_quickstart_v0169_4",
+          "name": "chrome_qa_1995",
           "status": "passed"
         },
         {
@@ -1035,120 +974,61 @@
         {
           "name": "mdbook_docs_seo",
           "status": "passed"
-        },
-        {
-          "name": "quickstart_legacy_anchors_chrome",
-          "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
+            "detail": "trajectory:branch_01M8GCM9Q9VM817PSY9SGW6JXN",
             "event_id": "event:4",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
-            "event_id": "event:5",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
-            "event_id": "event:6",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_docs_01m8fjpadj5ywkv7": {
+          "branch_01M8GCM9Q9VM817PSY9SGW6JXN": {
             "evidence_only": true,
-            "id": "branch_docs_01m8fjpadj5ywkv7",
-            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "id": "branch_01M8GCM9Q9VM817PSY9SGW6JXN",
+            "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/book/theme/fonts/Geist-Variable.woff2",
-                  "docs/book/theme/fonts/GeistMono-Variable.woff2",
-                  "docs/book/theme/fonts/OFL-LICENSE.txt",
                   "docs/book/theme/index.hbs",
                   "docs/book/src/custom.css",
                   "docs/book/src/index.md",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/configuration.md",
-                  "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
-                ],
-                "proof_refs": [
-                  "doc_alignment",
-                  "mdbook_docs_seo",
-                  "chrome_qa_5themes_5viewports"
-                ],
-                "scope": [
-                  "docs/book/**"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5"
-                ],
-                "proof_refs": [
-                  "quickstart_legacy_anchors_chrome"
-                ],
-                "scope": [
-                  "docs/book/**"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  "docs/book/theme/index.hbs",
-                  "docs/book/src/custom.css",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/configuration.md",
                   ".decapod/managed/specs/ARCHITECTURE.md",
                   ".decapod/managed/specs/INTERFACES.md",
                   ".decapod/managed/specs/OPERATIONS.md",
-                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify"
+                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP audit-decapod-1995.mjs ok=true exceptionsCount=0 failures=[] across 320..1440 + 1.25x zoom + 5 themes"
                 ],
                 "proof_refs": [
                   "doc_alignment",
                   "mdbook_docs_seo",
-                  "chrome_qa_5themes_5viewports",
-                  "clean_env_quickstart_v0169_4"
+                  "chrome_qa_1995"
                 ],
                 "scope": [
-                  "docs/book/**"
+                  "root"
                 ],
-                "sequence": 6,
+                "sequence": 4,
                 "validation_findings": []
               }
             ]
@@ -1156,33 +1036,30 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5",
-        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify",
-        "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
+        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP audit-decapod-1995.mjs ok=true exceptionsCount=0 failures=[] across 320..1440 + 1.25x zoom + 5 themes"
       ],
       "inspected_files": [],
-      "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+      "intent_id": "intent:change_01M8GCM9JPZQMFPC94VGWF1YJB",
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTERFACES.md",
         ".decapod/managed/specs/OPERATIONS.md",
-        "docs/book/src/configuration.md",
         "docs/book/src/custom.css",
         "docs/book/src/index.md",
-        "docs/book/src/quickstart.md",
-        "docs/book/theme/fonts/Geist-Variable.woff2",
-        "docs/book/theme/fonts/GeistMono-Variable.woff2",
-        "docs/book/theme/fonts/OFL-LICENSE.txt",
         "docs/book/theme/index.hbs"
       ],
-      "repo_scope": [
-        "docs/book/**"
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
-      "run_id": "branch_docs_01m8fjpadj5ywkv7",
+      "repo_scope": [
+        "root"
+      ],
+      "run_id": "branch_01M8GCM9Q9VM817PSY9SGW6JXN",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "docs_01m8fjpadj5ywkv7",
+      "task_id": "bugs_01m8gcen6vkjv9gz",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
