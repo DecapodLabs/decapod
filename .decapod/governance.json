@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,64 +872,65 @@
     }
   },
   "change": {
-    "id": "test_01m8fksbstm838m1",
-    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "id": "change_01M8G0QWSKBZCE5J7YDVWMP5KV",
+    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:hop1-batch-unbundle-and-next-hop": {
-      "statement": "Bounded-parallel GHA artifact download (max 6 threads), unbundled standalone CLI/entrypoint targets, and next-hop release.yml digest admission preserve full sha256 custody, selector coverage, and fail-closed verification.",
-      "falsifier": "Tampered ZIP bytes, missing artifact, duplicate obligation, unreviewed workflow SHA-256, or RULE-POLICY-003 mutation passes admission.",
+    "cloud-context-store-isolation": {
+      "statement": "Cloud context RPC ignores retained Local SQLite, keeps file and embedded context, and explicitly reports unavailable shared knowledge.",
+      "falsifier": "A Cloud invocation opens a retained database or sidecar, changes audit evidence, or returns the Local sentinel.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "tests/source_ci_profile_policy.rs"
+        "tests/context_capsule_rpc.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp_1672_hop1_initial",
-      "summary": "CI shard unbundling (#1672 Hop 1), bounded-parallel GHA custody downloads (#1400/#1573), and reviewed_next_hop_workflow_digests for release.yml",
-      "input_digest": "sha256:9c47b67377e408f93744efb9603884ad11a0e87f05b6a8194d1e1bb2697c7b7e"
+      "id": "cloud-context-1986-candidate",
+      "summary": "Fence compound context knowledge at the effective backend before retained SQLite access",
+      "input_digest": "sha256:6ae18523979f3e377b41a05b54faf18ad7bd574e17f353389148e8ff083b712e",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
     },
     {
-      "id": "cp_1672_hop1_config_reconciled",
-      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for #1672 Hop 1 off origin/master@2ed6e67ee",
-      "input_digest": "sha256:3eafafe83dc006dfb272cd0eddc36af0f8a110b8c0541820a35a9d22a0966781"
+      "id": "cloud-context-1986-wal",
+      "summary": "Exercise the file boundary with a valid retained WAL store and independent broker audit readback",
+      "input_digest": "sha256:b9f80ca0e044d98b33d36fedab351acea2a9ed6a924058dbea919e591bba066e",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
     },
     {
-      "id": "cp_1672_hop1_official_0169_3",
-      "summary": "Refresh release-bound manifest and Dockerfile.decapod via official v0.169.3",
-      "input_digest": "sha256:c2db6dc115c7209ef3906166a1feaa1f7f2f485639d80b66566a20e762c74ef4"
-    },
-    {
-      "id": "cp_1672_hop1_dockerfile_0169_3",
-      "summary": "Refresh managed Dockerfile.decapod to v0.169.3 via official v0.169.3 CLI",
-      "input_digest": "sha256:60123cdf83d3e187ad2c04ca33a66c01b9c6c5b9d7c98c0cdd711d879fe84ece"
+      "id": "cloud-context-1986-accepted-release",
+      "summary": "Reconcile the reviewed source inventory for the accepted package-version-only release and preserve mandatory proof",
+      "input_digest": "sha256:27ef9cb76b759a64b7681a61bd6a4b074d1b4ef9c76e334aeb48a1989b4aed02",
+      "proof_refs": [
+        "tests/context_capsule_rpc.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:run_1672_hop1": {
+    "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "decapod_hop1"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1672_hop1",
+      "id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute #1672 Hop 1, #1400, #1573, and two-hop release workflow digest admission off origin/master.",
-      "refined_intent": "Unbundle CLI/entrypoint tests, implement bounded-parallel OfficialCli/GithubWorkflowInventory batch downloads, and admit Hop 2 release.yml SHA-256 via readiness_profile::reviewed_next_hop_workflow_digests.",
+      "raw_intent": "Keep Cloud context off retained Local knowledge (GH #1986)\n\nResolve effective repository backend before any local knowledge access and verify normal/stdin RPC across clean and retained Local stores.",
+      "refined_intent": "Keep Cloud context off retained Local knowledge (GH #1986)\n\nResolve effective repository backend before any local knowledge access and verify normal/stdin RPC across clean and retained Local stores.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -942,247 +943,155 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Unbundle overloaded CLI/entrypoint Bazel test targets and drop duplicate/unnecessary serial locks (#1672 Hop 1), parallelize distinct GHA artifact downloads up to 6 bounded workers (#1400/#1573), and add reviewed_next_hop_workflow_digests for Hop 2 release.yml without altering workflows in Hop 1.",
+      "intent": "Backend selection controls operational knowledge before any local file access. Keep file and Constitution context available and preserve Local behavior and stored bytes.",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "CLI context_capsule_rpc repeats both context operations via flags and stdin from clean and retained stores, including linked worktree selector skew.",
+        "Full configured Decapod validation against current accepted master."
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
+          "reason": "Documented backend selection before retained SQLite is consulted, with unchanged authority owners.",
+          "reviewed_code_fingerprint": "14868159618c09ccda1a8f148cf6740c404ab0749e04e60899be562ce98e6251",
+          "spec_material_hash": "65386d2b074cb55022284918373f992f28be6dadeb99f272574562baff3ee195"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
+          "reason": "Represented Cloud knowledge unavailable while preserving file and Constitution context.",
+          "reviewed_code_fingerprint": "14868159618c09ccda1a8f148cf6740c404ab0749e04e60899be562ce98e6251",
+          "spec_material_hash": "558270e72558fed8726818f01474573d8258eab4c18c97213e68cde6db3295f0"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod pin via official CLI; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "reason": "Compound context checks existing backend authority and skips the retained Local working data. Managed identity, session access, and Git source policy stay in their current owners.",
+          "reviewed_code_fingerprint": "14868159618c09ccda1a8f148cf6740c404ab0749e04e60899be562ce98e6251",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "CI shard unbundling (#1672 Hop 1), parallel GHA custody downloads (#1400/#1573), and next-hop release workflow admission",
+      "title": "Isolate retained Local knowledge from Cloud context",
       "todo_ids": [
-        "test_01m8fksbstm838m1"
+        "code_01m8g0py4fvmk64v"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795828991Z"
+      "updated_at": "1795836241Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e89114ea25e26e9b42833aea58f6798c9424b713456ea141a1d54c6d44d4198e",
+      "artifact_hash": "sha256:7e23479ab16245c4be97902f00c669ab19e48f71d0241f16b6fb6cc50f2209b5",
       "checks": [
         {
-          "name": "cargo_clippy_d_warnings",
+          "name": "native_context_isolation",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "init_reconciliation_22",
-          "status": "passed"
-        },
-        {
-          "name": "init_reconciliation_config_digest",
-          "status": "passed"
-        },
-        {
-          "name": "official_0169_3_dockerfile_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "official_0169_3_specs_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "readiness_profile_35",
-          "status": "passed"
-        },
-        {
-          "name": "snapshot_provider_219",
-          "status": "passed"
-        },
-        {
-          "name": "source_import_11",
-          "status": "passed"
-        },
-        {
-          "name": "unbundled_cli_and_policy_suites",
-          "status": "passed"
+          "name": "released_local_context_isolation",
+          "status": "failed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_01M8G0QWYPF22H8WQ00AMY9NW1",
             "event_id": "event:4",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_01M8G0QWYPF22H8WQ00AMY9NW1",
             "event_id": "event:5",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "trajectory_step_recorded",
             "sequence": 5
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_01M8G0QWYPF22H8WQ00AMY9NW1",
             "event_id": "event:6",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "kind": "trajectory_step_recorded",
             "sequence": 6
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:7",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:8",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1672_hop1": {
+          "branch_01M8G0QWYPF22H8WQ00AMY9NW1": {
             "evidence_only": true,
-            "id": "run_1672_hop1",
-            "intent_id": "intent:run_1672_hop1",
+            "id": "branch_01M8G0QWYPF22H8WQ00AMY9NW1",
+            "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "implementation",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  ".config/build/decapod.BUILD.bzl"
+                  "src/decapod/lib.rs",
+                  "src/decapod/core/context_capsule.rs",
+                  "src/decapod/core/broker.rs",
+                  "src/decapod/plugins/knowledge.rs",
+                  "tests/context_capsule_rpc.rs",
+                  "Decapod v0.169.3 disposable fixture returned the Local sentinel via both RPC forms for both operations under Cloud and changed decapod.db SHA-256; Local positive retained."
                 ],
                 "proof_refs": [
-                  "cargo_fmt_check",
-                  "cargo_clippy_d_warnings",
-                  "snapshot_provider_219",
-                  "source_import_11",
-                  "readiness_profile_35",
-                  "init_reconciliation_22",
-                  "unbundled_cli_and_policy_suites"
+                  "released_local_context_isolation"
                 ],
                 "scope": [
-                  "decapod_hop1"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:5",
                 "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  "assets/tools/source_ci_profile.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/readiness_profile/tests.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "tests/cli_contracts.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/effective_grant_cli_contracts.rs",
-                  "tests/entrypoint_correctness.rs",
-                  "tests/entrypoint_validation_contracts.rs",
-                  "tests/governance_fault_detection_1795.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  "tests/support/cli_bin.rs"
+                  "Native macOS candidate context_capsule_rpc regression passed: both RPC forms, root and linked worktree selector skew, fresh clone, real Local WAL/SHM and unchanged broker audit count."
                 ],
-                "proof_refs": [],
+                "proof_refs": [
+                  "native_context_isolation"
+                ],
                 "scope": [
-                  "decapod_hop1"
+                  "root"
                 ],
                 "sequence": 5,
                 "validation_findings": []
               },
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:6",
                 "observations": [
-                  ".decapod/config.toml"
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "Accepted PR #1988 changed only the Decapod package version in Cargo.toml and Cargo.lock plus CHANGELOG. The v0.169.4 controller inspected the complete new source inventory. The reviewed digest refresh preserves the existing required graph and checks."
                 ],
-                "proof_refs": [
-                  "init_reconciliation_config_digest"
-                ],
+                "proof_refs": [],
                 "scope": [
-                  "decapod_hop1"
+                  "root"
                 ],
                 "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/.manifest.json",
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_specs_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_dockerfile_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1190,44 +1099,35 @@
         }
       },
       "declared_commands": [],
-      "evidence": [],
-      "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
+      "destination": "pull request",
+      "evidence": [
+        "Accepted PR #1988 changed only the Decapod package version in Cargo.toml and Cargo.lock plus CHANGELOG. The v0.169.4 controller inspected the complete new source inventory. The reviewed digest refresh preserves the existing required graph and checks.",
+        "Decapod v0.169.3 disposable fixture returned the Local sentinel via both RPC forms for both operations under Cloud and changed decapod.db SHA-256; Local positive retained.",
+        "Native macOS candidate context_capsule_rpc regression passed: both RPC forms, root and linked worktree selector skew, fresh clone, real Local WAL/SHM and unchanged broker audit count."
       ],
-      "intent_id": "intent:run_1672_hop1",
+      "inspected_files": [
+        "Cargo.lock",
+        "Cargo.toml",
+        "src/decapod/core/broker.rs",
+        "src/decapod/core/context_capsule.rs",
+        "src/decapod/lib.rs"
+      ],
+      "intent_id": "intent:change_01M8G0QWSKBZCE5J7YDVWMP5KV",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        ".decapod/managed/.manifest.json",
-        ".decapod/managed/Dockerfile.decapod",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/cli_contracts.rs",
-        "tests/consumer_readiness.rs",
-        "tests/effective_grant_cli_contracts.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/entrypoint_validation_contracts.rs",
-        "tests/governance_fault_detection_1795.rs",
-        "tests/source_ci_profile_policy.rs",
-        "tests/support/cli_bin.rs"
+        "src/decapod/plugins/knowledge.rs",
+        "tests/context_capsule_rpc.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks",
+        "validation"
       ],
       "repo_scope": [
-        "decapod_hop1"
+        "root"
       ],
-      "run_id": "run_1672_hop1",
+      "run_id": "branch_01M8G0QWYPF22H8WQ00AMY9NW1",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m8fksbstm838m1",
+      "task_id": "code_01m8g0py4fvmk64v",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

@@ -1,7 +1,7 @@
 use serde_json::Value;
 use std::fs;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use tempfile::TempDir;
 
 fn run_decapod(dir: &Path, args: &[&str]) -> std::process::Output {
@@ -28,6 +28,246 @@ fn run_git(dir: &Path, args: &[&str]) -> std::process::Output {
         .args(args)
         .output()
         .expect("run git")
+}
+
+fn query_repository_knowledge(dir: &Path, machine: &Path, op: &str, stdin: bool) -> Value {
+    use std::io::Write;
+
+    let params = if op == "context.resolve" {
+        serde_json::json!({"query": "workspace retained knowledge sentinel"})
+    } else {
+        serde_json::json!({"topic": "workspace retained knowledge sentinel", "scope": "core"})
+    };
+    let mut child = Command::new(env!("CARGO_BIN_EXE_decapod"));
+    child
+        .current_dir(dir)
+        .env("XDG_CONFIG_HOME", machine)
+        .env("DECAPOD_AGENT_ID", "context-store-boundary-fixture")
+        .env("DECAPOD_HEADLESS", "1")
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .args(["rpc"])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let output = if stdin {
+        let mut process = child
+            .arg("--stdin")
+            .stdin(Stdio::piped())
+            .spawn()
+            .expect("start stdin RPC");
+        let request = serde_json::json!({"id": "fixture-context", "op": op, "params": params});
+        process
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(request.to_string().as_bytes())
+            .unwrap();
+        process.wait_with_output().unwrap()
+    } else {
+        child
+            .args(["--op", op, "--params", &params.to_string()])
+            .output()
+            .unwrap()
+    };
+    assert!(
+        output.status.success(),
+        "{op}, stdin={stdin}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let response: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(response["success"], true, "{response}");
+    response["result"].clone()
+}
+
+#[cfg(target_os = "linux")]
+fn observe_store_opens(database: &Path, files: &[&str]) -> std::os::fd::OwnedFd {
+    use std::os::fd::{AsRawFd, FromRawFd};
+    use std::os::unix::ffi::OsStrExt;
+
+    let raw = unsafe { libc::inotify_init1(libc::IN_NONBLOCK | libc::IN_CLOEXEC) };
+    assert!(raw >= 0, "{}", std::io::Error::last_os_error());
+    let watcher = unsafe { std::os::fd::OwnedFd::from_raw_fd(raw) };
+    for name in files {
+        let path = database.with_file_name(name);
+        if path.exists() {
+            let path = std::ffi::CString::new(path.as_os_str().as_bytes()).unwrap();
+            let watch = unsafe {
+                libc::inotify_add_watch(watcher.as_raw_fd(), path.as_ptr(), libc::IN_OPEN)
+            };
+            assert!(watch >= 0, "{}", std::io::Error::last_os_error());
+        }
+    }
+    watcher
+}
+
+#[test]
+fn cloud_context_ignores_retained_local_knowledge() {
+    let fixture = TempDir::new().unwrap();
+    let repo = fixture.path().join("repository");
+    fs::create_dir(&repo).unwrap();
+    let machine = fixture.path().join("machine");
+    let machine_path = machine.to_str().unwrap();
+    let envs = [
+        ("XDG_CONFIG_HOME", machine_path),
+        ("DECAPOD_VALIDATE_SKIP_GIT_GATES", "1"),
+    ];
+    let git = |args: &[&str]| {
+        let output = run_git(&repo, args);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    };
+    git(&["init", "-b", "master"]);
+    git(&["config", "user.name", "Context fixture"]);
+    git(&["config", "user.email", "context-fixture@example.invalid"]);
+    git(&["config", "commit.gpgsign", "false"]);
+    let call = |args: &[&str]| {
+        let output = run_decapod_with_env(&repo, args, &envs);
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    };
+    call(&[
+        "init",
+        "--force",
+        "--no-container-workspaces",
+        "--isolation-mode",
+        "worktree",
+    ]);
+    call(&["docs", "ingest"]);
+    call(&["rpc", "--op", "agent.init"]);
+    call(&[
+        "data",
+        "knowledge",
+        "add",
+        "--id",
+        "local-sentinel-1986",
+        "--title",
+        "workspace retained knowledge sentinel",
+        "--text",
+        "cedar narwhal",
+        "--provenance",
+        "cmd:fixture",
+    ]);
+    git(&["add", "-A"]);
+    git(&["commit", "-m", "Seed Local context fixture"]);
+    let worktree = repo.join(".decapod/workspaces/context-1986");
+    git(&[
+        "worktree",
+        "add",
+        "-b",
+        "agent/context-1986",
+        worktree.to_str().unwrap(),
+    ]);
+
+    let config = |dir: &Path| dir.join(".decapod/config.toml");
+    let local = fs::read_to_string(config(&repo)).unwrap();
+    let cloud = local.replace("backend = \"local\"", "backend = \"cloud\"");
+    assert_ne!(local, cloud);
+    let operations = ["context.resolve", "context.capsule.query"];
+    for op in operations {
+        let packet = query_repository_knowledge(&repo, &machine, op, false);
+        let records = packet["knowledge"]["records"].as_array().unwrap();
+        assert!(records.iter().any(|row| row["id"] == "local-sentinel-1986"));
+        assert!(
+            records
+                .iter()
+                .any(|row| row["provenance"] == serde_json::json!(["cmd:fixture"]))
+        );
+    }
+
+    let database = repo.join(".decapod/data/decapod.db");
+    let conn = decapod::core::db::Connection::open(&database).unwrap();
+    conn.execute_batch("PRAGMA journal_mode = WAL").unwrap();
+    let audit_count = || -> i64 {
+        conn.query_row(
+            "SELECT count(*) FROM events WHERE stream = 'broker'",
+            [],
+            |row| row.get(0),
+        )
+        .unwrap()
+    };
+    let prior_audit = audit_count();
+    assert!(prior_audit > 0);
+    // Keep the connection alive so SQLite leaves the real WAL/SHM files in place.
+    let source_files = [
+        "decapod.db",
+        "decapod.db-wal",
+        "decapod.db-shm",
+        "decapod.db-journal",
+        "decapod.db.lock",
+    ];
+    let snapshot = || {
+        source_files.map(|name| match fs::read(database.with_file_name(name)) {
+            Ok(bytes) => Some(bytes),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => None,
+            Err(error) => panic!("{name}: {error}"),
+        })
+    };
+    let before = snapshot();
+    assert!(before[1].is_some() && before[2].is_some());
+    #[cfg(target_os = "linux")]
+    let watcher = observe_store_opens(&database, &source_files);
+
+    let assert_cloud = |dir: &Path| {
+        for op in operations {
+            for stdin in [false, true] {
+                let packet = query_repository_knowledge(dir, &machine, op, stdin);
+                assert_eq!(packet["knowledge"]["status"], "cloud_knowledge_unavailable");
+                assert_eq!(packet["knowledge"]["records"], serde_json::json!([]));
+                assert!(!packet.to_string().contains("cedar narwhal"));
+                let file_context = if op == "context.resolve" {
+                    &packet["local_project_specs"]["constitution_refs"]
+                } else {
+                    &packet["sources"]
+                };
+                assert!(
+                    file_context
+                        .as_array()
+                        .is_some_and(|sources| !sources.is_empty())
+                );
+            }
+        }
+    };
+
+    // A candidate can opt in to Cloud before its Local base changes.
+    fs::write(config(&worktree), &cloud).unwrap();
+    assert_cloud(&worktree);
+    // A Local candidate cannot recover Local data after the base selects Cloud.
+    fs::write(config(&repo), &cloud).unwrap();
+    git(&["add", ".decapod/config.toml"]);
+    git(&["commit", "-m", "Select Cloud in accepted configuration"]);
+    fs::write(config(&worktree), &local).unwrap();
+    assert_cloud(&repo);
+    assert_cloud(&worktree);
+    #[cfg(target_os = "linux")]
+    {
+        use std::os::fd::AsRawFd;
+        let mut observed = libc::pollfd {
+            fd: watcher.as_raw_fd(),
+            events: libc::POLLIN,
+            revents: 0,
+        };
+        assert_eq!(
+            unsafe { libc::poll(&mut observed, 1, 0) },
+            0,
+            "a Cloud context process opened a retained Local database file"
+        );
+    }
+    assert!(
+        snapshot() == before,
+        "retained DB, sidecars and lock file changed"
+    );
+    assert_eq!(audit_count(), prior_audit, "Local broker audit changed");
+    assert!(!worktree.join(".decapod/data").exists());
+
+    let clean = fixture.path().join("fresh-clone");
+    git(&["clone", "--local", ".", clean.to_str().unwrap()]);
+    assert_cloud(&clean);
+    assert!(!clean.join(".decapod/data").exists());
 }
 
 fn setup_repo() -> (TempDir, std::path::PathBuf) {
