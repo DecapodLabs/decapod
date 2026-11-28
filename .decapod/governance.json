@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "3868461b441bbfa04cbc676922b983ac9d61483d",
+    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,51 +872,82 @@
     }
   },
   "change": {
-    "id": "pr-1378-1379-1369",
-    "base_commit": "3868461b441bbfa04cbc676922b983ac9d61483d",
+    "id": "change_01M8FZ2K20HKGZGB4THM212MYT",
+    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1378-1379-1369-container-supabase": {
-      "statement": "storage_health_preflight rejects unix mode&0o222==0 before write_probe under uid=0 CAP_DAC_OVERRIDE, sqlite_hardening serializes DECAPOD_STORAGE_FAULT_STAGE, Supabase 3-mode topology and hosted boundaries are documented, and local_native_managed_project_revocation aligns with #1896.",
-      "falsifier": "Any failure of sqlite_hardening, datastore_contract, shared_state_semantics_1247, storage_filesystem_tests, container_signer, plugins::container, supabase_service, or Decapod CI/Validate checks.",
+    "claim-1568-cloud-delegated-grant-admission": {
+      "statement": "data db CLI and data.database.* RPC resolve Propodus 037 repository access and delegated grants over DPoP, enforce grant generation/digest/expiry/operation bounds, fail closed when unauthenticated, and never open or create .decapod/data/decapod.db when backend=cloud",
+      "falsifier": "Targeted unit and loopback DPoP CLI/RPC tests fail or .decapod/data/decapod.db is created under backend=cloud",
       "status": "supported",
       "proof_refs": [
-        "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 TestPostgresNativeManagedProjectConsumer pass; host cargo clippy --offline --all-targets -- -D warnings = 0"
+        "src/decapod/core/db_maintenance.rs",
+        "tests/cloud_wave_parity.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-1378-1379-1369-rebased",
-      "summary": "Rebased #1378/#1379/#1369 onto origin/master@3868461b4 with official v0.169.5 preserving all PR #1997/#2000/#2002/#2003 code and living specs.",
-      "input_digest": "sha256:ffa099dba90a8bed47fc5e9630c3bf7c44c9f428864faffc79572e994d8fc5e8"
+      "id": "chk-1568-phase1-impl",
+      "summary": "Wired Propodus 037 repository access and delegated grants end-to-end in db_maintenance, lib, cli, rpc, docs, and loopback tests; guarded SQLite fallback on backend=cloud; awaiting Phase 2 local cargo test once Quiet Window lifts",
+      "input_digest": "sha256:f7bc113627e6b2d6eac3bdd8e566dacccc90a11c3f9ece3028779c40be076714"
     },
     {
-      "id": "chk-1378-1379-1369-rebased-v2",
-      "summary": "Rebased #1378/#1379/#1369 onto origin/master@3868461b4 with official v0.169.5, full spec reviews, preserving all PR #1997/#2000/#2002/#2003 code and living specs.",
-      "input_digest": "sha256:bed9a06c3679744203570978829346b145083b6f3898deeb887b238e52e984eb"
+      "id": "chk-1568-rebased-v01694",
+      "summary": "Rebased #1568 cleanly onto origin/master@a2d7266db with v0.169.4 Dockerfile/specs/manifest refresh and Cloud agent session token fix for data db CLI/RPC",
+      "input_digest": "sha256:a814df8c61b66e1beff8a7c0850ac1f3233cbc04053abec68f85b1b9546c33e4"
+    },
+    {
+      "id": "chk-1568-rebased-v01694-supported",
+      "summary": "Promoted claim-1568-cloud-delegated-grant-admission to supported with proof refs on rebased origin/master@a2d7266db + v0.169.4",
+      "input_digest": "sha256:653f746a9cc3ee06f0671e8a3588f62d727eddab1280e4ae72a5c900d462bb31"
+    },
+    {
+      "id": "chk-1568-v01694-digest-sync",
+      "summary": "Synced reviewed_sources_digest in .decapod/config.toml to full origin/master@a2d7266db inventory_digest and refreshed checkpoint",
+      "input_digest": "sha256:80939e5cf9be3389a6493d9c3438f8cf6b7ed43ed4529466223fb0bfe82c2c6c"
+    },
+    {
+      "id": "chk-1568-b04913596-v01694",
+      "summary": "Rebased #1568 cleanly onto origin/master@b04913596 with v0.169.4 Dockerfile/specs/manifest refresh and exact inventory_digest",
+      "input_digest": "sha256:57ac6302e97d9a36a9a99ee0a60056841f863ab4126ecd7abb55ff40b9bf58d2"
+    },
+    {
+      "id": "chk-1568-170efc04a-v01694",
+      "summary": "Rebased #1568 cleanly onto origin/master@170efc04a with v0.169.4 specs/manifest refresh and exact 0.169.5 inventory_digest",
+      "input_digest": "sha256:b9e04d1c0285e0bf1be104a2f05420c260fed9fcb8b7ef79ced6a3f7f4e28e60"
+    },
+    {
+      "id": "chk-1568-170efc04a-v01695",
+      "summary": "Refreshed #1568 entrypoints, Dockerfile pin, manifest, and specs with official decapod v0.169.5 on origin/master@170efc04a",
+      "input_digest": "sha256:a55b0d5cc578f5184b837ded601e9ca223404d979a98ee1f3853cb14472f000c"
+    },
+    {
+      "id": "chk-1568-4dbafaebd-v01695",
+      "summary": "Rebased #1568 cleanly onto origin/master@4dbafaebd with official v0.169.5 specs/manifest/Dockerfile and zero spec deletions",
+      "input_digest": "sha256:dddc9b3d2d801249871efe2700fb0f38bcfb1710193a81db89851c55843329d9"
     }
   ],
   "intents": {
-    "intent:run-1378-1379-1369-20261128113649": {
+    "intent:change_01M8FZ2K20HKGZGB4THM212MYT": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero weakening of fail-closed storage or hosted-credential checks; $0/mo; zero BYPASSRLS; zero workflow edits; preserve all merged PR #1997/#2000/#2002/#2003 code and living specs."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run-1378-1379-1369-20261128113649",
+      "id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Harden Linux container root-UID storage preflight, fix sqlite_hardening fault-env race, document 3-mode Supabase/PG17 topology and align seat-revocation diagnostics (#1378, #1379, #1369)",
-      "refined_intent": "Reject mode&0o222==0 before write_probe under #[cfg(unix)] for uid=0 CAP_DAC_OVERRIDE containers, synchronize DECAPOD_STORAGE_FAULT_STAGE via RwLock<()>, align local_native_managed_project_revocation with #1896 diagnostics, document direct/session/transaction pooler modes & hosted fail-closed boundaries, and keep #1378/#1379/#1369 OPEN pending hosted/multi-clone/Gatekeeper E2E.",
+      "raw_intent": "Audit and complete Decapod #1568 capability-scoped agent db maintenance",
+      "refined_intent": "Audit and complete Decapod #1568 capability-scoped agent db maintenance",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -929,84 +960,75 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Harden privileged-UID Linux container storage preflight, eliminate sqlite_hardening env race, document Supabase direct/session/transaction-pooler modes and hosted boundary, and align seat-revocation assertions with #1896.",
+      "intent": "Resolve propodus_repository_access_v1 + propodus_delegated_grants_v1 in data db CLI and data.database.* RPC paths on Cloud while failing closed unauthenticated and blocking local SQLite fallback",
       "phases": [],
       "proof_hooks": [
-        "Podman Linux uid=0 fuse/virtiofs 95/95 pass (sqlite_hardening, datastore_contract, shared_state_semantics_1247, storage_filesystem_tests, container_signer, plugins::container)",
-        "Disposable PG 17.11 + PostgREST 16.5 TestPostgresNativeManagedProjectConsumer pass",
-        "GitHub Actions CI + Decapod Validate on rebased HEAD"
+        "decapod validate"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Prepended #1378/#1379/#1369 container root-UID preflight and Supabase 3-mode topology architecture prose while preserving all PR #1997/#2000/#2002/#2003 sections.",
-          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
-          "spec_material_hash": "fc670ee91bb962e73803b4607efa43e7107c6d0203166aa17f7da0650a837953"
+          "reason": "Rebased #1568 cleanly onto origin/master@4dbafaebd preserving all merged living specs (#1997/#2000/#2002/#2003/#2004) and covering resolve_cloud_maintenance_authority, evaluate_capability_decision_with_cloud_authority, and ensure_local_sqlite_maintenance_backend",
+          "reviewed_code_fingerprint": "e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f",
+          "spec_material_hash": "7e3905c318221cb19655146c56d604db8426c79094a43530d699268cc05a164e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Prepended #1378/#1379/#1369 storage_health_preflight and Supabase/PG17 interface contract prose while preserving all PR #1997/#2000/#2002/#2003 sections.",
-          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
-          "spec_material_hash": "3dca4c65824c977e243c52746064aaa89b6ede3c94a78bb1d72506e2853792c7"
+          "reason": "Rebased #1568 cleanly onto origin/master@4dbafaebd preserving all merged living specs and covering --delegated-grant-id CLI/RPC surface, cloud_authority report fields, and CLOUD_LOCAL_SQLITE_UNSUPPORTED",
+          "reviewed_code_fingerprint": "e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f",
+          "spec_material_hash": "6295a898d11fbd3e1367dfaef10f0f3b8698d55e12725209f46c12aa3ff0a111"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Reviewed SECURITY.md: root-UID mode&0o222==0 rejection and hosted fail-closed boundaries tighten existing storage and credential invariants without weakening security guarantees.",
-          "reviewed_code_fingerprint": "2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854",
+          "reason": "Preserved fail-closed CLOUD_PRINCIPAL_UNVERIFIED and zero local SQLite fallback security boundaries on backend=cloud across 4dbafaebd rebase",
+          "reviewed_code_fingerprint": "e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f",
           "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Container root-UID preflight, sqlite_hardening sync, Supabase 3-mode docs & PG17 native proof (#1378, #1379, #1369)",
+      "title": "Wire Propodus 037 Cloud delegated grants into data db CLI and RPC (#1568)",
       "todo_ids": [
-        "code_01m8fkaw28vkrt2c"
+        "data_01m8fyb00662yn4b"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795865895Z"
+      "updated_at": "1795868197Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero weakening of fail-closed storage or hosted-credential checks; $0/mo; zero BYPASSRLS; zero workflow edits; preserve all merged PR #1997/#2000/#2002/#2003 code and living specs."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:b4b253729e776f7da9876ae7f8519d36d91a11653cc3ee4f7f59746f395a0f61",
+      "artifact_hash": "sha256:fe81832697867117f77554b07f9c9304b4d500ddf9836172fa196f0c4cfb0e42",
       "checks": [
         {
-          "name": "host_sqlite_hardening_supabase_db_clippy",
-          "status": "passed"
-        },
-        {
-          "name": "pg17_postgrest_native_consumer",
-          "status": "passed"
-        },
-        {
-          "name": "podman_uid0_virtiofs_95_of_95",
+          "name": "cargo-fmt",
           "status": "passed"
         }
       ],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run-1378-1379-1369-20261128113649",
+            "detail": "trajectory:branch_01M8FZ2K6C2C4SW2SSV9W4QWPP",
             "event_id": "event:4",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1015,34 +1037,35 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run-1378-1379-1369-20261128113649": {
+          "branch_01M8FZ2K6C2C4SW2SSV9W4QWPP": {
             "evidence_only": true,
-            "id": "run-1378-1379-1369-20261128113649",
-            "intent_id": "intent:run-1378-1379-1369-20261128113649",
+            "id": "branch_01M8FZ2K6C2C4SW2SSV9W4QWPP",
+            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/db.rs",
-                  "tests/sqlite_hardening.rs",
-                  "tests/supabase_service.rs",
-                  "docs/book/src/reference/supabase-validation.md",
-                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
-                  "src/decapod/core/db.rs",
-                  "tests/sqlite_hardening.rs",
-                  "tests/supabase_service.rs",
-                  "docs/book/src/reference/supabase-validation.md",
-                  "docs/datastore-v2/cloud-parity-and-boundaries.md",
-                  "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 native consumer pass; host clippy clean"
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/lib.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/docs_cli.rs",
+                  "docs/agent/command-contracts.md",
+                  "tests/cloud_wave_parity.rs",
+                  ".decapod/managed/specs/INTENT.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md"
                 ],
                 "proof_refs": [
-                  "podman_uid0_virtiofs_95_of_95",
-                  "pg17_postgrest_native_consumer",
-                  "host_sqlite_hardening_supabase_db_clippy"
+                  "cargo-fmt"
                 ],
                 "scope": [
-                  "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
+                  "root"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1052,31 +1075,37 @@
         }
       },
       "declared_commands": [],
-      "evidence": [
-        "Podman Linux uid=0 fuse/virtiofs 95/95 pass; disposable PG 17.11 + PostgREST 16.5 native consumer pass; host clippy clean"
-      ],
+      "destination": "pull request",
+      "evidence": [],
       "inspected_files": [
-        "docs/book/src/reference/supabase-validation.md",
-        "docs/datastore-v2/cloud-parity-and-boundaries.md",
-        "src/decapod/core/db.rs",
-        "tests/sqlite_hardening.rs",
-        "tests/supabase_service.rs"
+        "src/decapod/cli.rs",
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs"
       ],
-      "intent_id": "intent:run-1378-1379-1369-20261128113649",
+      "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
       "modified_files": [
-        "docs/book/src/reference/supabase-validation.md",
-        "docs/datastore-v2/cloud-parity-and-boundaries.md",
-        "src/decapod/core/db.rs",
-        "tests/sqlite_hardening.rs",
-        "tests/supabase_service.rs"
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTENT.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        "docs/agent/command-contracts.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/db_maintenance.rs",
+        "src/decapod/core/docs_cli.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/lib.rs",
+        "tests/cloud_wave_parity.rs"
+      ],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/db.rs,tests/sqlite_hardening.rs,tests/supabase_service.rs,docs/book/src/reference/supabase-validation.md,docs/datastore-v2/cloud-parity-and-boundaries.md,.decapod/managed/specs/*"
+        "root"
       ],
-      "run_id": "run-1378-1379-1369-20261128113649",
+      "run_id": "branch_01M8FZ2K6C2C4SW2SSV9W4QWPP",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fkaw28vkrt2c",
+      "task_id": "data_01m8fyb00662yn4b",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

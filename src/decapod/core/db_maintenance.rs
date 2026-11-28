@@ -625,7 +625,129 @@ pub fn evaluate_cloud_capability_with_delegated_grant(
             ),
         );
     }
+    if let Some(ref digest) = grant.grant_policy_digest
+        && normalize_sha256(digest) != normalize_sha256(&policy.policy_sha256)
+    {
+        return (
+            CapabilityDecision::Denied,
+            "POLICY_SNAPSHOT_STALE",
+            format!(
+                "delegated grant '{}' policy digest '{}' differs from canonical policy '{}'",
+                grant.grant_id, digest, policy.policy_sha256
+            ),
+        );
+    }
     base
+}
+
+/// Server-resolved repository access + optional Propodus 037 delegated grant context
+/// for `backend = "cloud"` CLI/RPC maintenance discovery and admission (#1568).
+#[derive(Debug, Clone, Default)]
+pub struct CloudMaintenanceAuthority {
+    pub access: Option<CloudRepositoryAccessStatus>,
+    pub delegated_grant: Option<CloudDelegatedGrantStatus>,
+    pub delegated_grant_id: Option<String>,
+    pub delegated_grant_requested: bool,
+    pub resolution_error: Option<String>,
+}
+
+fn valid_delegated_grant_id(raw: &str) -> Option<String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty()
+        || trimmed.len() > 128
+        || !trimmed
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.'))
+    {
+        return None;
+    }
+    Some(trimmed.to_string())
+}
+
+/// Resolve server-verified repository access and optional Propodus `037` delegated grant
+/// status for `backend = "cloud"` CLI/RPC invocations (#1568, Propodus #88).
+///
+/// Fails closed (preserving `access = None` / `delegated_grant = None`) whenever
+/// no active authenticated Cloud session exists, transport fails, or a grant ID
+/// cannot be validated. Never reads local environment privilege hints.
+pub fn resolve_cloud_maintenance_authority(
+    policy: &CanonicalMaintenancePolicy,
+    delegated_grant_id: Option<&str>,
+) -> CloudMaintenanceAuthority {
+    let mut auth = CloudMaintenanceAuthority::default();
+    if !policy.backend.is_cloud() || !policy.config.enabled {
+        return auth;
+    }
+
+    let validated_grant_id = match delegated_grant_id {
+        Some(raw) => {
+            auth.delegated_grant_requested = true;
+            match valid_delegated_grant_id(raw) {
+                Some(clean) => {
+                    auth.delegated_grant_id = Some(clean.clone());
+                    Some(clean)
+                }
+                None => {
+                    auth.resolution_error = Some(
+                        "CLOUD_DELEGATED_GRANT_INVALID: delegated_grant_id is empty or contains disallowed characters"
+                            .to_string(),
+                    );
+                    None
+                }
+            }
+        }
+        None => None,
+    };
+
+    #[cfg(feature = "supabase-cloud")]
+    {
+        let identity =
+            match crate::core::repo_identity::resolve_repository_identity(&policy.main_root) {
+                Ok(id) => id,
+                Err(err) => {
+                    auth.resolution_error = Some(err.to_string());
+                    return auth;
+                }
+            };
+        let (connector, routed, bearer) =
+            match crate::core::cloud_client::connect_control(&policy.main_root, &identity) {
+                Ok(connected) => connected,
+                Err(err) => {
+                    auth.resolution_error = Some(err.to_string());
+                    return auth;
+                }
+            };
+        match fetch_cloud_repository_access_status(&connector, &bearer, &routed.canonical_name) {
+            Ok(access) => auth.access = Some(access),
+            Err(err) => {
+                auth.resolution_error = Some(err.to_string());
+                return auth;
+            }
+        }
+        if let Some(grant_id) = validated_grant_id {
+            match fetch_cloud_delegated_grant_status(
+                &connector,
+                &bearer,
+                &routed.canonical_name,
+                &grant_id,
+            ) {
+                Ok(grant) => auth.delegated_grant = Some(grant),
+                Err(err) => {
+                    auth.resolution_error = Some(err.to_string());
+                }
+            }
+        }
+        auth
+    }
+    #[cfg(not(feature = "supabase-cloud"))]
+    {
+        let _ = validated_grant_id;
+        auth.resolution_error = Some(
+            "CLOUD_PRINCIPAL_UNVERIFIED: built without supabase-cloud transport feature"
+                .to_string(),
+        );
+        auth
+    }
 }
 
 /// Query current repository access tier and owner-repair policy via `dactyl-db 0.18.0`
@@ -1593,12 +1715,14 @@ pub fn verify_actor_and_custody(
     })
 }
 
-/// Evaluate capability admissibility for a single modeled capability against the canonical policy.
+/// Evaluate capability admission given an optional resolved hosted control-plane
+/// authority context (`propodus_repository_access_v1` + `propodus_delegated_grants_v1`).
 #[must_use]
-pub fn evaluate_capability_decision(
+pub fn evaluate_capability_decision_with_cloud_authority(
     policy: &CanonicalMaintenancePolicy,
     capability: DbMaintenanceCapability,
     expected_policy_sha256: Option<&str>,
+    cloud_authority: Option<&CloudMaintenanceAuthority>,
 ) -> (CapabilityDecision, &'static str, String) {
     if let Some(expected) = expected_policy_sha256
         && normalize_sha256(expected) != normalize_sha256(&policy.policy_sha256)
@@ -1625,11 +1749,52 @@ pub fn evaluate_capability_decision(
     }
 
     if policy.backend.is_cloud() {
-        return evaluate_cloud_capability_decision_with_access(
+        let Some(auth) = cloud_authority else {
+            return evaluate_cloud_capability_decision_with_access(
+                policy,
+                capability,
+                expected_policy_sha256,
+                None,
+            );
+        };
+        if auth.access.is_none() {
+            return evaluate_cloud_capability_decision_with_access(
+                policy,
+                capability,
+                expected_policy_sha256,
+                None,
+            );
+        }
+        if auth.delegated_grant_requested
+            && auth.delegated_grant.is_none()
+            && let Some(err) = auth.resolution_error.as_deref()
+            && err.starts_with("CLOUD_DELEGATED_GRANT_INVALID:")
+        {
+            return (
+                CapabilityDecision::Denied,
+                "CLOUD_DELEGATED_GRANT_INVALID",
+                err.trim_start_matches("CLOUD_DELEGATED_GRANT_INVALID:")
+                    .trim()
+                    .to_string(),
+            );
+        }
+        if capability == DbMaintenanceCapability::Recover
+            && !auth.delegated_grant_requested
+            && auth.delegated_grant.is_none()
+        {
+            return evaluate_cloud_capability_decision_with_access(
+                policy,
+                capability,
+                expected_policy_sha256,
+                auth.access.as_ref(),
+            );
+        }
+        return evaluate_cloud_capability_with_delegated_grant(
             policy,
             capability,
             expected_policy_sha256,
-            None,
+            auth.access.as_ref(),
+            auth.delegated_grant.as_ref(),
         );
     }
 
@@ -1692,15 +1857,34 @@ pub fn evaluate_capability_decision(
     )
 }
 
-/// Evaluate an arbitrary capability name (including unmodeled capabilities like `db.sql` or `db.vacuum`).
-pub fn evaluate_named_capability(
+#[must_use]
+pub fn evaluate_capability_decision(
+    policy: &CanonicalMaintenancePolicy,
+    capability: DbMaintenanceCapability,
+    expected_policy_sha256: Option<&str>,
+) -> (CapabilityDecision, &'static str, String) {
+    evaluate_capability_decision_with_cloud_authority(
+        policy,
+        capability,
+        expected_policy_sha256,
+        None,
+    )
+}
+
+/// Evaluate an arbitrary capability name with an optional hosted cloud authority context.
+pub fn evaluate_named_capability_with_cloud_authority(
     policy: &CanonicalMaintenancePolicy,
     raw_capability: &str,
     expected_policy_sha256: Option<&str>,
+    cloud_authority: Option<&CloudMaintenanceAuthority>,
 ) -> CapabilityStatusEntry {
     if let Some(cap) = DbMaintenanceCapability::parse_str(raw_capability) {
-        let (decision, code, _detail) =
-            evaluate_capability_decision(policy, cap, expected_policy_sha256);
+        let (decision, code, _detail) = evaluate_capability_decision_with_cloud_authority(
+            policy,
+            cap,
+            expected_policy_sha256,
+            cloud_authority,
+        );
         CapabilityStatusEntry {
             capability: cap.as_str().to_string(),
             required_tier: cap.authority_tier(),
@@ -1721,16 +1905,37 @@ pub fn evaluate_named_capability(
     }
 }
 
-/// Build the full capability discovery report for the calling agent.
-pub fn build_capabilities_report(
+/// Evaluate an arbitrary capability name (including unmodeled capabilities like `db.sql` or `db.vacuum`).
+pub fn evaluate_named_capability(
+    policy: &CanonicalMaintenancePolicy,
+    raw_capability: &str,
+    expected_policy_sha256: Option<&str>,
+) -> CapabilityStatusEntry {
+    evaluate_named_capability_with_cloud_authority(
+        policy,
+        raw_capability,
+        expected_policy_sha256,
+        None,
+    )
+}
+
+/// Build the full capability discovery report for the calling agent with an optional
+/// hosted Decapod Cloud authority context (`propodus_repository_access_v1` + `propodus_delegated_grants_v1`).
+pub fn build_capabilities_report_with_cloud_authority(
     policy: &CanonicalMaintenancePolicy,
     actor: &VerifiedMaintenanceActor,
     probe_capabilities: &[String],
+    cloud_authority: Option<&CloudMaintenanceAuthority>,
 ) -> serde_json::Value {
     let mut entries: Vec<CapabilityStatusEntry> = DbMaintenanceCapability::ALL
         .iter()
         .map(|cap| {
-            let (decision, code, _) = evaluate_capability_decision(policy, *cap, None);
+            let (decision, code, _) = evaluate_capability_decision_with_cloud_authority(
+                policy,
+                *cap,
+                None,
+                cloud_authority,
+            );
             CapabilityStatusEntry {
                 capability: cap.as_str().to_string(),
                 required_tier: cap.authority_tier(),
@@ -1744,11 +1949,16 @@ pub fn build_capabilities_report(
 
     for extra in probe_capabilities {
         if DbMaintenanceCapability::parse_str(extra).is_none() {
-            entries.push(evaluate_named_capability(policy, extra, None));
+            entries.push(evaluate_named_capability_with_cloud_authority(
+                policy,
+                extra,
+                None,
+                cloud_authority,
+            ));
         }
     }
 
-    serde_json::json!({
+    let mut report = serde_json::json!({
         "schema_version": DB_MAINTENANCE_SCHEMA_VERSION,
         "status": "ok",
         "backend": match policy.backend {
@@ -1756,7 +1966,11 @@ pub fn build_capabilities_report(
             BackendType::Cloud => "cloud",
         },
         "repo_identity": policy.repo_identity,
-        "database": crate::core::schemas::LOCAL_DB_NAME,
+        "database": if policy.backend.is_cloud() {
+            "cloud:propodus"
+        } else {
+            crate::core::schemas::LOCAL_DB_NAME
+        },
         "policy": {
             "enabled": policy.config.enabled,
             "canonical_policy_sha256": policy.policy_sha256,
@@ -1777,17 +1991,50 @@ pub fn build_capabilities_report(
             "db.schema_migrate"
         ],
         "implies_validation_ready": false,
-    })
+    });
+    if policy.backend.is_cloud()
+        && let Some(obj) = report.as_object_mut()
+    {
+        let cloud_meta = match cloud_authority {
+            Some(auth) => serde_json::json!({
+                "principal_verified": auth.access.is_some(),
+                "effective_tier": auth.access.as_ref().map(|a| a.effective_tier.as_str()),
+                "delegated_grant_id": auth.delegated_grant_id,
+                "delegated_grant_resolved": auth.delegated_grant.is_some(),
+                "resolution_error": auth.resolution_error.as_deref().map(|err| redact_for_repo(err, &policy.main_root)),
+            }),
+            None => serde_json::json!({
+                "principal_verified": false,
+                "effective_tier": null,
+                "delegated_grant_id": null,
+                "delegated_grant_resolved": false,
+                "resolution_error": null,
+            }),
+        };
+        obj.insert("cloud_authority".to_string(), cloud_meta);
+    }
+    report
 }
 
-/// Centralized admission gate + audit execution wrapper for a governed capability.
+/// Build the full capability discovery report for the calling agent.
+pub fn build_capabilities_report(
+    policy: &CanonicalMaintenancePolicy,
+    actor: &VerifiedMaintenanceActor,
+    probe_capabilities: &[String],
+) -> serde_json::Value {
+    build_capabilities_report_with_cloud_authority(policy, actor, probe_capabilities, None)
+}
+
+/// Centralized admission gate + audit execution wrapper for a governed capability,
+/// optionally carrying a hosted `propodus_delegated_grants_v1` grant ID on `backend = "cloud"`.
 #[allow(clippy::too_many_arguments)]
-pub fn execute_governed_capability(
+pub fn execute_governed_capability_with_grant(
     invocation_dir: &Path,
     capability_name: &str,
     claimed_actor: Option<&str>,
     operation_id: Option<&str>,
     expected_policy_sha256: Option<&str>,
+    delegated_grant_id: Option<&str>,
     verify_session: SessionVerifier<'_>,
     mut preconditions: Vec<String>,
     run_op: impl FnOnce(
@@ -1802,6 +2049,12 @@ pub fn execute_governed_capability(
     }
     if let Some(expected) = expected_policy_sha256 {
         preconditions.push(format!("expected_policy_sha256={expected}"));
+    }
+    if let Some(grant_id) = delegated_grant_id {
+        let trimmed = grant_id.trim();
+        if !trimmed.is_empty() {
+            preconditions.push(format!("delegated_grant_id={trimmed}"));
+        }
     }
 
     let policy = match resolve_canonical_policy(invocation_dir) {
@@ -1885,8 +2138,16 @@ pub fn execute_governed_capability(
         )));
     };
 
-    let (decision, reason_code, detail) =
-        evaluate_capability_decision(&policy, capability, expected_policy_sha256);
+    let cloud_authority = policy
+        .backend
+        .is_cloud()
+        .then(|| resolve_cloud_maintenance_authority(&policy, delegated_grant_id));
+    let (decision, reason_code, detail) = evaluate_capability_decision_with_cloud_authority(
+        &policy,
+        capability,
+        expected_policy_sha256,
+        cloud_authority.as_ref(),
+    );
     if decision != CapabilityDecision::Allowed {
         let _ = append_audit_record(
             &policy.main_store_root,
@@ -1956,7 +2217,8 @@ pub fn execute_governed_capability(
     let fresh_policy = resolve_canonical_policy(invocation_dir).map_err(|(code, msg)| {
         DecapodError::ValidationError(format!("{code}: {}", redact_secrets(&msg)))
     })?;
-    if fresh_policy.policy_sha256 != policy.policy_sha256 {
+    if fresh_policy.policy_sha256 != policy.policy_sha256 || fresh_policy.backend != policy.backend
+    {
         let _ = append_audit_record(
             &policy.main_store_root,
             &DbMaintenanceAuditRecord {
@@ -2080,10 +2342,56 @@ pub fn execute_governed_capability(
     }
 }
 
+/// Refuses to open or mutate local `.decapod/data/decapod.db` when `[repo].backend = "cloud"`.
+fn ensure_local_sqlite_maintenance_backend(
+    policy: &CanonicalMaintenancePolicy,
+    capability: DbMaintenanceCapability,
+) -> Result<(), (&'static str, String)> {
+    if policy.backend.is_cloud() {
+        return Err((
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED",
+            format!(
+                "capability '{}' cannot open or mutate local SQLite .decapod/data/decapod.db when [repo].backend = \"cloud\"; repository state is hosted remotely",
+                capability.as_str()
+            ),
+        ));
+    }
+    Ok(())
+}
+
+/// Centralized admission gate + audit execution wrapper for a governed capability.
+#[allow(clippy::too_many_arguments)]
+pub fn execute_governed_capability(
+    invocation_dir: &Path,
+    capability_name: &str,
+    claimed_actor: Option<&str>,
+    operation_id: Option<&str>,
+    expected_policy_sha256: Option<&str>,
+    verify_session: SessionVerifier<'_>,
+    preconditions: Vec<String>,
+    run_op: impl FnOnce(
+        &CanonicalMaintenancePolicy,
+        &VerifiedMaintenanceActor,
+    ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)>,
+) -> Result<serde_json::Value, DecapodError> {
+    execute_governed_capability_with_grant(
+        invocation_dir,
+        capability_name,
+        claimed_actor,
+        operation_id,
+        expected_policy_sha256,
+        None,
+        verify_session,
+        preconditions,
+        run_op,
+    )
+}
+
 /// Execute `db.inspect` (read-only Dactyl inventory + non-destructive lock snapshot).
 pub fn run_maintain_inspect(
     policy: &CanonicalMaintenancePolicy,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::Inspect)?;
     let db_path = crate::core::events::canonical_db_path(&policy.main_store_root);
     let lock = StorageLock::diagnose(&db_path, Duration::ZERO)
         .map_err(|e| ("LOCK_DIAGNOSE_FAILED", e.to_string()))?;
@@ -2108,6 +2416,7 @@ pub fn run_maintain_inspect(
 pub fn run_maintain_verify(
     policy: &CanonicalMaintenancePolicy,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::Verify)?;
     crate::core::dactyl::ensure_local_sqlite_runtime()
         .map_err(|e| ("SQLITE_RUNTIME_UNAVAILABLE", e.to_string()))?;
     let db_path = crate::core::events::canonical_db_path(&policy.main_store_root);
@@ -2151,6 +2460,7 @@ pub fn run_maintain_lock_diagnose(
     policy: &CanonicalMaintenancePolicy,
     probe_timeout_ms: u64,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::LockDiagnose)?;
     let db_path = crate::core::events::canonical_db_path(&policy.main_store_root);
     let diagnosis: StorageLockDiagnosis =
         StorageLock::diagnose(&db_path, Duration::from_millis(probe_timeout_ms))
@@ -2170,6 +2480,7 @@ pub fn run_maintain_lock_diagnose(
 pub fn run_maintain_lock_release_own(
     policy: &CanonicalMaintenancePolicy,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::LockReleaseOwn)?;
     let db_path = crate::core::events::canonical_db_path(&policy.main_store_root);
     let report = StorageLock::release_owned_if_idle(&db_path)
         .map_err(|e| ("LOCK_RELEASE_OWN_REFUSED", e.to_string()))?;
@@ -2197,6 +2508,7 @@ pub fn run_maintain_wal_checkpoint(
     policy: &CanonicalMaintenancePolicy,
     timeout_ms: u64,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::WalCheckpoint)?;
     if timeout_ms > 5_000 {
         return Err((
             "WAL_CHECKPOINT_TIMEOUT_OUT_OF_RANGE",
@@ -2254,6 +2566,7 @@ pub fn run_maintain_backup(
     policy: &CanonicalMaintenancePolicy,
     raw_destination: &Path,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::Backup)?;
     crate::core::dactyl::ensure_local_sqlite_runtime()
         .map_err(|e| ("SQLITE_RUNTIME_UNAVAILABLE", e.to_string()))?;
     let resolved_dest = validate_agent_backup_destination(policy, raw_destination)?;
@@ -2500,9 +2813,10 @@ pub fn run_maintain_recover(
 
 /// Execute bounded `db.lock.retry` over an authorized target capability (`inspect`, `verify`, `backup`),
 /// re-verifying canonical policy before every attempt and failing closed on deadline exhaustion.
-pub fn run_maintain_lock_retry(
+pub fn run_maintain_lock_retry_with_grant(
     invocation_dir: &Path,
     spec: &LockRetrySpec,
+    delegated_grant_id: Option<&str>,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
     if spec.max_attempts == 0 || spec.max_attempts > MAX_RETRY_ATTEMPTS {
         return Err((
@@ -2551,22 +2865,30 @@ pub fn run_maintain_lock_retry(
         // Re-check canonical policy before EVERY attempt so reverting canonical opt-in
         // immediately stops in-flight retries and prevents privilege expansion.
         let fresh_policy = resolve_canonical_policy(invocation_dir)?;
-        let (retry_dec, retry_code, retry_msg) = evaluate_capability_decision(
+        let cloud_authority = fresh_policy
+            .backend
+            .is_cloud()
+            .then(|| resolve_cloud_maintenance_authority(&fresh_policy, delegated_grant_id));
+        let (retry_dec, retry_code, retry_msg) = evaluate_capability_decision_with_cloud_authority(
             &fresh_policy,
             DbMaintenanceCapability::LockRetry,
             spec.expected_policy_sha256.as_deref(),
+            cloud_authority.as_ref(),
         );
         if retry_dec != CapabilityDecision::Allowed {
             return Err((retry_code, retry_msg));
         }
-        let (target_dec, target_code, target_msg) = evaluate_capability_decision(
-            &fresh_policy,
-            target_cap,
-            spec.expected_policy_sha256.as_deref(),
-        );
+        let (target_dec, target_code, target_msg) =
+            evaluate_capability_decision_with_cloud_authority(
+                &fresh_policy,
+                target_cap,
+                spec.expected_policy_sha256.as_deref(),
+                cloud_authority.as_ref(),
+            );
         if target_dec != CapabilityDecision::Allowed {
             return Err((target_code, target_msg));
         }
+        ensure_local_sqlite_maintenance_backend(&fresh_policy, target_cap)?;
 
         let remaining_ms = deadline.saturating_sub(started.elapsed()).as_millis() as u64;
         if remaining_ms == 0 && attempt > 1 {
@@ -2645,10 +2967,19 @@ pub fn run_maintain_lock_retry(
     ))
 }
 
+/// Execute bounded `db.lock.retry` over an authorized target capability (`inspect`, `verify`, `backup`).
+pub fn run_maintain_lock_retry(
+    invocation_dir: &Path,
+    spec: &LockRetrySpec,
+) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    run_maintain_lock_retry_with_grant(invocation_dir, spec, None)
+}
+
 fn run_verify_with_bounded_lock(
     policy: &CanonicalMaintenancePolicy,
     probe_budget_ms: u64,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::Verify)?;
     let db_path = crate::core::events::canonical_db_path(&policy.main_store_root);
     if !db_path.exists() {
         return run_maintain_verify(policy);
@@ -2674,6 +3005,7 @@ fn run_backup_with_bounded_lock(
     destination: &Path,
     probe_budget_ms: u64,
 ) -> Result<(serde_json::Value, Option<String>), (&'static str, String)> {
+    ensure_local_sqlite_maintenance_backend(policy, DbMaintenanceCapability::Backup)?;
     // Validate destination BEFORE checking lock contention so invalid/existing paths
     // fail immediately without retrying.
     let _ = validate_agent_backup_destination(policy, destination)?;
@@ -3722,5 +4054,170 @@ mod tests {
         );
         assert_eq!(dec, CapabilityDecision::Denied);
         assert_eq!(code, "CLOUD_DELEGATED_GRANT_REQUIRED");
+    }
+
+    #[test]
+    fn evaluate_capability_decision_with_cloud_authority_enforces_delegated_grants_and_blocks_local_sqlite()
+     {
+        let temp = tempfile::tempdir().expect("tempdir");
+        let policy = CanonicalMaintenancePolicy {
+            backend: BackendType::Cloud,
+            main_root: temp.path().to_path_buf(),
+            workspace_root: temp.path().to_path_buf(),
+            main_store_root: temp.path().join(".decapod/data"),
+            config: DbMaintenanceConfig {
+                enabled: true,
+                owner_repair_enabled: true,
+                allowed: Some(vec![
+                    DbMaintenanceCapability::Inspect,
+                    DbMaintenanceCapability::Verify,
+                    DbMaintenanceCapability::Recover,
+                ]),
+                required_tier: None,
+            },
+            policy_sha256: "sha256:pol123".to_string(),
+            canonical_revision: "deadbeef".to_string(),
+            repo_identity: "DecapodLabs/decapod".to_string(),
+            unmerged_branch_violation: None,
+        };
+        let access = CloudRepositoryAccessStatus {
+            repository: "DecapodLabs/decapod".to_string(),
+            effective_tier: RepoAccessTier::Owner,
+            seat_authorized: true,
+            policy_bound: true,
+            policy_revision: Some(5),
+            policy_hash: Some("sha256:pol123".to_string()),
+            accepted_commit: Some("deadbeef".to_string()),
+            max_delegated_tier: RepoAccessTier::Owner,
+            require_owner_for_repair: true,
+            authority_generation: Some(3),
+            repair_eligible: true,
+        };
+        let valid_grant = CloudDelegatedGrantStatus {
+            grant_id: "grant_01".to_string(),
+            repository: "DecapodLabs/decapod".to_string(),
+            revoked: false,
+            expired: false,
+            revocation_generation: 3,
+            observed_revocation_generation: 3,
+            policy_generation: 5,
+            observed_policy_generation: 5,
+            session_generation: 2,
+            observed_session_generation: 2,
+            grant_policy_digest: Some("sha256:pol123".to_string()),
+            allowed_operations: BTreeSet::from(["db.verify".to_string()]),
+        };
+
+        // Missing cloud authority still fails closed with CLOUD_PRINCIPAL_UNVERIFIED.
+        let (dec, code, _) = evaluate_capability_decision_with_cloud_authority(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            None,
+            None,
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_PRINCIPAL_UNVERIFIED");
+
+        // Owner repair without delegated_grant_id remains authorized when repair_eligible.
+        let owner_no_grant = CloudMaintenanceAuthority {
+            access: Some(access.clone()),
+            delegated_grant: None,
+            delegated_grant_id: None,
+            delegated_grant_requested: false,
+            resolution_error: None,
+        };
+        let (dec, code, _) = evaluate_capability_decision_with_cloud_authority(
+            &policy,
+            DbMaintenanceCapability::Recover,
+            None,
+            Some(&owner_no_grant),
+        );
+        assert_eq!(dec, CapabilityDecision::Allowed);
+        assert_eq!(code, "CLOUD_OWNER_REPAIR_ALLOWED");
+
+        // Safe capabilities on Cloud require an explicit non-revoked delegated grant.
+        let (dec, code, _) = evaluate_capability_decision_with_cloud_authority(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            None,
+            Some(&owner_no_grant),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_GRANT_REQUIRED");
+
+        // Invalid grant id preserves explicit rejection code.
+        let invalid_grant = CloudMaintenanceAuthority {
+            access: Some(access.clone()),
+            delegated_grant: None,
+            delegated_grant_id: None,
+            delegated_grant_requested: true,
+            resolution_error: Some("CLOUD_DELEGATED_GRANT_INVALID: bad id".to_string()),
+        };
+        let (dec, code, _) = evaluate_capability_decision_with_cloud_authority(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            None,
+            Some(&invalid_grant),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_GRANT_INVALID");
+
+        // Valid grant authorizes db.verify and rejects ungranted db.inspect.
+        let active_auth = CloudMaintenanceAuthority {
+            access: Some(access),
+            delegated_grant: Some(valid_grant),
+            delegated_grant_id: Some("grant_01".to_string()),
+            delegated_grant_requested: true,
+            resolution_error: None,
+        };
+        let (dec, code, _) = evaluate_capability_decision_with_cloud_authority(
+            &policy,
+            DbMaintenanceCapability::Verify,
+            None,
+            Some(&active_auth),
+        );
+        assert_eq!(dec, CapabilityDecision::Allowed);
+        assert_eq!(code, "CLOUD_TIER_ALLOWED");
+
+        let (dec, code, _) = evaluate_capability_decision_with_cloud_authority(
+            &policy,
+            DbMaintenanceCapability::Inspect,
+            None,
+            Some(&active_auth),
+        );
+        assert_eq!(dec, CapabilityDecision::Denied);
+        assert_eq!(code, "CLOUD_DELEGATED_OPERATION_NOT_GRANTED");
+
+        // Local SQLite execution helpers refuse backend = "cloud".
+        assert_eq!(
+            run_maintain_inspect(&policy).unwrap_err().0,
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED"
+        );
+        assert_eq!(
+            run_maintain_verify(&policy).unwrap_err().0,
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED"
+        );
+        assert_eq!(
+            run_maintain_lock_diagnose(&policy, 10).unwrap_err().0,
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED"
+        );
+        assert_eq!(
+            run_maintain_lock_release_own(&policy).unwrap_err().0,
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED"
+        );
+        assert_eq!(
+            run_maintain_wal_checkpoint(&policy, 50).unwrap_err().0,
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED"
+        );
+        assert_eq!(
+            run_maintain_backup(&policy, &temp.path().join(".decapod/backups/b.db"))
+                .unwrap_err()
+                .0,
+            "CLOUD_LOCAL_SQLITE_UNSUPPORTED"
+        );
+        assert!(
+            !temp.path().join(".decapod/data/decapod.db").exists(),
+            "cloud maintenance must never create local SQLite database"
+        );
     }
 }

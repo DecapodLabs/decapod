@@ -2397,6 +2397,9 @@ pub(crate) enum DatabaseCommand {
         /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
         #[clap(long)]
         actor: Option<String>,
+        /// Optional Propodus 037 delegated grant identifier for Cloud capability evaluation.
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Governed lock contention diagnostics, bounded retry, and owned-lease release.
     Lock(DatabaseLockCli),
@@ -2422,6 +2425,9 @@ pub(crate) enum DatabaseCommand {
         /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
         #[clap(long)]
         actor: Option<String>,
+        /// Optional Propodus 037 delegated grant identifier for Cloud mode admission.
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Create a Dactyl online-backup snapshot at an operator- or policy-scoped path.
     Backup {
@@ -2440,6 +2446,9 @@ pub(crate) enum DatabaseCommand {
         /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
         #[clap(long)]
         actor: Option<String>,
+        /// Optional Propodus 037 delegated grant identifier for Cloud mode admission.
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Explicitly recover via Dactyl's verified logical dump/reload workflow.
     Recover {
@@ -2458,6 +2467,9 @@ pub(crate) enum DatabaseCommand {
         /// Optional asserted actor label (must match authenticated DECAPOD_AGENT_ID).
         #[clap(long)]
         actor: Option<String>,
+        /// Optional Propodus 037 delegated grant identifier for Cloud mode admission.
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
 }
 
@@ -2480,6 +2492,8 @@ pub(crate) enum DatabaseLockCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Retry an authorized safe maintenance operation with bounded backoff and deadline.
     Retry {
@@ -2504,6 +2518,8 @@ pub(crate) enum DatabaseLockCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Safely relinquish only an explicitly registered idle current-process lease.
     ReleaseOwn {
@@ -2513,6 +2529,8 @@ pub(crate) enum DatabaseLockCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
 }
 
@@ -2533,6 +2551,8 @@ pub(crate) enum DatabaseMaintainCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Governed `db.verify` (read-only Dactyl SQLite integrity probe).
     #[clap(visible_alias = "integrity-check")]
@@ -2543,6 +2563,8 @@ pub(crate) enum DatabaseMaintainCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Governed `db.lock.diagnose` (non-destructive lock & sidecar inspection).
     #[clap(name = "lock-inspect")]
@@ -2556,6 +2578,8 @@ pub(crate) enum DatabaseMaintainCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Governed `db.wal.checkpoint` (bounded non-destructive SQLite PASSIVE WAL checkpoint).
     #[clap(name = "wal-checkpoint")]
@@ -2569,6 +2593,8 @@ pub(crate) enum DatabaseMaintainCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Governed `db.backup` (bounded Dactyl online backup under `.decapod/backups/`).
     Backup {
@@ -2580,6 +2606,8 @@ pub(crate) enum DatabaseMaintainCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
     /// Governed `db.recover` (denied without repository owner repair authority, #1590).
     Recover {
@@ -2591,6 +2619,8 @@ pub(crate) enum DatabaseMaintainCommand {
         expected_policy_sha256: Option<String>,
         #[clap(long)]
         actor: Option<String>,
+        #[clap(long = "delegated-grant-id", alias = "grant-id")]
+        delegated_grant_id: Option<String>,
     },
 }
 

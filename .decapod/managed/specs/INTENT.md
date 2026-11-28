@@ -1,3 +1,10 @@
+## End-to-End Propodus `037` Cloud Delegated-Grant Admission Across `data db` CLI & RPC (`#1568`)
+
+Wires Propodus migration `037` Cloud repository-access (`propodus_repository_access_v1`) and delegated-grant (`propodus_delegated_grants_v1`) resolution into every live `decapod data db` CLI and `data.database.*` RPC discovery/execution path when `[repo].backend = "cloud"`, while preserving fail-closed unauthenticated refusal (`CLOUD_PRINCIPAL_UNVERIFIED`) and prohibiting any local `.decapod/data/decapod.db` SQLite open/create fallback (`CLOUD_LOCAL_SQLITE_UNSUPPORTED`):
+
+- **End-to-end Cloud authority admission (`src/decapod/core/db_maintenance.rs`, `src/decapod/lib.rs`)**: Introduces `resolve_cloud_maintenance_authority`, `evaluate_capability_decision_with_cloud_authority`, `build_capabilities_report_with_cloud_authority`, and `execute_governed_capability_with_grant`, resolving DPoP-authenticated `connect_control` checks during both discovery (`capabilities`) and execution (`verify`, `maintain.*`, `lock.*`, `backup`, `recover`), failing closed on missing sessions (`CLOUD_PRINCIPAL_UNVERIFIED`), missing grants (`CLOUD_DELEGATED_GRANT_REQUIRED`), ungranted operations (`CLOUD_DELEGATED_OPERATION_NOT_GRANTED`), revoked/expired grants (`CLOUD_DELEGATED_GRANT_REVOKED` / `CLOUD_DELEGATED_GRANT_EXPIRED`), stale generations (`CLOUD_DELEGATED_GRANT_GENERATION_STALE`), or `grant_policy_digest` drift (`POLICY_SNAPSHOT_STALE`).
+- **Cloud CLI/RPC `--delegated-grant-id` & SQLite guard (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/docs_cli.rs`, `docs/agent/command-contracts.md`)**: Threads `--delegated-grant-id` / `delegated_grant_id` across CLI subcommands and JSON-RPC `Database*Params` structs, guards every local SQLite maintenance runner (`run_maintain_{inspect,verify,lock_diagnose,lock_release_own,wal_checkpoint,backup}`, bounded-lock helpers, and `run_maintain_lock_retry_with_grant`) against `[repo].backend = "cloud"`, and validates the full CLI + RPC DPoP contract in `tests/cloud_wave_parity.rs`.
+
 ## Container Custody Root-UID Preflight, Supabase Connection Modes & Local PG17 Native Proof (`#1379`, `#1378`, `#1369`)
 
 Hardens Linux container storage custody and documents the three Supabase/PostgreSQL 17 operational boundaries without weakening fail-closed checks:
@@ -1547,7 +1554,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
+- Repository signal fingerprint: `e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
