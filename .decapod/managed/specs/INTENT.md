@@ -1,3 +1,11 @@
+## Cold Cross-Harness Continuation Custody & Non-Deadlocking Workunit Re-Checkpointing (`#1367`, `#1735`)
+
+Eliminates two kernel continuation gaps discovered during genuine cross-harness (`agy` -> `codex`) `"Continue PR #42"` execution with active owner + stale pass + unknown-outcome mutation:
+
+- **Read-only continuation inspection before handoff (`src/decapod/lib.rs::command_requires_worktree`)**: Allows a cold replacement harness inside an isolated worktree to inspect `govern plan status`, `govern workunit {get,status,journal-status}`, `govern trajectory {status,verify-resume}`, and read-only `data broker {audit,verify,repair --apply=false}` without hitting `AUTHORING_CUSTODY_STALE`, while keeping all mutating commands and `infer orientation` custody-gated.
+- **Non-deadlocking stale-pass invalidation on fresh workunit checkpoint (`src/decapod/core/workunit.rs::checkpoint_workunit`)**: When a previously bound (`binding.is_some()`), non-`Verified` workunit drifts in source tree or task lease custody, `checkpoint_workunit` clears stale `proof_results`, `proof_hashes`, and `validation_*` fields and captures the current execution binding (`proof_status = "not_proven"`) instead of deadlocking in a self-referential `EXECUTION_MATERIAL_CHANGED` loop, while preserving strict failure for `Verified` and unbound legacy baselines.
+- **Regression & cross-harness proof (`tests/unit/core/workunit_journal_tests.rs`, `tests/gate_admission_and_resilience.rs`)**: Covers drifted `checkpoint_workunit` recovery and cold pre-handoff read-only inspection alongside genuine `agy` -> `codex` same-continuation-unit takeover receipts.
+
 ## End-to-End Propodus `037` Cloud Delegated-Grant Admission Across `data db` CLI & RPC (`#1568`)
 
 Wires Propodus migration `037` Cloud repository-access (`propodus_repository_access_v1`) and delegated-grant (`propodus_delegated_grants_v1`) resolution into every live `decapod data db` CLI and `data.database.*` RPC discovery/execution path when `[repo].backend = "cloud"`, while preserving fail-closed unauthenticated refusal (`CLOUD_PRINCIPAL_UNVERIFIED`) and prohibiting any local `.decapod/data/decapod.db` SQLite open/create fallback (`CLOUD_LOCAL_SQLITE_UNSUPPORTED`):
@@ -1554,7 +1562,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f`
+- Repository signal fingerprint: `f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

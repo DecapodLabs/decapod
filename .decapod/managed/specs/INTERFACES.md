@@ -1,3 +1,8 @@
+## `#1367` Cold Continuation CLI Inspection & Workunit Re-Checkpoint Contracts (`src/decapod/lib.rs`, `src/decapod/core/workunit.rs`)
+
+- **Cold pre-handoff read-only CLI surfaces (`src/decapod/lib.rs`)**: `decapod govern plan status`, `decapod govern workunit {get, status, journal-status}`, `decapod govern trajectory {status, verify-resume}`, `decapod data broker {audit, verify}`, and dry-run `decapod data broker repair` execute read-only inside another actor's isolated worktree without returning `AUTHORING_CUSTODY_STALE`; all mutating `govern` and `data broker repair --apply` commands remain gated on active exclusive custody.
+- **`checkpoint_workunit` drift transition (`src/decapod/core/workunit.rs`)**: Calling `decapod govern workunit checkpoint` on a previously bound, non-`Verified` workunit whose material, plan, or lease custody drifted strips stale `proof_results` and returns `resumable: true`, `proof_status: "not_proven"`; unbound legacy passing baselines continue to fail with `WORKUNIT_CHECKPOINT_REQUIRED`.
+
 ## `#1568` `data db` CLI & `data.database.*` RPC `--delegated-grant-id` & Cloud Guard Interfaces (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/db_maintenance.rs`, `docs/agent/command-contracts.md`)
 
 - **CLI flags (`src/decapod/cli.rs`)**: Adds `--delegated-grant-id <ID>` (alias `--grant-id`) to `DatabaseCommand::{Capabilities, Verify, Backup, Recover}`, `DatabaseLockCommand::{Diagnose, Retry, ReleaseOwn}`, and `DatabaseMaintainCommand::{Inspect, Verify, LockInspect, WalCheckpoint, Backup, Recover}`.
@@ -2766,7 +2771,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f`
+- Repository signal fingerprint: `f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

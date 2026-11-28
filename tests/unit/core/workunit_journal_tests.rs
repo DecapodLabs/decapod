@@ -1299,3 +1299,72 @@ fn split_store_inspection_and_explicit_convergence_retain_not_proven_audit_histo
     assert!(main_after.resumable);
     validate_verified_manifest(&root, &previous.manifest).unwrap();
 }
+
+#[test]
+fn checkpoint_workunit_after_source_or_custody_drift_invalidates_stale_pass_instead_of_deadlocking()
+{
+    let root = accepted_execution_fixture();
+    set_proof_plan(root.path(), "task_test", &["gate-a".into()]).unwrap();
+    checkpoint_workunit(root.path(), "task_test", "ckpt-tree-x", Some(2)).unwrap();
+
+    let artifact = ".decapod/data/proof-a.txt";
+    fs::write(root.path().join(artifact), "tree X proof").unwrap();
+    record_proof_result(
+        root.path(),
+        "task_test",
+        "gate-a",
+        "pass",
+        Some(artifact.into()),
+    )
+    .unwrap();
+    let passed = workunit_journal_status(root.path(), "task_test").unwrap();
+    assert!(passed.resumable);
+    assert_eq!(passed.proof_status, "not_proven");
+    assert_eq!(
+        load_workunit(root.path(), "task_test")
+            .unwrap()
+            .proof_results
+            .len(),
+        1
+    );
+
+    // Source changes and task lease custody advances to a replacement owner.
+    fs::write(
+        root.path().join("src/app.rs"),
+        "fn main() { println!(\"repaired\"); }\n",
+    )
+    .unwrap();
+    let data = root.path().join(".decapod/data");
+    let conn = db::db_connect(&crate::core::todo::todo_db_path(&data).to_string_lossy()).unwrap();
+    conn.execute(
+        "UPDATE tasks SET lease_generation = lease_generation + 1, revision = revision + 1 WHERE id = 'task_test'",
+        [],
+    )
+    .unwrap();
+    drop(conn);
+
+    // Resuming old tree X checkpoint must fail closed.
+    let resume_err = resume_workunit(
+        root.path(),
+        "task_test",
+        "resume-stale",
+        Some(passed.generation.unwrap()),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(
+        resume_err.contains("EXECUTION_STATE_CHANGED"),
+        "expected EXECUTION_STATE_CHANGED, got: {resume_err}"
+    );
+
+    // Re-checkpointing after drift must NOT deadlock on the stale passing proof; it must
+    // capture the new tree/custody binding while stripping stale proof results.
+    let refreshed = checkpoint_workunit(root.path(), "task_test", "ckpt-tree-y", None).unwrap();
+    assert!(refreshed.resumable, "{refreshed:?}");
+    assert_eq!(refreshed.proof_status, "not_proven");
+    let manifest = load_workunit(root.path(), "task_test").unwrap();
+    assert!(
+        manifest.proof_results.is_empty(),
+        "stale tree X passing proof must be stripped on drifted checkpoint: {manifest:?}"
+    );
+}

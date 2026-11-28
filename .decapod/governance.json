@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "accepted_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,65 +872,90 @@
     }
   },
   "change": {
-    "id": "change_01M8FZ2K20HKGZGB4THM212MYT",
-    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "id": "change_1367_731219081",
+    "base_commit": "7312190817a7bdccddbb2ebe4904dd1ffe662785",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1568-cloud-delegated-grant-admission": {
-      "statement": "data db CLI and data.database.* RPC resolve Propodus 037 repository access and delegated grants over DPoP, enforce grant generation/digest/expiry/operation bounds, fail closed when unauthenticated, and never open or create .decapod/data/decapod.db when backend=cloud",
-      "falsifier": "Targeted unit and loopback DPoP CLI/RPC tests fail or .decapod/data/decapod.db is created under backend=cloud",
+    "claim:cold-continuation-custody": {
+      "statement": "Cold replacement harnesses inspect canonical plan/workunit/trajectory/broker read-only without custody rejection and non-Verified drifted workunits re-checkpoint cleanly while Verified baselines remain enforced.",
+      "falsifier": "Cold pre-handoff read-only inspection rejects with AUTHORING_CUSTODY_STALE, mutating paths bypass custody, or Verified baseline passes without re-verification.",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/db_maintenance.rs",
-        "tests/cloud_wave_parity.rs"
+        "tests/gate_admission_and_resilience.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-1568-phase1-impl",
-      "summary": "Wired Propodus 037 repository access and delegated grants end-to-end in db_maintenance, lib, cli, rpc, docs, and loopback tests; guarded SQLite fallback on backend=cloud; awaiting Phase 2 local cargo test once Quiet Window lifts",
-      "input_digest": "sha256:f7bc113627e6b2d6eac3bdd8e566dacccc90a11c3f9ece3028779c40be076714"
+      "id": "cold-continue-1367-hop1",
+      "summary": "Rebase #1367 onto origin/master@731219081 with official v0.169.3",
+      "input_digest": "sha256:372fc827ca474ed927ea0896268deb363d9e160d25665c882f5a42bed5720713"
     },
     {
-      "id": "chk-1568-rebased-v01694",
-      "summary": "Rebased #1568 cleanly onto origin/master@a2d7266db with v0.169.4 Dockerfile/specs/manifest refresh and Cloud agent session token fix for data db CLI/RPC",
-      "input_digest": "sha256:a814df8c61b66e1beff8a7c0850ac1f3233cbc04053abec68f85b1b9546c33e4"
+      "id": "cp-1367-v01694-rebase",
+      "summary": "Rebase #1367 onto origin/master@a2d7266db and refresh v0.169.4 Dockerfile/specs pins",
+      "input_digest": "sha256:ba926fbf94f6c9b76a633de2fd445f0ada66ee93bf30a5a7301e12b53d665e3b",
+      "proof_refs": [
+        ".decapod/managed/Dockerfile.decapod"
+      ]
     },
     {
-      "id": "chk-1568-rebased-v01694-supported",
-      "summary": "Promoted claim-1568-cloud-delegated-grant-admission to supported with proof refs on rebased origin/master@a2d7266db + v0.169.4",
-      "input_digest": "sha256:653f746a9cc3ee06f0671e8a3588f62d727eddab1280e4ae72a5c900d462bb31"
+      "id": "cp-1367-cold-continue-v01694",
+      "summary": "Cold pre-handoff observers and non-Verified drifted workunit re-checkpointing (#1367, v0.169.4)",
+      "input_digest": "sha256:97bad40e64317c08a5895d57072ccc217e3a23a59b7cad5eb192c1f90d49dc39",
+      "proof_refs": [
+        "tests/gate_admission_and_resilience.rs"
+      ]
     },
     {
-      "id": "chk-1568-v01694-digest-sync",
-      "summary": "Synced reviewed_sources_digest in .decapod/config.toml to full origin/master@a2d7266db inventory_digest and refreshed checkpoint",
-      "input_digest": "sha256:80939e5cf9be3389a6493d9c3438f8cf6b7ed43ed4529466223fb0bfe82c2c6c"
+      "id": "cp-1367-cold-continue-v01694-r2",
+      "summary": "Cold pre-handoff observers and non-Verified drifted workunit re-checkpointing (#1367, v0.169.4)",
+      "input_digest": "sha256:ee2c0ffde1786bfd14aa1042c2fd02ac07605c1fdd5f9c192663b4a83ac61c4d",
+      "proof_refs": [
+        "tests/gate_admission_and_resilience.rs"
+      ]
     },
     {
-      "id": "chk-1568-b04913596-v01694",
-      "summary": "Rebased #1568 cleanly onto origin/master@b04913596 with v0.169.4 Dockerfile/specs/manifest refresh and exact inventory_digest",
-      "input_digest": "sha256:57ac6302e97d9a36a9a99ee0a60056841f863ab4126ecd7abb55ff40b9bf58d2"
+      "id": "cp-1367-cold-continue-v01694-r3",
+      "summary": "Sync reviewed_sources_digest for v0.169.4 base a2d7266db (#1367)",
+      "input_digest": "sha256:1cc5ace30039291ea03f54e201c58ee668de381921a6dc999f51dcd4379677b3",
+      "proof_refs": [
+        ".decapod/config.toml"
+      ]
     },
     {
-      "id": "chk-1568-170efc04a-v01694",
-      "summary": "Rebased #1568 cleanly onto origin/master@170efc04a with v0.169.4 specs/manifest refresh and exact 0.169.5 inventory_digest",
-      "input_digest": "sha256:b9e04d1c0285e0bf1be104a2f05420c260fed9fcb8b7ef79ced6a3f7f4e28e60"
+      "id": "cp-1367-cold-continue-v01694-r4",
+      "summary": "Sync .manifest.json config_input_hash after reviewed_sources_digest update (#1367, v0.169.4)",
+      "input_digest": "sha256:e077969dcff05e88f3a87dd0385af85c2677a6a037d42955b9d716afec1a3b84",
+      "proof_refs": [
+        ".decapod/managed/.manifest.json"
+      ]
     },
     {
-      "id": "chk-1568-170efc04a-v01695",
-      "summary": "Refreshed #1568 entrypoints, Dockerfile pin, manifest, and specs with official decapod v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:a55b0d5cc578f5184b837ded601e9ca223404d979a98ee1f3853cb14472f000c"
+      "id": "ckpt-wt2-1367-rebased",
+      "summary": "Rebased #1367 cold continuation onto origin/master@b04913596",
+      "input_digest": "sha256:2fb9bccdd3f3b51e0c13cf65e16d6b392193c929e2385090197be28e6743eda0"
     },
     {
-      "id": "chk-1568-4dbafaebd-v01695",
-      "summary": "Rebased #1568 cleanly onto origin/master@4dbafaebd with official v0.169.5 specs/manifest/Dockerfile and zero spec deletions",
-      "input_digest": "sha256:dddc9b3d2d801249871efe2700fb0f38bcfb1710193a81db89851c55843329d9"
+      "id": "ckpt-wt2-1367-170efc",
+      "summary": "Rebased #1367 cold continuation onto origin/master@170efc04a",
+      "input_digest": "sha256:e6c3b99f76758f8ae69b87e1716ca44820cea6983009b4eed43b16299ff0174b"
+    },
+    {
+      "id": "ckpt-wt2-1367-v01695",
+      "summary": "Refreshed #1367 cold continuation for official Decapod v0.169.5 on origin/master@170efc04a",
+      "input_digest": "sha256:1a89e539d3044e0f103958a5570a4e9e17df6ccf6756fd73b15b15b90b6a7c57"
+    },
+    {
+      "id": "ckpt-wt2-1367-60af3115",
+      "summary": "Rebased #1367 cold continuation onto origin/master@60af3115ec6e (v0.169.5)",
+      "input_digest": "sha256:8e1f47429883ac81ad0f46152481518b6238c2a36d55c5355cb9490dc86e5921"
     }
   ],
   "intents": {
-    "intent:change_01M8FZ2K20HKGZGB4THM212MYT": {
+    "intent:run_1367_731219081": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
@@ -940,14 +965,14 @@
         "root"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
+      "id": "intent:run_1367_731219081",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Audit and complete Decapod #1568 capability-scoped agent db maintenance",
-      "refined_intent": "Audit and complete Decapod #1568 capability-scoped agent db maintenance",
+      "raw_intent": "Execute #1367/#1735 cold cross-harness Continue PR continuation proof",
+      "refined_intent": "Allow cold replacement harnesses to inspect plan/workunit/trajectory/broker read-only before handoff and allow checkpoint_workunit on drifted non-Verified workunits to clear stale proof instead of deadlocking.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -960,7 +985,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Resolve propodus_repository_access_v1 + propodus_delegated_grants_v1 in data db CLI and data.database.* RPC paths on Cloud while failing closed unauthenticated and blocking local SQLite fallback",
+      "intent": "Allow cold replacement harnesses to inspect plan/workunit/trajectory/broker read-only before handoff and allow checkpoint_workunit on drifted non-Verified workunits to clear stale proof instead of deadlocking.",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -970,65 +995,84 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rebased #1568 cleanly onto origin/master@4dbafaebd preserving all merged living specs (#1997/#2000/#2002/#2003/#2004) and covering resolve_cloud_maintenance_authority, evaluate_capability_decision_with_cloud_authority, and ensure_local_sqlite_maintenance_backend",
-          "reviewed_code_fingerprint": "e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f",
-          "spec_material_hash": "7e3905c318221cb19655146c56d604db8426c79094a43530d699268cc05a164e"
+          "reason": "Rebased #1367 onto origin/master@60af3115ec6e (v0.169.5) preserving all prior PR #1997/#2002/#2003/#2004/#2005 specs",
+          "reviewed_code_fingerprint": "f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af",
+          "spec_material_hash": "c16fd0f8a50b54892a00805a2435112db787e71824f356b0e2ac32930280be3e"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased #1568 cleanly onto origin/master@4dbafaebd preserving all merged living specs and covering --delegated-grant-id CLI/RPC surface, cloud_authority report fields, and CLOUD_LOCAL_SQLITE_UNSUPPORTED",
-          "reviewed_code_fingerprint": "e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f",
-          "spec_material_hash": "6295a898d11fbd3e1367dfaef10f0f3b8698d55e12725209f46c12aa3ff0a111"
+          "reason": "Rebased #1367 onto origin/master@60af3115ec6e (v0.169.5) preserving all prior PR #1997/#2002/#2003/#2004/#2005 specs",
+          "reviewed_code_fingerprint": "f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af",
+          "spec_material_hash": "aed2120675dfcebf06ff83f4e7e8c53dfbbeac6a88ecabf8a565c55996f12f11"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Preserved fail-closed CLOUD_PRINCIPAL_UNVERIFIED and zero local SQLite fallback security boundaries on backend=cloud across 4dbafaebd rebase",
-          "reviewed_code_fingerprint": "e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f",
+          "reason": "No security surface changes beyond command_requires_worktree read-only observer exemptions (#1367)",
+          "reviewed_code_fingerprint": "f8ee91bc87ed6611671fed19810262a44bf22cc33331e2d3d823a03ab09b20af",
           "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Wire Propodus 037 Cloud delegated grants into data db CLI and RPC (#1568)",
+      "title": "Fix cold pre-handoff read-only inspection and non-Verified drifted workunit re-checkpointing (#1367, #1735)",
       "todo_ids": [
-        "data_01m8fyb00662yn4b"
+        "code_01m8fh2bm7qsyb95"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795868197Z"
+      "updated_at": "1795870592Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:fe81832697867117f77554b07f9c9304b4d500ddf9836172fa196f0c4cfb0e42",
+      "artifact_hash": "sha256:4f8afb8cc2b7b433ec5f4af84a22bd9a929ba38e5ad6aab9137945968bcc81c1",
       "checks": [
         {
-          "name": "cargo-fmt",
+          "name": "cross_harness_agy_to_codex_cold_continue",
+          "status": "passed"
+        },
+        {
+          "name": "gate_admission_and_resilience",
+          "status": "passed"
+        },
+        {
+          "name": "shared_state_semantics_1247",
+          "status": "passed"
+        },
+        {
+          "name": "workunit_cli",
+          "status": "passed"
+        },
+        {
+          "name": "workunit_journal_tests",
+          "status": "passed"
+        },
+        {
+          "name": "workunit_publish_gate",
           "status": "passed"
         }
       ],
-      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
+            "intent_id": "intent:run_1367_731219081",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
+            "intent_id": "intent:run_1367_731219081",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8FZ2K6C2C4SW2SSV9W4QWPP",
+            "detail": "trajectory:run_1367_731219081",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
+            "intent_id": "intent:run_1367_731219081",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1037,32 +1081,35 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8FZ2K6C2C4SW2SSV9W4QWPP": {
+          "run_1367_731219081": {
             "evidence_only": true,
-            "id": "branch_01M8FZ2K6C2C4SW2SSV9W4QWPP",
-            "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
+            "id": "run_1367_731219081",
+            "intent_id": "intent:run_1367_731219081",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/db_maintenance.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/db_maintenance.rs",
+                  "src/decapod/core/workunit.rs",
+                  "tests/gate_admission_and_resilience.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
                   "src/decapod/lib.rs",
-                  "src/decapod/cli.rs",
-                  "src/decapod/core/rpc.rs",
-                  "src/decapod/core/docs_cli.rs",
-                  "docs/agent/command-contracts.md",
-                  "tests/cloud_wave_parity.rs",
+                  "src/decapod/core/workunit.rs",
+                  "tests/gate_admission_and_resilience.rs",
+                  "tests/unit/core/workunit_journal_tests.rs",
                   ".decapod/managed/specs/INTENT.md",
                   ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md"
+                  ".decapod/managed/specs/INTERFACES.md",
+                  "Aligned onto origin/master@731219081 (PR #1987 Hop 1); verifier-4 2077/2077 lib + 5/5 gate_admission + CI 46092308756 success"
                 ],
                 "proof_refs": [
-                  "cargo-fmt"
+                  "workunit_journal_tests",
+                  "gate_admission_and_resilience",
+                  "shared_state_semantics_1247",
+                  "workunit_cli",
+                  "workunit_publish_gate",
+                  "cross_harness_agy_to_codex_cold_continue"
                 ],
                 "scope": [
                   "root"
@@ -1075,37 +1122,32 @@
         }
       },
       "declared_commands": [],
-      "destination": "pull request",
-      "evidence": [],
-      "inspected_files": [
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/rpc.rs",
-        "src/decapod/lib.rs"
+      "evidence": [
+        "Aligned onto origin/master@731219081 (PR #1987 Hop 1); verifier-4 2077/2077 lib + 5/5 gate_admission + CI 46092308756 success"
       ],
-      "intent_id": "intent:change_01M8FZ2K20HKGZGB4THM212MYT",
+      "inspected_files": [
+        "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
+        "tests/gate_admission_and_resilience.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
+      ],
+      "intent_id": "intent:run_1367_731219081",
       "modified_files": [
         ".decapod/managed/specs/ARCHITECTURE.md",
         ".decapod/managed/specs/INTENT.md",
         ".decapod/managed/specs/INTERFACES.md",
-        "docs/agent/command-contracts.md",
-        "src/decapod/cli.rs",
-        "src/decapod/core/db_maintenance.rs",
-        "src/decapod/core/docs_cli.rs",
-        "src/decapod/core/rpc.rs",
+        "src/decapod/core/workunit.rs",
         "src/decapod/lib.rs",
-        "tests/cloud_wave_parity.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "tests/gate_admission_and_resilience.rs",
+        "tests/unit/core/workunit_journal_tests.rs"
       ],
       "repo_scope": [
         "root"
       ],
-      "run_id": "branch_01M8FZ2K6C2C4SW2SSV9W4QWPP",
+      "run_id": "run_1367_731219081",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "data_01m8fyb00662yn4b",
+      "task_id": "code_01m8fh2bm7qsyb95",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

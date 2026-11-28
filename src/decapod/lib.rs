@@ -4605,7 +4605,21 @@ fn command_requires_worktree(command: &Command) -> bool {
         // Policy observation and an already-authorized recovery actor must be
         // usable before source authoring. Policy still enforces trust/approval.
         Command::Govern(GovernCli {
-            command: GovernCommand::Policy(_),
+            command:
+                GovernCommand::Policy(_)
+                | GovernCommand::Plan(PlanCli {
+                    command: PlanCommand::Status,
+                })
+                | GovernCommand::Workunit(WorkunitCli {
+                    command:
+                        WorkunitCommand::Get { .. }
+                        | WorkunitCommand::Status { .. }
+                        | WorkunitCommand::JournalStatus { .. },
+                })
+                | GovernCommand::Trajectory(TrajectoryCli {
+                    command:
+                        TrajectoryCommand::Status { .. } | TrajectoryCommand::VerifyResume { .. },
+                }),
         }) => false,
         Command::Govern(GovernCli {
             command:
@@ -4640,7 +4654,15 @@ fn command_requires_worktree(command: &Command) -> bool {
         | Command::Houseboat(_)
         | Command::Observe(_)
         | Command::Qa(_) => false,
-        Command::Data(data_cli) => !matches!(data_cli.command, DataCommand::Schema(_)),
+        Command::Data(data_cli) => !matches!(
+            &data_cli.command,
+            DataCommand::Schema(_)
+                | DataCommand::Broker(BrokerCli {
+                    command: BrokerCommand::Audit
+                        | BrokerCommand::Verify
+                        | BrokerCommand::Repair { apply: false, .. },
+                })
+        ),
         Command::Rpc(_) => false,
         _ => true,
     }
