@@ -1,3 +1,19 @@
+## Opt-in authenticated A2A HTTP transport adapter (`#873`)
+
+Adds a bounded, loopback-by-default authenticated HTTP/1.1 A2A transport adapter (`decapod a2a serve` and `decapod a2a send`) on top of `decapod a2a card` and `decapod a2a handoff` without introducing a mandatory daemon or importing remote authority:
+
+- **Authenticated HTTP A2A surface (`src/decapod/core/http_transport.rs`, `src/decapod/core/agent_interop/a2a.rs`, `src/decapod/cli.rs`, `src/decapod/lib.rs`)**: Exposes `GET /.well-known/agent.json`, `GET /a2a/v1/card`, `POST /a2a/v1/handoff`, `POST /a2a/v1/tasks/inspect`, and `POST /a2a/v1/tasks/cancel` behind `HttpTransportConfig::allow_a2a_routes`, inheriting constant-time Bearer token auth, loopback-only Host/Origin guards, `Idempotency-Key` replay/conflict enforcement, and `--max-requests` (`INV-DAEMONLESS`).
+- **Fail-closed local ground-truth validation (`validate_a2a_handoff`, `resolve_local_handoff_context`)**: Validates every incoming A2A envelope against server-resolved repository ground truth (refusing tampered digests, contradictory owners, stale HEAD/base/proof commits, `claims_local_authority: true`, and post-cancel replays), preserving `unresolved_questions` and `pending_obligations` with `imported_authority_granted: false` and `local_custody_modified: false` until locally re-claimed.
+- **Heterogeneous two-agent end-to-end proof (`tests/agent_interop_conformance.rs::a2a_http_adapter_and_heterogeneous_two_agent_handoff`)**: Exercises independent `codex-sender` and `antigravity-receiver` processes over `decapod a2a serve`, `decapod a2a send`, and `A2aHttpClient`, leaving free local daemonless CLI workflows untouched when the adapter is unused.
+
+## Harness discovery, update/rollback, skew/missing-binary checks & host-switching (`#875`)
+
+Completes harness-native discovery packaging across Codex, Claude Code, Antigravity, OpenCode, Grok Build, and pi with explicit host-version pinning, update/rollback snapshots, disabled/skew/missing-binary diagnostics, and cross-harness project switching:
+
+- **Exact pinned host matrix (`src/decapod/core/agent_interop/registry.rs::harness_compatibility_matrix`)**: Records `pinned_host_version` and `update_rollback_supported` across all 6 rows while keeping `live_host_verified: false` until unauthenticated/rate-limited external CLIs are exercised live.
+- **Lifecycle status, update, and rollback (`inspect_harness_package`, `update_harness_package`, `rollback_harness_package`, `decapod integration harness {status,update,rollback}`)**: Detects `version_skew`, `missing_binary`, `disabled`, and `partial_install`, refuses updates pointing to missing binaries, stores pre-install/pre-update snapshots in `.decapod/data/harness-backups/`, and rolls back configs/skills/plugins while preserving authored user settings.
+- **All-harness discovery & host-switching proof (`tests/agent_interop_conformance.rs::harness_discovery_skew_missing_binary_update_rollback_and_host_switch`)**: Executes generated MCP (`Codex`, `Claude Code`, `Antigravity`, `OpenCode`), cooperative hooks (`Claude Code PreToolUse`, `OpenCode tool.execute.before`), and `rpc --stdin` (`Grok Build`, `pi`), then switches harnesses on one repo without transcript replay.
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1532,7 +1548,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `9d56fdc3afbd74ae8d597ca9b499dc7576e7599938ebffa4dcf9b68b7d6d028b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

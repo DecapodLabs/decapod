@@ -5106,7 +5106,26 @@ fn run_mcp_command(mcp_cli: McpCli) -> Result<(), error::DecapodError> {
 
 fn run_a2a_command(a2a_cli: A2aCli) -> Result<(), error::DecapodError> {
     use core::agent_interop::a2a::{
-        A2aHandoffEnvelope, LocalHandoffContext, builtin_agent_card, validate_a2a_handoff,
+        A2aHandoffEnvelope, A2aHttpClient, A2aServeOptions, LocalHandoffContext,
+        builtin_agent_card, resolve_local_handoff_context, serve_a2a_http, validate_a2a_handoff,
+    };
+    let read_token = |token_stdin: bool,
+                      auth_token: Option<String>|
+     -> Result<String, error::DecapodError> {
+        if token_stdin {
+            let mut buf = String::new();
+            io::stdin().read_to_string(&mut buf)?;
+            Ok(buf.trim().to_string())
+        } else {
+            auth_token
+                .or_else(|| std::env::var("DECAPOD_A2A_TOKEN").ok())
+                .ok_or_else(|| {
+                    error::DecapodError::ValidationError(
+                        "authenticated A2A HTTP transport requires --token-stdin, --auth-token, or DECAPOD_A2A_TOKEN"
+                            .to_string(),
+                    )
+                })
+        }
     };
     match a2a_cli.command {
         A2aCommand::Card { format } => {
@@ -5162,6 +5181,82 @@ fn run_a2a_command(a2a_cli: A2aCli) -> Result<(), error::DecapodError> {
                 return Err(error::DecapodError::ValidationError(format!(
                     "A2A handoff rejected: {}",
                     report.reason_codes.join(", ")
+                )));
+            }
+            Ok(())
+        }
+        A2aCommand::Serve {
+            dir,
+            bind,
+            token_stdin,
+            auth_token,
+            allow_remote,
+            max_requests,
+            max_body_bytes,
+            repo_id,
+            base_sha,
+            owner_agent,
+            lease_generation,
+            receiver_agent,
+            now_epoch,
+        } => {
+            let root = resolve_observe_root(dir)?;
+            let token = read_token(token_stdin, auth_token)?;
+            let local_context = resolve_local_handoff_context(
+                &root,
+                repo_id.as_deref(),
+                base_sha.as_deref(),
+                owner_agent.as_deref(),
+                lease_generation,
+                receiver_agent.as_deref(),
+                now_epoch,
+            )
+            .map_err(error::DecapodError::ValidationError)?;
+            let mut options = A2aServeOptions::loopback_default(token, local_context);
+            options.bind = bind;
+            options.allow_remote = allow_remote;
+            options.max_requests = max_requests;
+            options.max_body_bytes = max_body_bytes;
+            serve_a2a_http(&root, options)?;
+            Ok(())
+        }
+        A2aCommand::Send {
+            url,
+            token_stdin,
+            auth_token,
+            input,
+            json,
+            idempotency_key,
+        } => {
+            let token = read_token(token_stdin, auth_token)?;
+            let raw = match (input, json) {
+                (Some(path), None) => fs::read(&path)?,
+                (None, Some(inline)) => inline.into_bytes(),
+                _ => {
+                    return Err(error::DecapodError::ValidationError(
+                        "provide either --input <FILE> or --json <JSON>".to_string(),
+                    ));
+                }
+            };
+            let parsed_val = core::json::unique_value(&raw).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid handoff JSON: {e}"))
+            })?;
+            let envelope: A2aHandoffEnvelope = serde_json::from_value(parsed_val).map_err(|e| {
+                error::DecapodError::ValidationError(format!("Invalid A2aHandoffEnvelope: {e}"))
+            })?;
+            let key = idempotency_key.unwrap_or_else(|| envelope.content_sha256.clone());
+            let client = A2aHttpClient::new(url, token);
+            let (_status, res) = client
+                .submit_handoff(&key, &envelope)
+                .map_err(error::DecapodError::ValidationError)?;
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&res).map_err(io::Error::other)?
+            );
+            if !res.accepted {
+                return Err(error::DecapodError::ValidationError(format!(
+                    "A2A HTTP handoff rejected: {}",
+                    res.report.reason_codes.join(", ")
                 )));
             }
             Ok(())
@@ -13126,8 +13221,9 @@ fn run_integration_command(cli: IntegrationCli) -> Result<(), error::DecapodErro
 
 fn run_harness_integration_command(cli: HarnessCli) -> Result<(), error::DecapodError> {
     use core::agent_interop::registry::{
-        HarnessId, generate_harness_package, harness_compatibility_matrix, install_harness_package,
-        remove_harness_package,
+        HarnessId, generate_harness_package, harness_compatibility_matrix, inspect_harness_package,
+        install_harness_package, remove_harness_package, rollback_harness_package,
+        update_harness_package,
     };
 
     let resolve_repo_root = |dir: Option<PathBuf>| -> Result<PathBuf, error::DecapodError> {
@@ -13223,6 +13319,58 @@ fn run_harness_integration_command(cli: HarnessCli) -> Result<(), error::Decapod
             let mut reports = Vec::with_capacity(targets.len());
             for id in targets {
                 let rep = remove_harness_package(&root, id)
+                    .map_err(error::DecapodError::ValidationError)?;
+                reports.push(rep);
+            }
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&reports).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
+        HarnessCommand::Status { harness, all, dir } => {
+            let root = resolve_repo_root(dir)?;
+            let targets = select_harnesses(harness, all)?;
+            let mut reports = Vec::with_capacity(targets.len());
+            for id in targets {
+                let rep = inspect_harness_package(&root, id)
+                    .map_err(error::DecapodError::ValidationError)?;
+                reports.push(rep);
+            }
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&reports).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
+        HarnessCommand::Update {
+            harness,
+            all,
+            dir,
+            executable,
+            min_version,
+        } => {
+            let root = resolve_repo_root(dir)?;
+            let exe = resolve_exe(executable);
+            let targets = select_harnesses(harness, all)?;
+            let mut reports = Vec::with_capacity(targets.len());
+            for id in targets {
+                let rep = update_harness_package(&root, id, &exe, &min_version)
+                    .map_err(error::DecapodError::ValidationError)?;
+                reports.push(rep);
+            }
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&reports).map_err(io::Error::other)?
+            );
+            Ok(())
+        }
+        HarnessCommand::Rollback { harness, all, dir } => {
+            let root = resolve_repo_root(dir)?;
+            let targets = select_harnesses(harness, all)?;
+            let mut reports = Vec::with_capacity(targets.len());
+            for id in targets {
+                let rep = rollback_harness_package(&root, id)
                     .map_err(error::DecapodError::ValidationError)?;
                 reports.push(rep);
             }

@@ -1,3 +1,21 @@
+## Opt-in A2A HTTP CLI & wire contracts (`#873`)
+
+- **CLI (`src/decapod/cli.rs::A2aCommand`, `src/decapod/lib.rs::run_a2a_command`)**:
+  - `decapod a2a serve`: Binds `127.0.0.1:0` (or explicit loopback/opt-in remote `--bind` with `--allow-remote`), reads Bearer token via `--token-stdin` / `--auth-token` / `DECAPOD_A2A_TOKEN`, prints a single readiness JSON object (`{"status":"listening","endpoint":"http://...","repository_id":"..."}`), and serves up to `--max-requests` requests against local git HEAD/base (`--dir`, `--repo-id`, `--base-sha`, `--owner-agent`, `--lease-generation`, `--receiver-agent`, `--now-epoch`).
+  - `decapod a2a send`: Submits an `A2aHandoffEnvelope` (`--input` or `--json`) over `POST /a2a/v1/handoff` with `Idempotency-Key` (`--idempotency-key` or envelope `content_sha256`), printing `A2aHandoffHttpResult` and exiting non-zero when `accepted == false`.
+- **HTTP routes & capability catalog (`src/decapod/core/interop.rs::transport:a2a`)**:
+  - `GET /.well-known/agent.json` & `GET /a2a/v1/card` return `builtin_http_agent_card` (`transport_mode: "authenticated-http-loopback"`, `http_endpoint: Some(...)`).
+  - `POST /a2a/v1/handoff` returns HTTP `200` (`accepted: true`) or `422` (`accepted: false`) with `imported_authority_granted: false` and `local_custody_modified: false`; `POST /a2a/v1/tasks/inspect` and `POST /a2a/v1/tasks/cancel` inspect or mark external handoff artifacts `Canceled` without mutating repository todo custody.
+  - `interop.rs` `transport:a2a` adds `"cli:decapod a2a serve"` and `"cli:decapod a2a send"` while keeping `VerificationState::NotRun` until observed execution.
+
+## Harness packaging CLI & compatibility matrix interfaces (`#875`)
+
+- **New CLI subcommands (`src/decapod/cli.rs::HarnessCommand`, `src/decapod/lib.rs::run_harness_integration_command`)**:
+  - `decapod integration harness status [--harness <H> | --all] [--dir <DIR>]`: Emits `Vec<HarnessStatusReport>` (`installed`, `disabled`, `version_skew`, `missing_binary`, `rollback_snapshot_available`, `status`).
+  - `decapod integration harness update [--harness <H> | --all] [--executable <PATH>] [--min-version <VER>] [--dir <DIR>]`: Fails closed on `missing_binary` or `version_skew`, snapshots existing state, and merges updated harness packages.
+  - `decapod integration harness rollback [--harness <H> | --all] [--dir <DIR>]`: Restores pre-install/pre-update config/skill/plugin bytes and deletes newly added files while preserving user settings.
+- **Matrix fields (`HarnessCompatibilityRow`)**: Adds `pinned_host_version` and `update_rollback_supported` while keeping `live_host_verified: false`.
+
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -2731,7 +2749,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `9d56fdc3afbd74ae8d597ca9b499dc7576e7599938ebffa4dcf9b68b7d6d028b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

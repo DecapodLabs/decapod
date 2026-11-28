@@ -1030,6 +1030,401 @@ fn a2a_agent_card_and_handoff_validation() {
 }
 
 #[test]
+fn a2a_http_adapter_and_heterogeneous_two_agent_handoff() {
+    use std::io::{BufRead, BufReader};
+
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path();
+    let bin = decapod_bin();
+
+    // 1. Initialize an isolated local git repository with daemonless Decapod.
+    for args in [
+        vec!["init", "-b", "master"],
+        vec!["config", "user.email", "a2a-test@decapodlabs.ai"],
+        vec!["config", "user.name", "A2A Test"],
+    ] {
+        assert!(
+            Command::new("git")
+                .current_dir(repo)
+                .args(&args)
+                .status()
+                .unwrap()
+                .success()
+        );
+    }
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "init",
+                "--force",
+                "--dir",
+                repo.to_str().unwrap(),
+                "--no-container-workspaces",
+                "--isolation-mode",
+                "worktree",
+                "--no-ci",
+                "--product-name",
+                "A2aTestRepo",
+                "--product-summary",
+                "A2A HTTP adapter test repo.",
+            ])
+            .stdin(Stdio::null())
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(repo)
+            .args(["add", "-A"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new("git")
+            .current_dir(repo)
+            .args(["commit", "-m", "init governed repo"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    let head_sha = String::from_utf8(
+        Command::new("git")
+            .current_dir(repo)
+            .args(["rev-parse", "HEAD"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap()
+    .trim()
+    .to_string();
+
+    // 2. Agent A ("codex-sender") creates and claims a task locally without any A2A server running.
+    let acquire_a = Command::new(&bin)
+        .current_dir(repo)
+        .env("DECAPOD_AGENT_ID", "codex-sender")
+        .args(["session", "acquire"])
+        .output()
+        .unwrap();
+    assert!(acquire_a.status.success());
+    let add_out = Command::new(&bin)
+        .current_dir(repo)
+        .env("DECAPOD_AGENT_ID", "codex-sender")
+        .args([
+            "todo",
+            "add",
+            "Transfer governed task over A2A HTTP",
+            "--owner",
+            "codex-sender",
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    assert!(add_out.status.success());
+    let add_json: Value = serde_json::from_slice(&add_out.stdout).unwrap();
+    let task_id = add_json["id"].as_str().unwrap().to_string();
+    let claim_a = Command::new(&bin)
+        .current_dir(repo)
+        .env("DECAPOD_AGENT_ID", "codex-sender")
+        .args(["todo", "claim", "--id", &task_id, "--format", "json"])
+        .output()
+        .unwrap();
+    assert!(claim_a.status.success());
+
+    // 3. Agent B ("antigravity-receiver") launches bounded `decapod a2a serve` (`INV-DAEMONLESS`).
+    let token = "a2a-test-bearer-token-987654321";
+    let mut server = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "a2a",
+            "serve",
+            "--dir",
+            repo.to_str().unwrap(),
+            "--bind",
+            "127.0.0.1:0",
+            "--token-stdin",
+            "--max-requests",
+            "12",
+            "--repo-id",
+            "DecapodLabs/decapod",
+            "--base-sha",
+            &head_sha,
+            "--owner-agent",
+            "codex-sender",
+            "--lease-generation",
+            "1",
+            "--receiver-agent",
+            "antigravity-receiver",
+            "--now-epoch",
+            "1500",
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn decapod a2a serve");
+    {
+        let mut stdin = server.stdin.take().unwrap();
+        stdin.write_all(token.as_bytes()).unwrap();
+        stdin.write_all(b"\n").unwrap();
+    }
+    let mut stdout_reader = BufReader::new(server.stdout.take().unwrap());
+    let mut ready_line = String::new();
+    stdout_reader.read_line(&mut ready_line).unwrap();
+    let ready_json: Value = serde_json::from_str(&ready_line).unwrap();
+    assert_eq!(ready_json["status"], "listening");
+    let endpoint = ready_json["endpoint"].as_str().unwrap().to_string();
+    let host_port = endpoint.strip_prefix("http://").unwrap();
+
+    // 4. Negative transport guards: unauthenticated (401) & foreign Origin (403).
+    let unauth = a2a::A2aHttpClient::new(&endpoint, "wrong-token")
+        .request("GET", "/.well-known/agent.json", None, None)
+        .unwrap();
+    assert_eq!(unauth.status, 401);
+
+    // Raw foreign Origin check (using tokio::net::TcpStream per clippy policy).
+    {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_io()
+            .build()
+            .unwrap();
+        let text = rt.block_on(async {
+            let mut stream = tokio::net::TcpStream::connect(host_port).await.unwrap();
+            let raw_req = format!(
+                "GET /.well-known/agent.json HTTP/1.1\r\nHost: {host_port}\r\nOrigin: https://evil.example\r\nAuthorization: Bearer {token}\r\nConnection: close\r\n\r\n"
+            );
+            stream.write_all(raw_req.as_bytes()).await.unwrap();
+            let mut buf = Vec::new();
+            stream.read_to_end(&mut buf).await.unwrap();
+            String::from_utf8_lossy(&buf).to_string()
+        });
+        assert!(
+            text.starts_with("HTTP/1.1 403"),
+            "expected 403, got: {text}"
+        );
+    }
+
+    // 5. Authenticated Agent Card discovery (`GET /.well-known/agent.json`).
+    let client = a2a::A2aHttpClient::new(&endpoint, token);
+    let card = client.fetch_agent_card().unwrap();
+    assert_eq!(card.transport_mode, "authenticated-http-loopback");
+    assert_eq!(card.http_endpoint.as_deref(), Some(endpoint.as_str()));
+    assert!(!card.conformance_layers.decapod_extension_required_by_core);
+    assert!(
+        card.skills
+            .iter()
+            .any(|s| s.id == "governance.handoff.cancel")
+    );
+
+    let valid_envelope = a2a::A2aHandoffEnvelope {
+        schema_version: a2a::A2A_CARD_SCHEMA_VERSION.to_string(),
+        protocol_version: a2a::A2A_PROTOCOL_VERSION.to_string(),
+        handoff_id: "hoff-http-01".to_string(),
+        task_id: task_id.clone(),
+        task_state: a2a::A2aTaskState::Working,
+        sender_agent_id: "codex-sender".to_string(),
+        receiver_agent_id: "antigravity-receiver".to_string(),
+        summary: "Continue A2A HTTP task under local custody".to_string(),
+        dependencies: vec!["dep-a2a-1".to_string()],
+        created_at_epoch: 1000,
+        expires_at_epoch: 2000,
+        decapod_extension: a2a::DecapodA2aExtension {
+            repository_id: "DecapodLabs/decapod".to_string(),
+            expected_head_sha: head_sha.clone(),
+            expected_base_sha: head_sha.clone(),
+            lease_generation: 1,
+            owner_agent_id: "codex-sender".to_string(),
+            intent_anchor: format!("intent:todo:{task_id}"),
+            unresolved_questions: vec!["Confirm release tag before publish".to_string()],
+            pending_obligations: vec!["run decapod validate".to_string()],
+            interlock_refs: vec!["interlock:worktree".to_string()],
+            context_bundle_sha256: format!("sha256:{}", "a".repeat(64)),
+            proof_commit_sha: Some(head_sha.clone()),
+            claims_local_authority: false,
+        },
+        content_sha256: String::new(),
+    }
+    .with_computed_digest();
+
+    // 6. Tampered digest -> 422 fail closed.
+    let mut tampered = valid_envelope.clone();
+    tampered.summary = "tampered summary".to_string();
+    let (tamper_status, tamper_res) = client.submit_handoff("idem-tamper", &tampered).unwrap();
+    assert_eq!(tamper_status, 422);
+    assert!(!tamper_res.accepted);
+    assert!(!tamper_res.imported_authority_granted);
+    assert!(
+        tamper_res
+            .report
+            .reason_codes
+            .contains(&"handoff_digest_tampered".to_string())
+    );
+
+    // 7. Contradictory ownership + stale head + imported authority claim -> 422 fail closed.
+    let mut rogue = valid_envelope.clone();
+    rogue.decapod_extension.owner_agent_id = "rogue-agent".to_string();
+    rogue.decapod_extension.expected_head_sha = "0".repeat(40);
+    rogue.decapod_extension.claims_local_authority = true;
+    rogue = rogue.with_computed_digest();
+    let (rogue_status, rogue_res) = client.submit_handoff("idem-rogue", &rogue).unwrap();
+    assert_eq!(rogue_status, 422);
+    assert!(!rogue_res.accepted);
+    assert!(!rogue_res.imported_authority_granted);
+    assert!(
+        rogue_res
+            .report
+            .reason_codes
+            .contains(&"contradictory_task_ownership".to_string())
+    );
+    assert!(
+        rogue_res
+            .report
+            .reason_codes
+            .contains(&"stale_head_commit".to_string())
+    );
+    assert!(
+        rogue_res
+            .report
+            .reason_codes
+            .contains(&"imported_authority_claim_denied".to_string())
+    );
+
+    // 8. Missing Idempotency-Key -> 400 fail closed.
+    let no_idem = client
+        .request(
+            "POST",
+            "/a2a/v1/handoff",
+            None,
+            Some(&serde_json::to_vec(&valid_envelope).unwrap()),
+        )
+        .unwrap();
+    assert_eq!(no_idem.status, 400);
+
+    // 9. Independent Agent A CLI subprocess sends valid handoff (`decapod a2a send`).
+    let mut send_child = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "a2a",
+            "send",
+            "--url",
+            &endpoint,
+            "--token-stdin",
+            "--idempotency-key",
+            "idem-valid-1",
+            "--json",
+            &serde_json::to_string(&valid_envelope).unwrap(),
+        ])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn decapod a2a send");
+    {
+        let mut stdin = send_child.stdin.take().unwrap();
+        stdin.write_all(token.as_bytes()).unwrap();
+    }
+    let send_out = send_child.wait_with_output().unwrap();
+    assert!(
+        send_out.status.success(),
+        "decapod a2a send failed: {}",
+        String::from_utf8_lossy(&send_out.stderr)
+    );
+    let send_res: a2a::A2aHandoffHttpResult = serde_json::from_slice(&send_out.stdout).unwrap();
+    assert!(send_res.accepted);
+    assert!(!send_res.imported_authority_granted);
+    assert!(!send_res.local_custody_modified);
+    assert_eq!(
+        send_res.report.preserved_unresolved_questions,
+        vec!["Confirm release tag before publish"]
+    );
+
+    // 10. Idempotent replay succeeds with X-Decapod-Idempotency-Replayed; mutated conflict -> 409.
+    let replay_resp = client
+        .request(
+            "POST",
+            "/a2a/v1/handoff",
+            Some("idem-valid-1"),
+            Some(&serde_json::to_vec(&valid_envelope).unwrap()),
+        )
+        .unwrap();
+    assert_eq!(replay_resp.status, 200);
+    assert_eq!(
+        replay_resp
+            .headers
+            .get("x-decapod-idempotency-replayed")
+            .map(String::as_str),
+        Some("true")
+    );
+    let mut conflict_env = valid_envelope.clone();
+    conflict_env.summary = "different payload same key".to_string();
+    conflict_env = conflict_env.with_computed_digest();
+    let conflict_resp = client
+        .request(
+            "POST",
+            "/a2a/v1/handoff",
+            Some("idem-valid-1"),
+            Some(&serde_json::to_vec(&conflict_env).unwrap()),
+        )
+        .unwrap();
+    assert_eq!(conflict_resp.status, 409);
+
+    // 11. Agent B inspects external task artifact without human rebriefing, then cancels it.
+    let (insp_status, insp_rec) = client.inspect_task("idem-inspect-1", &task_id).unwrap();
+    assert_eq!(insp_status, 200);
+    assert_eq!(insp_rec.task_id, task_id);
+    assert!(!insp_rec.imported_authority_granted);
+    assert_eq!(
+        insp_rec.decapod_extension.unresolved_questions,
+        vec!["Confirm release tag before publish"]
+    );
+
+    let (cancel_status, cancel_rec) = client
+        .cancel_task("idem-cancel-1", &task_id, Some("superseded"))
+        .unwrap();
+    assert_eq!(cancel_status, 200);
+    assert_eq!(cancel_rec.task_state, a2a::A2aTaskState::Canceled);
+    assert!(!cancel_rec.local_custody_modified);
+
+    // 12. Post-cancel handoff replay MUST fail closed (422 non_continuable_task_state).
+    let (after_cancel_status, after_cancel_res) = client
+        .submit_handoff("idem-after-cancel", &valid_envelope)
+        .unwrap();
+    assert_eq!(after_cancel_status, 422);
+    assert!(!after_cancel_res.accepted);
+    assert!(
+        after_cancel_res
+            .report
+            .reason_codes
+            .contains(&"non_continuable_task_state".to_string())
+    );
+
+    // Bounded server exits cleanly once max_requests=12 is satisfied.
+    let server_out = server.wait_with_output().unwrap();
+    assert!(
+        server_out.status.success(),
+        "decapod a2a serve failed: {}",
+        String::from_utf8_lossy(&server_out.stderr)
+    );
+
+    // 12. Verify local repository custody remained under codex-sender (never imported remotely)
+    //     and Agent B can still operate normally with daemonless local Decapod CLI.
+    let todo_get = Command::new(&bin)
+        .current_dir(repo)
+        .env("DECAPOD_AGENT_ID", "codex-sender")
+        .args(["todo", "get", "--id", &task_id, "--format", "json"])
+        .output()
+        .unwrap();
+    assert!(todo_get.status.success());
+    let todo_json: Value = serde_json::from_slice(&todo_get.stdout).unwrap();
+    assert_eq!(todo_json["item"]["owner"], "codex-sender");
+}
+
+#[test]
 fn capability_registry_skill_discovery_manifest_compiler_fragment_composition_and_harness_packaging()
  {
     // ---- #1715: Offline Capability Registry & Graph Validation ----
@@ -2068,6 +2463,608 @@ fn harness_native_cli_install_executes_mcp_and_hooks_and_preserves_user_config()
         1
     );
     assert_eq!(claude_after["hooks"]["PreToolUse"][0]["matcher"], "Custom");
+}
+
+#[test]
+fn harness_discovery_skew_missing_binary_update_rollback_and_host_switch() {
+    use std::io::Write;
+    use std::process::Stdio;
+
+    let tmp = tempfile::tempdir().unwrap();
+    let repo = tmp.path();
+    let bin = decapod_bin();
+
+    assert!(
+        Command::new("git")
+            .current_dir(repo)
+            .args(["init", "-b", "master"])
+            .status()
+            .unwrap()
+            .success()
+    );
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "init",
+                "--force",
+                "--dir",
+                repo.to_str().unwrap(),
+                "--no-container-workspaces",
+                "--isolation-mode",
+                "worktree",
+                "--no-ci",
+                "--product-name",
+                "HarnessLifecycleRepo",
+                "--product-summary",
+                "Multi-harness discovery, lifecycle, and host-switch test.",
+            ])
+            .stdin(Stdio::null())
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+
+    // 1. Matrix command exposes pinned host versions, rollback capability, and honest live_host_verified: false.
+    let matrix_out = Command::new(&bin)
+        .current_dir(repo)
+        .args(["integration", "harness", "matrix", "--format", "json"])
+        .output()
+        .unwrap();
+    assert!(matrix_out.status.success());
+    let matrix: Value = serde_json::from_slice(&matrix_out.stdout).unwrap();
+    let rows = matrix.as_array().unwrap();
+    assert_eq!(rows.len(), 6);
+    for row in rows {
+        assert!(!row["pinned_host_version"].as_str().unwrap().is_empty());
+        assert_eq!(row["update_rollback_supported"], true);
+        assert_eq!(row["live_host_verified"], false);
+    }
+
+    // 2. Pre-seed distinct user configs across all 6 harnesses and install --all.
+    let codex_mcp = concat!(".", "codex", "/mcp.json");
+    let codex_skill = concat!(".", "codex", "/skills/decapod/SKILL.md");
+    let user_configs = [
+        (
+            codex_mcp,
+            json!({ "mcpServers": { "user-codex-tool": { "command": "/usr/bin/true" } }, "codexTag": 1 }),
+        ),
+        (
+            ".claude/settings.local.json",
+            json!({ "permissions": { "allow": ["Bash(git log)"] }, "hooks": { "PreToolUse": [{ "matcher": "User", "hooks": [{ "type": "command", "command": "true" }] }] } }),
+        ),
+        (
+            ".antigravity/mcp.json",
+            json!({ "mcpServers": { "user-agy-tool": { "command": "/usr/bin/true" } }, "agyKeep": true }),
+        ),
+        (
+            ".opencode/mcp.json",
+            json!({ "mcpServers": { "user-opencode-tool": { "command": "/usr/bin/true" } }, "theme": "dark" }),
+        ),
+        (
+            ".grok/decapod-rpc.json",
+            json!({ "grokCustom": "preserve-grok" }),
+        ),
+        (
+            ".pi/decapod-extension.json",
+            json!({ "piCustom": "preserve-pi" }),
+        ),
+    ];
+    for (rel, payload) in &user_configs {
+        let p = repo.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(&p, serde_json::to_string_pretty(payload).unwrap()).unwrap();
+    }
+
+    let install = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "integration",
+            "harness",
+            "install",
+            "--all",
+            "--executable",
+            bin.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(
+        install.status.success(),
+        "install --all failed: {}",
+        String::from_utf8_lossy(&install.stderr)
+    );
+
+    // 3. Execute live MCP initialize + tools/list + tools/call using exact generated MCP configs across Codex, Claude Code, Antigravity, OpenCode.
+    let mcp_req = concat!(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"host-lifecycle-test\",\"version\":\"1.0\"}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"decapod_interop_manifest\",\"arguments\":{\"validate\":true}}}\n"
+    );
+    for cfg_rel in [
+        codex_mcp,
+        ".claude/settings.local.json",
+        ".antigravity/mcp.json",
+        ".opencode/mcp.json",
+    ] {
+        let cfg: Value =
+            serde_json::from_str(&std::fs::read_to_string(repo.join(cfg_rel)).unwrap()).unwrap();
+        let entry = &cfg["mcpServers"]["decapod"];
+        let cmd = entry["command"].as_str().unwrap();
+        let cwd = entry["cwd"].as_str().unwrap();
+        let args: Vec<String> = entry["args"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap().to_string())
+            .collect();
+        let mut child = Command::new(cmd)
+            .current_dir(cwd)
+            .args(&args)
+            .args(["--framing", "jsonl"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(mcp_req.as_bytes())
+            .unwrap();
+        let out = child.wait_with_output().unwrap();
+        assert!(out.status.success(), "MCP failed for {cfg_rel}");
+        let lines: Vec<Value> = String::from_utf8_lossy(&out.stdout)
+            .lines()
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| serde_json::from_str(l).unwrap())
+            .collect();
+        assert_eq!(
+            lines.len(),
+            3,
+            "expected 3 JSON-RPC responses for {cfg_rel}"
+        );
+        assert_eq!(lines[0]["result"]["serverInfo"]["name"], "decapod");
+        assert!(lines[1]["result"]["tools"].as_array().unwrap().len() >= 6);
+        assert_eq!(lines[2]["result"]["isError"], Value::Bool(false));
+    }
+
+    // 4. Execute live cooperative hooks for BOTH Claude Code PreToolUse and OpenCode tool.execute.before.
+    let claude_cfg: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".claude/settings.local.json")).unwrap(),
+    )
+    .unwrap();
+    let claude_hook_cmd = claude_cfg["hooks"]["PreToolUse"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|h| h["decapodManaged"] == true)
+        .unwrap()["hooks"][0]["command"]
+        .as_str()
+        .unwrap();
+    assert!(
+        Command::new("sh")
+            .current_dir(repo)
+            .args(["-c", claude_hook_cmd])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+
+    let opencode_plugin: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".opencode/plugins/decapod.json")).unwrap(),
+    )
+    .unwrap();
+    let oc_hook = &opencode_plugin["hooks"]["tool.execute.before"];
+    let oc_args: Vec<String> = oc_hook["args"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    assert!(
+        Command::new(oc_hook["command"].as_str().unwrap())
+            .current_dir(oc_hook["cwd"].as_str().unwrap())
+            .args(&oc_args)
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+
+    // 5. Execute live `decapod rpc --stdin` using exact generated commands for Grok Build and Pi.
+    for (cfg_rel, req_id) in [
+        (".grok/decapod-rpc.json", "grok-1"),
+        (".pi/decapod-extension.json", "pi-1"),
+    ] {
+        let cfg: Value =
+            serde_json::from_str(&std::fs::read_to_string(repo.join(cfg_rel)).unwrap()).unwrap();
+        let entry = &cfg["decapod"];
+        let cmd = entry["command"].as_str().unwrap();
+        let cwd = entry["cwd"].as_str().unwrap();
+        let args: Vec<String> = entry["args"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_str().unwrap().to_string())
+            .collect();
+        let mut child = Command::new(cmd)
+            .current_dir(cwd)
+            .args(&args)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let rpc_body = json!({ "op": "agent.init", "params": {}, "id": req_id }).to_string();
+        child
+            .stdin
+            .as_mut()
+            .unwrap()
+            .write_all(rpc_body.as_bytes())
+            .unwrap();
+        let out = child.wait_with_output().unwrap();
+        assert!(
+            out.status.success(),
+            "rpc --stdin failed for {cfg_rel}: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        let resp: Value = serde_json::from_slice(&out.stdout).unwrap();
+        assert_eq!(resp["success"], true);
+    }
+
+    // 6. Status healthy -> version skew -> missing binary -> disabled failure scenarios.
+    let status_out = Command::new(&bin)
+        .current_dir(repo)
+        .args(["integration", "harness", "status", "--all"])
+        .output()
+        .unwrap();
+    assert!(status_out.status.success());
+    let statuses: Value = serde_json::from_slice(&status_out.stdout).unwrap();
+    for s in statuses.as_array().unwrap() {
+        assert_eq!(s["status"], "healthy");
+        assert_eq!(s["rollback_snapshot_available"], true);
+    }
+
+    // Inject version_skew on Codex & disabled flag on Antigravity; check status reports both accurately.
+    let mut codex_skew: Value =
+        serde_json::from_str(&std::fs::read_to_string(repo.join(codex_mcp)).unwrap()).unwrap();
+    codex_skew["mcpServers"]["decapod"]["decapod_version"] = Value::String("0.0.1".to_string());
+    std::fs::write(
+        repo.join(codex_mcp),
+        serde_json::to_string_pretty(&codex_skew).unwrap(),
+    )
+    .unwrap();
+
+    let mut agy_disabled: Value =
+        serde_json::from_str(&std::fs::read_to_string(repo.join(".antigravity/mcp.json")).unwrap())
+            .unwrap();
+    agy_disabled["decapodDisabled"] = Value::Bool(true);
+    std::fs::write(
+        repo.join(".antigravity/mcp.json"),
+        serde_json::to_string_pretty(&agy_disabled).unwrap(),
+    )
+    .unwrap();
+
+    let codex_status: Value = serde_json::from_slice(
+        &Command::new(&bin)
+            .current_dir(repo)
+            .args(["integration", "harness", "status", "--harness", "codex"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    assert_eq!(codex_status[0]["version_skew"], true);
+    assert_eq!(codex_status[0]["status"], "version_skew");
+
+    let agy_status: Value = serde_json::from_slice(
+        &Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "integration",
+                "harness",
+                "status",
+                "--harness",
+                "antigravity",
+            ])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    assert_eq!(agy_status[0]["disabled"], true);
+    assert_eq!(agy_status[0]["status"], "disabled");
+
+    // Missing executable fails closed during `update` AND reports `missing_binary: true` when configured.
+    let missing_bin = repo.join("does-not-exist/decapod");
+    let bad_update = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "integration",
+            "harness",
+            "update",
+            "--harness",
+            "pi",
+            "--executable",
+            missing_bin.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(!bad_update.status.success());
+    assert!(String::from_utf8_lossy(&bad_update.stderr).contains("missing_binary"));
+
+    let mut pi_missing: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".pi/decapod-extension.json")).unwrap(),
+    )
+    .unwrap();
+    pi_missing["decapod"]["command"] = Value::String(missing_bin.to_string_lossy().to_string());
+    std::fs::write(
+        repo.join(".pi/decapod-extension.json"),
+        serde_json::to_string_pretty(&pi_missing).unwrap(),
+    )
+    .unwrap();
+    let pi_status: Value = serde_json::from_slice(
+        &Command::new(&bin)
+            .current_dir(repo)
+            .args(["integration", "harness", "status", "--harness", "pi"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    assert_eq!(pi_status[0]["missing_binary"], true);
+    assert_eq!(pi_status[0]["status"], "missing_binary");
+
+    // 7. Update heals tampered codex/pi states, rollback restores pre-update state, and install -> rollback restores exact original user configs.
+    let heal = Command::new(&bin)
+        .current_dir(repo)
+        .args([
+            "integration",
+            "harness",
+            "update",
+            "--all",
+            "--executable",
+            bin.to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(heal.status.success());
+    let codex_healed: Value = serde_json::from_slice(
+        &Command::new(&bin)
+            .current_dir(repo)
+            .args(["integration", "harness", "status", "--harness", "codex"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    assert_eq!(codex_healed[0]["status"], "healthy");
+    let pi_healed: Value = serde_json::from_slice(
+        &Command::new(&bin)
+            .current_dir(repo)
+            .args(["integration", "harness", "status", "--harness", "pi"])
+            .output()
+            .unwrap()
+            .stdout,
+    )
+    .unwrap();
+    assert_eq!(pi_healed[0]["status"], "healthy");
+
+    // Rolling back immediately after `update` restores exact pre-update state (tampered 0.0.1 on codex).
+    let rollback_update = Command::new(&bin)
+        .current_dir(repo)
+        .args(["integration", "harness", "rollback", "--all"])
+        .output()
+        .unwrap();
+    assert!(
+        rollback_update.status.success(),
+        "rollback --all after update failed: {}",
+        String::from_utf8_lossy(&rollback_update.stderr)
+    );
+    let codex_rolled_back: Value =
+        serde_json::from_str(&std::fs::read_to_string(repo.join(codex_mcp)).unwrap()).unwrap();
+    assert_eq!(
+        codex_rolled_back["mcpServers"]["decapod"]["decapod_version"],
+        "0.0.1"
+    );
+
+    // Clean install over exact user configs -> immediate rollback restores exact user configs and removes newly created skill/plugin files.
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args(["integration", "harness", "remove", "--all"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    for (rel, payload) in &user_configs {
+        let p = repo.join(rel);
+        std::fs::write(&p, serde_json::to_string_pretty(payload).unwrap()).unwrap();
+    }
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "integration",
+                "harness",
+                "install",
+                "--all",
+                "--executable",
+                bin.to_str().unwrap(),
+            ])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    assert!(repo.join(".opencode/plugins/decapod.json").exists());
+    assert!(repo.join(codex_skill).exists());
+
+    let rollback_install = Command::new(&bin)
+        .current_dir(repo)
+        .args(["integration", "harness", "rollback", "--all"])
+        .output()
+        .unwrap();
+    assert!(rollback_install.status.success());
+
+    for (rel, original) in &user_configs {
+        let after: Value =
+            serde_json::from_str(&std::fs::read_to_string(repo.join(rel)).unwrap()).unwrap();
+        assert_eq!(&after, original, "rollback did not restore exact {rel}");
+    }
+    assert!(!repo.join(".opencode/plugins/decapod.json").exists());
+    assert!(!repo.join(codex_skill).exists());
+
+    // 8. Re-install + remove --all cleanly removes Decapod entries across all 6 harnesses while keeping user entries.
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "integration",
+                "harness",
+                "install",
+                "--all",
+                "--executable",
+                bin.to_str().unwrap(),
+            ])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args(["integration", "harness", "remove", "--all"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let grok_after: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".grok/decapod-rpc.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(grok_after["grokCustom"], "preserve-grok");
+    assert!(grok_after.get("decapod").is_none());
+
+    // 9. Host-switching proof: Codex acquires session & claims todo; Antigravity (MCP) + Grok Build (rpc --stdin) discover same canonical custody & fail closed on unauthorized mutation.
+    let session_pw = "switch-secret-pw";
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .env("DECAPOD_AGENT_ID", "codex-host")
+            .env("DECAPOD_SESSION_PASSWORD", session_pw)
+            .args(["session", "acquire"])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+    let todo_add = Command::new(&bin)
+        .current_dir(repo)
+        .env("DECAPOD_AGENT_ID", "codex-host")
+        .env("DECAPOD_SESSION_PASSWORD", session_pw)
+        .args(["todo", "add", "Switch hosts cleanly"])
+        .output()
+        .unwrap();
+    assert!(todo_add.status.success());
+
+    assert!(
+        Command::new(&bin)
+            .current_dir(repo)
+            .args([
+                "integration",
+                "harness",
+                "install",
+                "--all",
+                "--executable",
+                bin.to_str().unwrap(),
+            ])
+            .output()
+            .unwrap()
+            .status
+            .success()
+    );
+
+    // Host 2a: Antigravity discovers repo via generated MCP command, reads manifest, and rejects unauthenticated governed_mutate.
+    let agy_cfg: Value =
+        serde_json::from_str(&std::fs::read_to_string(repo.join(".antigravity/mcp.json")).unwrap())
+            .unwrap();
+    let agy_entry = &agy_cfg["mcpServers"]["decapod"];
+    let agy_args: Vec<String> = agy_entry["args"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    let mut agy_mcp = Command::new(agy_entry["command"].as_str().unwrap())
+        .current_dir(agy_entry["cwd"].as_str().unwrap())
+        .args(&agy_args)
+        .args(["--framing", "jsonl"])
+        .env_remove("DECAPOD_SESSION_PASSWORD")
+        .env("DECAPOD_AGENT_ID", "antigravity-host")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let agy_req = concat!(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"decapod_interop_manifest\",\"arguments\":{\"validate\":true}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"decapod_governed_mutate\",\"arguments\":{\"op\":\"store.upsert\",\"params\":{}}}}\n"
+    );
+    agy_mcp
+        .stdin
+        .as_mut()
+        .unwrap()
+        .write_all(agy_req.as_bytes())
+        .unwrap();
+    let agy_out = agy_mcp.wait_with_output().unwrap();
+    assert!(agy_out.status.success());
+    let agy_lines: Vec<Value> = String::from_utf8_lossy(&agy_out.stdout)
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(agy_lines.len(), 3);
+    assert_eq!(agy_lines[1]["result"]["isError"], Value::Bool(false));
+    assert_eq!(agy_lines[2]["result"]["isError"], Value::Bool(true));
+
+    // Host 2b: Grok Build resolves the exact same governed todo state via generated rpc --stdin without transcript replay.
+    let grok_cfg: Value = serde_json::from_str(
+        &std::fs::read_to_string(repo.join(".grok/decapod-rpc.json")).unwrap(),
+    )
+    .unwrap();
+    let grok_entry = &grok_cfg["decapod"];
+    let grok_args: Vec<String> = grok_entry["args"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap().to_string())
+        .collect();
+    let mut grok_rpc = Command::new(grok_entry["command"].as_str().unwrap())
+        .current_dir(grok_entry["cwd"].as_str().unwrap())
+        .args(&grok_args)
+        .env("DECAPOD_AGENT_ID", "grok-host")
+        .env("DECAPOD_SESSION_PASSWORD", session_pw)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    grok_rpc
+        .stdin
+        .as_mut()
+        .unwrap()
+        .write_all(br#"{"op":"context.resolve","params":{},"id":"grok-switch"}"#)
+        .unwrap();
+    let grok_out = grok_rpc.wait_with_output().unwrap();
+    assert!(grok_out.status.success());
+    let grok_resp: Value = serde_json::from_slice(&grok_out.stdout).unwrap();
+    assert_eq!(grok_resp["success"], true);
 }
 
 #[test]

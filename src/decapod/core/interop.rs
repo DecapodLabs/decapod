@@ -728,6 +728,8 @@ pub fn builtin_manifest() -> InteropManifest {
             entrypoints: vec![
                 "cli:decapod a2a card".to_string(),
                 "cli:decapod a2a handoff".to_string(),
+                "cli:decapod a2a serve".to_string(),
+                "cli:decapod a2a send".to_string(),
             ],
             read_only: true,
             session_required: false,

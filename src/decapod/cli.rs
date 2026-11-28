@@ -2939,6 +2939,69 @@ pub(crate) enum A2aCommand {
         #[clap(long, conflicts_with = "input")]
         json: Option<String>,
     },
+    /// Serve the opt-in authenticated loopback HTTP A2A adapter (#873)
+    Serve {
+        /// Repository root directory (defaults to current working directory)
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Socket bind address (loopback required unless --allow-remote)
+        #[clap(long, default_value = "127.0.0.1:0")]
+        bind: String,
+        /// Read Bearer auth token from stdin (recommended over argv)
+        #[clap(long)]
+        token_stdin: bool,
+        /// Bearer auth token (or set DECAPOD_A2A_TOKEN)
+        #[clap(long)]
+        auth_token: Option<String>,
+        /// Allow non-loopback bind/Host headers (default: loopback only)
+        #[clap(long)]
+        allow_remote: bool,
+        /// Optional maximum number of HTTP requests to serve before exiting (INV-DAEMONLESS)
+        #[clap(long)]
+        max_requests: Option<usize>,
+        /// Maximum incoming HTTP body size in bytes
+        #[clap(long, default_value_t = 262_144)]
+        max_body_bytes: usize,
+        /// Repository identifier expected in incoming handoff envelopes
+        #[clap(long)]
+        repo_id: Option<String>,
+        /// Expected accepted base commit SHA (defaults to current HEAD if omitted)
+        #[clap(long)]
+        base_sha: Option<String>,
+        /// Expected current owner agent ID in local repository ground truth
+        #[clap(long)]
+        owner_agent: Option<String>,
+        /// Minimum local custody lease generation
+        #[clap(long, default_value_t = 1)]
+        lease_generation: u64,
+        /// Expected receiving agent ID for incoming handoffs
+        #[clap(long)]
+        receiver_agent: Option<String>,
+        /// Override local verification epoch timestamp (for deterministic tests)
+        #[clap(long)]
+        now_epoch: Option<u64>,
+    },
+    /// Send a bounded A2A handoff envelope to a running `decapod a2a serve` endpoint (#873)
+    Send {
+        /// Target A2A HTTP endpoint URL (e.g. http://127.0.0.1:8080)
+        #[clap(long)]
+        url: String,
+        /// Read Bearer auth token from stdin
+        #[clap(long)]
+        token_stdin: bool,
+        /// Bearer auth token (or set DECAPOD_A2A_TOKEN)
+        #[clap(long)]
+        auth_token: Option<String>,
+        /// Path to JSON file containing an `A2aHandoffEnvelope`
+        #[clap(long, conflicts_with = "json")]
+        input: Option<PathBuf>,
+        /// Inline JSON `A2aHandoffEnvelope`
+        #[clap(long, conflicts_with = "input")]
+        json: Option<String>,
+        /// Explicit Idempotency-Key header value (defaults to envelope content digest)
+        #[clap(long)]
+        idempotency_key: Option<String>,
+    },
 }
 
 #[derive(clap::Args, Debug)]
@@ -3192,6 +3255,48 @@ pub(crate) enum HarnessCommand {
         #[clap(long, conflicts_with = "all")]
         harness: Option<String>,
         /// Remove Decapod entries for all supported harnesses.
+        #[clap(long, conflicts_with = "harness")]
+        all: bool,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+    },
+    /// Inspect installed harness config status, version skew, disabled state, and missing binary (#875).
+    Status {
+        /// Target harness (codex, claude-code, antigravity, opencode, grok-build, pi).
+        #[clap(long, conflicts_with = "all")]
+        harness: Option<String>,
+        /// Inspect all supported harnesses.
+        #[clap(long, conflicts_with = "harness")]
+        all: bool,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+    },
+    /// Update installed harness discovery packages with rollback snapshot and binary verification (#875).
+    Update {
+        /// Target harness (codex, claude-code, antigravity, opencode, grok-build, pi).
+        #[clap(long, conflicts_with = "all")]
+        harness: Option<String>,
+        /// Update packages for all supported harnesses.
+        #[clap(long, conflicts_with = "harness")]
+        all: bool,
+        /// Repository root directory (defaults to current working directory).
+        #[clap(short, long)]
+        dir: Option<PathBuf>,
+        /// Executable path override (defaults to current decapod binary path).
+        #[clap(long)]
+        executable: Option<PathBuf>,
+        /// Minimum required Decapod semver.
+        #[clap(long, default_value = "0.0.0")]
+        min_version: String,
+    },
+    /// Roll back the most recent harness install/update while preserving authored user config (#875).
+    Rollback {
+        /// Target harness (codex, claude-code, antigravity, opencode, grok-build, pi).
+        #[clap(long, conflicts_with = "all")]
+        harness: Option<String>,
+        /// Roll back all harnesses that have a stored rollback snapshot.
         #[clap(long, conflicts_with = "harness")]
         all: bool,
         /// Repository root directory (defaults to current working directory).

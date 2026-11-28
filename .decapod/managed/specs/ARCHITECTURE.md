@@ -1,3 +1,15 @@
+## Opt-in A2A HTTP transport & replay-safe adapter (`#873`)
+
+- **Transport boundary (`src/decapod/core/http_transport.rs::HttpTransportConfig::allow_a2a_routes`)**: Opt-in flag (default `false`) admitting `GET /.well-known/agent.json`, `GET /a2a/v1/card`, and `POST /a2a/v1/{handoff,tasks/inspect,tasks/cancel}` through the existing `serve_on_listener` pipeline (constant-time Bearer auth, loopback Host/Origin checks, `Idempotency-Key` / `X-Decapod-Request-Id` replay/conflict cache, and `max_requests` exit cap).
+- **A2A HTTP state & pure-tokio client (`src/decapod/core/agent_interop/a2a.rs`)**:
+  - `A2aHttpServerState` holds up to `MAX_A2A_HTTP_TASK_RECORDS` (`256`) non-authoritative `A2aTaskRecord` entries; `handle_handoff` evaluates incoming envelopes strictly against server-owned `LocalHandoffContext` (`resolve_local_handoff_context`) rather than caller-supplied context overrides and rejects replays against canceled tasks.
+  - `A2aHttpClient` executes bounded HTTP/1.1 requests over `tokio::net::TcpStream` (`tokio::time::timeout`) for `fetch_agent_card`, `submit_handoff`, `inspect_task`, and `cancel_task` without introducing blocking `std::net::TcpStream` or new Cargo dependencies.
+
+## Harness discovery lifecycle & rollback architecture (`#875`)
+
+- **Snapshot storage boundary (`src/decapod/core/agent_interop/registry.rs::capture_rollback_snapshot`, `rollback_harness_package`)**: Stores pre-install/pre-update file snapshots (`HarnessRollbackSnapshot`) strictly in gitignored `.decapod/data/harness-backups/<slug>.json` with atomic writes and symlink refusal (`ensure_non_symlink_path`), keeping authored configs untouched on rollback or removal.
+- **Binary & skew verification (`inspect_harness_package`, `update_harness_package`)**: Validates explicit executable paths (`executable_exists_on_disk_or_path`), compares embedded `decapod_version` against `CARGO_PKG_VERSION`, and inspects `decapodDisabled` / `enabled: false` flags without invoking external LLM endpoints.
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2194,7 +2206,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `9d56fdc3afbd74ae8d597ca9b499dc7576e7599938ebffa4dcf9b68b7d6d028b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

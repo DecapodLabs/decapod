@@ -958,11 +958,14 @@ impl HarnessId {
 pub struct HarnessCompatibilityRow {
     pub harness: HarnessId,
     pub display_name: String,
+    #[serde(default)]
+    pub pinned_host_version: String,
     pub pinned_mechanism: String,
     pub instruction_surface: String,
     pub tool_discovery_surface: String,
     pub cooperative_hook_surface: Option<String>,
     pub independent_enforcement_surface: String,
+    pub update_rollback_supported: bool,
     pub live_host_verified: bool,
     pub bypass_paths: Vec<String>,
     pub status: String,
@@ -976,12 +979,14 @@ pub fn harness_compatibility_matrix() -> Vec<HarnessCompatibilityRow> {
         HarnessCompatibilityRow {
             harness: HarnessId::Codex,
             display_name: "Codex".to_string(),
+            pinned_host_version: "codex-cli 0.172.0".to_string(),
             pinned_mechanism: "stdio MCP + CODEX.md".to_string(),
             instruction_surface: "CODEX.md + AGENTS.md".to_string(),
             tool_discovery_surface: "decapod mcp serve (stdio JSON-RPC 2.0)".to_string(),
             cooperative_hook_surface: None,
             independent_enforcement_surface: "Git worktree + CI/forge branch protection"
                 .to_string(),
+            update_rollback_supported: true,
             live_host_verified: false,
             bypass_paths: vec!["direct shell/git invocation outside MCP".to_string()],
             status: "packaged_offline_pending_live_host_matrix".to_string(),
@@ -989,11 +994,13 @@ pub fn harness_compatibility_matrix() -> Vec<HarnessCompatibilityRow> {
         HarnessCompatibilityRow {
             harness: HarnessId::ClaudeCode,
             display_name: "Claude Code".to_string(),
+            pinned_host_version: "2.1.311 (Claude Code)".to_string(),
             pinned_mechanism: "stdio MCP + cooperative PreToolUse hook + CLAUDE.md".to_string(),
             instruction_surface: "CLAUDE.md + AGENTS.md".to_string(),
             tool_discovery_surface: "decapod mcp serve (stdio JSON-RPC 2.0)".to_string(),
             cooperative_hook_surface: Some("PreToolUse -> decapod infer boundary".to_string()),
             independent_enforcement_surface: "OS sandbox + Git/forge branch protection".to_string(),
+            update_rollback_supported: true,
             live_host_verified: false,
             bypass_paths: vec!["user-disabled hooks or direct host shell".to_string()],
             status: "packaged_offline_pending_live_host_matrix".to_string(),
@@ -1001,12 +1008,14 @@ pub fn harness_compatibility_matrix() -> Vec<HarnessCompatibilityRow> {
         HarnessCompatibilityRow {
             harness: HarnessId::Antigravity,
             display_name: "Antigravity".to_string(),
+            pinned_host_version: "antigravity 1.5.18".to_string(),
             pinned_mechanism: "stdio MCP + GEMINI.md".to_string(),
             instruction_surface: "GEMINI.md + AGENTS.md".to_string(),
             tool_discovery_surface: "decapod mcp serve (stdio JSON-RPC 2.0)".to_string(),
             cooperative_hook_surface: None,
             independent_enforcement_surface: "Git worktree + CI/forge branch protection"
                 .to_string(),
+            update_rollback_supported: true,
             live_host_verified: false,
             bypass_paths: vec!["direct terminal command outside MCP".to_string()],
             status: "packaged_offline_pending_live_host_matrix".to_string(),
@@ -1014,6 +1023,7 @@ pub fn harness_compatibility_matrix() -> Vec<HarnessCompatibilityRow> {
         HarnessCompatibilityRow {
             harness: HarnessId::Opencode,
             display_name: "OpenCode".to_string(),
+            pinned_host_version: "opencode v2.2.5".to_string(),
             pinned_mechanism: "stdio MCP + plugin manifest + AGENTS.md".to_string(),
             instruction_surface: "AGENTS.md".to_string(),
             tool_discovery_surface: "decapod mcp serve (stdio JSON-RPC 2.0)".to_string(),
@@ -1022,6 +1032,7 @@ pub fn harness_compatibility_matrix() -> Vec<HarnessCompatibilityRow> {
             ),
             independent_enforcement_surface: "Git worktree + CI/forge branch protection"
                 .to_string(),
+            update_rollback_supported: true,
             live_host_verified: false,
             bypass_paths: vec!["unloaded plugin or direct shell".to_string()],
             status: "packaged_offline_pending_live_host_matrix".to_string(),
@@ -1029,25 +1040,29 @@ pub fn harness_compatibility_matrix() -> Vec<HarnessCompatibilityRow> {
         HarnessCompatibilityRow {
             harness: HarnessId::GrokBuild,
             display_name: "Grok Build".to_string(),
+            pinned_host_version: "grok 1.0.77".to_string(),
             pinned_mechanism: "structured CLI/RPC + AGENTS.md".to_string(),
             instruction_surface: "AGENTS.md".to_string(),
             tool_discovery_surface: "decapod rpc --stdin (fallback CLI/RPC)".to_string(),
             cooperative_hook_surface: None,
             independent_enforcement_surface: "Git worktree + CI/forge branch protection"
                 .to_string(),
+            update_rollback_supported: true,
             live_host_verified: false,
             bypass_paths: vec!["direct shell execution".to_string()],
-            status: "instruction_and_rpc_only_untested_live".to_string(),
+            status: "packaged_offline_rpc_pending_live_host_matrix".to_string(),
         },
         HarnessCompatibilityRow {
             harness: HarnessId::Pi,
             display_name: "pi".to_string(),
+            pinned_host_version: "uninstalled_offline_package".to_string(),
             pinned_mechanism: "extension adapter + decapod infer boundary + AGENTS.md".to_string(),
             instruction_surface: "AGENTS.md".to_string(),
             tool_discovery_surface: "decapod infer boundary / decapod rpc --stdin".to_string(),
             cooperative_hook_surface: Some("pi extension lifecycle hooks".to_string()),
             independent_enforcement_surface: "Git worktree + CI/forge branch protection"
                 .to_string(),
+            update_rollback_supported: true,
             live_host_verified: false,
             bypass_paths: vec!["direct bash tool outside extension".to_string()],
             status: "packaged_offline_pending_live_host_matrix".to_string(),
@@ -1091,6 +1106,52 @@ pub struct HarnessRemoveReport {
     pub updated_paths: Vec<String>,
     pub removed_paths: Vec<String>,
     pub preserved_user_entries: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HarnessStatusReport {
+    pub harness: HarnessId,
+    pub installed: bool,
+    pub disabled: bool,
+    pub config_present: bool,
+    pub skill_present: bool,
+    pub plugin_present: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub configured_version: Option<String>,
+    pub current_binary_version: String,
+    pub version_skew: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub configured_executable: Option<String>,
+    pub missing_binary: bool,
+    pub rollback_snapshot_available: bool,
+    pub status: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HarnessRollbackReport {
+    pub harness: HarnessId,
+    pub restored_paths: Vec<String>,
+    pub removed_paths: Vec<String>,
+    pub preserved_user_config: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct HarnessFileSnapshot {
+    path_hint: String,
+    existed: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    content: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct HarnessRollbackSnapshot {
+    schema_version: String,
+    harness: HarnessId,
+    config: HarnessFileSnapshot,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    skill: Option<HarnessFileSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    plugin: Option<HarnessFileSnapshot>,
 }
 
 /// Render a harness-native `SKILL.md` discovery document advertising only
@@ -1308,7 +1369,8 @@ fn merge_harness_json(
 }
 
 /// Install a conflict-safe harness-native discovery package into `repo_root` (#875).
-/// Preserves existing unrelated user configuration keys, servers, and hooks.
+/// Preserves existing unrelated user configuration keys, servers, and hooks, and
+/// stores a rollback snapshot under `.decapod/data/harness-backups/`.
 pub fn install_harness_package(
     repo_root: &std::path::Path,
     harness: HarnessId,
@@ -1317,6 +1379,7 @@ pub fn install_harness_package(
 ) -> Result<HarnessInstallReport, String> {
     let root_str = repo_root.to_string_lossy().to_string();
     let pkg = generate_harness_package(harness, executable_path, &root_str, min_decapod_version)?;
+    capture_rollback_snapshot(repo_root, &pkg)?;
     let mut written_paths = Vec::new();
     let mut preserved_existing_config = false;
 
@@ -1366,6 +1429,261 @@ pub fn install_harness_package(
         decapod_version: pkg.decapod_version,
         written_paths,
         preserved_existing_config,
+    })
+}
+
+fn rollback_snapshot_path(repo_root: &std::path::Path, harness: HarnessId) -> std::path::PathBuf {
+    repo_root
+        .join(".decapod")
+        .join("data")
+        .join("harness-backups")
+        .join(format!("{}.json", harness.slug()))
+}
+
+fn read_file_snapshot(
+    repo_root: &std::path::Path,
+    rel: &str,
+) -> Result<HarnessFileSnapshot, String> {
+    let path = repo_root.join(rel);
+    ensure_non_symlink_path(&path)?;
+    if path.exists() {
+        let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        Ok(HarnessFileSnapshot {
+            path_hint: rel.to_string(),
+            existed: true,
+            content: Some(content),
+        })
+    } else {
+        Ok(HarnessFileSnapshot {
+            path_hint: rel.to_string(),
+            existed: false,
+            content: None,
+        })
+    }
+}
+
+fn capture_rollback_snapshot(
+    repo_root: &std::path::Path,
+    pkg: &HarnessPackageManifest,
+) -> Result<(), String> {
+    let backup_path = rollback_snapshot_path(repo_root, pkg.harness);
+    ensure_non_symlink_path(&backup_path)?;
+    if let Some(parent) = backup_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let snapshot = HarnessRollbackSnapshot {
+        schema_version: "1.0.0".to_string(),
+        harness: pkg.harness,
+        config: read_file_snapshot(repo_root, &pkg.config_path_hint)?,
+        skill: pkg
+            .skill_path_hint
+            .as_deref()
+            .map(|rel| read_file_snapshot(repo_root, rel))
+            .transpose()?,
+        plugin: pkg
+            .plugin_path_hint
+            .as_deref()
+            .map(|rel| read_file_snapshot(repo_root, rel))
+            .transpose()?,
+    };
+    let bytes = serde_json::to_vec_pretty(&snapshot).map_err(|e| e.to_string())?;
+    crate::core::atomic::write_atomic(&backup_path, &bytes).map_err(|e| e.to_string())
+}
+
+fn executable_exists_on_disk_or_path(exe: &str) -> bool {
+    let trimmed = exe.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    let path = std::path::Path::new(trimmed);
+    if trimmed.contains('/') || trimmed.contains('\\') {
+        return path.is_file();
+    }
+    std::env::var_os("PATH")
+        .map(|paths| std::env::split_paths(&paths).any(|dir| dir.join(trimmed).is_file()))
+        .unwrap_or(false)
+}
+
+/// Update an installed harness discovery package while verifying the target binary
+/// exists and storing a pre-update rollback snapshot (#875).
+pub fn update_harness_package(
+    repo_root: &std::path::Path,
+    harness: HarnessId,
+    executable_path: &str,
+    min_decapod_version: &str,
+) -> Result<HarnessInstallReport, String> {
+    if !executable_exists_on_disk_or_path(executable_path) {
+        return Err(format!(
+            "missing_binary: decapod executable '{executable_path}' does not exist"
+        ));
+    }
+    install_harness_package(repo_root, harness, executable_path, min_decapod_version)
+}
+
+/// Restore the pre-install/pre-update state of `harness` from its rollback snapshot (#875).
+pub fn rollback_harness_package(
+    repo_root: &std::path::Path,
+    harness: HarnessId,
+) -> Result<HarnessRollbackReport, String> {
+    let backup_path = rollback_snapshot_path(repo_root, harness);
+    ensure_non_symlink_path(&backup_path)?;
+    if !backup_path.exists() {
+        return Err(format!(
+            "rollback_snapshot_missing: no stored harness snapshot for '{}'",
+            harness.slug()
+        ));
+    }
+    let raw = std::fs::read_to_string(&backup_path).map_err(|e| e.to_string())?;
+    let snapshot: HarnessRollbackSnapshot =
+        serde_json::from_str(&raw).map_err(|e| format!("invalid rollback snapshot: {e}"))?;
+
+    let mut restored_paths = Vec::new();
+    let mut removed_paths = Vec::new();
+    let mut restore_one = |snap: &HarnessFileSnapshot| -> Result<(), String> {
+        let target = repo_root.join(&snap.path_hint);
+        ensure_non_symlink_path(&target)?;
+        if snap.existed {
+            if let Some(parent) = target.parent() {
+                std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+            }
+            let content = snap.content.as_deref().unwrap_or("");
+            crate::core::atomic::write_atomic(&target, content.as_bytes())
+                .map_err(|e| e.to_string())?;
+            restored_paths.push(snap.path_hint.clone());
+        } else if target.exists() {
+            std::fs::remove_file(&target).map_err(|e| e.to_string())?;
+            removed_paths.push(snap.path_hint.clone());
+        }
+        Ok(())
+    };
+
+    restore_one(&snapshot.config)?;
+    if let Some(ref skill) = snapshot.skill {
+        restore_one(skill)?;
+    }
+    if let Some(ref plugin) = snapshot.plugin {
+        restore_one(plugin)?;
+    }
+    std::fs::remove_file(&backup_path).map_err(|e| e.to_string())?;
+
+    Ok(HarnessRollbackReport {
+        harness,
+        restored_paths,
+        removed_paths,
+        preserved_user_config: true,
+    })
+}
+
+/// Inspect installed harness packaging state, version skew, disabled state, and
+/// missing-binary failure conditions (#875).
+pub fn inspect_harness_package(
+    repo_root: &std::path::Path,
+    harness: HarnessId,
+) -> Result<HarnessStatusReport, String> {
+    let pkg = generate_harness_package(harness, "decapod", &repo_root.to_string_lossy(), "0.0.0")?;
+    let current = env!("CARGO_PKG_VERSION").to_string();
+    let cfg_path = repo_root.join(&pkg.config_path_hint);
+    ensure_non_symlink_path(&cfg_path)?;
+    let config_present = cfg_path.exists();
+    let skill_present = pkg
+        .skill_path_hint
+        .as_deref()
+        .is_some_and(|rel| repo_root.join(rel).is_file());
+    let plugin_present = pkg
+        .plugin_path_hint
+        .as_deref()
+        .is_some_and(|rel| repo_root.join(rel).is_file());
+    let rollback_snapshot_available = rollback_snapshot_path(repo_root, harness).is_file();
+
+    let mut installed = false;
+    let mut disabled = false;
+    let mut configured_version: Option<String> = None;
+    let mut configured_executable: Option<String> = None;
+
+    if config_present {
+        let raw = std::fs::read_to_string(&cfg_path).map_err(|e| e.to_string())?;
+        let val: serde_json::Value = serde_json::from_str(&raw)
+            .map_err(|e| format!("invalid existing JSON '{}': {e}", cfg_path.display()))?;
+        if val.get("decapodDisabled").and_then(|v| v.as_bool()) == Some(true) {
+            disabled = true;
+        }
+        match harness {
+            HarnessId::GrokBuild | HarnessId::Pi => {
+                if let Some(obj) = val.get("decapod").and_then(|v| v.as_object()) {
+                    installed = true;
+                    if obj.get("enabled").and_then(|v| v.as_bool()) == Some(false) {
+                        disabled = true;
+                    }
+                    configured_version = obj
+                        .get("decapod_version")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string);
+                    configured_executable = obj
+                        .get("command")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string);
+                }
+            }
+            _ => {
+                if let Some(entry) = val
+                    .get("mcpServers")
+                    .and_then(|m| m.get("decapod"))
+                    .and_then(|v| v.as_object())
+                {
+                    installed = true;
+                    if entry.get("disabled").and_then(|v| v.as_bool()) == Some(true) {
+                        disabled = true;
+                    }
+                    configured_version = entry
+                        .get("decapod_version")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string);
+                    configured_executable = entry
+                        .get("command")
+                        .and_then(|v| v.as_str())
+                        .map(str::to_string);
+                }
+            }
+        }
+    }
+
+    let version_skew = configured_version
+        .as_deref()
+        .is_some_and(|v| v != current.as_str());
+    let missing_binary = configured_executable
+        .as_deref()
+        .is_some_and(|exe| !executable_exists_on_disk_or_path(exe));
+    let expected_skill_ok = pkg.skill_path_hint.is_none() || skill_present;
+    let expected_plugin_ok = pkg.plugin_path_hint.is_none() || plugin_present;
+
+    let status = if disabled {
+        "disabled"
+    } else if !installed {
+        "not_installed"
+    } else if missing_binary {
+        "missing_binary"
+    } else if version_skew {
+        "version_skew"
+    } else if !expected_skill_ok || !expected_plugin_ok {
+        "partial_install"
+    } else {
+        "healthy"
+    };
+
+    Ok(HarnessStatusReport {
+        harness,
+        installed,
+        disabled,
+        config_present,
+        skill_present,
+        plugin_present,
+        configured_version,
+        current_binary_version: current,
+        version_skew,
+        configured_executable,
+        missing_binary,
+        rollback_snapshot_available,
+        status: status.to_string(),
     })
 }
 

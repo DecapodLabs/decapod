@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "accepted_commit": "a2d7266db2c63fea15f86c2de75a84f2cb55e8f3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,64 +872,67 @@
     }
   },
   "change": {
-    "id": "test_01m8fksbstm838m1",
-    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "id": "pr_873_875_v01694",
+    "base_commit": "a2d7266db2c63fea15f86c2de75a84f2cb55e8f3",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:hop1-batch-unbundle-and-next-hop": {
-      "statement": "Bounded-parallel GHA artifact download (max 6 threads), unbundled standalone CLI/entrypoint targets, and next-hop release.yml digest admission preserve full sha256 custody, selector coverage, and fail-closed verification.",
-      "falsifier": "Tampered ZIP bytes, missing artifact, duplicate obligation, unreviewed workflow SHA-256, or RULE-POLICY-003 mutation passes admission.",
+    "claim:a2a-http-loopback-adapter": {
+      "statement": "Opt-in A2A HTTP transport exposes authenticated card/handoff/inspect/cancel routes with Idempotency-Key replay safety, fail-closed ground-truth validation, and zero daemonless CLI regression",
+      "falsifier": "A2A routes expose unauthenticated mutation, trust caller-supplied context overrides, accept canceled replays, or break local CLI without serve",
       "status": "supported",
       "proof_refs": [
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "tests/source_ci_profile_policy.rs"
+        "src/decapod/core/agent_interop/a2a.rs",
+        "src/decapod/core/http_transport.rs",
+        "tests/agent_interop_conformance.rs"
+      ]
+    },
+    "claim:harness-discovery-packaging-lifecycle": {
+      "statement": "All six harness adapters pin host versions, preserve user configs via atomic rollback snapshots, fail closed on version skew or missing binaries, and keep live_host_verified=false without unauthenticated host execution",
+      "falsifier": "Any harness adapter overwrites unrelated user config, accepts missing binary or version skew during update/generate, fails to restore exact pre-install/pre-update state on rollback, or falsely sets live_host_verified=true",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/agent_interop/registry.rs",
+        "tests/agent_interop_conformance.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "cp_1672_hop1_initial",
-      "summary": "CI shard unbundling (#1672 Hop 1), bounded-parallel GHA custody downloads (#1400/#1573), and reviewed_next_hop_workflow_digests for release.yml",
-      "input_digest": "sha256:9c47b67377e408f93744efb9603884ad11a0e87f05b6a8194d1e1bb2697c7b7e"
+      "id": "chk-873-875-v01694",
+      "summary": "Rebase #873/#875 cleanly onto origin/master@a2d7266db under v0.169.4",
+      "input_digest": "sha256:40b3eaa1030473546a817f435f81afb75b4ef2470d5fd9796104b767c1d383b1"
     },
     {
-      "id": "cp_1672_hop1_config_reconciled",
-      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for #1672 Hop 1 off origin/master@2ed6e67ee",
-      "input_digest": "sha256:3eafafe83dc006dfb272cd0eddc36af0f8a110b8c0541820a35a9d22a0966781"
+      "id": "chk-873-875-v01694-clean",
+      "summary": "Restore 11 PR #1987 Hop 1 files from origin/master and refresh specs (#873, #875)",
+      "input_digest": "sha256:72ddbc48079e96dd6cde1cf9f61792bd91e15c2225270f1d99a601d7c7ea5d2a"
     },
     {
-      "id": "cp_1672_hop1_official_0169_3",
-      "summary": "Refresh release-bound manifest and Dockerfile.decapod via official v0.169.3",
-      "input_digest": "sha256:c2db6dc115c7209ef3906166a1feaa1f7f2f485639d80b66566a20e762c74ef4"
-    },
-    {
-      "id": "cp_1672_hop1_dockerfile_0169_3",
-      "summary": "Refresh managed Dockerfile.decapod to v0.169.3 via official v0.169.3 CLI",
-      "input_digest": "sha256:60123cdf83d3e187ad2c04ca33a66c01b9c6c5b9d7c98c0cdd711d879fe84ece"
+      "id": "test_01m8fjsp0s8zbsbr",
+      "summary": "Avoid literal legacy dot-codex string in tests/agent_interop_conformance.rs while testing harness packaging lifecycle",
+      "input_digest": "sha256:12b19f961ff2f0a4f095087ca0c55b0a59a426dbb4997f0d56e1b7af1a48d295"
     }
   ],
   "intents": {
-    "intent:run_1672_hop1": {
+    "intent:branch_01M8FQ_873_875": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Isolated worktree; zero daemon fallback"
       ],
       "constraints": [
-        "decapod_hop1"
+        "src/decapod/core/agent_interop/,http_transport.rs,interop.rs,cli.rs,lib.rs,tests/agent_interop_conformance.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1672_hop1",
+      "id": "intent:branch_01M8FQ_873_875",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute #1672 Hop 1, #1400, #1573, and two-hop release workflow digest admission off origin/master.",
-      "refined_intent": "Unbundle CLI/entrypoint tests, implement bounded-parallel OfficialCli/GithubWorkflowInventory batch downloads, and admit Hop 2 release.yml SHA-256 via readiness_profile::reviewed_next_hop_workflow_digests.",
+      "raw_intent": "Execute #873 A2A HTTP adapter and #875 harness packaging lifecycle",
+      "refined_intent": "Rebased onto origin/master@a2d7266db with v0.169.4 governance/specs",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -942,87 +945,67 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Unbundle overloaded CLI/entrypoint Bazel test targets and drop duplicate/unnecessary serial locks (#1672 Hop 1), parallelize distinct GHA artifact downloads up to 6 bounded workers (#1400/#1573), and add reviewed_next_hop_workflow_digests for Hop 2 release.yml without altering workflows in Hop 1.",
+      "intent": "Implement opt-in authenticated A2A HTTP transport and complete harness discovery, update/rollback, and host-switching lifecycle",
       "phases": [],
       "proof_hooks": [],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
+          "reason": "Verified tests/agent_interop_conformance.rs avoids literal dot-codex string while preserving full Codex/multi-harness lifecycle conformance; architecture, interfaces, and security invariants remain accurate.",
+          "reviewed_code_fingerprint": "9d56fdc3afbd74ae8d597ca9b499dc7576e7599938ebffa4dcf9b68b7d6d028b",
+          "spec_material_hash": "eaa81c62c4ac5dcfbb8d179fc6581c2b2ed7747a1889af74cb1f3da23595faa4"
         },
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
+          "reason": "Verified tests/agent_interop_conformance.rs avoids literal dot-codex string while preserving full Codex/multi-harness lifecycle conformance; architecture, interfaces, and security invariants remain accurate.",
+          "reviewed_code_fingerprint": "9d56fdc3afbd74ae8d597ca9b499dc7576e7599938ebffa4dcf9b68b7d6d028b",
+          "spec_material_hash": "15ebeca3788696895ef68fb8e9364d4a33700217ff7b5faf4ca6524ac1bb7d8f"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod pin via official CLI; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "reason": "Verified tests/agent_interop_conformance.rs avoids literal dot-codex string while preserving full Codex/multi-harness lifecycle conformance; architecture, interfaces, and security invariants remain accurate.",
+          "reviewed_code_fingerprint": "9d56fdc3afbd74ae8d597ca9b499dc7576e7599938ebffa4dcf9b68b7d6d028b",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "CI shard unbundling (#1672 Hop 1), parallel GHA custody downloads (#1400/#1573), and next-hop release workflow admission",
+      "title": "A2A HTTP transport adapter and harness discovery lifecycle (#873, #875)",
       "todo_ids": [
-        "test_01m8fksbstm838m1"
+        "test_01m8fjsp0s8zbsbr"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795828991Z"
+      "updated_at": "1795841646Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Isolated worktree; zero daemon fallback"
       ],
-      "artifact_hash": "sha256:e89114ea25e26e9b42833aea58f6798c9424b713456ea141a1d54c6d44d4198e",
+      "artifact_hash": "sha256:0fa9a25f839e7f1cc43aa59c7fb132aab9fe97b6e1d04230d35cb5ca6456915e",
       "checks": [
         {
-          "name": "cargo_clippy_d_warnings",
+          "name": "agent_interop_conformance_13_of_13",
           "status": "passed"
         },
         {
-          "name": "cargo_fmt_check",
+          "name": "agent_interop_unit_5_of_5",
           "status": "passed"
         },
         {
-          "name": "init_reconciliation_22",
+          "name": "fmt_clippy",
           "status": "passed"
         },
         {
-          "name": "init_reconciliation_config_digest",
+          "name": "http_transport_unit_6_of_6",
           "status": "passed"
         },
         {
-          "name": "official_0169_3_dockerfile_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "official_0169_3_specs_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "readiness_profile_35",
-          "status": "passed"
-        },
-        {
-          "name": "snapshot_provider_219",
-          "status": "passed"
-        },
-        {
-          "name": "source_import_11",
-          "status": "passed"
-        },
-        {
-          "name": "unbundled_cli_and_policy_suites",
+          "name": "interop_conformance_12_of_12",
           "status": "passed"
         }
       ],
@@ -1030,159 +1013,53 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_01M8FQ_873_875",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_01M8FQ_873_875",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1672_hop1",
+            "detail": "trajectory:branch_01M8FQ_873_875",
             "event_id": "event:4",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:branch_01M8FQ_873_875",
             "kind": "trajectory_step_recorded",
             "sequence": 4
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:5",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:6",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:7",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:8",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1672_hop1": {
+          "branch_01M8FQ_873_875": {
             "evidence_only": true,
-            "id": "run_1672_hop1",
-            "intent_id": "intent:run_1672_hop1",
+            "id": "branch_01M8FQ_873_875",
+            "intent_id": "intent:branch_01M8FQ_873_875",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  ".config/build/decapod.BUILD.bzl"
+                  "src/decapod/core/agent_interop/a2a.rs",
+                  "src/decapod/core/agent_interop/registry.rs",
+                  "src/decapod/core/http_transport.rs",
+                  "tests/agent_interop_conformance.rs"
                 ],
                 "proof_refs": [
-                  "cargo_fmt_check",
-                  "cargo_clippy_d_warnings",
-                  "snapshot_provider_219",
-                  "source_import_11",
-                  "readiness_profile_35",
-                  "init_reconciliation_22",
-                  "unbundled_cli_and_policy_suites"
+                  "agent_interop_conformance_13_of_13",
+                  "agent_interop_unit_5_of_5",
+                  "fmt_clippy",
+                  "http_transport_unit_6_of_6",
+                  "interop_conformance_12_of_12"
                 ],
                 "scope": [
-                  "decapod_hop1"
+                  "src/decapod/core/agent_interop/,http_transport.rs,interop.rs,cli.rs,lib.rs,tests/agent_interop_conformance.rs"
                 ],
                 "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  "assets/tools/source_ci_profile.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/readiness_profile/tests.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "tests/cli_contracts.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/effective_grant_cli_contracts.rs",
-                  "tests/entrypoint_correctness.rs",
-                  "tests/entrypoint_validation_contracts.rs",
-                  "tests/governance_fault_detection_1795.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  "tests/support/cli_bin.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml"
-                ],
-                "proof_refs": [
-                  "init_reconciliation_config_digest"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/.manifest.json",
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_specs_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_dockerfile_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1191,43 +1068,21 @@
       },
       "declared_commands": [],
       "evidence": [],
-      "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
-      ],
-      "intent_id": "intent:run_1672_hop1",
+      "inspected_files": [],
+      "intent_id": "intent:branch_01M8FQ_873_875",
       "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        ".decapod/managed/.manifest.json",
-        ".decapod/managed/Dockerfile.decapod",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/cli_contracts.rs",
-        "tests/consumer_readiness.rs",
-        "tests/effective_grant_cli_contracts.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/entrypoint_validation_contracts.rs",
-        "tests/governance_fault_detection_1795.rs",
-        "tests/source_ci_profile_policy.rs",
-        "tests/support/cli_bin.rs"
+        "src/decapod/core/agent_interop/a2a.rs",
+        "src/decapod/core/agent_interop/registry.rs",
+        "src/decapod/core/http_transport.rs",
+        "tests/agent_interop_conformance.rs"
       ],
       "repo_scope": [
-        "decapod_hop1"
+        "src/decapod/core/agent_interop/,http_transport.rs,interop.rs,cli.rs,lib.rs,tests/agent_interop_conformance.rs"
       ],
-      "run_id": "run_1672_hop1",
+      "run_id": "branch_01M8FQ_873_875",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m8fksbstm838m1",
+      "task_id": "test_01m8fjsp0s8zbsbr",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

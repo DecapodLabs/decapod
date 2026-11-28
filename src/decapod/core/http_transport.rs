@@ -112,6 +112,10 @@ pub struct HttpTransportConfig {
     pub allowed_repo_ids: Vec<String>,
     /// Explicitly revoked token IDs denied on `X-Decapod-Token-Id` (#1719).
     pub revoked_token_ids: Vec<String>,
+    /// Allow opt-in A2A HTTP endpoints (`GET /.well-known/agent.json`,
+    /// `GET /a2a/v1/card`, `POST /a2a/v1/handoff`, `POST /a2a/v1/tasks/{inspect,cancel}`)
+    /// while preserving all bearer/origin/host/idempotency/replay guards (#873).
+    pub allow_a2a_routes: bool,
 }
 
 impl HttpTransportConfig {
@@ -141,6 +145,7 @@ impl HttpTransportConfig {
             required_tenant_id: None,
             allowed_repo_ids: Vec::new(),
             revoked_token_ids: Vec::new(),
+            allow_a2a_routes: false,
         }
     }
 
@@ -684,6 +689,47 @@ where
                 .with_header("X-Decapod-Read-Only", "true");
             }
         }
+    } else if config.allow_a2a_routes {
+        match request.method.as_str() {
+            "GET" => {
+                if !matches!(
+                    request.path.as_str(),
+                    "/.well-known/agent.json" | "/a2a/v1/card"
+                ) {
+                    return HttpResponse::json(
+                        404,
+                        error_code_json(
+                            "not_found",
+                            "use GET /.well-known/agent.json, GET /a2a/v1/card, or POST /a2a/v1/{handoff,tasks/inspect,tasks/cancel}",
+                        ),
+                    );
+                }
+            }
+            "POST" => {
+                if !matches!(
+                    request.path.as_str(),
+                    "/a2a/v1/handoff" | "/a2a/v1/tasks/inspect" | "/a2a/v1/tasks/cancel"
+                ) {
+                    return HttpResponse::json(
+                        404,
+                        error_code_json(
+                            "not_found",
+                            "use POST /a2a/v1/handoff, /a2a/v1/tasks/inspect, or /a2a/v1/tasks/cancel",
+                        ),
+                    );
+                }
+            }
+            _ => {
+                return HttpResponse::json(
+                    405,
+                    error_code_json(
+                        "method_not_allowed",
+                        "A2A HTTP adapter accepts GET and POST only",
+                    ),
+                )
+                .with_header("Allow", "GET, POST");
+            }
+        }
     } else {
         if request.method != "POST" {
             return HttpResponse::json(
@@ -1002,6 +1048,7 @@ fn write_response(stream: &mut TcpStream, response: HttpResponse) -> std::io::Re
         408 => "Request Timeout",
         409 => "Conflict",
         413 => "Payload Too Large",
+        422 => "Unprocessable Entity",
         431 => "Request Header Fields Too Large",
         502 => "Bad Gateway",
         503 => "Service Unavailable",
