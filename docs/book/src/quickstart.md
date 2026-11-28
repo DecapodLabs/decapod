@@ -1,155 +1,113 @@
 # Quickstart
 
-Get Decapod operational in your repository in under five minutes.
+Follow this guide to initialize Decapod once in your repository and verify your first governed result from a real coding agent run.
 
-> **Who runs what:** A **human operator** installs Decapod and runs `decapod init` once per repository. After initialization, **your coding agent** (Codex, Claude Code, Cursor, Antigravity, or another harness) invokes the remaining Decapod commands automatically as part of its workflow.
+> **Who runs what:** A **human operator** installs `decapod` and runs `decapod init` once per repository. After initialization, **your coding agent** (Codex, Claude Code, Cursor, Antigravity, or a custom harness) invokes the remaining commands automatically via the generated repository entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`).
 
-## 1. Installation (Human)
+---
 
-Install the Decapod binary using Cargo:
+<div aria-hidden="true"><span id="1-installation-human"></span></div>
+
+## 1. Install the binary (Human)
+
+Choose either prebuilt binary installation or building from source:
 
 ```bash
-cargo install decapod
+# Fastest when cargo-binstall is installed (requires Rust/Cargo + cargo-binstall):
+cargo binstall decapod
+
+# Or compile directly from crates.io with locked dependencies:
+cargo install decapod --locked
 ```
 
-For an existing Decapod repository, installation is followed by an autonomous,
-idempotent upgrade on the next normal command. `decapod init`, `decapod validate`,
-and other governed commands one-shot-import any residual legacy event JSONL into
-the canonical SQLite event store (`decapod.db`) and move those files under
-`.decapod/data/.retired-jsonl/`. Runtime writers never append to JSONL. Legacy
-SQLite stores recreated by an older binary are copied forward and removed. Existing
-override body bytes are preserved while sections are rendered into fenced
-documentation source areas with visible authoring instructions; unsafe or
-ambiguous authority fails closed.
+**Local SQLite prerequisite:** Default local mode (`backend = "local"`) uses a host SQLite shared library via Dactyl. If `decapod` reports `LOCAL_SQLITE_RUNTIME_REQUIRED`, install your OS SQLite runtime or set `DACTYL_SQLITE_LIBRARY`; see [Local Dactyl SQLite prerequisite](reference/errors.md#local-dactyl-sqlite-prerequisite). Cloud-backed repositories do not require local SQLite.
 
-## 2. Repository Initialization (Human, once per repo)
+---
 
-Initialize your repository. This is the only human-facing setup command: use
-`--backend local` (**Decapod Local**, default, free and offline) to store task custody locally in `.decapod/data/decapod.db`, or `--backend cloud` (**Decapod Cloud**, **$50/contributor/repo/mo** with **$0 surprise overages** and **multi-repo reservations**; see [Cloud Pricing](https://decapodlabs.ai/pricing)) when teams on separate machines should share live task claims through the managed cloud task service. Both modes keep specs, plans, trajectories, worktrees, and Git proof repo-native.
+<div aria-hidden="true"><span id="2-repository-initialization-human-once-per-repo"></span></div>
 
-Initialization creates `.decapod/` and scaffolds the agent entrypoints (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`) so whichever coding agent you open knows how to invoke the kernel. Agents later run `decapod init --proof` during validation for non-interactive upgrades (see [Configuration](configuration.md) and [Constitution](concepts/constitution.md)).
+## 2. Initialize once per repository (Human)
+
+Run `decapod init` from your repository root:
 
 ```bash
+# Free local mode (SQLite in .decapod/data/decapod.db, offline, no signup):
 decapod init
-# Or for shared managed cloud tasks:
+
+# Or Decapod Cloud ($50/contributor/repo/mo, $0 surprise overages):
 decapod init --backend cloud
 ```
 
-Terminal setup follows **Project → Preferences → Review**. Describe the project,
-keep **Recommended** defaults, or use **Customize** to adjust project details,
-workspace isolation, connections and advanced settings. Local storage needs no
-account. Existing authored settings remain the defaults.
+Interactive terminal setup steps through **Project → Preferences → Review** to generate `.decapod/config.toml`, `.decapod/governance.json`, living spec templates under `.decapod/managed/specs/`, and agent entrypoints. Scripted setups use `decapod init with` or `--proof` (for config-only preparation without signing in or claiming readiness). Existing repo upgrades and legacy JSONL imports are documented in [Configuration: Legacy Upgrades](configuration.md#legacy-upgrades-and-config-backups).
 
-**Apply setup** creates the selected directory, Git repository and governance
-files. **Edit choices** returns to preferences; **Cancel** leaves a newly selected
-project uncreated. A dry run writes no project state. Changed configuration is
-backed up privately under `.decapod/data/config-backups/`.
+For **Decapod Cloud** teams:
+- Start a personal or team workspace and subscription at [Cloud Signup](https://decapodlabs.ai/signup) (see [Cloud Pricing](https://decapodlabs.ai/pricing)).
+- Manage repository enrollment, seats, access policies, and billing in [Organization Admin](https://decapodlabs.ai/admin).
+- Each teammate signs in per machine with `decapod cloud login`; credentials stay private, and missing authorization (`action_required` or `repository_denied`) fails closed without falling back to local SQLite (see [Decapod Cloud Boundary](reference/propodus.md)).
 
-Cloud sign-in starts after applying the reviewed setup. Create a personal or
-team workspace and start a subscription at
-[Cloud Signup](https://decapodlabs.ai/signup) (see
-[Cloud Pricing](https://decapodlabs.ai/pricing) for plan details), then manage
-subscriptions, repository enrollment, seat assignments, teammate access
-policies, and billing in [Organization Admin](https://decapodlabs.ai/admin).
-Pricing, seat assignment, and repository authorization remain service-owned,
-and setup does not collect a credential or maintain an access roster in TOML.
+---
 
-For team onboarding on a repository that already selects `backend = "cloud"`,
-teammates clone the repository and sign in individually with `decapod cloud login`
-(or via `decapod session acquire` / a normal cloud command); credentials stay
-machine-private, and the service verifies each teammate's organization
-membership, repository enrollment, and assigned seat before admitting task reads
-or writes (`action_required` or `repository_denied` halts without falling back
-to SQLite).
+<div aria-hidden="true"><span id="3-prompt-gate--contract-ingestion-agent-invoked"></span><span id="4-agent-session-custody-agent-invoked"></span><span id="5-claiming-a-task-agent-invoked"></span><span id="6-entering-an-isolated-workspace-agent-invoked"></span><span id="7-decision-time-orientation--reflection-agent-invoked"></span></div>
 
-Cloud initialization may return `onboarding_pending` with a one-time browser
-URL. Continue with your coding agent: it shares the link, resumes the saved
-connection with `decapod cloud login`, and continues your task after sign-in.
-The human runs init once per repository; later Decapod operations belong to the
-agent. Setup is ready only when the service confirms account completion and an
-authenticated repository read succeeds. The `--proof` flag prepares cloud
-configuration only; it does not authenticate or establish readiness. See
-[Decapod Cloud sign-in and task access](reference/propodus.md) for private
-custody, account requirements, and explicit interrupted-flow recovery.
+## 3. Hand off to your coding agent
 
-Once `decapod init` completes, **open your preferred coding agent** in the project and describe the engineering goal. You do not need to run the remaining kernel commands by hand.
+Once `decapod init` succeeds, open your coding agent in the repository and ask for the engineering outcome you want in ordinary language—for example:
 
-## 3. Prompt Gate & Contract Ingestion (Agent-invoked)
-
-Before reading repository content or mutating state, the coding agent evaluates the incoming prompt and ingests current command contracts from the binary:
-
-```bash
-printf '%s' '<incoming prompt>' | decapod eval --stdin --format json
-decapod docs ingest
+```text
+Fix the failing retry-backoff test.
 ```
 
-The agent continues only when `decapod eval` exits `0` and returns `"status": "allow"`.
+(Or, for a UI/UX task: `Improve the terminal interface.`)
 
-## 4. Agent Session Custody (Agent-invoked)
+You do **not** need to append `"Read AGENTS.md, claim a task, write tests, update docs, commit, push, merge"` or operate Decapod commands manually. Your repository entrypoints tell the agent how to identify concrete improvements, perform the implementation, add or update meaningful tests, keep affected documentation and living specs aligned, repair failures, and deliver through the repository's configured endpoint—stopping at PR review by default or advancing autonomously only where explicitly configured in [Standing Project Delegation](configuration.md#standing-project-delegation).
 
-Before performing governed mutations, the agent acquires a session so task claims, workspace leases, and proof records are attributable:
+At decision and commit boundaries, your agent invokes the kernel:
 
-```bash
-decapod session acquire
-```
+| Stage | Agent command | Purpose |
+| --- | --- | --- |
+| Prompt & contract gate | `printf '%s' '<prompt>' \| decapod eval --stdin --format json` & `decapod docs ingest` | Screen untrusted input (`"status": "allow"`) and load current binary contracts |
+| Session & task claim | `decapod session acquire` & `decapod todo claim --id <task-id>` | Attribute custody and lease exclusive work ownership |
+| Worktree isolation | `decapod workspace ensure --branch agent/<agent>/<task-id>-<topic>` | Keep `main`/`master` untouched (`--container` when `container_workspaces = true`) |
+| Orientation | `decapod infer orientation --task-id <task-id>` & `decapod rpc --op context.resolve` | Load task constraints, living specs, and optional bounded reflection |
+| Validation & proof | `decapod govern artifacts checkpoint ...` & `decapod validate` | Bind exact candidate `HEAD` to configured proof checks |
 
-Export the printed `DECAPOD_AGENT_ID` and `DECAPOD_SESSION_PASSWORD` for session-scoped commands. For cloud repositories, session acquisition first establishes local custody and then reuses or refreshes the private managed session through Dactyl.
+See [Single-Agent & Handoff Workflow](workflows/single-agent.md) and the [CLI Reference](reference/cli.md) for full flag contracts and mid-task agent handoffs.
 
-## 5. Claiming a Task (Agent-invoked)
+---
 
-The agent creates or claims a `todo` to establish scoped ownership and prevent other agents or teammates from silently duplicating the same unit of work (see [Single-Agent Workflow](workflows/single-agent.md) and [Multi-Agent Workflow](workflows/multi-agent.md)):
+<div aria-hidden="true"><span id="8-checkpoints-validation-and-proof-agent-invoked"></span></div>
 
-```bash
-# Add a task if one doesn't exist
-decapod todo add "Refactor the parser logic" --priority high
+## 4. First Governed Result Walkthrough
 
-# Inspect open tasks and fleet overlap, then claim with an explicit lease
-decapod todo list
-decapod todo fleet
-decapod todo claim --id <task-id> --lease-seconds 3600
-```
+Here is what one currently supported, verifiable Decapod run produces in your repository—grounded in recorded runs on the [Proof page](https://decapodlabs.ai/proof.html), cross-host entrypoint observations in [`#880`](https://github.com/DecapodLabs/decapod/issues/880), and the end-to-end fixture in `tests/workunit_verified_proof_1660.rs` (target outcome-only defaults for full duty derivation, outcome-relevant test controls, and unattended push-through-merge are tracked in [`#1981`](https://github.com/DecapodLabs/decapod/issues/1981), [`#1982`](https://github.com/DecapodLabs/decapod/issues/1982), and [`#1983`](https://github.com/DecapodLabs/decapod/issues/1983) as target/in-progress):
 
-## 6. Entering an Isolated Workspace (Agent-invoked)
-
-The agent creates an isolated Git worktree for the claimed task, keeping the root checkout (`master`/`main`) untouched (see [Workspaces](concepts/workspaces.md)):
+1. **Isolated branch & active custody:** After claiming `<task-id>`, your agent works strictly inside `.decapod/workspaces/<worktree>` on branch `agent/<agent-id>/<task-id>-<topic>`, leaving the root checkout untouched.
+2. **Authored intent & staged checkpoint:** Before committing edits, the agent updates code, tests, affected guidance, and `.decapod/managed/specs/` (`INTENT.md`, `ARCHITECTURE.md`, `INTERFACES.md`), records checks in `.decapod/governance.json` (`decapod govern trajectory record`), and runs:
 
 ```bash
-decapod workspace ensure --branch agent/<agent-id>/<task-id>-<topic>
-cd <reported-worktree-path>
-```
-
-Use the exact `worktree_path` returned by `decapod workspace ensure`. If `container_workspaces = true` is configured (see [Config Specification](reference/config-toml.md)), add `--container` to wrap the workspace in a Docker container (see [Workspace Isolation Workflow](workflows/workspace-isolation.md)).
-
-## 7. Decision-Time Orientation & Reflection (Agent-invoked)
-
-Inside the isolated worktree, the agent gathers task-bound constraints, context, and optional bounded reflection before writing code:
-
-```bash
-decapod infer orientation --task-id <task-id>
-decapod rpc --op context.resolve
-# Optional: consult embedded global engineering doctrine inside the governed loop
-decapod constitution get core/DECAPOD
-```
-
-At a consequential decision boundary or forbidden-path risk, the agent can pass `--reflection '<request-json>'` to `decapod infer orientation --task-id <task-id>` or call `decapod rpc --op mentor.obligations` for a source-bound, three-round challenge check.
-
-## 8. Checkpoints, Validation, and Proof (Agent-invoked)
-
-As the agent implements the change in the isolated worktree, it updates living specs (`.decapod/managed/specs/*`), records trajectory checks, checkpoints staged material before committing, and runs validation on the exact candidate commit:
-
-```bash
-decapod govern trajectory record --run-id <run-id> --modified-file <path> --check "unit=passed"
 git add <authored-paths>
-decapod govern artifacts checkpoint --id <checkpoint-id> --summary "What changed and why"
+decapod govern artifacts checkpoint --id <checkpoint-id> --summary "Implement fix and update specs"
 git add .decapod/governance.json
-git commit -m "Describe the governed change"
+git commit -m "Implement governed change"
+```
 
+3. **Validation binds to the exact `HEAD` commit:** The agent runs:
+
+```bash
 decapod validate
 ```
 
-If `decapod validate` fails, the agent inspects the reported blockers, fixes the root cause on the work branch, checkpoints and commits the repair, and re-runs `decapod validate` against the revised commit. Only after required gates pass does it publish and complete the task:
+   - If a configured build, test, spec, or policy gate fails, `decapod validate` exits nonzero with typed blockers and remediation steps so the agent can repair the failure and revalidate before claiming completion.
+   - **Stale-evidence invalidation:** If the agent fixes code and creates a new commit, any earlier green receipt for the previous commit immediately becomes `stale` and cannot admit `VERIFIED` completion or PR creation. The agent must run `decapod validate` again on the revised `HEAD`.
+4. **Visible proof in the final result:** Once `decapod validate` passes for the exact current commit against the accepted target branch, the agent publishes or advances to the authorized endpoint (`decapod workspace publish` and `decapod todo done --id <task-id> --validated`) and reports the verifiable result:
+   - Requested behavior and isolated branch/worktree (`agent/<agent-id>/<task-id>-<topic>`)
+   - What changed across code, tests, affected documentation, and living specs
+   - Which required checks actually ran and passed against exact candidate `HEAD`
+   - Current accepted target branch, PR or merge state (`PR opened` vs `merged`), and any unresolved work or authority boundary
 
 ```bash
 decapod workspace publish
 decapod todo done --id <task-id> --validated
 ```
+
+**Boundary of what proof establishes:** `decapod validate` proves that the configured repository gates, specs, custody checks, and tests actually executed and passed against the exact candidate `HEAD` commit (not fabricated `record-proof` claims). It does **not** guarantee semantic correctness beyond the configured checks and human review, nor physical confinement of unrestricted host tools. See [Proof & Verification Gates](concepts/proof.md).

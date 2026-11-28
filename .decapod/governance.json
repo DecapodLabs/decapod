@@ -911,6 +911,14 @@
         "Cargo.lock",
         "Cargo.toml"
       ]
+    },
+    {
+      "id": "shared-context-accepted-b049",
+      "summary": "Reconcile the accepted #1992 documentation changes and refresh shared context proof against the new master.",
+      "input_digest": "sha256:f70e27cd666c63be4e1454c268d3711a93edd069c99809131ccb9c7610d96b63",
+      "proof_refs": [
+        "git:b049135963d158139a610904752cc546c22e606d"
+      ]
     }
   ],
   "intents": {
@@ -954,21 +962,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Maintains reviewed context behavior under the accepted package-version-only inventory change.",
+          "reason": "Preserve the shared Cloud observation architecture alongside the newly accepted docs shell architecture.",
           "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
-          "spec_material_hash": "568e3bc261252f30ac9cf615c6baa2d2321e6ed1a900ad7303cd3164ccd5e040"
+          "spec_material_hash": "f12cbae3ea7a4b1eca3aacd65e2f114e735b13fd6a88afb8cebeb399a3e2eebb"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Maintains reviewed context behavior under the accepted package-version-only inventory change.",
+          "reason": "Retain both the Cloud knowledge contract and the accepted docs navigation contract.",
           "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
-          "spec_material_hash": "c72399e060514832308c9aae049d9a2100635900b80f415a17e2e750560ddd15"
+          "spec_material_hash": "a23207d11ab9783ce7fe24eb2b575f0791e7d1c1deae923404a0759724b0bae4"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Maintains reviewed context behavior under the accepted package-version-only inventory change.",
+          "reason": "Repository-scoped context custody remains the material security change on the current accepted target.",
           "reviewed_code_fingerprint": "6b0da21d15c2991cb7576ddd2d3d32a33517ec44eb0944c35950b07e04c46ebb",
           "spec_material_hash": "dd7ac27adb32274254a2dba14e8ed4a30e972b0875c0ab3a19bafa5989dd763e"
         }
@@ -981,15 +989,19 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795836485Z"
+      "updated_at": "1795845180Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch",
         "Private sessions, Git files and proof admission have separate authority"
       ],
-      "artifact_hash": "sha256:04fcd9de26b936c0ee50cfe7514b350f0c352507087fbf7d8fbf15a958092bcf",
+      "artifact_hash": "sha256:bbd32dbd9e5bc0b4467796704648d0230cdecb07ff8fcf78eb1215a77a4be095",
       "checks": [
+        {
+          "name": "accepted-target-merge",
+          "status": "passed"
+        },
         {
           "name": "diff-check",
           "status": "passed"
@@ -1027,10 +1039,17 @@
             "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8G10SJN3ZD7B959CNN083TP",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8G10SDMHY4MBNK6QA2537QF",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8G10SJN3ZD7B959CNN083TP": {
@@ -1068,6 +1087,22 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "Integrated accepted b049135963d158139a610904752cc546c22e606d (#1992), preserving both authored spec traditions and using governance merge reconciliation. Source behavior unchanged. Exact configured validation remains required."
+                ],
+                "proof_refs": [
+                  "accepted-target-merge"
+                ],
+                "scope": [
+                  "Hosted scoped repository revisions and snapshot",
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1076,6 +1111,7 @@
       "declared_commands": [],
       "destination": "pull request",
       "evidence": [
+        "Integrated accepted b049135963d158139a610904752cc546c22e606d (#1992), preserving both authored spec traditions and using governance merge reconciliation. Source behavior unchanged. Exact configured validation remains required.",
         "src/decapod/core/cloud_context.rs"
       ],
       "inspected_files": [],
