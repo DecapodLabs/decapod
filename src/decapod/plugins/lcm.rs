@@ -401,20 +401,12 @@ pub fn rebuild_index(
         }));
     }
 
-    let broker = DbBroker::new(&store.root);
-    let db_path = lcm_db_path(&store.root);
-
     let mut validated_count = 0;
     let mut error_count = 0;
     let mut errors: Vec<String> = vec![];
 
-    broker.with_conn(&db_path, "decapod", None, "lcm.rebuild", |conn| {
-        conn.execute("DELETE FROM originals_index", [])?;
-        Ok(())
-    })?;
-
-    for event in events {
-        if validate {
+    if validate {
+        for event in &events {
             let computed_hash = sha256_hex(event.content.as_bytes());
             if computed_hash != event.content_hash {
                 error_count += 1;
@@ -422,30 +414,58 @@ pub fn rebuild_index(
                     "Hash mismatch for event {}: expected {}, got {}",
                     event.event_id, event.content_hash, computed_hash
                 ));
-                continue;
+            } else {
+                validated_count += 1;
             }
-            validated_count += 1;
         }
-
-        broker.with_conn(&db_path, "decapod", None, "lcm.rebuild.insert", |conn| {
-            conn.execute(
-                "INSERT INTO originals_index (content_hash, event_id, ts, actor, kind, byte_size, session_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-                params![
-                    event.content_hash,
-                    event.event_id,
-                    event.ts,
-                    event.actor,
-                    event.kind,
-                    event.content.len() as i64,
-                    event.metadata.get("session_id").and_then(|v| v.as_str()),
-                ],
-            )?;
-            Ok(())
-        })?;
+        // Preserve the existing derived index atomically when ledger integrity fails.
+        if error_count > 0 {
+            return Ok(serde_json::json!({
+                "status": "failed",
+                "validated_count": validated_count,
+                "error_count": error_count,
+                "errors": errors,
+            }));
+        }
     }
 
+    let broker = DbBroker::new(&store.root);
+    let db_path = lcm_db_path(&store.root);
+
+    broker.with_conn(&db_path, "decapod", None, "lcm.rebuild", |conn| {
+        conn.execute_batch("BEGIN IMMEDIATE")?;
+        let apply = (|| -> Result<(), error::DecapodError> {
+            conn.execute("DELETE FROM originals_index", [])?;
+            for event in &events {
+                conn.execute(
+                    "INSERT INTO originals_index (content_hash, event_id, ts, actor, kind, byte_size, session_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+                    params![
+                        event.content_hash,
+                        event.event_id,
+                        event.ts,
+                        event.actor,
+                        event.kind,
+                        event.content.len() as i64,
+                        event.metadata.get("session_id").and_then(|v| v.as_str()),
+                    ],
+                )?;
+            }
+            Ok(())
+        })();
+        match apply {
+            Ok(()) => {
+                conn.execute_batch("COMMIT")?;
+                Ok(())
+            }
+            Err(err) => {
+                let _ = conn.execute_batch("ROLLBACK");
+                Err(err)
+            }
+        }
+    })?;
+
     Ok(serde_json::json!({
-        "status": if error_count > 0 { "failed" } else { "success" },
+        "status": "success",
         "validated_count": validated_count,
         "error_count": error_count,
         "errors": errors,
@@ -504,30 +524,43 @@ pub fn rebuild_index_from_ledger(store: &Store) -> Result<usize, error::DecapodE
     let db_path = lcm_db_path(&store.root);
 
     broker.with_conn(&db_path, "decapod", None, "lcm.rebuild", |conn| {
-        conn.execute("DELETE FROM originals_index", [])
-            .map_err(error::DecapodError::StorageError)?;
-        let mut count = 0usize;
-        for event in &events {
-            let session_id = event
-                .metadata
-                .get("session_id")
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            conn.execute(
-                "INSERT OR IGNORE INTO originals_index(content_hash, event_id, ts, actor, kind, byte_size, session_id) VALUES(?1,?2,?3,?4,?5,?6,?7)",
-                params![
-                    event.content_hash,
-                    event.event_id,
-                    event.ts,
-                    event.actor,
-                    event.kind,
-                    event.content.len() as i64,
-                    session_id,
-                ],
-            ).map_err(error::DecapodError::StorageError)?;
-            count += 1;
+        conn.execute_batch("BEGIN IMMEDIATE")?;
+        let apply = (|| -> Result<usize, error::DecapodError> {
+            conn.execute("DELETE FROM originals_index", [])
+                .map_err(error::DecapodError::StorageError)?;
+            let mut count = 0usize;
+            for event in &events {
+                let session_id = event
+                    .metadata
+                    .get("session_id")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                conn.execute(
+                    "INSERT OR IGNORE INTO originals_index(content_hash, event_id, ts, actor, kind, byte_size, session_id) VALUES(?1,?2,?3,?4,?5,?6,?7)",
+                    params![
+                        event.content_hash,
+                        event.event_id,
+                        event.ts,
+                        event.actor,
+                        event.kind,
+                        event.content.len() as i64,
+                        session_id,
+                    ],
+                ).map_err(error::DecapodError::StorageError)?;
+                count += 1;
+            }
+            Ok(count)
+        })();
+        match apply {
+            Ok(count) => {
+                conn.execute_batch("COMMIT")?;
+                Ok(count)
+            }
+            Err(err) => {
+                let _ = conn.execute_batch("ROLLBACK");
+                Err(err)
+            }
         }
-        Ok(count)
     })
 }
 

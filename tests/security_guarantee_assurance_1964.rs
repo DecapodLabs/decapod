@@ -385,7 +385,84 @@ fn negative_first_controls_refuse_wrong_subject_stale_state_and_prebuild_promoti
         classify_control_status(Some(409), "conflict", "detail", false),
     );
 
-    // 3. Compiled CLI binary: authenticated session + `validate --pre-build` MUST NOT grant
+    // 3. Container signer rejects origin suffix/port/userinfo/fragment smuggling while accepting exact origin.
+    {
+        use decapod::core::cloud_dpop::DeviceKeyStore;
+        use decapod::core::container_signer::{
+            ContainerSignRequest, ContainerSignerPolicy, SignerCapabilityKind,
+            WorkspaceCredentialsConfig,
+        };
+        use std::sync::Arc;
+        use std::sync::atomic::AtomicBool;
+
+        let signer_tmp = TempDir::new().expect("signer tmp");
+        let signer_repo = signer_tmp.path().join("repo");
+        fs::create_dir_all(&signer_repo).expect("mkdir signer repo");
+        let ks = DeviceKeyStore::with_root_dir(
+            "https://cloud.example.invalid",
+            "DecapodLabs/decapod",
+            &signer_repo,
+            &signer_tmp.path().join("keys"),
+        )
+        .expect("keystore");
+        let key = ks.load_or_create().expect("key");
+        let now = 1_780_000_000;
+        let policy = ContainerSignerPolicy {
+            allowed_repository: "DecapodLabs/decapod".into(),
+            allowed_origin: "https://cloud.example.invalid".into(),
+            allowed_agent_id: "agent-1964".into(),
+            credentials: WorkspaceCredentialsConfig {
+                propodus_cloud: Some("signer-broker".into()),
+                ..Default::default()
+            },
+            session_expires_at: now + 300,
+            revoked: Arc::new(AtomicBool::new(false)),
+            device_key_store: Some(ks),
+            access_token_digest: None,
+        };
+        let smuggled = policy.sign_request(
+            &ContainerSignRequest {
+                capability: SignerCapabilityKind::PropodusCloud,
+                repository: "DecapodLabs/decapod".into(),
+                agent_id: "agent-1964".into(),
+                method: "POST".into(),
+                url: "https://cloud.example.invalid.evil.com/functions/v1/decapod-onboarding/cloud-query".into(),
+                nonce: None,
+                aud: Some("https://cloud.example.invalid".into()),
+                access_token_sha256: Some("ath_1964".into()),
+            },
+            now,
+            Some(&key),
+        );
+        assert!(!smuggled.ok, "origin suffix smuggling must fail closed");
+        assert_eq!(
+            smuggled.code.as_deref(),
+            Some("CONTAINER_SIGNER_ORIGIN_DENIED")
+        );
+
+        let valid_sig = policy.sign_request(
+            &ContainerSignRequest {
+                capability: SignerCapabilityKind::PropodusCloud,
+                repository: "DecapodLabs/decapod".into(),
+                agent_id: "agent-1964".into(),
+                method: "POST".into(),
+                url: "https://cloud.example.invalid/functions/v1/decapod-onboarding/cloud-query"
+                    .into(),
+                nonce: None,
+                aud: Some("https://cloud.example.invalid".into()),
+                access_token_sha256: Some("ath_1964".into()),
+            },
+            now,
+            Some(&key),
+        );
+        assert!(
+            valid_sig.ok,
+            "legitimate signer control failed: {:?}",
+            valid_sig
+        );
+    }
+
+    // 4. Compiled CLI binary: authenticated session + `validate --pre-build` MUST NOT grant
     //    `publication_ready` or `proof_ready`.
     let tmp = TempDir::new().expect("cli tmpdir");
     let repo = tmp.path();
@@ -477,6 +554,9 @@ fn run_isolated_cargo(repo: &Path, target_dir: &Path, args: &[&str]) -> Output {
         cmd.env_remove(key);
     }
     cmd.env("CARGO_TARGET_DIR", target_dir);
+    // Keep isolated fault-injection builds unoptimized so single-fault checks stay well within bounded CI budgets.
+    cmd.env("CARGO_PROFILE_DEV_OPT_LEVEL", "0");
+    cmd.env("CARGO_PROFILE_TEST_OPT_LEVEL", "0");
     if std::env::var_os("CARGO_BUILD_JOBS").is_none() {
         cmd.env("CARGO_BUILD_JOBS", "2");
     }
@@ -569,6 +649,48 @@ fn mutation_checks_detect_weakened_uncovered_security_boundaries() {
                 "--offline",
                 "--lib",
                 "core::http_transport::tests::read_only_credential_refuses_mutating_rpc_op_and_admits_allowlisted_op",
+            ],
+        },
+        AssuranceFaultSpec {
+            rule_id: "RULE-SIGNER-ORIGIN-010",
+            source_file: "src/decapod/core/container_signer.rs",
+            target_snippet: r#"        let Some(path_part) = extract_origin_relative_path(&req.url, allowed_origin) else {
+            return deny(
+                "CONTAINER_SIGNER_ORIGIN_DENIED",
+                "request URL does not match the bound Cloud origin",
+            );
+        };"#,
+            fault_replacement: r#"        let Some(path_part) = req.url.strip_prefix(allowed_origin) else {
+            return deny(
+                "CONTAINER_SIGNER_ORIGIN_DENIED",
+                "request URL does not match the bound Cloud origin",
+            );
+        };"#,
+            cargo_args: &[
+                "test",
+                "--offline",
+                "--lib",
+                "core::container_signer::tests::container_signer_rejects_origin_suffix_port_userinfo_fragment_and_path_smuggling",
+            ],
+        },
+        AssuranceFaultSpec {
+            rule_id: "RULE-HTTP-AUTH-011",
+            source_file: "src/decapod/core/http_transport.rs",
+            target_snippet: r#"    if !verify_bearer_token(
+        request.headers.get("authorization").map(String::as_str),
+        &config.auth_token,
+    ) {"#,
+            fault_replacement: r#"    if false
+        && !verify_bearer_token(
+            request.headers.get("authorization").map(String::as_str),
+            &config.auth_token,
+        )
+    {"#,
+            cargo_args: &[
+                "test",
+                "--offline",
+                "--lib",
+                "core::http_transport::tests::slow_and_unauthorized_peers_fail_closed_within_timeout",
             ],
         },
     ];

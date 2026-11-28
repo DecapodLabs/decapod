@@ -1321,3 +1321,193 @@ fn derived_1936_cloud_parity_matrix_and_store_inspection_stay_deterministic_with
         "cloud derived parity inspection must never create decapod.db"
     );
 }
+
+#[test]
+fn replay_1936_federation_lcm_and_context_capsule_deterministic_rebuild_and_atomic_rollback() {
+    use decapod::core::context_capsule;
+    use decapod::plugins::lcm;
+
+    let (_tmp, repo, data) = init_store_fixture();
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: data.clone(),
+    };
+    {
+        let reg_conn = Connection::open(federation::federation_db_path(&data)).expect("open db");
+        reg_conn
+            .execute(
+                "INSERT INTO agents(agent_id, trust_level, status, updated_at)
+                 VALUES('agent-1936', 'verified', 'active', '1Z')
+                 ON CONFLICT(agent_id) DO UPDATE SET trust_level = 'verified'",
+                [],
+            )
+            .expect("register verified test actor");
+    }
+
+    // 1) Federation node/edit/edge deterministic rebuild + corrupt-event rollback preservation.
+    let n1 = federation::add_node(
+        &store,
+        "Kernel Decision One",
+        "decision",
+        "notable",
+        "agent_inferred",
+        "Use single authoritative SQLite store.",
+        "cmd:decapod-test",
+        "arch,hardening",
+        "repo",
+        None,
+        "agent-1936",
+    )
+    .expect("add federation node 1");
+    let n2 = federation::add_node(
+        &store,
+        "Kernel Lesson Two",
+        "lesson",
+        "background",
+        "agent_inferred",
+        "Always bind receipts to candidate SHA.",
+        "cmd:decapod-test",
+        "proof",
+        "repo",
+        None,
+        "agent-1936",
+    )
+    .expect("add federation node 2");
+    federation::edit_node(
+        &store,
+        &n2.id,
+        Some("Kernel Lesson Two Revised"),
+        None,
+        None,
+        None,
+    )
+    .expect("edit federation node 2");
+    federation::add_edge(&store, &n1.id, &n2.id, "depends_on").expect("add federation edge");
+
+    let fed_conn = Connection::open(federation::federation_db_path(&data)).expect("open fed db");
+    let snapshot_nodes = |c: &Connection| -> Vec<(String, String, String)> {
+        let mut stmt = c
+            .prepare("SELECT id, title, status FROM nodes ORDER BY id")
+            .unwrap();
+        stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+            .unwrap()
+            .map(|r| r.unwrap())
+            .collect()
+    };
+    let snapshot_edges = |c: &Connection| -> Vec<(String, String, String)> {
+        let mut stmt = c
+            .prepare("SELECT source_id, target_id, edge_type FROM node_edges ORDER BY source_id, target_id, edge_type")
+            .unwrap();
+        stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)))
+            .unwrap()
+            .map(|r| r.unwrap())
+            .collect()
+    };
+    let expected_nodes = snapshot_nodes(&fed_conn);
+    let expected_edges = snapshot_edges(&fed_conn);
+
+    // Wipe derived federation tables and rebuild from canonical events stream.
+    fed_conn
+        .execute_batch("DELETE FROM node_edges; DELETE FROM nodes;")
+        .expect("wipe derived federation tables");
+    let replayed_count = federation::rebuild_from_events(&data).expect("rebuild federation");
+    assert_eq!(replayed_count, 4);
+    assert_eq!(snapshot_nodes(&fed_conn), expected_nodes);
+    assert_eq!(snapshot_edges(&fed_conn), expected_edges);
+
+    // Inject a corrupt federation event (missing required node_type) -> rebuild must roll back
+    // and leave the pre-rebuild derived projection completely intact.
+    fed_conn
+        .execute(
+            "INSERT INTO events(seq, event_id, ts, stream, event_type, actor, subject_kind, subject_id, payload)
+             VALUES((SELECT COALESCE(MAX(seq), 0) + 1 FROM events WHERE stream='federation'),
+                    '01M85CORRUPTFED00000000001', '1795400400Z', 'federation', 'node.create',
+                    'agent-1936', 'node', 'N_CORRUPT', '{\"title\":\"broken\"}')",
+            [],
+        )
+        .expect("insert corrupt federation event");
+    let fed_err = federation::rebuild_from_events(&data).expect_err("corrupt event must roll back");
+    assert!(
+        fed_err
+            .to_string()
+            .contains("pre-rebuild projection preserved"),
+        "{fed_err}"
+    );
+    assert_eq!(snapshot_nodes(&fed_conn), expected_nodes);
+    assert_eq!(snapshot_edges(&fed_conn), expected_edges);
+    drop(fed_conn);
+
+    // 2) LCM deterministic rebuild & atomic rollback when ledger integrity fails (#1936 fix).
+    lcm::initialize_lcm_db(&data).expect("init lcm db");
+    let r1 = lcm::ingest(
+        &store,
+        "first immutable artifact",
+        "artifact",
+        "agent-1936",
+        Some("sess-1"),
+        Some("test"),
+    )
+    .expect("lcm ingest 1");
+    let r2 = lcm::ingest(
+        &store,
+        "second immutable event",
+        "event",
+        "agent-1936",
+        Some("sess-1"),
+        Some("test"),
+    )
+    .expect("lcm ingest 2");
+    assert_eq!(
+        lcm::rebuild_index(&store, true).expect("clean lcm rebuild")["status"],
+        "success"
+    );
+    let originals_before = lcm::list_originals(&store, None, Some(10)).expect("list originals");
+    assert_eq!(originals_before.len(), 2);
+
+    // Tamper with one LCM ledger event's content_hash -> validated rebuild MUST fail AND
+    // preserve the existing `originals_index` intact rather than wiping it!
+    let lcm_conn = Connection::open(events::canonical_db_path(&data)).expect("open lcm db");
+    let ev1_id = r1["event_id"].as_str().expect("ev1 id");
+    let ev2_id = r2["event_id"].as_str().expect("ev2 id");
+    let _ = ev1_id;
+    let raw_payload: String = lcm_conn
+        .query_row(
+            "SELECT payload FROM events WHERE stream='lcm' AND event_id=?1",
+            [ev2_id],
+            |r| r.get(0),
+        )
+        .expect("read lcm payload");
+    let mut parsed_ev: serde_json::Value = serde_json::from_str(&raw_payload).unwrap();
+    parsed_ev["content_hash"] = json!("0".repeat(64));
+    lcm_conn
+        .execute(
+            "UPDATE events SET payload = ?1 WHERE stream='lcm' AND event_id=?2",
+            params![parsed_ev.to_string(), ev2_id],
+        )
+        .expect("tamper lcm event hash");
+    drop(lcm_conn);
+
+    let failed_rebuild = lcm::rebuild_index(&store, true).expect("failed validated rebuild");
+    assert_eq!(failed_rebuild["status"], "failed");
+    assert_eq!(failed_rebuild["error_count"], 1);
+    let originals_after_fail =
+        lcm::list_originals(&store, None, Some(10)).expect("originals preserved");
+    assert_eq!(
+        originals_after_fail.len(),
+        originals_before.len(),
+        "validated lcm::rebuild_index failure must preserve prior originals_index"
+    );
+
+    // 3) DeterministicContextCapsule query parity across repeated evaluations.
+    let cap_a =
+        context_capsule::query_embedded_capsule(&repo, "validation", "interfaces", None, None, 5)
+            .expect("capsule a");
+    let cap_b =
+        context_capsule::query_embedded_capsule(&repo, "validation", "interfaces", None, None, 5)
+            .expect("capsule b");
+    assert_eq!(cap_a.capsule_hash, cap_b.capsule_hash);
+    assert_eq!(
+        cap_a.canonical_json_bytes().unwrap(),
+        cap_b.canonical_json_bytes().unwrap()
+    );
+}

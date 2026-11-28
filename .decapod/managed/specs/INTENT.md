@@ -1501,6 +1501,10 @@ Decapod's local-first governance kernel now exposes decoupled Houseboat primitiv
 - **Governed scheduled docs auto-sync (`#1388`) & Nix tag publication (`#1626`)**: `.github/workflows/docs_autosync.yml` replaces raw `create-pull-request` with `assets/tools/docs_autosync_governed.sh` (`begin-pr`, trajectory init/record, `specs.refresh`, exact-material `checkpoint`, `verify-checkpoints --publication-material`, non-force push, fail-closed drift report); `.github/workflows/nix-flake.yml` covers squash-merged commits and SemVer `v*` release tags under native-only publication ownership.
 - **Non-Buildkite GitHub Actions preflight activation (`#1890`) & ETag conditional polling (`#1573`)**: `.decapod/config.toml` transitions from Buildkite (`validation_buildkite_preflights = false`, `[proof.ci_attested]` retired) to the independently reviewed GitHub Actions carrier (`validation_github_actions_preflights = true`); `PublicGithubReads` (`src/decapod/core/snapshot_provider/mod.rs`) and `github_quota.rs` support bounded in-process `If-None-Match` ETag revalidation so HTTP 304 polls preserve anonymous rate-limit quota without caching across runs.
 
+## Crash Durability, Consistency Model Checking, Derived-Index Atomicity, and Security Boundary Enforcement (#1934, #1935, #1936, #1964)
+
+- **Hardening & assurance closure (`#1934`–`#1936`, `#1964`)**: Closes real boundary gaps identified during post-cutover verification without altering authority boundaries: (1) enforces exact origin authority and canonical path allowlisting in `container_signer::extract_origin_relative_path` (`src/decapod/core/container_signer.rs`) so suffix/port/userinfo/fragment/path-traversal smuggling cannot mint host-signed DPoP proofs (`RULE-SIGNER-ORIGIN-010`), paired with `RULE-HTTP-AUTH-011` (`http_transport::verify_bearer_token` inside `handle_single_connection`); (2) makes `lcm::rebuild_index` and `lcm::rebuild_index_from_ledger` (`src/decapod/plugins/lcm.rs`) atomic under `BEGIN IMMEDIATE ... COMMIT` while preserving existing `originals_index` rows on content-hash validation failure; and (3) proves `workspace_lifecycle::reserve` staging-to-publish `SIGKILL` recovery + CLI `govern workunit recover`, a deterministic 48-step multi-agent + clock-anomaly lease model checker (`tests/lease_fencing_consistency_1935.rs`), and `federation` + `lcm` + `context_capsule` rebuild convergence (`tests/derived_replay_1936.rs`).
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
@@ -1532,7 +1536,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

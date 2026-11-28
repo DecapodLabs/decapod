@@ -2733,6 +2733,11 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **Source-CI check IDs**: `pre-build-validate`, `selective-core-1`, `selective-core-2`, `selective-core-3`, `selective-core-status` (`Tests (core)`), `selective-cli-1`, `selective-cli-2`, `selective-cli-3`, `selective-cli-status` (`Tests (cli)`), and `selective-plugins` (`Tests (plugins)`).
 - **Configured strict preflight carrier (`.decapod/config.toml`)**: `[proof].validation_buildkite_preflights = false` and `[proof].validation_github_actions_preflights = true` with `[proof.required_profile].id = "decapod.pr-readiness.v1"` and reconciled `reviewed_sources_digest` (`#1890`).
 
+## Hardening & Security Boundary Interface Updates (#1936, #1964)
+
+- **Host Container Signer (`src/decapod/core/container_signer.rs`)**: `ContainerSignerPolicy::sign_request` enforces exact origin authority (`extract_origin_relative_path`, returning `CONTAINER_SIGNER_ORIGIN_DENIED` on suffix/port/userinfo/fragment smuggling) and exact allowlisted gateway/PostgREST paths (`/functions/v1/decapod-onboarding/cloud-{query,batch,control}`, `/rest/v1/rpc/{dactyl_query_v1,dactyl_batch_v1,propodus_proof_acceptance_v1,propodus_proof_acceptance_get_v1}`, returning `CONTAINER_SIGNER_OPERATION_DENIED` on prefix/traversal paths).
+- **LCM Index Rebuild (`src/decapod/plugins/lcm.rs`)**: `rebuild_index(store, validate)` preserves its JSON envelope (`status`, `validated_count`, `error_count`, `errors`) while guaranteeing no `originals_index` mutation when `error_count > 0` and atomic replacement otherwise.
+
 <!-- decapod:codebase-contract:start -->
 
 ## Codebase Contract Snapshot
@@ -2745,7 +2750,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

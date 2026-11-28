@@ -272,16 +272,15 @@ impl ContainerSignerPolicy {
             }
         }
 
-        // Enforce origin & operation allowlist: containers cannot enroll new
-        // devices, revoke host keys, or sign against foreign origins.
+        // Enforce exact origin & canonical path allowlist: containers cannot
+        // enroll new devices, revoke host keys, or smuggle foreign hosts/ports/paths.
         let allowed_origin = self.allowed_origin.trim_end_matches('/');
-        if !req.url.starts_with(allowed_origin) {
+        let Some(path_part) = extract_origin_relative_path(&req.url, allowed_origin) else {
             return deny(
                 "CONTAINER_SIGNER_ORIGIN_DENIED",
                 "request URL does not match the bound Cloud origin",
             );
-        }
-        let path_part = &req.url[allowed_origin.len()..];
+        };
         let path_only = path_part.split('?').next().unwrap_or(path_part);
         if !is_container_allowed_cloud_operation(req.method.as_str(), path_only) {
             return deny(
@@ -344,21 +343,58 @@ impl ContainerSignerPolicy {
     }
 }
 
+fn extract_origin_relative_path<'a>(url: &'a str, allowed_origin: &str) -> Option<&'a str> {
+    if allowed_origin.is_empty()
+        || url.chars().any(|c| c.is_control() || c.is_whitespace())
+        || url.contains('#')
+    {
+        return None;
+    }
+    let scheme_sep = allowed_origin.find("://")?;
+    let origin_scheme = &allowed_origin[..scheme_sep];
+    let origin_authority = &allowed_origin[scheme_sep + 3..];
+    if origin_authority.is_empty()
+        || origin_authority.contains(['/', '?', '#', '@'])
+        || url.len() <= allowed_origin.len()
+    {
+        return None;
+    }
+    let url_scheme_sep = url.find("://")?;
+    let url_scheme = &url[..url_scheme_sep];
+    if !url_scheme.eq_ignore_ascii_case(origin_scheme) {
+        return None;
+    }
+    let after_scheme = &url[url_scheme_sep + 3..];
+    let authority_end = after_scheme.find(['/', '?']).unwrap_or(after_scheme.len());
+    let url_authority = &after_scheme[..authority_end];
+    if url_authority.contains('@') || !url_authority.eq_ignore_ascii_case(origin_authority) {
+        return None;
+    }
+    let path_and_query = &after_scheme[authority_end..];
+    if !path_and_query.starts_with('/') {
+        return None;
+    }
+    Some(path_and_query)
+}
+
 fn is_container_allowed_cloud_operation(method: &str, path: &str) -> bool {
     let m = method.trim().to_ascii_uppercase();
     if m != "POST" {
         return false;
     }
-    let normalized = path.trim();
     // Containers may sign normal scoped query/batch data & proof transitions,
-    // never device enrollment, revocation, session minting, org/policy admin, or billing endpoints.
-    normalized.ends_with("/cloud-query")
-        || normalized.ends_with("/cloud-batch")
-        || normalized.ends_with("/cloud-control")
-        || normalized.ends_with("/rpc/dactyl_query_v1")
-        || normalized.ends_with("/rpc/dactyl_batch_v1")
-        || normalized.ends_with("/rpc/propodus_proof_acceptance_v1")
-        || normalized.ends_with("/rpc/propodus_proof_acceptance_get_v1")
+    // never device enrollment, revocation, session minting, org/policy admin,
+    // billing endpoints, or traversal/prefixed paths.
+    matches!(
+        path,
+        "/functions/v1/decapod-onboarding/cloud-query"
+            | "/functions/v1/decapod-onboarding/cloud-batch"
+            | "/functions/v1/decapod-onboarding/cloud-control"
+            | "/rest/v1/rpc/dactyl_query_v1"
+            | "/rest/v1/rpc/dactyl_batch_v1"
+            | "/rest/v1/rpc/propodus_proof_acceptance_v1"
+            | "/rest/v1/rpc/propodus_proof_acceptance_get_v1"
+    )
 }
 
 pub struct HostContainerSignerServer {

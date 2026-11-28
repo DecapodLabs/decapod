@@ -166,6 +166,16 @@ impl RepoFixture {
     }
 
     fn run_decapod(&self, agent_id: &str, args: &[&str]) -> CmdResult {
+        self.run_decapod_in(&self.repo, agent_id, None, args)
+    }
+
+    fn run_decapod_in(
+        &self,
+        dir: &Path,
+        agent_id: &str,
+        password: Option<&str>,
+        args: &[&str],
+    ) -> CmdResult {
         let mut cmd = Command::new(decapod_bin());
         let xdg_refs = [
             self.xdg[0].as_path(),
@@ -174,12 +184,11 @@ impl RepoFixture {
             self.xdg[3].as_path(),
         ];
         scrub_env(&mut cmd, Some(&self.home), Some(xdg_refs));
-        let out = cmd
-            .current_dir(&self.repo)
-            .env("DECAPOD_AGENT_ID", agent_id)
-            .args(args)
-            .output()
-            .expect("spawn decapod");
+        cmd.current_dir(dir).env("DECAPOD_AGENT_ID", agent_id);
+        if let Some(pw) = password {
+            cmd.env("DECAPOD_SESSION_PASSWORD", pw);
+        }
+        let out = cmd.args(args).output().expect("spawn decapod");
         let combined = format!(
             "stdout:\n{}\nstderr:\n{}",
             String::from_utf8_lossy(&out.stdout),
@@ -860,4 +869,174 @@ fn crash_1934_cloud_custody_journal_interruption_and_unknown_outcome_never_creat
         !repo_root.join(".decapod/data/decapod.db").exists(),
         "cloud crash recovery must never fall back to local SQLite"
     );
+}
+
+#[cfg(unix)]
+#[test]
+fn crash_1934_workspace_reserve_interrupted_after_persist_recovers_staging_and_workunit_cli() {
+    use std::os::unix::fs::PermissionsExt;
+
+    if let Ok(repo_str) = std::env::var("DECAPOD_1934_HELPER_RESERVE_REPO") {
+        let ready = std::env::var("DECAPOD_1934_HELPER_RESERVE_READY").unwrap();
+        let target = std::env::var("DECAPOD_1934_HELPER_RESERVE_TARGET").unwrap();
+        let repo = PathBuf::from(repo_str);
+        // Reserve will persist durable intent to `events` while `.staging/invocation-*` exists,
+        // then fail at `publish_directory` because `.decapod/workspaces` is `0o555` (unless root).
+        let _ = workspace_lifecycle::reserve(&repo, Path::new(&target), false);
+        fs::write(&ready, "persisted").unwrap();
+        loop {
+            std::thread::sleep(Duration::from_millis(25));
+        }
+    }
+
+    let fx = RepoFixture::new();
+    let ws_root = fx.repo.join(".decapod/workspaces");
+    fs::create_dir_all(&ws_root).unwrap();
+    let peer_ws = ws_root.join("peer-preserved-1934");
+    git_in(
+        &fx.repo,
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/peer/reserve-recovery",
+            peer_ws.to_str().unwrap(),
+            "master",
+        ],
+    );
+    fs::write(peer_ws.join("peer.txt"), "peer untouched\n").unwrap();
+
+    let target_ws = ws_root.join("agent-1934-interrupted-reserve");
+    let orig_ws_mode = fs::metadata(&ws_root).unwrap().permissions().mode();
+    let _restore_ws = RestoreModeGuard {
+        path: ws_root.clone(),
+        mode: orig_ws_mode,
+    };
+    fs::set_permissions(&ws_root, fs::Permissions::from_mode(0o555)).unwrap();
+    let probe = fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(ws_root.join(".perm_probe"));
+    if let Ok(f) = probe {
+        drop(f);
+        let _ = fs::remove_file(ws_root.join(".perm_probe"));
+        return;
+    }
+
+    let ready_file = fx.repo.join(".decapod/1934_reserve_ready");
+    let exe = std::env::current_exe().unwrap();
+    let child = Command::new(&exe)
+        .arg("crash_1934_workspace_reserve_interrupted_after_persist_recovers_staging_and_workunit_cli")
+        .arg("--nocapture")
+        .env("DECAPOD_1934_HELPER_RESERVE_REPO", &fx.repo)
+        .env("DECAPOD_1934_HELPER_RESERVE_TARGET", &target_ws)
+        .env("DECAPOD_1934_HELPER_RESERVE_READY", &ready_file)
+        .spawn()
+        .expect("spawn reserve crash helper");
+    let mut guard = ChildKillGuard::new(child);
+    wait_for_file(&ready_file, guard.as_mut(), Duration::from_secs(10));
+    guard.sigkill_and_wait();
+
+    // Durable receipt must exist in `events` while target workspace was not prematurely published.
+    assert!(!target_ws.exists());
+    drop(_restore_ws);
+
+    // Recovery via `workspace_lifecycle::reserve` adopts the exact persisted staging invocation.
+    let mut recovered_ws = workspace_lifecycle::reserve(&fx.repo, &target_ws, false).unwrap();
+    assert!(target_ws.is_dir());
+    recovered_ws.mark_ready().unwrap();
+    assert!(recovered_ws.is_ready());
+    drop(recovered_ws);
+    assert_eq!(
+        fs::read_to_string(peer_ws.join("peer.txt")).unwrap(),
+        "peer untouched\n"
+    );
+
+    // Workunit append-vs-publish recovery exercised through the CLI boundary (`recover` + `journal-status`)
+    // inside a todo-scoped isolated git worktree under `.decapod/workspaces/`.
+    let acq = fx.run_decapod_in(&fx.repo, "agent-crash", None, &["session", "acquire"]);
+    assert!(acq.success(), "{}", acq.combined);
+    let pw = acq
+        .stdout_str()
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: ").map(str::to_owned))
+        .expect("session password");
+
+    let add_wu = fx.run_decapod_in(
+        &fx.repo,
+        "agent-crash",
+        Some(&pw),
+        &["todo", "add", "Workunit recovery 1934", "--format", "json"],
+    );
+    assert!(add_wu.success(), "{}", add_wu.combined);
+    let task_id = add_wu.json()["id"].as_str().unwrap().to_string();
+    let claim_wu = fx.run_decapod_in(
+        &fx.repo,
+        "agent-crash",
+        Some(&pw),
+        &["todo", "claim", "--id", &task_id, "--format", "json"],
+    );
+    assert!(claim_wu.success(), "{}", claim_wu.combined);
+    let branch_wu = format!("agent/agent-crash/{task_id}-wu1934");
+    let ensure_wu = fx.run_decapod_in(
+        &fx.repo,
+        "agent-crash",
+        Some(&pw),
+        &["workspace", "ensure", "--branch", &branch_wu],
+    );
+    assert!(ensure_wu.success(), "{}", ensure_wu.combined);
+    let wu_wt = PathBuf::from(ensure_wu.json()["worktree_path"].as_str().unwrap());
+
+    workunit::init_workunit(&wu_wt, &task_id, "intent:1934-cli").unwrap();
+    let wu_path = workunit::workunit_path(&wu_wt, &task_id).unwrap();
+    fs::write(&wu_path, format!("{{\"task_id\":\"{task_id}\",").as_bytes())
+        .expect("simulate torn projection");
+
+    let status_before = fx.run_decapod_in(
+        &wu_wt,
+        "agent-crash",
+        Some(&pw),
+        &[
+            "govern",
+            "workunit",
+            "journal-status",
+            "--task-id",
+            &task_id,
+        ],
+    );
+    assert!(status_before.success(), "{}", status_before.combined);
+    assert_eq!(status_before.json()["projection_state"], "invalid");
+    assert_eq!(status_before.json()["resumable"], false);
+
+    let rec1 = fx.run_decapod_in(
+        &wu_wt,
+        "agent-crash",
+        Some(&pw),
+        &["govern", "workunit", "recover", "--task-id", &task_id],
+    );
+    let rec2 = fx.run_decapod_in(
+        &wu_wt,
+        "agent-crash",
+        Some(&pw),
+        &["govern", "workunit", "recover", "--task-id", &task_id],
+    );
+    assert!(rec1.success(), "{}", rec1.combined);
+    assert!(rec2.success(), "{}", rec2.combined);
+    assert_eq!(rec1.json()["projection_state"], "current");
+    assert_eq!(rec1.json()["proof_status"], "not_proven");
+    assert_eq!(rec1.json()["resumable"], false);
+    assert_eq!(rec2.json()["projection_state"], "current");
+
+    DbBroker::new(&fx.store.root)
+        .with_conn(
+            &todo::todo_db_path(&fx.store.root),
+            "agent-crash",
+            None,
+            "test.1934.final_integrity",
+            |conn| {
+                assert_eq!(integrity_check(conn), "ok");
+                Ok(())
+            },
+        )
+        .unwrap();
 }

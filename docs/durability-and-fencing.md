@@ -41,7 +41,7 @@ Cloud mode (`core/storage.rs` `TodoStore` / `Dactyl` / `Propodus`) delegates rem
   2. Create `.decapod/workspaces/.staging/invocation-*`, record `(dev, ino, birth/xattr nonce)` and fsync.
   3. Persist `workspace.reservation.*` receipt to `events` (`WORKSPACE_LIFECYCLE`) before rename.
   4. Atomically publish into `.decapod/workspaces/<name>` via `renameat2(RENAME_NOREPLACE)` (Linux) or `renamex_np(RENAME_EXCL)` (macOS) and fsync parent.
-- **Crash recovery**: A crash between step 3 and step 4 leaves the staging directory intact; a subsequent `reserve` recovers the exact `Receipt` by directory identity and completes the no-replace rename without adopting arbitrary directories or deleting unrelated worktrees.
+- **Crash recovery**: A crash (`SIGKILL`) or directory-publish failure between step 3 and step 4 leaves the staging directory and durable receipt intact; a subsequent `reserve` recovers the exact `Receipt` by directory identity and completes the no-replace rename without adopting arbitrary directories or deleting unrelated worktrees (`tests/crash_durability_1934.rs`).
 - **Remote publication (`workspace_publication.rs`)**: `git push` alone is never treated as proof (`PUBLICATION_INCOMPLETE`). `verify_remote` reads exact push-destination refs (`git ls-remote`), fetches exact commit OIDs (`--no-write-fetch-head`), verifies committed governance/spec bundles (`verify_committed_bundle`), and `ensure_and_verify_pr_for_target` re-runs local and remote admission checks before PR creation and again after PR diff/readback (quarantining non-admitted PRs via `quarantine_pr`).
 
 ## 3. Authoritative Lease Ordering and Proof Fencing

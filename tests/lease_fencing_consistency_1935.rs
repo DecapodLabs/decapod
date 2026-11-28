@@ -1691,3 +1691,351 @@ fn fencing_1935_clock_anomaly_preserves_monotonic_fences_and_cloud_custody_rejec
         "cloud custody fencing must never touch decapod.db"
     );
 }
+
+#[test]
+fn model_check_competing_agents_and_clock_anomalies_preserve_custody_and_proof_fences() {
+    use decapod::core::fleet_coord::{
+        LeaseLifecycle, LeaseState, lease_allows_reclaim, lease_state,
+    };
+
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    struct LeaseModel {
+        assigned_to: Option<String>,
+        generation: i64,
+        lifecycle: LeaseLifecycle,
+        expires_at_secs: Option<i64>,
+        revision: i64,
+        done: bool,
+    }
+
+    let h = FencingHarness::new();
+    let pw_a = h.acquire_session("agent-a");
+    let pw_b = h.acquire_session("agent-b");
+    let pw_c = h.acquire_session("agent-c");
+    let creds = [("agent-a", pw_a), ("agent-b", pw_b), ("agent-c", pw_c)];
+
+    let add = h.run_as(
+        "agent-a",
+        Some(&creds[0].1),
+        &h.repo_root,
+        &["todo", "add", "Model check 1935 task", "--format", "json"],
+    );
+    assert!(add.success(), "{}", add.combined);
+    let task_id = add.json()["id"].as_str().unwrap().to_string();
+
+    let mut model = LeaseModel {
+        assigned_to: None,
+        generation: 0,
+        lifecycle: LeaseLifecycle::Claimed, // unused while assigned_to is None
+        expires_at_secs: None,
+        revision: 0,
+        done: false,
+    };
+
+    // Deterministic Xorshift64 schedule over 48 adversarial steps combining competing
+    // claims, same-gen heartbeats with forward/backward clock jumps, generation-rotating
+    // renewals, yields, releases, and stale-owner completion attempts.
+    let mut seed: u64 = 0x1935_cafe_babe_d00d;
+    let mut next_u64 = || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        seed
+    };
+
+    let mut wall_clock: i64 = 1_800_000_000;
+    let store = Store {
+        kind: StoreKind::Repo,
+        root: h.store_root(),
+    };
+
+    for step in 0..48usize {
+        let actor_idx = (next_u64() as usize) % creds.len();
+        let (actor, actor_pw) = (&creds[actor_idx].0, &creds[actor_idx].1);
+        let op = (next_u64() % 6) as usize;
+
+        // Exercise adversarial clock anomalies: backward skew (-200s), tiny forward (+1s),
+        // and large forward (+700s) jumps.
+        let skew_mode = next_u64() % 4;
+        if skew_mode == 0 {
+            wall_clock = (wall_clock - 200).max(1_700_000_000);
+        } else if skew_mode == 1 {
+            wall_clock += 1;
+        } else {
+            wall_clock += 700;
+        }
+        let now_ts = format!("{wall_clock}Z");
+
+        match op {
+            // 0: Competing `todo claim` via real CLI (uses system clock so use >= 1s lease or check outcome).
+            0 => {
+                let res = h.run_as(
+                    actor,
+                    Some(actor_pw),
+                    &h.repo_root,
+                    &[
+                        "todo",
+                        "claim",
+                        "--id",
+                        &task_id,
+                        "--lease-seconds",
+                        "600",
+                        "--format",
+                        "json",
+                    ],
+                );
+                let (_, db_assignee, db_gen, db_lifecycle, db_exp, db_rev) =
+                    h.read_task_row(&task_id);
+                let live_now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64;
+                let model_exp_str = model.expires_at_secs.map(|s| format!("{s}Z"));
+                let can_claim = match model.assigned_to.as_deref() {
+                    None => true,
+                    Some(cur) if cur == *actor => true,
+                    Some(_) => {
+                        !model.lifecycle.holds_exclusive_custody()
+                            || lease_allows_reclaim(
+                                model_exp_str.as_deref(),
+                                &format!("{live_now}Z"),
+                            )
+                    }
+                };
+                if can_claim {
+                    assert!(
+                        res.success(),
+                        "step {step} ({actor}) expected claim to succeed: {}",
+                        res.combined
+                    );
+                    assert_eq!(db_assignee, *actor);
+                    assert!(db_gen >= model.generation);
+                    assert!(db_rev >= model.revision);
+                    model.assigned_to = Some((*actor).to_string());
+                    model.generation = db_gen;
+                    model.lifecycle = LeaseLifecycle::parse(Some(&db_lifecycle));
+                    model.expires_at_secs = db_exp
+                        .as_deref()
+                        .and_then(|s| s.trim_end_matches('Z').parse::<i64>().ok());
+                    model.revision = db_rev;
+                } else {
+                    assert!(
+                        !res.success() || res.json()["status"] == "conflict",
+                        "step {step} ({actor}) competing claim bypassed live owner {:?}: {}",
+                        model.assigned_to,
+                        res.combined
+                    );
+                    assert_eq!(db_assignee, model.assigned_to.as_deref().unwrap_or(""));
+                    assert_eq!(db_gen, model.generation);
+                    assert_eq!(db_rev, model.revision);
+                }
+            }
+            // 1: Same-generation heartbeat under synthetic clock anomaly (`heartbeat_claim_lease_at`).
+            1 => {
+                let model_exp_str = model.expires_at_secs.map(|s| format!("{s}Z"));
+                let active_holder = model.assigned_to.as_deref() == Some(*actor)
+                    && model.generation > 0
+                    && model.lifecycle.holds_exclusive_custody()
+                    && lease_state(model_exp_str.as_deref(), &now_ts) == LeaseState::Active;
+                // Keep thread-local / env agent aligned only if calling directly? `heartbeat_claim_lease_at`
+                // checks `crate::current_agent_id()`; test via `todo renew --heartbeat` CLI for real OS process fencing
+                // and verify `lease_state` / `lease_allows_reclaim` invariants directly against model clock.
+                if let Some(exp_secs) = model.expires_at_secs {
+                    let expected_active = wall_clock < exp_secs;
+                    assert_eq!(
+                        lease_state(Some(&format!("{exp_secs}Z")), &now_ts) == LeaseState::Active,
+                        expected_active
+                    );
+                    assert_eq!(
+                        lease_allows_reclaim(Some(&format!("{exp_secs}Z")), &now_ts),
+                        wall_clock >= exp_secs
+                    );
+                }
+                let hb = h.run_as(
+                    actor,
+                    Some(actor_pw),
+                    &h.repo_root,
+                    &[
+                        "todo",
+                        "renew",
+                        "--heartbeat",
+                        "--id",
+                        &task_id,
+                        "--lease-seconds",
+                        "600",
+                        "--format",
+                        "json",
+                    ],
+                );
+                let live_now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64;
+                let real_active = model.assigned_to.as_deref() == Some(*actor)
+                    && model.generation > 0
+                    && model.lifecycle.holds_exclusive_custody()
+                    && model.expires_at_secs.is_some_and(|e| e > live_now);
+                let (_, db_assignee, db_gen, _, db_exp, db_rev) = h.read_task_row(&task_id);
+                if real_active {
+                    assert!(
+                        hb.success(),
+                        "step {step} heartbeat failed: {}",
+                        hb.combined
+                    );
+                    assert_eq!(
+                        db_gen, model.generation,
+                        "heartbeat must not rotate generation"
+                    );
+                    assert_eq!(db_rev, model.revision, "heartbeat must not bump revision");
+                    model.expires_at_secs = db_exp
+                        .as_deref()
+                        .and_then(|s| s.trim_end_matches('Z').parse::<i64>().ok());
+                } else {
+                    assert!(
+                        !hb.success(),
+                        "step {step} stale/non-owner heartbeat unexpectedly succeeded (active_holder={active_holder}): {}",
+                        hb.combined
+                    );
+                    assert_eq!(db_assignee, model.assigned_to.as_deref().unwrap_or(""));
+                    assert_eq!(db_gen, model.generation);
+                }
+            }
+            // 2: Generation-rotating `todo renew`.
+            2 => {
+                let renew = h.run_as(
+                    actor,
+                    Some(actor_pw),
+                    &h.repo_root,
+                    &[
+                        "todo",
+                        "renew",
+                        "--id",
+                        &task_id,
+                        "--lease-seconds",
+                        "600",
+                        "--format",
+                        "json",
+                    ],
+                );
+                let live_now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as i64;
+                let real_active = model.assigned_to.as_deref() == Some(*actor)
+                    && model.generation > 0
+                    && model.lifecycle.holds_exclusive_custody()
+                    && model.expires_at_secs.is_some_and(|e| e > live_now);
+                let (_, _, db_gen, db_lifecycle, db_exp, db_rev) = h.read_task_row(&task_id);
+                if real_active {
+                    assert!(
+                        renew.success(),
+                        "step {step} renew failed: {}",
+                        renew.combined
+                    );
+                    assert!(db_gen > model.generation, "renew must rotate generation");
+                    assert!(db_rev > model.revision, "renew must increment revision");
+                    model.generation = db_gen;
+                    model.lifecycle = LeaseLifecycle::parse(Some(&db_lifecycle));
+                    model.expires_at_secs = db_exp
+                        .as_deref()
+                        .and_then(|s| s.trim_end_matches('Z').parse::<i64>().ok());
+                    model.revision = db_rev;
+                } else {
+                    assert!(
+                        !renew.success() || renew.json()["status"] == "conflict",
+                        "step {step} stale renew succeeded: {}",
+                        renew.combined
+                    );
+                    assert_eq!(db_gen, model.generation);
+                }
+            }
+            // 3: `todo release` or `todo yield`.
+            3 | 4 => {
+                let use_yield = op == 4;
+                let args: Vec<&str> = if use_yield {
+                    vec![
+                        "todo",
+                        "yield",
+                        "--id",
+                        &task_id,
+                        "--reason",
+                        "model-check-yield",
+                        "--format",
+                        "json",
+                    ]
+                } else {
+                    vec!["todo", "release", "--id", &task_id, "--format", "json"]
+                };
+                let rel = h.run_as(actor, Some(actor_pw), &h.repo_root, &args);
+                let is_owner = model.assigned_to.as_deref() == Some(*actor)
+                    && model.lifecycle.holds_exclusive_custody();
+                let (_, db_assignee, db_gen, db_lifecycle, db_exp, db_rev) =
+                    h.read_task_row(&task_id);
+                if is_owner {
+                    assert!(
+                        rel.success(),
+                        "step {step} release/yield failed: {}",
+                        rel.combined
+                    );
+                    model.assigned_to = if db_assignee.is_empty() {
+                        None
+                    } else {
+                        Some(db_assignee)
+                    };
+                    model.generation = db_gen;
+                    model.lifecycle = LeaseLifecycle::parse(Some(&db_lifecycle));
+                    model.expires_at_secs = db_exp
+                        .as_deref()
+                        .and_then(|s| s.trim_end_matches('Z').parse::<i64>().ok());
+                    model.revision = db_rev;
+                    assert!(!model.lifecycle.holds_exclusive_custody());
+                } else if !use_yield && model.assigned_to.is_none() {
+                    // `todo release` is idempotent on an already-unclaimed task and must not alter
+                    // generation, revision, or assignee.
+                    assert!(
+                        rel.success()
+                            && rel.json()["result"]["message"]
+                                .as_str()
+                                .is_some_and(|m| m.contains("already released")),
+                        "step {step} idempotent release on unclaimed task unexpected: {}",
+                        rel.combined
+                    );
+                    assert_eq!(db_assignee, "");
+                    assert_eq!(db_gen, model.generation);
+                    assert_eq!(db_rev, model.revision);
+                } else {
+                    assert!(
+                        !rel.success() || rel.json()["status"] != "ok",
+                        "step {step} non-owner release/yield mutated state: {}",
+                        rel.combined
+                    );
+                    assert_eq!(db_assignee, model.assigned_to.as_deref().unwrap_or(""));
+                    assert_eq!(db_gen, model.generation);
+                    assert_eq!(db_rev, model.revision);
+                }
+            }
+            // 5: Stale CAS completion attempt at `revision - 1` must always be fenced.
+            _ => {
+                let stale_rev = model.revision.saturating_sub(1);
+                if model.revision > 0 {
+                    let res = todo::update_status(
+                        &store,
+                        &task_id,
+                        stale_rev,
+                        "open",
+                        "done",
+                        "task.done",
+                        json!({"actor": actor}),
+                    )
+                    .unwrap();
+                    assert_eq!(res["status"], "conflict");
+                }
+            }
+        }
+
+        // Invariant: journal verification passes cleanly after every single schedule step.
+        let jv = todo::task_journal_verify(&h.store_root()).expect("journal verify");
+        assert_eq!(jv["status"], "ok", "step {step} broke journal verify: {jv}");
+        assert!(!model.done);
+    }
+}

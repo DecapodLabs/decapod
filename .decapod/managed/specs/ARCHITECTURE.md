@@ -2174,6 +2174,12 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **Governed docs sync & Nix release tag gating (`assets/tools/docs_autosync_governed.sh`, `.github/workflows/docs_autosync.yml`, `.github/workflows/nix-flake.yml`)**: Encapsulates scheduled docs sync in a testable script enforcing `begin-pr` -> `docs build` -> `trajectory` -> `specs.refresh` -> `checkpoint` -> `verify-checkpoints --publication-material` -> non-force push (`#1388`), and extends `nix-flake.yml` to accept native SemVer `refs/tags/v*` release pushes alongside squash/linear and merge-commit `master` pushes (`#1626`).
 - **ETag conditional polling (`src/decapod/core/snapshot_provider/mod.rs`, `src/decapod/core/snapshot_provider/github_quota.rs`)**: `PublicGithubReads` maintains a bounded 64-entry in-process ETag validator cache (`If-None-Match`), handling HTTP 304 Not Modified without charging rate-limit request counts (`observe_not_modified`) while failing closed on unexpected 304s or malformed ETag headers (`#1573`).
 
+## Hardening & Assurance Architecture Additions (#1934, #1935, #1936, #1964)
+
+- **Atomic LCM index rebuild (`src/decapod/plugins/lcm.rs`)**: `rebuild_index` validates all ledger event content hashes prior to opening a single `BEGIN IMMEDIATE ... COMMIT` transaction over `originals_index`, preserving the existing derived index on `status = "failed"` rather than deleting prior rows before per-event inserts; `rebuild_index_from_ledger` executes inside a single `BEGIN IMMEDIATE ... COMMIT` transaction with explicit `ROLLBACK` (`tests/derived_replay_1936.rs`, `docs/derived-data-and-replay.md`).
+- **Crash-recovery & schedule-fencing verification (`tests/crash_durability_1934.rs`, `tests/lease_fencing_consistency_1935.rs`)**: Exercises subprocess `SIGKILL` during `workspace_lifecycle::reserve` between `Receipt` append and directory publication (verifying exact staging recovery without clobbering peer worktrees), CLI `govern workunit journal-status`/`recover` idempotency inside todo-scoped worktrees, and a deterministic 3-agent + clock-skew state-machine model checker enforcing monotonic `lease_generation` and `task_journal_verify` parity (`docs/durability-and-fencing.md`).
+- **Strict container-signer origin boundary (`src/decapod/core/container_signer.rs`)**: `ContainerSignerPolicy::sign_request` validates `req.url` via `extract_origin_relative_path` (exact case-insensitive `scheme://authority` match, no `@` userinfo, no `#` fragment, leading `/` path) and exact `is_container_allowed_cloud_operation` route matching rather than `starts_with` / `ends_with` substrings.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -2209,7 +2215,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
