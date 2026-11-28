@@ -113,6 +113,21 @@ pub struct GovernedPlan {
     /// Bounded continuation receipts; never plan acceptance or execution proof.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reflection: Option<crate::core::mentor::reflection::Journal>,
+    /// Full lossless human outcome request retained alongside short title/intent (#1981).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_request: Option<String>,
+    /// Accepted user clarifications combined with the governing request (#1981).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub clarifications: Vec<String>,
+    /// Outcome-implied ordinary professional responsibilities (#1981/#1982).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub derived_duties: Vec<crate::core::professional_defaults::DerivedProfessionalDuty>,
+    /// Standing delivery endpoint resolved from accepted base policy + request (#1983).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delivery_endpoint: Option<crate::core::professional_defaults::ResolvedDeliveryContract>,
+    /// Current delivery progression status (#1983).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delivery_phase: Option<crate::core::professional_defaults::DeliveryPhaseStatus>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq, clap::ValueEnum)]
@@ -331,6 +346,11 @@ pub fn init_plan(
             phases: input.phases,
             spec_reviews,
             reflection,
+            original_request: None,
+            clarifications: Vec::new(),
+            derived_duties: Vec::new(),
+            delivery_endpoint: None,
+            delivery_phase: None,
             updated_at: crate::core::time::now_epoch_z(),
         };
         save_plan(project_root, &plan)?;
@@ -1191,6 +1211,7 @@ pub(crate) fn validate_plan_progress_at(
             None,
         ));
     }
+    validate_duty_coverage_if_applicable(None, plan)?;
     Ok(())
 }
 
@@ -1200,7 +1221,37 @@ pub(crate) fn validate_plan_progress_at_root(
     phase: crate::core::validation_rules::EvaluationPhase,
 ) -> Result<(), error::DecapodError> {
     ensure_instruction_ready_at(root, plan, phase.clone(), "NEEDS_HUMAN_INPUT")?;
-    validate_plan_progress_at(plan, phase)
+    validate_phase_contract(&plan.phases)?;
+    if matches!(
+        plan.state,
+        PlanState::Approved | PlanState::Executing | PlanState::Done
+    ) && has_unresolved_intent_requirements(plan)
+    {
+        ensure_instruction_ready(plan, phase, "NEEDS_HUMAN_INPUT")?;
+    }
+    if plan.state == PlanState::Done && plan.phases.iter().any(|phase| !phase.completed) {
+        return Err(marker_error(
+            "PHASES_INCOMPLETE",
+            "Plan cannot reach DONE until every declared phase is completed.",
+            None,
+        ));
+    }
+    if plan.phases.iter().any(|phase| {
+        phase.completed
+            && phase
+                .entry_gates
+                .iter()
+                .chain(&phase.exit_gates)
+                .any(|gate| !gate.satisfied)
+    }) {
+        return Err(marker_error(
+            "PHASE_GATE_NOT_SATISFIED",
+            "Completed phases must satisfy every gate in the current contract; revise the contract and replay its phase progress.",
+            None,
+        ));
+    }
+    validate_duty_coverage_if_applicable(Some(root), plan)?;
+    Ok(())
 }
 
 fn validate_phase_contract(phases: &[Phase]) -> Result<(), error::DecapodError> {
@@ -1401,7 +1452,11 @@ pub fn complete_phase(
         if plan.phases.iter().all(|candidate| candidate.completed) {
             plan.state = PlanState::Done;
         }
-        validate_plan_progress(&plan)?;
+        validate_plan_progress_at_root(
+            project_root,
+            &plan,
+            crate::core::validation_rules::EvaluationPhase::DuringExecution,
+        )?;
         save_plan(project_root, &plan)?;
         Ok(plan)
     })
@@ -1788,6 +1843,325 @@ pub(crate) fn enforce_scope_constraints(
         )?;
     }
     Ok(())
+}
+
+fn git_rev_parse(root: &Path, rev: &str) -> Option<String> {
+    if !root.join(".git").exists() {
+        return None;
+    }
+    let output = std::process::Command::new("git")
+        .current_dir(root)
+        .args(["rev-parse", "--verify", "--quiet", rev])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let val = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if val.is_empty() { None } else { Some(val) }
+}
+
+pub(crate) fn current_candidate_and_target_commits(root: &Path) -> (String, String) {
+    let candidate = git_rev_parse(root, "HEAD").unwrap_or_default();
+    let target = [
+        "origin/master",
+        "origin/main",
+        "refs/heads/master",
+        "refs/heads/main",
+    ]
+    .into_iter()
+    .find_map(|r| git_rev_parse(root, r))
+    .unwrap_or_default();
+    (candidate, target)
+}
+
+pub(crate) fn resolve_delivery_policy_from_repo(
+    project_root: &Path,
+    governing_request: &str,
+) -> crate::core::professional_defaults::DeliveryResolutionInput {
+    use sha2::{Digest, Sha256};
+
+    let candidate_cfg = crate::cli::DecapodProjectConfig::load(project_root).ok();
+    let accepted_res =
+        crate::core::db_maintenance::resolve_accepted_project_config(project_root).ok();
+
+    let (accepted_main_merge, standing_pr_merge_delegated, requires_pr_workflow, policy_revision) =
+        if let Some((main_root, accepted_cfg, _)) = accepted_res {
+            let cfg_bytes = fs::read(main_root.join(".decapod/config.toml")).unwrap_or_default();
+            let mut hasher = Sha256::new();
+            hasher.update(&cfg_bytes);
+            let digest = format!("sha256:{:x}", hasher.finalize());
+            let pr_workflow = accepted_cfg.proof.ci_attested.is_some()
+                || accepted_cfg.proof.validation_github_actions_preflights
+                || accepted_cfg.proof.validation_buildkite_preflights
+                || accepted_cfg.proof.repository_contract.is_some()
+                || accepted_cfg.governance.standing_pr_merge
+                || project_root.join(".github/workflows").exists();
+            (
+                accepted_cfg.governance.main_merge,
+                accepted_cfg.governance.standing_pr_merge,
+                pr_workflow,
+                digest,
+            )
+        } else {
+            let cfg_bytes = fs::read(project_root.join(".decapod/config.toml")).unwrap_or_default();
+            let mut hasher = Sha256::new();
+            hasher.update(&cfg_bytes);
+            let digest = format!("sha256:{:x}", hasher.finalize());
+            let pr_workflow = candidate_cfg.as_ref().is_some_and(|c| {
+                c.proof.ci_attested.is_some()
+                    || c.proof.validation_github_actions_preflights
+                    || c.proof.validation_buildkite_preflights
+                    || c.proof.repository_contract.is_some()
+            }) || project_root.join(".github/workflows").exists();
+            (false, false, pr_workflow, digest)
+        };
+
+    let candidate_main_merge = candidate_cfg.as_ref().is_some_and(|c| {
+        c.governance.main_merge || (c.governance.standing_pr_merge && !standing_pr_merge_delegated)
+    });
+
+    crate::core::professional_defaults::DeliveryResolutionInput {
+        governing_request: governing_request.to_string(),
+        accepted_main_merge,
+        candidate_main_merge,
+        requires_pr_workflow,
+        standing_pr_merge_delegated,
+        requires_review: requires_pr_workflow,
+        requires_ci_checks: requires_pr_workflow,
+        policy_revision,
+    }
+}
+
+pub(crate) fn validate_duty_coverage_if_applicable(
+    root: Option<&Path>,
+    plan: &GovernedPlan,
+) -> Result<(), error::DecapodError> {
+    if plan.state != PlanState::Done || plan.derived_duties.is_empty() {
+        return Ok(());
+    }
+    let (candidate_commit, target_commit, policy_revision) = if let Some(r) = root {
+        let policy = resolve_delivery_policy_from_repo(r, &plan.intent).policy_revision;
+        if r.join(".git").exists() {
+            let (cand, targ) = current_candidate_and_target_commits(r);
+            (cand, targ, policy)
+        } else {
+            let fallback_cand = plan
+                .derived_duties
+                .iter()
+                .find_map(|d| d.subject_commit.clone())
+                .unwrap_or_default();
+            let fallback_targ = plan
+                .derived_duties
+                .iter()
+                .find_map(|d| d.target_commit.clone())
+                .unwrap_or_default();
+            (fallback_cand, fallback_targ, policy)
+        }
+    } else {
+        let policy = plan
+            .delivery_endpoint
+            .as_ref()
+            .map(|d| d.policy_revision.clone())
+            .or_else(|| {
+                plan.derived_duties
+                    .first()
+                    .map(|d| d.policy_revision.clone())
+            })
+            .unwrap_or_else(|| "accepted-policy".to_string());
+        let fallback_cand = plan
+            .derived_duties
+            .iter()
+            .find_map(|d| d.subject_commit.clone())
+            .unwrap_or_default();
+        let fallback_targ = plan
+            .derived_duties
+            .iter()
+            .find_map(|d| d.target_commit.clone())
+            .unwrap_or_default();
+        (fallback_cand, fallback_targ, policy)
+    };
+    let report = crate::core::professional_defaults::evaluate_duty_coverage(
+        &plan.derived_duties,
+        &candidate_commit,
+        &target_commit,
+        &policy_revision,
+    );
+    if !report.ready {
+        let first = &report.unmet_duties[0];
+        return Err(marker_error(
+            &first.code,
+            &format!("{} ({})", first.reason, first.next_admissible_action),
+            Some(serde_json::to_value(&report).unwrap_or_default()),
+        ));
+    }
+    Ok(())
+}
+
+/// Derive ordinary professional duties and standing delivery endpoint for the current plan (#1981/#1983).
+pub fn derive_plan_duties(
+    project_root: &Path,
+    original_request: Option<&str>,
+    clarifications: &[String],
+    affected_paths: &[String],
+    owner: Option<&str>,
+) -> Result<GovernedPlan, error::DecapodError> {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
+            marker_error(
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
+                None,
+            )
+        })?;
+        let previous = plan.clone();
+
+        let eff_original = original_request
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .or_else(|| plan.original_request.clone())
+            .unwrap_or_else(|| plan.intent.clone());
+        let mut merged_clarifications = plan.clarifications.clone();
+        for clar in clarifications {
+            let trimmed = clar.trim();
+            if !trimmed.is_empty() && !merged_clarifications.iter().any(|c| c == trimmed) {
+                merged_clarifications.push(trimmed.to_string());
+            }
+        }
+        let full_request = crate::core::professional_defaults::compose_governing_request(
+            Some(&eff_original),
+            Some(&plan.title),
+            Some(&plan.intent),
+            &merged_clarifications,
+        );
+        let project_intent = crate::cli::DecapodProjectConfig::load(project_root)
+            .ok()
+            .map(|c| {
+                format!(
+                    "{} ({}; {})",
+                    c.repo.product_summary.as_deref().unwrap_or(""),
+                    c.repo.architecture_direction.as_deref().unwrap_or(""),
+                    c.repo.product_type.as_deref().unwrap_or("")
+                )
+            });
+        let delivery_policy = resolve_delivery_policy_from_repo(project_root, &full_request);
+        let (cand_sha, _) = current_candidate_and_target_commits(project_root);
+        let derived = crate::core::professional_defaults::derive_professional_contract(
+            &crate::core::professional_defaults::OutcomeDerivationInput {
+                original_request: Some(eff_original.clone()),
+                task_title: Some(plan.title.clone()),
+                task_description: Some(plan.intent.clone()),
+                clarifications: merged_clarifications.clone(),
+                project_intent,
+                affected_paths: affected_paths.to_vec(),
+                source_revision: if cand_sha.is_empty() {
+                    "working-tree".to_string()
+                } else {
+                    cand_sha
+                },
+                owner: owner
+                    .map(str::to_string)
+                    .unwrap_or_else(crate::current_agent_id),
+                delivery_policy,
+            },
+        );
+        plan.original_request = Some(eff_original);
+        plan.clarifications = merged_clarifications;
+        plan.derived_duties = derived.duties;
+        plan.delivery_endpoint = Some(derived.delivery_endpoint);
+        if plan.delivery_phase.is_none() {
+            plan.delivery_phase =
+                Some(crate::core::professional_defaults::DeliveryPhaseStatus::Planned);
+        }
+        if plan != previous {
+            invalidate_plan_acceptance(&mut plan);
+        }
+        plan.schema_version = PLAN_SCHEMA_VERSION.to_string();
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
+}
+
+/// Update behavior-relevant evidence or exclusion rationale on a derived duty (#1982).
+pub fn refine_plan_duty(
+    project_root: &Path,
+    update: crate::core::professional_defaults::DutyRefinementUpdate,
+) -> Result<GovernedPlan, error::DecapodError> {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
+            marker_error(
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
+                None,
+            )
+        })?;
+        crate::core::professional_defaults::refine_duty_disposition(
+            &mut plan.derived_duties,
+            &update,
+        )
+        .map_err(|msg| {
+            let code = msg.split(':').next().unwrap_or("DUTY_REFINEMENT_REJECTED");
+            marker_error(code, &msg, None)
+        })?;
+        plan.updated_at = crate::core::time::now_epoch_z();
+        if plan.state == PlanState::Done {
+            validate_duty_coverage_if_applicable(Some(project_root), &plan)?;
+        }
+        save_plan(project_root, &plan)?;
+        Ok(plan)
+    })
+}
+
+/// Verify outcome-relevant evidence coverage against current candidate, target, and policy (#1982).
+pub fn verify_plan_coverage(
+    project_root: &Path,
+    candidate_commit: Option<&str>,
+    target_commit: Option<&str>,
+    policy_revision: Option<&str>,
+) -> Result<crate::core::professional_defaults::DutyCoverageReport, error::DecapodError> {
+    let plan = load_plan(project_root)?.ok_or_else(|| {
+        marker_error(
+            "NEEDS_PLAN_APPROVAL",
+            "Plan artifact is missing. Run `decapod govern plan init` first.",
+            None,
+        )
+    })?;
+    let (git_cand, git_targ) = current_candidate_and_target_commits(project_root);
+    let cand = candidate_commit.map(str::to_string).unwrap_or(git_cand);
+    let targ = target_commit.map(str::to_string).unwrap_or(git_targ);
+    let pol = policy_revision.map(str::to_string).unwrap_or_else(|| {
+        resolve_delivery_policy_from_repo(project_root, &plan.intent).policy_revision
+    });
+    let report = crate::core::professional_defaults::evaluate_duty_coverage(
+        &plan.derived_duties,
+        &cand,
+        &targ,
+        &pol,
+    );
+    Ok(report)
+}
+
+/// Advance or inspect standing delivery endpoint progression on the governed plan (#1983).
+pub fn advance_plan_delivery(
+    project_root: &Path,
+    input: crate::core::professional_defaults::DeliveryProgressionInput,
+) -> Result<crate::core::professional_defaults::DeliveryProgressionDecision, error::DecapodError> {
+    crate::core::governance_document::with_lock(project_root, || {
+        let mut plan = load_plan(project_root)?.ok_or_else(|| {
+            marker_error(
+                "NEEDS_PLAN_APPROVAL",
+                "Plan artifact is missing. Run `decapod govern plan init` first.",
+                None,
+            )
+        })?;
+        let decision = crate::core::professional_defaults::advance_delivery_progression(&input);
+        plan.delivery_endpoint = Some(input.contract);
+        plan.delivery_phase = Some(decision.status);
+        plan.updated_at = crate::core::time::now_epoch_z();
+        save_plan(project_root, &plan)?;
+        Ok(decision)
+    })
 }
 
 #[cfg(test)]

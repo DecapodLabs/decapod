@@ -2242,7 +2242,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Contract Snapshot
 
-- Core modules (149): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+133 more)
+- Core modules (150): `agent_eval`, `agent_interop`, `analyze`, `ansi`, `artifact_clarity`, `assets`, `assurance`, `atomic`, `auth`, `authoring`, `backend`, `bounded_process`, `broker`, `capabilities`, `capability_contract`, `capsule_policy`, (+134 more)
 - Plugin/extension modules (25): `aptitude`, `archive`, `container`, `context`, `cron`, `decide`, `doctor`, `eval`, `federation`, `federation_ext`, `feedback`, `gatling`, (+13 more)
 - Build manifests (10): `BUILD.bazel`, `Cargo.toml`, `assets/tools/laya-native/Cargo.toml`, `bindings/typescript/native/Cargo.toml`, `bindings/typescript/package.json`, `flake.nix`, `packages/pi-decapod/package.json`, `tests/fixtures/activation_conformance/greeting/Cargo.toml`, (+2 more)
 <!-- decapod:codebase-contract:end -->
@@ -2251,7 +2251,17 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `beed5da91a1328c685bc08f03c8618b1901a0aa6ec4caa95a440729a8f685d08`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (298 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Outcome-Implied Responsibilities, Coverage Gate & Delivery Progression (`#1981`, `#1982`, `#1983`, `#1367`)
+
+- **Core derivation & progression engine (`src/decapod/core/professional_defaults.rs`)**:
+  - `compose_governing_request`, `classify_task_profile`, `resolve_delivery_endpoint`, `derive_professional_contract`, `summarize_duties`, `refine_duty_disposition`, `evaluate_duty_coverage`, and `advance_delivery_progression` share one pure-Rust contract across orientation, plan governance, validation, and workunit continuation, delegating direct main-merge freshness checks to `evaluate_main_merge_authorization` (`src/decapod/core/obligation_ledger.rs`).
+- **Plan governance, worktree policy & workunit continuity (`src/decapod/plan_governance.rs`, `src/decapod/core/governance_document/merge_reconcile.rs`, `src/decapod/core/workunit.rs`)**:
+  - `GovernedPlan` retains `original_request`, `clarifications`, `derived_duties`, `delivery_endpoint`, and `delivery_phase` (with 3-way Git merge support in `merge_reconcile.rs`); `resolve_delivery_policy_from_repo` reads `[governance].main_merge` and `[governance].standing_pr_merge` solely via `db_maintenance::resolve_accepted_project_config`.
+  - `validate_plan_progress_at_root` enforces `evaluate_duty_coverage` against current `HEAD`, accepted target commit, and accepted `.decapod/config.toml` SHA-256 digest before admitting `PlanState::Done`; `workunit_journal_status` projects the task's `derived_duties`, `duty_summary`, `delivery_endpoint`, and `delivery_phase` for cold resume (`#1367`).
+- **CLI, RPC & doc surfaces (`src/decapod/cli.rs`, `src/decapod/lib.rs`, `src/decapod/core/rpc.rs`, `docs/agent/{config-schema,repository-readiness}.md`)**:
+  - `run_infer_orientation` and `governed_plan_context` populate `OrientationPacket` and `GovernedPlanContext` (`context.resolve`) without truncating `>5` derived duties; `PlanCommand` exposes `--original-request`, `--clarification`, `--affected-path`, `--derive-duties`, `derive-duties`, `refine-duty`, `verify-coverage`, and `advance-delivery`.

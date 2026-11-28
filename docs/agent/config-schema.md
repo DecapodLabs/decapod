@@ -332,8 +332,15 @@ using an independently supported released controller before publication.
 Validation establishes whether the agent's work has converged on the user's
 declared intent and satisfies the conditions for integration. Its assurance is
 bounded by the declared requirements and checks. A subsequent readiness decision
-can evaluate that result; the agent publishes through the applicable gate and
-the human retains merge authority. This principle adds no unimplemented guarantee.
+evaluates that result; the agent publishes through the applicable gate. By
+default (`[governance].main_merge = false` without standing PR merge
+delegation), the human retains merge authority. When accepted base policy
+explicitly delegates direct merge (`[governance].main_merge = true`) or standing
+PR auto-merge authority and exact candidate/target validation passes cleanly, the
+agent advances autonomously to the authorized terminal delivery endpoint without
+asking redundant follow-up confirmation, while candidate edits can never expand
+merge authority beyond accepted policy. This principle adds no unimplemented
+guarantee.
 
 ## Optional Laya post-validation assessment
 
