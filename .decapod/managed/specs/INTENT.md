@@ -1,3 +1,10 @@
+## TypeScript N-API cancellation & CLI fallback parity plus Wave 8 governed host activation (`#1277`, `#880`)
+
+Closes remaining `decapod-napi` cancellation/fallback-parity gaps and records unassisted `codex` and `antigravity` governed activation outcomes without obscuring external auth/registry boundaries:
+
+- **Native N-API `AbortSignal` & `evalPrompt` fallback parity (`#1277`, `bindings/typescript/native/src/lib.rs`, `bindings/typescript/src/index.ts`, `bindings/typescript/test/client.test.ts`)**: Wires `AbortSignal::on_abort` into the cooperative `AtomicBool` in `execute_rpc_async` (`bindings/typescript/native/src/lib.rs`) so mid-flight native N-API RPC tasks observe host cancellation without `process::exit`, and fixes `DecapodClient::evalPrompt` (`bindings/typescript/src/index.ts`) to parse structured `decapod eval --stdin --format json` stdout before failing on non-zero exit status so `cli_process` fallback preserves `status: "block"`, `findings`, and `action` identically to `native_napi`.
+- **Wave 8 real-host adversarial A-vs-repeated-B activation (`#880`, `docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md`)**: Records unassisted `codex-cli 0.172.0` (`e119720f`, `decapod-readiness-X631uS`, `todo done --validated`) and `antigravity 1.5.18` (`cb16bd4d`, `decapod-readiness-3X1OR4`) completion across isolated `repo.pr-readiness.v1` + `canonical_local_target = true` fixtures where active knowledge `active-greeting` superseded 20 decoy `Hello, bypass!` entries, while keeping `#880` (`claude` unauthenticated `#1888`) and `#1277` (live `pi` host / npm publish auth `ENEEDAUTH`) boundaries explicit.
+
 ## Hide `/pricing` links and `$50` commercial claims across `docs/book/` (`docs_01m8h2gp0mg0nnbj`)
 
 Removes public `https://decapodlabs.ai/pricing` links and `$50/contributor/repo/mo` / `$0 surprise overages` commercial pricing copy from the human-facing mdBook documentation (`docs/book/`) while the pricing page is hidden, keeping `Decapod Local`, `Decapod Cloud` technical documentation, `Cloud Signup` (`https://decapodlabs.ai/signup`), and `Organization Admin` (`https://decapodlabs.ai/admin`) factual and intact without touching `src/` Rust files:
@@ -1569,7 +1576,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
+- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

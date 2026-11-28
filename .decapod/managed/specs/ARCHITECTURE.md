@@ -1,3 +1,9 @@
+## Native N-API `AbortSignal::on_abort`, `evalPrompt` parity & Wave 8 pilot observations (`#1277`, `#880`)
+
+- **Cooperative N-API cancellation seam (`bindings/typescript/native/src/lib.rs::execute_rpc_async`)**: Registers `sig.on_abort(...)` on `napi::bindgen_prelude::AbortSignal` to flip the per-invocation `Arc<AtomicBool>` (`CANCELLED`) passed to `AsyncTask::with_optional_signal`, enabling cooperative in-flight abort without global mutable state or process termination.
+- **`cli_process` `evalPrompt` stdout-before-exit parsing (`bindings/typescript/src/index.ts::DecapodClient::evalPrompt`)**: Reads `out.stdout` structured JSON first when `decapod eval --stdin --format json` exits non-zero on `status: "block"`, preserving parity with `native_napi::evalPrompt`.
+- **Wave 8 compact outcome comparison (`docs/research/host-outcome-pilot/{wave8-input.json,wave8-comparison.json,wave8-host-activation-2026-11-27.md}`)**: Uses `decapod trace flight-recorder compare` over unredacted SHA-256-referenced `codex 0.172.0` and `antigravity 1.5.18` traces (`unverified_pair_identities: []`, `reported_verified_useful_work: 2` governed).
+
 ## Hide `/pricing` Navigation & Commercial Copy in mdBook Documentation (`docs/book/`, `docs_01m8h2gp0mg0nnbj`)
 
 - **mdBook theme shell (`docs/book/theme/index.hbs`)**: Drops the three `https://decapodlabs.ai/pricing` anchor links across `.decapod-top-links`, `.decapod-footer-links`, and `.decapod-rail-links` without altering `.decapod-top-links` layout, self-hosted Geist font rules, or `docs/book/src/custom.css`.
@@ -2245,7 +2251,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
+- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

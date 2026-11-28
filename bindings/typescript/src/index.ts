@@ -624,6 +624,29 @@ export class DecapodClient implements DecapodTransport {
       ...options,
       stdin: provenance.rawHumanPrompt,
     });
+    if (out.stdout.trim() !== "") {
+      try {
+        const parsed = JSON.parse(out.stdout) as {
+          status?: string;
+          prompt_sha256?: string;
+          findings?: readonly unknown[];
+          action?: string;
+        };
+        if (typeof parsed.status === "string") {
+          return {
+            allowed: out.exitCode === 0 && parsed.status === "allow",
+            status: parsed.status,
+            promptSha256: parsed.prompt_sha256,
+            findings: parsed.findings,
+            action: parsed.action,
+            raw: out.stdout,
+            transport: this.transportMeta,
+          };
+        }
+      } catch {
+        // Fall through to exitCode / invalid_json handling below.
+      }
+    }
     if (out.exitCode !== 0) {
       return {
         allowed: false,
@@ -632,30 +655,12 @@ export class DecapodClient implements DecapodTransport {
         transport: this.transportMeta,
       };
     }
-    try {
-      const parsed = JSON.parse(out.stdout) as {
-        status?: string;
-        prompt_sha256?: string;
-        findings?: readonly unknown[];
-        action?: string;
-      };
-      return {
-        allowed: parsed.status === "allow",
-        status: parsed.status ?? "unknown",
-        promptSha256: parsed.prompt_sha256,
-        findings: parsed.findings,
-        action: parsed.action,
-        raw: out.stdout,
-        transport: this.transportMeta,
-      };
-    } catch {
-      return {
-        allowed: false,
-        status: "invalid_json",
-        raw: out.stdout,
-        transport: this.transportMeta,
-      };
-    }
+    return {
+      allowed: false,
+      status: "invalid_json",
+      raw: out.stdout,
+      transport: this.transportMeta,
+    };
   }
 
   async orient(

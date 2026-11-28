@@ -1,3 +1,9 @@
+## `#1277` / `#880` TypeScript N-API cancellation, CLI fallback parity & Wave 8 pilot artifacts (`bindings/typescript/`, `docs/research/host-outcome-pilot/`)
+
+- **`DecapodClient::evalPrompt` (`bindings/typescript/src/index.ts`)**: Both `native_napi` and `cli_process` carriers now return identical `EvalPromptResult` (`allowed: false`, `status: "block"`, `findings`, `action`) when given injection/exfiltration prompts, verified by `bindings/typescript/test/client.test.ts` (`8/8` pass) and `packages/pi-decapod/test/pi_extension.test.ts` (`5/5` pass), alongside `npm run bench` (`evalPrompt` `0.005ms` vs `9.733ms` = `1946.6x`; `rpc(schema.get)` `0.142ms` vs `8.645ms` = `60.9x`).
+- **`execute_rpc_async` (`bindings/typescript/native/src/lib.rs`)**: Wires `AbortSignal::on_abort` into cooperative `AtomicBool` cancellation (`std::sync::atomic::Ordering::SeqCst`).
+- **Wave 8 pilot observation artifacts (`docs/research/host-outcome-pilot/wave8-{input.json,comparison.json,host-activation-2026-11-27.md}`)**: Redacted flight-recorder inputs (`decapod.outcome-observations.v1`) and rendered comparison (`decapod.outcome-comparison.v1`) for `codex 0.172.0` and `antigravity 1.5.18`.
+
 ## Public Documentation Navigation & Cloud Route Contracts (`docs/book/`, `docs_01m8h2gp0mg0nnbj`)
 
 - **Shell & page routes (`docs/book/theme/index.hbs`, `docs/book/src/index.md`)**:
@@ -2779,7 +2785,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948`
+- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

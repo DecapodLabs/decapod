@@ -193,4 +193,33 @@ test("DecapodClient uses real native_napi addon with concurrent isolation when b
   await assert.rejects(clientA.rpc("schema.get", {}, { signal: controller.signal }), (err: unknown) => {
     return err instanceof DOMException && err.name === "AbortError";
   });
+
+  // Also test native in-flight abort + native-vs-CLI semantic parity (#1277).
+  const midFlightController = new AbortController();
+  const midFlight = clientA.rpc("context.resolve", { query: "schema" }, { signal: midFlightController.signal });
+  midFlightController.abort();
+  await assert.rejects(midFlight, (err: unknown) => {
+    return err instanceof Error;
+  });
+
+  const cliBin = process.env.DECAPOD_TEST_BIN;
+  if (cliBin) {
+    const cliClient = new DecapodClient({
+      cwd: repoRoot,
+      agentId: "cli-parity-alpha",
+      binaryPath: cliBin,
+      preferNative: false,
+    });
+    assert.equal(cliClient.transportInfo().kind, "cli_process");
+    const [cliOk, cliBlocked, cliRpc] = await Promise.all([
+      cliClient.evalPrompt(safeProv),
+      cliClient.evalPrompt(blockedProv),
+      cliClient.rpc("schema.get", { entity: "todo" }),
+    ]);
+    assert.equal(cliOk.allowed, evalOk.allowed);
+    assert.equal(cliOk.status, evalOk.status);
+    assert.equal(cliBlocked.allowed, evalBlocked.allowed);
+    assert.equal(cliBlocked.status, evalBlocked.status);
+    assert.equal(cliRpc.ok, rpcA.ok);
+  }
 });

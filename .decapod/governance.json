@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "4dbafaebd14414c7e39ef660d7fa7b0943af0193",
+    "accepted_commit": "a00bb829b069f3c4472d6528a2a45a10ae11764f",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,78 +872,51 @@
     }
   },
   "change": {
-    "id": "change_01M8H2VNQT3MEWBN6FA9FK5H9J",
-    "base_commit": "4dbafaebd14414c7e39ef660d7fa7b0943af0193",
+    "id": "pr_1277_880_a00b",
+    "base_commit": "a00bb829b069f3c4472d6528a2a45a10ae11764f",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim:docs-hide-pricing-links": {
-      "statement": "Decapod mdBook theme and source chapters contain zero decapodlabs.ai/pricing links and zero  commercial pricing claims while preserving factual Organization Admin, Cloud Signup, and reference/cloud-projects.html routes without modifying src/ Rust files.",
-      "falsifier": "Any decapodlabs.ai/pricing link or /contributor/repo/mo copy appears in docs/book/ source or rendered mdBook HTML, or tests/doc_alignment.rs fails, or any file under src/ is modified.",
+    "claim-1277-880-napi-hosts": {
+      "statement": "decapod-napi execute_rpc_async wires cooperative AbortSignal cancellation without process exits, DecapodClient::evalPrompt preserves structured block verdicts across native_napi and cli_process carriers, and Wave 8 redacted pilot artifacts record unassisted codex and antigravity governed runs",
+      "falsifier": "bindings/typescript client tests fail, cli_process evalPrompt drops structured block findings, or decapod validate fails",
       "status": "supported",
       "proof_refs": [
-        "docs/book/src/index.md",
-        "docs/book/theme/index.hbs",
-        "tests/doc_alignment.rs"
+        "bindings/typescript/native/src/lib.rs",
+        "bindings/typescript/src/index.ts",
+        "bindings/typescript/test/client.test.ts",
+        "docs/research/host-outcome-pilot/wave8-comparison.json",
+        "docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk-1-docs-hide-pricing",
-      "summary": "Hide /pricing links and  commercial claims across docs/book, update doc_alignment test, and refresh living specs",
-      "input_digest": "sha256:a631e377c121604ab7bd388c205b15d5bdd81e4f01f7352846a3f9aaca4f8a5b",
-      "proof_refs": [
-        "docs/book/theme/index.hbs",
-        "tests/doc_alignment.rs"
-      ]
-    },
-    {
-      "id": "chk-2-merge-origin-master",
-      "summary": "Merge origin/master (PR #2005) and refresh living specs and manifest",
-      "input_digest": "sha256:7bd347ae948058c67a9f5382ff1309a1e56e9fe65f89c9c5286c3ee1020425f3",
-      "proof_refs": [
-        "docs/book/theme/index.hbs",
-        "tests/doc_alignment.rs"
-      ]
-    },
-    {
-      "id": "chk-3-security-spec-review",
-      "summary": "Record SECURITY.md unchanged-with-reason spec review for docs-only hide-pricing PR",
-      "input_digest": "sha256:c6cae418423406baed2767a7ef44b8a2cafdf71afa393fb12e8e21be0f0dccc2",
-      "proof_refs": [
-        "tests/doc_alignment.rs"
-      ]
-    },
-    {
-      "id": "chk-4-merge-master-2006",
-      "summary": "Merge origin/master (PR #2006), refresh living specs, and record all 3 spec reviews",
-      "input_digest": "sha256:c39764c45ca0930057c9c2cb4f8b8041c40bb48afc6b2c492845cc785e23aaa6",
-      "proof_refs": [
-        "docs/book/theme/index.hbs",
-        "tests/doc_alignment.rs"
-      ]
+      "id": "ckpt-wt3-1277-880-a00b",
+      "summary": "Rebased #1277+#880 onto origin/master@a00bb829b069 (v0.169.5) preserving PR #2008 specs",
+      "input_digest": "sha256:3289bc7458e1569f53d8f4a48db917daa5d5da8ce45fb1eceb3ace968db0b5c2"
     }
   ],
   "intents": {
-    "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J": {
+    "intent:run_1277_880_a00b": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Current claimed task and isolated work branch"
+        "Keep #1277 and #880 open pending external npm publish auth, live pi host, and claude #1888 auth; zero workflow edits"
       ],
       "constraints": [
-        "root"
+        "bindings/typescript/",
+        "docs/research/host-outcome-pilot/"
       ],
       "created_sequence": 1,
-      "id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+      "id": "intent:run_1277_880_a00b",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Hide /pricing links in Decapod docs (Track C)",
-      "refined_intent": "Hide /pricing links in Decapod docs (Track C)",
+      "raw_intent": "Implement and verify #1277 TypeScript N-API cooperative cancellation + CLI fallback parity and #880 Wave 8 host activation evidence",
+      "refined_intent": "Wire AbortSignal::on_abort into execute_rpc_async, parse evalPrompt stdout before exit code in cli_process fallback, and commit redacted Wave 8 codex/antigravity pilot artifacts",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -956,9 +929,11 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Hide /pricing links in Decapod docs (Track C)",
+      "intent": "Wire cooperative AbortSignal cancellation in decapod-napi execute_rpc_async, restore cli_process evalPrompt block-response parity in DecapodClient, and record redacted Wave 8 codex/antigravity host activation comparison artifacts",
       "phases": [],
       "proof_hooks": [
+        "bindings/typescript/test/client.test.ts",
+        "packages/pi-decapod/test/pi_extension.test.ts",
         "decapod validate"
       ],
       "schema_version": "1.1.0",
@@ -966,69 +941,72 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Merged origin/master (#2006) and preserved mdBook hide-pricing architecture spec updates",
-          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
-          "spec_material_hash": "94e19ce1e4940ae29dfee38f505ba04e5142a421177c26e1544d3126318acbf8"
+          "reason": "Rebased #1277+#880 onto origin/master@a00bb829b069 (v0.169.5) preserving PR #2008 and all prior living specs",
+          "reviewed_code_fingerprint": "5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd",
+          "spec_material_hash": "cab087ca6ce456f45d26cc2cc3c80195c94fabd2802406c544d30c5f7d7e182c"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Merged origin/master (#2006) and preserved mdBook hide-pricing and doc_alignment interface spec updates",
-          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
-          "spec_material_hash": "66514f95ab932ff0779ba9b983df2ea94ac1fd92e3de6b31c5a352808e17342c"
+          "reason": "Rebased #1277+#880 onto origin/master@a00bb829b069 (v0.169.5) preserving PR #2008 and all prior living specs",
+          "reviewed_code_fingerprint": "5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd",
+          "spec_material_hash": "138f46ead493b175d1b1e951113d5cccae876a38d6dae9e6fa5201dfdb3c948b"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Docs-only mdBook pricing-link removal and tests/doc_alignment.rs update after merging origin/master (#2006); zero src/ Rust, auth, egress, or credential changes",
-          "reviewed_code_fingerprint": "57f559dc1e3a47a4ffe72c05fbf230a33a9f00088fa4a65b68eed92478e7e948",
+          "reason": "No security surface changes; evalPrompt fallback parity enforces block disposition (#1277, #880)",
+          "reviewed_code_fingerprint": "5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd",
           "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Hide /pricing links in Decapod docs (Track C)",
+      "title": "TypeScript N-API AbortSignal, CLI evalPrompt fallback parity, and Wave 8 host pilot (#1277, #880)",
       "todo_ids": [
-        "docs_01m8h2gp0mg0nnbj"
+        "bend_01m8fmb9p8vqqe8k"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795873807Z"
+      "updated_at": "1795878024Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Current claimed task and isolated work branch"
+        "Keep #1277 and #880 open pending external npm publish auth, live pi host, and claude #1888 auth; zero workflow edits"
       ],
-      "artifact_hash": "sha256:74d417f91a496983aff5a6dd7de8e27bff41ac5137f6a2dc71db258be030a3c0",
+      "artifact_hash": "sha256:74ed0596fd3a0d359ec1a9c38a277dee104443cd6f8efb8aff527a88575c2e54",
       "checks": [
         {
-          "name": "mdbook_build_and_seo",
+          "name": "bindings_ts_client_tests_8",
           "status": "passed"
         },
         {
-          "name": "rg_zero_pricing_refs",
+          "name": "gha_ci_46155422089_39_of_39",
+          "status": "passed"
+        },
+        {
+          "name": "pi_decapod_extension_tests_5",
           "status": "passed"
         }
       ],
-      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+            "intent_id": "intent:run_1277_880_a00b",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+            "intent_id": "intent:run_1277_880_a00b",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
+            "detail": "trajectory:run_1277_880_a00b",
             "event_id": "event:4",
-            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+            "intent_id": "intent:run_1277_880_a00b",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1037,45 +1015,32 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_01M8H2VNVAX4XPB39P8H5N0Y4S": {
+          "run_1277_880_a00b": {
             "evidence_only": true,
-            "id": "branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
-            "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+            "id": "run_1277_880_a00b",
+            "intent_id": "intent:run_1277_880_a00b",
             "steps": [
               {
-                "action": "verification",
-                "command": "mdbook build docs/book -d /tmp/decapod-book-hide-pricing && python3 assets/tools/docs_seo.py /tmp/decapod-book-hide-pricing",
+                "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "docs/book/theme/index.hbs",
-                  "docs/book/src/index.md",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/introduction.md",
-                  "docs/book/src/concepts/faq.md",
-                  "docs/book/src/reference/cloud-projects.md",
-                  "docs/book/src/reference/propodus.md",
-                  "docs/book/src/workflows/multi-agent.md",
-                  "tests/doc_alignment.rs",
-                  "docs/book/theme/index.hbs",
-                  "docs/book/src/index.md",
-                  "docs/book/src/quickstart.md",
-                  "docs/book/src/introduction.md",
-                  "docs/book/src/concepts/faq.md",
-                  "docs/book/src/reference/cloud-projects.md",
-                  "docs/book/src/reference/propodus.md",
-                  "docs/book/src/workflows/multi-agent.md",
-                  "tests/doc_alignment.rs",
-                  ".decapod/managed/specs/INTENT.md",
-                  ".decapod/managed/specs/ARCHITECTURE.md",
-                  ".decapod/managed/specs/INTERFACES.md",
-                  "mdbook 0.4.40 + docs_seo.py built 31 public pages with 0 decapodlabs.ai/pricing and 0 /contributor/repo/mo matches"
+                  "bindings/typescript/native/Cargo.lock",
+                  "bindings/typescript/native/src/lib.rs",
+                  "bindings/typescript/src/index.ts",
+                  "bindings/typescript/test/client.test.ts",
+                  "docs/research/host-outcome-pilot/wave8-comparison.json",
+                  "docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md",
+                  "docs/research/host-outcome-pilot/wave8-input.json",
+                  "Rebased cleanly onto origin/master@a00bb829b069 (PR #2008) preserving all prior living specs; exact 7 code/research files identical to 39/39 CI-green e2a4e31df."
                 ],
                 "proof_refs": [
-                  "mdbook_build_and_seo",
-                  "rg_zero_pricing_refs"
+                  "bindings_ts_client_tests_8",
+                  "pi_decapod_extension_tests_5",
+                  "gha_ci_46155422089_39_of_39"
                 ],
                 "scope": [
-                  "root"
+                  "bindings/typescript/",
+                  "docs/research/host-outcome-pilot/"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1084,49 +1049,29 @@
           }
         }
       },
-      "declared_commands": [
-        "mdbook build docs/book -d /tmp/decapod-book-hide-pricing && python3 assets/tools/docs_seo.py /tmp/decapod-book-hide-pricing"
-      ],
-      "destination": "pull request",
+      "declared_commands": [],
       "evidence": [
-        "mdbook 0.4.40 + docs_seo.py built 31 public pages with 0 decapodlabs.ai/pricing and 0 /contributor/repo/mo matches"
+        "Rebased cleanly onto origin/master@a00bb829b069 (PR #2008) preserving all prior living specs; exact 7 code/research files identical to 39/39 CI-green e2a4e31df."
       ],
-      "inspected_files": [
-        "docs/book/src/concepts/faq.md",
-        "docs/book/src/index.md",
-        "docs/book/src/introduction.md",
-        "docs/book/src/quickstart.md",
-        "docs/book/src/reference/cloud-projects.md",
-        "docs/book/src/reference/propodus.md",
-        "docs/book/src/workflows/multi-agent.md",
-        "docs/book/theme/index.hbs",
-        "tests/doc_alignment.rs"
-      ],
-      "intent_id": "intent:change_01M8H2VNQT3MEWBN6FA9FK5H9J",
+      "inspected_files": [],
+      "intent_id": "intent:run_1277_880_a00b",
       "modified_files": [
-        ".decapod/managed/specs/ARCHITECTURE.md",
-        ".decapod/managed/specs/INTENT.md",
-        ".decapod/managed/specs/INTERFACES.md",
-        "docs/book/src/concepts/faq.md",
-        "docs/book/src/index.md",
-        "docs/book/src/introduction.md",
-        "docs/book/src/quickstart.md",
-        "docs/book/src/reference/cloud-projects.md",
-        "docs/book/src/reference/propodus.md",
-        "docs/book/src/workflows/multi-agent.md",
-        "docs/book/theme/index.hbs",
-        "tests/doc_alignment.rs"
-      ],
-      "next_transitions": [
-        "Refine plan and declare falsifiable checks"
+        "bindings/typescript/native/Cargo.lock",
+        "bindings/typescript/native/src/lib.rs",
+        "bindings/typescript/src/index.ts",
+        "bindings/typescript/test/client.test.ts",
+        "docs/research/host-outcome-pilot/wave8-comparison.json",
+        "docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md",
+        "docs/research/host-outcome-pilot/wave8-input.json"
       ],
       "repo_scope": [
-        "root"
+        "bindings/typescript/",
+        "docs/research/host-outcome-pilot/"
       ],
-      "run_id": "branch_01M8H2VNVAX4XPB39P8H5N0Y4S",
+      "run_id": "run_1277_880_a00b",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "docs_01m8h2gp0mg0nnbj",
+      "task_id": "bend_01m8fmb9p8vqqe8k",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
