@@ -468,13 +468,31 @@ fn historical_oversized_task_field_remains_losslessly_readable_and_patchable_on_
         let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
         conn.execute("DELETE FROM events WHERE stream = 'todo'", [])
             .unwrap();
+        conn.execute("DROP TRIGGER IF EXISTS trg_decapod_tasks_upd_contract", [])
+            .unwrap();
         conn.execute(
             "UPDATE tasks SET description = ?1 WHERE id = ?2",
             decapod::params![historical_oversized, id],
         )
         .unwrap();
     }
+    todo::initialize_todo_db(&data).unwrap();
     todo::task_journal_checkpoint(&data, None).unwrap();
+
+    // Direct SQL overwrite of bounded description must fail closed inside SQLite once triggers are active.
+    {
+        let conn = Connection::open(data.join(schemas::LOCAL_DB_NAME)).unwrap();
+        let sql_err = conn
+            .execute(
+                "UPDATE tasks SET description = ?1 WHERE id = ?2",
+                decapod::params!["J".repeat(storage_contracts::MAX_DESCRIPTION_BYTES + 1), id],
+            )
+            .unwrap_err();
+        assert!(
+            sql_err.to_string().contains("STORAGE_CONTRACT_VIOLATION"),
+            "expected SQLite trigger STORAGE_CONTRACT_VIOLATION, got {sql_err}"
+        );
+    }
 
     // Updating unrelated columns (title + owner) must succeed and preserve all 100,000 bytes.
     let patched = todo::edit_task(

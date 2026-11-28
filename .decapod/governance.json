@@ -918,6 +918,11 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/46119565038"
       ]
+    },
+    {
+      "id": "merge-accepted-storage-e10831742",
+      "summary": "Preserve #1989 material and current task journal while integrating accepted storage contract merge e10831742",
+      "input_digest": "sha256:6c0d839489aa03d9ac6b413f4042fc682e1f09208f779cb4107c80fe34f6caee"
     }
   ],
   "intents": {
@@ -964,22 +969,22 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The GitHub metadata barrier retains terminal successes only for intermediate polls and rereads every exact workflow at the final barrier. All workflow inputs match the accepted release.",
-          "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
-          "spec_material_hash": "0f856bc014a0ea7252b21ea6b7b06eef5b7444c9b9af46be7fe5a76293a48972"
+          "reason": "Preserves the accepted storage contracts and adds opt-in observed cost and intermediate successful workflow caching. Every exact workflow is reread by the final barrier.",
+          "reviewed_code_fingerprint": "6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2",
+          "spec_material_hash": "dd788c4fa1f34608a7243a1609168510131383e2aac668450868978e56a5743f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "The measurements view is opt-in and preserves default comparison output. Provider attempt, authorization and evidence semantics remain exact.",
-          "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
-          "spec_material_hash": "a8ab136c7aff7bc45f45e68e4459e2c0d55fda114d1b3f4dacfa9daa7746add8"
+          "reason": "Preserves the accepted storage interfaces. The new measurements view is opt-in with unchanged defaults and final provider verification semantics.",
+          "reviewed_code_fingerprint": "6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2",
+          "spec_material_hash": "09ea9ddf5d769761697b3760fa6041872486be805d0d0c54cf4bdb0b025f464d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "The final barrier still authenticates the original source plan and provider identities. All proof inputs match the accepted release, and the memory-only successful-path set provides no publication authority.",
-          "reviewed_code_fingerprint": "2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee",
+          "reason": "The final barrier authenticates the exact accepted source plan and provider identities. The memory-only successful-path set grants no publication authority.",
+          "reviewed_code_fingerprint": "6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -991,16 +996,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795853189Z"
+      "updated_at": "1795853305Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:86ff1ad637e1e570d741ec6eed3aed02cf48578b540c8bd4c85c3f4a971c9fba",
+      "artifact_hash": "sha256:63419124583c3006d1cf9d0abdcef9dfcbda9627994f57fc324618b62a532e45",
       "checks": [
         {
           "name": "accepted release inventory comparison",
+          "status": "passed"
+        },
+        {
+          "name": "accepted storage merge source overlap review",
           "status": "passed"
         },
         {
@@ -1062,10 +1071,17 @@
             "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "trajectory_step_recorded",
             "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 7,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8GDCK4RM8QH7PK0V5F86HFH": {
@@ -1144,6 +1160,23 @@
                 ],
                 "sequence": 7,
                 "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Origin master advanced to e10831742. It independently carries the same reviewed inventory and changes no #1989 production files. The kernel reconciled prior current PR custody and newly accepted obligations."
+                ],
+                "proof_refs": [
+                  "accepted storage merge source overlap review"
+                ],
+                "scope": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "root"
+                ],
+                "sequence": 8,
+                "validation_findings": []
               }
             ]
           }
@@ -1154,6 +1187,7 @@
       "evidence": [
         "25 snapshot-provider automatic native tests passed. The two-workflow request-count fixture uses 26 instead of 48 intermediate reads, then fresh reads both exact workflows and rejects changed attempts. Existing pending-attempt, source-binding, authorization and Buildkite cases passed.",
         "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted.",
+        "Origin master advanced to e10831742. It independently carries the same reviewed inventory and changes no #1989 production files. The kernel reconciled prior current PR custody and newly accepted obligations.",
         "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection.",
         "Verified hashes and canonical symlinks for all 112 discovered inventory entries against accepted 170efc04. Compared the preceding accepted tree; only the two Cargo version entries changed in the inventory. Existing source Actions are historical for the next milestone."
       ],
@@ -1175,6 +1209,7 @@
       ],
       "next_transitions": [
         "Checkpoint and obtain source validation for the exact reconciled commit",
+        "Checkpoint merged current target and collect exact full source CI",
         "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [

@@ -2,7 +2,7 @@
 
 ## Host measurement and GitHub source polling verification (#1989)
 
-The v0.169.5 release merge (`170efc04`) changes the Decapod package version in `Cargo.toml` and `Cargo.lock` and updates the changelog. All 112 discovered proof source entries on this branch match the accepted release. Reconciliation updates the reviewed digest and retains the existing provider, required workflow set, and final exact-attempt readback. Source checks on `e8f3e349` passed before this reconciliation. Full validation must establish evidence for the new exact commit.
+The v0.169.5 release merge (`170efc04`) changes the Decapod package version in `Cargo.toml` and `Cargo.lock` and updates the changelog. All 112 discovered proof source entries on this branch match the accepted release. Reconciliation updates the reviewed digest and retains the existing provider, required workflow set, and final exact-attempt readback. Source checks on `e8f3e349` passed before this reconciliation. The accepted target later advanced to storage contract merge (`e10831742`), which already declares this inventory. The kernel reconciles the existing journal and accepted obligations during integration. Full validation must establish evidence for the resulting exact commit.
 
 ## `#1672` Hop 1 shard unbundling, `#1400` batch custody download & next-hop workflow digest verification
 
@@ -2927,7 +2927,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2b71a0a3892c35c37aaa262f882bf367949698b70dc59f240c9356581afa5bee`
+- Repository signal fingerprint: `6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
