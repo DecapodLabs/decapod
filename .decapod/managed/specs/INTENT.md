@@ -1,3 +1,11 @@
+## Section 10 storage contracts, SQLite write-boundary triggers & v0.169.1 dogfood benchmarks (`#1630`)
+
+Closes the remaining `#1630` unified storage contract, SQLite/PostgreSQL boundary enforcement, and `v0.169.1` dogfood growth measurement obligations without introducing shadow tables or weakening legacy read guarantees:
+
+- **Unified versioned field/collection contract table & Propodus ABI reconciliation (`src/decapod/core/storage_contracts.rs::field_contract_table`, `docs/datastore-v2/logical_contract_v1.json`)**: Maps all active persisted `(table, column)` pairs (`tasks`, `events`, `task_verification`, `task_tags`, `task_owners`, `task_dependencies`, `storage_components`, `storage_component_refs`, `knowledge`, `nodes`, `decisions`, `sessions`, `cron_jobs`, `reflexes`, `feedback`, `archives`, `claims`, `proof_events`, `health_cache`, `approvals`, `obligations`, `obligation_edges`, `preferences`, `patterns`, `observations`, `consolidations`, `agent_prompts`, `originals_index`, `summaries`, `request_dedupe`) to UTF-8 byte limits, `MAX_JSON_DEPTH = 32`, collection limits, PostgreSQL `octet_length(convert_to(col, 'UTF8'))` expressions (`postgres_check_constraint_sql`), and `propodus_abi_v1_max_bytes` (`decapod.logical_storage_abi.v1`), exported in `contract_manifest()["field_table"]`.
+- **SQLite engine write-boundary triggers & `storage_owner` proxy compatibility (`src/decapod/core/storage_contracts.rs::ensure_sqlite_write_boundary_triggers`, `src/decapod/core/storage_owner.rs::permitted_create_trigger`)**: Installs one compact `BEFORE INSERT` and one `BEFORE UPDATE OF <cols>` trigger pair per table (`trg_decapod_{tasks,task_verification,events}_{ins,upd}_contract`), querying `pragma_table_info(?1)` and `sqlite_schema` via `SELECT` and admitting single `CREATE TRIGGER` DDL over `Proxy`, rejecting UTF-8 byte overflows and `0x00` bytes inside SQLite while preserving historical oversized rows on read and unrelated-column updates (`tests/datastore_contract.rs`).
+- **Enhanced `v0.169.1` synthetic + dogfood compaction benchmarks (`src/decapod/core/houseboat.rs::run_local_storage_compaction_benchmark`, `docs/datastore-v2/compaction-benchmarks-v0.169.1.md`, `docs/datastore-v2/dogfood-compaction-v0.169.1.json`)**: Benchmarks `_ce_v1` + `storage_components` deduplication against an apples-to-apples uncompacted v1 twin (`1,114,112 -> 946,176` B, `-167,936` B / `15.07%`), captures `v0.169.1` release snapshots across `dactyl`, `propodus`, and `decapod` (`536,883,200 -> 451,088,384` B, `85,794,816` B / `15.98%` saved on `899,461` logical events with 100% lossless parity), and verifies live local PostgreSQL 17 `octet_length(convert_to(col, 'UTF8'))` + `storage_components` GC parity.
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1532,7 +1540,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
+- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
