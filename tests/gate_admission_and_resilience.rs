@@ -718,3 +718,97 @@ fn issue_1763_phase_authority_matrix_denied_repair_admitted_and_external_bypass_
         "external unmediated bypass commit must remain non-admitted"
     );
 }
+
+#[test]
+fn issue_1367_cold_observer_inspects_plan_workunit_trajectory_broker_readonly_before_handoff() {
+    let (tmp, root, wt, task_id, pw_a) = setup_isolated_worktree("agent-alpha");
+    let xdg = tmp.path();
+
+    let artifacts_a = decapod(
+        xdg,
+        &wt,
+        &["govern", "artifacts", "status"],
+        "agent-alpha",
+        Some(&pw_a),
+    );
+    assert!(artifacts_a.status.success());
+    let gov_json: Value = serde_json::from_slice(&artifacts_a.stdout).unwrap();
+    let intent_id = gov_json["sections"]["trajectory"]["intent_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    let run_id = gov_json["sections"]["trajectory"]["run_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    assert!(
+        decapod(
+            xdg,
+            &wt,
+            &[
+                "govern",
+                "workunit",
+                "init",
+                "--task-id",
+                &task_id,
+                "--intent-ref",
+                &intent_id,
+            ],
+            "agent-alpha",
+            Some(&pw_a),
+        )
+        .status
+        .success()
+    );
+
+    // Cold replacement actor (before handoff) MUST be able to inspect read-only
+    // continuation state without hitting AUTHORING_CUSTODY_STALE, while mutations remain blocked.
+    let pw_b = acquire_session(xdg, &root, "agent-beta");
+    for args in [
+        vec!["govern", "plan", "status"],
+        vec!["govern", "workunit", "get", "--task-id", &task_id],
+        vec!["govern", "workunit", "status", "--task-id", &task_id],
+        vec![
+            "govern",
+            "workunit",
+            "journal-status",
+            "--task-id",
+            &task_id,
+        ],
+        vec!["govern", "trajectory", "status", "--run-id", &run_id],
+        vec!["data", "broker", "verify"],
+        vec!["data", "broker", "audit"],
+    ] {
+        let out = decapod(xdg, &wt, &args, "agent-beta", Some(&pw_b));
+        assert!(
+            out.status.success(),
+            "read-only {args:?} failed for cold observer: stdout={} stderr={}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+
+    // Mutating commands MUST still refuse with AUTHORING_CUSTODY_STALE before handoff.
+    let mutate = decapod(
+        xdg,
+        &wt,
+        &[
+            "govern",
+            "workunit",
+            "checkpoint",
+            "--task-id",
+            &task_id,
+            "--operation-id",
+            "op-unauthorized",
+        ],
+        "agent-beta",
+        Some(&pw_b),
+    );
+    assert!(!mutate.status.success());
+    assert!(
+        String::from_utf8_lossy(&mutate.stderr).contains("AUTHORING_CUSTODY_STALE"),
+        "expected AUTHORING_CUSTODY_STALE on unhanded-off mutation, got: {}",
+        String::from_utf8_lossy(&mutate.stderr)
+    );
+}
