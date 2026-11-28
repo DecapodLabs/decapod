@@ -907,6 +907,11 @@
       "id": "contributor-guide",
       "summary": "Document repository-scoped contributor authorization and agent-owned exact-action continuation.",
       "input_digest": "sha256:6c2e8f5465afd7d2734fa9e720ec7cf74e1edef1d7ba711c42777514966f6717"
+    },
+    {
+      "id": "accepted-docs-integration",
+      "summary": "Preserve contributor admission and the accepted documentation revision.",
+      "input_digest": "sha256:64bd842739904ca8798ba36e119bad18d361ce15c829e8008cc90d7705f41e5d"
     }
   ],
   "intents": {
