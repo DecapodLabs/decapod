@@ -941,6 +941,11 @@
       "id": "current-pr-falsifiable-claim",
       "summary": "Preserve the exact candidate and record its current falsifiable publication claim.",
       "input_digest": "sha256:0ff2b7a417055dfcb3b769caa7e54536805f3e08b4f9008da5975d778146d91c"
+    },
+    {
+      "id": "release-current-spec-review",
+      "summary": "Bind the current interface and surrounding contract reviews to the accepted release and exact source.",
+      "input_digest": "sha256:0932b55de3efdfbd3d61fb71cb67c2dc377998e6aa979f0e4af76f3bab54e0ae"
     }
   ],
   "intents": {
@@ -986,22 +991,22 @@
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
           "reason": "Documented backend selection before retained SQLite is consulted, with unchanged authority owners.",
-          "reviewed_code_fingerprint": "14868159618c09ccda1a8f148cf6740c404ab0749e04e60899be562ce98e6251",
-          "spec_material_hash": "65386d2b074cb55022284918373f992f28be6dadeb99f272574562baff3ee195"
+          "reviewed_code_fingerprint": "b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc",
+          "spec_material_hash": "395fc7375f7a150fed5064c2c2d8cae15884413f84bb9d54b50095351aac5c9f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
           "reason": "Represented Cloud knowledge unavailable while preserving file and Constitution context.",
-          "reviewed_code_fingerprint": "14868159618c09ccda1a8f148cf6740c404ab0749e04e60899be562ce98e6251",
-          "spec_material_hash": "558270e72558fed8726818f01474573d8258eab4c18c97213e68cde6db3295f0"
+          "reviewed_code_fingerprint": "b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc",
+          "spec_material_hash": "251943ef54d5b891b9120fe19d6721a73096b6d310861df183f7991863b598bb"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
           "reason": "Compound context checks existing backend authority and skips the retained Local working data. Managed identity, session access, and Git source policy stay in their current owners.",
-          "reviewed_code_fingerprint": "14868159618c09ccda1a8f148cf6740c404ab0749e04e60899be562ce98e6251",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reviewed_code_fingerprint": "b5e6e51977ed9d2ae3f14a659d90808255b326fb392fdadc02f59605d7c60ebc",
+          "spec_material_hash": "4f0722f8f82a71ed39351e0e19aac413f968aad28c13d7a0932a699fd33cf52a"
         }
       ],
       "state": "APPROVED",
@@ -1012,7 +1017,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795836241Z"
+      "updated_at": "1795848136Z"
     },
     "trajectory": {
       "active_boundaries": [
