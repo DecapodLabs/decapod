@@ -926,6 +926,14 @@
       "proof_refs": [
         "tests/cloud_command_path.rs"
       ]
+    },
+    {
+      "id": "guard-170efc-release-integration",
+      "summary": "Integrate the accepted 0.169.5 release and bind its current controller projections to the Cloud claim guard",
+      "input_digest": "sha256:71a4c67d648325fe659394d6118a42514c80ef6579c8921660669ff9cf1c37fc",
+      "proof_refs": [
+        "tests/cloud_command_path.rs"
+      ]
     }
   ],
   "intents": {
@@ -969,22 +977,22 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Accepted documentation architecture is retained. The claim guard leaves hosted authority boundaries intact.",
-          "reviewed_code_fingerprint": "12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137",
+          "reason": "Only accepted release metadata and generated projections advance from the prior integration. Hosted ownership boundaries remain as reviewed.",
+          "reviewed_code_fingerprint": "2faf668f4cae183163fbc34f8d4ecb271b36ce3a881eaa6afd5a69dec37f926d",
           "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Preserve accepted documentation contracts and the branch Cloud claim-option rules in the integrated spec.",
-          "reviewed_code_fingerprint": "12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137",
+          "reason": "The release merge preserves the previously reviewed Cloud claim-options contract against the accepted 0.169.5 source.",
+          "reviewed_code_fingerprint": "2faf668f4cae183163fbc34f8d4ecb271b36ce3a881eaa6afd5a69dec37f926d",
           "spec_material_hash": "d27e9abdf025b884178feeb99770a5768253ab71851f6ac3866cb34ec500a990"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "This integration preserves the accepted security spec and the existing pre-transport refusal contract.",
-          "reviewed_code_fingerprint": "12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137",
+          "reason": "The release merge keeps the existing pre-transport refusal and authenticated authority rules.",
+          "reviewed_code_fingerprint": "2faf668f4cae183163fbc34f8d4ecb271b36ce3a881eaa6afd5a69dec37f926d",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
@@ -996,13 +1004,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795844918Z"
+      "updated_at": "1795845496Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:4b6645f3893bee4c5f738add505e1b660e610022da23d62cb08f248a568b7619",
+      "artifact_hash": "sha256:614211f94c87668b38a0f552d0c64a72528bb34d4235acfc7c4eb2f3cf9522ae",
       "checks": [
         {
           "name": "format",
@@ -1044,10 +1052,17 @@
             "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
             "kind": "trajectory_step_recorded",
             "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M8G1AWNJJTEYVQCJYPHA28FQ",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M8G1AWDFF30XK1GCP8W7WYE8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 6,
+        "next_sequence": 7,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_01M8G1AWNJJTEYVQCJYPHA28FQ": {
@@ -1104,6 +1119,23 @@
                 ],
                 "sequence": 6,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "CHANGELOG.md",
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  ".decapod/config.toml",
+                  "Accepted release merge 170efc04ae39ec9ba78e27db941ac86731c9969e changed the package/lock version and CHANGELOG. The official controller will bind the reviewed source inventory sha256:0d87fdfabf5eccda9438e69cb40e495e888d441c38f5031a4e7ceec5d7a9ffbe. The earlier b049 push-context proof became stale on target movement."
+                ],
+                "proof_refs": [],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
               }
             ]
           }
@@ -1113,11 +1145,15 @@
       "destination": "pull request",
       "evidence": [
         "Accepted b049135963d158139a610904752cc546c22e606d carries the published book and its authored living specs. Preserved those bytes and the Cloud claim guard, regenerated only managed projections, and will validate against the new exact target. Earlier PR admission is historical.",
+        "Accepted release merge 170efc04ae39ec9ba78e27db941ac86731c9969e changed the package/lock version and CHANGELOG. The official controller will bind the reviewed source inventory sha256:0d87fdfabf5eccda9438e69cb40e495e888d441c38f5031a4e7ceec5d7a9ffbe. The earlier b049 push-context proof became stale on target movement.",
         "Checksum-verified v0.169.4 reported the accepted source inventory sha256:cb01a74e37d2bf94fd3e4aab8561168079123a40a773bedc2400cd696d36a7ee and regenerated release-bound projections. Full configured validation is still required.",
         "Shared, explicit duration and explicit intent were discarded in the main Cloud dispatch; the same preflight now checks CLI and direct entry points."
       ],
       "inspected_files": [
         ".decapod/managed/specs/INTERFACES.md",
+        "CHANGELOG.md",
+        "Cargo.lock",
+        "Cargo.toml",
         "src/decapod/core/dactyl_todo.rs",
         "src/decapod/core/todo.rs"
       ],
