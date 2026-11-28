@@ -1,5 +1,13 @@
 # Security
 
+## Post-PR observation authority (#1983)
+
+An observed merge requires a stable PR identity, a matching immutable
+repository ID, a closed PR, and a valid commit from explicit GitHub
+merge evidence. GitHub test merge commits carry no delivery evidence.
+Current authorization remains with accepted policy and required forge
+controls.
+
 ## Section 12 Host Integration, Caller Isolation, and Privacy Boundaries (#875, #1277, #1095, #880, #1888)
 
 - **Harness packaging isolation (`src/decapod/core/agent_interop/registry.rs`)**: `install_harness_package` and `remove_harness_package` refuse symlink targets (`symlink_metadata`), verify version skew (`version_skew`), preserve unrelated user MCP/hook entries via `decapodManaged = true` tagging, and construct harness config directory literals safely without bypassing repository namespace gates.
@@ -1631,7 +1639,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

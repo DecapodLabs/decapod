@@ -345,13 +345,18 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
     {
         proof["status"] = "stale_accepted_base".into();
     }
-    let target_pr = if offline {
+    let mut target_pr = if offline {
         None
     } else {
         repository.as_ref().and_then(|r| {
             pr.and_then(|n| workspace::observe_pr_for_diagnostic(&root, &r.canonical_name, n).ok())
         })
     };
+    let checkout_matches_pr = target_pr.as_ref().is_some_and(|pr| {
+        pr["head"].as_str() == head.as_deref()
+            && pr["head_branch"].as_str() == branch.as_deref()
+            && pr["base_branch"].as_str() == Some(base_branch)
+    });
     let forge_checks = target_pr
         .as_ref()
         .and_then(|pr| pr["required_forge_checks"].as_array());
@@ -365,6 +370,9 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
     });
     let pending_checks =
         forge_checks.is_some_and(|checks| checks.iter().any(|check| check["bucket"] == "pending"));
+    let passing_checks = forge_checks.is_some_and(|checks| {
+        !checks.is_empty() && checks.iter().all(|check| check["bucket"] == "pass")
+    });
     let container_required = accepted.map(|c| c.repo.container_workspaces);
     let in_container = status.as_ref().map(|s| s.container.in_container);
     if operation == "workspace.publish" {
@@ -430,12 +438,10 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
                 "gh pr checks --required",
             );
         }
-        if target_pr.as_ref().is_some_and(|pr| {
-            pr["head"].as_str() != head.as_deref()
-                || pr["head_branch"].as_str() != branch.as_deref()
-                || pr["base_branch"].as_str() != Some(base_branch)
-                || pr["state"] != "open"
-        }) {
+        if target_pr
+            .as_ref()
+            .is_some_and(|pr| !checkout_matches_pr || pr["state"] != "open")
+        {
             block(
                 &mut blockers,
                 "PR_TARGET_MISMATCH",
@@ -471,14 +477,15 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
             "Retry diagnosis after completing the candidate edit",
         );
     }
+    let checkout_unchanged = git(&root, &["rev-parse", "--verify", "HEAD"]) == head
+        && git(&root, &["symbolic-ref", "--quiet", "--short", "HEAD"]) == branch;
     if final_candidate
         .as_deref()
         .map(digest)
         .map(Value::String)
         .unwrap_or(Value::Null)
         != candidate.get("digest").cloned().unwrap_or(Value::Null)
-        || git(&root, &["rev-parse", "--verify", "HEAD"]) != head
-        || git(&root, &["symbolic-ref", "--quiet", "--short", "HEAD"]) != branch
+        || !checkout_unchanged
     {
         candidate["status"] = "changed_during_diagnosis".into();
         eligible = None;
@@ -525,6 +532,9 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
         .as_ref()
         .and_then(|i| serde_json::to_value(&i.dirty).ok())
         .unwrap_or(json!({"status":"unavailable"}));
+    if let Some(pr) = target_pr.as_mut() {
+        pr["matches_workspace_candidate"] = json!(checkout_matches_pr && checkout_unchanged);
+    }
     super::trace::redact(
         json!({"schema_version":SCHEMA,"exit_code":exit_code,"read_only":true,
         "repository":{"root":main,"protected_root":protected_root},
@@ -546,7 +556,7 @@ pub(crate) fn inspect(root: &Path, operation: &str, pr: Option<u64>, offline: bo
         "container_proof":{"required":container_required,"status":match (container_required, in_container) {(Some(false),_)=>"not_required",(Some(true),Some(true))=>"runtime_detected_proof_unverified",(Some(true),Some(false))=>"unestablished",_=>"unavailable"},"captured":null,"source":"accepted_repository_config_and_workspace_status"},
         "dirty_files":dirty_files,
         "governance_artifacts":artifacts,"proof":proof,"target_pr":target_pr,
-        "remote_check_readiness":{"status":if failing_checks{"blocked"}else if pending_checks{"pending"}else if forge_checks.is_some_and(|checks| !checks.is_empty() && checks.iter().all(|check| check["bucket"]=="pass")){"forge_required_checks_passing"}else{"unverified"},
+        "remote_check_readiness":{"status":if failing_checks{"blocked"}else if pending_checks{"pending"}else if passing_checks{"forge_required_checks_passing"}else{"unverified"},
             "source":"github_required_pr_checks","complete_proof_profile_verified":false},
         "publication_readiness":{"can_publish":false,"live_recheck_required":true,"source":"existing_governed_publisher"},
         "merge_authorized":false,"blockers":blockers,"next_actions":next_actions}),
@@ -601,6 +611,15 @@ pub(crate) fn run(
             "Proof: {}; publication needs live governed recheck",
             report["proof"]["status"]
         );
+        if let Some(pr) = report["target_pr"].as_object() {
+            println!(
+                "PR #{}: {} (matches workspace candidate: {})",
+                pr["number"], pr["merge_observation"]["state"], pr["matches_workspace_candidate"]
+            );
+            if let Some(commit) = pr["merge_observation"]["merge_commit"].as_str() {
+                println!("Observed merge commit: {commit}");
+            }
+        }
         if let Some(blockers) = report["blockers"].as_array() {
             for blocker in blockers.iter().take(12) {
                 println!("{}: {}", blocker["code"], blocker["next_action"]);

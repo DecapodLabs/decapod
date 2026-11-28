@@ -872,55 +872,61 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
+    "id": "delivery-reconciliation-1983",
     "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
+    "delivery-reconciliation-1983": {
+      "statement": "Workspace diagnosis projects an observed merge of the exact stable repository and PR without granting authority, and reports if the readback matches the current candidate.",
+      "falsifier": "Open synthetic commits or unstable repository and PR snapshots appear as observed merge, stale candidate matches, or diagnosis admits a mutation.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "tests/init_config_behavior.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
+      "id": "delivery-reconciliation-1983",
+      "summary": "Project exact observed PR delivery through the existing read-only command and verify with the native CLI.",
+      "input_digest": "sha256:a346ad5b0a54e2533b36bd6bae9fa78a0eea929c7d7b19a3098993d793e0a941",
+      "proof_refs": [
+        "tests/init_config_behavior.rs"
+      ]
     },
     {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "delivery-reconciliation-e108",
+      "summary": "Preserve accepted #1997 storage and refresh exact post-PR diagnosis reviews.",
+      "input_digest": "sha256:0a5fe63be9a1537cacc3b661cad2b7d419f6a5a4deb0e91c84e8d2bdee721fa0",
+      "proof_refs": [
+        "git:e108317423a8d6fc12cbc3bc01017c76706dc1e2"
+      ]
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:delivery-reconciliation-1983": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Read-only workspace diagnosis. Use existing forge identity and proof custody."
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "src/decapod/core/workspace_publication.rs",
+        "src/decapod/core/workspace_diagnostic.rs",
+        "tests/init_config_behavior.rs",
+        "docs/agent",
+        ".decapod/managed/specs"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:delivery-reconciliation-1983",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Advance ordinary authorized post-PR reconciliation under Decapod #1983.",
+      "refined_intent": "Expose distinct native forge delivery states with exact candidate matching in existing read-only diagnosis.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,126 +939,140 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Read actual stable GitHub PR merge state and keep candidate applicability independent of observed historical delivery.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "cargo test --test init_config_behavior diagnostic_reconciles_exact_pr_delivery_across_processes"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
+          "reason": "Exact post-PR readback continues through the existing GitHub reader and the accepted storage ownership changes remain intact.",
+          "reviewed_code_fingerprint": "1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5",
+          "spec_material_hash": "3c2b1e981d3c424bc313b928fbc3dda309ffc349f7d87d148a96bf93c0f43348"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "reason": "The workspace diagnosis projection and accepted datastore interfaces retain their distinct existing sources.",
+          "reviewed_code_fingerprint": "1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5",
+          "spec_material_hash": "832b6462c7a4179e33e23ba814654aacc1039a5760eed5c2955f424d0cd71530"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "reason": "Observed remote merge evidence retains its existing identity and authorization boundary after the accepted storage changes.",
+          "reviewed_code_fingerprint": "1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5",
+          "spec_material_hash": "3642a7262289c0f60c8d477a3afebb1c4735581498cf8e11f19be225384b81d7"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Reconcile exact post-PR delivery evidence",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "code_01m8g67bdhgag3q1"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853513Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Read-only workspace diagnosis. Use existing forge identity and proof custody."
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:b068903ec8e50c6b8d7da9e912457e7d040261cfbd10ab2fc975a01c1cb5d7fd",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
+          "name": "accepted-storage-merge",
           "status": "passed"
         },
         {
-          "name": "pg17_utf8_gc_parity",
-          "status": "passed"
+          "name": "current-candidate-provider",
+          "status": "partial"
         },
         {
-          "name": "storage_contracts::tests",
-          "status": "passed"
-        },
-        {
-          "name": "storage_owner::tests",
-          "status": "passed"
-        },
-        {
-          "name": "tests/group_broker",
+          "name": "native-diagnostic",
           "status": "passed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:delivery-reconciliation-1983",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:delivery-reconciliation-1983",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:delivery-reconciliation-1983",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:delivery-reconciliation-1983",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:delivery-reconciliation-1983",
+            "event_id": "event:5",
+            "intent_id": "intent:delivery-reconciliation-1983",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "delivery-reconciliation-1983": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "delivery-reconciliation-1983",
+            "intent_id": "intent:delivery-reconciliation-1983",
             "steps": [
               {
-                "action": "trajectory.record",
+                "action": "verification",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  "The compiled CLI fixture restarted over scripted forge responses and preserved open, unmerged closure, observed merge, and unavailable states. Tests proved mismatch and race handling, with no remote mutation or authority."
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "native-diagnostic"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  ".decapod/managed/specs",
+                  "docs/agent",
+                  "src/decapod/core/workspace_diagnostic.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "tests/init_config_behavior.rs"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, events, TODO, config, tests, and docs against original target bytes. Post-PR diagnosis implementation, docs and regression fixture are unchanged. The prior provider receipt is historical."
+                ],
+                "proof_refs": [
+                  "accepted-storage-merge",
+                  "current-candidate-provider"
+                ],
+                "scope": [
+                  ".decapod/managed/specs",
+                  "docs/agent",
+                  "src/decapod/core/workspace_diagnostic.rs",
+                  "src/decapod/core/workspace_publication.rs",
+                  "tests/init_config_behavior.rs"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1061,25 +1081,23 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "The compiled CLI fixture restarted over scripted forge responses and preserved open, unmerged closure, observed merge, and unavailable states. Tests proved mismatch and race handling, with no remote mutation or authority.",
+        "Verified accepted e108317423a8d6fc12cbc3bc01017c76706dc1e2 storage, events, TODO, config, tests, and docs against original target bytes. Post-PR diagnosis implementation, docs and regression fixture are unchanged. The prior provider receipt is historical."
       ],
       "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
-      "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
-      ],
+      "intent_id": "intent:delivery-reconciliation-1983",
+      "modified_files": [],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        ".decapod/managed/specs",
+        "docs/agent",
+        "src/decapod/core/workspace_diagnostic.rs",
+        "src/decapod/core/workspace_publication.rs",
+        "tests/init_config_behavior.rs"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "delivery-reconciliation-1983",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "code_01m8g67bdhgag3q1",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

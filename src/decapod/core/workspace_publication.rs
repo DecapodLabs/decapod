@@ -375,16 +375,17 @@ pub(super) fn verify_spec_reviews(repo: &Path, base: &str) -> Result<(), Decapod
     Ok(())
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 struct PrRef {
     #[serde(rename = "ref")]
     branch: String,
     sha: String,
     repo: Option<PrRepo>,
 }
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 struct PrRepo {
     full_name: String,
+    id: Option<u64>,
 }
 #[derive(Debug, Deserialize)]
 struct PullRequest {
@@ -393,11 +394,42 @@ struct PullRequest {
     state: String,
     #[serde(default)]
     draft: bool,
-    #[serde(default)]
-    merged: bool,
+    merged: Option<bool>,
+    merge_commit_sha: Option<String>,
     head: PrRef,
     base: PrRef,
     changed_files: usize,
+}
+
+#[derive(Serialize, PartialEq, Eq)]
+#[serde(tag = "state", rename_all = "snake_case")]
+enum PrMergeObservation<'a> {
+    Open,
+    ClosedUnmerged,
+    ObservedMerged { merge_commit: &'a str },
+    Unavailable,
+}
+
+impl PullRequest {
+    fn repository_id(&self) -> Option<u64> {
+        let head_id = self.head.repo.as_ref()?.id?;
+        let base_id = self.base.repo.as_ref()?.id?;
+        (head_id > 0 && head_id == base_id).then_some(head_id)
+    }
+
+    fn merge_observation(&self) -> PrMergeObservation<'_> {
+        match (self.state.as_str(), self.merged) {
+            ("open", Some(false)) => PrMergeObservation::Open,
+            ("closed", Some(false)) => PrMergeObservation::ClosedUnmerged,
+            ("closed", Some(true)) if self.repository_id().is_some() => self
+                .merge_commit_sha
+                .as_deref()
+                .filter(|sha| oid(sha) && sha.bytes().any(|byte| byte != b'0'))
+                .map(|merge_commit| PrMergeObservation::ObservedMerged { merge_commit })
+                .unwrap_or(PrMergeObservation::Unavailable),
+            _ => PrMergeObservation::Unavailable,
+        }
+    }
 }
 
 fn check_pr(
@@ -445,6 +477,8 @@ pub(super) fn diagnostic_read_pr(
     slug: &str,
     number: u64,
 ) -> Result<serde_json::Value, DecapodError> {
+    let pr_url = format!("https://github.com/{slug}/pull/{number}");
+    crate::core::trust_egress::validate_egress_url(&pr_url, &[]).map_err(failure)?;
     let read = || {
         json::<PullRequest>(&gh(
             repo,
@@ -457,7 +491,11 @@ pub(super) fn diagnostic_read_pr(
         )?)
     };
     let pr = read()?;
-    if pr.number != number
+    if number == 0
+        || pr.number != number
+        || !pr.html_url.eq_ignore_ascii_case(&pr_url)
+        || !oid(&pr.head.sha)
+        || !oid(&pr.base.sha)
         || !pr
             .head
             .repo
@@ -473,6 +511,7 @@ pub(super) fn diagnostic_read_pr(
             "PR_TARGET_MISMATCH: diagnostic readback returned another repository or PR",
         ));
     }
+    let merge = pr.merge_observation();
     // A failed or pending check is valid observation output. Read the PR
     // again to ensure the forge still associates this rollup with the head.
     let checks = Command::new("gh")
@@ -493,19 +532,19 @@ pub(super) fn diagnostic_read_pr(
         .filter(|checks| checks.len() <= 256);
     let current = read()?;
     if current.number != pr.number
-        || current.head.sha != pr.head.sha
-        || current.base.sha != pr.base.sha
-        || current.head.branch != pr.head.branch
-        || current.base.branch != pr.base.branch
+        || current.head != pr.head
+        || current.base != pr.base
+        || current.html_url != pr.html_url
         || current.state != pr.state
+        || current.draft != pr.draft
+        || current.merge_observation() != merge
     {
         return Err(failure(
             "PR_TARGET_CHANGED: diagnostic PR changed during readback",
         ));
     }
-    let pr_url = format!("https://github.com/{slug}/pull/{number}");
-    crate::core::trust_egress::validate_egress_url(&pr_url, &[]).map_err(failure)?;
     Ok(serde_json::json!({"number":pr.number,"url":pr_url,
+        "github_repository_id":pr.repository_id(),"merge_observation":merge,
         "state":pr.state,"draft":pr.draft,"head":pr.head.sha,"head_branch":pr.head.branch,
         "base":pr.base.sha,"base_branch":pr.base.branch,"required_forge_checks":checks,
         "admission":"not_established_by_pr_existence"}))
@@ -582,7 +621,7 @@ fn quarantine_pr(
     if !matches(&pr) {
         return Err(failure("PR_QUARANTINE_TARGET_UNVERIFIED"));
     }
-    if pr.merged {
+    if pr.merged == Some(true) {
         return Err(failure(
             "PR_QUARANTINE_UNAVAILABLE_ALREADY_MERGED: admission failed after an external merge; no quarantine or merge authorization is claimed",
         ));
@@ -599,7 +638,7 @@ fn quarantine_pr(
     }
     let observed: PullRequest = json(&call(&["api", &endpoint])?)?;
     if matches(&observed)
-        && !observed.merged
+        && observed.merged != Some(true)
         && (observed.state == "closed" || (observed.state == "open" && observed.draft))
     {
         Ok(if observed.state == "closed" {

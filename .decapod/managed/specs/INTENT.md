@@ -1,3 +1,10 @@
+## Recover observed delivery after interruption (#1983)
+
+An agent can reopen workspace diagnosis for the same PR after an interrupted
+delivery. It can distinguish an open PR, closure without merge, and an
+observed merge even after a new process starts. The agent retains the
+remaining validation and authority obligations from the governed workflow.
+
 ## Section 10 storage contracts, SQLite write-boundary triggers & v0.169.1 dogfood benchmarks (`#1630`)
 
 Closes the remaining `#1630` unified storage contract, SQLite/PostgreSQL boundary enforcement, and `v0.169.1` dogfood growth measurement obligations without introducing shadow tables or weakening legacy read guarantees:
@@ -1540,7 +1547,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

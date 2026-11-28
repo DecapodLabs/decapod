@@ -1,3 +1,11 @@
+## Exact PR delivery readback (#1983)
+
+`workspace diagnose --pr <number> --format json` includes the
+`target_pr.merge_observation` state and available merge commit. The
+`matches_workspace_candidate` field identifies the exact checked-out head
+and configured target. Unstable or unavailable forge access leaves the
+requested PR observation unavailable.
+
 ## `#1630` Storage contract manifest, SQLite trigger names & benchmark report schema (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`, `docs/datastore-v2/`)
 
 - **Rust & JSON contract surface (`core::storage_contracts`)**: Exports `FieldContractSpec`, `FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql(&FieldContractSpec)`, and `ensure_sqlite_write_boundary_triggers(&Connection)`; `contract_manifest()` adds `field_table` and `propodus_abi_v1_reconciliation`, synchronized with `docs/datastore-v2/logical_contract_v1.json` (`release: "0.169.1"`).
@@ -2745,7 +2753,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

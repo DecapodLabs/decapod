@@ -1,3 +1,11 @@
+## Post-PR delivery observation (#1983)
+
+`workspace_publication::diagnostic_read_pr` reconciles the requested PR with
+two GitHub snapshots around the existing required-check read. The observed
+merge commit and exact PR head are independent of the live validation proof.
+`workspace_diagnostic` maps the PR observation to the unchanged checkout
+using the exact head revision, head branch, and configured target branch.
+
 ## `#1630` Unified storage field table, compact SQLite write-boundary triggers & v0.169.1 benchmark pipeline (`src/decapod/core/storage_contracts.rs`, `src/decapod/core/houseboat.rs`)
 
 - **Per-column contract registry (`storage_contracts::FIELD_CONTRACTS`, `field_contract_table()`, `postgres_check_constraint_sql`)**: Const-table architecture indexing active persisted columns by `(table, column, field_class, max_utf8_bytes, non_empty, nullable, max_json_depth, max_collection_len, propodus_abi_v1_max_bytes)` and surfacing `field_table` + `propodus_abi_v1_reconciliation` inside `contract_manifest()`.
@@ -2209,7 +2217,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `1f35b5a28cc89ea50cb0cc6a9d08a10fa968ba5860b61325b577f3e67cf78cc5`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
