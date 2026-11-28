@@ -1620,6 +1620,8 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 - **Cross-layer claim matrix & drift gate (`docs/security-assurance-matrix.md`, `tests/security_guarantee_assurance_1964.rs`)**: Maps published security/correctness claims across `README.md`, `SECURITY.md`, `docs/trust-and-egress-inventory.md`, `docs/publication-admission-acceptance.md`, `docs/book/src/reference/cloud-projects.md`, and `bindings/typescript/README.md` to exact enforcement components, evidence paths, and residual assumptions (`proven_for_exact_subject`, `trusted_assertion`, `conditional`, `not_proven`, `unsupported`), prohibiting unqualified absolute claims (`unspoofable`, `100% guaranteed`, unqualified `zero telemetry`).
 - **Mutation coverage extension (`tests/security_guarantee_assurance_1964.rs`)**: Preserves `#1795` intact and adds isolated single-fault mutation detection across uncovered boundaries `RULE-APPROVAL-006` (`governed_transition::admit`), `RULE-CLOUD-PROOF-008` (`cloud_proof::assert_candidate_acceptance_envelope`), `RULE-HTTP-READONLY-009` (`http_transport::read_only_only`), `RULE-SIGNER-ORIGIN-010` (`container_signer::extract_origin_relative_path` rejecting origin suffix/port/userinfo/fragment/path smuggling), and `RULE-HTTP-AUTH-011` (`http_transport::handle_single_connection` bearer token gate covered end-to-end via `slow_and_unauthorized_peers_fail_closed_within_timeout`).
 
+- **Whole-source egress & Cloud revocation boundary (`src/decapod/core/model_assets.rs`, `tests/trust_egress_gate.rs`)**: Enforces `validate_egress_url` on `download_public_asset`, scans every non-test file under `src/decapod/` against `DECLARED_EGRESS_CHANNELS` and `docs/trust-and-egress-inventory.md`, and exercises `DECAPOD_CHECK_LATEST` and `backend = "cloud"` -> `cloud logout` + `backend = "local"` revocation against a live loopback trap (`#1944`).
+
 <!-- decapod:codebase-contract:start -->
 
 ## Codebase Contract Snapshot
@@ -1631,7 +1633,7 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
+- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

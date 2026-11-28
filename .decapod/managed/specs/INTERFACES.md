@@ -2738,6 +2738,11 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **Host Container Signer (`src/decapod/core/container_signer.rs`)**: `ContainerSignerPolicy::sign_request` enforces exact origin authority (`extract_origin_relative_path`, returning `CONTAINER_SIGNER_ORIGIN_DENIED` on suffix/port/userinfo/fragment smuggling) and exact allowlisted gateway/PostgREST paths (`/functions/v1/decapod-onboarding/cloud-{query,batch,control}`, `/rest/v1/rpc/{dactyl_query_v1,dactyl_batch_v1,propodus_proof_acceptance_v1,propodus_proof_acceptance_get_v1}`, returning `CONTAINER_SIGNER_OPERATION_DENIED` on prefix/traversal paths).
 - **LCM Index Rebuild (`src/decapod/plugins/lcm.rs`)**: `rebuild_index(store, validate)` preserves its JSON envelope (`status`, `validated_count`, `error_count`, `errors`) while guaranteeing no `originals_index` mutation when `error_count > 0` and atomic replacement otherwise.
 
+## Egress Inventory & Model Download Interface Guarantees (#1944)
+
+- **`model_assets::download_public_asset` (`src/decapod/core/model_assets.rs`)**: Rejects undeclared hosts, plaintext `http://`, `@`-userinfo, URL fragments, and invalid authority ports via `trust_egress::validate_egress_url(url, &[])` with `io::ErrorKind::Other` before filesystem writes or `/usr/bin/curl` execution.
+- **`docs/trust-and-egress-inventory.md`**: Lists all reviewed outbound `curl`/`gh` sinks (`validate.rs`, `workspace_publication.rs`, `snapshot_provider/{mod,public_buildkite}.rs`, `model_assets.rs`, `propodus.rs`, `rpc.rs`, `lib.rs`) alongside `container_signer.rs` and `derived_release_driver.rs`.
+
 <!-- decapod:codebase-contract:start -->
 
 ## Codebase Contract Snapshot
@@ -2750,7 +2755,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
+- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

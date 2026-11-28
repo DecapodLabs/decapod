@@ -694,3 +694,382 @@ fn static_inventory_completeness_matches_codebase_and_invariants() {
         "telemetry projection must preserve strictly read-only / no default upload invariant"
     );
 }
+
+fn collect_src_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    let mut entries = fs::read_dir(dir)
+        .expect("read src dir")
+        .map(|entry| entry.expect("dir entry").path())
+        .collect::<Vec<_>>();
+    entries.sort();
+    for path in entries {
+        if path.is_dir() {
+            collect_src_rs_files(&path, out);
+        } else if path.extension().and_then(|ext| ext.to_str()) == Some("rs") {
+            out.push(path);
+        }
+    }
+}
+
+fn strip_cfg_test_items(src: &str) -> String {
+    let mut out = String::with_capacity(src.len());
+    let mut skipping = false;
+    let mut saw_brace = false;
+    let mut depth: i32 = 0;
+    for line in src.lines() {
+        if !skipping {
+            if line.trim() == "#[cfg(test)]" {
+                skipping = true;
+                saw_brace = false;
+                depth = 0;
+                continue;
+            }
+            out.push_str(line);
+            out.push('\n');
+        } else {
+            let opens = line.bytes().filter(|&b| b == b'{').count() as i32;
+            let closes = line.bytes().filter(|&b| b == b'}').count() as i32;
+            if opens > 0 {
+                saw_brace = true;
+            }
+            depth += opens - closes;
+            if (saw_brace && depth <= 0) || (!saw_brace && line.trim_end().ends_with(';')) {
+                skipping = false;
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn whole_src_outbound_network_and_telemetry_sinks_are_inventoried_and_fail_closed() {
+    use decapod::core::telemetry::TelemetryRetentionPolicy;
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let src_root = root.join("src/decapod");
+    let mut rs_files = Vec::new();
+    collect_src_rs_files(&src_root, &mut rs_files);
+    assert!(!rs_files.is_empty());
+
+    // Every production file under src/decapod/ with an outbound curl/gh/socket/HTTP sink
+    // must be explicitly listed here and documented in docs/trust-and-egress-inventory.md.
+    const REVIEWED_OUTBOUND_SOURCE_SINKS: &[(&str, &str)] = &[
+        ("src/decapod/core/model_assets.rs", "model_assets.rs"),
+        ("src/decapod/core/propodus.rs", "propodus.rs"),
+        ("src/decapod/core/rpc.rs", "src/decapod/core/rpc.rs"),
+        (
+            "src/decapod/core/snapshot_provider/mod.rs",
+            "snapshot_provider/mod.rs",
+        ),
+        (
+            "src/decapod/core/snapshot_provider/public_buildkite.rs",
+            "public_buildkite.rs",
+        ),
+        ("src/decapod/core/validate.rs", "validate.rs"),
+        (
+            "src/decapod/core/workspace_publication.rs",
+            "workspace_publication.rs",
+        ),
+        ("src/decapod/lib.rs", "src/decapod/lib.rs"),
+    ];
+
+    // Schema URIs, documentation/badge URLs, and non-network registry metadata strings
+    // that are never dialed as outbound egress endpoints.
+    const NON_EGRESS_INFORMATIONAL_HOSTS: &[&str] = &[
+        "decapod.dev",
+        "decapodlabs.github.io",
+        "example.invalid",
+        "fixture.invalid",
+        "img.shields.io",
+        "index.crates.io",
+        "json-schema.org",
+    ];
+
+    let sink_needles = [
+        "Command::new(\"curl\")",
+        "Command::new(\"/usr/bin/curl\")",
+        "Command::new(&self.curl)",
+        "Command::new(curl)",
+        "Command::new(\"gh\")",
+        "TcpStream::connect",
+        "UdpSocket::",
+        "reqwest::",
+        "ureq::",
+        "hyper::Client",
+        "hyper_util::",
+    ];
+
+    let mut discovered_sinks = Vec::new();
+    for path in &rs_files {
+        let rel = path
+            .strip_prefix(root)
+            .expect("relative path")
+            .to_string_lossy()
+            .replace('\\', "/");
+        if rel.ends_with("_tests.rs") || rel.ends_with("/tests.rs") || rel.contains("/tests/") {
+            continue;
+        }
+        let raw = fs::read_to_string(path).expect("read src file");
+        let prod = strip_cfg_test_items(&raw);
+
+        let mut matched_sink = false;
+        for line in prod.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("//") {
+                continue;
+            }
+            if sink_needles.iter().any(|needle| line.contains(needle)) {
+                matched_sink = true;
+            }
+            let mut rest = line;
+            while let Some(pos) = rest.find("https://") {
+                let after = &rest[pos + "https://".len()..];
+                let authority: String = after
+                    .chars()
+                    .take_while(|c| {
+                        c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_' | '[' | ']' | ':')
+                    })
+                    .collect();
+                let host = authority
+                    .trim_start_matches('[')
+                    .split(']')
+                    .next()
+                    .unwrap_or("")
+                    .split(':')
+                    .next()
+                    .unwrap_or("")
+                    .to_ascii_lowercase();
+                if !host.is_empty() && !NON_EGRESS_INFORMATIONAL_HOSTS.contains(&host.as_str()) {
+                    let probe_url = format!("https://{host}/");
+                    assert!(
+                        validate_egress_url(&probe_url, &[]).is_ok(),
+                        "undeclared production https:// host `{host}` found in `{rel}`; add to DECLARED_EGRESS_CHANNELS & docs/trust-and-egress-inventory.md"
+                    );
+                }
+                rest = after;
+            }
+        }
+        if matched_sink {
+            discovered_sinks.push(rel);
+        }
+    }
+
+    for rel in &discovered_sinks {
+        let entry = REVIEWED_OUTBOUND_SOURCE_SINKS
+            .iter()
+            .find(|(reviewed_rel, _)| reviewed_rel == &rel.as_str());
+        assert!(
+            entry.is_some(),
+            "new uninventoried outbound sink `{rel}` found under src/decapod/; review and register in trust_egress_gate + docs/trust-and-egress-inventory.md"
+        );
+        let (_, doc_needle) = entry.unwrap();
+        assert!(
+            INVENTORY_DOC.contains(doc_needle),
+            "docs/trust-and-egress-inventory.md missing sink entry `{doc_needle}` for `{rel}`"
+        );
+    }
+
+    // model_assets.rs and telemetry default policy fail closed.
+    let model_assets_rs = fs::read_to_string(root.join("src/decapod/core/model_assets.rs"))
+        .expect("read model_assets.rs");
+    assert!(
+        model_assets_rs.contains("validate_egress_url(url, &[])"),
+        "model_assets.rs must validate URLs via trust_egress::validate_egress_url"
+    );
+    assert!(
+        !TelemetryRetentionPolicy::default().allow_identifier_observation,
+        "TelemetryRetentionPolicy default must keep allow_identifier_observation = false"
+    );
+}
+
+#[test]
+fn cloud_to_local_revocation_and_check_latest_toggle_halt_outbound_egress_under_trap() {
+    let repo = tempfile::tempdir().expect("repo");
+    let home = tempfile::tempdir().expect("home");
+    let xdg_config = tempfile::tempdir().expect("xdg config");
+    let xdg_data = tempfile::tempdir().expect("xdg data");
+    let trap = NetworkTrap::new();
+
+    init_git_repo(repo.path());
+
+    let init = run_isolated_cli(
+        repo.path(),
+        home.path(),
+        xdg_config.path(),
+        xdg_data.path(),
+        &trap,
+        &[],
+        &["init", "--force", "--proof"],
+    );
+    assert!(init.status.success());
+
+    let session = run_isolated_cli(
+        repo.path(),
+        home.path(),
+        xdg_config.path(),
+        xdg_data.path(),
+        &trap,
+        &[],
+        &["session", "acquire"],
+    );
+    assert!(session.status.success());
+    let password = String::from_utf8_lossy(&session.stdout)
+        .lines()
+        .find_map(|line| line.strip_prefix("Password: "))
+        .map(str::trim)
+        .expect("session password")
+        .to_string();
+
+    // 1. DECAPOD_CHECK_LATEST=1 opts in `capabilities`, and clearing it halts immediately.
+    let caps_off = run_isolated_cli(
+        repo.path(),
+        home.path(),
+        xdg_config.path(),
+        xdg_data.path(),
+        &trap,
+        &[("DECAPOD_SESSION_PASSWORD", password.as_str())],
+        &["capabilities", "--format", "json"],
+    );
+    assert!(caps_off.status.success());
+    assert_eq!(trap.shim_invocations(), "");
+
+    let caps_on = run_isolated_cli(
+        repo.path(),
+        home.path(),
+        xdg_config.path(),
+        xdg_data.path(),
+        &trap,
+        &[
+            ("DECAPOD_SESSION_PASSWORD", password.as_str()),
+            ("DECAPOD_CHECK_LATEST", "1"),
+        ],
+        &["capabilities", "--format", "json"],
+    );
+    assert!(caps_on.status.success());
+    assert!(
+        trap.shim_invocations()
+            .contains("crates.io/api/v1/crates/decapod"),
+        "expected DECAPOD_CHECK_LATEST=1 to invoke curl shim; got: {}",
+        trap.shim_invocations()
+    );
+
+    let _ = fs::remove_file(&trap.shim_log);
+    let caps_revoked = run_isolated_cli(
+        repo.path(),
+        home.path(),
+        xdg_config.path(),
+        xdg_data.path(),
+        &trap,
+        &[("DECAPOD_SESSION_PASSWORD", password.as_str())],
+        &["capabilities", "--format", "json"],
+    );
+    assert!(caps_revoked.status.success());
+    assert_eq!(
+        trap.shim_invocations(),
+        "",
+        "unsetting DECAPOD_CHECK_LATEST must immediately stop outbound crates.io checks"
+    );
+
+    // 2. Switching backend = "cloud" -> cloud logout + backend = "local" halts Cloud egress immediately.
+    let cloud_listener = TcpListener::bind("127.0.0.1:0").expect("bind cloud trap");
+    cloud_listener.set_nonblocking(true).expect("nonblocking");
+    let cloud_addr = cloud_listener.local_addr().unwrap();
+    let cloud_hits = Arc::new(AtomicUsize::new(0));
+    let cloud_stop = Arc::new(AtomicBool::new(false));
+    let hits_ref = Arc::clone(&cloud_hits);
+    let stop_ref = Arc::clone(&cloud_stop);
+    let cloud_thread = std::thread::spawn(move || {
+        while !stop_ref.load(Ordering::Relaxed) {
+            match cloud_listener.accept() {
+                Ok((mut stream, _)) => {
+                    hits_ref.fetch_add(1, Ordering::SeqCst);
+                    let mut buf = [0u8; 256];
+                    let _ = stream.read(&mut buf);
+                }
+                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    let cfg_path = repo.path().join(".decapod/config.toml");
+    let base_cfg = fs::read_to_string(&cfg_path).expect("read config.toml");
+    let cloud_cfg = base_cfg.replace("backend = \"local\"", "backend = \"cloud\"");
+    assert_ne!(cloud_cfg, base_cfg, "config must toggle backend = cloud");
+    fs::write(&cfg_path, cloud_cfg).expect("write cloud config");
+    let state_cloud = ConsentRevocationState::load_from_project_root(repo.path()).expect("cloud");
+    assert!(state_cloud.allows_cloud_egress());
+
+    let origin_url = format!("http://{cloud_addr}");
+    let _ = Command::new(decapod_bin())
+        .args(["cloud", "status"])
+        .current_dir(repo.path())
+        .env("HOME", home.path())
+        .env("XDG_CONFIG_HOME", xdg_config.path())
+        .env("XDG_DATA_HOME", xdg_data.path())
+        .env("DECAPOD_AGENT_ID", "trust-gate-agent")
+        .env("DECAPOD_SESSION_PASSWORD", password.as_str())
+        .env("DECAPOD_TEST_MODE", "1")
+        .env("DECAPOD_CLOUD_TEST_ORIGIN", &origin_url)
+        .output()
+        .expect("run decapod cloud status");
+    assert!(
+        cloud_hits.load(Ordering::SeqCst) > 0,
+        "opted-in cloud status should reach loopback test origin before revocation"
+    );
+
+    // Revoke cloud consent: logout + switch backend back to local, then verify 0 trap hits.
+    let logout = run_isolated_cli(
+        repo.path(),
+        home.path(),
+        xdg_config.path(),
+        xdg_data.path(),
+        &trap,
+        &[("DECAPOD_SESSION_PASSWORD", password.as_str())],
+        &["cloud", "logout"],
+    );
+    assert!(
+        logout.status.success(),
+        "cloud logout failed: {}",
+        String::from_utf8_lossy(&logout.stderr)
+    );
+    fs::write(&cfg_path, &base_cfg).expect("restore local backend");
+    let state_local = ConsentRevocationState::load_from_project_root(repo.path()).expect("local");
+    assert!(!state_local.allows_cloud_egress());
+
+    cloud_hits.store(0, Ordering::SeqCst);
+    for args in [
+        &["session", "acquire"][..],
+        &["capabilities", "--format", "json"][..],
+        &["todo", "list", "--format", "json"][..],
+        &["rpc", "--op", "observe.telemetry"][..],
+        &["validate", "--pre-build", "--format", "json"][..],
+    ] {
+        let out = Command::new(decapod_bin())
+            .args(args)
+            .current_dir(repo.path())
+            .env("HOME", home.path())
+            .env("XDG_CONFIG_HOME", xdg_config.path())
+            .env("XDG_DATA_HOME", xdg_data.path())
+            .env("DECAPOD_AGENT_ID", "trust-gate-agent")
+            .env("DECAPOD_SESSION_PASSWORD", password.as_str())
+            .env("DECAPOD_TEST_MODE", "1")
+            .env("DECAPOD_CLOUD_TEST_ORIGIN", &origin_url)
+            .output()
+            .expect("run post-revocation command");
+        assert!(
+            out.status.success(),
+            "post-revocation {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
+    assert_eq!(
+        cloud_hits.load(Ordering::SeqCst),
+        0,
+        "revoking cloud backend must halt all cloud origin egress across restarts"
+    );
+    cloud_stop.store(true, Ordering::Relaxed);
+    let _ = cloud_thread.join();
+}

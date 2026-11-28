@@ -131,6 +131,7 @@ pub(crate) fn download_public_asset(
     if maximum == 0 || maximum > MAX_ARTIFACT || !url.starts_with("https://") {
         return Err(invalid("invalid bounded public model transport request"));
     }
+    crate::core::trust_egress::validate_egress_url(url, &[]).map_err(invalid)?;
     let transport = LocalVerification {
         deadline,
         cancellation,
@@ -358,5 +359,23 @@ mod tests {
         ] {
             assert!(!valid_digest(&digest));
         }
+    }
+
+    #[test]
+    fn transport_rejects_undeclared_or_smuggled_egress_urls_before_spawning_curl() {
+        let root = tempfile::tempdir().unwrap();
+        let path = root.path().canonicalize().unwrap().join("asset");
+        let deadline = Instant::now() + Duration::from_secs(10);
+        let cancel = Cancellation::default();
+        for url in [
+            "https://undeclared.example.invalid/model.gguf",
+            "http://huggingface.co/model.gguf",
+            "https://user:secret@huggingface.co/model.gguf",
+            "https://huggingface.co/model.gguf#frag",
+        ] {
+            let err = download_public_asset(url, &path, 64, deadline, &cancel).unwrap_err();
+            assert_eq!(err.kind(), io::ErrorKind::Other, "url `{url}`: {err}");
+        }
+        assert!(!path.exists());
     }
 }
