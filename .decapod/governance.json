@@ -918,6 +918,11 @@
       "proof_refs": [
         "https://github.com/DecapodLabs/decapod/actions/runs/46102880516"
       ]
+    },
+    {
+      "id": "accepted-docs-integration",
+      "summary": "Preserve the active work and merge accepted documentation and living specifications.",
+      "input_digest": "sha256:095794d7f85254324ac0913f9ba440c6dd5d83fb27571d41ca0cec3041d05c92"
     }
   ],
   "intents": {
