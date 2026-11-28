@@ -23,3 +23,10 @@ This note reconciles the remaining Section 10 storage/parity trackers (`#1110`, 
 
 - **Tracker Conflict**: `#1220` requests a pure-Rust datastore without SQLite-family C dependencies, whereas Decapod's accepted architecture in `Cargo.toml` (`dactyl-db = { features = ["sqlite", "neon"] }`), `src/decapod/core/dactyl.rs` (`LOCAL_SQLITE_RUNTIME_REQUIRED`), and `docs/datastore-v2/architecture.md` mandates `dactyl-db` SQLite as the single authoritative local datastore (`#1118`, `#1132`) alongside Propodus/Dactyl Cloud parity.
 - **Decision**: Do NOT introduce a competing embedded datastore engine. Preserve the single authoritative SQLite/Dactyl boundary, keep `cloud_parity_matrix` and `local_sqlite_path_present` isolation airtight, and report `#1220` truthfully as an irreducible architectural conflict with the accepted Dactyl contract unless maintainers explicitly supersede Dactyl.
+
+
+The Cloud `todo claim` route accepts ordinary exclusive assignment. Shared
+mode, an explicit lease duration, and an explicit intent anchor each return an
+unsupported error before datastore dispatch. An accepted claim commits task
+assignment and its ordered event. Hosted renewal, heartbeat and authorized
+handoff require a separate durable service contract.

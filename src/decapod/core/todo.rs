@@ -4617,12 +4617,6 @@ pub fn claim_task_with_lease(
         return Err(authoring::authoring_actor_required_error());
     }
     if let Some((cloud, identity)) = cloud_runtime(root)? {
-        if mode == ClaimMode::Shared {
-            return Err(error::DecapodError::NotImplemented(
-                "CLOUD_SHARED_CLAIM_UNSUPPORTED: hosted cloud claims only support exclusive custody"
-                    .into(),
-            ));
-        }
         let project_root = project_root_from_store_root(root)?;
         let factory = inline_cloud_todo_factory(&project_root);
         return run_cloud_todo_command_with_factory(
@@ -8595,10 +8589,30 @@ fn check_cloud_todo_preflight(
     root: &Path,
     command: &TodoCommand,
 ) -> Result<(), error::DecapodError> {
-    if matches!(command, TodoCommand::Renew { .. }) {
-        return Err(error::DecapodError::NotImplemented(
-            CLOUD_LEASE_RENEW_UNSUPPORTED.into(),
-        ));
+    let unsupported = match command {
+        TodoCommand::Claim {
+            mode: ClaimMode::Shared,
+            ..
+        } => Some(
+            "CLOUD_SHARED_CLAIM_UNSUPPORTED: hosted cloud claims only support exclusive custody",
+        ),
+        TodoCommand::Claim {
+            lease_seconds: Some(_),
+            ..
+        } => Some(
+            "CLOUD_CLAIM_LEASE_UNSUPPORTED: hosted cloud claims do not accept an explicit lease duration",
+        ),
+        TodoCommand::Claim {
+            intent_anchor: Some(_),
+            ..
+        } => Some(
+            "CLOUD_CLAIM_INTENT_ANCHOR_UNSUPPORTED: hosted cloud claims do not accept an explicit intent anchor",
+        ),
+        TodoCommand::Renew { .. } => Some(CLOUD_LEASE_RENEW_UNSUPPORTED),
+        _ => None,
+    };
+    if let Some(reason) = unsupported {
+        return Err(error::DecapodError::NotImplemented(reason.into()));
     }
     if let TodoCommand::Done {
         validated: true,
@@ -8756,7 +8770,7 @@ fn run_cloud_todo_command_with_factory<F: CloudTodoStoreFactory>(
     operation_id: Option<&str>,
     journal: Option<&CloudTodoJournal>,
 ) -> Result<JsonValue, error::DecapodError> {
-    // Reject unsupported renewal and invalid proof capture before connector work.
+    // Reject unsupported claim and renewal parameters before connector work.
     check_cloud_todo_preflight(root, command)?;
     let mut operation = cloud_add_request(command)
         .map(|payload| {

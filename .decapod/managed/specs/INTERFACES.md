@@ -2731,7 +2731,17 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `12b3f6e6edd577738145f5dfbe9e84216bbfaa9c0d6fc4956b1954ade87b3137`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+### Cloud task claim options (#1809)
+
+`todo::check_cloud_todo_preflight` admits ordinary exclusive claims and
+rejects requested semantics outside the hosted claim profile before a
+connector opens. Shared mode returns `CLOUD_SHARED_CLAIM_UNSUPPORTED`.
+Explicit `--lease-seconds` and `--intent-anchor` return
+`CLOUD_CLAIM_LEASE_UNSUPPORTED` and
+`CLOUD_CLAIM_INTENT_ANCHOR_UNSUPPORTED` respectively. Local claim options
+continue through the existing Local path.
