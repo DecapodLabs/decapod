@@ -373,6 +373,47 @@ pub struct WorkUnitJournalStatus {
     pub audit_records: Vec<SplitStoreAuditRecord>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub convergence_hint: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub derived_duties: Vec<crate::core::professional_defaults::DerivedProfessionalDuty>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub duty_summary: Option<crate::core::professional_defaults::DutyCompactSummary>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delivery_endpoint: Option<crate::core::professional_defaults::ResolvedDeliveryContract>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delivery_phase: Option<crate::core::professional_defaults::DeliveryPhaseStatus>,
+}
+
+fn load_workunit_plan_continuation(
+    root: &Path,
+    task_id: &str,
+) -> (
+    Vec<crate::core::professional_defaults::DerivedProfessionalDuty>,
+    Option<crate::core::professional_defaults::DutyCompactSummary>,
+    Option<crate::core::professional_defaults::ResolvedDeliveryContract>,
+    Option<crate::core::professional_defaults::DeliveryPhaseStatus>,
+) {
+    let Ok(Some(plan)) = crate::plan_governance::load_plan(root) else {
+        return (Vec::new(), None, None, None);
+    };
+    if !plan.todo_ids.is_empty() && !plan.todo_ids.iter().any(|id| id == task_id) {
+        return (Vec::new(), None, None, None);
+    }
+    let summary = if plan.derived_duties.is_empty() {
+        None
+    } else if let Some(ref endpoint) = plan.delivery_endpoint {
+        Some(crate::core::professional_defaults::summarize_duties(
+            &plan.derived_duties,
+            endpoint.endpoint,
+        ))
+    } else {
+        None
+    };
+    (
+        plan.derived_duties,
+        summary,
+        plan.delivery_endpoint,
+        plan.delivery_phase,
+    )
 }
 
 fn journal_error(code: &str, detail: impl std::fmt::Display) -> error::DecapodError {
@@ -1823,6 +1864,8 @@ pub fn workunit_journal_status(
         } else {
             Some("WORKUNIT_CHECKPOINT_REQUIRED".into())
         };
+        let (derived_duties, duty_summary, delivery_endpoint, delivery_phase) =
+            load_workunit_plan_continuation(root, task_id);
         return Ok(WorkUnitJournalStatus {
             task_id: task_id.into(),
             generation: None,
@@ -1837,6 +1880,10 @@ pub fn workunit_journal_status(
             atomic_domain_supported: split.is_none(),
             audit_records,
             convergence_hint,
+            derived_duties,
+            duty_summary,
+            delivery_endpoint,
+            delivery_phase,
         });
     };
     let projection_state = match load_workunit_projection(root, task_id) {
@@ -1891,6 +1938,8 @@ pub fn workunit_journal_status(
         };
         (resumable, resume_blocker, proof_status)
     };
+    let (derived_duties, duty_summary, delivery_endpoint, delivery_phase) =
+        load_workunit_plan_continuation(root, task_id);
     Ok(WorkUnitJournalStatus {
         task_id: task_id.into(),
         generation: Some(record.generation),
@@ -1905,6 +1954,10 @@ pub fn workunit_journal_status(
         atomic_domain_supported: split.is_none(),
         audit_records,
         convergence_hint,
+        derived_duties,
+        duty_summary,
+        delivery_endpoint,
+        delivery_phase,
     })
 }
 

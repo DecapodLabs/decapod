@@ -378,6 +378,10 @@ fn dockerfile_orientation_separates_workspace_and_application_containers() {
             task_binding: "not_available".to_string(),
             instruction_readiness: None,
             instruction_lineage: None,
+            original_request: None,
+            derived_duties: vec![],
+            duty_summary: None,
+            delivery_endpoint: None,
         },
         constraints: vec![],
         allowed_scope: vec![],
@@ -387,6 +391,10 @@ fn dockerfile_orientation_separates_workspace_and_application_containers() {
         known_unknowns: vec![],
         decision_gates: vec![],
         next_action: String::new(),
+        original_request: None,
+        derived_duties: vec![],
+        duty_summary: None,
+        delivery_endpoint: None,
     };
 
     apply_container_orientation_constraints(&mut packet, "dockerfile packaging");

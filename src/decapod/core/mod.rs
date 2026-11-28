@@ -83,6 +83,7 @@ pub mod output;
 pub mod path_policy;
 pub mod pool;
 pub mod pre_build_validate;
+pub mod professional_defaults;
 pub mod project_specs;
 pub mod projection;
 pub mod projection_budget;

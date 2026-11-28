@@ -32,6 +32,14 @@ pub struct OrientationPacket {
     pub next_action: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reflection: Option<crate::core::mentor::reflection::Outcome>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_request: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub derived_duties: Vec<crate::core::professional_defaults::DerivedProfessionalDuty>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub duty_summary: Option<crate::core::professional_defaults::DutyCompactSummary>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delivery_endpoint: Option<crate::core::professional_defaults::ResolvedDeliveryContract>,
 }
 
 /// The plan context agents must see before selecting an implementation path.
@@ -57,6 +65,14 @@ pub struct GovernedPlanContext {
     pub instruction_readiness: Option<crate::plan_governance::InstructionReadiness>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub instruction_lineage: Option<crate::core::custody::InstructionLineage>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub original_request: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub derived_duties: Vec<crate::core::professional_defaults::DerivedProfessionalDuty>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub duty_summary: Option<crate::core::professional_defaults::DutyCompactSummary>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub delivery_endpoint: Option<crate::core::professional_defaults::ResolvedDeliveryContract>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

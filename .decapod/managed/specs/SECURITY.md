@@ -1633,7 +1633,15 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (298 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Standing Delivery Policy Isolation & Anti-Bypass Evidence Controls (`#1981`, `#1982`, `#1983`)
+
+- **No candidate policy self-authorization (`src/decapod/lib.rs`, `src/decapod/core/validate.rs`, `src/decapod/core/effective_grant.rs`, `src/decapod/plan_governance.rs`)**:
+  - Both `[governance].main_merge` and `[governance].standing_pr_merge` are read strictly from accepted base `.decapod/config.toml` via `db_maintenance::resolve_accepted_project_config`. Any candidate branch attempt to set either beyond accepted base policy fails closed with `POLICY_SELF_AUTHORIZATION_REJECTED` (and `CandidatePolicyWideningRejected` in `effective_grant`), keeping delivery endpoint authority strictly anchored to accepted base policy.
+- **Anti-shortcut proof & duty custody (`src/decapod/core/professional_defaults.rs`, `src/decapod/plan_governance.rs`)**:
+  - `refine_duty_disposition` forbids dropping `ExplicitHumanRequest` obligations (`EXPLICIT_REQUEST_CANNOT_BE_DROPPED`), relabeling required duties as optional (`REQUIRED_TO_OPTIONAL_FORBIDDEN`), and unsupported `NonApplicableWithRationale` declarations; `evaluate_duty_coverage` enforces mechanically observed execution (`UNOBSERVED_AGENT_SUMMARY_ONLY`), failing-baseline/negative controls (`MISSING_NEGATIVE_CONTROL`), requested behavior coverage (`REQUESTED_BEHAVIOR_UNCOVERED`), non-vacuous assertions/test counts (`VACUOUS_OR_EMPTY_CHECK`), and fresh candidate/target/policy digests (`STALE_DUTY_EVIDENCE`).
+- **Idempotent uncertain delivery recovery**: `UnknownPendingReadback`, `MergeRequested`, and `QueuedForMerge` require readback (`must_query_remote_first = true`) preserving exact `operation_id` and `pr_number` before retry, preventing duplicate PRs or blind mutation replay.

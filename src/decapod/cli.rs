@@ -521,6 +521,9 @@ pub(crate) struct InitWithCli {
     /// Preserve the configured direct main-merge opt-in policy during reinitialization.
     #[clap(skip)]
     pub existing_main_merge: bool,
+    /// Preserve the configured standing PR-merge delegation opt-in during reinitialization.
+    #[clap(skip)]
+    pub existing_standing_pr_merge: bool,
     /// Preserve human-authored exceptional grants during init refresh.
     #[clap(skip)]
     pub existing_rbac: GovernanceRbac,
@@ -696,6 +699,10 @@ pub struct GovernanceConfig {
     /// Defaults to false (fail-closed) and cannot be self-authorized by a candidate branch.
     #[serde(default, skip_serializing_if = "is_false")]
     pub main_merge: bool,
+    /// Accepted standing repo delegation to merge a passing PR automatically once required
+    /// checks and approvals are green (#1983). Defaults to false (fail-closed).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub standing_pr_merge: bool,
     /// Human-authored, fail-closed role grants for exceptional operations.
     #[serde(default, skip_serializing_if = "GovernanceRbac::is_default")]
     pub rbac: GovernanceRbac,
@@ -1883,6 +1890,18 @@ pub(crate) enum PlanCommand {
         forbidden_paths: Vec<String>,
         #[clap(long)]
         file_touch_budget: Option<usize>,
+        /// Full lossless original user request preserved alongside short title/intent (#1981)
+        #[clap(long)]
+        original_request: Option<String>,
+        /// Accepted clarifications combined with original request (#1981)
+        #[clap(long = "clarification")]
+        clarifications: Vec<String>,
+        /// Affected repository paths for domain-aware duty inference (#1981)
+        #[clap(long = "affected-path")]
+        affected_paths: Vec<String>,
+        /// Derive ordinary professional duties and delivery endpoint on initialization (#1981/#1983)
+        #[clap(long, default_value_t = false)]
+        derive_duties: bool,
     },
     /// Patch governed PLAN artifact
     Update {
@@ -2001,6 +2020,84 @@ pub(crate) enum PlanCommand {
     ExitPhase {
         #[clap(long)]
         phase_id: String,
+    },
+    /// Derive ordinary professional responsibilities and standing delivery endpoint (#1981/#1983)
+    DeriveDuties {
+        #[clap(long)]
+        original_request: Option<String>,
+        #[clap(long = "clarification")]
+        clarifications: Vec<String>,
+        #[clap(long = "affected-path")]
+        affected_paths: Vec<String>,
+        #[clap(long)]
+        owner: Option<String>,
+    },
+    /// Record behavior-relevant evidence or justified exclusion for a derived duty (#1982)
+    RefineDuty {
+        #[clap(long)]
+        duty_id: String,
+        #[clap(long, value_enum)]
+        disposition: crate::core::professional_defaults::DutyDisposition,
+        #[clap(long, default_value_t = false)]
+        check_executed: bool,
+        #[clap(long, default_value_t = false)]
+        check_passed: bool,
+        #[clap(long, default_value_t = false)]
+        requested_behavior_covered: bool,
+        #[clap(long, default_value_t = false)]
+        observed_execution: bool,
+        #[clap(long, default_value_t = false)]
+        negative_control_verified: bool,
+        #[clap(long)]
+        evidence_ref: Option<String>,
+        #[clap(long)]
+        assertion_count: Option<usize>,
+        #[clap(long)]
+        collected_test_count: Option<usize>,
+        #[clap(long)]
+        subject_commit: Option<String>,
+        #[clap(long)]
+        target_commit: Option<String>,
+        #[clap(long)]
+        exclusion_rationale: Option<String>,
+        #[clap(long)]
+        requested_required_flag: Option<bool>,
+        #[clap(long, default_value_t = false)]
+        source_backed_rationale: bool,
+    },
+    /// Verify outcome-relevant evidence coverage against current candidate/target/policy (#1982)
+    VerifyCoverage {
+        #[clap(long)]
+        candidate_commit: Option<String>,
+        #[clap(long)]
+        target_commit: Option<String>,
+        #[clap(long)]
+        policy_revision: Option<String>,
+    },
+    /// Advance or evaluate delivery endpoint progression without unnecessary human interruption (#1983)
+    AdvanceDelivery {
+        #[clap(long, value_enum)]
+        phase_status: crate::core::professional_defaults::DeliveryPhaseStatus,
+        #[clap(long)]
+        pr_number: Option<u64>,
+        #[clap(long, default_value_t = false)]
+        pr_checks_green: bool,
+        #[clap(long, default_value_t = false)]
+        pr_reviews_satisfied: bool,
+        #[clap(long)]
+        operation_id: Option<String>,
+        #[clap(long)]
+        forge_merge_observed: Option<bool>,
+        #[clap(long)]
+        validated_candidate_commit: Option<String>,
+        #[clap(long)]
+        current_candidate_commit: Option<String>,
+        #[clap(long)]
+        validated_target_commit: Option<String>,
+        #[clap(long)]
+        current_target_commit: Option<String>,
+        #[clap(long, default_value_t = false)]
+        full_validation_passed: bool,
     },
 }
 
@@ -3550,6 +3647,12 @@ pub(crate) struct InferOrientationCli {
     /// Optional specific task ID
     #[clap(long)]
     pub task_id: Option<String>,
+    /// Accepted clarifications fused into full governing intent (#1981)
+    #[clap(long = "clarification")]
+    pub clarifications: Vec<String>,
+    /// Affected workspace-relative paths used for surface/domain discovery (#1981)
+    #[clap(long = "affected-path")]
+    pub affected_paths: Vec<String>,
     /// Optional bounded reflection request JSON (task, submission, operation, paths).
     #[clap(long)]
     pub reflection: Option<String>,

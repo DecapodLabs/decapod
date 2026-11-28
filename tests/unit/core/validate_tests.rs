@@ -719,6 +719,11 @@ fn seed_publication_bundle(dir: &Path) {
         constraints: ScopeConstraints::default(),
         phases: vec![],
         updated_at: "1780000000Z".to_string(),
+        original_request: None,
+        clarifications: Vec::new(),
+        derived_duties: Vec::new(),
+        delivery_endpoint: None,
+        delivery_phase: None,
     };
     plan_governance::save_plan(dir, &plan).expect("plan");
     trajectory::init_trajectory(

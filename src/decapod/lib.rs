@@ -2322,6 +2322,7 @@ fn init_with_from_config(
         existing_github_actions_preflights: config.proof.validation_github_actions_preflights,
         existing_allow_basic_shared_claims: config.governance.allow_basic_shared_claims,
         existing_main_merge: config.governance.main_merge,
+        existing_standing_pr_merge: config.governance.standing_pr_merge,
         existing_rbac: config.governance.rbac.clone(),
         existing_db_maintenance: config.governance.db_maintenance.clone(),
         existing_publication_deny_identifiers: config
@@ -2444,6 +2445,7 @@ fn preserve_unspecified_init_options(
     init.existing_github_actions_preflights = existing.existing_github_actions_preflights;
     init.existing_allow_basic_shared_claims = existing.existing_allow_basic_shared_claims;
     init.existing_main_merge = existing.existing_main_merge;
+    init.existing_standing_pr_merge = existing.existing_standing_pr_merge;
     init.existing_rbac = existing.existing_rbac;
     init.existing_db_maintenance = existing.existing_db_maintenance;
     init.existing_publication_deny_identifiers = existing.existing_publication_deny_identifiers;
@@ -2534,6 +2536,7 @@ fn config_from_init_with(init: &InitWithCli, repo: RepoContext) -> DecapodProjec
             approval_categories,
             allow_basic_shared_claims: init.existing_allow_basic_shared_claims,
             main_merge: init.existing_main_merge,
+            standing_pr_merge: init.existing_standing_pr_merge,
             rbac: init.existing_rbac.clone(),
             db_maintenance: init.existing_db_maintenance.clone(),
             publication_deny_identifiers: init.existing_publication_deny_identifiers.clone(),
@@ -3739,6 +3742,7 @@ pub fn run() -> Result<(), error::DecapodError> {
                             existing_github_actions_preflights: false,
                             existing_allow_basic_shared_claims: false,
                             existing_main_merge: false,
+                            existing_standing_pr_merge: false,
                             existing_rbac: crate::cli::GovernanceRbac::default(),
                             existing_db_maintenance:
                                 crate::core::db_maintenance::DbMaintenanceConfig::default(),
@@ -8157,18 +8161,24 @@ fn run_validate_command(
         return Ok(());
     }
     let candidate_cfg = crate::cli::DecapodProjectConfig::load(workspace_root)?;
-    if candidate_cfg.governance.main_merge {
+    if candidate_cfg.governance.main_merge || candidate_cfg.governance.standing_pr_merge {
         let (_, accepted_cfg, _) =
             crate::core::db_maintenance::resolve_accepted_project_config(workspace_root).map_err(
                 |(code, msg)| {
                     error::DecapodError::ValidationError(format!(
-                        "POLICY_SELF_AUTHORIZATION_REJECTED: cannot verify accepted base policy for governance.main_merge = true ({code}: {msg})"
+                        "POLICY_SELF_AUTHORIZATION_REJECTED: cannot verify accepted base policy for governance merge opt-in ({code}: {msg})"
                     ))
                 },
             )?;
-        if !accepted_cfg.governance.main_merge {
+        if candidate_cfg.governance.main_merge && !accepted_cfg.governance.main_merge {
             return Err(error::DecapodError::ValidationError(
                 "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.main_merge = true beyond accepted policy (#1468)".to_string(),
+            ));
+        }
+        if candidate_cfg.governance.standing_pr_merge && !accepted_cfg.governance.standing_pr_merge
+        {
+            return Err(error::DecapodError::ValidationError(
+                "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.standing_pr_merge = true beyond accepted policy (#1983)".to_string(),
             ));
         }
     }
@@ -10467,6 +10477,9 @@ fn run_workunit_command(
                     "atomic_domain_supported": journal.atomic_domain_supported,
                     "manifest_hash": hash,
                     "path": path,
+                    "derived_duties": journal.derived_duties,
+                    "delivery_endpoint": journal.delivery_endpoint,
+                    "delivery_phase": journal.delivery_phase,
                 }))
                 .unwrap()
             );
@@ -10839,8 +10852,12 @@ fn run_plan_command(
             deferred_questions,
             forbidden_paths,
             file_touch_budget,
+            original_request,
+            clarifications,
+            affected_paths,
+            derive_duties,
         } => {
-            let plan = plan_governance::init_plan(
+            let mut plan = plan_governance::init_plan(
                 project_root,
                 plan_governance::InitPlanInput {
                     title,
@@ -10859,6 +10876,15 @@ fn run_plan_command(
                     phases: vec![],
                 },
             )?;
+            if derive_duties || original_request.is_some() || !clarifications.is_empty() {
+                plan = plan_governance::derive_plan_duties(
+                    project_root,
+                    original_request.as_deref(),
+                    &clarifications,
+                    &affected_paths,
+                    None,
+                )?;
+            }
             println!("{}", serde_json::to_string_pretty(&plan).unwrap());
         }
         PlanCommand::Update {
@@ -11111,6 +11137,141 @@ fn run_plan_command(
         PlanCommand::ExitPhase { phase_id } => {
             let plan = plan_governance::complete_phase(project_root, &phase_id)?;
             println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::DeriveDuties {
+            original_request,
+            clarifications,
+            affected_paths,
+            owner,
+        } => {
+            let plan = plan_governance::derive_plan_duties(
+                project_root,
+                original_request.as_deref(),
+                &clarifications,
+                &affected_paths,
+                owner.as_deref(),
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::RefineDuty {
+            duty_id,
+            disposition,
+            check_executed,
+            check_passed,
+            requested_behavior_covered,
+            observed_execution,
+            negative_control_verified,
+            evidence_ref,
+            assertion_count,
+            collected_test_count,
+            subject_commit,
+            target_commit,
+            exclusion_rationale,
+            requested_required_flag,
+            source_backed_rationale,
+        } => {
+            let plan = plan_governance::refine_plan_duty(
+                project_root,
+                core::professional_defaults::DutyRefinementUpdate {
+                    duty_id,
+                    disposition,
+                    requested_required_flag,
+                    check_executed,
+                    check_passed,
+                    requested_behavior_covered,
+                    evidence_ref,
+                    observed_execution,
+                    negative_control_verified,
+                    assertion_count,
+                    collected_test_count,
+                    subject_commit,
+                    target_commit,
+                    exclusion_rationale,
+                    rationale_is_source_backed: source_backed_rationale,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&plan).unwrap());
+        }
+        PlanCommand::VerifyCoverage {
+            candidate_commit,
+            target_commit,
+            policy_revision,
+        } => {
+            let report = plan_governance::verify_plan_coverage(
+                project_root,
+                candidate_commit.as_deref(),
+                target_commit.as_deref(),
+                policy_revision.as_deref(),
+            )?;
+            println!("{}", serde_json::to_string_pretty(&report).unwrap());
+            if !report.ready {
+                let first = &report.unmet_duties[0];
+                return Err(error::DecapodError::ValidationError(format!(
+                    "{}: {}",
+                    first.code, first.reason
+                )));
+            }
+        }
+        PlanCommand::AdvanceDelivery {
+            phase_status,
+            pr_number,
+            pr_checks_green,
+            pr_reviews_satisfied,
+            operation_id,
+            forge_merge_observed,
+            validated_candidate_commit,
+            current_candidate_commit,
+            validated_target_commit,
+            current_target_commit,
+            full_validation_passed,
+        } => {
+            let plan = plan_governance::load_plan(project_root)?.ok_or_else(|| {
+                error::DecapodError::ValidationError("Plan artifact is missing".to_string())
+            })?;
+            let coverage = plan_governance::verify_plan_coverage(
+                project_root,
+                current_candidate_commit.as_deref(),
+                current_target_commit.as_deref(),
+                None,
+            )?;
+            let policy_input = plan_governance::resolve_delivery_policy_from_repo(
+                project_root,
+                plan.original_request.as_deref().unwrap_or(&plan.intent),
+            );
+            let contract = core::professional_defaults::resolve_delivery_endpoint(&policy_input);
+            let (git_cand, git_targ) =
+                plan_governance::current_candidate_and_target_commits(project_root);
+            let cur_cand = current_candidate_commit.unwrap_or(git_cand);
+            let val_cand = validated_candidate_commit.unwrap_or_else(|| cur_cand.clone());
+            let cur_targ = current_target_commit.unwrap_or(git_targ);
+            let val_targ = validated_target_commit.unwrap_or_else(|| cur_targ.clone());
+            let candidate_cfg = crate::cli::DecapodProjectConfig::load(project_root).ok();
+            let cand_main_merge = candidate_cfg
+                .as_ref()
+                .is_some_and(|c| c.governance.main_merge);
+            let decision = plan_governance::advance_plan_delivery(
+                project_root,
+                core::professional_defaults::DeliveryProgressionInput {
+                    contract,
+                    phase_status,
+                    duty_coverage_ready: coverage.ready,
+                    main_merge_input: core::obligation_ledger::MainMergeAuthorizationInput {
+                        accepted_base_main_merge: policy_input.accepted_main_merge,
+                        candidate_main_merge: cand_main_merge,
+                        validated_candidate_commit: val_cand,
+                        current_candidate_commit: cur_cand,
+                        validated_target_commit: val_targ,
+                        current_target_commit: cur_targ,
+                        full_validation_passed,
+                    },
+                    pr_number,
+                    pr_checks_green,
+                    pr_reviews_satisfied,
+                    operation_id,
+                    forge_merge_observed,
+                },
+            )?;
+            println!("{}", serde_json::to_string_pretty(&decision).unwrap());
         }
     }
 
@@ -18352,15 +18513,22 @@ fn run_infer_orientation(
         decision_gates: vec![],
         next_action: "Perform research to map relevant files and symbols.".to_string(),
         reflection: None,
+        original_request: None,
+        derived_duties: vec![],
+        duty_summary: None,
+        delivery_endpoint: None,
     };
 
+    let mut task_title: Option<String> = None;
+    let mut task_description: Option<String> = None;
     if let Some(ref id) = cli.task_id {
         let store_root = find_governance_root(project_root)
             .join(".decapod")
             .join("data");
         if let Some(task) = todo::get_task(&store_root, id)? {
-            packet.user_goal = task.title.clone();
-            if !task.description.is_empty() {
+            task_title = Some(task.title.clone());
+            if !task.description.trim().is_empty() {
+                task_description = Some(task.description.clone());
                 packet
                     .known_unknowns
                     .push(format!("Task detail: {}", task.description));
@@ -18371,6 +18539,25 @@ fn run_infer_orientation(
             }
         }
     }
+
+    let mut clarifications = cli.clarifications.clone();
+    if let Some(ref plan_req) = packet.governed_plan.original_request
+        && cli.intent.as_deref().is_none_or(|i| i.trim().is_empty())
+    {
+        task_title = task_title.or_else(|| Some(plan_req.clone()));
+    }
+    let full_governing_request = core::professional_defaults::compose_governing_request(
+        cli.intent.as_deref(),
+        task_title.as_deref(),
+        task_description.as_deref(),
+        &clarifications,
+    );
+    if cli.intent.is_some() || task_title.is_some() || task_description.is_some() {
+        packet.user_goal = full_governing_request.clone();
+        packet.original_request = Some(full_governing_request.clone());
+    }
+    clarifications.sort();
+    clarifications.dedup();
 
     let intent_lower = packet.user_goal.to_lowercase();
 
@@ -18404,14 +18591,51 @@ fn run_infer_orientation(
 
     apply_container_orientation_constraints(&mut packet, &intent_lower);
 
-    // Heuristics for precision
-    if intent_lower.contains("fix") || intent_lower.contains("bug") {
-        packet
-            .proof_required
-            .push("Reproduction test case".to_string());
-        packet
-            .constraints
-            .push("Do not introduce regressions".to_string());
+    let project_intent = crate::cli::DecapodProjectConfig::load(project_root)
+        .ok()
+        .map(|c| {
+            format!(
+                "{} ({}; {})",
+                c.repo.product_summary.as_deref().unwrap_or(""),
+                c.repo.architecture_direction.as_deref().unwrap_or(""),
+                c.repo.product_type.as_deref().unwrap_or("")
+            )
+        });
+    let delivery_policy =
+        plan_governance::resolve_delivery_policy_from_repo(project_root, &packet.user_goal);
+    let (cand_sha, _) = plan_governance::current_candidate_and_target_commits(project_root);
+    let derived = core::professional_defaults::derive_professional_contract(
+        &core::professional_defaults::OutcomeDerivationInput {
+            original_request: packet.original_request.clone(),
+            task_title,
+            task_description,
+            clarifications: cli.clarifications.clone(),
+            project_intent,
+            affected_paths: cli.affected_paths.clone(),
+            source_revision: if cand_sha.is_empty() {
+                "working-tree".to_string()
+            } else {
+                cand_sha
+            },
+            owner: current_agent_id(),
+            delivery_policy,
+        },
+    );
+
+    for area in &derived.relevant_areas {
+        if !packet.relevant_areas.contains(area) {
+            packet.relevant_areas.push(area.clone());
+        }
+    }
+    for proof in &derived.proof_required {
+        if !packet.proof_required.contains(proof) {
+            packet.proof_required.push(proof.clone());
+        }
+    }
+    for constraint in &derived.constraints {
+        if !packet.constraints.contains(constraint) {
+            packet.constraints.push(constraint.clone());
+        }
     }
 
     if crate::core::rpc::architectural_alignment_required(&packet.user_goal) {
@@ -18422,17 +18646,26 @@ fn run_infer_orientation(
         );
     }
 
-    if intent_lower.contains("test") {
-        packet.relevant_areas.push("tests/fixtures".to_string());
+    if packet.allowed_scope.is_empty() {
+        packet.allowed_scope = derived.allowed_scope.clone();
     }
 
-    if packet.allowed_scope.is_empty() {
-        if intent_lower.contains("test") {
-            packet.allowed_scope = vec!["tests/".to_string()];
-        } else {
-            packet.allowed_scope = vec!["src/".to_string(), "tests/".to_string()];
-        }
-    }
+    let effective_duties = if !packet.governed_plan.derived_duties.is_empty() {
+        packet.governed_plan.derived_duties.clone()
+    } else {
+        derived.duties.clone()
+    };
+    let effective_endpoint = packet
+        .governed_plan
+        .delivery_endpoint
+        .clone()
+        .unwrap_or(derived.delivery_endpoint);
+    packet.duty_summary = Some(core::professional_defaults::summarize_duties(
+        &effective_duties,
+        effective_endpoint.endpoint,
+    ));
+    packet.derived_duties = effective_duties;
+    packet.delivery_endpoint = Some(effective_endpoint);
 
     if let Some(input) = &cli.reflection {
         let request: crate::core::mentor::reflection::Request = serde_json::from_str(input)
@@ -18522,6 +18755,10 @@ fn governed_plan_context(
             task_binding: "not_available".to_string(),
             instruction_readiness: None,
             instruction_lineage: None,
+            original_request: None,
+            derived_duties: vec![],
+            duty_summary: None,
+            delivery_endpoint: None,
         });
     };
 
@@ -18553,6 +18790,17 @@ fn governed_plan_context(
         None => "not_requested",
     };
 
+    let duty_summary = if plan.derived_duties.is_empty() {
+        None
+    } else if let Some(ref endpoint) = plan.delivery_endpoint {
+        Some(core::professional_defaults::summarize_duties(
+            &plan.derived_duties,
+            endpoint.endpoint,
+        ))
+    } else {
+        None
+    };
+
     Ok(crate::core::rpc::GovernedPlanContext {
         status: "present".to_string(),
         path,
@@ -18567,6 +18815,10 @@ fn governed_plan_context(
         task_binding: task_binding.to_string(),
         instruction_readiness: Some(instruction_readiness),
         instruction_lineage,
+        original_request: plan.original_request,
+        derived_duties: plan.derived_duties,
+        duty_summary,
+        delivery_endpoint: plan.delivery_endpoint,
     })
 }
 

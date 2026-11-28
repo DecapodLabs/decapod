@@ -715,6 +715,30 @@ fn merge_plan_section(
                 &o.spec_reviews,
                 &t.spec_reviews,
             )?;
+            let original_request = merge_option_3way(
+                b_ref.and_then(|p| p.original_request.as_ref()),
+                o.original_request.as_ref(),
+                t.original_request.as_ref(),
+                "plan.original_request",
+            )?;
+            let derived_duties = merge_scalar_3way(
+                b_ref.map(|p| &p.derived_duties),
+                &o.derived_duties,
+                &t.derived_duties,
+                "plan.derived_duties",
+            )?;
+            let delivery_endpoint = merge_option_3way(
+                b_ref.and_then(|p| p.delivery_endpoint.as_ref()),
+                o.delivery_endpoint.as_ref(),
+                t.delivery_endpoint.as_ref(),
+                "plan.delivery_endpoint",
+            )?;
+            let delivery_phase = merge_option_3way(
+                b_ref.and_then(|p| p.delivery_phase.as_ref()),
+                o.delivery_phase.as_ref(),
+                t.delivery_phase.as_ref(),
+                "plan.delivery_phase",
+            )?;
 
             let merged = GovernedPlan {
                 schema_version: if o.schema_version == "1.1.0" || t.schema_version == "1.1.0" {
@@ -759,6 +783,11 @@ fn merge_plan_section(
                 updated_at: o.updated_at.max(t.updated_at),
                 spec_reviews,
                 reflection,
+                original_request,
+                clarifications: merge_string_union(&o.clarifications, &t.clarifications),
+                derived_duties,
+                delivery_endpoint,
+                delivery_phase,
             };
             serde_json::to_value(merged)
                 .map(Some)

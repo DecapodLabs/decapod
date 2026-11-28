@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "a00bb829b069f3c4472d6528a2a45a10ae11764f",
+    "accepted_commit": "a9468771e4c725df0bb2ec288f451ca599dffbb2",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,51 +872,55 @@
     }
   },
   "change": {
-    "id": "pr_1277_880_a00b",
-    "base_commit": "a00bb829b069f3c4472d6528a2a45a10ae11764f",
+    "id": "feat_01m8g099z2crqzh3",
+    "base_commit": "a9468771e4c725df0bb2ec288f451ca599dffbb2",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1277-880-napi-hosts": {
-      "statement": "decapod-napi execute_rpc_async wires cooperative AbortSignal cancellation without process exits, DecapodClient::evalPrompt preserves structured block verdicts across native_napi and cli_process carriers, and Wave 8 redacted pilot artifacts record unassisted codex and antigravity governed runs",
-      "falsifier": "bindings/typescript client tests fail, cli_process evalPrompt drops structured block findings, or decapod validate fails",
+    "claim-1981-1983-professional-defaults": {
+      "statement": "Decapod derives outcome-implied professional duties across code and non-code profiles (#1981), enforces behavior-relevant verification coverage (#1982), and advances authorized standing delivery endpoints across cold workunit continuation (#1983, #1367) without regressing bug-fix verification defaults.",
+      "falsifier": "Any unit or integration test in tests/professional_defaults_1981_1983.rs, tests/infer_precision.rs, tests/unit/core/effective_grant_tests.rs, tests/unit/core/validate_tests.rs, or tests/unit/lib_init_prompt_tests.rs fails, or remote CI/Decapod Validate rejects the candidate.",
       "status": "supported",
       "proof_refs": [
-        "bindings/typescript/native/src/lib.rs",
-        "bindings/typescript/src/index.ts",
-        "bindings/typescript/test/client.test.ts",
-        "docs/research/host-outcome-pilot/wave8-comparison.json",
-        "docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md"
+        "src/decapod/core/professional_defaults.rs",
+        "tests/professional_defaults_1981_1983.rs",
+        "tests/unit/core/effective_grant_tests.rs",
+        "tests/unit/core/validate_tests.rs",
+        "tests/unit/lib_init_prompt_tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ckpt-wt3-1277-880-a00b",
-      "summary": "Rebased #1277+#880 onto origin/master@a00bb829b069 (v0.169.5) preserving PR #2008 specs",
-      "input_digest": "sha256:3289bc7458e1569f53d8f4a48db917daa5d5da8ce45fb1eceb3ace968db0b5c2"
+      "id": "chk-1981-1983-a9468771e",
+      "summary": "Rebase #1981/#1982/#1983/#1367 outcome-implied professional defaults, behavior-relevant proof, and standing delivery endpoints onto origin/master@a9468771e4c7",
+      "input_digest": "sha256:fae9fea6e14975b0a7cad129a342634f88632b03fc4693e3b09e118672d9cbbc"
+    },
+    {
+      "id": "chk-1981-1983-clippy-fix",
+      "summary": "Fix clippy::too_many_arguments on make_duty and verify zero clippy warnings across --all-targets --all-features",
+      "input_digest": "sha256:0eb81063f34753cd344b6c10448a3403610ad6f5abc964751cfe267cfd2ab072"
     }
   ],
   "intents": {
-    "intent:run_1277_880_a00b": {
+    "intent:run-1981-1983-rebase-a9468771e": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Keep #1277 and #880 open pending external npm publish auth, live pi host, and claude #1888 auth; zero workflow edits"
+        "Isolated git worktree bound to feat_01m8g099z2crqzh3; zero deletions in existing living specs; issues #1981/#1982/#1983/#1367 remain open (Refs only)."
       ],
       "constraints": [
-        "bindings/typescript/",
-        "docs/research/host-outcome-pilot/"
+        "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1277_880_a00b",
+      "id": "intent:run-1981-1983-rebase-a9468771e",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Implement and verify #1277 TypeScript N-API cooperative cancellation + CLI fallback parity and #880 Wave 8 host activation evidence",
-      "refined_intent": "Wire AbortSignal::on_abort into execute_rpc_async, parse evalPrompt stdout before exit code in cli_process fallback, and commit redacted Wave 8 codex/antigravity pilot artifacts",
+      "raw_intent": "Implement outcome-implied professional defaults (#1981), behavior-relevant proof coverage (#1982), and standing authorized delivery endpoints with cold continuation (#1983, #1367).",
+      "refined_intent": "Rebase verified #1981-#1983 implementation and tests cleanly onto origin/master@a9468771e4c725df0bb2ec288f451ca599dffbb2 with Decapod v0.169.5 governance alignment.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -929,120 +933,160 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Wire cooperative AbortSignal cancellation in decapod-napi execute_rpc_async, restore cli_process evalPrompt block-response parity in DecapodClient, and record redacted Wave 8 codex/antigravity host activation comparison artifacts",
+      "intent": "Implement deterministic outcome-implied professional duty derivation (#1981), behavior-relevant verification coverage enforcement (#1982), and standing authorized delivery-endpoint progression with cold continuation (#1983, #1367) while preserving bug-fix regression defaults.",
       "phases": [],
       "proof_hooks": [
-        "bindings/typescript/test/client.test.ts",
-        "packages/pi-decapod/test/pi_extension.test.ts",
-        "decapod validate"
+        "Remote GitHub Actions CI, Decapod Validate, Docs, Deploy Docs, Constitution Sync, and official decapod v0.169.5 publication_ready validation pass on this exact candidate commit."
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rebased #1277+#880 onto origin/master@a00bb829b069 (v0.169.5) preserving PR #2008 and all prior living specs",
-          "reviewed_code_fingerprint": "5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd",
-          "spec_material_hash": "cab087ca6ce456f45d26cc2cc3c80195c94fabd2802406c544d30c5f7d7e182c"
+          "reason": "Confirmed #1981-#1983 architecture spec remains accurate after #[allow(clippy::too_many_arguments)] lint fix on make_duty.",
+          "reviewed_code_fingerprint": "d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44",
+          "spec_material_hash": "a634944329f420f94718fe6ea09ba6172c0443b204ab67abc4bc0113371311e2"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased #1277+#880 onto origin/master@a00bb829b069 (v0.169.5) preserving PR #2008 and all prior living specs",
-          "reviewed_code_fingerprint": "5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd",
-          "spec_material_hash": "138f46ead493b175d1b1e951113d5cccae876a38d6dae9e6fa5201dfdb3c948b"
+          "reason": "Confirmed #1981-#1983 interfaces spec remains accurate after #[allow(clippy::too_many_arguments)] lint fix on make_duty.",
+          "reviewed_code_fingerprint": "d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44",
+          "spec_material_hash": "07cf4f8ca3e7a082f233cd5a5e1b0b10c9870f77764ede28bfc767245a98f11e"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "No security surface changes; evalPrompt fallback parity enforces block disposition (#1277, #880)",
-          "reviewed_code_fingerprint": "5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd",
-          "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
+          "reason": "Confirmed #1981-#1983 security spec remains accurate after #[allow(clippy::too_many_arguments)] lint fix on make_duty.",
+          "reviewed_code_fingerprint": "d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44",
+          "spec_material_hash": "f8c11cb159306f16563b40338fd4253eb338c87860127e9b9291f708770f3d98"
         }
       ],
       "state": "APPROVED",
-      "stop_conditions": [],
-      "title": "TypeScript N-API AbortSignal, CLI evalPrompt fallback parity, and Wave 8 host pilot (#1277, #880)",
+      "stop_conditions": [
+        "Stop if any test in tests/professional_defaults_1981_1983.rs, tests/infer_precision.rs, or remote CI fails, or if any prior spec lines are deleted."
+      ],
+      "title": "Outcome-implied professional defaults, behavior-relevant proof, and standing delivery endpoints (#1981, #1982, #1983, #1367)",
       "todo_ids": [
-        "bend_01m8fmb9p8vqqe8k"
+        "feat_01m8g099z2crqzh3"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795878024Z"
+      "updated_at": "1795881029Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Keep #1277 and #880 open pending external npm publish auth, live pi host, and claude #1888 auth; zero workflow edits"
+        "Isolated git worktree bound to feat_01m8g099z2crqzh3; zero deletions in existing living specs; issues #1981/#1982/#1983/#1367 remain open (Refs only)."
       ],
-      "artifact_hash": "sha256:74ed0596fd3a0d359ec1a9c38a277dee104443cd6f8efb8aff527a88575c2e54",
+      "artifact_hash": "sha256:b04dbf02b87baef506557b2a2f268e38fb7b7166e30487c8a63d68bb056865bb",
       "checks": [
         {
-          "name": "bindings_ts_client_tests_8",
+          "name": "cargo_clippy_all_targets_warnings",
           "status": "passed"
         },
         {
-          "name": "gha_ci_46155422089_39_of_39",
+          "name": "cargo_fmt_check",
           "status": "passed"
         },
         {
-          "name": "pi_decapod_extension_tests_5",
+          "name": "git_apply_3way_a9468771e",
           "status": "passed"
         }
       ],
+      "current_phase": "rebase_and_prebuild_verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1277_880_a00b",
+            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1277_880_a00b",
+            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:run_1277_880_a00b",
+            "detail": "trajectory:run-1981-1983-rebase-a9468771e",
             "event_id": "event:4",
-            "intent_id": "intent:run_1277_880_a00b",
+            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:run-1981-1983-rebase-a9468771e",
+            "event_id": "event:5",
+            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 5,
         "schema_version": "1.1.0",
         "trajectories": {
-          "run_1277_880_a00b": {
+          "run-1981-1983-rebase-a9468771e": {
             "evidence_only": true,
-            "id": "run_1277_880_a00b",
-            "intent_id": "intent:run_1277_880_a00b",
+            "id": "run-1981-1983-rebase-a9468771e",
+            "intent_id": "intent:run-1981-1983-rebase-a9468771e",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "bindings/typescript/native/Cargo.lock",
-                  "bindings/typescript/native/src/lib.rs",
-                  "bindings/typescript/src/index.ts",
-                  "bindings/typescript/test/client.test.ts",
-                  "docs/research/host-outcome-pilot/wave8-comparison.json",
-                  "docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md",
-                  "docs/research/host-outcome-pilot/wave8-input.json",
-                  "Rebased cleanly onto origin/master@a00bb829b069 (PR #2008) preserving all prior living specs; exact 7 code/research files identical to 39/39 CI-green e2a4e31df."
+                  "src/decapod/core/professional_defaults.rs",
+                  "src/decapod/core/effective_grant.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/lib.rs",
+                  "tests/professional_defaults_1981_1983.rs",
+                  "src/decapod/core/professional_defaults.rs",
+                  "src/decapod/core/effective_grant.rs",
+                  "src/decapod/core/workunit.rs",
+                  "src/decapod/core/validate.rs",
+                  "src/decapod/core/rpc.rs",
+                  "src/decapod/core/governance_document/merge_reconcile.rs",
+                  "src/decapod/core/mod.rs",
+                  "src/decapod/plan_governance.rs",
+                  "src/decapod/cli.rs",
+                  "src/decapod/lib.rs",
+                  "docs/agent/config-schema.md",
+                  "docs/agent/repository-readiness.md",
+                  "tests/professional_defaults_1981_1983.rs",
+                  "tests/unit/core/effective_grant_tests.rs",
+                  "tests/unit/core/validate_tests.rs",
+                  "tests/unit/lib_init_prompt_tests.rs",
+                  "16 code/doc/test files applied cleanly via git apply --3way onto origin/master@a9468771e4c7; 4 authored spec sections appended with zero deletions; prior targeted verification passed tests/professional_defaults_1981_1983.rs (4/4) and tests/infer_precision.rs (1/1); remote GHA CI + Decapod Validate will execute full build and test suite."
                 ],
                 "proof_refs": [
-                  "bindings_ts_client_tests_8",
-                  "pi_decapod_extension_tests_5",
-                  "gha_ci_46155422089_39_of_39"
+                  "git_apply_3way_a9468771e",
+                  "cargo_fmt_check"
                 ],
                 "scope": [
-                  "bindings/typescript/",
-                  "docs/research/host-outcome-pilot/"
+                  "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
                 ],
                 "sequence": 4,
+                "validation_findings": [
+                  "Remote GitHub Actions CI and Decapod Validate verify full compilation and test execution on this exact commit before PR merge."
+                ]
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "src/decapod/core/professional_defaults.rs",
+                  "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings exited 0 after adding #[allow(clippy::too_many_arguments)] on make_duty."
+                ],
+                "proof_refs": [
+                  "cargo_clippy_all_targets_warnings",
+                  "cargo_fmt_check"
+                ],
+                "scope": [
+                  "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
+                ],
+                "sequence": 5,
                 "validation_findings": []
               }
             ]
@@ -1050,30 +1094,49 @@
         }
       },
       "declared_commands": [],
+      "destination": "Merge-ready PR on DecapodLabs/decapod referencing #1981, #1982, #1983, #1367 (all kept OPEN).",
       "evidence": [
-        "Rebased cleanly onto origin/master@a00bb829b069 (PR #2008) preserving all prior living specs; exact 7 code/research files identical to 39/39 CI-green e2a4e31df."
+        "16 code/doc/test files applied cleanly via git apply --3way onto origin/master@a9468771e4c7; 4 authored spec sections appended with zero deletions; prior targeted verification passed tests/professional_defaults_1981_1983.rs (4/4) and tests/infer_precision.rs (1/1); remote GHA CI + Decapod Validate will execute full build and test suite.",
+        "CLIPPY_CONF_DIR=.config cargo clippy --all-targets --all-features -- -D warnings exited 0 after adding #[allow(clippy::too_many_arguments)] on make_duty."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:run_1277_880_a00b",
+      "inspected_files": [
+        "src/decapod/core/effective_grant.rs",
+        "src/decapod/core/professional_defaults.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
+        "tests/professional_defaults_1981_1983.rs"
+      ],
+      "intent_id": "intent:run-1981-1983-rebase-a9468771e",
       "modified_files": [
-        "bindings/typescript/native/Cargo.lock",
-        "bindings/typescript/native/src/lib.rs",
-        "bindings/typescript/src/index.ts",
-        "bindings/typescript/test/client.test.ts",
-        "docs/research/host-outcome-pilot/wave8-comparison.json",
-        "docs/research/host-outcome-pilot/wave8-host-activation-2026-11-27.md",
-        "docs/research/host-outcome-pilot/wave8-input.json"
+        "docs/agent/config-schema.md",
+        "docs/agent/repository-readiness.md",
+        "src/decapod/cli.rs",
+        "src/decapod/core/effective_grant.rs",
+        "src/decapod/core/governance_document/merge_reconcile.rs",
+        "src/decapod/core/mod.rs",
+        "src/decapod/core/professional_defaults.rs",
+        "src/decapod/core/rpc.rs",
+        "src/decapod/core/validate.rs",
+        "src/decapod/core/workunit.rs",
+        "src/decapod/lib.rs",
+        "src/decapod/plan_governance.rs",
+        "tests/professional_defaults_1981_1983.rs",
+        "tests/unit/core/effective_grant_tests.rs",
+        "tests/unit/core/validate_tests.rs",
+        "tests/unit/lib_init_prompt_tests.rs"
       ],
       "repo_scope": [
-        "bindings/typescript/",
-        "docs/research/host-outcome-pilot/"
+        "src/decapod/core/professional_defaults.rs,src/decapod/core/effective_grant.rs,src/decapod/core/workunit.rs,src/decapod/core/validate.rs,src/decapod/core/rpc.rs,src/decapod/plan_governance.rs,src/decapod/cli.rs,src/decapod/lib.rs,docs/agent/config-schema.md,docs/agent/repository-readiness.md,tests/professional_defaults_1981_1983.rs"
       ],
-      "run_id": "run_1277_880_a00b",
+      "run_id": "run-1981-1983-rebase-a9468771e",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "bend_01m8fmb9p8vqqe8k",
+      "task_id": "feat_01m8g099z2crqzh3",
       "tool_calls": [],
-      "unresolved_assumptions": []
+      "unresolved_assumptions": [
+        "Remote GitHub Actions CI and Decapod Validate verify full compilation and test execution on this exact commit before PR merge."
+      ]
     }
   },
   "legacy_digests": {

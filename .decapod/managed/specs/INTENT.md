@@ -1568,15 +1568,23 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Contract Snapshot
 
-- Tracked significant codebase files: 655 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (286), `tests/` (297)
-- Core modules: 149 | Workflows: 9 | Integration targets: 180
+- Tracked significant codebase files: 657 across `.config/` (1), `.github/` (11), `Cargo.lock/` (1), `Cargo.toml/` (1), `README.md/` (1), `assets/` (41), `bindings/` (9), `docs/` (3), `packages/` (4), `src/` (287), `tests/` (298)
+- Core modules: 150 | Workflows: 9 | Integration targets: 181
 <!-- decapod:codebase-contract:end -->
 
 <!-- decapod:codebase-attestation:start -->
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (298 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Outcome-Implied Professional Responsibilities, Behavior-Relevant Proof & Authorized Delivery Endpoints (`#1981`, `#1982`, `#1983`, `#1367`)
+
+Closes the end-to-end outcome-delivery gap when a principal issues a terse outcome request (such as `"roll the dice on the agy tui ux"` or a domain-specific improvement) without spelling out multi-step engineering, UX, verification, or Git delivery mechanics:
+
+- **Domain-aware professional responsibility inference without prompt keyword gating (`#1981`, `src/decapod/core/professional_defaults.rs`, `src/decapod/lib.rs`)**: `compose_governing_request` preserves `original_request`, `task.title`, `task.description`, and accepted `clarifications` losslessly; `classify_task_profile` and `derive_professional_contract` infer cross-functional `DerivedProfessionalDuty` items (`ProductResearch`, `DesignUx`, `EngineeringQa`, `SecurityPrivacyDataOps`, `DocsSupport`, `CommercialOrg`) from domain context and affected paths without requiring literal `"fix"`, `"bug"`, or `"test"` keywords, keeping non-code business deliverables (`SourceBackedBusinessArtifact`) and spelling-only prose changes proportionate (`ProportionateProse`) while surfacing all `>5` duties across `infer orientation`, `govern plan status`, `rpc --op context.resolve`, and `govern workunit status`.
+- **Outcome-relevant, non-vacuous, fresh evidence admission (`#1982`, `src/decapod/plan_governance.rs`, `src/decapod/core/professional_defaults.rs`)**: `refine_plan_duty` rejects dropping explicit human requests (`EXPLICIT_REQUEST_CANNOT_BE_DROPPED`), relabeling required duties as optional (`REQUIRED_TO_OPTIONAL_FORBIDDEN`), and unsupported N/A claims; `evaluate_duty_coverage` and `validate_plan_progress_at_root` reject `"green tests, broken UX"` (`REQUESTED_BEHAVIOR_UNCOVERED`), zero-collected/zero-assertion runs (`VACUOUS_OR_EMPTY_CHECK`), missing negative controls (`MISSING_NEGATIVE_CONTROL`), unobserved agent assertions (`UNOBSERVED_AGENT_SUMMARY_ONLY`), and stale candidate/target/policy bindings (`STALE_DUTY_EVIDENCE`) before promoting `PlanState::Done`.
+- **Standing delivery endpoint resolution, readback-first uncertainty handling & docs alignment (`#1983`, `src/decapod/cli.rs`, `docs/agent/config-schema.md`, `docs/agent/repository-readiness.md`, `src/decapod/core/workunit.rs`)**: Resolves `AnalysisOnly`, `DraftOnly`, `PushOnly`, `PullRequest`, `DirectMerge`, `PullRequestThenMerge`, or `Cancelled` from accepted `.decapod/config.toml` (`[governance].main_merge` and `[governance].standing_pr_merge`), fails closed on candidate elevation (`POLICY_SELF_AUTHORIZATION_REJECTED`), advances `PrOpened` -> `QueuedForMerge` / `MergeRequested` -> `UnknownPendingReadback` (read-first with preserved `operation_id` and `pr_number`) -> `Merged` without redundant confirmation prompts, aligns `docs/agent/{config-schema,repository-readiness}.md`, and preserves all `>5` derived duties plus delivery endpoint/phase across `#1367` cold `workunit` continuation.

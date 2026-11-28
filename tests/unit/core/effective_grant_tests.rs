@@ -320,6 +320,11 @@ fn red_green_2_rejects_copied_parent_grant_forged_approval_plan_approved_and_can
         updated_at: "1700000000Z".into(),
         spec_reviews: vec![],
         reflection: None,
+        original_request: None,
+        clarifications: vec![],
+        derived_duties: vec![],
+        delivery_endpoint: None,
+        delivery_phase: None,
     };
     save_plan(root, &plan).unwrap();
 

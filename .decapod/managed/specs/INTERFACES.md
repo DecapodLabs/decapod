@@ -2785,7 +2785,19 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `5c384ebe3e8cd438988648c13a63579ae614b11ba456661cf5987c809ad831dd`
-- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
+- Repository signal fingerprint: `d85a148d55d116b3bde0bb01cd94e782fcb594e98da9c7f17b3b15c713c6ec44`
+- Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (287 files), `tests/` (298 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+## Professional Defaults CLI, RPC, Config & Workunit Continuation Surfaces (`#1981`, `#1982`, `#1983`, `#1367`)
+
+- **CLI (`src/decapod/cli.rs`, `src/decapod/lib.rs`)**:
+  - `decapod infer orientation [--intent <TEXT>] [--task-id <ID>] [--clarification <TEXT>...] [--affected-path <PATH>...]`: emits `OrientationPacket` with `original_request`, full `derived_duties`, `duty_summary`, and `delivery_endpoint`.
+  - `decapod govern plan init ... [--original-request <TEXT>] [--clarification <TEXT>...] [--affected-path <PATH>...] [--derive-duties]` and new `PlanCommand` subcommands: `derive-duties`, `refine-duty`, `verify-coverage`, and `advance-delivery`.
+- **RPC & Workunit readback (`src/decapod/core/rpc.rs`, `src/decapod/core/workunit.rs`)**:
+  - `context.resolve` (`GovernedPlanContext`) and `decapod govern workunit status --task-id <ID>` (`WorkUnitJournalStatus`) emit full `derived_duties` (untruncated when `>5`), `duty_summary`, `delivery_endpoint`, and `delivery_phase`.
+- **Configuration & docs (`src/decapod/cli.rs`, `docs/agent/{config-schema,repository-readiness}.md`)**:
+  - `[governance].standing_pr_merge` (`bool`, default `false`, `skip_serializing_if = "is_false"`) complements `[governance].main_merge` for accepted standing PR merge delegation; both docs explicitly reconcile default human merge authority with accepted standing opt-in delegation.
+- **Verification suite (`tests/professional_defaults_1981_1983.rs`)**:
+  - Covers terse-vs-keywordless request parity, commercial/non-code/prose proportionality, `"green tests, broken UX"` (`REQUESTED_BEHAVIOR_UNCOVERED`), vacuous checks (`VACUOUS_OR_EMPTY_CHECK`), stale `HEAD` invalidation (`STALE_DUTY_EVIDENCE`), standing PR/direct merge progression with readback-first `UnknownPendingReadback`, candidate elevation refusal (`POLICY_SELF_AUTHORIZATION_REJECTED`), and cross-agent cold `workunit` continuation (`#1367`).

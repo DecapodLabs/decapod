@@ -3895,6 +3895,11 @@ pub fn validate_project_config_downgrade_check(
             "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.main_merge = true beyond accepted policy (#1468)".to_string(),
         ));
     }
+    if !accepted_cfg.governance.standing_pr_merge && candidate.governance.standing_pr_merge {
+        return Err(error::DecapodError::ValidationError(
+            "POLICY_SELF_AUTHORIZATION_REJECTED: candidate .decapod/config.toml cannot enable governance.standing_pr_merge = true beyond accepted policy (#1983)".to_string(),
+        ));
+    }
     check_org_overlay_candidate_downgrade(&accepted_cfg, &candidate)
 }
 
