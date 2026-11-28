@@ -884,6 +884,22 @@
       "proof_refs": [
         "docs/book/src/quickstart.md"
       ]
+    },
+    {
+      "id": "privacy-local-doc-fonts",
+      "summary": "Remove the externally fetched documentation fonts while retaining existing font fallbacks",
+      "input_digest": "sha256:6f9c8d1106a11121a969242637cc2d214036c293bce26277093240f0ef14e039",
+      "proof_refs": [
+        "docs/book/src/custom.css"
+      ]
+    },
+    {
+      "id": "privacy-local-doc-fonts-final",
+      "summary": "Remove the externally fetched documentation fonts",
+      "input_digest": "sha256:a4bd1aff974e6aeffc602caa920307f8975e5c4d6daee16ff8b818617d9a0b93",
+      "proof_refs": [
+        "docs/book/src/custom.css"
+      ]
     }
   ],
   "intents": {
@@ -927,23 +943,23 @@
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "The guide describes existing kernel and hosting boundaries.",
+          "reason": "The guide uses the existing kernel and docs shell.",
           "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Document objective-only prompts, repository delegation and separate delivery evidence.",
+          "reason": "Preserve the documented goal and observed endpoint.",
           "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "1d2bc71d468c17bbb7a00ce04b169568af29b2e93148ded725ae4c2a22c1f7fe"
         },
         {
-          "disposition": "unchanged_with_reason",
+          "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Configured authority and verification still govern delivery.",
+          "reason": "The guide uses local font fallbacks and has no Google Fonts request.",
           "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
-          "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
+          "spec_material_hash": "a17b892040271fe04148295ddf34d2b9513aec51b3377359ace140c4efd1c7ee"
         }
       ],
       "state": "APPROVED",
@@ -954,7 +970,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795838472Z"
+      "updated_at": "1795838757Z"
     },
     "trajectory": {
       "active_boundaries": [

@@ -1635,3 +1635,6 @@ The independent JSON encoding vectors remain a bounded parser compatibility chec
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+# Documentation font delivery
+
+The documentation shell uses locally available font families and browser fallbacks. Reading the guide requires no request to a third-party font service.

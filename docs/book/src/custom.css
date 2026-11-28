@@ -1,7 +1,6 @@
 /* Decapod Labs / Plush documentation system — mdBook v0.4.40 shell.
  * All default mdBook keyboard, search, chapter, theme, print and links remain active.
  * Public logos belong to the website repo; this CSS introduces no runtime dependencies. */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 :root{
  --sidebar-width:302px;--menu-bar-height:82px;--content-max-width:920px;
  --decapod-orange:#f05b37;--decapod-coral:#f19c76;--decapod-ink:#231a25;
