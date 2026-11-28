@@ -3288,6 +3288,12 @@ fn per_platform_contract_rejects_missing_host_platform_and_incompatible_native_f
     assert!(!wrong_report.ready, "{wrong_report:?}");
     assert!(!wrong_report.proof_ready);
     assert_eq!(wrong_host.execution_attempts, 1);
+    blocked(&wrong_report, "INCOMPATIBLE_NATIVE_EXECUTABLE");
+    assert_eq!(
+        wrong_report.blockers.last().map(|b| b.code.as_str()),
+        Some("INCOMPATIBLE_NATIVE_EXECUTABLE"),
+        "incompatible executable blocker must not collapse to READINESS_BLOCKED: {wrong_report:?}"
+    );
     blocked(&wrong_report, &foreign_path);
     blocked(&wrong_report, expected_detected);
     blocked(&wrong_report, expected_host_phrase);

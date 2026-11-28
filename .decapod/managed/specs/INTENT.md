@@ -1,3 +1,11 @@
+## Scoped `qa verify recover` Executable-Format & Platform Diagnostic Fidelity (`#1892`, `#1544`)
+
+Restores diagnostic fidelity when `decapod qa verify recover` inspects native validation failures (such as `worldofgeese/den`-style `repo.pr-readiness.v1` failures on a foreign ELF or Mach-O binary), so closed-set label extraction preserves actionable recovery labels instead of collapsing to generic `READINESS_BLOCKED`:
+
+- **Typed native executable-format failure (`src/decapod/core/native_proof.rs`, `src/decapod/core/validation_runtime.rs`)**: Introduces `IncompatibleNativeExecutableError` in `native_executable` and `validate_invocation`, preserves its typed chain inside `run_native`, and classifies it in `ValidationReport::finish` as `"INCOMPATIBLE_NATIVE_EXECUTABLE"`.
+- **Scoped diagnostic allowlist & structured extraction (`src/decapod/plugins/verify.rs`, `docs/agent/error-recovery.md`)**: Adds `INCOMPATIBLE_NATIVE_EXECUTABLE`, `REPOSITORY_COMMAND_PLATFORM`, `MISSING_PLATFORM_EXECUTION`, `INCOMPATIBLE_TARGET_EXECUTOR`, and `UNKNOWN_DEPLOYMENT_TARGET` to `SAFE_BLOCKER_LABELS`, and extracts `INCOMPATIBLE_NATIVE_EXECUTABLE` from structured native executable-format messages while preserving closed-set redaction without leaking tool paths or raw filenames.
+- **Regression & Den-style fixture proof (`tests/unit/plugins/verify_tests.rs`, `tests/consumer_readiness.rs`, `tests/recovery_workflows_1956_1957.rs`)**: Verifies `ValidationReport.blockers` and end-to-end `qa verify recover --json` retain `INCOMPATIBLE_NATIVE_EXECUTABLE` at `stage=readiness` across both legacy wrapped errors and typed errors.
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1524,7 +1532,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `fbd09eebd6ffa9c6b06f685f2ac468bbb5555b16bd53792a33e382bb05c646a3`
+- Repository signal fingerprint: `76a177564cc344db9f584e5afaaabc9a1cbe62f346905c3d073a43b2dbac5397`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (294 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
