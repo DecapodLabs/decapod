@@ -906,6 +906,14 @@
         "docs/book/theme/index.hbs",
         "tests/doc_alignment.rs"
       ]
+    },
+    {
+      "id": "chk-3-security-spec-review",
+      "summary": "Record SECURITY.md unchanged-with-reason spec review for docs-only hide-pricing PR",
+      "input_digest": "sha256:c6cae418423406baed2767a7ef44b8a2cafdf71afa393fb12e8e21be0f0dccc2",
+      "proof_refs": [
+        "tests/doc_alignment.rs"
+      ]
     }
   ],
   "intents": {
@@ -959,6 +967,13 @@
           "reason": "Merged origin/master (#2005) and preserved mdBook hide-pricing and doc_alignment interface spec updates",
           "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
           "spec_material_hash": "b1676599865a98ec59d155b13ca033cebc232a0f28c7cbcadf96a03ac6507578"
+        },
+        {
+          "disposition": "unchanged_with_reason",
+          "path": ".decapod/managed/specs/SECURITY.md",
+          "reason": "Docs-only mdBook pricing-link removal and tests/doc_alignment.rs update; zero src/ Rust, authentication, egress, or credential-boundary changes",
+          "reviewed_code_fingerprint": "dbb3a5ec3469e123dcd78010a8edde431a183d41631a17ea1be0291e286239d7",
+          "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
@@ -969,7 +984,7 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795870525Z"
+      "updated_at": "1795872351Z"
     },
     "trajectory": {
       "active_boundaries": [
