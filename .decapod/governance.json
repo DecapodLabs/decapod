@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "accepted_commit": "a2d7266db2c63fea15f86c2de75a84f2cb55e8f3",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,64 +872,39 @@
     }
   },
   "change": {
-    "id": "test_01m8fksbstm838m1",
-    "base_commit": "2ed6e67ee6654a15db2668474ddd522a04853df6",
+    "id": "change_01M8G4QVQRVHCR6VT6J2AX39VW",
+    "base_commit": "a2d7266db2c63fea15f86c2de75a84f2cb55e8f3",
     "target_base": "origin/master"
-  },
-  "claims": {
-    "claim:hop1-batch-unbundle-and-next-hop": {
-      "statement": "Bounded-parallel GHA artifact download (max 6 threads), unbundled standalone CLI/entrypoint targets, and next-hop release.yml digest admission preserve full sha256 custody, selector coverage, and fail-closed verification.",
-      "falsifier": "Tampered ZIP bytes, missing artifact, duplicate obligation, unreviewed workflow SHA-256, or RULE-POLICY-003 mutation passes admission.",
-      "status": "supported",
-      "proof_refs": [
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "tests/source_ci_profile_policy.rs"
-      ]
-    }
   },
   "checkpoints": [
     {
-      "id": "cp_1672_hop1_initial",
-      "summary": "CI shard unbundling (#1672 Hop 1), bounded-parallel GHA custody downloads (#1400/#1573), and reviewed_next_hop_workflow_digests for release.yml",
-      "input_digest": "sha256:9c47b67377e408f93744efb9603884ad11a0e87f05b6a8194d1e1bb2697c7b7e"
-    },
-    {
-      "id": "cp_1672_hop1_config_reconciled",
-      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for #1672 Hop 1 off origin/master@2ed6e67ee",
-      "input_digest": "sha256:3eafafe83dc006dfb272cd0eddc36af0f8a110b8c0541820a35a9d22a0966781"
-    },
-    {
-      "id": "cp_1672_hop1_official_0169_3",
-      "summary": "Refresh release-bound manifest and Dockerfile.decapod via official v0.169.3",
-      "input_digest": "sha256:c2db6dc115c7209ef3906166a1feaa1f7f2f485639d80b66566a20e762c74ef4"
-    },
-    {
-      "id": "cp_1672_hop1_dockerfile_0169_3",
-      "summary": "Refresh managed Dockerfile.decapod to v0.169.3 via official v0.169.3 CLI",
-      "input_digest": "sha256:60123cdf83d3e187ad2c04ca33a66c01b9c6c5b9d7c98c0cdd711d879fe84ece"
+      "id": "first-result-docs",
+      "summary": "Publish first-use guidance and label the pending host qualification",
+      "input_digest": "sha256:b06fd3204cfe55054c4177efbb21f7ae37cf4da61382131c87506b225269d648",
+      "proof_refs": [
+        "docs/book/src/quickstart.md"
+      ]
     }
   ],
   "intents": {
-    "intent:run_1672_hop1": {
+    "intent:change_01M8G4QVQRVHCR6VT6J2AX39VW": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "decapod_hop1"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:run_1672_hop1",
+      "id": "intent:change_01M8G4QVQRVHCR6VT6J2AX39VW",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute #1672 Hop 1, #1400, #1573, and two-hop release workflow digest admission off origin/master.",
-      "refined_intent": "Unbundle CLI/entrypoint tests, implement bounded-parallel OfficialCli/GithubWorkflowInventory batch downloads, and admit Hop 2 release.yml SHA-256 via readiness_profile::reviewed_next_hop_workflow_digests.",
+      "raw_intent": "Publish the first-result walkthrough for outcome prompts (#1978)\n\nPreserve existing docs enhancements, explain standing authority and the observed delivery boundary, and publish accurate first-use guidance.",
+      "refined_intent": "Publish the first-result walkthrough for outcome prompts (#1978)\n\nPreserve existing docs enhancements, explain standing authority and the observed delivery boundary, and publish accurate first-use guidance.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -942,292 +917,88 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Unbundle overloaded CLI/entrypoint Bazel test targets and drop duplicate/unnecessary serial locks (#1672 Hop 1), parallelize distinct GHA artifact downloads up to 6 bounded workers (#1400/#1573), and add reviewed_next_hop_workflow_digests for Hop 2 release.yml without altering workflows in Hop 1.",
+      "intent": "Preserve the prior first-use guide structure, use an outcome-only prompt, and explain standing authority and observable delivery without claiming the open host qualification.",
       "phases": [],
-      "proof_hooks": [],
+      "proof_hooks": [
+        "Configured documentation build, links, material specs and publication gate."
+      ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
-          "disposition": "updated",
+          "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "reason": "The guide describes existing kernel and hosting boundaries.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod via official v0.169.3 CLI.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
-          "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
+          "reason": "Document objective-only prompts, repository delegation and separate delivery evidence.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "spec_material_hash": "1d2bc71d468c17bbb7a00ce04b169568af29b2e93148ded725ae4c2a22c1f7fe"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Refreshed 0.169.3 Dockerfile.decapod pin via official CLI; security boundaries unchanged.",
-          "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
+          "reason": "Configured authority and verification still govern delivery.",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "CI shard unbundling (#1672 Hop 1), parallel GHA custody downloads (#1400/#1573), and next-hop release workflow admission",
+      "title": "From setup to a first inspectable engineering result",
       "todo_ids": [
-        "test_01m8fksbstm838m1"
+        "code_01m8g4q1kkxx9xkd"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795828991Z"
+      "updated_at": "1795838472Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:e89114ea25e26e9b42833aea58f6798c9424b713456ea141a1d54c6d44d4198e",
-      "checks": [
-        {
-          "name": "cargo_clippy_d_warnings",
-          "status": "passed"
-        },
-        {
-          "name": "cargo_fmt_check",
-          "status": "passed"
-        },
-        {
-          "name": "init_reconciliation_22",
-          "status": "passed"
-        },
-        {
-          "name": "init_reconciliation_config_digest",
-          "status": "passed"
-        },
-        {
-          "name": "official_0169_3_dockerfile_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "official_0169_3_specs_refresh",
-          "status": "passed"
-        },
-        {
-          "name": "readiness_profile_35",
-          "status": "passed"
-        },
-        {
-          "name": "snapshot_provider_219",
-          "status": "passed"
-        },
-        {
-          "name": "source_import_11",
-          "status": "passed"
-        },
-        {
-          "name": "unbundled_cli_and_policy_suites",
-          "status": "passed"
-        }
-      ],
+      "artifact_hash": "sha256:e9b64e88a5ba6c7c7ff9a9de5463f3df1fe4a3895baeb6c989e6aab9c0d0c88c",
+      "checks": [],
+      "current_phase": "intent",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G4QVQRVHCR6VT6J2AX39VW",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:run_1672_hop1",
+            "intent_id": "intent:change_01M8G4QVQRVHCR6VT6J2AX39VW",
             "kind": "refined",
             "sequence": 3
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:4",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 4
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:5",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 5
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:6",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 6
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:7",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 7
-          },
-          {
-            "detail": "trajectory:run_1672_hop1",
-            "event_id": "event:8",
-            "intent_id": "intent:run_1672_hop1",
-            "kind": "trajectory_step_recorded",
-            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 8,
+        "next_sequence": 3,
         "schema_version": "1.1.0",
-        "trajectories": {
-          "run_1672_hop1": {
-            "evidence_only": true,
-            "id": "run_1672_hop1",
-            "intent_id": "intent:run_1672_hop1",
-            "steps": [
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:4",
-                "observations": [
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "assets/tools/source_ci_profile.rs",
-                  ".config/build/decapod.BUILD.bzl"
-                ],
-                "proof_refs": [
-                  "cargo_fmt_check",
-                  "cargo_clippy_d_warnings",
-                  "snapshot_provider_219",
-                  "source_import_11",
-                  "readiness_profile_35",
-                  "init_reconciliation_22",
-                  "unbundled_cli_and_policy_suites"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 4,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:5",
-                "observations": [
-                  ".config/build/decapod.BUILD.bzl",
-                  "assets/tools/source_ci_profile.rs",
-                  "src/decapod/core/init_reconciliation/mod.rs",
-                  "src/decapod/core/readiness_profile.rs",
-                  "src/decapod/core/readiness_profile/tests.rs",
-                  "src/decapod/core/snapshot_provider/github_artifacts.rs",
-                  "src/decapod/core/snapshot_provider/mod.rs",
-                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-                  "tests/cli_contracts.rs",
-                  "tests/consumer_readiness.rs",
-                  "tests/effective_grant_cli_contracts.rs",
-                  "tests/entrypoint_correctness.rs",
-                  "tests/entrypoint_validation_contracts.rs",
-                  "tests/governance_fault_detection_1795.rs",
-                  "tests/source_ci_profile_policy.rs",
-                  "tests/support/cli_bin.rs"
-                ],
-                "proof_refs": [],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 5,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:6",
-                "observations": [
-                  ".decapod/config.toml"
-                ],
-                "proof_refs": [
-                  "init_reconciliation_config_digest"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 6,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:7",
-                "observations": [
-                  ".decapod/managed/.manifest.json",
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_specs_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 7,
-                "validation_findings": []
-              },
-              {
-                "action": "trajectory.record",
-                "custody_event_id": "event:8",
-                "observations": [
-                  ".decapod/managed/Dockerfile.decapod"
-                ],
-                "proof_refs": [
-                  "official_0169_3_dockerfile_refresh"
-                ],
-                "scope": [
-                  "decapod_hop1"
-                ],
-                "sequence": 8,
-                "validation_findings": []
-              }
-            ]
-          }
-        }
+        "trajectories": {}
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [],
-      "inspected_files": [
-        ".config/build/decapod.BUILD.bzl",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs"
-      ],
-      "intent_id": "intent:run_1672_hop1",
-      "modified_files": [
-        ".config/build/decapod.BUILD.bzl",
-        ".decapod/config.toml",
-        ".decapod/managed/.manifest.json",
-        ".decapod/managed/Dockerfile.decapod",
-        "assets/tools/source_ci_profile.rs",
-        "src/decapod/core/init_reconciliation/mod.rs",
-        "src/decapod/core/readiness_profile.rs",
-        "src/decapod/core/readiness_profile/tests.rs",
-        "src/decapod/core/snapshot_provider/github_artifacts.rs",
-        "src/decapod/core/snapshot_provider/mod.rs",
-        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
-        "tests/cli_contracts.rs",
-        "tests/consumer_readiness.rs",
-        "tests/effective_grant_cli_contracts.rs",
-        "tests/entrypoint_correctness.rs",
-        "tests/entrypoint_validation_contracts.rs",
-        "tests/governance_fault_detection_1795.rs",
-        "tests/source_ci_profile_policy.rs",
-        "tests/support/cli_bin.rs"
+      "inspected_files": [],
+      "intent_id": "intent:change_01M8G4QVQRVHCR6VT6J2AX39VW",
+      "modified_files": [],
+      "next_transitions": [
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "decapod_hop1"
+        "root"
       ],
-      "run_id": "run_1672_hop1",
+      "run_id": "branch_01M8G4QVW0GTX4YE0WQ90R5YGV",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "test_01m8fksbstm838m1",
+      "task_id": "code_01m8g4q1kkxx9xkd",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

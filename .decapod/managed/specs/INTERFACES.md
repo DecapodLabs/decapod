@@ -386,6 +386,8 @@ publication readiness; the configured exact-candidate checks still govern releas
 
 ## Bounded context and host observations
 
+The quickstart separates an ordinary objective from repository delegation. The agent works against the complete request and reports the observed delivery endpoint. Candidate validation, PR publication, target merge, and deployment each have their own evidence. Host qualification records the endpoint and any human intervention.
+
 `context.resolve` retains its fragment contract and adds selection reasons, stable source identities, a scoped advisory knowledge projection, and current governed-plan context with explicit task binding. It returns an explicit no-match result for advisory queries and retains mandatory obligations. New capsule and bundle fields are versioned. Legacy hashes stay stable when the optional fields are absent. The complete context envelope is capped at 262,144 bytes, with at most twelve fragments and 8,192 excerpt bytes.
 
 `infer boundary --input` accepts a bounded `decapod.native-boundary.v1` request with a host agent ID. `trace flight-recorder compare --input` reads compact outcome observations and preserves missing metrics and incomplete runs. `trace flight-recorder acceptance --capture` continues to correlate the independently captured observer inputs.
@@ -2731,7 +2733,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

@@ -25,3 +25,11 @@ Defines project-specific policy and metadata.
 ## Project Overrides
 
 For deep behavioral changes, use `.decapod/OVERRIDE.md` (see [Config Overrides](concepts/overrides.md)). Find the generated directive section and replace the instruction inside its four-backtick source block with Markdown or any documentation style you prefer. Decapod extracts the block contents as authority while the outer file renders them as code. Duplicate or Decapod-namespaced unknown directive headings outside a body block fail closed instead of applying partial authority.
+
+## Legacy Upgrades and Config Backups
+
+When upgrading an existing Decapod repository after installing a newer `decapod` binary:
+
+- **Idempotent store migration:** `decapod init`, `decapod validate`, and other governed commands one-shot-import any residual legacy event JSONL into the canonical SQLite event store (`.decapod/data/decapod.db`) and move retired files under `.decapod/data/.retired-jsonl/`. Runtime writers never append to JSONL, and legacy SQLite stores recreated by an older binary are copied forward and removed.
+- **Override preservation:** Existing `.decapod/OVERRIDE.md` body bytes are preserved while sections are rendered into fenced documentation source areas with visible authoring instructions; unsafe or ambiguous authority fails closed.
+- **Non-destructive config refresh:** `decapod init --refresh` preserves existing authored settings as defaults, makes no state edits during `--dry-run`, and backs up changed configuration privately under `.decapod/data/config-backups/`. Agents run `decapod init --proof` during validation for non-interactive upgrade checks without authenticating Cloud credentials or asserting readiness.
