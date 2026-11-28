@@ -420,6 +420,7 @@ pub struct StorageCompactParams {
 pub struct DatabaseCapabilitiesParams {
     pub probes: Vec<String>,
     pub actor: Option<String>,
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -428,6 +429,7 @@ pub struct DatabaseMaintainInspectParams {
     pub operation_id: Option<String>,
     pub expected_policy_sha256: Option<String>,
     pub actor: Option<String>,
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -436,6 +438,7 @@ pub struct DatabaseVerifyParams {
     pub operation_id: Option<String>,
     pub expected_policy_sha256: Option<String>,
     pub actor: Option<String>,
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -448,6 +451,8 @@ pub struct DatabaseBackupParams {
     pub expected_policy_sha256: Option<String>,
     #[serde(default)]
     pub actor: Option<String>,
+    #[serde(default)]
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -460,6 +465,8 @@ pub struct DatabaseRecoverParams {
     pub expected_policy_sha256: Option<String>,
     #[serde(default)]
     pub actor: Option<String>,
+    #[serde(default)]
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -469,6 +476,7 @@ pub struct DatabaseLockDiagnoseParams {
     pub operation_id: Option<String>,
     pub expected_policy_sha256: Option<String>,
     pub actor: Option<String>,
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -489,6 +497,8 @@ pub struct DatabaseLockRetryParams {
     pub expected_policy_sha256: Option<String>,
     #[serde(default)]
     pub actor: Option<String>,
+    #[serde(default)]
+    pub delegated_grant_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
@@ -497,6 +507,7 @@ pub struct DatabaseLockReleaseOwnParams {
     pub operation_id: Option<String>,
     pub expected_policy_sha256: Option<String>,
     pub actor: Option<String>,
+    pub delegated_grant_id: Option<String>,
 }
 
 fn default_wal_checkpoint_timeout_ms() -> u64 {
@@ -511,6 +522,7 @@ pub struct DatabaseWalCheckpointParams {
     pub operation_id: Option<String>,
     pub expected_policy_sha256: Option<String>,
     pub actor: Option<String>,
+    pub delegated_grant_id: Option<String>,
 }
 
 impl Default for DatabaseWalCheckpointParams {
@@ -520,6 +532,7 @@ impl Default for DatabaseWalCheckpointParams {
             operation_id: None,
             expected_policy_sha256: None,
             actor: None,
+            delegated_grant_id: None,
         }
     }
 }

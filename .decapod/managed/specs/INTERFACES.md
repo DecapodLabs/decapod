@@ -1,3 +1,9 @@
+## `#1568` `data db` CLI & `data.database.*` RPC `--delegated-grant-id` & Cloud Guard Interfaces (`src/decapod/cli.rs`, `src/decapod/core/rpc.rs`, `src/decapod/core/db_maintenance.rs`, `docs/agent/command-contracts.md`)
+
+- **CLI flags (`src/decapod/cli.rs`)**: Adds `--delegated-grant-id <ID>` (alias `--grant-id`) to `DatabaseCommand::{Capabilities, Verify, Backup, Recover}`, `DatabaseLockCommand::{Diagnose, Retry, ReleaseOwn}`, and `DatabaseMaintainCommand::{Inspect, Verify, LockInspect, WalCheckpoint, Backup, Recover}`.
+- **RPC parameters & reports (`src/decapod/core/rpc.rs`, `src/decapod/core/db_maintenance.rs`)**: Adds optional `delegated_grant_id: Option<String>` across `Database{Capabilities, MaintainInspect, Verify, Backup, Recover, LockDiagnose, LockRetry, LockReleaseOwn, WalCheckpoint}Params`. `build_capabilities_report_with_cloud_authority` sets `"database": "cloud:propodus"` and emits `"cloud_authority": { principal_verified, effective_tier, delegated_grant_id, delegated_grant_resolved, resolution_error }` when `[repo].backend = "cloud"`.
+- **Fail-closed backend boundary**: Calling SQLite-backed maintenance executors (`run_maintain_{inspect,verify,lock_diagnose,lock_release_own,wal_checkpoint,backup}`) on `[repo].backend = "cloud"` fails closed with `"CLOUD_LOCAL_SQLITE_UNSUPPORTED"` after admission, while `tests/cloud_wave_parity.rs::cli_and_rpc_db_maintenance_enforce_propodus_037_delegated_grants_end_to_end` verifies CLI and JSON-RPC end-to-end against loopback DPoP (`propodus_repository_access_v1` + `propodus_delegated_grants_v1`).
+
 ## Container Custody & Supabase 3-Mode Interface Contract (`#1379`, `#1378`, `#1369`)
 
 - **`core::db::storage_health_preflight(store_root)`**: Rejects `#[cfg(unix)]` directories with `mode & 0o222 == 0` (`STORAGE_PREFLIGHT_FAILED: store root '...' has read-only mode (...); refuse write probe under privileged UID.`) before `detect_fs_type` (`UNSUPPORTED_FS_TYPES`: `nfs`, `nfs4`, `cifs`, `smbfs`, `9p`, `vboxsf`; permitting `virtiofs`/`fuse*`) and `write_probe`.
@@ -2760,7 +2766,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `2ca6f6e743d139e015d7995348084aff0157cf35b7f86869bdbb5268f3c36854`
+- Repository signal fingerprint: `e6f364a29983cb8bdc9433c161c92f3ff446d83612d7665c701bb88094190f9f`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

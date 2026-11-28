@@ -11589,12 +11589,14 @@ fn should_dispatch_governed_database_cli(invocation_dir: &Path, command: &Databa
             governed,
             operation_id,
             expected_policy_sha256,
+            delegated_grant_id,
             actor,
         }
         | DatabaseCommand::Backup {
             governed,
             operation_id,
             expected_policy_sha256,
+            delegated_grant_id,
             actor,
             ..
         }
@@ -11602,12 +11604,14 @@ fn should_dispatch_governed_database_cli(invocation_dir: &Path, command: &Databa
             governed,
             operation_id,
             expected_policy_sha256,
+            delegated_grant_id,
             actor,
             ..
         } => {
             if *governed
                 || operation_id.is_some()
                 || expected_policy_sha256.is_some()
+                || delegated_grant_id.is_some()
                 || actor.is_some()
             {
                 return true;
@@ -11634,6 +11638,8 @@ fn verify_strict_local_agent_session(
     if main_root != workspace_root {
         candidate_roots.push(main_root);
     }
+    let allow_cloud_token = core::cloud_workspace::is_cloud_project(workspace_root)
+        || core::cloud_workspace::is_cloud_project(main_root);
     let mut saw_expired = false;
     let mut saw_wrong_password = false;
     let mut saw_wrong_backend = false;
@@ -11657,7 +11663,9 @@ fn verify_strict_local_agent_session(
                 ),
             ));
         }
-        if !session_token_matches_backend(&rec.token, BackendType::Local) {
+        let backend_ok = session_token_matches_backend(&rec.token, BackendType::Local)
+            || (allow_cloud_token && session_token_matches_backend(&rec.token, BackendType::Cloud));
+        if !backend_ok {
             saw_wrong_backend = true;
             continue;
         }
@@ -11718,7 +11726,11 @@ fn run_governed_database_cli(
         DatabaseCommand::Inspect { .. } => {
             unreachable!("legacy read-only inventory handled separately")
         }
-        DatabaseCommand::Capabilities { probes, actor } => {
+        DatabaseCommand::Capabilities {
+            probes,
+            actor,
+            delegated_grant_id,
+        } => {
             let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
                 |(code, msg)| error::DecapodError::ValidationError(format!("{code}: {msg}")),
             )?;
@@ -11734,7 +11746,18 @@ fn run_governed_database_cli(
                     db_maintenance::redact_for_repo(&msg, &policy.main_root)
                 ))
             })?;
-            db_maintenance::build_capabilities_report(&policy, &verified_actor, &probes)
+            let cloud_authority = policy.backend.is_cloud().then(|| {
+                db_maintenance::resolve_cloud_maintenance_authority(
+                    &policy,
+                    delegated_grant_id.as_deref(),
+                )
+            });
+            db_maintenance::build_capabilities_report_with_cloud_authority(
+                &policy,
+                &verified_actor,
+                &probes,
+                cloud_authority.as_ref(),
+            )
         }
         DatabaseCommand::Audit { limit } => {
             let policy = db_maintenance::resolve_canonical_policy(invocation_dir).map_err(
@@ -11768,13 +11791,15 @@ fn run_governed_database_cli(
                 timeout_ms,
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.lock.diagnose",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![format!("timeout_ms={timeout_ms}")],
                 |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, timeout_ms),
@@ -11787,6 +11812,7 @@ fn run_governed_database_cli(
                 deadline_ms,
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
             } => {
                 let spec = db_maintenance::LockRetrySpec {
@@ -11798,12 +11824,13 @@ fn run_governed_database_cli(
                     operation_id: operation_id.clone(),
                     expected_policy_sha256: expected_policy_sha256.clone(),
                 };
-                db_maintenance::execute_governed_capability(
+                db_maintenance::execute_governed_capability_with_grant(
                     invocation_dir,
                     "db.lock.retry",
                     actor.as_deref(),
                     operation_id.as_deref(),
                     expected_policy_sha256.as_deref(),
+                    delegated_grant_id.as_deref(),
                     &verify_strict_local_agent_session,
                     vec![
                         format!("target={}", target.as_capability().as_str()),
@@ -11811,19 +11838,27 @@ fn run_governed_database_cli(
                         format!("initial_backoff_ms={initial_backoff_ms}"),
                         format!("deadline_ms={deadline_ms}"),
                     ],
-                    |_, _| db_maintenance::run_maintain_lock_retry(invocation_dir, &spec),
+                    |_, _| {
+                        db_maintenance::run_maintain_lock_retry_with_grant(
+                            invocation_dir,
+                            &spec,
+                            delegated_grant_id.as_deref(),
+                        )
+                    },
                 )?
             }
             DatabaseLockCommand::ReleaseOwn {
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.lock.release_own",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
@@ -11833,13 +11868,15 @@ fn run_governed_database_cli(
             DatabaseMaintainCommand::Inspect {
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.inspect",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_inspect(policy),
@@ -11847,13 +11884,15 @@ fn run_governed_database_cli(
             DatabaseMaintainCommand::Verify {
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.verify",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_verify(policy),
@@ -11862,13 +11901,15 @@ fn run_governed_database_cli(
                 timeout_ms,
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.lock.diagnose",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![format!("timeout_ms={timeout_ms}")],
                 |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, timeout_ms),
@@ -11877,13 +11918,15 @@ fn run_governed_database_cli(
                 timeout_ms,
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.wal.checkpoint",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![format!("timeout_ms={timeout_ms}")],
                 |policy, _| db_maintenance::run_maintain_wal_checkpoint(policy, timeout_ms),
@@ -11892,13 +11935,15 @@ fn run_governed_database_cli(
                 destination,
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.backup",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["destination=<bounded-backups-dir>".to_string()],
                 |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
@@ -11907,13 +11952,15 @@ fn run_governed_database_cli(
                 preserve_original_at,
                 operation_id,
                 expected_policy_sha256,
+                delegated_grant_id,
                 actor,
-            } => db_maintenance::execute_governed_capability(
+            } => db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.recover",
                 actor.as_deref(),
                 operation_id.as_deref(),
                 expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
                 |policy, verified_actor| {
@@ -11928,14 +11975,16 @@ fn run_governed_database_cli(
         DatabaseCommand::Verify {
             operation_id,
             expected_policy_sha256,
+            delegated_grant_id,
             actor,
             ..
-        } => db_maintenance::execute_governed_capability(
+        } => db_maintenance::execute_governed_capability_with_grant(
             invocation_dir,
             "db.verify",
             actor.as_deref(),
             operation_id.as_deref(),
             expected_policy_sha256.as_deref(),
+            delegated_grant_id.as_deref(),
             &verify_strict_local_agent_session,
             vec![],
             |policy, _| db_maintenance::run_maintain_verify(policy),
@@ -11944,14 +11993,16 @@ fn run_governed_database_cli(
             destination,
             operation_id,
             expected_policy_sha256,
+            delegated_grant_id,
             actor,
             ..
-        } => db_maintenance::execute_governed_capability(
+        } => db_maintenance::execute_governed_capability_with_grant(
             invocation_dir,
             "db.backup",
             actor.as_deref(),
             operation_id.as_deref(),
             expected_policy_sha256.as_deref(),
+            delegated_grant_id.as_deref(),
             &verify_strict_local_agent_session,
             vec!["destination=<bounded-backups-dir>".to_string()],
             |policy, _| db_maintenance::run_maintain_backup(policy, &destination),
@@ -11960,14 +12011,16 @@ fn run_governed_database_cli(
             preserve_original_at,
             operation_id,
             expected_policy_sha256,
+            delegated_grant_id,
             actor,
             ..
-        } => db_maintenance::execute_governed_capability(
+        } => db_maintenance::execute_governed_capability_with_grant(
             invocation_dir,
             "db.recover",
             actor.as_deref(),
             operation_id.as_deref(),
             expected_policy_sha256.as_deref(),
+            delegated_grant_id.as_deref(),
             &verify_strict_local_agent_session,
             vec!["tier=owner".to_string()],
             |policy, verified_actor| {
@@ -12056,11 +12109,20 @@ fn run_governed_database_rpc(
                     db_maintenance::redact_for_repo(&msg, &policy.main_root)
                 ))
             })?;
-            Ok(db_maintenance::build_capabilities_report(
-                &policy,
-                &verified_actor,
-                &params.probes,
-            ))
+            let cloud_authority = policy.backend.is_cloud().then(|| {
+                db_maintenance::resolve_cloud_maintenance_authority(
+                    &policy,
+                    params.delegated_grant_id.as_deref(),
+                )
+            });
+            Ok(
+                db_maintenance::build_capabilities_report_with_cloud_authority(
+                    &policy,
+                    &verified_actor,
+                    &params.probes,
+                    cloud_authority.as_ref(),
+                ),
+            )
         }
         "data.database.audit" => {
             let params: DatabaseAuditParams = parse_governed_rpc_params(&request.params)?;
@@ -12093,12 +12155,13 @@ fn run_governed_database_rpc(
         }
         "data.database.maintain.inspect" => {
             let params: DatabaseMaintainInspectParams = parse_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.inspect",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_inspect(policy),
@@ -12106,12 +12169,13 @@ fn run_governed_database_rpc(
         }
         "data.database.verify" => {
             let params: DatabaseVerifyParams = parse_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.verify",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_verify(policy),
@@ -12119,12 +12183,13 @@ fn run_governed_database_rpc(
         }
         "data.database.backup" => {
             let params: DatabaseBackupParams = parse_required_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.backup",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["destination=<bounded-backups-dir>".to_string()],
                 |policy, _| db_maintenance::run_maintain_backup(policy, &params.destination),
@@ -12133,12 +12198,13 @@ fn run_governed_database_rpc(
         "data.database.recover" => {
             let params: DatabaseRecoverParams =
                 parse_required_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.recover",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec!["tier=owner".to_string()],
                 |policy, verified_actor| {
@@ -12152,12 +12218,13 @@ fn run_governed_database_rpc(
         }
         "data.database.lock.diagnose" => {
             let params: DatabaseLockDiagnoseParams = parse_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.lock.diagnose",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![format!("timeout_ms={}", params.timeout_ms)],
                 |policy, _| db_maintenance::run_maintain_lock_diagnose(policy, params.timeout_ms),
@@ -12166,6 +12233,7 @@ fn run_governed_database_rpc(
         "data.database.lock.retry" => {
             let params: DatabaseLockRetryParams =
                 parse_required_governed_rpc_params(&request.params)?;
+            let delegated_grant_id = params.delegated_grant_id.clone();
             let spec = db_maintenance::LockRetrySpec {
                 target: params.target,
                 destination: params.destination,
@@ -12175,12 +12243,13 @@ fn run_governed_database_rpc(
                 operation_id: params.operation_id.clone(),
                 expected_policy_sha256: params.expected_policy_sha256.clone(),
             };
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.lock.retry",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![
                     format!("target={}", params.target.as_capability().as_str()),
@@ -12188,17 +12257,24 @@ fn run_governed_database_rpc(
                     format!("initial_backoff_ms={}", params.initial_backoff_ms),
                     format!("deadline_ms={}", params.deadline_ms),
                 ],
-                |_, _| db_maintenance::run_maintain_lock_retry(invocation_dir, &spec),
+                |_, _| {
+                    db_maintenance::run_maintain_lock_retry_with_grant(
+                        invocation_dir,
+                        &spec,
+                        delegated_grant_id.as_deref(),
+                    )
+                },
             )
         }
         "data.database.lock.release_own" => {
             let params: DatabaseLockReleaseOwnParams = parse_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.lock.release_own",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![],
                 |policy, _| db_maintenance::run_maintain_lock_release_own(policy),
@@ -12206,12 +12282,13 @@ fn run_governed_database_rpc(
         }
         "data.database.wal_checkpoint" => {
             let params: DatabaseWalCheckpointParams = parse_governed_rpc_params(&request.params)?;
-            db_maintenance::execute_governed_capability(
+            db_maintenance::execute_governed_capability_with_grant(
                 invocation_dir,
                 "db.wal.checkpoint",
                 params.actor.as_deref(),
                 params.operation_id.as_deref(),
                 params.expected_policy_sha256.as_deref(),
+                params.delegated_grant_id.as_deref(),
                 &verify_strict_local_agent_session,
                 vec![format!("timeout_ms={}", params.timeout_ms)],
                 |policy, _| db_maintenance::run_maintain_wal_checkpoint(policy, params.timeout_ms),
