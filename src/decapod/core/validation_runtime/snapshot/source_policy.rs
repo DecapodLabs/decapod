@@ -114,6 +114,26 @@ fn verify_non_integration_effective_context(
     }
 }
 
+fn expected_script_sources(
+    project: &CurrentProject,
+    check: &source::Check,
+) -> Vec<(&'static str, &'static [u8])> {
+    if matches!(check.job, "test-core" | "test-cli")
+        && project
+            .catalog
+            .obligations()
+            .iter()
+            .any(|o| o.key.job == "test-prepare")
+    {
+        return source::workflow_owned::SOURCES
+            .iter()
+            .copied()
+            .filter(|(p, _)| *p == "assets/tools/source_ci/selective-worker.sh")
+            .collect();
+    }
+    source::workflow_owned::script_sources(check)
+}
+
 /// The known input map is built only from independently authenticated earlier
 /// producer artifacts. A receipt cannot supply its own expected binary hashes.
 pub(super) fn verify(
@@ -247,7 +267,7 @@ pub(super) fn verify(
             }
             Some("source_recipe") => {
                 let path = field(row, "path")?;
-                let expected = source::workflow_owned::script_sources(check)
+                let expected = expected_script_sources(project, check)
                     .into_iter()
                     .find(|(name, _)| *name == path)
                     .ok_or_else(|| invalid("undeclared source recipe input"))?;
@@ -424,7 +444,7 @@ pub(super) fn verify(
         configs == expected_configs,
         "source toolchain configuration inventory incomplete",
     )?;
-    let expected_recipes: BTreeSet<_> = source::workflow_owned::script_sources(check)
+    let expected_recipes: BTreeSet<_> = expected_script_sources(project, check)
         .iter()
         .map(|(p, _)| *p)
         .collect();

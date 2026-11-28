@@ -1059,6 +1059,9 @@ pub fn required_artifact_paths(check: &Check, _paths: &[String]) -> Vec<String> 
     };
     let mut artifact_paths = artifact_defaults.to_vec();
     match check.id {
+        "selective-prepare" => {
+            artifact_paths.push("target/selective-custody-artifacts/selective-archive.v1");
+        }
         "integration-prepare" => {
             artifact_paths.extend([
                 "target/integration-custody-artifacts/integration-custody",

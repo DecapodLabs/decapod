@@ -48,6 +48,12 @@
 
 # Architecture
 
+## Authenticated `OfficialCli` ETag/304 transport, pinned `cargo-dist` release installers & selective compile-once custody (`#1573`, `#1672` Hop 2A)
+
+- **`OfficialCli::execute_github_get` & LF/CRLF header parsing (`src/decapod/core/snapshot_provider/mod.rs`, `src/decapod/core/snapshot_provider/github_quota.rs`)**: Invokes `gh api -i` for `ProviderRequest::GithubGet`, sends `If-None-Match` when an in-process `etag_cache` entry (`<= 128` entries, `<= 2 MiB` body) exists, treats `HTTP/2.0 304 Not Modified` (where `gh` returns exit code `1`) as a zero-quota cache hit via `observe_public_github_not_modified`, records `x-ratelimit-remaining`/`x-ratelimit-reset` into `GithubQuota` on HTTP `200`/`403`/`429`, and fixes `decimal_header` / `parse_valid_etag` to trim `\r` after splitting on `\n` so LF-terminated `HTTP/2.0` status lines never merge into header line 1.
+- **Direct GitHub Release `cargo-dist` installer (`.github/workflows/release.yml`, `tests/fixtures/release_pinned_preparation.yml`)**: Replaces the remote `cargo-dist-installer.sh` pipe across `plan` and all Linux/macOS artifact matrix entries with `curl --retry 3` against `github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-<triple>.tar.xz` plus strict SHA-256 verification before extraction.
+- **Compile-once selective test custody & Hop 2B admission (`assets/tools/integration_shards.rs`, `assets/tools/source_ci/selective-{prepare,worker}.sh`, `assets/tools/source_ci_workflow_owned.rs`, `assets/tools/source_ci_custody.rs`, `src/decapod/core/validation_runtime/snapshot/{source_import,source_policy,integration}.rs`, `src/decapod/core/readiness_profile.rs`)**: Adds `prepare-selective` and `run-selective` commands over the 21 `SELECTIVE_TARGETS`, binds the 80-byte `selective-archive.v1` descriptor (`<sha256>  <bytes>`) into `known_inputs` for `"target/selective-download/selective-tests.tar"`, enables `job_name_with_counts` (`1/3..3/3` or `1/6..6/6` + `test-prepare`), moves `release.yml` into `reviewed_workflow_digests()`, and registers Hop 2B `.github/workflows/ci.yml` (`sha256:ba728f59ffa86f548c9d3946753994def1b220c411c38f7395ff2a83376fb115`) in `reviewed_next_hop_workflow_digests()`.
+
 ## Bounded-parallel custody download, unbundled CLI/core targets & next-hop workflow admission (`#1400`, `#1573`, `#1672` Hop 1)
 
 - **Batch `Runner` & `OfficialCli` execution (`src/decapod/core/snapshot_provider/mod.rs`)**: Extracts `OfficialCli::prepare_command` and `OfficialCli::run_prepared_command` (preserving `GITHUB_TOKEN`/`GH_TOKEN`/Buildkite env scrubbing and `ProcessLimits`) and implements `Runner::execute_batch` / `OfficialCli::execute_batch` using `std::thread::scope` (`MAX_CONCURRENT_SUBPROCESSES = 6`, checking `budget.remaining()` and `budget.cancel` per task, returning deterministic ordered outcomes).
@@ -2209,7 +2215,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `2c7a6039ef4394cefc1230d76e27ee303e03d1e8478c9e51f40ff6ec66cb1b2a`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

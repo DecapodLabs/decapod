@@ -148,7 +148,17 @@ jobs:
         # we specify bash to get pipefail; it guards against the `curl` command
         # failing. otherwise `sh` won't catch that `curl` returned non-0
         shell: bash
-        run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          curl --proto '=https' --tlsv1.2 -LsSf --retry 3 \
+            "https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-x86_64-unknown-linux-gnu.tar.xz" \
+            -o "$tmp/cargo-dist.tar.xz"
+          printf '%s  %s\n' "772bd100cb51335462cee66fc336252e6b12123cde8e761c07bbc410ada43ad7" "$tmp/cargo-dist.tar.xz" | sha256sum --check --status
+          tar -xf "$tmp/cargo-dist.tar.xz" -C "$tmp" --strip-components=1
+          install -d "$HOME/.cargo/bin"
+          install -m 0755 "$tmp/cargo-dist" "$HOME/.cargo/bin/cargo-dist"
       - name: Stage cargo-dist cache
         shell: bash
         run: |
@@ -266,22 +276,22 @@ jobs:
         include:
           - targets: aarch64-apple-darwin
             runner: macos-latest
-            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            install_dist: "set -euo pipefail && tmp=\"$(mktemp -d)\" && trap 'rm -rf \"$tmp\"' EXIT && if [ \"$(uname -m)\" = x86_64 ]; then t=x86_64-apple-darwin; s=e9ccae8d88103d2e42f2b6378df7cecb9466f2d6159da38bd32f31da41b6da05; else t=aarch64-apple-darwin; s=a1a76d7c2e93af7380e00a3662c463f5c70b3e8f0e8e9be30194843ee5920cb7; fi && curl --proto '=https' --tlsv1.2 -LsSf --retry 3 \"https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-${t}.tar.xz\" -o \"$tmp/d.tar.xz\" && printf '%s  %s\\n' \"$s\" \"$tmp/d.tar.xz\" | shasum -a 256 --check --status && tar -xf \"$tmp/d.tar.xz\" -C \"$tmp\" --strip-components=1 && install -d \"$HOME/.cargo/bin\" && install -m 0755 \"$tmp/cargo-dist\" \"$HOME/.cargo/bin/cargo-dist\""
             packages_install: "true"
             dist_args: "--artifacts=local --target=aarch64-apple-darwin"
           - targets: aarch64-unknown-linux-gnu
             runner: ubuntu-latest
-            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            install_dist: "set -euo pipefail && tmp=\"$(mktemp -d)\" && trap 'rm -rf \"$tmp\"' EXIT && curl --proto '=https' --tlsv1.2 -LsSf --retry 3 \"https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-x86_64-unknown-linux-gnu.tar.xz\" -o \"$tmp/d.tar.xz\" && printf '%s  %s\\n' \"772bd100cb51335462cee66fc336252e6b12123cde8e761c07bbc410ada43ad7\" \"$tmp/d.tar.xz\" | sha256sum --check --status && tar -xf \"$tmp/d.tar.xz\" -C \"$tmp\" --strip-components=1 && install -d \"$HOME/.cargo/bin\" && install -m 0755 \"$tmp/cargo-dist\" \"$HOME/.cargo/bin/cargo-dist\""
             packages_install: "true"
             dist_args: "--artifacts=local --target=aarch64-unknown-linux-gnu"
           - targets: x86_64-apple-darwin
             runner: macos-latest
-            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            install_dist: "set -euo pipefail && tmp=\"$(mktemp -d)\" && trap 'rm -rf \"$tmp\"' EXIT && if [ \"$(uname -m)\" = x86_64 ]; then t=x86_64-apple-darwin; s=e9ccae8d88103d2e42f2b6378df7cecb9466f2d6159da38bd32f31da41b6da05; else t=aarch64-apple-darwin; s=a1a76d7c2e93af7380e00a3662c463f5c70b3e8f0e8e9be30194843ee5920cb7; fi && curl --proto '=https' --tlsv1.2 -LsSf --retry 3 \"https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-${t}.tar.xz\" -o \"$tmp/d.tar.xz\" && printf '%s  %s\\n' \"$s\" \"$tmp/d.tar.xz\" | shasum -a 256 --check --status && tar -xf \"$tmp/d.tar.xz\" -C \"$tmp\" --strip-components=1 && install -d \"$HOME/.cargo/bin\" && install -m 0755 \"$tmp/cargo-dist\" \"$HOME/.cargo/bin/cargo-dist\""
             packages_install: "true"
             dist_args: "--artifacts=local --target=x86_64-apple-darwin"
           - targets: x86_64-unknown-linux-gnu
             runner: ubuntu-latest
-            install_dist: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-installer.sh | sh"
+            install_dist: "set -euo pipefail && tmp=\"$(mktemp -d)\" && trap 'rm -rf \"$tmp\"' EXIT && curl --proto '=https' --tlsv1.2 -LsSf --retry 3 \"https://github.com/axodotdev/cargo-dist/releases/download/v0.22.1/cargo-dist-x86_64-unknown-linux-gnu.tar.xz\" -o \"$tmp/d.tar.xz\" && printf '%s  %s\\n' \"772bd100cb51335462cee66fc336252e6b12123cde8e761c07bbc410ada43ad7\" \"$tmp/d.tar.xz\" | sha256sum --check --status && tar -xf \"$tmp/d.tar.xz\" -C \"$tmp\" --strip-components=1 && install -d \"$HOME/.cargo/bin\" && install -m 0755 \"$tmp/cargo-dist\" \"$HOME/.cargo/bin/cargo-dist\""
             packages_install: "true"
             dist_args: "--artifacts=local --target=x86_64-unknown-linux-gnu"
     runs-on: ${{ matrix.runner }}

@@ -254,6 +254,33 @@ pub(super) fn record(
             known.prepared.replace(prepared).is_none(),
             "duplicate integration preparation producer",
         )?;
+    } else if check.id == "selective-prepare" {
+        let raw = produced_bytes(
+            files,
+            check.id,
+            "target/selective-custody-artifacts/selective-archive.v1",
+        )?;
+        let text = std::str::from_utf8(raw)
+            .map_err(|_| invalid("selective archive descriptor must be UTF-8"))?;
+        let (digest, size_str) = text
+            .trim()
+            .split_once("  ")
+            .ok_or_else(|| invalid("malformed selective archive descriptor"))?;
+        let bytes: u64 = size_str
+            .parse()
+            .map_err(|_| invalid("invalid selective archive byte length"))?;
+        ensure(
+            digest.len() == 64
+                && digest
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                && bytes > 0,
+            "invalid selective archive digest or size",
+        )?;
+        known.inputs.insert(
+            "target/selective-download/selective-tests.tar".into(),
+            format!("sha256:{digest}"),
+        );
     } else if check.job == "test-integration" {
         let prepared = known
             .prepared
@@ -289,6 +316,15 @@ pub(super) fn required_inputs(
             paths.insert(format!("target/integration-receipts/{shard}.receipt"));
         }
         return paths;
+    }
+    if matches!(check.job, "test-core" | "test-cli")
+        && project
+            .catalog
+            .obligations()
+            .iter()
+            .any(|o| o.key.job == "test-prepare")
+    {
+        return BTreeSet::from(["target/selective-download/selective-tests.tar".to_string()]);
     }
     let paths: BTreeSet<_> =
         source::workflow_owned::input_files(check, &project.identity_inputs.root)

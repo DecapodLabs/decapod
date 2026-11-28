@@ -77,11 +77,20 @@ pub const SOURCES: &[(&str, &[u8])] = &[
         include_bytes!("source_ci/docs-build.sh"),
     ),
     ("assets/tools/docs_seo.py", include_bytes!("docs_seo.py")),
+    (
+        "assets/tools/source_ci/selective-prepare.sh",
+        include_bytes!("source_ci/selective-prepare.sh"),
+    ),
+    (
+        "assets/tools/source_ci/selective-worker.sh",
+        include_bytes!("source_ci/selective-worker.sh"),
+    ),
 ];
 pub fn script(check: &Check) -> Option<&'static str> {
     Some(match check.id {
         "release-metadata" => "assets/tools/source_ci/release-metadata.sh",
         "pre-build-validate" => "assets/tools/source_ci/pre-build-validate.sh",
+        "selective-prepare" => "assets/tools/source_ci/selective-prepare.sh",
         "selective-core-status" => "assets/tools/source_ci/shard-status.sh",
         "selective-cli-status" => "assets/tools/source_ci/shard-status.sh",
         "commit-lint" => "assets/tools/source_ci/commit-lint.sh",

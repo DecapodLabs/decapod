@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "accepted_commit": "e108317423a8d6fc12cbc3bc01017c76706dc1e2",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,55 +872,68 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
-    "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
+    "id": "pr_1672_hop2a_r3",
+    "base_commit": "e108317423a8d6fc12cbc3bc01017c76706dc1e2",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
+    "claim-hop2a-release-quota-selective-prep": {
+      "statement": "Hop 2A replaces axodotdev installer with pinned GitHub Release cargo-dist SHA-256, adds gh api -i ETag/304 + quota pacing on OfficialCli, adds selective-prepare custody, and pre-admits Hop 2B 6-shard ci.yml digest",
+      "falsifier": "targeted snapshot_provider, readiness_profile, release_workflow_policy, integration_sharding_policy, or decapod validate fails",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "assets/tools/integration_shards.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/snapshot_provider/github_quota.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/integration_sharding_policy.rs",
+        "tests/release_workflow_policy.rs",
+        "tests/source_ci_profile_policy.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
-    },
-    {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "cp_1672_hop2a_e10831742",
+      "summary": "Rebase Hop 2A (PR #1998) cleanly onto origin/master@e10831742 (v0.169.5) preserving all #1997 changes",
+      "input_digest": "sha256:012365249f39460b695776421da72137df10acd0770a43fc72449efc2b371f4f",
+      "proof_refs": [
+        "assets/tools/integration_shards.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/snapshot_provider/github_quota.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "tests/integration_sharding_policy.rs",
+        "tests/release_workflow_policy.rs",
+        "tests/source_ci_profile_policy.rs"
+      ]
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:run_1672_hop2a_r3": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Keep .github/workflows/ci.yml unchanged in Hop 2A so official v0.169.5 controller validates cleanly; pre-admit Hop 2B ci.yml sha256:ba728f59ffa86f548c9d3946753994def1b220c411c38f7395ff2a83376fb115"
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        ".github/workflows/release.yml",
+        "tests/fixtures/release_pinned_preparation.yml",
+        "src/decapod/core/snapshot_provider/",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/validation_runtime/snapshot/",
+        "assets/tools/"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:run_1672_hop2a_r3",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Execute Decapod CI/CD #1672 Hop 2A, #1573 GitHub quota/ETag pacing, #1400 latency, and pinned release.yml cargo-dist tarballs off origin/master@e10831742",
+      "refined_intent": "Pin release.yml cargo-dist v0.22.1 tarballs + SHA-256, add OfficialCli gh api -i ETag/304 + rate-limit pacing, add selective-prepare/worker runtime & custody, and pre-admit Hop 2B 6-shard ci.yml digest in readiness_profile",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -933,7 +946,7 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Land release.yml direct cargo-dist SHA-256 pinning, #1573 OfficialCli gh api -i ETag/304 quota pacing, selective-prepare/run-selective helpers, and pre-admit Hop 2B 6-shard ci.yml digest",
       "phases": [],
       "proof_hooks": [
         "decapod validate"
@@ -943,59 +956,71 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
+          "reason": "Documented Hop 2A OfficialCli ETag/304 cache, selective-prepare/worker runtime, pinned cargo-dist SHA-256 verification, and 0.169.5 pins off e10831742.",
+          "reviewed_code_fingerprint": "2c7a6039ef4394cefc1230d76e27ee303e03d1e8478c9e51f40ff6ec66cb1b2a",
+          "spec_material_hash": "55850842eff7efc6cc2d1be36045a13acc6f5a2d40bb9280c0d1008ccbf68c28"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "reason": "Documented selective-archive.v1 descriptor interface, test-prepare GHA importer contract, OfficialCli gh api -i ETag headers, and Hop 2B ci.yml digest admission.",
+          "reviewed_code_fingerprint": "2c7a6039ef4394cefc1230d76e27ee303e03d1e8478c9e51f40ff6ec66cb1b2a",
+          "spec_material_hash": "3189b1a80c79b79976ffb6093c138e896e82519691c72b1f076322208c574c20"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
+          "reason": "Maintained fail-closed custody, SHA-256 tarball pinning in release.yml, and strict OfficialCli ETag validation without fallback; security boundaries preserved.",
+          "reviewed_code_fingerprint": "2c7a6039ef4394cefc1230d76e27ee303e03d1e8478c9e51f40ff6ec66cb1b2a",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Hop 2A: pinned cargo-dist tarballs, OfficialCli ETag/304 quota pacing, selective-prepare custody & Hop 2B ci.yml admission",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "cicd_01m8g0662b5c30sv"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853436Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Keep .github/workflows/ci.yml unchanged in Hop 2A so official v0.169.5 controller validates cleanly; pre-admit Hop 2B ci.yml sha256:ba728f59ffa86f548c9d3946753994def1b220c411c38f7395ff2a83376fb115"
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:bfd17567f627a0ef85880fc36eac350af3b969fe270946699999de6a7a8c573f",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
+          "name": "cargo_clippy_all_targets_d_warnings",
           "status": "passed"
         },
         {
-          "name": "pg17_utf8_gc_parity",
+          "name": "hop2a_pre_rebase_decapod_validate",
           "status": "passed"
         },
         {
-          "name": "storage_contracts::tests",
+          "name": "integration_sharding_policy_23",
           "status": "passed"
         },
         {
-          "name": "storage_owner::tests",
+          "name": "readiness_profile_51",
           "status": "passed"
         },
         {
-          "name": "tests/group_broker",
+          "name": "release_workflow_policy_22",
+          "status": "passed"
+        },
+        {
+          "name": "snapshot_provider_221",
+          "status": "passed"
+        },
+        {
+          "name": "source_ci_profile_policy_57_filtered",
+          "status": "passed"
+        },
+        {
+          "name": "validation_runtime_95",
           "status": "passed"
         }
       ],
@@ -1003,20 +1028,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:run_1672_hop2a_r3",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:run_1672_hop2a_r3",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:run_1672_hop2a_r3",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:run_1672_hop2a_r3",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1025,32 +1050,49 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "run_1672_hop2a_r3": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "run_1672_hop2a_r3",
+            "intent_id": "intent:run_1672_hop2a_r3",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  ".decapod/config.toml",
+                  ".github/workflows/release.yml",
+                  "tests/fixtures/release_pinned_preparation.yml",
+                  "src/decapod/core/snapshot_provider/github_quota.rs",
+                  "src/decapod/core/snapshot_provider/mod.rs",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/readiness_profile/tests.rs",
+                  "src/decapod/core/validation_runtime/snapshot/integration.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+                  "src/decapod/core/validation_runtime/snapshot/source_policy.rs",
+                  "assets/tools/integration_shards.rs",
+                  "assets/tools/source_ci_custody.rs",
+                  "assets/tools/source_ci_workflow_owned.rs",
+                  "assets/tools/source_ci/selective-prepare.sh",
+                  "assets/tools/source_ci/selective-worker.sh",
+                  "Rebased PR #1998 cleanly onto origin/master@e10831742 (after PR #1997 merged); prior identical code on 257b12866 passed official v0.169.5 decapod validate (publication_ready: true, GHA CI 46116860303 39/39 green)."
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "hop2a_pre_rebase_decapod_validate",
+                  "release_workflow_policy_22",
+                  "integration_sharding_policy_23",
+                  "readiness_profile_51",
+                  "snapshot_provider_221",
+                  "validation_runtime_95",
+                  "source_ci_profile_policy_57_filtered",
+                  "cargo_clippy_all_targets_d_warnings"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  ".github/workflows/release.yml",
+                  "assets/tools/",
+                  "src/decapod/core/readiness_profile.rs",
+                  "src/decapod/core/snapshot_provider/",
+                  "src/decapod/core/validation_runtime/snapshot/",
+                  "tests/fixtures/release_pinned_preparation.yml"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1061,25 +1103,39 @@
       },
       "declared_commands": [],
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "Rebased PR #1998 cleanly onto origin/master@e10831742 (after PR #1997 merged); prior identical code on 257b12866 passed official v0.169.5 decapod validate (publication_ready: true, GHA CI 46116860303 39/39 green)."
       ],
       "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
+      "intent_id": "intent:run_1672_hop2a_r3",
       "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
+        ".decapod/config.toml",
+        ".github/workflows/release.yml",
+        "assets/tools/integration_shards.rs",
+        "assets/tools/source_ci/selective-prepare.sh",
+        "assets/tools/source_ci/selective-worker.sh",
+        "assets/tools/source_ci_custody.rs",
+        "assets/tools/source_ci_workflow_owned.rs",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/readiness_profile/tests.rs",
+        "src/decapod/core/snapshot_provider/github_quota.rs",
+        "src/decapod/core/snapshot_provider/mod.rs",
+        "src/decapod/core/validation_runtime/snapshot/integration.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_import.rs",
+        "src/decapod/core/validation_runtime/snapshot/source_policy.rs",
+        "tests/fixtures/release_pinned_preparation.yml"
       ],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        ".github/workflows/release.yml",
+        "assets/tools/",
+        "src/decapod/core/readiness_profile.rs",
+        "src/decapod/core/snapshot_provider/",
+        "src/decapod/core/validation_runtime/snapshot/",
+        "tests/fixtures/release_pinned_preparation.yml"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "run_1672_hop2a_r3",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "cicd_01m8g0662b5c30sv",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

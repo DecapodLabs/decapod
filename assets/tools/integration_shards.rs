@@ -551,6 +551,136 @@ pub fn run_shard(artifact: &Path, shard: &str) -> io::Result<()> {
     Ok(())
 }
 
+pub const SELECTIVE_TARGETS: &[&str] = &[
+    "todo_enforcement",
+    "validate_termination",
+    "group_broker",
+    "group_broker_strict",
+    "workspace_interlock",
+    "spec_workspace_ownership",
+    "workspace_prune_regression",
+    "hermes_governance_substrate",
+    "workunit_cli",
+    "context_capsule_cli",
+    "interop_conformance",
+    "cli_contract_enforcement",
+    "entrypoint_correctness",
+    "entrypoint_validation_contracts",
+    "infer_precision",
+    "init_ci_scaffolding",
+    "init_config_behavior",
+    "cli_contracts",
+    "effective_grant_cli_contracts",
+    "consumer_readiness",
+    "sqlite_maintenance",
+];
+
+pub fn prepare_selective(output: &Path) -> io::Result<()> {
+    if output.exists() {
+        return Err(io::Error::other(
+            "selective artifact directory must not already exist",
+        ));
+    }
+    let labels: Vec<_> = SELECTIVE_TARGETS
+        .iter()
+        .map(|target| format!("//:{target}"))
+        .chain(std::iter::once("//:build_lifecycle".to_string()))
+        .collect();
+    successful(
+        Command::new("bazelisk")
+            .arg("build")
+            .args(&labels)
+            .status()?,
+        "shared selective build",
+    )?;
+    let bazel_bin = bazel_path("bazel-bin")?;
+    let roots = vec![
+        fs::canonicalize(env::current_dir()?)?,
+        bazel_path("output_base")?,
+    ];
+    fs::create_dir_all(output)?;
+    let output = fs::canonicalize(output)?;
+    let mut copied = BTreeMap::new();
+    let mut ancestors = BTreeSet::new();
+    for target in SELECTIVE_TARGETS {
+        copy_tree(
+            &bazel_bin.join(target),
+            &output.join(target),
+            &roots,
+            &mut copied,
+            &mut ancestors,
+        )?;
+        copy_tree(
+            &bazel_bin.join(format!("{target}.runfiles")),
+            &output.join(format!("{target}.runfiles")),
+            &roots,
+            &mut copied,
+            &mut ancestors,
+        )?;
+    }
+    copy_tree(
+        &bazel_bin.join("build_lifecycle"),
+        &output.join("build_lifecycle"),
+        &roots,
+        &mut copied,
+        &mut ancestors,
+    )?;
+    fs::copy(env::current_exe()?, output.join("integration-shards"))?;
+    Ok(())
+}
+
+pub fn run_selective(artifact: &Path, targets_csv: &str) -> io::Result<()> {
+    let targets: Vec<&str> = targets_csv
+        .split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .collect();
+    if targets.is_empty() {
+        return Err(io::Error::other("empty selective target list"));
+    }
+    for target in &targets {
+        if !SELECTIVE_TARGETS.contains(target) {
+            return Err(io::Error::other(format!(
+                "unknown selective target: {target}"
+            )));
+        }
+    }
+    if targets.len() == 1 {
+        return successful(test_command(artifact, targets[0])?.status()?, targets[0]);
+    }
+    let failures = std::sync::Mutex::new(Vec::<&str>::new());
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let workers = targets.len().min(4);
+    std::thread::scope(|scope| {
+        for _ in 0..workers {
+            scope.spawn(|| {
+                loop {
+                    let idx = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    if idx >= targets.len() {
+                        break;
+                    }
+                    let target = targets[idx];
+                    let res = test_command(artifact, target)
+                        .and_then(|mut cmd| cmd.status())
+                        .and_then(|status| successful(status, target));
+                    if let Err(error) = res {
+                        eprintln!("{error}");
+                        failures.lock().unwrap().push(target);
+                    }
+                }
+            });
+        }
+    });
+    let failures = failures.into_inner().unwrap();
+    if !failures.is_empty() {
+        return Err(io::Error::other(format!(
+            "failed selective targets: {}",
+            failures.join(", ")
+        )));
+    }
+    Ok(())
+}
+
 fn argument(args: &[OsString], name: &str) -> io::Result<PathBuf> {
     args.windows(2)
         .find(|pair| pair[0] == name)
@@ -572,14 +702,23 @@ fn main() {
             Some("prepare") if args.len() == 5 => {
                 prepare(&argument(&args, "--paths")?, &argument(&args, "--output")?)
             }
+            Some("prepare-selective") if args.len() == 3 => {
+                prepare_selective(&argument(&args, "--output")?)
+            }
             Some("run") if args.len() == 5 => run_shard(
                 &argument(&args, "--artifact")?,
                 argument(&args, "--shard")?
                     .to_str()
                     .ok_or_else(|| io::Error::other("non-UTF-8 shard"))?,
             ),
+            Some("run-selective") if args.len() == 5 => run_selective(
+                &argument(&args, "--artifact")?,
+                argument(&args, "--targets")?
+                    .to_str()
+                    .ok_or_else(|| io::Error::other("non-UTF-8 targets"))?,
+            ),
             _ => Err(io::Error::other(
-                "usage: integration-shards plan --paths FILE | prepare --paths FILE --output DIR | run --artifact DIR --shard ID",
+                "usage: integration-shards plan --paths FILE | prepare --paths FILE --output DIR | prepare-selective --output DIR | run --artifact DIR --shard ID | run-selective --artifact DIR --targets CSV",
             )),
         }
     })();
