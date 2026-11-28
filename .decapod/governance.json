@@ -922,6 +922,11 @@
       "id": "released-dactyl022",
       "summary": "Pin the checksum-verified Dactyl 0.22.0 transport for repository contributor admission.",
       "input_digest": "sha256:ac623d7ebc72ad0d9a7c67dca19845ba4b36005a9d8115e6095f6bb0ed4ecfef"
+    },
+    {
+      "id": "reviewed-dactyl022-inventory",
+      "summary": "Reconcile the proof inventory after verifying that only the published Dactyl dependency inputs changed.",
+      "input_digest": "sha256:f001fd8b3c4f3d2398852e984f2e72d6a929699985b32d957e49dd68a64a5a6b"
     }
   ],
   "intents": {
