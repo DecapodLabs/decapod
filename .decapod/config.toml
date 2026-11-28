@@ -78,7 +78,7 @@ commands = []
 
 [proof.required_profile]
 id = "decapod.pr-readiness.v1"
-reviewed_sources_digest = "sha256:0ec9e969678148791e3889811ca784ec8f30eb4652d8089b996a5b4f0bbb5445"
+reviewed_sources_digest = "sha256:19cfd28103181083012c0f9f405f45baeef3f614ac55911380bc8b25deff44d5"
 
 [custody]
 isolation = "container"

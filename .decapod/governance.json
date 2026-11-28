@@ -894,6 +894,11 @@
       "id": "cp_1672_hop1_initial",
       "summary": "CI shard unbundling (#1672 Hop 1), bounded-parallel GHA custody downloads (#1400/#1573), and reviewed_next_hop_workflow_digests for release.yml",
       "input_digest": "sha256:9c47b67377e408f93744efb9603884ad11a0e87f05b6a8194d1e1bb2697c7b7e"
+    },
+    {
+      "id": "cp_1672_hop1_config_reconciled",
+      "summary": "Reconcile reviewed_sources_digest in .decapod/config.toml for #1672 Hop 1 off origin/master@2ed6e67ee",
+      "input_digest": "sha256:3eafafe83dc006dfb272cd0eddc36af0f8a110b8c0541820a35a9d22a0966781"
     }
   ],
   "intents": {
@@ -935,21 +940,21 @@
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Updated for #1672 Hop 1 unbundled test shards, #1400/#1573 bounded-parallel custody downloads, and reviewed_next_hop_workflow_digests.",
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml after #1672 Hop 1 + #1400 + #1573.",
           "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "3868421d422d9a570fa07b9fb630118e3ec35f1541079c944266fe236d06aa9b"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Updated for #1672 Hop 1 unbundled test shards, #1400/#1573 bounded-parallel custody downloads, and reviewed_next_hop_workflow_digests.",
+          "reason": "Reconciled reviewed_sources_digest in .decapod/config.toml after #1672 Hop 1 + #1400 + #1573.",
           "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "90cf2b6b3091425460252d13c2858fe5c4fc604f65ce2358c26563a3bfb474c2"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Hop 1 retains all workflow/carrier digests, sha256 artifact checks, and fail-closed admission rules while only admitting the reviewed next-hop release.yml SHA-256.",
+          "reason": "Reconciled .decapod/config.toml digest only; security boundaries unchanged.",
           "reviewed_code_fingerprint": "c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
@@ -962,13 +967,13 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795827195Z"
+      "updated_at": "1795827326Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Keep .github/workflows/*.yml unchanged in Hop 1; use audited non-release bootstrap 78b9c0f18a only for local governance/validate."
       ],
-      "artifact_hash": "sha256:27663814f2c9a01d2416bcc072e38ff871b6e93a73677b6d3a26f56d0ef604b3",
+      "artifact_hash": "sha256:fe3747ded4ca2b43ead560fd0ad3400862938c1080be26d7a9e8614a529d4317",
       "checks": [
         {
           "name": "cargo_clippy_d_warnings",
@@ -980,6 +985,10 @@
         },
         {
           "name": "init_reconciliation_22",
+          "status": "passed"
+        },
+        {
+          "name": "init_reconciliation_config_digest",
           "status": "passed"
         },
         {
@@ -1026,10 +1035,17 @@
             "intent_id": "intent:run_1672_hop1",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:run_1672_hop1",
+            "event_id": "event:6",
+            "intent_id": "intent:run_1672_hop1",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "run_1672_hop1": {
@@ -1090,6 +1106,21 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  ".decapod/config.toml"
+                ],
+                "proof_refs": [
+                  "init_reconciliation_config_digest"
+                ],
+                "scope": [
+                  "decapod_hop1"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1108,6 +1139,7 @@
       "intent_id": "intent:run_1672_hop1",
       "modified_files": [
         ".config/build/decapod.BUILD.bzl",
+        ".decapod/config.toml",
         "assets/tools/source_ci_profile.rs",
         "src/decapod/core/init_reconciliation/mod.rs",
         "src/decapod/core/readiness_profile.rs",
