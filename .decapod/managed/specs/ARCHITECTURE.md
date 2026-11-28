@@ -1,3 +1,9 @@
+## Cloud MCP/Integration Dactyl boundary & schema-inspection hygiene (`#1120`, `#1221`, `#1110`, `#1735`)
+
+- **Shared fail-closed Cloud RPC check (`src/decapod/core/cloud_parity_matrix.rs::is_cloud_unsupported_rpc_op`)**: Derives MCP mutation denial directly from `build_parity_matrix().unsupported_cloud_operations`, wired through `McpServerConfig::cloud_backend` (`src/decapod/lib.rs::run_mcp_command` -> `src/decapod/core/agent_interop/mcp.rs`).
+- **Parameterized schema inspection (`src/decapod/core/legacy_todo_recovery.rs::table_columns`)**: Queries `SELECT name FROM pragma_table_info(?1)` with an explicit table allowlist, removing raw `PRAGMA` formatting while preserving byte-snapshot isolation.
+- **ADR assurance tracking (`docs/architecture/agent-interop-adr.md`)**: Records offline Cloud/Dactyl parity and fail-closed MCP/CLI gates while keeping external hosted Supabase service verification and live third-party host runs explicitly partial.
+
 ## Cloud workspace creation, container relay, and `govern policy` routing (#1886)
 
 - **Early-dispatch file-only Cloud policy route (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Includes `GovernCommand::Policy(_)` so `decapod govern policy` operates on repository-local Git/config state and Propodus `propodus_governance_v1` Cloud approvals rather than rejecting with `PUBLIC_CLOUD_BACKEND_UNAVAILABLE`.
@@ -2194,7 +2200,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `017a2dd16d5d4d7705d58e8ef0b73dbd654ce00de041047bf3d0da35cb51e183`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

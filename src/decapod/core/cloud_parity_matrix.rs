@@ -765,6 +765,16 @@ pub fn cross_check_parity_matrix(matrix: &CloudParityMatrix) -> ParityMatrixCros
     }
 }
 
+/// Return whether `op` is explicitly classified as unsupported in Cloud mode
+/// (requiring fail-closed refusal without `.decapod/data/decapod.db` fallback).
+pub fn is_cloud_unsupported_rpc_op(op: &str) -> bool {
+    let trimmed = op.trim();
+    build_parity_matrix()
+        .unsupported_cloud_operations
+        .iter()
+        .any(|entry| entry.operation_id == trimmed)
+}
+
 /// Inspect the parity matrix for `repo_root` without mutating any state,
 /// without initializing `.decapod/data/decapod.db`, and without network calls.
 pub fn inspect_cloud_parity(repo_root: &Path) -> Result<CloudParityInspectionReport, DecapodError> {
@@ -868,7 +878,12 @@ mod tests {
                     .any(|op| op.operation_id == op_id && op.never_falls_back_to_sqlite),
                 "missing fail-closed unsupported cloud boundary entry: {op_id}"
             );
+            assert!(
+                is_cloud_unsupported_rpc_op(op_id),
+                "is_cloud_unsupported_rpc_op must match {op_id}"
+            );
         }
+        assert!(!is_cloud_unsupported_rpc_op("agent.init"));
     }
 
     #[test]

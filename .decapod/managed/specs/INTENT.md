@@ -1,3 +1,11 @@
+## Cloud MCP/Integration Dactyl parity, PRAGMA removal & `#1735` ADR contracts (`#1120`, `#1221`, `#1110`, `#1735`)
+
+Closes remaining Dactyl storage-bridge and Cloud/MCP interop fail-closed parity boundaries without introducing `.decapod/data/decapod.db` fallback or violating single-authority local SQLite boundaries:
+
+- **Cloud MCP & Integration file-only parity (`src/decapod/lib.rs`, `src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/cloud_parity_matrix.rs`)**: Admits `decapod mcp`, `decapod a2a`, and host `decapod integration` commands in Cloud repositories without creating `.decapod/data/decapod.db`, while gating `decapod_governed_mutate` against `cloud_parity_matrix::is_cloud_unsupported_rpc_op` so `store.upsert` / `store.query` fail closed with `cloud_backend_unavailable`.
+- **Legacy recovery PRAGMA removal (`src/decapod/core/legacy_todo_recovery.rs`)**: Replaces interpolated `PRAGMA table_info({table})` with parameterized `pragma_table_info(?1)` bounded to an explicit table allowlist (`tasks`, `events`, `task_events`).
+- **Dactyl Neon HTTP atomic parity & ADR contracts (`tests/cloud_dactyl_boundary.rs`, `tests/cloud_cli_boundary.rs`, `docs/architecture/agent-interop-adr.md`)**: Proves end-to-end `DactylTodoStore` HTTP `/query` + `/atomic` CAS/release/completion/event-ordering parity and updates the `#1735` honest assurance table with external/hosted boundaries kept explicit.
+
 ## Keep workspace creation, policy approval, container relay, and validation usable on Cloud repositories (#1886)
 
 Completes end-to-end workspace creation and validation parity when an accepted repository selects `[repo].backend = "cloud"`, failing closed on custody/scope mismatches without falling back to `.decapod/data/decapod.db`:
@@ -1532,7 +1540,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `017a2dd16d5d4d7705d58e8ef0b73dbd654ce00de041047bf3d0da35cb51e183`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

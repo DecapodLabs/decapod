@@ -4494,7 +4494,16 @@ fn is_cloud_file_only_command(
         | Command::Analyze(_)
         | Command::Observe(_)
         | Command::Validate(_)
-        | Command::Session(_) => true,
+        | Command::Session(_)
+        | Command::Mcp(_)
+        | Command::A2a(_) => true,
+        Command::Integration(integration_cli) => matches!(
+            integration_cli.command,
+            IntegrationCommand::Harness(_)
+                | IntegrationCommand::Preview { .. }
+                | IntegrationCommand::Remove { .. }
+                | IntegrationCommand::Restore { .. }
+        ),
         Command::Workspace(ws_cli) => matches!(
             ws_cli.command,
             WorkspaceCommand::Status
@@ -5023,10 +5032,13 @@ fn run_mcp_command(mcp_cli: McpCli) -> Result<(), error::DecapodError> {
             allow_mutations,
         } => {
             let repo_root = std::env::current_dir()?;
+            let project_root =
+                find_decapod_project_root(&repo_root).unwrap_or_else(|_| repo_root.clone());
             let mut cfg = McpServerConfig::bounded_for_root(&repo_root);
             cfg.one_shot = one_shot;
             cfg.max_requests = max_requests;
             cfg.max_frame_bytes = max_frame_bytes;
+            cfg.cloud_backend = core::cloud_workspace::is_cloud_project(&project_root);
             cfg.framing = match framing.as_str() {
                 "jsonl" => McpFramingMode::Jsonl,
                 "content-length" => McpFramingMode::ContentLength,
@@ -5034,17 +5046,21 @@ fn run_mcp_command(mcp_cli: McpCli) -> Result<(), error::DecapodError> {
             };
             if allow_mutations {
                 cfg.read_only_session = false;
-                let project_root =
-                    find_decapod_project_root(&repo_root).unwrap_or_else(|_| repo_root.clone());
                 let main_root = find_governance_root(&project_root);
                 let agent_id = std::env::var("DECAPOD_AGENT_ID").unwrap_or_default();
                 let password = std::env::var("DECAPOD_SESSION_PASSWORD").unwrap_or_default();
                 if !agent_id.trim().is_empty() && !password.trim().is_empty() {
-                    cfg.session_authenticated = verify_strict_local_agent_session(
+                    let expected_backend = if cfg.cloud_backend {
+                        cli::BackendType::Cloud
+                    } else {
+                        cli::BackendType::Local
+                    };
+                    cfg.session_authenticated = verify_strict_agent_session_for_backend(
                         &project_root,
                         &main_root,
                         agent_id.trim(),
                         password.trim(),
+                        expected_backend,
                     )
                     .is_ok();
                 }
@@ -11629,6 +11645,22 @@ fn verify_strict_local_agent_session(
     agent_id: &str,
     supplied_password: &str,
 ) -> Result<String, (&'static str, String)> {
+    verify_strict_agent_session_for_backend(
+        workspace_root,
+        main_root,
+        agent_id,
+        supplied_password,
+        BackendType::Local,
+    )
+}
+
+fn verify_strict_agent_session_for_backend(
+    workspace_root: &Path,
+    main_root: &Path,
+    agent_id: &str,
+    supplied_password: &str,
+    expected_backend: BackendType,
+) -> Result<String, (&'static str, String)> {
     let now = now_epoch_secs();
     let mut candidate_roots = vec![workspace_root];
     if main_root != workspace_root {
@@ -11657,7 +11689,7 @@ fn verify_strict_local_agent_session(
                 ),
             ));
         }
-        if !session_token_matches_backend(&rec.token, BackendType::Local) {
+        if !session_token_matches_backend(&rec.token, expected_backend) {
             saw_wrong_backend = true;
             continue;
         }

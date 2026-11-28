@@ -1,3 +1,9 @@
+## `#1120`/`#1221`/`#1110`/`#1735` Cloud MCP, Integration & Dactyl Parity Contracts
+
+- **`decapod mcp` / `decapod a2a` / `decapod integration {harness,preview,remove,restore}` on `backend = "cloud"` (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Admitted without triggering `local_storage_startup` or creating `.decapod/data/decapod.db`.
+- **`decapod_governed_mutate` Cloud boundary (`src/decapod/core/agent_interop/mcp.rs`, `src/decapod/core/cloud_parity_matrix.rs::is_cloud_unsupported_rpc_op`)**: Returns `cloud_backend_unavailable` (`isError: true`) when `McpServerConfig::cloud_backend` is true and `op` is listed in `unsupported_cloud_operations` (`store.upsert`, `store.query`, etc.).
+- **`DactylTodoStore` Neon HTTP parity (`tests/cloud_dactyl_boundary.rs::dactyl_todo_store_neon_atomic_cas_and_event_ordering_without_local_sqlite`)**: Verifies opaque `StorageContext` forwarding, concurrent `claim_task` single-winner CAS, holder-only `release_task`/`complete_task`, atomic `tasks`+`events` ordering, and zero `.decapod/data/decapod.db` fallback.
+
 ## `#1886` Cloud workspace, policy approval, and container-relay contracts (`src/decapod/lib.rs`, `src/decapod/core/workspace.rs`, `src/decapod/core/cloud_workspace.rs`)
 
 - **`decapod govern policy approve` on Cloud (`src/decapod/lib.rs::is_cloud_file_only_command`)**: Accepts `GovernCommand::Policy(_)` under `[repo].backend = "cloud"` and returns `DECAPOD_REPO_TRANSITION_DECISION_ID=<uuid>` backed by `propodus_governance_v1` without falling back to `.decapod/data/decapod.db`.
@@ -2731,7 +2737,7 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `c844ac3803ccf492b57cca99441677f8a0b231be21e8f02a9bf04959a17207c0`
+- Repository signal fingerprint: `017a2dd16d5d4d7705d58e8ef0b73dbd654ce00de041047bf3d0da35cb51e183`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

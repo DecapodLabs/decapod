@@ -309,10 +309,14 @@ fn store_identity(root: &Path) -> Result<String, DecapodError> {
 }
 
 fn table_columns(conn: &Connection, table: &str) -> Result<BTreeSet<String>, DecapodError> {
+    if !matches!(table, "tasks" | "events" | "task_events") {
+        return Err(invalid(&format!(
+            "unsupported legacy inspection table '{table}'"
+        )));
+    }
     let mut cols = BTreeSet::new();
-    let sql = format!("PRAGMA table_info({table})");
-    let mut stmt = conn.prepare(&sql)?;
-    let rows = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    let mut stmt = conn.prepare("SELECT name FROM pragma_table_info(?1)")?;
+    let rows = stmt.query_map([table], |row| row.get::<_, String>(0))?;
     for row in rows {
         cols.insert(row?);
     }

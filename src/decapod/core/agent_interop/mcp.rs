@@ -48,6 +48,8 @@ pub struct McpServerConfig {
     pub read_only_session: bool,
     pub session_authenticated: bool,
     pub in_managed_worktree: bool,
+    /// When true, the repository uses `backend = "cloud"` and non-todo store ops fail closed.
+    pub cloud_backend: bool,
 }
 
 impl McpServerConfig {
@@ -62,6 +64,7 @@ impl McpServerConfig {
             read_only_session: true,
             session_authenticated: false,
             in_managed_worktree: false,
+            cloud_backend: false,
         }
     }
 }
@@ -617,13 +620,6 @@ impl McpServer {
                         "Authenticated Decapod session required before mutation.",
                     ));
                 }
-                if !self.config.in_managed_worktree {
-                    return Ok(mcp_denied_result(
-                        "mcp.decapod_governed_mutate",
-                        "worktree_isolation_required",
-                        "Mutating operation refused outside an isolated .decapod/workspaces/* worktree.",
-                    ));
-                }
                 let op = arguments
                     .get("op")
                     .and_then(Value::as_str)
@@ -633,6 +629,22 @@ impl McpServer {
                         op,
                         "unknown_op",
                         &format!("Operation '{op}' is not registered in Decapod RPC_OPS."),
+                    ));
+                }
+                if self.config.cloud_backend
+                    && crate::core::cloud_parity_matrix::is_cloud_unsupported_rpc_op(op)
+                {
+                    return Ok(mcp_denied_result(
+                        op,
+                        "cloud_backend_unavailable",
+                        "CLOUD_BACKEND_UNAVAILABLE: non-todo local store operations are unsupported under backend = \"cloud\" without SQLite fallback.",
+                    ));
+                }
+                if !self.config.in_managed_worktree {
+                    return Ok(mcp_denied_result(
+                        "mcp.decapod_governed_mutate",
+                        "worktree_isolation_required",
+                        "Mutating operation refused outside an isolated .decapod/workspaces/* worktree.",
                     ));
                 }
                 Ok(mcp_tool_json_result(

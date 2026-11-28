@@ -612,3 +612,137 @@ fn cloud_expired_session_renewal_never_creates_local_sqlite_database() {
         "expired cloud session renewal must never create .decapod/data/decapod.db"
     );
 }
+
+#[test]
+fn cloud_mcp_and_integration_preserve_zero_sqlite_and_fail_closed_store_mutations() {
+    use std::io::Write;
+    use std::process::Stdio;
+    let project = cloud_project();
+    git(project.path(), &["config", "user.name", "Decapod Test"]);
+    git(
+        project.path(),
+        &["config", "user.email", "test@example.invalid"],
+    );
+    git(project.path(), &["add", "."]);
+    git(project.path(), &["commit", "-m", "cloud root"]);
+
+    let db_path = project.path().join(".decapod/data/decapod.db");
+    assert!(!db_path.exists());
+
+    let home = tempfile::tempdir().unwrap();
+
+    // 1. Read-only MCP schema/config & integration matrix/a2a card run cleanly in Cloud mode without creating decapod.db.
+    for args in [
+        &["mcp", "schema"][..],
+        &["integration", "harness", "matrix"][..],
+        &["integration", "harness", "generate", "--harness", "codex"][..],
+        &["a2a", "card"][..],
+    ] {
+        let out = Command::new(env!("CARGO_BIN_EXE_decapod"))
+            .args(args)
+            .env("HOME", home.path())
+            .env("DECAPOD_AGENT_ID", "cloud-interop-agent")
+            .current_dir(project.path())
+            .output()
+            .expect("run cloud interop command");
+        assert!(
+            out.status.success(),
+            "cloud command {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&out.stderr)
+        );
+        assert!(
+            !db_path.exists(),
+            "cloud command {:?} created decapod.db",
+            args
+        );
+    }
+
+    // 2. Seed an active Cloud session record + isolated git worktree, then prove MCP --allow-mutations
+    //    admits read-only discovery while refusing non-todo local store ops (`store.upsert`) fail-closed!
+    use sha2::{Digest, Sha256};
+    let sess_pw = "cloud-mcp-secret";
+    let cloud_token = "cloud_01m8fpx21aa2r0ndtesttoken";
+    let mut hasher = Sha256::new();
+    hasher.update(cloud_token.as_bytes());
+    hasher.update(b":");
+    hasher.update(sess_pw.as_bytes());
+    let password_hash: String = hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    let sessions_dir = project.path().join(".decapod/managed/sessions");
+    std::fs::create_dir_all(&sessions_dir).unwrap();
+    let active_record = serde_json::json!({
+        "agent_id": "cloud-interop-agent",
+        "token": cloud_token,
+        "password_hash": password_hash,
+        "issued_at_epoch_secs": 1_700_000_000_u64,
+        "expires_at_epoch_secs": 4_102_444_800_u64
+    });
+    std::fs::write(
+        sessions_dir.join("cloud-interop-agent.json"),
+        serde_json::to_vec_pretty(&active_record).unwrap(),
+    )
+    .unwrap();
+
+    let wt_dir = project.path().join(".decapod/workspaces/cloud-mcp-wt");
+    git(
+        project.path(),
+        &[
+            "worktree",
+            "add",
+            "-b",
+            "agent/cloud-interop-agent/cloud-mcp",
+            wt_dir.to_str().unwrap(),
+        ],
+    );
+
+    let mcp_req = concat!(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\",\"params\":{}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"decapod_interop_manifest\",\"arguments\":{\"validate\":true}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"decapod_governed_mutate\",\"arguments\":{\"op\":\"store.upsert\",\"params\":{\"entity\":\"knowledge\"}}}}\n"
+    );
+    let mut mcp_child = Command::new(env!("CARGO_BIN_EXE_decapod"))
+        .args(["mcp", "serve", "--framing", "jsonl", "--allow-mutations"])
+        .env("HOME", home.path())
+        .env("DECAPOD_AGENT_ID", "cloud-interop-agent")
+        .env("DECAPOD_SESSION_PASSWORD", sess_pw)
+        .current_dir(&wt_dir)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn cloud mcp serve");
+    mcp_child
+        .stdin
+        .as_mut()
+        .unwrap()
+        .write_all(mcp_req.as_bytes())
+        .unwrap();
+    let mcp_out = mcp_child.wait_with_output().unwrap();
+    assert!(
+        mcp_out.status.success(),
+        "cloud mcp serve failed: {}",
+        String::from_utf8_lossy(&mcp_out.stderr)
+    );
+    let responses: Vec<serde_json::Value> = String::from_utf8_lossy(&mcp_out.stdout)
+        .lines()
+        .filter(|l| !l.trim().is_empty())
+        .map(|l| serde_json::from_str(l).unwrap())
+        .collect();
+    assert_eq!(responses.len(), 3);
+    assert_eq!(responses[1]["result"]["isError"], serde_json::json!(false));
+    assert_eq!(responses[2]["result"]["isError"], serde_json::json!(true));
+    let denial_text = responses[2]["result"]["content"][0]["text"]
+        .as_str()
+        .unwrap_or_default();
+    assert!(
+        denial_text.contains("cloud_backend_unavailable"),
+        "expected cloud_backend_unavailable denial, got: {denial_text}"
+    );
+    assert!(!db_path.exists());
+    assert!(!wt_dir.join(".decapod/data/decapod.db").exists());
+}
