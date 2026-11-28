@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "baseline": {
-    "accepted_commit": "ed2608fa702c5b78f2b5f67969dc64aded737a2a",
+    "accepted_commit": "1a16ec7ef27dfb977ccfa1bfc89d6b3dc68098be",
     "policy": {
       "change_control": {
         "requires_human_review": true,
@@ -872,50 +872,47 @@
     }
   },
   "change": {
-    "id": "pr_hardening_1934_1964",
-    "base_commit": "ed2608fa702c5b78f2b5f67969dc64aded737a2a",
+    "id": "pr_trust_egress_1944",
+    "base_commit": "1a16ec7ef27dfb977ccfa1bfc89d6b3dc68098be",
     "target_base": "origin/master"
   },
   "claims": {
-    "hardening-1934-1936-1964": {
-      "statement": "ContainerSignerPolicy enforces exact origin authority and canonical path allowlist, lcm rebuild_index preserves originals_index atomically on hash mismatch, and crash/lease-fencing/replay/mutation suites prove boundary fail-closed behavior.",
-      "falsifier": "Any origin/userinfo/fragment/path smuggling bypasses container_signer, corrupt lcm replay wipes originals_index, SIGKILL leaves unrecoverable workspace reservation, competing-agent clock skew breaks lease_generation monotonicity, or any assurance fault spec passes undetected.",
+    "trust-egress-1944": {
+      "statement": "Decapod enforces validate_egress_url on model_assets::download_public_asset, inventories every production outbound sink and https:// host across src/decapod/, and halts outbound egress immediately on DECAPOD_CHECK_LATEST unset or Cloud-to-local revocation.",
+      "falsifier": "Any uninventoried curl/gh/socket/HTTP sink or https:// host in production src/decapod/, smuggled/undeclared URL accepted by model_assets, or outbound connection after revoking Cloud/DECAPOD_CHECK_LATEST fails trust_egress_gate.",
       "status": "supported",
       "proof_refs": [
-        "tests/crash_durability_1934.rs",
-        "tests/derived_replay_1936.rs",
-        "tests/lease_fencing_consistency_1935.rs",
-        "tests/security_guarantee_assurance_1964.rs",
-        "tests/unit/core/container_signer_tests.rs"
+        "src/decapod/core/model_assets.rs",
+        "tests/trust_egress_gate.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "ckpt-hardening-ed2608fa7",
-      "summary": "Harden container_signer, lcm atomic rebuild, and crash/lease/replay/assurance suites (#1934, #1935, #1936, #1964, rebased onto ed2608fa7 v0.169.5)",
-      "input_digest": "sha256:4a90f2ffe1199856e81df1e75a0d755f8978c984e2233702b59dffe152acc10a"
+      "id": "ckpt-trust-egress-1a16ec7ef",
+      "summary": "Enforce validate_egress_url in model_assets, recursive src/decapod egress/host scanner, and Cloud-to-local revocation runtime gate (#1944, rebased onto 1a16ec7ef v0.169.5)",
+      "input_digest": "sha256:7c43e13b71f37772ff15e538c1a603fb41fcdb149a297d1188ad6816b9e56a37"
     }
   ],
   "intents": {
-    "intent:branch_hardening_1934_1964": {
+    "intent:branch_trust_egress_1944": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Decapod-only isolated worktree; zero Clack or root checkout mutations"
+        "Decapod-only isolated worktree; Clack (#10) untouched"
       ],
       "constraints": [
-        "src/decapod/{core/container_signer.rs,plugins/lcm.rs},tests/,docs/,.decapod/managed/specs/"
+        "src/decapod/core/model_assets.rs,tests/trust_egress_gate.rs,docs/trust-and-egress-inventory.md,.decapod/managed/specs/"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_hardening_1934_1964",
+      "id": "intent:branch_trust_egress_1944",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Close Decapod #1934, #1935, #1936, and #1964 hardening and security-assurance gaps",
-      "refined_intent": "Enforce exact origin/path validation in container_signer, atomic hash-validated lcm index rebuilds, SIGKILL durability, 48-step lease/fencing model check, derived replay determinism, and mutation/fault-injection assurance tests on ed2608fa7",
+      "raw_intent": "Close Decapod gaps in #1944 (whole-src egress scanner, model_assets URL validation, and runtime revocation proof)",
+      "refined_intent": "Enforce validate_egress_url in model_assets::download_public_asset, recursively scan src/decapod/ production sinks/hosts, and prove Cloud-to-local revocation halts egress under live loopback trap on 1a16ec7ef",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -928,53 +925,51 @@
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Close #1934, #1935, #1936, and #1964 boundary gaps on origin/master@ed2608fa7: exact origin authority and canonical allowlist in container_signer, atomic hash-prevalidated lcm index rebuilds, SIGKILL workspace recovery, 48-step lease fencing model check, derived replay convergence, and RULE-SIGNER-ORIGIN-010 / RULE-HTTP-AUTH-011 assurance tests.",
+      "intent": "Close #1944 Decapod trust-egress gaps on origin/master@1a16ec7ef: enforce validate_egress_url in model_assets::download_public_asset, scan every production outbound sink and https:// host in src/decapod/, and verify Cloud-to-local + DECAPOD_CHECK_LATEST revocation halts outbound egress.",
       "phases": [],
       "proof_hooks": [
-        "cargo test --test crash_durability_1934",
-        "cargo test --test lease_fencing_consistency_1935",
-        "cargo test --test derived_replay_1936",
-        "cargo test --test security_guarantee_assurance_1964"
+        "cargo test --test trust_egress_gate",
+        "cargo test --lib model_assets"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Rebased onto ed2608fa7 (v0.169.5): atomic LCM index rebuild, SIGKILL/fencing suites, and container_signer origin boundary (#1934-#1936, #1964)",
-          "reviewed_code_fingerprint": "e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488",
-          "spec_material_hash": "341245a13e69f92b2de407e9715d722f5f7a868a662231f51266abeb2afcd62d"
+          "reason": "Rebased onto 1a16ec7ef (v0.169.5): model_assets URL validation and whole-src recursive egress scanner (#1944)",
+          "reviewed_code_fingerprint": "23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4",
+          "spec_material_hash": "349884fe628345d40c95bad646a80a0a0b4061e5dea323dabc2abf82a6ac4eef"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Rebased onto ed2608fa7 (v0.169.5): ContainerSignerPolicy origin/path errors and LCM rebuild envelope (#1936, #1964)",
-          "reviewed_code_fingerprint": "e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488",
-          "spec_material_hash": "692e7d4017fbe793138e1c2d767b16cbd2f54a28969fb8efeb63938abc025a4c"
+          "reason": "Rebased onto 1a16ec7ef (v0.169.5): model_assets::download_public_asset egress validation and reviewed sink inventory (#1944)",
+          "reviewed_code_fingerprint": "23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4",
+          "spec_material_hash": "0034c21062752dabee4d8525ce1d3fa3ef5c40c8669231faecc17e798b077a5f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "Rebased onto ed2608fa7 (v0.169.5): RULE-SIGNER-ORIGIN-010 and RULE-HTTP-AUTH-011 mutation assurance coverage (#1964)",
-          "reviewed_code_fingerprint": "e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488",
-          "spec_material_hash": "f3e87be29e87828b26c711b7e736a15b01b10b56b2e6b9beee1bf0b1397d41f1"
+          "reason": "Rebased onto 1a16ec7ef (v0.169.5): whole-src egress scan and Cloud-to-local revocation runtime gate (#1944)",
+          "reviewed_code_fingerprint": "23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4",
+          "spec_material_hash": "38c7146f883d2aa1a915b58a3afa96a5cc519d003fd2c12c0034264d8842266f"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Harden container_signer origin/allowlist, atomic lcm replay, and crash/lease/assurance suites (#1934, #1935, #1936, #1964)",
+      "title": "Enforce whole-src egress scanner, model_assets URL validation, and cloud revocation gate (#1944)",
       "todo_ids": [
-        "secu_01m8fmdbpf4g7g0n"
+        "secu_01m8g08fr42hp6sw"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795861129Z"
+      "updated_at": "1795863241Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Decapod-only isolated worktree; zero Clack or root checkout mutations"
+        "Decapod-only isolated worktree; Clack (#10) untouched"
       ],
-      "artifact_hash": "sha256:a56c92c1b2ff9fa5a6b89f4327ea72bc649c3db73a777b01f6733aaef770a5fa",
+      "artifact_hash": "sha256:664d871c8300378d3de1b6294fd19c7b87405bb7c1bc8ba3c551d2d3af46e0a8",
       "checks": [
         {
           "name": "cargo_fmt",
@@ -985,20 +980,20 @@
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_hardening_1934_1964",
+            "intent_id": "intent:branch_trust_egress_1944",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_hardening_1934_1964",
+            "intent_id": "intent:branch_trust_egress_1944",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_hardening_1934_1964",
+            "detail": "trajectory:branch_trust_egress_1944",
             "event_id": "event:4",
-            "intent_id": "intent:branch_hardening_1934_1964",
+            "intent_id": "intent:branch_trust_egress_1944",
             "kind": "trajectory_step_recorded",
             "sequence": 4
           }
@@ -1007,31 +1002,24 @@
         "next_sequence": 4,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_hardening_1934_1964": {
+          "branch_trust_egress_1944": {
             "evidence_only": true,
-            "id": "branch_hardening_1934_1964",
-            "intent_id": "intent:branch_hardening_1934_1964",
+            "id": "branch_trust_egress_1944",
+            "intent_id": "intent:branch_trust_egress_1944",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/container_signer.rs",
-                  "src/decapod/plugins/lcm.rs",
-                  "tests/crash_durability_1934.rs",
-                  "tests/lease_fencing_consistency_1935.rs",
-                  "tests/derived_replay_1936.rs",
-                  "tests/security_guarantee_assurance_1964.rs",
-                  "tests/unit/core/container_signer_tests.rs",
-                  "docs/derived-data-and-replay.md",
-                  "docs/durability-and-fencing.md",
-                  "docs/security-assurance-matrix.md"
+                  "docs/trust-and-egress-inventory.md",
+                  "src/decapod/core/model_assets.rs",
+                  "tests/trust_egress_gate.rs"
                 ],
                 "proof_refs": [
                   "cargo_fmt"
                 ],
                 "scope": [
-                  "src/decapod/{core/container_signer.rs,plugins/lcm.rs},tests/,docs/,.decapod/managed/specs/"
+                  "src/decapod/core/model_assets.rs,tests/trust_egress_gate.rs,docs/trust-and-egress-inventory.md,.decapod/managed/specs/"
                 ],
                 "sequence": 4,
                 "validation_findings": []
@@ -1043,26 +1031,19 @@
       "declared_commands": [],
       "evidence": [],
       "inspected_files": [],
-      "intent_id": "intent:branch_hardening_1934_1964",
+      "intent_id": "intent:branch_trust_egress_1944",
       "modified_files": [
-        "docs/derived-data-and-replay.md",
-        "docs/durability-and-fencing.md",
-        "docs/security-assurance-matrix.md",
-        "src/decapod/core/container_signer.rs",
-        "src/decapod/plugins/lcm.rs",
-        "tests/crash_durability_1934.rs",
-        "tests/derived_replay_1936.rs",
-        "tests/lease_fencing_consistency_1935.rs",
-        "tests/security_guarantee_assurance_1964.rs",
-        "tests/unit/core/container_signer_tests.rs"
+        "docs/trust-and-egress-inventory.md",
+        "src/decapod/core/model_assets.rs",
+        "tests/trust_egress_gate.rs"
       ],
       "repo_scope": [
-        "src/decapod/{core/container_signer.rs,plugins/lcm.rs},tests/,docs/,.decapod/managed/specs/"
+        "src/decapod/core/model_assets.rs,tests/trust_egress_gate.rs,docs/trust-and-egress-inventory.md,.decapod/managed/specs/"
       ],
-      "run_id": "branch_hardening_1934_1964",
+      "run_id": "branch_trust_egress_1944",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "secu_01m8fmdbpf4g7g0n",
+      "task_id": "secu_01m8g08fr42hp6sw",
       "tool_calls": [],
       "unresolved_assumptions": []
     }

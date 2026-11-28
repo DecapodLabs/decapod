@@ -1505,6 +1505,10 @@ Decapod's local-first governance kernel now exposes decoupled Houseboat primitiv
 
 - **Hardening & assurance closure (`#1934`–`#1936`, `#1964`)**: Closes real boundary gaps identified during post-cutover verification without altering authority boundaries: (1) enforces exact origin authority and canonical path allowlisting in `container_signer::extract_origin_relative_path` (`src/decapod/core/container_signer.rs`) so suffix/port/userinfo/fragment/path-traversal smuggling cannot mint host-signed DPoP proofs (`RULE-SIGNER-ORIGIN-010`), paired with `RULE-HTTP-AUTH-011` (`http_transport::verify_bearer_token` inside `handle_single_connection`); (2) makes `lcm::rebuild_index` and `lcm::rebuild_index_from_ledger` (`src/decapod/plugins/lcm.rs`) atomic under `BEGIN IMMEDIATE ... COMMIT` while preserving existing `originals_index` rows on content-hash validation failure; and (3) proves `workspace_lifecycle::reserve` staging-to-publish `SIGKILL` recovery + CLI `govern workunit recover`, a deterministic 48-step multi-agent + clock-anomaly lease model checker (`tests/lease_fencing_consistency_1935.rs`), and `federation` + `lcm` + `context_capsule` rebuild convergence (`tests/derived_replay_1936.rs`).
 
+## Whole-Repo Egress Scanner & Cloud-to-Local Revocation Gate (#1944)
+
+- **Whole-source egress inventory enforcement (`src/decapod/core/model_assets.rs`, `tests/trust_egress_gate.rs`, `docs/trust-and-egress-inventory.md`)**: Closes the gap between Decapod and Dactyl/Propodus static egress gates by (1) validating model asset download URLs through `trust_egress::validate_egress_url(url, &[])` prior to file creation or `/usr/bin/curl` execution; (2) scanning all production `.rs` files under `src/decapod/` (`#[cfg(test)]` stripped) so any newly added outbound `curl`/`gh`/socket/HTTP sink or production `https://` host fails CI unless registered in `REVIEWED_OUTBOUND_SOURCE_SINKS`, `DECLARED_EGRESS_CHANNELS`, and `docs/trust-and-egress-inventory.md`; and (3) exercising runtime `DECAPOD_CHECK_LATEST` and `backend = "cloud"` -> `cloud logout` + `backend = "local"` revocation across restarts under a live loopback trap (`Clack#10` stays outside scope and `#1944` remains open).
+
 <!-- decapod:declared-capabilities:start -->
 
 ## Declared Capability Surfaces
@@ -1536,7 +1540,7 @@ These declarations select authoring and proof obligations; they do not attest im
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
+- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

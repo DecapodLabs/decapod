@@ -2180,6 +2180,11 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 - **Crash-recovery & schedule-fencing verification (`tests/crash_durability_1934.rs`, `tests/lease_fencing_consistency_1935.rs`)**: Exercises subprocess `SIGKILL` during `workspace_lifecycle::reserve` between `Receipt` append and directory publication (verifying exact staging recovery without clobbering peer worktrees), CLI `govern workunit journal-status`/`recover` idempotency inside todo-scoped worktrees, and a deterministic 3-agent + clock-skew state-machine model checker enforcing monotonic `lease_generation` and `task_journal_verify` parity (`docs/durability-and-fencing.md`).
 - **Strict container-signer origin boundary (`src/decapod/core/container_signer.rs`)**: `ContainerSignerPolicy::sign_request` validates `req.url` via `extract_origin_relative_path` (exact case-insensitive `scheme://authority` match, no `@` userinfo, no `#` fragment, leading `/` path) and exact `is_container_allowed_cloud_operation` route matching rather than `starts_with` / `ends_with` substrings.
 
+## Whole-Source Egress & Revocation Gate (#1944)
+
+- **Model asset URL validation (`src/decapod/core/model_assets.rs`)**: `download_public_asset` enforces `crate::core::trust_egress::validate_egress_url(url, &[])` in addition to the `https://` scheme guard before allocating private cache destinations or spawning `/usr/bin/curl`.
+- **Recursive `src/decapod/` egress/host scanner (`tests/trust_egress_gate.rs`)**: `whole_src_outbound_network_and_telemetry_sinks_are_inventoried_and_fail_closed` strips `#[cfg(test)]` blocks and comments across `src/decapod/**/*.rs`, verifying every outbound sink matches `REVIEWED_OUTBOUND_SOURCE_SINKS` + `docs/trust-and-egress-inventory.md`, every production `https://` host passes `validate_egress_url` or `NON_EGRESS_INFORMATIONAL_HOSTS`, and `TelemetryRetentionPolicy::default().allow_identifier_observation` remains `false`.
+
 <!-- decapod:capability-overlay:persistent-state:start -->
 
 Generated capability obligations: `persistent-state` is declared for this project. These are decisions and proof requirements, not claims of implemented behavior. Resolve each against project source and tests; record unsupported or non-applicable mechanisms explicitly.
@@ -2215,7 +2220,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `e0a745265622eeab152832aa08afeca2d6138867a7d7a92fe9801f0ee37be488`
+- Repository signal fingerprint: `23d9883a7f049e9fd4264d43f12aafb049f294e903c24f11d9a7125b591579f4`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
