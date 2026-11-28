@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.169.3](https://github.com/DecapodLabs/decapod/compare/v0.169.2...v0.169.3) - 2026-11-28
+
+### Fixed
+
+- *(verify)* preserve INCOMPATIBLE_NATIVE_EXECUTABLE in scoped qa verify recover ([#1892](https://github.com/DecapodLabs/decapod/pull/1892))
+
+### Other
+
+- *(managed)* pin v0.169.2 Dockerfile.decapod and manifest for #1892
+- *(proof)* reconcile reviewed_sources_digest for v0.169.2 base 78b9c0f18a ([#1892](https://github.com/DecapodLabs/decapod/pull/1892))
+
 ## [0.169.2](https://github.com/DecapodLabs/decapod/compare/v0.169.1...v0.169.2) - 2026-11-27
 
 ### Added
