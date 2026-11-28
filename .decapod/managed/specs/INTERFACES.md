@@ -2745,7 +2745,21 @@ The accepted v0.154.0 package epoch (`0f44f780`) is integrated before encoding v
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->
+
+### Opt-in flight recorder measurements
+
+`decapod trace flight-recorder compare --input <file> --measurements` emits
+`decapod.outcome-measurements.v1` with per-run terminal status, evidence
+references, captured clock and volume measurements, and explicit missing
+reasons. The default `decapod.outcome-comparison.v1` remains available for
+existing consumers. Both paths use the same pair, evidence and input
+validation. The measurement view grants no proof or publication authority.
+
+The source-CI metadata barrier polls pending GitHub Actions workflows and
+rechecks all exact workflow attempts using fresh state at the final boundary.
+A changed attempt, a missing required workflow or a failed final read prevents
+source suite admission.

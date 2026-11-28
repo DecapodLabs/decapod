@@ -27,6 +27,19 @@ pub const METRICS: &[&str] = &[
     "harmful_context_rate",
 ];
 
+const OPTIONAL_STAGE_METRICS: &[&str] = &[
+    "discovery_ms",
+    "process_startup_ms",
+    "kernel_ms",
+    "model_ms",
+    "provider_wait_ms",
+    "implementation_ms",
+    "recovery_ms",
+    "handoff_ms",
+    "decapod_response_bytes",
+    "repeated_setup_calls",
+];
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum EvidenceClass {
@@ -157,6 +170,73 @@ pub struct Report {
     pub runs: Vec<Run>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct Measurements<'a> {
+    schema_version: &'static str,
+    evidence_limit: &'static str,
+    incomplete_pairs: &'a [String],
+    unverified_pair_identities: &'a [String],
+    runs: Vec<RunMeasurements<'a>>,
+}
+
+#[derive(Debug, Serialize)]
+struct RunMeasurements<'a> {
+    run_id: &'a str,
+    pair_id: &'a str,
+    stratum: &'a str,
+    arm: &'a Arm,
+    evidence_class: &'a EvidenceClass,
+    status: &'a TerminalStatus,
+    host: &'a str,
+    host_version: &'a str,
+    model: Option<&'a str>,
+    kernel_sha256: &'a str,
+    task_source_sha256: &'a str,
+    first_missing_boundary: Option<&'a str>,
+    metrics: BTreeMap<&'static str, Metric>,
+}
+
+impl Report {
+    pub fn measurements(&self) -> Measurements<'_> {
+        Measurements {
+            schema_version: "decapod.outcome-measurements.v1",
+            evidence_limit: "Producer-reported observations and evidence references. Stage clocks may overlap or run outside the host wall interval. Missing measurements cannot be allocated to any stage. No causal, completion or publication verdict.",
+            incomplete_pairs: &self.incomplete_pairs,
+            unverified_pair_identities: &self.unverified_pair_identities,
+            runs: self
+                .runs
+                .iter()
+                .map(|run| RunMeasurements {
+                    run_id: &run.run_id,
+                    pair_id: &run.pair_id,
+                    stratum: &run.stratum,
+                    arm: &run.arm,
+                    evidence_class: &run.evidence_class,
+                    status: &run.status,
+                    host: &run.host,
+                    host_version: &run.host_version,
+                    model: run.model.as_deref(),
+                    kernel_sha256: &run.kernel_sha256,
+                    task_source_sha256: &run.task_source_sha256,
+                    first_missing_boundary: run.first_missing_boundary.as_deref(),
+                    metrics: METRICS
+                        .iter()
+                        .chain(OPTIONAL_STAGE_METRICS)
+                        .map(|&name| {
+                            let metric = run.metrics.get(name).cloned().unwrap_or(Metric {
+                                value: None,
+                                evidence: None,
+                                missing_reason: Some(MissingReason::NotObserved),
+                            });
+                            (name, metric)
+                        })
+                        .collect(),
+                })
+                .collect(),
+        }
+    }
+}
+
 fn invalid() -> io::Error {
     io::Error::new(
         io::ErrorKind::InvalidData,
@@ -236,12 +316,11 @@ pub fn compare(input: Input) -> io::Result<Report> {
             || !verdict(&run.functional_correctness)
             || !verdict(&run.governed_completion)
             || !verdict(&run.context_delivery)
-            || run
-                .metrics
-                .keys()
-                .map(String::as_str)
-                .collect::<BTreeSet<_>>()
-                != METRICS.iter().copied().collect()
+            || METRICS.iter().any(|&name| !run.metrics.contains_key(name))
+            || run.metrics.keys().any(|name| {
+                !METRICS.contains(&name.as_str())
+                    && !OPTIONAL_STAGE_METRICS.contains(&name.as_str())
+            })
         {
             return Err(invalid());
         }
@@ -253,15 +332,12 @@ pub fn compare(input: Input) -> io::Result<Report> {
                         && metric.missing_reason.is_none()
                         && metric.evidence.as_ref().is_some_and(evidence) =>
                 {
-                    if !matches!(
-                        name.as_str(),
-                        "active_human_minutes"
-                            | "total_cost_usd"
-                            | "wall_ms"
-                            | "setup_ms"
-                            | "validation_ms"
-                            | "harmful_context_rate"
-                    ) && value.fract() != 0.0
+                    if !name.ends_with("_ms")
+                        && !matches!(
+                            name.as_str(),
+                            "active_human_minutes" | "total_cost_usd" | "harmful_context_rate"
+                        )
+                        && value.fract() != 0.0
                     {
                         return Err(invalid());
                     }

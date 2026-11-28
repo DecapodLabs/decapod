@@ -35,6 +35,7 @@ fn plan() -> SourceRunPlan {
 struct Gh {
     missing: bool,
     running: bool,
+    security_running: bool,
     attempt: u32,
     denied: bool,
     urls: Vec<String>,
@@ -48,6 +49,7 @@ impl Default for Gh {
         Self {
             missing: false,
             running: false,
+            security_running: false,
             attempt: 1,
             denied: false,
             urls: vec![
@@ -120,7 +122,8 @@ impl Runner for Gh {
             } else {
                 ".github/workflows/ci.yml"
             };
-            let run = json!({"id":id,"run_attempt":self.attempt,"workflow_id":id,"path":workflow,"head_sha":s.transport_head(),"head_branch":r.transport_ref().trim_start_matches("refs/heads/"),"event":"push","status":if self.running{"in_progress"}else{"completed"},"conclusion":if self.running{None}else if self.failed{Some("failure")}else{Some("success")},"repository":{"id":1,"full_name":"org/repo"},"head_repository":{"id":1,"full_name":"org/repo"}});
+            let running = self.running || (security && self.security_running);
+            let run = json!({"id":id,"run_attempt":self.attempt,"workflow_id":id,"path":workflow,"head_sha":s.transport_head(),"head_branch":r.transport_ref().trim_start_matches("refs/heads/"),"event":"push","status":if running{"in_progress"}else{"completed"},"conclusion":if running{None}else if self.failed{Some("failure")}else{Some("success")},"repository":{"id":1,"full_name":"org/repo"},"head_repository":{"id":1,"full_name":"org/repo"}});
             json!({"total_count":if self.missing{0}else{1},"workflow_runs":if self.missing{vec![]}else{vec![run]}})
         } else if path.ends_with("ci.yml") || path.ends_with("security.yml") {
             let security = path.ends_with("security.yml");
@@ -345,14 +348,20 @@ fn missing_and_running_are_pending_then_terminal_without_repeated_receipts() {
     assert!(poll(&mut gh, &mut bk, &snapshot(), &plan(), &mut state, &b).unwrap());
 }
 #[test]
-fn changed_attempt_or_duplicate_workflow_is_never_adopted() {
+fn changed_pending_attempt_or_duplicate_workflow_is_never_adopted() {
     for duplicate in [false, true] {
         let c = Cancellation::default();
         let b = budget(&c);
-        let mut gh = Gh::default();
+        let mut gh = Gh {
+            running: !duplicate,
+            ..Gh::default()
+        };
         let mut bk = Bk::default();
         let mut state = PollState::default();
-        assert!(poll(&mut gh, &mut bk, &snapshot(), &plan(), &mut state, &b).unwrap());
+        assert_eq!(
+            poll(&mut gh, &mut bk, &snapshot(), &plan(), &mut state, &b).unwrap(),
+            duplicate
+        );
         if duplicate {
             bk.envelopes.get_mut(&8).unwrap()["github_workflow_path"] =
                 ".github/workflows/ci.yml".into();
@@ -594,6 +603,49 @@ fn buildkite_only_barrier_uses_no_actions_and_rechecks_native_build_identity() {
             .is_err()
     );
 }
+#[test]
+fn successful_github_attempt_is_polled_once_until_fresh_final_recheck() {
+    let c = Cancellation::default();
+    let b = budget(&c);
+    let mut gh = Gh {
+        security_running: true,
+        ..Gh::default()
+    };
+    let mut bk = Bk::default();
+    let snapshot = snapshot();
+    let mut plan = plan();
+    plan.buildkite_pipelines.clear();
+    let mut state = PollState::default();
+
+    assert!(!poll(&mut gh, &mut bk, &snapshot, &plan, &mut state, &b).unwrap());
+    assert_eq!(gh.calls, 4); // metadata plus run for both workflows
+    for _ in 0..10 {
+        assert!(!poll(&mut gh, &mut bk, &snapshot, &plan, &mut state, &b).unwrap());
+    }
+    assert_eq!(gh.calls, 24); // only the pending workflow needs more reads
+
+    gh.security_running = false;
+    assert!(poll(&mut gh, &mut bk, &snapshot, &plan, &mut state, &b).unwrap());
+    assert_eq!(gh.calls, 26);
+    let terminal = terminal(state, &plan);
+    terminal
+        .recheck(&mut gh, &mut bk, &snapshot, &plan, &b)
+        .unwrap();
+
+    let before = gh.calls;
+    gh.attempt = 2;
+    let error = terminal
+        .recheck(&mut gh, &mut bk, &snapshot, &plan, &b)
+        .unwrap_err();
+    assert_eq!(gh.calls - before, 4); // a fresh read of both exact workflows
+    assert!(
+        error
+            .to_string()
+            .contains("source run/attempt/build changed")
+    );
+    assert_eq!(bk.calls, 0);
+}
+
 #[test]
 fn github_source_ci_barrier_rechecks_attempt_without_buildkite_reads() {
     let c = Cancellation::default();

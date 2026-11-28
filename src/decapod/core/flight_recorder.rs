@@ -35,6 +35,9 @@ pub enum FlightRecorderCommand {
     Compare {
         #[clap(long)]
         input: std::path::PathBuf,
+        /// Show measured stages and explicit unknowns for each run
+        #[clap(long)]
+        measurements: bool,
     },
     /// Render governance timeline from event logs
     Timeline {
@@ -67,13 +70,18 @@ pub fn run_flight_recorder_cli(store: &Store, cli: FlightRecorderCli) -> Result<
             );
             Ok(())
         }
-        FlightRecorderCommand::Compare { input } => {
+        FlightRecorderCommand::Compare {
+            input,
+            measurements,
+        } => {
             let report = outcomes::read_and_compare(&input).map_err(DecapodError::IoError)?;
-            println!(
-                "{}",
+            let output = if measurements {
+                serde_json::to_string_pretty(&report.measurements())
+            } else {
                 serde_json::to_string_pretty(&report)
-                    .map_err(|e| DecapodError::ValidationError(e.to_string()))?
-            );
+            }
+            .map_err(|e| DecapodError::ValidationError(e.to_string()))?;
+            println!("{output}");
             Ok(())
         }
         FlightRecorderCommand::Timeline { format, limit } => render_timeline(store, &format, limit),
@@ -302,7 +310,7 @@ pub fn schema() -> serde_json::Value {
         "description": "Governance timeline renderer - makes the narrow corridor legible",
         "commands": [
             { "name": "acceptance", "description": "Read-only correlation of digest-bound host and kernel evidence; never publication authority", "parameters": ["capture"] },
-            { "name": "compare", "description": "Opt-in compact observations; no authenticated proof or publication authority", "parameters": ["input"] },
+            { "name": "compare", "description": "Opt-in compact observations; no authenticated proof or publication authority", "parameters": ["input", "measurements"] },
             { "name": "timeline", "description": "Render governance timeline from event logs", "parameters": ["format", "limit"] },
             { "name": "transcript", "description": "Export transcript as markdown", "parameters": ["output", "actor"] }
         ],

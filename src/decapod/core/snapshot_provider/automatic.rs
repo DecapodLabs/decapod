@@ -154,6 +154,7 @@ fn plan_binding(plan: &SourceRunPlan) -> String {
 #[derive(Default)]
 struct PollState {
     github: BTreeMap<String, GithubRunIdentity>,
+    github_successful: BTreeSet<String>,
     buildkite: BTreeMap<(String, String, String), ImportedBuildIdentity>,
 }
 #[derive(Deserialize)]
@@ -285,6 +286,10 @@ fn poll(
     budget.remaining()?;
     let mut complete = true;
     for path in &plan.github_workflows {
+        // The terminal barrier always re-reads every workflow with fresh state.
+        if state.github_successful.contains(path) {
+            continue;
+        }
         let Some(run) = github::discover_workflow_status(runner, snapshot, path, budget)? else {
             ensure(
                 !state.github.contains_key(path),
@@ -318,6 +323,7 @@ fn poll(
                     ),
                 ));
             }
+            state.github_successful.insert(path.clone());
         } else {
             complete = false;
         }

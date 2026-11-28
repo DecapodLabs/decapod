@@ -346,7 +346,7 @@
 
 `assets/build/compress_constitution.rs` calls the shared source admission check before compression. The check reserves explicit binding and router identities, checks references, and requires review declarations for binding guidance. `assets/tools/constitution_history.rs` produces a reproducible chronology from immutable accepted source and a dated public release capture.
 
-The native boundary adapter delegates through literal arguments to the current kernel. The flight recorder keeps the merged acceptance observer and adds an opt-in comparison over compact observations. Each operation uses the existing governance and proof owners.
+The native boundary adapter delegates through literal arguments to the current kernel. The flight recorder keeps the merged acceptance observer and adds an opt-in comparison over compact observations. Its per-run measurements view reuses the same bounded observer input, validates optional stage clocks and volume counters, and preserves provenance and pair status. Historical observations without a measured stage expose a null and its reason. Each operation uses the existing governance and proof owners.
 
 ## Pure report projection does not authenticate proof (#1726)
 
@@ -1806,7 +1806,7 @@ The machine-private cloud todo receipt file uses a version-two envelope around i
 
 ## PR 1666: accepted v0.143.2 source integration
 
-`snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative after removal of a redundant earlier binding read.
+`snapshot_provider::github_quota::GithubQuota` is shared by the existing Budget. Validated successful HTTP response hints pace cold GitHub locator discovery; known Buildkite envelopes retain their normal polling interval. The final binding and fresh-registry recheck remain authoritative. The in-process GitHub Actions poll state retains successful exact attempts to skip repeat intermediate reads. The terminal barrier creates fresh state and verifies every required workflow before accepting the source set.
 
 ## PR1666 current-master integration
 
@@ -2209,7 +2209,7 @@ Generated capability obligations: `persistent-state` is declared for this projec
 
 ## Codebase Attestation
 
-- Repository signal fingerprint: `f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205`
+- Repository signal fingerprint: `6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2`
 - Significant implementation surfaces: `.config/` (1 files), `.github/` (11 files), `Cargo.lock/` (1 files), `Cargo.toml/` (1 files), `README.md/` (1 files), `assets/` (41 files), `bindings/` (9 files), `docs/` (3 files), `packages/` (4 files), `src/` (286 files), `tests/` (297 files)
 - Refreshed from the current codebase by `decapod rpc --op specs.refresh`
 <!-- decapod:codebase-attestation:end -->

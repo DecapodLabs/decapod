@@ -66,6 +66,28 @@ Run the compact collector with:
 decapod trace flight-recorder compare --input docs/research/host-outcome-pilot/comparison-input.json
 ```
 
+The optional `--measurements` view reports the captured metrics per run
+with their evidence references and missing reasons. It preserves pair and
+terminal status. Capturers may supply separate observations for discovery,
+process startup, kernel execution, model turns, provider wait, implementation,
+recovery and handoff in milliseconds, along with observed Decapod response
+bytes and repeated setup calls. Count repetitions only when the captured
+calls share the same request, repository, actor, policy, and freshness
+dependencies. Response bytes describe observed Decapod response payloads
+within that run. These fields are optional in observation bundles. An omitted
+field appears in the view as `not_observed`. Each clock retains its own scope
+and capture reference. Stage clocks may overlap, and response bytes and reported
+tokens are separate measurements. The original comparison remains the default.
+
+The source-CI metadata barrier can skip redundant intermediate GitHub Actions
+reads after an exact workflow attempt reports success. It continues to query
+pending workflows and authenticates every required workflow again at the
+terminal barrier. In the two-workflow deterministic fixture, the first poll,
+ten pending polls and one final completion poll use 26 GitHub reads. Polling
+both workflows throughout the same fixture uses 48 reads. This is a request
+count for the fixture. The final recheck reads both workflows and rejects a
+changed attempt before publication.
+
 Every unavailable measurement has an explicit null and reason. Reviewed human
 active minutes, semantic interruption classes, setup/validation allocation,
 complete model costs, retained context bytes and delivery identity are unobserved.

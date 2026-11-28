@@ -872,55 +872,78 @@
     }
   },
   "change": {
-    "id": "pr_1630_170efc04a",
+    "id": "change_01M8GDCK16H3HWCVEW6QEKRTK8",
     "base_commit": "170efc04ae39ec9ba78e27db941ac86731c9969e",
     "target_base": "origin/master"
   },
   "claims": {
-    "claim-1630-storage-compaction": {
-      "statement": "Unified FIELD_CONTRACTS + PG17 parity + compact SQLite write-boundary triggers (compatible with DECAPOD_STORAGE_OWNER=1 proxy) preserve lossless oversized historical rows and achieve 15.07% synthetic / 15.98% v0.169.1 dogfood compaction savings.",
-      "falsifier": "Any UTF-8/NUL write-boundary bypass, STORAGE_OWNER_READ_CONTROL_REJECTED regression in group_broker, historical row data loss, or manifest/pre-build failure.",
+    "host-measurement-availability": {
+      "statement": "The opt-in measurements view preserves published run status and measurement provenance and leaves unobserved historical phase timings explicit.",
+      "falsifier": "A historical incomplete pair becomes matched, a partial run becomes completed, a missing timing becomes zero, or a measured timing loses its capture reference.",
       "status": "supported",
       "proof_refs": [
-        "docs/datastore-v2/dogfood-compaction-v0.169.1.json",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "tests/datastore_contract.rs",
-        "tests/group_broker.rs"
+        "tests/unit/core/outcome_comparison_tests.rs"
+      ]
+    },
+    "terminal-github-intermediate-reads": {
+      "statement": "An exact successful GitHub Actions attempt is retained only for intermediate polling. Every final workflow read is fresh and a changed run attempt prevents source admission.",
+      "falsifier": "The fixture makes more than 26 intermediate GitHub metadata reads across its 12 cycles, or a fresh final read accepts the changed attempt.",
+      "status": "supported",
+      "proof_refs": [
+        "src/decapod/core/snapshot_provider/automatic/tests.rs"
       ]
     }
   },
   "checkpoints": [
     {
-      "id": "chk_1630_170efc04a",
-      "summary": "Rebased #1630 onto origin/master@170efc04a with exact 0.169.5 inventory_digest, refreshed specs/manifest, and supported claim",
-      "input_digest": "sha256:38d7170bc504002a6817d8294ea26ac39914660dcb4cb71134d129b0b06574d1"
+      "id": "host-stage-measurements",
+      "summary": "Render whole-run observations with separate captured clocks and explicit unknowns",
+      "input_digest": "sha256:b739650c046f67d5d221cc3409eda072717a1b514a2b97b8b2f02334ced84320",
+      "proof_refs": [
+        "tests/unit/core/outcome_comparison_tests.rs"
+      ]
     },
     {
-      "id": "chk_1630_v01695",
-      "summary": "Refreshed #1630 surfaces, entrypoints, manifest, and Dockerfile.decapod to official v0.169.5 on origin/master@170efc04a",
-      "input_digest": "sha256:c112bcbe071b0fb3125f477c8bdfc808f39d60cc9645fc5b32fb07e5d3969ca3"
+      "id": "source-ci-intermediate-github-success",
+      "summary": "Avoid repeat intermediate reads of successful GitHub attempts and preserve final source suite checks",
+      "input_digest": "sha256:0b6bc04985180698180283b1690a4ea9085ebeaaa25feae5c06ba89f7d080f89",
+      "proof_refs": [
+        "src/decapod/core/snapshot_provider/automatic/tests.rs"
+      ]
+    },
+    {
+      "id": "code_01m8gd8dzpvdrmwp",
+      "summary": "Reconcile the 112 accepted v0.169.5 validation source entries without changing the required profile or workflow semantics",
+      "input_digest": "sha256:2c79399adf962a61dfc5e09d621e8b856d7f0dfaeaf2c1c5dd2d2cf90f68181b",
+      "proof_refs": [
+        "https://github.com/DecapodLabs/decapod/actions/runs/46119565038"
+      ]
+    },
+    {
+      "id": "merge-accepted-storage-e10831742",
+      "summary": "Preserve #1989 material and current task journal while integrating accepted storage contract merge e10831742",
+      "input_digest": "sha256:6c0d839489aa03d9ac6b413f4042fc682e1f09208f779cb4107c80fe34f6caee"
     }
   ],
   "intents": {
-    "intent:branch_1630_170efc04a": {
+    "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8": {
       "acceptance_criteria": [],
       "assumptions": [],
       "boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
       "constraints": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        "root"
       ],
       "created_sequence": 1,
-      "id": "intent:branch_1630_170efc04a",
+      "id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
       "instruction_origin": {
         "source_ref": "caller:unverified"
       },
       "out_of_scope": [],
       "proof_requirements": [],
-      "raw_intent": "Execute Decapod #1630 unified bounded compaction + v0.169.1 dogfood growth measurements",
-      "refined_intent": "Rebase #1630 onto origin/master@170efc04a preserving FIELD_CONTRACTS, compact SQLite triggers + storage_owner proxy compatibility, and v0.169.1 dogfood benchmarks",
+      "raw_intent": "Expose whole-run host measurements with provenance and unknowns\n\nDecapod #1989. Render existing flight recorder stage observations per run, retain honest missing measurements and accepted proof, and make no host or runtime claim.",
+      "refined_intent": "Expose whole-run host measurements with provenance and unknowns\n\nDecapod #1989. Render existing flight recorder stage observations per run, retain honest missing measurements and accepted proof, and make no host or runtime claim.",
       "status": "refined",
       "updated_sequence": 3
     }
@@ -929,130 +952,230 @@
     "plan": {
       "constraints": {
         "file_touch_budget": null,
-        "forbidden_paths": []
+        "forbidden_paths": [
+          "src/decapod/lib.rs"
+        ]
       },
       "deferred_questions": [],
       "human_questions": [],
-      "intent": "Implement unified versioned FIELD_CONTRACTS + PostgreSQL parity helpers, compact SQLite BEFORE INSERT/UPDATE contract triggers with storage_owner proxy compatibility, lossless oversized historical read/patch proof, and v0.169.1 synthetic + dogfood compaction benchmarks across decapod, dactyl, and propodus.",
+      "intent": "Render a read-only digest-bearing measurement view over the existing outcome comparison. Skip repeat intermediate GitHub Actions metadata requests only for already successful exact workflow attempts and retain fresh complete final authorization checks. Preserve Buildkite, capture semantics, and all proof gates.",
       "phases": [],
       "proof_hooks": [
-        "decapod validate"
+        "flight recorder legacy and optional metric tests",
+        "GitHub source workflow metadata polling and final attempt regression tests"
       ],
       "schema_version": "1.1.0",
       "spec_reviews": [
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/ARCHITECTURE.md",
-          "reason": "Refreshed #1630 specs, entrypoints, and Dockerfile.decapod to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "c7f630035f860ea014b597fa03ba594190e0924f586735970e8bf3cfb5c7259d"
+          "reason": "Preserves the accepted storage contracts and adds opt-in observed cost and intermediate successful workflow caching. Every exact workflow is reread by the final barrier.",
+          "reviewed_code_fingerprint": "6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2",
+          "spec_material_hash": "dd788c4fa1f34608a7243a1609168510131383e2aac668450868978e56a5743f"
         },
         {
           "disposition": "updated",
           "path": ".decapod/managed/specs/INTERFACES.md",
-          "reason": "Refreshed #1630 interfaces and manifest to official decapod v0.169.5 on origin/master@170efc04a",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
-          "spec_material_hash": "5b343920c7c4769c5e8ae7be3a6b581d26dedefab2ecf9addd5ab90c642b568e"
+          "reason": "Preserves the accepted storage interfaces. The new measurements view is opt-in with unchanged defaults and final provider verification semantics.",
+          "reviewed_code_fingerprint": "6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2",
+          "spec_material_hash": "09ea9ddf5d769761697b3760fa6041872486be805d0d0c54cf4bdb0b025f464d"
         },
         {
           "disposition": "unchanged_with_reason",
           "path": ".decapod/managed/specs/SECURITY.md",
-          "reason": "#1630 preserves SQLite/PG write-boundary validation, NUL-freedom, storage_owner single-statement security gate, and fail-closed security contracts on v0.169.5",
-          "reviewed_code_fingerprint": "f5b26099b3c76eff512a47775e0a5500ba3ed7c5bac4e4f69fd30a1358fd6205",
+          "reason": "The final barrier authenticates the exact accepted source plan and provider identities. The memory-only successful-path set grants no publication authority.",
+          "reviewed_code_fingerprint": "6e5c302b88cad5ca0aa3f93b697bde47c76df35bce405b7c0f82838b595c1ed2",
           "spec_material_hash": "d983aaad7f463610b984e32220e1ee9b80fef14f1fd7c445d5092218381aa317"
         }
       ],
       "state": "APPROVED",
       "stop_conditions": [],
-      "title": "Unified storage field contracts, SQLite write triggers & v0.169.1 benchmarks (#1630)",
+      "title": "Expose whole-run host measurements",
       "todo_ids": [
-        "code_01m8fe528f5hp12s"
+        "code_01m8gd8dzpvdrmwp"
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795847034Z"
+      "updated_at": "1795853305Z"
     },
     "trajectory": {
       "active_boundaries": [
-        "Zero shadow tables, lossless oversized legacy row preservation, zero BYPASSRLS, official v0.169.4 controller"
+        "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:3079cc7740a1e56312095fa3e33f9deaa27ab5c7694bc9e64541bd3fc0662e0f",
+      "artifact_hash": "sha256:63419124583c3006d1cf9d0abdcef9dfcbda9627994f57fc324618b62a532e45",
       "checks": [
         {
-          "name": "datastore_contract_and_82_tests",
+          "name": "accepted release inventory comparison",
           "status": "passed"
         },
         {
-          "name": "pg17_utf8_gc_parity",
+          "name": "accepted storage merge source overlap review",
           "status": "passed"
         },
         {
-          "name": "storage_contracts::tests",
+          "name": "focused_flight_recorder_native",
           "status": "passed"
         },
         {
-          "name": "storage_owner::tests",
+          "name": "historical e8f3e349 source Actions (5)",
           "status": "passed"
         },
         {
-          "name": "tests/group_broker",
+          "name": "historical_capture_pre_implementation_readback",
+          "status": "passed"
+        },
+        {
+          "name": "native_snapshot_provider_automatic",
           "status": "passed"
         }
       ],
+      "current_phase": "verification",
       "custody": {
         "events": [
           {
             "event_id": "event:2",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "created",
             "sequence": 2
           },
           {
             "event_id": "event:3",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "refined",
             "sequence": 3
           },
           {
-            "detail": "trajectory:branch_1630_170efc04a",
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
             "event_id": "event:4",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "kind": "trajectory_step_recorded",
             "sequence": 4
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:5",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:6",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:7",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 7
+          },
+          {
+            "detail": "trajectory:branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "event_id": "event:8",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
+            "kind": "trajectory_step_recorded",
+            "sequence": 8
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 4,
+        "next_sequence": 8,
         "schema_version": "1.1.0",
         "trajectories": {
-          "branch_1630_170efc04a": {
+          "branch_01M8GDCK4RM8QH7PK0V5F86HFH": {
             "evidence_only": true,
-            "id": "branch_1630_170efc04a",
-            "intent_id": "intent:branch_1630_170efc04a",
+            "id": "branch_01M8GDCK4RM8QH7PK0V5F86HFH",
+            "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
             "steps": [
               {
                 "action": "trajectory.record",
                 "custody_event_id": "event:4",
                 "observations": [
-                  "src/decapod/core/storage_contracts.rs",
-                  "src/decapod/core/storage_owner.rs",
-                  "src/decapod/core/todo.rs",
-                  "src/decapod/core/events.rs",
-                  "src/decapod/core/houseboat.rs",
-                  "tests/datastore_contract.rs",
-                  "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+                  "docs/research/host-outcome-pilot/sec12-antigravity-input.json",
+                  "src/decapod/core/flight_recorder/outcomes.rs",
+                  "src/decapod/core/flight_recorder.rs",
+                  "tests/unit/core/outcome_comparison_tests.rs",
+                  "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection."
                 ],
                 "proof_refs": [
-                  "storage_contracts::tests",
-                  "storage_owner::tests",
-                  "tests/group_broker",
-                  "datastore_contract_and_82_tests",
-                  "pg17_utf8_gc_parity"
+                  "historical_capture_pre_implementation_readback"
                 ],
                 "scope": [
-                  "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+                  "root"
                 ],
                 "sequence": 4,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:5",
+                "observations": [
+                  "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted."
+                ],
+                "proof_refs": [
+                  "focused_flight_recorder_native"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 5,
+                "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "src/decapod/core/snapshot_provider/automatic.rs",
+                  "src/decapod/core/snapshot_provider/automatic/tests.rs",
+                  "25 snapshot-provider automatic native tests passed. The two-workflow request-count fixture uses 26 instead of 48 intermediate reads, then fresh reads both exact workflows and rejects changed attempts. Existing pending-attempt, source-binding, authorization and Buildkite cases passed."
+                ],
+                "proof_refs": [
+                  "native_snapshot_provider_automatic"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 6,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:7",
+                "observations": [
+                  "Cargo.toml",
+                  "Cargo.lock",
+                  "CHANGELOG.md",
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "Verified hashes and canonical symlinks for all 112 discovered inventory entries against accepted 170efc04. Compared the preceding accepted tree; only the two Cargo version entries changed in the inventory. Existing source Actions are historical for the next milestone."
+                ],
+                "proof_refs": [
+                  "accepted release inventory comparison",
+                  "historical e8f3e349 source Actions (5)"
+                ],
+                "scope": [
+                  "root"
+                ],
+                "sequence": 7,
+                "validation_findings": []
+              },
+              {
+                "action": "verification",
+                "custody_event_id": "event:8",
+                "observations": [
+                  "Origin master advanced to e10831742. It independently carries the same reviewed inventory and changes no #1989 production files. The kernel reconciled prior current PR custody and newly accepted obligations."
+                ],
+                "proof_refs": [
+                  "accepted storage merge source overlap review"
+                ],
+                "scope": [
+                  ".decapod/config.toml",
+                  ".decapod/managed/specs/VALIDATION.md",
+                  "root"
+                ],
+                "sequence": 8,
                 "validation_findings": []
               }
             ]
@@ -1060,26 +1183,44 @@
         }
       },
       "declared_commands": [],
+      "destination": "pull request",
       "evidence": [
-        "Verified 17/17 tests/group_broker + 11/11 storage_owner::tests + 4/4 storage_contracts::tests + 82/82 earlier suite + 15.98% dogfood compaction"
+        "25 snapshot-provider automatic native tests passed. The two-workflow request-count fixture uses 26 instead of 48 intermediate reads, then fresh reads both exact workflows and rejects changed attempts. Existing pending-attempt, source-binding, authorization and Buildkite cases passed.",
+        "Eleven native outcome tests passed, including actual historical captures, unknown optional stages and strict evidence validation. No new live host runs were attempted.",
+        "Origin master advanced to e10831742. It independently carries the same reviewed inventory and changes no #1989 production files. The kernel reconciled prior current PR custody and newly accepted obligations.",
+        "Released Decapod 0.169.5 replayed the unchanged historical comparison. Cold and governed initialization rows are incomplete pairs. Both governed runs are partial, and their host elapsed is not process-startup time. Optional omitted stages remain unobserved in the new projection.",
+        "Verified hashes and canonical symlinks for all 112 discovered inventory entries against accepted 170efc04. Compared the preceding accepted tree; only the two Cargo version entries changed in the inventory. Existing source Actions are historical for the next milestone."
       ],
-      "inspected_files": [],
-      "intent_id": "intent:branch_1630_170efc04a",
+      "inspected_files": [
+        "CHANGELOG.md",
+        "Cargo.lock",
+        "Cargo.toml",
+        "docs/research/host-outcome-pilot/sec12-antigravity-input.json",
+        "src/decapod/core/flight_recorder/outcomes.rs"
+      ],
+      "intent_id": "intent:change_01M8GDCK16H3HWCVEW6QEKRTK8",
       "modified_files": [
-        "src/decapod/core/events.rs",
-        "src/decapod/core/houseboat.rs",
-        "src/decapod/core/storage_contracts.rs",
-        "src/decapod/core/storage_owner.rs",
-        "src/decapod/core/todo.rs",
-        "tests/datastore_contract.rs"
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
+        "src/decapod/core/flight_recorder.rs",
+        "src/decapod/core/snapshot_provider/automatic.rs",
+        "src/decapod/core/snapshot_provider/automatic/tests.rs",
+        "tests/unit/core/outcome_comparison_tests.rs"
+      ],
+      "next_transitions": [
+        "Checkpoint and obtain source validation for the exact reconciled commit",
+        "Checkpoint merged current target and collect exact full source CI",
+        "Refine plan and declare falsifiable checks"
       ],
       "repo_scope": [
-        "src/decapod/core/storage_contracts.rs,src/decapod/core/storage_owner.rs,src/decapod/core/todo.rs,src/decapod/core/events.rs,src/decapod/core/houseboat.rs,tests/datastore_contract.rs,docs/datastore-v2/**,.decapod/**"
+        ".decapod/config.toml",
+        ".decapod/managed/specs/VALIDATION.md",
+        "root"
       ],
-      "run_id": "branch_1630_170efc04a",
+      "run_id": "branch_01M8GDCK4RM8QH7PK0V5F86HFH",
       "schema_version": "1.1.0",
       "shortcut_risk_signals": [],
-      "task_id": "code_01m8fe528f5hp12s",
+      "task_id": "code_01m8gd8dzpvdrmwp",
       "tool_calls": [],
       "unresolved_assumptions": []
     }
