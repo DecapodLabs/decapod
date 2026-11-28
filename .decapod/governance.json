@@ -906,6 +906,11 @@
       "id": "chk-merge-v0169-4",
       "summary": "Merge origin/master v0.169.4 and reconcile governance/specs",
       "input_digest": "sha256:53cbc200f287d0ff38e45840ad67cdbf7903b9e69f13a1d55bf9f676ec661474"
+    },
+    {
+      "id": "chk-v0169-4-uplift-final",
+      "summary": "Finalize #1977 copy/focus/header/hero fixes and #1978 short outcome prompt + standing project delegation + v0.169.4 clean-env specs",
+      "input_digest": "sha256:22a4909eaa8c001e53566a1aee796ca39401771369679a32ac47be1c812142fa"
     }
   ],
   "intents": {
@@ -946,6 +951,22 @@
         "decapod validate"
       ],
       "schema_version": "1.1.0",
+      "spec_reviews": [
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/ARCHITECTURE.md",
+          "reason": "Updated reading shell layout, hero contrast, focus/search clearance, per-codeblock live copy, and #1978 short-prompt / standing-delegation notes",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "spec_material_hash": "00ef8edceeac62139b33822fc4e38d959f5d729f12619b15a5e9e142e41acd16"
+        },
+        {
+          "disposition": "updated",
+          "path": ".decapod/managed/specs/INTERFACES.md",
+          "reason": "Documented per-codeblock live copy status badges, focus/search sticky clearance, and #1978 onboarding contracts",
+          "reviewed_code_fingerprint": "bca92c9e84412c93e0d84b82454a32e3c5f574e5c63117c5b77b50aa34087c3b",
+          "spec_material_hash": "0abab150f54aae1c6b93aaffacbfc2972b4f9db6912394293bf6748a5ae3a61e"
+        }
+      ],
       "state": "APPROVED",
       "stop_conditions": [],
       "title": "Docs uplift: layout, code/header readability, first governed result (#1977, #1978)",
@@ -954,16 +975,20 @@
       ],
       "unknowns": [],
       "unresolved_contradictions": [],
-      "updated_at": "1795822027Z"
+      "updated_at": "1795836396Z"
     },
     "trajectory": {
       "active_boundaries": [
         "Current claimed task and isolated work branch"
       ],
-      "artifact_hash": "sha256:9ce5db3cff075d894e1719660dffbcabfdf96e85568a4d808de8515eae1be75b",
+      "artifact_hash": "sha256:b78ab45b3505e7a46761340231e2332473aceceee9bfa624a4182c28b0131ca1",
       "checks": [
         {
           "name": "chrome_qa_5themes_5viewports",
+          "status": "passed"
+        },
+        {
+          "name": "clean_env_quickstart_v0169_4",
           "status": "passed"
         },
         {
@@ -1006,10 +1031,17 @@
             "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
             "kind": "trajectory_step_recorded",
             "sequence": 5
+          },
+          {
+            "detail": "trajectory:branch_docs_01m8fjpadj5ywkv7",
+            "event_id": "event:6",
+            "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
+            "kind": "trajectory_step_recorded",
+            "sequence": 6
           }
         ],
         "knowledge_candidates": [],
-        "next_sequence": 5,
+        "next_sequence": 6,
         "schema_version": "1.1.0",
         "trajectories": {
           "branch_docs_01m8fjpadj5ywkv7": {
@@ -1056,6 +1088,31 @@
                 ],
                 "sequence": 5,
                 "validation_findings": []
+              },
+              {
+                "action": "trajectory.record",
+                "custody_event_id": "event:6",
+                "observations": [
+                  "docs/book/theme/index.hbs",
+                  "docs/book/src/custom.css",
+                  "docs/book/src/quickstart.md",
+                  "docs/book/src/configuration.md",
+                  ".decapod/managed/specs/ARCHITECTURE.md",
+                  ".decapod/managed/specs/INTERFACES.md",
+                  ".decapod/managed/specs/OPERATIONS.md",
+                  "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify"
+                ],
+                "proof_refs": [
+                  "doc_alignment",
+                  "mdbook_docs_seo",
+                  "chrome_qa_5themes_5viewports",
+                  "clean_env_quickstart_v0169_4"
+                ],
+                "scope": [
+                  "docs/book/**"
+                ],
+                "sequence": 6,
+                "validation_findings": []
               }
             ]
           }
@@ -1064,11 +1121,15 @@
       "declared_commands": [],
       "evidence": [
         "Verified example prompt in quickstart.md Section 3 and legacy anchor fragment clearance (#1..#8) in headless Chrome CDP audit + doc_alignment 5/5",
+        "doc_alignment 5/5 passed; mdbook + docs_seo.py 31 public pages; Chrome CDP 5 pages x 5 themes x 5 viewports + 1.25x zoom + copy success/failure + search nav + keyboard focus 0 failures; clean-env v0.169.4 Quickstart test passed 194 Four Invariants gates in /tmp/decapod-quickstart-verify",
         "doc_alignment 5/5 passed; mdbook + docs_seo.py built 31 public pages; headless Chrome CDP audit 0 failures across light/rust/navy/coal/ayu at 320/390/768/1024/1440 and 1.25x zoom"
       ],
       "inspected_files": [],
       "intent_id": "intent:branch_docs_01m8fjpadj5ywkv7",
       "modified_files": [
+        ".decapod/managed/specs/ARCHITECTURE.md",
+        ".decapod/managed/specs/INTERFACES.md",
+        ".decapod/managed/specs/OPERATIONS.md",
         "docs/book/src/configuration.md",
         "docs/book/src/custom.css",
         "docs/book/src/index.md",

@@ -612,33 +612,105 @@
 
             var copyBtn = document.getElementById('decapod-copy-agent-btn');
             var copyStatus = document.getElementById('decapod-copy-agent-status');
+            function copyPlainText(text, onOk, onErr) {
+                function fallbackCopy() {
+                    try {
+                        var ta = document.createElement('textarea');
+                        ta.value = text;
+                        ta.setAttribute('readonly', '');
+                        ta.style.position = 'fixed';
+                        ta.style.opacity = '0';
+                        document.body.appendChild(ta);
+                        ta.select();
+                        var ok = document.execCommand('copy');
+                        document.body.removeChild(ta);
+                        if (ok) { onOk(); return; }
+                    } catch (e) {}
+                    onErr();
+                }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(onOk, fallbackCopy);
+                } else {
+                    fallbackCopy();
+                }
+            }
+
             if (copyBtn && copyStatus) {
+                var agentCopyTimer = null;
                 copyBtn.addEventListener('click', function() {
                     var md = buildAgentMarkdown();
-                    function onOk() {
-                        copyStatus.textContent = 'Copied Markdown';
-                        setTimeout(function() { copyStatus.textContent = ''; }, 2400);
+                    copyPlainText(
+                        md,
+                        function() {
+                            copyStatus.dataset.copyState = 'copied';
+                            copyStatus.textContent = 'Copied Markdown';
+                            clearTimeout(agentCopyTimer);
+                            agentCopyTimer = setTimeout(function() {
+                                copyStatus.textContent = '';
+                                delete copyStatus.dataset.copyState;
+                            }, 2400);
+                        },
+                        function() {
+                            copyStatus.dataset.copyState = 'error';
+                            copyStatus.textContent = 'Copy unavailable';
+                        }
+                    );
+                });
+            }
+
+            // Accessible live feedback (success & failure) for per-codeblock copy controls
+            if (main) {
+                Array.from(main.querySelectorAll('pre > .buttons .clip-button')).forEach(function(origBtn) {
+                    var buttons = origBtn.parentElement;
+                    var pre = buttons ? buttons.closest('pre') : null;
+                    if (!buttons || !pre) return;
+
+                    var btn = origBtn.cloneNode(true);
+                    origBtn.parentNode.replaceChild(btn, origBtn);
+
+                    var statusBadge = buttons.querySelector('.decapod-code-copy-status');
+                    if (!statusBadge) {
+                        statusBadge = document.createElement('span');
+                        statusBadge.className = 'decapod-code-copy-status';
+                        statusBadge.setAttribute('role', 'status');
+                        statusBadge.setAttribute('aria-live', 'polite');
+                        buttons.insertBefore(statusBadge, btn);
                     }
-                    function fallbackCopy() {
-                        try {
-                            var ta = document.createElement('textarea');
-                            ta.value = md;
-                            ta.setAttribute('readonly', '');
-                            ta.style.position = 'fixed';
-                            ta.style.opacity = '0';
-                            document.body.appendChild(ta);
-                            ta.select();
-                            var ok = document.execCommand('copy');
-                            document.body.removeChild(ta);
-                            if (ok) { onOk(); return; }
-                        } catch (e) {}
-                        copyStatus.textContent = 'Copy unavailable';
-                    }
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(md).then(onOk, fallbackCopy);
-                    } else {
-                        fallbackCopy();
-                    }
+
+                    var timer = null;
+                    btn.addEventListener('click', function(ev) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        var codeText = typeof window.playground_text === 'function'
+                            ? window.playground_text(pre, false)
+                            : ((pre.querySelector('code') || pre).textContent || '');
+                        var tip = btn.querySelector('.tooltiptext');
+                        copyPlainText(
+                            codeText,
+                            function() {
+                                statusBadge.dataset.copyState = 'copied';
+                                statusBadge.textContent = 'Copied';
+                                if (tip) tip.textContent = 'Copied';
+                                clearTimeout(timer);
+                                timer = setTimeout(function() {
+                                    statusBadge.textContent = '';
+                                    delete statusBadge.dataset.copyState;
+                                    if (tip) tip.textContent = '';
+                                }, 2400);
+                            },
+                            function() {
+                                statusBadge.dataset.copyState = 'error';
+                                statusBadge.textContent = 'Copy unavailable';
+                                if (tip) tip.textContent = 'Copy unavailable';
+                                clearTimeout(timer);
+                                timer = setTimeout(function() {
+                                    statusBadge.textContent = '';
+                                    delete statusBadge.dataset.copyState;
+                                    if (tip) tip.textContent = '';
+                                }, 3200);
+                            }
+                        );
+                    });
                 });
             }
         })();

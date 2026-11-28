@@ -51,17 +51,15 @@ For **Decapod Cloud** teams:
 
 ## 3. Hand off to your coding agent
 
-Once `decapod init` succeeds, open your coding agent in the repository and state your goal in plain language. You do not need to run kernel commands manually.
-
-**Example prompt for your coding agent:**
+Once `decapod init` succeeds, open your coding agent in the repository and ask for the engineering outcome you want in ordinary language—for example:
 
 ```text
-Read AGENTS.md, claim a Decapod task for fixing the failing retry-backoff test,
-work inside an isolated Decapod workspace, update tests and living specs under
-.decapod/managed/specs/, checkpoint and commit your change, and run
-decapod validate against the final commit. Stop and ask me if any check
-fails without a supported recovery path or requires a product decision.
+Fix the failing retry-backoff test.
 ```
+
+(Or, for a UI/UX task: `Improve the terminal interface.`)
+
+You do **not** need to append `"Read AGENTS.md, claim a task, write tests, update docs, commit, push, merge"` or operate Decapod commands manually. Your repository entrypoints tell the agent how to identify concrete improvements, perform the implementation, add or update meaningful tests, keep affected documentation and living specs aligned, repair failures, and deliver through the repository's configured endpoint—stopping at PR review by default or advancing autonomously only where explicitly configured in [Standing Project Delegation](configuration.md#standing-project-delegation).
 
 At decision and commit boundaries, your agent invokes the kernel:
 
@@ -81,10 +79,10 @@ See [Single-Agent & Handoff Workflow](workflows/single-agent.md) and the [CLI Re
 
 ## 4. First Governed Result Walkthrough
 
-Here is what one complete, verifiable Decapod run produces in your repository — grounded in recorded runs on the [Proof page](https://decapodlabs.ai/proof.html) and enforced end-to-end by `tests/workunit_verified_proof_1660.rs`:
+Here is what one currently supported, verifiable Decapod run produces in your repository—grounded in recorded runs on the [Proof page](https://decapodlabs.ai/proof.html), cross-host entrypoint observations in [`#880`](https://github.com/DecapodLabs/decapod/issues/880), and the end-to-end fixture in `tests/workunit_verified_proof_1660.rs` (target outcome-only defaults for full duty derivation, outcome-relevant test controls, and unattended push-through-merge are tracked in [`#1981`](https://github.com/DecapodLabs/decapod/issues/1981), [`#1982`](https://github.com/DecapodLabs/decapod/issues/1982), and [`#1983`](https://github.com/DecapodLabs/decapod/issues/1983) as target/in-progress):
 
 1. **Isolated branch & active custody:** After claiming `<task-id>`, your agent works strictly inside `.decapod/workspaces/<worktree>` on branch `agent/<agent-id>/<task-id>-<topic>`, leaving the root checkout untouched.
-2. **Authored intent & staged checkpoint:** Before committing edits, the agent updates `.decapod/managed/specs/` (`INTENT.md`, `ARCHITECTURE.md`, `INTERFACES.md`), records checks in `.decapod/governance.json` (`decapod govern trajectory record`), and runs:
+2. **Authored intent & staged checkpoint:** Before committing edits, the agent updates code, tests, affected guidance, and `.decapod/managed/specs/` (`INTENT.md`, `ARCHITECTURE.md`, `INTERFACES.md`), records checks in `.decapod/governance.json` (`decapod govern trajectory record`), and runs:
 
 ```bash
 git add <authored-paths>
@@ -99,13 +97,17 @@ git commit -m "Implement governed change"
 decapod validate
 ```
 
-   - If a configured build, test, spec, or policy gate fails, `decapod validate` exits nonzero with typed blockers and remediation steps. The task stays open and unverified.
+   - If a configured build, test, spec, or policy gate fails, `decapod validate` exits nonzero with typed blockers and remediation steps so the agent can repair the failure and revalidate before claiming completion.
    - **Stale-evidence invalidation:** If the agent fixes code and creates a new commit, any earlier green receipt for the previous commit immediately becomes `stale` and cannot admit `VERIFIED` completion or PR creation. The agent must run `decapod validate` again on the revised `HEAD`.
-4. **Governed completion:** Once `decapod validate` passes for the exact current commit against the accepted target branch, the agent publishes and closes the task:
+4. **Visible proof in the final result:** Once `decapod validate` passes for the exact current commit against the accepted target branch, the agent publishes or advances to the authorized endpoint (`decapod workspace publish` and `decapod todo done --id <task-id> --validated`) and reports the verifiable result:
+   - Requested behavior and isolated branch/worktree (`agent/<agent-id>/<task-id>-<topic>`)
+   - What changed across code, tests, affected documentation, and living specs
+   - Which required checks actually ran and passed against exact candidate `HEAD`
+   - Current accepted target branch, PR or merge state (`PR opened` vs `merged`), and any unresolved work or authority boundary
 
 ```bash
 decapod workspace publish
 decapod todo done --id <task-id> --validated
 ```
 
-**Boundary of what proof establishes:** `decapod validate` proves that the configured repository gates, specs, custody checks, and tests actually executed and passed against the exact candidate `HEAD` commit (not fabricated `record-proof` claims). It does **not** guarantee semantic correctness beyond the configured checks and human review. See [Proof & Verification Gates](concepts/proof.md).
+**Boundary of what proof establishes:** `decapod validate` proves that the configured repository gates, specs, custody checks, and tests actually executed and passed against the exact candidate `HEAD` commit (not fabricated `record-proof` claims). It does **not** guarantee semantic correctness beyond the configured checks and human review, nor physical confinement of unrestricted host tools. See [Proof & Verification Gates](concepts/proof.md).
